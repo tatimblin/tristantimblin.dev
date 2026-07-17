@@ -23,10 +23,11 @@
 # Periodic iPhone additions are normalized a little brighter than fabric so they
 # read with more midtone dots while still avoiding the blob-merging a raw bright
 # clip (e.g. a sunset beach at ~113/255) produces. -n measures the source's mean
-# luma and darkens it with a gamma curve until it matches the target (-m, default
-# 35), so any bright upload self-corrects. The gamma is found by bisection on the
-# actual measured output (the curve is convex, so a closed-form estimate
-# undershoots). Pass -m to aim darker (toward fabric's 23) or brighter.
+# luma and darkens it until it matches the target (-m, default 35), so any bright
+# upload self-corrects. Darkening scales luma in YUV (chroma-preserving) rather
+# than a gamma curve so color survives for the dot color-reveal; the scale is
+# found by bisection on the measured output. Pass -m to aim darker (toward
+# fabric's 23) or brighter.
 #
 # Usage:
 #   prepare-video.sh [-i in] [-o out] [-w width] [-f fps] [-q crf] [-t] [-n] [-m luma]
@@ -112,26 +113,33 @@ if [ "$TONEMAP" -eq 1 ]; then
   OUT_COLOR=(-colorspace bt709 -color_primaries bt709 -color_trc bt709)
 fi
 
-# Brightness normalization: bisect the eq gamma (lower = darker) until the mean
-# luma of the full chain lands within tolerance of the target. Monotonic in
-# gamma, so a handful of steps converge. The winning gamma is appended to VF.
+# Brightness normalization: darken toward the target mean luma while keeping
+# color intact. We scale luma multiplicatively in YUV (lutyuv=y=val*k, which
+# leaves the U/V chroma planes untouched) rather than gamma-crushing in RGB.
+# eq=gamma pushes each pixel's weaker channels toward zero, which desaturates a
+# bright clip to near-grey as it darkens (the dots then have no color to reveal);
+# lutyuv preserves hue, so the halftone color-reveal still shows real color.
+# A saturation lift counters the perceptual desaturation of a darker image.
+# k is found by bisection on the actual measured output (linear in k, so a few
+# steps converge); the winning scale + SAT_BOOST are appended to VF.
+SAT_BOOST=1.5 # saturation multiplier applied with the luma scale
 if [ "$NORMALIZE" -eq 1 ]; then
   src_luma=$(measure_luma "$VF")
-  echo "Normalizing: source mean luma ${src_luma} -> target ${TARGET_LUMA}"
+  echo "Normalizing: source mean luma ${src_luma} -> target ${TARGET_LUMA} (chroma-preserving)"
   if awk "BEGIN{exit !(${src_luma} > ${TARGET_LUMA} + 2)}"; then
-    lo=0.05; hi=1.0; gamma=1.0
+    lo=0.05; hi=1.0; scale=1.0
     for i in $(seq 1 7); do
-      gamma=$(awk "BEGIN{printf \"%.4f\", ($lo + $hi) / 2}")
-      m=$(measure_luma "${VF},eq=gamma=${gamma}")
-      echo "  step $i: gamma=${gamma} -> luma=${m}"
-      # Too bright: darken more (lower gamma). Too dark: lighten (raise gamma).
+      scale=$(awk "BEGIN{printf \"%.4f\", ($lo + $hi) / 2}")
+      m=$(measure_luma "${VF},lutyuv=y=val*${scale}")
+      echo "  step $i: y-scale=${scale} -> luma=${m}"
+      # Too bright: scale down more. Too dark: scale up.
       if awk "BEGIN{exit !(${m} > ${TARGET_LUMA})}"; then
-        hi=$gamma
+        hi=$scale
       else
-        lo=$gamma
+        lo=$scale
       fi
     done
-    VF="${VF},eq=gamma=${gamma}"
+    VF="${VF},lutyuv=y=val*${scale},eq=saturation=${SAT_BOOST}"
   else
     echo "  source already at/below target; no darkening applied."
   fi

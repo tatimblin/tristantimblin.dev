@@ -21,6 +21,9 @@ const SRC = SOURCES[0].src;
 			const attr = input.dataset.attr!;
 			if (input.type === "checkbox") {
 				input.checked ? hero.setAttribute(attr, "") : hero.removeAttribute(attr);
+			} else if (input.dataset.zeroOff !== undefined && input.value === "0") {
+				// "absent = off" attrs (color-reveal, shimmer): 0 removes the attr.
+				hero.removeAttribute(attr);
 			} else {
 				hero.setAttribute(attr, input.value);
 			}
@@ -73,6 +76,18 @@ const SRC = SOURCES[0].src;
 			<label>
 				<span>contrast <output data-out="contrast"></output></span>
 				<input type="range" data-attr="contrast" min="0.2" max="3" step="0.05" value="1.1" />
+			</label>
+			<label>
+				<span>color-reveal <output data-out="color-reveal"></output></span>
+				<input type="range" data-attr="color-reveal" data-zero-off min="0" max="300" step="10" value="0" />
+			</label>
+			<label>
+				<span>shimmer % <output data-out="shimmer"></output></span>
+				<input type="range" data-attr="shimmer" data-zero-off min="0" max="100" step="1" value="0" />
+			</label>
+			<label>
+				<span>reveal-boost <output data-out="reveal-boost"></output></span>
+				<input type="range" data-attr="reveal-boost" min="0" max="1" step="0.05" value="1" />
 			</label>
 			<div class="row">
 				<label class="color">
