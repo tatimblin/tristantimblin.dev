@@ -18,13 +18,15 @@
 #     come out upright without extra flags.
 #
 # Brightness normalization (-n): the halftone look is best when the source is
-# mostly dark with bright highlights punching through (like fabric.mp4, whose
-# mean luma is ~23/255). A brighter clip (e.g. a sunset beach at ~113/255) fills
-# most cells and the dots merge into blobs. -n measures the source's mean luma
-# and darkens it with a gamma curve until it matches the target (-m, default 23),
-# so any bright upload self-corrects to the fabric aesthetic. The gamma is found
-# by bisection on the actual measured output (the curve is convex, so a closed-
-# form estimate undershoots).
+# mostly dark with bright highlights punching through. fabric.mp4 (mean luma
+# ~23/255) is a deliberately dark one-off and is left as-is (never run with -n).
+# Periodic iPhone additions are normalized a little brighter than fabric so they
+# read with more midtone dots while still avoiding the blob-merging a raw bright
+# clip (e.g. a sunset beach at ~113/255) produces. -n measures the source's mean
+# luma and darkens it with a gamma curve until it matches the target (-m, default
+# 35), so any bright upload self-corrects. The gamma is found by bisection on the
+# actual measured output (the curve is convex, so a closed-form estimate
+# undershoots). Pass -m to aim darker (toward fabric's 23) or brighter.
 #
 # Usage:
 #   prepare-video.sh [-i in] [-o out] [-w width] [-f fps] [-q crf] [-t] [-n] [-m luma]
@@ -36,7 +38,8 @@
 #   -q  H.264 CRF       (default: 26; lower = higher quality/larger file)
 #   -t  tonemap HDR     (HLG/BT.2020 -> BT.709 SDR contrast/saturation correction)
 #   -n  normalize luma  (darken to the target mean brightness for the dot look)
-#   -m  target luma     (mean luma 0-255 for -n; default 23 ~= fabric.mp4)
+#   -m  target luma     (mean luma 0-255 for -n; default 35 — a touch brighter
+#                        than fabric.mp4's 23, which is a dark one-off left as-is)
 #
 # Examples:
 #   prepare-video.sh                                                 # fabric (SDR)
@@ -60,7 +63,7 @@ FPS=0
 CRF=26
 TONEMAP=0
 NORMALIZE=0
-TARGET_LUMA=23
+TARGET_LUMA=35
 SAMPLE_FRAMES=40 # frames sampled when measuring mean luma
 
 while getopts "i:o:w:f:q:tnm:h" opt; do
