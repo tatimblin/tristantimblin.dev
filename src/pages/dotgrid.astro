@@ -2,7 +2,11 @@
 import Layout from "../layouts/Layout.astro";
 import "@whois/dotted-grid/styles.css";
 
-const SRC = "/videos/fabric.web.mp4";
+const SOURCES = [
+	{ label: "fabric", src: "/videos/fabric.web.mp4" },
+	{ label: "beach", src: "/videos/beach.web.mp4" },
+];
+const SRC = SOURCES[0].src;
 ---
 
 <script>
@@ -27,6 +31,16 @@ const SRC = "/videos/fabric.web.mp4";
 			input.addEventListener("input", () => sync(input));
 			sync(input); // apply initial state on load
 		});
+
+		// Source switcher: swap the video the effect samples.
+		panel.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((btn) => {
+			btn.addEventListener("click", () => {
+				hero.setAttribute("src", btn.dataset.src!);
+				panel
+					.querySelectorAll("[data-src]")
+					.forEach((b) => b.classList.toggle("is-active", b === btn));
+			});
+		});
 	}
 </script>
 
@@ -37,6 +51,13 @@ const SRC = "/videos/fabric.web.mp4";
 
 		<aside class="controls" data-controls aria-label="dotted-grid controls">
 			<h2>&lt;dotted-grid&gt;</h2>
+			<div class="sources">
+				{SOURCES.map((s, i) => (
+					<button type="button" data-src={s.src} class={i === 0 ? "is-active" : ""}>
+						{s.label}
+					</button>
+				))}
+			</div>
 			<label>
 				<span>cell-size <output data-out="cell-size"></output></span>
 				<input type="range" data-attr="cell-size" min="2" max="24" step="1" value="6" />
@@ -111,6 +132,30 @@ const SRC = "/videos/fabric.web.mp4";
 		margin: 0 0 var(--space-1, 0.25rem);
 		font-size: 0.95rem;
 		font-family: ui-monospace, monospace;
+	}
+
+	.controls .sources {
+		display: flex;
+		gap: 0.4rem;
+	}
+
+	.controls .sources button {
+		flex: 1;
+		padding: 0.35rem 0.5rem;
+		border: 1px solid rgba(255, 255, 255, 0.18);
+		border-radius: 8px;
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		font-size: 0.78rem;
+		cursor: pointer;
+	}
+
+	.controls .sources button.is-active {
+		background: #7fd4ff;
+		border-color: #7fd4ff;
+		color: #03060d;
+		font-weight: 600;
 	}
 
 	.controls label {
