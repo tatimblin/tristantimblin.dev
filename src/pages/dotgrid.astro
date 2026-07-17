@@ -1,0 +1,167 @@
+---
+import Layout from "../layouts/Layout.astro";
+import "@whois/dotted-grid/styles.css";
+
+const SRC = "/videos/fabric.web.mp4";
+---
+
+<script>
+	import "@whois/dotted-grid";
+
+	// Live controls: reflect each input onto the hero <dotted-grid> attributes.
+	// Boolean attrs (invert/paused) toggle presence; the rest set a value.
+	const hero = document.querySelector<HTMLElement>("[data-hero]");
+	const panel = document.querySelector<HTMLElement>("[data-controls]");
+	if (hero && panel) {
+		const sync = (input: HTMLInputElement) => {
+			const attr = input.dataset.attr!;
+			if (input.type === "checkbox") {
+				input.checked ? hero.setAttribute(attr, "") : hero.removeAttribute(attr);
+			} else {
+				hero.setAttribute(attr, input.value);
+			}
+			const out = panel.querySelector<HTMLElement>(`[data-out="${attr}"]`);
+			if (out) out.textContent = input.value;
+		};
+		panel.querySelectorAll<HTMLInputElement>("input").forEach((input) => {
+			input.addEventListener("input", () => sync(input));
+			sync(input); // apply initial state on load
+		});
+	}
+</script>
+
+<Layout title="Dotted Grid — tuning">
+	<main class="dotgrid-demo">
+		<!-- Full-viewport hero preview, driven live by the control panel. -->
+		<dotted-grid data-hero src={SRC}></dotted-grid>
+
+		<aside class="controls" data-controls aria-label="dotted-grid controls">
+			<h2>&lt;dotted-grid&gt;</h2>
+			<label>
+				<span>cell-size <output data-out="cell-size"></output></span>
+				<input type="range" data-attr="cell-size" min="2" max="24" step="1" value="6" />
+			</label>
+			<label>
+				<span>dot-scale <output data-out="dot-scale"></output></span>
+				<input type="range" data-attr="dot-scale" min="0.2" max="1.5" step="0.05" value="0.85" />
+			</label>
+			<label>
+				<span>gamma <output data-out="gamma"></output></span>
+				<input type="range" data-attr="gamma" min="0.2" max="3" step="0.05" value="0.8" />
+			</label>
+			<label>
+				<span>contrast <output data-out="contrast"></output></span>
+				<input type="range" data-attr="contrast" min="0.2" max="3" step="0.05" value="1.1" />
+			</label>
+			<div class="row">
+				<label class="color">
+					<span>color</span>
+					<input type="color" data-attr="color" value="#ededed" />
+				</label>
+				<label class="color">
+					<span>background</span>
+					<input type="color" data-attr="background" value="#000000" />
+				</label>
+			</div>
+			<div class="row">
+				<label class="check">
+					<input type="checkbox" data-attr="invert" />
+					<span>invert</span>
+				</label>
+				<label class="check">
+					<input type="checkbox" data-attr="paused" />
+					<span>paused</span>
+				</label>
+			</div>
+		</aside>
+	</main>
+</Layout>
+
+<style>
+	.dotgrid-demo {
+		background: #000;
+		color: #fafaf7;
+		position: relative;
+		min-height: 100vh;
+	}
+
+	.dotgrid-demo > dotted-grid {
+		--dotted-grid-height: 100vh;
+	}
+
+	.controls {
+		position: fixed;
+		top: var(--space-4, 1.5rem);
+		right: var(--space-4, 1.5rem);
+		z-index: 10;
+		width: 240px;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3, 0.75rem);
+		padding: var(--space-4, 1.5rem);
+		background: rgba(10, 10, 12, 0.72);
+		backdrop-filter: blur(10px);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: var(--radius, 12px);
+		font-family: var(--font-sans, ui-sans-serif, system-ui);
+		font-size: 0.8rem;
+	}
+
+	.controls h2 {
+		margin: 0 0 var(--space-1, 0.25rem);
+		font-size: 0.95rem;
+		font-family: ui-monospace, monospace;
+	}
+
+	.controls label {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.controls label span {
+		display: flex;
+		justify-content: space-between;
+		opacity: 0.85;
+	}
+
+	.controls output {
+		font-variant-numeric: tabular-nums;
+		opacity: 0.6;
+	}
+
+	.controls input[type="range"] {
+		width: 100%;
+		accent-color: #7fd4ff;
+	}
+
+	.controls .row {
+		display: flex;
+		gap: var(--space-3, 0.75rem);
+	}
+
+	.controls .color {
+		flex: 1;
+	}
+
+	.controls .color input {
+		width: 100%;
+		height: 28px;
+		padding: 0;
+		border: none;
+		background: none;
+	}
+
+	.controls .check {
+		flex-direction: row;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	@media (max-width: 640px) {
+		.controls {
+			left: var(--space-4, 1.5rem);
+			width: auto;
+		}
+	}
+</style>

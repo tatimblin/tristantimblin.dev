@@ -10,6 +10,7 @@
     "astro": "bunx --bun astro"
   },
   "dependencies": {
+    "@whois/dotted-grid": "workspace:*",
     "@whois/gallery-carousel": "workspace:*",
     "@whois/sticky-heading": "workspace:*",
     "@whois/wobble-text": "workspace:*",
