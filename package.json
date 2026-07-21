@@ -13,6 +13,8 @@
     "@whois/dotted-grid": "workspace:*",
     "@whois/gallery-carousel": "workspace:*",
     "@whois/sticky-heading": "workspace:*",
+    "@whois/stories-heading": "workspace:*",
+    "@whois/video-carousel": "workspace:*",
     "@whois/wobble-text": "workspace:*",
     "astro": "6.4.8",
     "scroll-timeline-polyfill": "^1.1.0"

@@ -1,0 +1,220 @@
+/* <stories-heading> — the "& other stories" lockup as a sticky heading.
+
+   Structure:
+     .sh__track  reserves the pin duration in normal flow (height = --sh-driver).
+     .sh__pin    position:sticky at --sh-top; holds the lockup while the track
+                 scrolls past. Because the pin is only as tall as the lockup,
+                 there is EMPTY SPACE below it inside the track.
+     .sh__stage  the 12-col grid of ampersand + "other stories" + rail.
+     .sh__below  the body copy, AFTER the track — it scrolls up into that empty
+                 space and bumps the pinned heading, then pushes it away.
+
+   While pinned, one scroll progress drives both the ampersand parallax
+   (translateY = (p-1) × --sh-travel) and the outline→solid reveal wipe
+   (--sh-clip 1→0), centered on p = 0.5. */
+
+stories-heading {
+	--sh-clip: 1;
+	/* How far the lockup overlaps up into the hero's bottom edge. The "&"'s tall
+	   top pokes into "tristan"; "other stories" (smaller, shared baseline) stays
+	   just below. This is the ONE spatial knob — everything else derives from it,
+	   so the hero video can be any height without moving the sticky start. */
+	--sh-overlap: 7vh;
+	/* Scroll distance over which the outline→solid reveal plays out while pinned. */
+	--sh-reveal: 300px;
+	/* Extra scroll the heading stays FIXED after the reveal, before the rising
+	   paragraph reaches and pushes it away. This is the px "fix duration". */
+	--sh-hold: 300px;
+	/* Font sizes: the "&" is far larger than "other stories" so, sharing a
+	   baseline, its top pokes up into "tristan" while "other stories" does not. */
+	--sh-amp-size: clamp(8rem, 22vw, 20rem);
+	--sh-heading-size: clamp(2.5rem, 6.5vw, 5rem);
+
+	display: block;
+	position: relative;
+	z-index: 1; /* the lockup rides over the hero where they overlap */
+	/* Pull the lockup up so it overlaps the hero bottom by --sh-overlap. Because
+	   the hero owns --hero-height, the lockup's scroll-0 top is
+	   (--hero-height − --sh-overlap) from the page top. */
+	margin-block-start: calc(-1 * var(--sh-overlap));
+}
+
+/* Reserve the pinned scroll distance in normal flow. The pin stays stuck for
+   (track height − pin height), so add the measured pin height (--sh-pin-height)
+   to reveal + hold to get exactly that much fixed scroll. The empty space below
+   the lockup is what the paragraph rises into. */
+.sh__track {
+	position: relative;
+	height: calc(
+		var(--sh-reveal) + var(--sh-hold) + var(--sh-pin-height, 0px)
+	);
+}
+
+/* The lockup pins here with plain CSS sticky. Its sticky offset equals its own
+   scroll-0 position — (hero height − overlap) from the viewport top — so it is
+   ALREADY at its stick line on load and engages immediately, with no free
+   scroll and no JS-measured value. --hero-height comes from the page; if there
+   is no hero, it falls back to 0 (pins at the top). */
+.sh__pin {
+	position: sticky;
+	top: calc(var(--hero-height, 0px) - var(--sh-overlap));
+}
+
+/* "&" and "other stories" sit on a SHARED BASELINE (align-items: baseline).
+   The "&" is much larger, so its top overlaps "tristan" while the smaller
+   "other stories" stays clear below the wordmark. */
+.sh__stage {
+	display: grid;
+	grid-template-columns: repeat(12, 1fr);
+	column-gap: var(--grid-gap, 1.5rem);
+	align-items: baseline;
+}
+
+/* --- Ampersand -------------------------------------------------------- */
+
+/* Column-1 line, aligned to the grid. A relative container so its solid face
+   can overlay the outline for the wipe. No parallax — baseline is shared. */
+.sh__amp {
+	grid-column: 1 / span 3;
+	grid-row: 1;
+	position: relative;
+	z-index: 1;
+	pointer-events: none;
+	/* Flush-right within its columns, then pushed rightward (negative end margin)
+	   so the "&" sits just left of "other stories" — reading as one lockup — while
+	   its tall top still overlaps "tristan". Both faces are right-aligned. */
+	text-align: right;
+	margin-inline-end: var(--sh-amp-nudge, -2rem);
+	padding-inline-end: var(--sh-amp-gap, 0.75rem);
+	font-size: var(--sh-amp-size);
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	white-space: nowrap;
+}
+
+/* --- "other stories" heading ------------------------------------------- */
+
+/* Same grid start + inset as the body copy, so "other stories" lines up with
+   the paragraph. The "&" lives in the columns to its left (outside this block). */
+.sh__heading {
+	grid-column: 4 / span 6;
+	grid-row: 1;
+	position: relative;
+	margin: 0;
+	padding-inline-start: var(--space-5, 1.5rem);
+	font-size: var(--sh-heading-size);
+	line-height: 1;
+	letter-spacing: -0.01em;
+	white-space: nowrap;
+}
+
+/* --- Two-layer face swap ----------------------------------------------- */
+
+/* The outline face stays in normal flow and defines each element's box (hence
+   the shared baseline). The solid face is overlaid exactly on top of it and
+   clipped in for the wipe. */
+.sh__amp .sh__solid,
+.sh__heading .sh__solid {
+	position: absolute;
+	inset: 0;
+}
+
+/* The "&" is right-aligned with a trailing gap; match the solid layer's right
+   edge to the outline's (which sits inside that padding) so the two faces
+   register exactly during the wipe. */
+.sh__amp .sh__solid {
+	right: var(--sh-amp-gap, 0.75rem);
+	left: auto;
+}
+
+/* "other stories" has a left inset; align the solid layer to it (not the
+   padding-box edge) so the swapped-in face lands exactly on the outline. */
+.sh__heading .sh__solid {
+	left: var(--space-5, 1.5rem);
+}
+
+/* Outline (shown first): a light stroke of the outline face, FILLED with the
+   background colour so "tristan" doesn't show through the glyphs.
+   --sh-outline-font selects the face; while testing the wipe alignment it is
+   the same serif as the solid layer so the glyphs register exactly. Switch it
+   to --font-display (Quintessential) for the final decorative swap. */
+.sh__outline {
+	font-family: var(
+		--sh-outline-font,
+		var(--font-serif, "Playfair Display", Georgia, serif)
+	);
+	font-weight: 600;
+	/* Fill = background colour; the light stroke draws the outline on top. */
+	color: var(--color-bg, #0a0a0a);
+	-webkit-text-stroke: 1px var(--color-fg, #ededed);
+}
+
+/* Solid (revealed): the resting Playfair face, on an opaque backdrop so the
+   wipe both swaps the typeface and masks the outline beneath it. Hidden from
+   the top by --sh-clip → fully shown at --sh-clip 0. */
+.sh__solid {
+	font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+	color: var(--color-fg, #ededed);
+	background: var(--color-bg, #0a0a0a);
+	clip-path: inset(calc(var(--sh-clip) * 100%) 0 0 0);
+}
+
+/* Reduced motion: no reveal wipe — the solid face shows immediately. */
+@media (prefers-reduced-motion: reduce) {
+	.sh__solid {
+		clip-path: none;
+	}
+}
+
+/* --- Tablet / mobile ---------------------------------------------------- */
+/* Stop pinning and stack in one column, in DOM order: heading lockup, then
+   copy, then the carousel. The pin/reveal are a large-screen affordance; here
+   the resting solid face renders statically (outline hidden). */
+@media (max-width: 900px) {
+	stories-heading {
+		--sh-amp-size: clamp(6rem, 22vw, 14rem);
+		margin-block-start: var(--space-7, 3rem); /* no hero overlap when stacked */
+	}
+
+	.sh__track {
+		height: auto;
+	}
+
+	.sh__pin {
+		position: static;
+	}
+
+	.sh__stage {
+		display: block;
+	}
+
+	/* Neutralize the desktop "&" nudge/right-align so it doesn't overflow when
+	   stacked. */
+	.sh__amp {
+		text-align: left;
+		margin-inline-end: 0;
+		padding-inline-end: 0;
+	}
+
+	/* Show only the solid face, and put it back in normal flow so it has height. */
+	.sh__outline {
+		display: none;
+	}
+
+	.sh__amp .sh__solid,
+	.sh__heading .sh__solid {
+		position: static;
+		clip-path: none;
+	}
+
+	.sh__heading {
+		white-space: normal;
+	}
+}
+
+@media (max-width: 640px) {
+	stories-heading {
+		--sh-amp-size: clamp(6rem, 30vw, 12rem);
+	}
+}

@@ -7,6 +7,8 @@
         "@whois/dotted-grid": "workspace:*",
         "@whois/gallery-carousel": "workspace:*",
         "@whois/sticky-heading": "workspace:*",
+        "@whois/stories-heading": "workspace:*",
+        "@whois/video-carousel": "workspace:*",
         "@whois/wobble-text": "workspace:*",
         "astro": "6.4.8",
         "scroll-timeline-polyfill": "^1.1.0",
@@ -22,6 +24,14 @@
     },
     "packages/sticky-heading": {
       "name": "@whois/sticky-heading",
+      "version": "0.0.1",
+    },
+    "packages/stories-heading": {
+      "name": "@whois/stories-heading",
+      "version": "0.0.1",
+    },
+    "packages/video-carousel": {
+      "name": "@whois/video-carousel",
       "version": "0.0.1",
     },
     "packages/wobble-text": {
@@ -254,6 +264,10 @@
     "@whois/gallery-carousel": ["@whois/gallery-carousel@workspace:packages/gallery-carousel"],
 
     "@whois/sticky-heading": ["@whois/sticky-heading@workspace:packages/sticky-heading"],
+
+    "@whois/stories-heading": ["@whois/stories-heading@workspace:packages/stories-heading"],
+
+    "@whois/video-carousel": ["@whois/video-carousel@workspace:packages/video-carousel"],
 
     "@whois/wobble-text": ["@whois/wobble-text@workspace:packages/wobble-text"],
 
