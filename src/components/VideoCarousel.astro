@@ -1,0 +1,103 @@
+---
+// An autoplaying dotted-grid carousel with a vertical date ruler. Reusable and
+// separate from VideoReel: this one steps through a list of clips (advancing when
+// each clip finishes) and exposes a discrete slider — one major tick per clip —
+// that magnifies toward the selection like the iOS Contacts alphabet scrubber.
+//
+// The clip data is authored in the markup (on each ruler tick + the caption) so
+// it degrades gracefully; the <video-carousel> custom element upgrades it into
+// the interactive scrubber. See packages/video-carousel.
+interface Clip {
+	src: string;
+	description: string;
+	location: string;
+	date: string;
+	alt: string;
+}
+
+interface Props {
+	clips?: Clip[];
+}
+
+// Placeholder list. Reuses the two videos that actually exist in /public/videos
+// as stand-ins; swap in real footage + metadata later.
+const {
+	clips = [
+		{
+			src: "/videos/beach.web.mp4",
+			description: "Beach",
+			location: "Lake Tahoe, CA",
+			date: "June 2025",
+			alt: "Halftone clip — Lake Tahoe",
+		},
+		{
+			src: "/videos/fabric.web.mp4",
+			description: "Fabric",
+			location: "Ocean Beach, SF",
+			date: "March 2024",
+			alt: "Halftone clip — Ocean Beach",
+		},
+		{
+			src: "/videos/beach.web.mp4",
+			description: "Beach",
+			location: "Big Sur, CA",
+			date: "Sept 2024",
+			alt: "Halftone clip — Big Sur",
+		},
+		{
+			src: "/videos/fabric.web.mp4",
+			description: "Fabric",
+			location: "Point Reyes, CA",
+			date: "Jan 2025",
+			alt: "Halftone clip — Point Reyes",
+		},
+		{
+			src: "/videos/beach.web.mp4",
+			description: "Beach",
+			location: "Marin Headlands",
+			date: "May 2025",
+			alt: "Halftone clip — Marin Headlands",
+		},
+	],
+} = Astro.props;
+
+const first = clips[0];
+---
+
+<video-carousel class="vc">
+	<div class="vc__ruler" data-vc-ruler aria-label="Select clip by date">
+		{
+			clips.map((clip, i) => (
+				<button
+					type="button"
+					class="vc__tick vc__tick--major"
+					data-index={i}
+					data-src={clip.src}
+					data-desc={clip.description}
+					data-loc={clip.location}
+					data-date={clip.date}
+					data-alt={clip.alt}
+					aria-label={`${clip.description} — ${clip.location} — ${clip.date}`}
+				/>
+			))
+		}
+	</div>
+
+	<div class="vc__stage" data-vc-stage>
+		<dotted-grid
+			class="vc__grid"
+			data-vc-grid
+			src={first?.src}
+			color="#ededed"
+			background="#050608"
+			color-reveal
+			shimmer="6"
+			no-loop
+		></dotted-grid>
+		<figcaption class="vc__caption">
+			<span class="vc__desc" data-vc-desc>{first?.description}</span>
+			<span class="vc__loc" data-vc-loc>{first?.location}</span>
+			<span class="vc__date" data-vc-date>{first?.date}</span>
+		</figcaption>
+	</div>
+</video-carousel>

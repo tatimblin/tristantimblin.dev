@@ -1,139 +1,141 @@
 ---
-import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
-import Section from "../components/Section.astro";
-import CarouselItem from "../components/CarouselItem.astro";
-import Title from "../components/Title.astro";
-import "@whois/sticky-heading/styles.css";
-import "@whois/wobble-text/styles.css";
-import "@whois/gallery-carousel/styles.css";
-
-const galleryItems = (await getCollection("gallery")).sort(
-	(a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
-);
+import StoriesHeading from "../components/StoriesHeading.astro";
+import VideoCarousel from "../components/VideoCarousel.astro";
+import "@whois/stories-heading/styles.css";
+import "@whois/dotted-grid/styles.css";
+import "@whois/video-carousel/styles.css";
 ---
 
 <script>
-	import "@whois/sticky-heading";
-	import "@whois/wobble-text";
-	import "@whois/gallery-carousel";
+	import "@whois/stories-heading";
+	import "@whois/dotted-grid";
+	import "@whois/video-carousel";
 </script>
 
 <Layout>
-	<main class="container">
-		<sticky-heading class="page-title page-title--root"
-			><Title as="h1" /></sticky-heading
-		>
+	<main class="home">
+		<!-- HERO: fabric video rendered as a dotted-grid halftone, with the
+		     "tristan" wordmark straddling its bottom edge. -->
+		<section class="hero">
+			<dotted-grid
+				class="hero__video"
+				src="/videos/fabric.web.mp4"
+				color="#ededed"
+				background="#0a0a0a"
+			></dotted-grid>
+			<h1 class="wordmark" data-sh-anchor>tristan</h1>
+		</section>
 
-		<Section
-			variant={1}
-			revealRange="entry 50% exit 25%"
-			expand
-		>
-			<sticky-heading slot="heading" class="page-title" reveal duration="300px"
-				><wobble-text scale="3" speed="0.6" frequency="0.04"><Title as="h2" /></wobble-text></sticky-heading
-			>
-			<wobble-text scale="3" speed="0.6" frequency="0.04">
+		<!-- TRAVELING LOCKUP: one "& other stories" whose big ampersand parallaxes
+		     from bottom-aligned (under "tristan") to top-aligned, with the
+		     font-swap reveal crossing at the ampersand's middle point. Copy and
+		     the meta + video carousel are placed into its grid via slots. -->
+		<StoriesHeading>
+			<div slot="copy">
 				<p>
-					A good story cannot function like a legal brief, which attempts to persuade and lead the reader down a
-					narrow path suspended above the abyss of unreason. Rather, it must be more like an empty house, an open
-					garden, a deserted beach by the ocean. The reader moves in with their own burdensome baggage and
-					long-cherished possessions, seeds of doubt and shears of understanding, maps of human nature and baskets
-					of sustaining faith. The reader then inhabits the story, explores its nooks and crannies, rearranges the
-					furniture to suit their taste, covers the walls with sketches of their inner life, and thereby makes the
-					story their home.
+					Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+					eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+					ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+					aliquip ex ea commodo consequat. Duis aute irure dolor in
+					reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+					pariatur.
 				</p>
-			</wobble-text>
-		</Section>
-
-		<gallery-carousel>
-			<div data-carousel-track>
-				{galleryItems.map((item) => (
-					<CarouselItem
-						slug={item.id}
-						media={item.data.media}
-						type={item.data.type}
-						poster={item.data.poster}
-						alt={item.data.alt}
-					/>
-				))}
-				<div data-carousel-cta>
-					<a href="/gallery" class="carousel-cta">View all &rarr;</a>
-				</div>
+				<p>
+					Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
+					officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde
+					omnis iste natus error sit voluptatem accusantium doloremque
+					laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore
+					veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+				</p>
 			</div>
-		</gallery-carousel>
 
-		<Section
-			variant={2}
-			revealRange="entry 50% exit 25%"
-		>
-			<sticky-heading slot="heading" class="page-title" reveal duration="0"
-				><h2>Section two</h2></sticky-heading
-			>
-			<p>
-				Body text for the second section. A second beat to the page — could be
-				selected work, writing, or anything that benefits from its own block.
-			</p>
-		</Section>
-		<Section
-			variant={3}
-			revealRange="entry 50% exit 25%"
-		>
-			<sticky-heading slot="heading" class="page-title" reveal duration="0"
-				><h2>Section three</h2></sticky-heading
-			>
-			<p>
-				Body text for the third section. The last band — good place for contact
-				info, a closing note, or a call to action.
-			</p>
-		</Section>
+			<div slot="rail" class="rail">
+				<!-- The single video panel: an autoplaying dotted-grid carousel with a
+				     vertical date ruler/scrubber on its left. -->
+				<VideoCarousel />
+			</div>
+		</StoriesHeading>
 
 		<div class="scroll-spacer" aria-hidden="true"></div>
 	</main>
 </Layout>
 
-<style is:global>
-	:root {
-		--sticky-heading-top: 20vh;
-	}
-</style>
-
 <style>
-	.page-title {
-		display: block;
+	.home {
 		padding-inline: var(--container-pad);
-		color: var(--section-fg, var(--color-fg));
+		/* Hero video height — the single knob for the hero size. The lockup below
+		   overlaps the hero's bottom edge by a fixed amount (--sh-overlap), so the
+		   "& other stories" ↔ "tristan" overlap and the sticky start point stay
+		   put no matter what this is set to. */
+		--hero-height: 80vh;
 	}
 
-	.page-title--root {
-		margin-block: 50vh var(--space-6);
+	/* HERO -------------------------------------------------------------- */
+	.hero {
+		position: relative;
+		/* Break out of .home's padding so the dotted-grid video is full-bleed,
+		   running to both edges of the screen. */
+		margin-inline: calc(var(--container-pad) * -1);
+	}
+
+	.hero__video {
+		--dotted-grid-height: var(--hero-height);
+		display: block;
+		overflow: hidden;
+	}
+
+	.wordmark {
+		position: absolute;
+		/* Align the wordmark's left edge to the grid's column-1 line (the same
+		   line the ampersand rests on), even though the hero itself is full-bleed. */
+		left: var(--container-pad);
+		bottom: 0;
+		margin: 0;
+		font-family: var(--font-serif);
+		font-weight: 500;
+		font-size: clamp(6rem, 27vw, 34rem);
+		line-height: 0.82;
+		letter-spacing: -0.02em;
+		color: #fff;
+		/* Straddle the video's bottom edge: push the glyphs down so their lower
+		   portion falls onto the page background below the hero. */
+		transform: translateY(42%);
+		pointer-events: none;
+	}
+
+	/* COPY -------------------------------------------------------------- */
+	.home :global(.sh__copy p) {
+		font-family: var(--font-serif);
+		font-size: var(--font-size-lg);
+		line-height: 1.6;
 		color: var(--color-fg);
 	}
 
-	.page-title :global(h1),
-	.page-title :global(h2) {
-		font-size: var(--font-size-3xl);
-		line-height: var(--line-height-tight);
-		letter-spacing: -0.02em;
-		font-weight: 700;
-		color: inherit;
+	.home :global(.sh__copy p + p) {
+		margin-block-start: var(--space-5);
+	}
+
+	/* RAIL (meta + carousel) -------------------------------------------- */
+	.rail {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-6);
+	}
+
+	/* The video panel fills the rail width; its own ruler sits to the left of the
+	   stage. */
+	.rail :global(.vc) {
+		width: 100%;
 	}
 
 	.scroll-spacer {
-		height: 100vh;
+		height: 60vh;
 	}
 
-	.carousel-cta {
-		display: inline-block;
-		padding: var(--space-3) var(--space-5);
-		color: var(--color-fg);
-		text-decoration: none;
-		font-weight: 600;
-		font-size: var(--font-size-lg);
-		white-space: nowrap;
-	}
-
-	.carousel-cta:hover {
-		color: var(--color-muted);
+	@media (max-width: 640px) {
+		.wordmark {
+			transform: translateY(30%);
+		}
 	}
 </style>

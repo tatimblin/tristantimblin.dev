@@ -1,0 +1,95 @@
+---
+// The "& other stories" lockup as a sticky heading.
+//
+// Structure (see packages/stories-heading for the mechanics):
+//   .sh__track  — reserves the pin duration in normal flow (its height is the
+//                 scroll distance the heading stays pinned).
+//     .sh__pin  — position:sticky; the lockup pins here at --sh-top.
+//       .sh__stage — 12-col grid: ampersand (col 1) · "other stories" (cols
+//                    4–7) · rail/carousel (cols 8–12).
+//   .sh__below  — a 12-col grid AFTER the track holding the body copy (cols
+//                 4–7, under the heading). Because it follows the full-height
+//                 track, it scrolls UP into the empty space below the pinned
+//                 heading and bumps it with no overlap, then pushes it away.
+//
+// The ampersand parallaxes (bottom→top aligned) and the outline→solid font-swap
+// wipes, both driven by one scroll progress over the pin duration.
+//
+// Face-swapping pieces render TWICE — an outline layer and a solid layer in the
+// same cell — so the reveal clip can wipe one over the other.
+---
+
+<stories-heading>
+	<div class="sh__track" data-sh-track>
+		<div class="sh__pin" data-sh-pin>
+			<div class="sh__stage" data-sh-stage>
+				<div class="sh__amp" aria-hidden="true">
+					<span class="sh__outline">&amp;</span>
+					<span class="sh__solid">&amp;</span>
+				</div>
+
+				<h2 class="sh__heading">
+					<span class="sh__outline" aria-hidden="true">other stories</span>
+					<span class="sh__solid">other stories</span>
+				</h2>
+			</div>
+		</div>
+	</div>
+
+	<!-- Scrolls up into the empty space below the pinned heading: body copy under
+	     the heading columns, the video carousel to its right. -->
+	<div class="sh__below">
+		<div class="sh__copy">
+			<slot name="copy" />
+		</div>
+		<div class="sh__rail">
+			<slot name="rail" />
+		</div>
+	</div>
+</stories-heading>
+
+<style>
+	/* The scrolling band below the pinned heading: copy under the heading
+	   columns (4–7), carousel on the right (8–12). It rises into the empty space
+	   below the pinned lockup and pushes it away. */
+	.sh__below {
+		display: grid;
+		grid-template-columns: repeat(12, 1fr);
+		column-gap: var(--grid-gap, 1.5rem);
+		/* Opaque so, as it scrolls up into the pinned heading's empty space, it
+		   cleanly covers the heading rather than overlapping it. */
+		background: var(--color-bg, #0a0a0a);
+		position: relative;
+		z-index: 2;
+	}
+
+	.sh__copy {
+		grid-column: 4 / span 4;
+		min-width: 0;
+		padding-inline-start: var(--space-5, 1.5rem);
+	}
+
+	/* Video reel on the right, lifted so it starts ABOVE the paragraph. */
+	.sh__rail {
+		grid-column: 9 / span 4;
+		grid-row: 1;
+		align-self: start;
+		margin-block-start: -220px;
+		min-width: 0;
+	}
+
+	/* Tablet / mobile: everything stacks in one column, in DOM order —
+	   heading lockup, then copy, then the carousel. */
+	@media (max-width: 900px) {
+		.sh__below {
+			display: block;
+		}
+		.sh__copy {
+			padding-inline-start: 0;
+			margin-block-start: var(--space-7, 3rem);
+		}
+		.sh__rail {
+			margin-block-start: var(--space-7, 3rem);
+		}
+	}
+</style>
