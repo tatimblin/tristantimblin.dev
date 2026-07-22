@@ -23,8 +23,11 @@ import "@whois/video-carousel/styles.css";
 				src="/videos/fabric.web.mp4"
 				color="#ededed"
 				background="#0a0a0a"
-			></dotted-grid>
-			<h1 class="wordmark" data-sh-anchor>tristan</h1>
+				cell-size="13"
+				dot-size="0.55"
+			>
+				<h1 class="wordmark" data-sh-anchor>tristan</h1>
+			</dotted-grid>
 		</section>
 
 		<!-- TRAVELING LOCKUP: one "& other stories" whose big ampersand parallaxes
@@ -64,11 +67,16 @@ import "@whois/video-carousel/styles.css";
 <style>
 	.home {
 		padding-inline: var(--container-pad);
-		/* Hero video height — the single knob for the hero size. The lockup below
-		   overlaps the hero's bottom edge by a fixed amount (--sh-overlap), so the
-		   "& other stories" ↔ "tristan" overlap and the sticky start point stay
-		   put no matter what this is set to. */
+		/* Hero video height — the single knob for the hero size. Because the
+		   wordmark lives INSIDE the grid and the lockup's overlap is keyed off
+		   --wordmark-size (not this), the "& other stories" ↔ "tristan" overlap
+		   holds no matter what this is set to. */
 		--hero-height: 80vh;
+		/* The "tristan" wordmark's font size. Shared with the lockup below so its
+		   overlap tracks the wordmark at every viewport width (the glyphs spill
+		   ~0.6em below the grid via translateY + line-height, so a fixed vh could
+		   never keep up on tall/wide windows — this scales WITH the type). */
+		--wordmark-size: clamp(6rem, 27vw, 34rem);
 	}
 
 	/* HERO -------------------------------------------------------------- */
@@ -82,9 +90,13 @@ import "@whois/video-carousel/styles.css";
 	.hero__video {
 		--dotted-grid-height: var(--hero-height);
 		display: block;
-		overflow: hidden;
+		/* The wordmark straddles the bottom edge, so its lower half must spill
+		   past the grid onto the page background — let it overflow vertically. */
+		overflow: visible;
 	}
 
+	/* "tristan" lives INSIDE the grid, anchored to its bottom edge and pushed
+	   down so the lower portion falls onto the page below the hero. */
 	.wordmark {
 		position: absolute;
 		/* Align the wordmark's left edge to the grid's column-1 line (the same
@@ -94,7 +106,7 @@ import "@whois/video-carousel/styles.css";
 		margin: 0;
 		font-family: var(--font-serif);
 		font-weight: 500;
-		font-size: clamp(6rem, 27vw, 34rem);
+		font-size: var(--wordmark-size);
 		line-height: 0.82;
 		letter-spacing: -0.02em;
 		color: #fff;
@@ -102,6 +114,7 @@ import "@whois/video-carousel/styles.css";
 		   portion falls onto the page background below the hero. */
 		transform: translateY(42%);
 		pointer-events: none;
+		z-index: 1; /* above the grid canvas */
 	}
 
 	/* COPY -------------------------------------------------------------- */

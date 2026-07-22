@@ -15,11 +15,24 @@
 
 stories-heading {
 	--sh-clip: 1;
-	/* How far the lockup overlaps up into the hero's bottom edge. The "&"'s tall
-	   top pokes into "tristan"; "other stories" (smaller, shared baseline) stays
-	   just below. This is the ONE spatial knob — everything else derives from it,
-	   so the hero video can be any height without moving the sticky start. */
-	--sh-overlap: 7vh;
+	/* Vertical placement of the lockup relative to the hero's bottom edge, keyed
+	   to FONT SIZES (not vh) so it tracks the type at every viewport — the three
+	   clamps below saturate at different widths, so all three must appear here.
+	   Geometry: "tristan"'s glyphs spill ~0.6em below the grid (translateY +
+	   line-height 0.82), and "other stories" sits ~0.7×(amp − heading) below the
+	   shared baseline. To seat "other stories" just below "tristan" (clearing it
+	   by --sh-clearance) while the taller "&" still pokes up, push the lockup DOWN
+	   by that spill minus the baseline drop. --sh-overlap is negated into the
+	   margin, so this is the negative of that downward push. */
+	--sh-overlap: calc(
+		0.82 * var(--sh-amp-size) - 0.75 * var(--sh-heading-size) - 0.6 *
+			var(--wordmark-size, 20rem) - var(--sh-clearance)
+	);
+	/* How far "other stories" tucks UP under "tristan", as a fraction of the
+	   wordmark — proportional, NOT a fixed px, so the overlap looks the same at
+	   every size (a constant px gap reads as "connected" when the type is small
+	   but "disconnected" once the wordmark grows on wide viewports). */
+	--sh-clearance: calc(-0.11 * var(--wordmark-size, 20rem));
 	/* Scroll distance over which the outline→solid reveal plays out while pinned. */
 	--sh-reveal: 300px;
 	/* Extra scroll the heading stays FIXED after the reveal, before the rising
@@ -28,7 +41,7 @@ stories-heading {
 	/* Font sizes: the "&" is far larger than "other stories" so, sharing a
 	   baseline, its top pokes up into "tristan" while "other stories" does not. */
 	--sh-amp-size: clamp(8rem, 22vw, 20rem);
-	--sh-heading-size: clamp(2.5rem, 6.5vw, 5rem);
+	--sh-heading-size: clamp(3rem, 8vw, 6.5rem);
 
 	display: block;
 	position: relative;
@@ -58,6 +71,11 @@ stories-heading {
 .sh__pin {
 	position: sticky;
 	top: calc(var(--hero-height, 0px) - var(--sh-overlap));
+	/* Ride ABOVE the opaque .sh__below band (z-index 2) so the "&", as it slides
+	   down to top-align, stays visible where it extends past the first paragraph
+	   lines. The "&" sits in cols 1–3 and the copy in cols 4–7, so they never
+	   collide — only the paint order needed fixing. */
+	z-index: 3;
 }
 
 /* "&" and "other stories" sit on a SHARED BASELINE (align-items: baseline).
@@ -88,9 +106,13 @@ stories-heading {
 	padding-inline-end: var(--sh-amp-gap, 0.75rem);
 	font-size: var(--sh-amp-size);
 	font-weight: 600;
-	line-height: 1;
+	line-height: 0.85;
 	letter-spacing: -0.02em;
 	white-space: nowrap;
+	/* Slides down over the pinned scroll: from baseline-aligned (0) to
+	   top-aligned with "other stories" (--sh-amp-shift, measured in JS). Default
+	   0 keeps the no-JS / first-paint state at the baseline start. */
+	transform: translateY(var(--sh-amp-shift, 0));
 }
 
 /* --- "other stories" heading ------------------------------------------- */
@@ -104,7 +126,7 @@ stories-heading {
 	margin: 0;
 	padding-inline-start: var(--space-5, 1.5rem);
 	font-size: var(--sh-heading-size);
-	line-height: 1;
+	line-height: 0.85;
 	letter-spacing: -0.01em;
 	white-space: nowrap;
 }
@@ -195,6 +217,7 @@ stories-heading {
 		text-align: left;
 		margin-inline-end: 0;
 		padding-inline-end: 0;
+		transform: none;
 	}
 
 	/* Show only the solid face, and put it back in normal flow so it has height. */
@@ -208,8 +231,12 @@ stories-heading {
 		clip-path: none;
 	}
 
+	/* Stacked, the "&" is in normal flow and its glyph descends below its
+	   line-height box; space "other stories" off the ampersand size so it clears
+	   that overhang instead of colliding with the "&"'s lower loop. */
 	.sh__heading {
 		white-space: normal;
+		margin-block-start: calc(0.18 * var(--sh-amp-size));
 	}
 }
 

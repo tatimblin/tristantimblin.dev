@@ -38,6 +38,10 @@ export class StoriesHeadingElement extends HTMLElement {
 	private listeners: Array<() => void> = [];
 	private rafId: number | null = null;
 
+	/** Distance (px) to slide the "&" down to go from baseline- to top-aligned
+	    with "other stories". Set by --sh-amp-size vs --sh-heading-size, measured. */
+	private travelPx = 0;
+
 	connectedCallback() {
 		this.track = this.querySelector<HTMLElement>("[data-sh-track]");
 		this.pin = this.querySelector<HTMLElement>("[data-sh-pin]");
@@ -87,9 +91,10 @@ export class StoriesHeadingElement extends HTMLElement {
 	/**
 	 * The lockup pins with plain CSS `position: sticky` at a viewport-relative
 	 * line (--sh-top, a vh value) — so the stick point never depends on the hero
-	 * video's height. The only thing measured here is the pin's own rendered
-	 * height, published as --sh-pin-height so the track can reserve the reveal +
-	 * hold distance ON TOP of it (the pin stays stuck for trackHeight − pinHeight).
+	 * video's height. Measured here: the pin's own rendered height, published as
+	 * --sh-pin-height so the track can reserve the reveal + hold distance ON TOP
+	 * of it (the pin stays stuck for trackHeight − pinHeight); and the "&"'s top
+	 * gap over "other stories" (--travelPx), the exact slide to top-align them.
 	 * Skipped in the stacked layout, where nothing pins.
 	 */
 	private measure() {
@@ -98,7 +103,24 @@ export class StoriesHeadingElement extends HTMLElement {
 		const stacked = window.matchMedia("(max-width: 900px)").matches;
 		if (stacked) {
 			this.style.removeProperty("--sh-pin-height");
+			this.travelPx = 0;
+			this.style.removeProperty("--sh-amp-shift");
+			this.style.removeProperty("--sh-amp-travel");
 			return;
+		}
+
+		// Measure the natural top-gap with the "&" untransformed: zero the shift,
+		// then read both boxes (reading a rect flushes layout). The taller "&"
+		// box starts higher, so headingTop − ampTop is how far to drop it to
+		// top-align. Scales with the font-size difference automatically. Publish
+		// it as --sh-amp-travel so the pin reserves that descent as bottom
+		// padding — done BEFORE reading pin height below so it's counted in.
+		if (this.amp && this.heading) {
+			this.style.setProperty("--sh-amp-shift", "0px");
+			const ampTop = this.amp.getBoundingClientRect().top;
+			const headingTop = this.heading.getBoundingClientRect().top;
+			this.travelPx = Math.max(0, headingTop - ampTop);
+			this.style.setProperty("--sh-amp-travel", `${this.travelPx.toFixed(1)}px`);
 		}
 
 		this.style.setProperty(
@@ -126,15 +148,23 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	private update() {
-		// Reduced motion: skip the wipe, show the solid face immediately.
+		// Reduced motion: skip the wipe and land the "&" at its top-aligned rest.
 		if (this.reducedMotion?.matches) {
 			this.style.setProperty("--sh-clip", "0");
+			this.style.setProperty("--sh-amp-shift", `${this.travelPx.toFixed(2)}px`);
 			return;
 		}
 
 		// The outline→solid wipe runs linearly over --sh-reveal of pinned scroll.
 		const revealed = this.progress();
 		this.style.setProperty("--sh-clip", (1 - revealed).toFixed(4));
+
+		// The "&" slides down over the FULL pinned distance so it reaches
+		// top-aligned exactly as the pin releases.
+		this.style.setProperty(
+			"--sh-amp-shift",
+			`${(this.travelPx * this.progressFull()).toFixed(2)}px`
+		);
 	}
 
 	/**
@@ -149,6 +179,22 @@ export class StoriesHeadingElement extends HTMLElement {
 		const stickyTop = parseFloat(getComputedStyle(this.pin).top) || 0;
 		const top = this.track.getBoundingClientRect().top;
 		return clamp01((stickyTop - top) / revealPx);
+	}
+
+	/**
+	 * Progress 0→1 over the FULL pinned distance (--sh-reveal + --sh-hold): 0 the
+	 * instant the pin sticks, 1 the instant it releases. Drives the "&" slide so
+	 * its speed is set by the whole sticky distance, not just the reveal.
+	 */
+	private progressFull(): number {
+		if (!this.track || !this.pin) return 1;
+		const revealPx = this.cssPx("--sh-reveal", 0.6 * window.innerHeight);
+		const holdPx = this.cssPx("--sh-hold", 0.6 * window.innerHeight);
+		const pinnedPx = revealPx + holdPx;
+		if (pinnedPx <= 0) return 1;
+		const stickyTop = parseFloat(getComputedStyle(this.pin).top) || 0;
+		const top = this.track.getBoundingClientRect().top;
+		return clamp01((stickyTop - top) / pinnedPx);
 	}
 
 	/** Resolve a CSS length custom property on the host to pixels. */
