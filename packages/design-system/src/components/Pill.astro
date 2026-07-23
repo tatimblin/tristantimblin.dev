@@ -1,0 +1,36 @@
+---
+// Pill — DS styled('span', { …, variants: { dark, variant } }).
+// Exact port of the variant API. Source has NO defaultVariants and `variant`
+// is a required prop, so we emit no default.
+import { cx } from "../lib/cx";
+
+type Variant = "info" | "success" | "warning" | "danger";
+
+interface Props {
+	as?: string;
+	variant?: Variant;
+	// The DS `dark` variant exists but carries no rules (`true: {}`), so it
+	// produces no CSS and — per the mechanical class rule — no class.
+	dark?: boolean;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "span",
+	variant,
+	dark,
+	class: className,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+
+const cls = cx(
+	"ds-pill",
+	variant && `ds-pill--variant-${variant}`,
+	className,
+);
+---
+
+<Tag class={cls} {...rest}><slot /></Tag>

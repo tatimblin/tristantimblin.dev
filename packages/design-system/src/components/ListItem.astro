@@ -1,0 +1,39 @@
+---
+// List.Item — DS styled('li', {...}). Renders a <li> containing a
+// Box[data-list-item] wrapper (the arrow marker) and a <div> for children.
+//
+// In the DS source ListItem uses <Box data-list-item><Icon.Arrow size="4"
+// variant="info" /></Box>. The Icon component is not part of this package, so
+// the arrow is inlined here as the exact ArrowIcon SVG. The ordered-list
+// variant hides this svg (`svg { display: none }`) and shows a counter :before,
+// so this structure supports both variants faithfully.
+import { cx } from "../lib/cx";
+
+interface Props {
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<li class={cx("ds-list-item", className)} {...rest}>
+	<div data-list-item class="ds-box">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="20"
+			height="20"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			role="img"
+		>
+			<path d="M18.5 12L4.99997 12"></path>
+			<path d="M13 18C13 18 19 13.5811 19 12C19 10.4188 13 6 13 6"></path>
+		</svg>
+	</div>
+	<div><slot /></div>
+</li>

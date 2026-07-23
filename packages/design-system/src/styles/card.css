@@ -1,0 +1,76 @@
+/* Card — exact port of the DS Card.styles.tsx (CardWrapper, CardHeader, CardBody). */
+
+/* CardWrapper = styled(Box, {...}) */
+.ds-card {
+	position: relative;
+	background: var(--card-bg, var(--card-background));
+	backdrop-filter: var(--card-blur, none);
+	border-radius: var(--border-radius-2);
+	box-shadow: var(--card-shadow);
+	overflow: hidden;
+	--border: 1px solid var(--border-color);
+	border: var(--border);
+}
+
+/* depth → Shadows[0..3] (tokens/shadows.ts) */
+.ds-card--depth-0 {
+	--card-shadow: none;
+}
+.ds-card--depth-1 {
+	--card-shadow: 0.5px 1px 1px hsl(var(--shadow-color) / 0.333);
+}
+.ds-card--depth-2 {
+	--card-shadow:
+		1px 2px 2px hsl(var(--shadow-color) / 0.333),
+		2px 4px 4px hsl(var(--shadow-color) / 0.333),
+		3px 6px 6px hsl(var(--shadow-color) / 0.333);
+}
+.ds-card--depth-3 {
+	--card-shadow:
+		1px 2px 2px hsl(var(--shadow-color) / 0.2),
+		2px 4px 4px hsl(var(--shadow-color) / 0.2),
+		4px 8px 8px hsl(var(--shadow-color) / 0.2),
+		8px 16px 16px hsl(var(--shadow-color) / 0.2),
+		16px 32px 32px hsl(var(--shadow-color) / 0.2);
+}
+
+/* variant */
+.ds-card--variant-primary {
+	--card-bg: var(--card-background);
+}
+.ds-card--variant-secondary {
+	--card-bg: oklch(from var(--gray-900) l c h / var(--opacity, 0.3));
+	--border: var(--thickness, 1px) solid oklch(from var(--gray-1100) l c h / 15%);
+}
+.ds-card--variant-tertiary {
+	--card-bg: transparent;
+}
+
+/* CardHeader = styled('div', {...}) */
+.ds-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-top-left-radius: var(--border-radius-1);
+	border-top-right-radius: var(--border-radius-1);
+	padding: 12px 12px;
+	color: var(--text-tertiary);
+	font-weight: 500;
+	font-size: var(--font-size-1);
+	border-bottom: var(--border);
+}
+
+/* CardBody = styled('div', { variants: { dotMatrix } }) */
+.ds-card-body {
+	overflow: hidden;
+	padding: 16px 16px;
+	position: relative;
+}
+.ds-card-body--dot-matrix-true {
+	background-image: radial-gradient(
+		oklch(from var(--border-color) l c h / 54%) 1px,
+		transparent 0
+	);
+	background-position: center center;
+	background-size: 12px 12px;
+}

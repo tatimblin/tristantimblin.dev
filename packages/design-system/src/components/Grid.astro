@@ -1,0 +1,79 @@
+---
+// Grid — DS styled(Box, { display:grid, height:inherit, variants }) plus the
+// arbitrary-string layout props (autoColumns/templateColumns/…) that the DS
+// applies through its `css` prop. Those are a real API, so they render as
+// inline style here (per CONVENTIONS.md).
+import { cx } from "../lib/cx";
+
+type Align = "start" | "center" | "end" | "stretch" | "baseline";
+type Justify = "start" | "center" | "end" | "between";
+type Flow = "row" | "column" | "dense" | "rowDense" | "columnDense";
+type Gap = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
+
+interface Props {
+	as?: string;
+	autoColumns?: string;
+	autoRows?: string;
+	flow?: Flow;
+	justify?: Justify | "initial";
+	align?: Align;
+	gap?: Gap;
+	gapX?: Gap;
+	gapY?: Gap;
+	templateAreas?: string;
+	templateRows?: string;
+	templateColumns?: string;
+	class?: string;
+	style?: string | Record<string, unknown>;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	autoColumns,
+	autoRows,
+	flow,
+	justify = "initial",
+	align = "stretch",
+	gap,
+	gapX,
+	gapY,
+	templateAreas,
+	templateRows,
+	templateColumns,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+
+const cls = cx(
+	"ds-grid",
+	align && `ds-grid--align-${align}`,
+	// 'initial' has no matching variant rule in the DS source.
+	justify && justify !== "initial" && `ds-grid--justify-${justify}`,
+	flow && `ds-grid--flow-${flow}`,
+	gap && `ds-grid--gap-${gap}`,
+	gapX && `ds-grid--gap-x-${gapX}`,
+	gapY && `ds-grid--gap-y-${gapY}`,
+	className,
+);
+
+// The DS passes these through the css prop → inline grid properties here.
+const styleObj: Record<string, string> = {};
+if (autoColumns) styleObj["grid-auto-columns"] = autoColumns;
+if (autoRows) styleObj["grid-auto-rows"] = autoRows;
+if (templateAreas) styleObj["grid-template-areas"] = templateAreas;
+if (templateRows) styleObj["grid-template-rows"] = templateRows;
+if (templateColumns) styleObj["grid-template-columns"] = templateColumns;
+const layoutStyle = Object.entries(styleObj)
+	.map(([k, v]) => `${k}:${v}`)
+	.join(";");
+const mergedStyle =
+	typeof style === "string"
+		? [layoutStyle, style].filter(Boolean).join(";")
+		: layoutStyle || undefined;
+---
+
+<Tag class={cls} style={mergedStyle} {...rest}><slot /></Tag>

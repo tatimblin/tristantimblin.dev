@@ -1,0 +1,61 @@
+---
+// Text — DS styled('span', { margin:0, padding:0, textRendering, variants }).
+// Exact port of the variant API + defaultVariants.
+import { cx } from "../lib/cx";
+
+type Family = "default" | "display" | "serif" | "mono" | "code";
+type Size = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type Variant =
+	| "default"
+	| "primary"
+	| "secondary"
+	| "tertiary"
+	| "info"
+	| "success"
+	| "warning"
+	| "danger";
+type Weight = 2 | 3 | 4;
+
+interface Props {
+	as?: string;
+	outline?: boolean;
+	spaced?: boolean;
+	family?: Family;
+	size?: Size | string;
+	truncate?: boolean;
+	variant?: Variant;
+	weight?: Weight | string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "span",
+	// defaultVariants from the DS source.
+	outline,
+	spaced = true,
+	family = "default",
+	size = 3,
+	truncate,
+	variant = "default",
+	weight = 2,
+	class: className,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+
+const cls = cx(
+	"ds-text",
+	outline && "ds-text--outline-true",
+	spaced && "ds-text--spaced-true",
+	family && `ds-text--family-${family}`,
+	size && `ds-text--size-${size}`,
+	truncate && "ds-text--truncate-true",
+	variant && `ds-text--variant-${variant}`,
+	weight && `ds-text--weight-${weight}`,
+	className,
+);
+---
+
+<Tag class={cls} {...rest}><slot /></Tag>

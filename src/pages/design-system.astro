@@ -1,0 +1,445 @@
+---
+// Living catalogue of the ported @whois/design-system components. Renders every
+// component in its variants/sizes/states for visual QA and regression reference.
+import Layout from "../layouts/Layout.astro";
+import "@whois/design-system/styles.css";
+
+import Box from "@whois/design-system/Box";
+import Flex from "@whois/design-system/Flex";
+import Grid from "@whois/design-system/Grid";
+import GridItem from "@whois/design-system/GridItem";
+import Text from "@whois/design-system/Text";
+import Heading from "@whois/design-system/Heading";
+import H1 from "@whois/design-system/H1";
+import H2 from "@whois/design-system/H2";
+import H3 from "@whois/design-system/H3";
+import H4 from "@whois/design-system/H4";
+import EM from "@whois/design-system/EM";
+import Strong from "@whois/design-system/Strong";
+import Label from "@whois/design-system/Label";
+import Button from "@whois/design-system/Button";
+import IconButton from "@whois/design-system/IconButton";
+import Card from "@whois/design-system/Card";
+import CardHeader from "@whois/design-system/CardHeader";
+import CardBody from "@whois/design-system/CardBody";
+import Callout from "@whois/design-system/Callout";
+import Pill from "@whois/design-system/Pill";
+import Anchor from "@whois/design-system/Anchor";
+import List from "@whois/design-system/List";
+import ListItem from "@whois/design-system/ListItem";
+import InlineCode from "@whois/design-system/InlineCode";
+import Icon from "@whois/design-system/Icon";
+import VisuallyHidden from "@whois/design-system/VisuallyHidden";
+
+const textSizes = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+const textVariants = [
+	"default",
+	"primary",
+	"secondary",
+	"tertiary",
+	"info",
+	"success",
+	"warning",
+	"danger",
+] as const;
+const textWeights = [2, 3, 4] as const;
+const families = ["default", "display", "serif", "mono", "code"] as const;
+const iconNames = [
+	"chevron",
+	"check",
+	"arrow",
+	"external",
+	"info",
+	"alert",
+	"github",
+	"play",
+	"pause",
+	"code",
+	"copy",
+	"command",
+] as const;
+const iconVariants = [
+	"default",
+	"primary",
+	"secondary",
+	"tertiary",
+	"info",
+	"danger",
+	"success",
+	"warning",
+] as const;
+---
+
+<Layout title="Design System">
+	<main class="ds-demo">
+		<h1 class="ds-demo__title">@whois/design-system — component catalogue</h1>
+
+		<!-- TYPOGRAPHY ----------------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Text — sizes</h2>
+			<Flex direction="column" gap={2} alignItems="start">
+				{textSizes.map((s) => (
+					<Text size={s}>size {s} — The quick brown fox (14/14/16/18/20/24/32/44)</Text>
+				))}
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Text — variants (color)</h2>
+			<Flex direction="column" gap={1} alignItems="start">
+				{textVariants.map((v) => (
+					<Text variant={v} size={4}>variant {v}</Text>
+				))}
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Text — weights</h2>
+			<Flex direction="column" gap={1} alignItems="start">
+				{textWeights.map((w) => (
+					<Text weight={w} size={4}>weight {w}</Text>
+				))}
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Text — families</h2>
+			<Flex direction="column" gap={1} alignItems="start">
+				{families.map((f) => (
+					<Text family={f} size={4}>family {f} — AaBbCc 123</Text>
+				))}
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Text — flags (outline / spaced / truncate)</h2>
+			<Flex direction="column" gap={2} alignItems="start">
+				<Text outline size={7}>outline face</Text>
+				<Text spaced size={4}>spaced letter-spacing</Text>
+				<div style="width:220px; border:1px dashed var(--border-color);">
+					<Text truncate size={4}>truncate this very long line that overflows its container</Text>
+				</div>
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Heading + H1–H4 · EM · Strong</h2>
+			<H1>H1 heading</H1>
+			<H2>H2 heading</H2>
+			<H3>H3 heading</H3>
+			<H4>H4 heading</H4>
+			<Heading as="p" size={2}>Heading as p, size 2</Heading>
+			<Text size={4}>Body with <EM>emphasis</EM> and <Strong>strong</Strong>.</Text>
+		</section>
+
+		<!-- BUTTONS -------------------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Button — variants</h2>
+			<Flex gap={3} wrap="wrap">
+				<Button variant="primary">Primary</Button>
+				<Button variant="secondary">Secondary</Button>
+				<Button variant="tertiary">Tertiary</Button>
+				<Button variant="primary" inverted>Primary inverted</Button>
+				<Button variant="primary" rounded>Rounded</Button>
+				<Button variant="primary" disabled>Disabled</Button>
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">IconButton — variants / sizes</h2>
+			<Flex gap={3} wrap="wrap" alignItems="center">
+				<IconButton variant="primary" size="large" aria-label="a"><Icon name="check" slot="icon" /></IconButton>
+				<IconButton variant="secondary" size="large" aria-label="b"><Icon name="copy" slot="icon" /></IconButton>
+				<IconButton variant="tertiary" size="large" aria-label="c"><Icon name="command" slot="icon" /></IconButton>
+				<IconButton variant="secondary" size="small" aria-label="d"><Icon name="x" slot="icon" /></IconButton>
+				<IconButton variant="secondary" size="large" rounded aria-label="e"><Icon name="play" slot="icon" /></IconButton>
+			</Flex>
+		</section>
+
+		<!-- CARD ----------------------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Card — depths / variants</h2>
+			<Grid templateColumns="repeat(auto-fill, minmax(200px, 1fr))" gap={4}>
+				{[0, 1, 2, 3].map((d) => (
+					<Card depth={d as 0 | 1 | 2 | 3} title={`Card depth ${d}`}>
+						<CardBody><Text size={3}>Body content.</Text></CardBody>
+					</Card>
+				))}
+				<Card variant="secondary" title="Secondary (glass)">
+					<CardBody><Text size={3}>Glass material.</Text></CardBody>
+				</Card>
+				<Card variant="tertiary">
+					<CardHeader>Manual header</CardHeader>
+					<CardBody><Text size={3}>Tertiary variant.</Text></CardBody>
+				</Card>
+			</Grid>
+		</section>
+
+		<!-- CALLOUT + PILL ------------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Callout — variants</h2>
+			<Flex direction="column" gap={3} alignItems="stretch">
+				<Callout variant="info">Info callout with default icon.</Callout>
+				<Callout variant="danger">Danger callout with default icon.</Callout>
+				<Callout variant="warning">Warning callout (no default icon per source).</Callout>
+				<Callout variant="info" label="LABEL">Info with a text label instead of icon.</Callout>
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Pill — variants</h2>
+			<Flex gap={2} wrap="wrap">
+				<Pill variant="info">info</Pill>
+				<Pill variant="success">success</Pill>
+				<Pill variant="warning">warning</Pill>
+				<Pill variant="danger">danger</Pill>
+			</Flex>
+		</section>
+
+		<!-- ANCHOR --------------------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Anchor — variants</h2>
+			<Flex direction="column" gap={2} alignItems="start">
+				<Anchor href="#">plain anchor</Anchor>
+				<Anchor href="#" underline>underline</Anchor>
+				<Anchor href="#" discreet>discreet</Anchor>
+				<Anchor href="#" arrow="right">arrow right</Anchor>
+				<Anchor href="#" arrow="left">arrow left</Anchor>
+				<Anchor href="https://example.com" external>external</Anchor>
+				<Anchor href="https://github.com/x" favicon>github favicon</Anchor>
+			</Flex>
+		</section>
+
+		<!-- LIST + INLINECODE ---------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">List — unordered / ordered</h2>
+			<Grid templateColumns="1fr 1fr" gap={5}>
+				<List variant="unordered">
+					<ListItem>First item</ListItem>
+					<ListItem>Second item</ListItem>
+					<ListItem>Third item</ListItem>
+				</List>
+				<List variant="ordered">
+					<ListItem>First item</ListItem>
+					<ListItem>Second item</ListItem>
+					<ListItem>Third item</ListItem>
+				</List>
+			</Grid>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">InlineCode</h2>
+			<Text size={4}>Run <InlineCode>bun install</InlineCode> then <InlineCode>bun dev</InlineCode>.</Text>
+		</section>
+
+		<!-- ICON ----------------------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Icon — names</h2>
+			<Flex gap={4} wrap="wrap" alignItems="center">
+				{iconNames.map((n) => (
+					<Flex direction="column" gap={1} alignItems="center">
+						<Icon name={n} size={6} variant="primary" />
+						<Text size={1} variant="tertiary">{n}</Text>
+					</Flex>
+				))}
+			</Flex>
+			<h2 class="ds-demo__h" style="margin-top:24px;">Icon — variants (colors)</h2>
+			<Flex gap={4} wrap="wrap" alignItems="center">
+				{iconVariants.map((v) => (
+					<Icon name="info" size={6} variant={v} />
+				))}
+			</Flex>
+		</section>
+
+		<!-- LAYOUT + A11Y -------------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Box / Flex (foundation)</h2>
+			<Flex gap={2} justifyContent="space-between"
+				style="border:1px solid var(--border-color); padding:8px;">
+				<Box style="background:var(--blue-400); padding:8px;">flex a</Box>
+				<Box style="background:var(--blue-500); padding:8px;">flex b</Box>
+				<Box style="background:var(--blue-600); padding:8px;">flex c</Box>
+			</Flex>
+		</section>
+
+		<!-- GRID: columns / gutters / breakpoints ------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Grid — 12 columns + spans</h2>
+			<Text size={2} variant="tertiary">
+				A 12-track grid. GridItem <InlineCode>colSpan</InlineCode> maps to
+				<InlineCode>grid-column: span N</InlineCode>. Spans in each row sum to 12.
+			</Text>
+			<Grid templateColumns="repeat(12, 1fr)" gap={3} style="margin-top:12px;">
+				{Array.from({ length: 12 }).map((_, i) => (
+					<GridItem class="ds-cell ds-cell--head">{i + 1}</GridItem>
+				))}
+				<GridItem colSpan={6} class="ds-cell">6</GridItem>
+				<GridItem colSpan={6} class="ds-cell">6</GridItem>
+				<GridItem colSpan={4} class="ds-cell">4</GridItem>
+				<GridItem colSpan={4} class="ds-cell">4</GridItem>
+				<GridItem colSpan={4} class="ds-cell">4</GridItem>
+				<GridItem colSpan={3} class="ds-cell">3</GridItem>
+				<GridItem colSpan={3} class="ds-cell">3</GridItem>
+				<GridItem colSpan={3} class="ds-cell">3</GridItem>
+				<GridItem colSpan={3} class="ds-cell">3</GridItem>
+				<GridItem colSpan={8} class="ds-cell">8</GridItem>
+				<GridItem colSpan={4} class="ds-cell">4</GridItem>
+			</Grid>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Grid — gutters (gap → --space-* tokens)</h2>
+			<Text size={2} variant="tertiary">
+				Same 4-column grid at increasing gap tokens. The gutter is the only
+				thing changing.
+			</Text>
+			{([2, 4, 6, 8] as const).map((g) => (
+				<div style="margin-top:16px;">
+					<Text size={1} variant="secondary">
+						gap={g} → var(--space-{g})
+					</Text>
+					<Grid templateColumns="repeat(4, 1fr)" gap={g} style="margin-top:6px;">
+						<GridItem class="ds-cell">1</GridItem>
+						<GridItem class="ds-cell">2</GridItem>
+						<GridItem class="ds-cell">3</GridItem>
+						<GridItem class="ds-cell">4</GridItem>
+					</Grid>
+				</div>
+			))}
+			<div style="margin-top:16px;">
+				<Text size={1} variant="secondary">
+					asymmetric: gapX={8} (column) · gapY={2} (row)
+				</Text>
+				<Grid templateColumns="repeat(3, 1fr)" gapX={8} gapY={2}
+					style="margin-top:6px;">
+					{Array.from({ length: 6 }).map((_, i) => (
+						<GridItem class="ds-cell">{i + 1}</GridItem>
+					))}
+				</Grid>
+			</div>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Grid — breakpoints</h2>
+			<Text size={2} variant="tertiary">
+				Resize the window. First row uses intrinsic
+				<InlineCode>auto-fill / minmax()</InlineCode> (no media queries).
+				Second row switches column count at the DS breakpoints (sm 640 · md
+				768 · lg 1024).
+			</Text>
+
+			<Text size={1} variant="secondary" style="margin-top:16px; display:block;">
+				auto-fill, minmax(120px, 1fr) — reflows continuously
+			</Text>
+			<Grid templateColumns="repeat(auto-fill, minmax(120px, 1fr))" gap={4}
+				style="margin-top:6px;">
+				{Array.from({ length: 8 }).map((_, i) => (
+					<GridItem class="ds-cell">{i + 1}</GridItem>
+				))}
+			</Grid>
+
+			<Text size={1} variant="secondary" style="margin-top:20px; display:block;">
+				1 col → 2 (sm) → 3 (md) → 4 (lg), via CSS media queries
+			</Text>
+			<Grid class="ds-bp-grid" gap={4} style="margin-top:6px;">
+				{Array.from({ length: 4 }).map((_, i) => (
+					<GridItem class="ds-cell">{i + 1}</GridItem>
+				))}
+			</Grid>
+			<Text size={1} variant="tertiary" style="margin-top:8px; display:block;">
+				current: <span class="ds-bp-readout"></span>
+			</Text>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">VisuallyHidden</h2>
+			<Text size={3}>There is a hidden label after this:</Text>
+			<VisuallyHidden>screen-reader only text</VisuallyHidden>
+		</section>
+	</main>
+</Layout>
+
+<style>
+	.ds-demo {
+		max-width: 1000px;
+		margin-inline: auto;
+		padding: var(--space-10) var(--space-6);
+		color: var(--text-primary);
+	}
+	.ds-demo__title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-8);
+		margin-bottom: var(--space-8);
+	}
+	.ds-demo__section {
+		padding-block: var(--space-6);
+		border-top: 1px solid var(--border-color);
+	}
+	.ds-demo__h {
+		font-family: var(--font-display);
+		font-size: var(--font-size-5);
+		color: var(--text-secondary);
+		margin-bottom: var(--space-4);
+	}
+
+	/* Grid demo cells — a visible box so columns + gutters read clearly. */
+	.ds-cell {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: var(--space-9);
+		padding: var(--space-2);
+		background: var(--blue-400);
+		border-radius: var(--border-radius-1);
+		font-family: var(--font-mono);
+		font-size: var(--font-size-1);
+		color: var(--text-primary);
+	}
+	.ds-cell--head {
+		min-height: var(--space-6);
+		background: var(--gray-300);
+		color: var(--text-tertiary);
+	}
+
+	/* Breakpoint grid: column count steps at the DS breakpoints. */
+	.ds-bp-grid {
+		grid-template-columns: 1fr;
+	}
+	@media (min-width: 640px) {
+		.ds-bp-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+	@media (min-width: 768px) {
+		.ds-bp-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+	@media (min-width: 1024px) {
+		.ds-bp-grid {
+			grid-template-columns: repeat(4, 1fr);
+		}
+	}
+
+	/* Pure-CSS breakpoint readout (mirrors the media queries above). */
+	.ds-bp-readout::before {
+		content: "base (<640) — 1 col";
+		font-family: var(--font-mono);
+		color: var(--accent);
+	}
+	@media (min-width: 640px) {
+		.ds-bp-readout::before {
+			content: "sm (≥640) — 2 cols";
+		}
+	}
+	@media (min-width: 768px) {
+		.ds-bp-readout::before {
+			content: "md (≥768) — 3 cols";
+		}
+	}
+	@media (min-width: 1024px) {
+		.ds-bp-readout::before {
+			content: "lg (≥1024) — 4 cols";
+		}
+	}
+</style>

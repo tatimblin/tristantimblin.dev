@@ -1,0 +1,127 @@
+/* Anchor — exact port of the DS styled('a', { …, variants }). */
+.ds-anchor {
+	font-size: inherit;
+	line-height: inherit;
+	color: var(--color, var(--hyperlink));
+	font-weight: inherit;
+	word-break: break-word;
+	text-decoration: none;
+	outline: none;
+	transition:
+		border-color 0.3s ease,
+		color 0.3s ease;
+
+	--hover-color: var(--text-primary);
+}
+
+.ds-anchor:focus {
+	--color: var(--hover-color, var(--accent));
+	--hover-translation-distance: var(--arrow-translation, 0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.ds-anchor:hover {
+		--color: var(--hover-color, var(--accent));
+		--hover-translation-distance: var(--arrow-translation, 0);
+	}
+}
+
+/* discreet */
+.ds-anchor--discreet-true {
+	--color: var(--text-tertiary);
+}
+
+/* external */
+.ds-anchor--external-true {
+	--size: 1.4em;
+}
+.ds-anchor--external-true:after {
+	content: "";
+	display: inline-block;
+	vertical-align: middle;
+	width: var(--size, 1.05em);
+	height: var(--size, 1.05em);
+	mask-image: var(--icon);
+	-webkit-mask-repeat: no-repeat;
+	background-color: currentColor;
+	margin-left: 0.18em;
+	margin-right: -0.36em;
+	transform: translateY(2px);
+}
+
+/* arrow: left */
+.ds-anchor--arrow-left {
+	--size: 1.1em;
+	--arrow-direction: -1;
+	--arrow-translation: -0.25em;
+	--hover-color: unset;
+}
+.ds-anchor--arrow-left:before {
+	content: "";
+	display: inline-block;
+	vertical-align: middle;
+	width: var(--size, 1.05em);
+	height: var(--size, 1.05em);
+	mask-image: var(--icon);
+	-webkit-mask-repeat: no-repeat;
+	background-color: currentColor;
+	margin-right: 0.18em;
+	transition: transform 0.4s ease;
+	transform: translateY(-2px) translateX(var(--hover-translation-distance, 0px))
+		scaleX(var(--arrow-direction, 1));
+}
+
+/* arrow: right */
+.ds-anchor--arrow-right {
+	--size: 1.1em;
+	--arrow-direction: 1;
+	--arrow-translation: 0.25em;
+	--hover-color: unset;
+}
+.ds-anchor--arrow-right:after {
+	content: "";
+	display: inline-block;
+	vertical-align: middle;
+	width: var(--size, 1.05em);
+	height: var(--size, 1.05em);
+	mask-image: var(--icon);
+	-webkit-mask-repeat: no-repeat;
+	background-color: currentColor;
+	margin-left: 0.18em;
+	transition: transform 0.4s ease;
+	transform: translateY(-2px) translateX(var(--hover-translation-distance, 0px))
+		scaleX(var(--arrow-direction, 1));
+}
+
+/* favicon */
+.ds-anchor--favicon-true {
+	--size: 1em;
+}
+.ds-anchor--favicon-true:before {
+	content: "";
+	display: inline-block;
+	vertical-align: middle;
+	width: var(--size, 1.05em);
+	height: var(--size, 1.05em);
+	mask-image: var(--icon);
+	-webkit-mask-repeat: no-repeat;
+	background-color: currentColor;
+	margin-right: 0.18em;
+	transform: translateY(-2px);
+}
+
+/* underline */
+.ds-anchor--underline-true {
+	border-bottom: 1px solid;
+	border-color: var(--anchor-border-color, transparent);
+
+	--hover-color: unset;
+}
+.ds-anchor--underline-true:focus {
+	--anchor-border-color: var(--accent);
+}
+@media (hover: hover) and (pointer: fine) {
+	.ds-anchor--underline-true:hover {
+		--anchor-border-color: var(--accent);
+	}
+}

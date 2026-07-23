@@ -1,0 +1,16 @@
+---
+// Box — the DS's unstyled polymorphic <div> primitive (styled('div', {})).
+// No variants; just a pass-through element with the ds-box hook class.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "div", class: className, ...rest } = Astro.props;
+const Tag = as as any;
+---
+
+<Tag class={cx("ds-box", className)} {...rest}><slot /></Tag>

@@ -1,0 +1,67 @@
+/* Callout — exact port of the DS styled('aside', { …, variants }) plus the
+ * icon-wrapper and label-wrapper badges. */
+.ds-callout {
+	position: relative;
+	padding: 16px 16px;
+	border-radius: var(--border-radius-1);
+	color: var(--text-primary);
+	border: 1px solid var(--emphasis);
+	background: var(--callout-background, var(--emphasis));
+}
+
+/* variant */
+.ds-callout--variant-info {
+	--callout-background: var(--emphasis);
+}
+.ds-callout--variant-danger {
+	--callout-background: var(--danger-emphasis);
+}
+.ds-callout--variant-warning {
+	--callout-background: var(--orange-400);
+}
+
+/* icon wrapper — StyledCalloutIconWrapper */
+.ds-callout__icon {
+	position: absolute;
+	display: flex;
+	top: -20px;
+	right: -20px;
+	border-radius: 50%;
+	padding: 4px;
+	color: var(--background);
+	border: 6px solid var(--background);
+	background: var(--icon-background, var(--background));
+}
+.ds-callout__icon--variant-info {
+	--icon-background: var(--accent);
+}
+.ds-callout__icon--variant-danger {
+	--icon-background: var(--danger);
+}
+.ds-callout__icon--variant-warning {
+	--icon-background: var(--warning);
+}
+
+/* label wrapper — StyledCalloutLabelWrapper */
+.ds-callout__label {
+	position: absolute;
+	display: flex;
+	top: -16px;
+	right: -8px;
+	border-radius: var(--border-radius-1);
+	padding: 6px;
+	color: var(--background);
+	font-size: var(--font-size-1);
+	font-weight: var(--font-weight-500);
+	user-select: none;
+	background: var(--icon-background, var(--background));
+}
+.ds-callout__label--variant-info {
+	--icon-background: var(--accent);
+}
+.ds-callout__label--variant-danger {
+	--icon-background: var(--danger);
+}
+.ds-callout__label--variant-warning {
+	--icon-background: var(--warning);
+}

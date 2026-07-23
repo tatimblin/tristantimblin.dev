@@ -1,0 +1,81 @@
+---
+// Button — exact port of DS StyledButton (styled('button', { … })).
+// Source: /tmp/mh-design-system/src/components/Button/{Button.tsx,Button.styles.tsx,Button.types.ts}
+//
+// The React component computes `hasIcon` from which of startIcon/endIcon are
+// passed, and wraps the icons in a <Flex> with a margin. Here the icons come in
+// as the named slots "start-icon" / "end-icon" (and legacy "icon"), and we
+// mirror the margin wrappers. `hasIcon` is computed from slot presence.
+//
+// Legacy: variant="icon" reroutes to StyledIconButton in the DS. We mirror that
+// by rendering with the icon-button base classes + tertiary variant.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	variant?: "primary" | "secondary" | "tertiary" | "icon";
+	inverted?: boolean;
+	rounded?: boolean;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "button",
+	// Button.tsx default: variant = 'primary'.
+	variant = "primary",
+	inverted,
+	rounded,
+	class: className,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+
+const hasStart = Astro.slots.has("start-icon");
+const hasEnd = Astro.slots.has("end-icon");
+// Mirror Button.tsx: hasIcon = startIcon ? 'startIcon' : endIcon ? 'endIcon' : 'none'.
+const hasIcon = hasStart ? "startIcon" : hasEnd ? "endIcon" : "none";
+---
+
+{
+	variant === "icon" ? (
+		<Tag
+			class={cx(
+				"ds-icon-button",
+				"ds-icon-button--variant-tertiary",
+				"ds-icon-button--size-large",
+				className,
+			)}
+			{...rest}
+		>
+			<span class="ds-icon-button__content">
+				<slot name="icon" />
+			</span>
+		</Tag>
+	) : (
+		<Tag
+			class={cx(
+				"ds-button",
+				`ds-button--variant-${variant}`,
+				`ds-button--has-icon-${hasIcon}`,
+				inverted && "ds-button--inverted-true",
+				rounded && "ds-button--rounded-true",
+				className,
+			)}
+			{...rest}
+		>
+			{hasStart ? (
+				<span class="ds-button__start-icon">
+					<slot name="start-icon" />
+				</span>
+			) : null}
+			<slot />
+			{hasEnd ? (
+				<span class="ds-button__end-icon">
+					<slot name="end-icon" />
+				</span>
+			) : null}
+		</Tag>
+	)
+}

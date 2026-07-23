@@ -1,0 +1,15 @@
+{
+  "name": "@whois/design-system",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tokens.css": "./src/tokens/index.css",
+    "./styles.css": "./src/styles/index.css",
+    "./*": "./src/components/*.astro"
+  },
+  "files": ["src"],
+  "scripts": {
+    "gen-tokens": "bun scripts/gen-tokens.mjs"
+  }
+}

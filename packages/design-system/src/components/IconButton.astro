@@ -1,0 +1,45 @@
+---
+// IconButton — exact port of DS StyledIconButton (styled('button', { … })).
+// Source: /tmp/mh-design-system/src/components/Button/{IconButton.tsx,Button.styles.tsx}
+//
+// A distinct styled export from Button, with its own variant API:
+//   variant: primary | secondary | tertiary   (default: secondary)
+//   size:    small | large                     (default: large)
+//   rounded: boolean
+// IconButton.tsx wraps the single icon child in a <Flex css={{ zIndex: 1 }} />;
+// we mirror that with the .ds-icon-button__content wrapper.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	variant?: "primary" | "secondary" | "tertiary";
+	size?: "small" | "large";
+	rounded?: boolean;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "button",
+	// defaultVariants from Button.styles.tsx StyledIconButton.
+	variant = "secondary",
+	size = "large",
+	rounded,
+	class: className,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+
+const cls = cx(
+	"ds-icon-button",
+	`ds-icon-button--variant-${variant}`,
+	`ds-icon-button--size-${size}`,
+	rounded && "ds-icon-button--rounded-true",
+	className,
+);
+---
+
+<Tag class={cls} {...rest}>
+	<span class="ds-icon-button__content"><slot /></span>
+</Tag>

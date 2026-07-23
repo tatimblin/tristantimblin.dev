@@ -1,0 +1,246 @@
+/* Grid + GridItem — exact port of Grid.styles.tsx. */
+
+.ds-grid {
+	display: grid;
+	height: inherit;
+}
+
+/* align → align-items */
+.ds-grid--align-start {
+	align-items: start;
+}
+.ds-grid--align-center {
+	align-items: center;
+}
+.ds-grid--align-end {
+	align-items: end;
+}
+.ds-grid--align-stretch {
+	align-items: stretch;
+}
+.ds-grid--align-baseline {
+	align-items: baseline;
+}
+
+/* justify → justify-content */
+.ds-grid--justify-start {
+	justify-content: start;
+}
+.ds-grid--justify-center {
+	justify-content: center;
+}
+.ds-grid--justify-end {
+	justify-content: end;
+}
+.ds-grid--justify-between {
+	justify-content: space-between;
+}
+
+/* flow → grid-auto-flow */
+.ds-grid--flow-row {
+	grid-auto-flow: row;
+}
+.ds-grid--flow-column {
+	grid-auto-flow: column;
+}
+.ds-grid--flow-dense {
+	grid-auto-flow: dense;
+}
+.ds-grid--flow-rowDense {
+	grid-auto-flow: row dense;
+}
+.ds-grid--flow-columnDense {
+	grid-auto-flow: column dense;
+}
+
+/* gap / gapX / gapY → --space-1..15 */
+.ds-grid--gap-1 {
+	gap: var(--space-1);
+}
+.ds-grid--gap-2 {
+	gap: var(--space-2);
+}
+.ds-grid--gap-3 {
+	gap: var(--space-3);
+}
+.ds-grid--gap-4 {
+	gap: var(--space-4);
+}
+.ds-grid--gap-5 {
+	gap: var(--space-5);
+}
+.ds-grid--gap-6 {
+	gap: var(--space-6);
+}
+.ds-grid--gap-7 {
+	gap: var(--space-7);
+}
+.ds-grid--gap-8 {
+	gap: var(--space-8);
+}
+.ds-grid--gap-9 {
+	gap: var(--space-9);
+}
+.ds-grid--gap-10 {
+	gap: var(--space-10);
+}
+.ds-grid--gap-11 {
+	gap: var(--space-11);
+}
+.ds-grid--gap-12 {
+	gap: var(--space-12);
+}
+.ds-grid--gap-13 {
+	gap: var(--space-13);
+}
+.ds-grid--gap-14 {
+	gap: var(--space-14);
+}
+.ds-grid--gap-15 {
+	gap: var(--space-15);
+}
+
+.ds-grid--gap-x-1 {
+	column-gap: var(--space-1);
+}
+.ds-grid--gap-x-2 {
+	column-gap: var(--space-2);
+}
+.ds-grid--gap-x-3 {
+	column-gap: var(--space-3);
+}
+.ds-grid--gap-x-4 {
+	column-gap: var(--space-4);
+}
+.ds-grid--gap-x-5 {
+	column-gap: var(--space-5);
+}
+.ds-grid--gap-x-6 {
+	column-gap: var(--space-6);
+}
+.ds-grid--gap-x-7 {
+	column-gap: var(--space-7);
+}
+.ds-grid--gap-x-8 {
+	column-gap: var(--space-8);
+}
+.ds-grid--gap-x-9 {
+	column-gap: var(--space-9);
+}
+.ds-grid--gap-x-10 {
+	column-gap: var(--space-10);
+}
+.ds-grid--gap-x-11 {
+	column-gap: var(--space-11);
+}
+.ds-grid--gap-x-12 {
+	column-gap: var(--space-12);
+}
+.ds-grid--gap-x-13 {
+	column-gap: var(--space-13);
+}
+.ds-grid--gap-x-14 {
+	column-gap: var(--space-14);
+}
+.ds-grid--gap-x-15 {
+	column-gap: var(--space-15);
+}
+
+.ds-grid--gap-y-1 {
+	row-gap: var(--space-1);
+}
+.ds-grid--gap-y-2 {
+	row-gap: var(--space-2);
+}
+.ds-grid--gap-y-3 {
+	row-gap: var(--space-3);
+}
+.ds-grid--gap-y-4 {
+	row-gap: var(--space-4);
+}
+.ds-grid--gap-y-5 {
+	row-gap: var(--space-5);
+}
+.ds-grid--gap-y-6 {
+	row-gap: var(--space-6);
+}
+.ds-grid--gap-y-7 {
+	row-gap: var(--space-7);
+}
+.ds-grid--gap-y-8 {
+	row-gap: var(--space-8);
+}
+.ds-grid--gap-y-9 {
+	row-gap: var(--space-9);
+}
+.ds-grid--gap-y-10 {
+	row-gap: var(--space-10);
+}
+.ds-grid--gap-y-11 {
+	row-gap: var(--space-11);
+}
+.ds-grid--gap-y-12 {
+	row-gap: var(--space-12);
+}
+.ds-grid--gap-y-13 {
+	row-gap: var(--space-13);
+}
+.ds-grid--gap-y-14 {
+	row-gap: var(--space-14);
+}
+.ds-grid--gap-y-15 {
+	row-gap: var(--space-15);
+}
+
+/* --- GridItem --- */
+.ds-grid-item {
+	position: relative;
+}
+
+.ds-grid-item--align-self-start {
+	align-self: start;
+}
+.ds-grid-item--align-self-center {
+	align-self: center;
+}
+.ds-grid-item--align-self-end {
+	align-self: end;
+}
+.ds-grid-item--align-self-stretch {
+	align-self: stretch;
+}
+.ds-grid-item--align-self-baseline {
+	align-self: baseline;
+}
+
+.ds-grid-item--justify-self-start {
+	justify-self: start;
+}
+.ds-grid-item--justify-self-center {
+	justify-self: center;
+}
+.ds-grid-item--justify-self-end {
+	justify-self: end;
+}
+.ds-grid-item--justify-self-stretch {
+	justify-self: stretch;
+}
+.ds-grid-item--justify-self-baseline {
+	justify-self: baseline;
+}
+
+.ds-grid-item--place-self-start {
+	place-self: start;
+}
+.ds-grid-item--place-self-center {
+	place-self: center;
+}
+.ds-grid-item--place-self-end {
+	place-self: end;
+}
+.ds-grid-item--place-self-stretch {
+	place-self: stretch;
+}
+.ds-grid-item--place-self-baseline {
+	place-self: baseline;
+}

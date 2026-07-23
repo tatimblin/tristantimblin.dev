@@ -1,0 +1,31 @@
+---
+// List — DS styled('div', { variants: { variant } }) rendered as <ul>/<ol>.
+// In the DS source the root is a styled div rendered `as` ol/ul depending on
+// `variant` (ordered -> 'ol', otherwise 'ul'). We mirror that switch here.
+// List.Item is a separate component: ListItem.astro (import it alongside).
+import { cx } from "../lib/cx";
+
+interface Props {
+	variant?: "unordered" | "ordered";
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	// defaultVariants from the DS source.
+	variant = "unordered",
+	class: className,
+	...rest
+} = Astro.props;
+
+// DS: const Component = variant === 'ordered' ? 'ol' : 'ul';
+const Tag = (variant === "ordered" ? "ol" : "ul") as any;
+
+const cls = cx(
+	"ds-list",
+	variant && `ds-list--variant-${variant}`,
+	className,
+);
+---
+
+<Tag class={cls} {...rest}><slot /></Tag>

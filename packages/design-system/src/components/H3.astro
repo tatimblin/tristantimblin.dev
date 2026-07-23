@@ -1,0 +1,9 @@
+---
+// H3 — DS <Heading as="h3" size="2" spaced={false} variant="primary" />.
+import Heading from "./Heading.astro";
+const props = Astro.props;
+---
+
+<Heading {...props} as="h3" size={2} spaced={false} variant="primary">
+	<slot />
+</Heading>

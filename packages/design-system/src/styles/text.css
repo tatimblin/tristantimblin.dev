@@ -1,0 +1,106 @@
+/* Text — exact port of the DS styled('span', { ... variants }). */
+.ds-text {
+	margin: 0;
+	padding: 0;
+	text-rendering: optimizeLegibility;
+}
+
+/* outline (boolean) */
+.ds-text--outline-true {
+	color: transparent !important;
+	-webkit-text-stroke-color: var(--text-primary);
+	-webkit-text-stroke-width: 1px;
+}
+
+/* spaced (boolean) */
+.ds-text--spaced-true {
+	letter-spacing: 0.3px;
+	line-height: 1.75;
+}
+
+/* family */
+.ds-text--family-default {
+	font-family: inherit;
+}
+.ds-text--family-display {
+	font-family: var(--font-display);
+}
+.ds-text--family-serif {
+	font-family: var(--font-serif);
+}
+.ds-text--family-mono {
+	font-family: var(--font-mono);
+}
+.ds-text--family-code {
+	font-family: var(--font-mono-code);
+}
+
+/* size → --font-size-* (note: size 2 maps to --font-size-1 in the DS source) */
+.ds-text--size-1 {
+	font-size: var(--font-size-1);
+}
+.ds-text--size-2 {
+	font-size: var(--font-size-1);
+}
+.ds-text--size-3 {
+	font-size: var(--font-size-3);
+}
+.ds-text--size-4 {
+	font-size: var(--font-size-4);
+}
+.ds-text--size-5 {
+	font-size: var(--font-size-5);
+}
+.ds-text--size-6 {
+	font-size: var(--font-size-6);
+}
+.ds-text--size-7 {
+	font-size: var(--font-size-7);
+}
+.ds-text--size-8 {
+	font-size: var(--font-size-8);
+}
+
+/* truncate (boolean) */
+.ds-text--truncate-true {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* variant → color */
+.ds-text--variant-default {
+	color: currentColor;
+}
+.ds-text--variant-primary {
+	color: var(--text-primary);
+}
+.ds-text--variant-secondary {
+	color: var(--text-secondary);
+}
+.ds-text--variant-tertiary {
+	color: var(--text-tertiary);
+}
+.ds-text--variant-info {
+	color: var(--accent);
+}
+.ds-text--variant-success {
+	color: var(--success);
+}
+.ds-text--variant-warning {
+	color: var(--warning);
+}
+.ds-text--variant-danger {
+	color: var(--danger);
+}
+
+/* weight → --font-weight-* */
+.ds-text--weight-2 {
+	font-weight: var(--font-weight-400);
+}
+.ds-text--weight-3 {
+	font-weight: var(--font-weight-500);
+}
+.ds-text--weight-4 {
+	font-weight: var(--font-weight-600);
+}

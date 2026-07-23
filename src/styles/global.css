@@ -1,10 +1,10 @@
+/* Design-system tokens (spacing --space-*, type --font-size-*, colors, radii,
+   fonts) come from @whois/design-system/tokens.css, imported AFTER this file in
+   Layout.astro. This block defines only what the DS layer does NOT provide:
+   the site's section palette, the sans/serif faces DS lacks, a few named
+   font-size aliases still used by legacy components, and layout knobs. The
+   legacy --color-* / --font-decorative names are bridged onto DS tokens there. */
 :root {
-  --color-bg: #0a0a0a;
-  --color-fg: #ededed;
-  --color-muted: #8a8a8a;
-  --color-border: rgba(255, 255, 255, 0.14);
-  --color-accent: #0a84ff;
-
   --section-1-bg: #bcd6ee;
   --section-1-fg: #14305a;
   --section-2-bg: #b9cdec;
@@ -14,8 +14,9 @@
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
-  --font-serif: "Playfair Display", ui-serif, Georgia, "Times New Roman", serif;
-  --font-display: "Quintessential", ui-serif, Georgia, serif;
+
+  /* Named font-size aliases still referenced by legacy components (DS uses a
+     numeric --font-size-1..8 scale instead). */
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.5rem;
@@ -23,15 +24,6 @@
   --font-size-3xl: clamp(2rem, 5vw, 3.5rem);
   --line-height-tight: 1.15;
   --line-height-base: 1.6;
-
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.5rem;
-  --space-6: 2rem;
-  --space-7: 3rem;
-  --space-8: 4rem;
 
   --container-max: 1200px;
   --container-pad: clamp(1rem, 4vw, 2rem);
@@ -46,7 +38,7 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {

@@ -1,0 +1,45 @@
+---
+// Card — DS CardWrapper = styled(Box, {...}) with depth + variant variants.
+// Renders via Box (polymorphic `as`). When a `title` prop is passed and no
+// CardHeader child is present, a CardHeader is rendered with the title, then
+// the body content follows as children (matching Card.tsx).
+import { cx } from "../lib/cx";
+import Box from "./Box.astro";
+import CardHeader from "./CardHeader.astro";
+
+interface Props {
+	as?: string;
+	// CardWrapper variants (Card.styles.tsx).
+	depth?: 0 | 1 | 2 | 3;
+	variant?: "primary" | "secondary" | "tertiary";
+	// Destructured in Card.tsx and forwarded; CardWrapper defines no matching
+	// variant, so it carries no CSS rule.
+	glass?: boolean;
+	title?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as,
+	// defaultVariants from the DS source.
+	depth = 1,
+	variant,
+	glass,
+	title,
+	class: className,
+	...rest
+} = Astro.props;
+
+const cls = cx(
+	"ds-card",
+	depth != null && `ds-card--depth-${depth}`,
+	variant && `ds-card--variant-${variant}`,
+	className,
+);
+---
+
+<Box as={as} class={cls} {...rest}>
+	{title ? <CardHeader>{title}</CardHeader> : null}
+	<slot />
+</Box>

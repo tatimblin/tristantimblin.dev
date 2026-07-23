@@ -1,0 +1,18 @@
+---
+// Strong — DS <Text as="strong" variant="primary" weight="3" />.
+// Delegates to Text with overrides (spaced stays the Text default: true).
+import Text from "./Text.astro";
+
+interface Props {
+	size?: number | string;
+	variant?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const props = Astro.props;
+---
+
+<Text {...props} as="strong" variant="primary" weight={3}>
+	<slot />
+</Text>

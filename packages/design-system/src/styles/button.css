@@ -1,0 +1,126 @@
+/* Button — exact port of the DS StyledButton = styled('button', { … }).
+ * Source: /tmp/mh-design-system/src/components/Button/Button.styles.tsx
+ * glassMaterialPrimitives['background-color'] (from GlassMaterial.tsx) inlined
+ * verbatim as: oklch(from var(--gray-900) l c h / var(--opacity, 0.3)) */
+
+.ds-button {
+	-webkit-appearance: none;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-shrink: 0;
+	outline: none;
+	cursor: pointer;
+	border: 0;
+	font: inherit;
+	/* Constant properties */
+	font-size: var(--font-size-1);
+	font-weight: var(--font-weight-500);
+	height: 34px;
+	width: max-content;
+	padding: 0px 12px;
+	transition: background 0.2s, transform 0.2s, color 0.2s, box-shadow 0.3s;
+	border-radius: var(--border-radius-1);
+
+	/* Computed properties */
+	background: var(--button-background, white);
+	color: var(--color, black);
+	transform: scale(var(--button-scale, 1)) translateZ(0);
+	box-shadow: var(--shadow, none);
+	opacity: var(--opacity, 1);
+	--shadow-hover-primary: 0 2px 40px -4px var(--input-focus);
+}
+
+.ds-button svg {
+	width: 18px;
+	height: 18px;
+}
+
+.ds-button:active {
+	--button-scale: 0.95;
+}
+
+.ds-button:disabled {
+	cursor: not-allowed;
+	--button-scale: 1.0 !important;
+	--shadow: none !important;
+	--opacity: 0.4;
+	filter: grayscale(0.25);
+}
+
+/* Icon wrappers (Button.tsx wraps start/endIcon in <Flex css={{ margin… }} />). */
+.ds-button__start-icon {
+	display: flex;
+	margin-right: var(--space-1);
+}
+.ds-button__end-icon {
+	display: flex;
+	margin-left: var(--space-1);
+}
+
+/* hasIcon */
+.ds-button--has-icon-startIcon {
+	padding: 0px 12px 0px 10px;
+}
+.ds-button--has-icon-endIcon {
+	padding: 0px 10px 0px 12px;
+}
+.ds-button--has-icon-none {
+	padding: 0px 12px;
+}
+
+/* variant: primary */
+.ds-button--variant-primary {
+	--button-background: var(--accent);
+	--color: var(--white);
+	--shadow: inset 0px 1px 1px rgba(255, 255, 255, 0.3),
+		inset 0px -1.5px 2px rgba(0, 0, 0, 0.3);
+}
+.ds-button--variant-primary:hover:not(:disabled) {
+	--shadow: inset 0px 1px 1px rgba(255, 255, 255, 0.3),
+		inset 0px -1.5px 2px rgba(0, 0, 0, 0.3), var(--shadow-hover-primary);
+}
+.ds-button--variant-primary:focus-visible {
+	--shadow: inset 0px 1px 1px rgba(255, 255, 255, 0.3),
+		inset 0px -1.5px 2px rgba(0, 0, 0, 0.3), var(--shadow-hover-primary);
+}
+.ds-button--variant-primary:active {
+	--shadow: inset 0px -1px 1px rgba(255, 255, 255, 0.2),
+		inset 0px -1.5px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* variant: secondary (empty :hover/:focus-visible rules in the DS source) */
+.ds-button--variant-secondary {
+	--button-background: transparent;
+	--color: var(--accent);
+}
+
+/* variant: tertiary */
+.ds-button--variant-tertiary {
+	--button-background: transparent;
+	--color: var(--text-tertiary);
+}
+.ds-button--variant-tertiary:hover:not(:disabled) {
+	--button-background: oklch(from var(--gray-900) l c h / var(--opacity, 0.3));
+	--color: var(--text-primary);
+}
+.ds-button--variant-tertiary:focus-visible {
+	--button-background: oklch(from var(--gray-900) l c h / var(--opacity, 0.3));
+	--color: var(--text-primary);
+}
+
+/* rounded */
+.ds-button--rounded-true {
+	border-radius: 9999px;
+}
+
+/* compoundVariants */
+.ds-button--variant-primary.ds-button--inverted-true {
+	--button-background: var(--text-primary);
+	--color: var(--background);
+}

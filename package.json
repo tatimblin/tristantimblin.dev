@@ -10,6 +10,7 @@
     "astro": "bunx --bun astro"
   },
   "dependencies": {
+    "@whois/design-system": "workspace:*",
     "@whois/dotted-grid": "workspace:*",
     "@whois/gallery-carousel": "workspace:*",
     "@whois/sticky-heading": "workspace:*",
@@ -21,5 +22,10 @@
   },
   "patchedDependencies": {
     "scroll-timeline-polyfill@1.1.0": "patches/scroll-timeline-polyfill@1.1.0.patch"
+  },
+  "devDependencies": {
+    "@maximeheckel/design-system": "4.2.3",
+    "react": "^19",
+    "react-dom": "^19"
   }
 }

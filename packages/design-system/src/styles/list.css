@@ -1,0 +1,53 @@
+/* List — exact port of the DS styled('div', { variants: { variant } }).
+   Rendered as <ul> (unordered) or <ol> (ordered). */
+.ds-list {
+	margin: 0;
+	padding: 0;
+	color: inherit;
+	list-style-position: outside;
+	list-style-image: none;
+}
+
+/* variant: unordered — List.Item renders the arrow marker itself. */
+.ds-list--variant-unordered li {
+	list-style: none;
+}
+
+/* variant: ordered — counter-based numbering; hide the arrow svg, add :before. */
+.ds-list--variant-ordered li {
+	counter-increment: li;
+}
+.ds-list--variant-ordered li svg {
+	display: none;
+}
+.ds-list--variant-ordered li:before {
+	content: counters(li, ".") ". ";
+	color: var(--accent);
+	margin-right: 6px;
+}
+
+/* List.Item — exact port of the DS styled('li', {...}). */
+.ds-list-item {
+	list-style: none;
+	display: flex;
+	margin-bottom: calc(1.45rem / 2);
+	line-height: 1.9;
+	letter-spacing: 0.3px;
+}
+.ds-list-item div[data-list-item] {
+	padding-right: 8px;
+	transform: translateY(4px);
+}
+.ds-list-item > ol {
+	margin-left: 1.45rem;
+	margin-bottom: calc(1.45rem / 2);
+	margin-top: calc(1.45rem / 2);
+}
+.ds-list-item > ul {
+	margin-left: 1.45rem;
+	margin-bottom: calc(1.45rem / 2);
+	margin-top: calc(1.45rem / 2);
+}
+.ds-list-item > p {
+	margin-bottom: calc(1.45rem / 2);
+}

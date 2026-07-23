@@ -1,0 +1,35 @@
+/* Pill — exact port of the DS styled('span', { …, variants }). */
+.ds-pill {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	padding: 5px 8px !important;
+	min-width: 40px;
+	height: 28px;
+	font-size: var(--font-size-1);
+	font-weight: var(--font-weight-500);
+	cursor: default;
+	user-select: none;
+	border-radius: var(--border-radius-1);
+
+	background: var(--pill-background);
+	color: var(--pill-color);
+}
+
+/* variant */
+.ds-pill--variant-info {
+	--pill-background: var(--emphasis);
+	--pill-color: var(--accent);
+}
+.ds-pill--variant-success {
+	--pill-background: var(--success-emphasis);
+	--pill-color: var(--success);
+}
+.ds-pill--variant-warning {
+	--pill-background: var(--warning-emphasis);
+	--pill-color: var(--warning);
+}
+.ds-pill--variant-danger {
+	--pill-background: var(--danger-emphasis);
+	--pill-color: var(--danger);
+}

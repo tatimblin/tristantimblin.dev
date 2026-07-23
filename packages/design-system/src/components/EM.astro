@@ -1,0 +1,28 @@
+---
+// EM — DS <Text as="em" variant="tertiary" weight="3" spaced={false}
+//      style={{ letterSpacing: '-0.3px' }} />. Delegates to Text with overrides.
+import Text from "./Text.astro";
+
+interface Props {
+	size?: number | string;
+	variant?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { style, ...rest } = Astro.props;
+const mergedStyle = ["letter-spacing: -0.3px", style]
+	.filter(Boolean)
+	.join("; ");
+---
+
+<Text
+	{...rest}
+	as="em"
+	variant="tertiary"
+	weight={3}
+	spaced={false}
+	style={mergedStyle}
+>
+	<slot />
+</Text>

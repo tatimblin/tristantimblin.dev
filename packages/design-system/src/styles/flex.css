@@ -1,0 +1,133 @@
+/* Flex — exact port of the DS styled('div', { display:flex, variants }). */
+.ds-flex {
+	display: flex;
+}
+
+/* alignItems */
+.ds-flex--align-items-baseline {
+	align-items: baseline;
+}
+.ds-flex--align-items-center {
+	align-items: center;
+}
+.ds-flex--align-items-end {
+	align-items: end;
+}
+.ds-flex--align-items-flex-end {
+	align-items: flex-end;
+}
+.ds-flex--align-items-flex-start {
+	align-items: flex-start;
+}
+.ds-flex--align-items-start {
+	align-items: start;
+}
+.ds-flex--align-items-stretch {
+	align-items: stretch;
+}
+
+/* alignContent */
+.ds-flex--align-content-baseline {
+	align-content: baseline;
+}
+.ds-flex--align-content-center {
+	align-content: center;
+}
+.ds-flex--align-content-end {
+	align-content: end;
+}
+.ds-flex--align-content-start {
+	align-content: start;
+}
+.ds-flex--align-content-stretch {
+	align-content: stretch;
+}
+
+/* direction */
+.ds-flex--direction-column {
+	flex-direction: column;
+}
+.ds-flex--direction-columnReverse {
+	flex-direction: column-reverse;
+}
+.ds-flex--direction-row {
+	flex-direction: row;
+}
+.ds-flex--direction-rowReverse {
+	flex-direction: row-reverse;
+}
+
+/* gap → --space-1..15 */
+.ds-flex--gap-1 {
+	gap: var(--space-1);
+}
+.ds-flex--gap-2 {
+	gap: var(--space-2);
+}
+.ds-flex--gap-3 {
+	gap: var(--space-3);
+}
+.ds-flex--gap-4 {
+	gap: var(--space-4);
+}
+.ds-flex--gap-5 {
+	gap: var(--space-5);
+}
+.ds-flex--gap-6 {
+	gap: var(--space-6);
+}
+.ds-flex--gap-7 {
+	gap: var(--space-7);
+}
+.ds-flex--gap-8 {
+	gap: var(--space-8);
+}
+.ds-flex--gap-9 {
+	gap: var(--space-9);
+}
+.ds-flex--gap-10 {
+	gap: var(--space-10);
+}
+.ds-flex--gap-11 {
+	gap: var(--space-11);
+}
+.ds-flex--gap-12 {
+	gap: var(--space-12);
+}
+.ds-flex--gap-13 {
+	gap: var(--space-13);
+}
+.ds-flex--gap-14 {
+	gap: var(--space-14);
+}
+.ds-flex--gap-15 {
+	gap: var(--space-15);
+}
+
+/* justifyContent */
+.ds-flex--justify-content-center {
+	justify-content: center;
+}
+.ds-flex--justify-content-end {
+	justify-content: end;
+}
+.ds-flex--justify-content-space-around {
+	justify-content: space-around;
+}
+.ds-flex--justify-content-space-between {
+	justify-content: space-between;
+}
+.ds-flex--justify-content-space-evenly {
+	justify-content: space-evenly;
+}
+.ds-flex--justify-content-start {
+	justify-content: start;
+}
+
+/* wrap */
+.ds-flex--wrap-wrap {
+	flex-wrap: wrap;
+}
+.ds-flex--wrap-nowrap {
+	flex-wrap: nowrap;
+}

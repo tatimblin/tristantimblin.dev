@@ -1,0 +1,14 @@
+/* Site-level token overrides — the hand-owned layer.
+ *
+ * This file is imported AFTER tokens.generated.css, so any custom property set
+ * here wins over the design system's generated value. Use it to retune the DS
+ * look for this site (colors, spacing, type) WITHOUT editing the generated
+ * artifact — which would be clobbered the next time gen-tokens.mjs runs.
+ *
+ * Empty by default: the site currently adopts the DS look as-is. Add overrides
+ * under :root (global) or .maximeheckel-light / .maximeheckel-dark (per theme).
+ */
+
+:root {
+	/* e.g. --accent: oklch(60% 0.2 240); */
+}

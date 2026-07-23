@@ -1,0 +1,37 @@
+---
+// Heading — DS <Text as="h1" size={headingSize[size]} css={headingCSS[size]} />.
+// The DS `size` prop (1-4) maps to a Text size, plus a shared headingCSS
+// (font-weight-600, line-height 1.5, letter-spacing -0.3px) applied via .ds-heading.
+import { cx } from "../lib/cx";
+import Text from "./Text.astro";
+
+type HeadingSize = 1 | 2 | 3 | 4;
+
+interface Props {
+	as?: string;
+	size?: HeadingSize | string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+// headingSize: DS size → Text size ('@initial' variant collapses to the value).
+const headingSize: Record<string, number> = {
+	1: 4,
+	2: 5,
+	3: 6,
+	4: 7,
+};
+
+const {
+	as = "h1", // DEFAULT_TAG
+	size = 1, // DS default size '1'
+	class: className,
+	...rest
+} = Astro.props;
+
+const textSize = headingSize[String(size)] ?? 4;
+---
+
+<Text {...rest} as={as} size={textSize} class={cx("ds-heading", className)}>
+	<slot />
+</Text>

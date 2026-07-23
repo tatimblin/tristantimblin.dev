@@ -1,0 +1,10 @@
+/* Heading — the shared headingCSS the DS Heading merges for every size
+   (1-4 are identical in the source). In the DS the css prop wins over variant
+   rules (font-weight, line-height, letter-spacing all override Text variants /
+   spaced), so use a doubled selector to guarantee the win regardless of
+   stylesheet import order. */
+.ds-heading.ds-heading {
+	font-weight: var(--font-weight-600);
+	line-height: 1.5;
+	letter-spacing: -0.3px;
+}

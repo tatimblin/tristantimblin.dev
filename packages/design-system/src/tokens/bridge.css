@@ -1,0 +1,33 @@
+/* Legacy-name bridge.
+ *
+ * The site's original CSS and the Web Components in packages/* reference a small
+ * set of custom properties (--color-*, a serif/decorative font) that the design
+ * system does not define. This layer maps those legacy names onto DS tokens so
+ * the existing markup keeps resolving after the DS token layer takes over.
+ *
+ * Imported LAST (after generated + overrides). The theme classes live on <html>
+ * (which is also :root), so var(--text-primary) etc. resolve here.
+ *
+ * Notes:
+ * - The WebGL <dotted-grid> reads --color-fg / --color-bg through a canvas
+ *   fillStyle. We alias them to plain OKLCH scale tokens (--gray-1200 /
+ *   --gray-100), NOT the relative-color --foreground (oklch(from …)), to avoid
+ *   any canvas relative-color support gap.
+ * - --font-display collides: DS uses it for Inter (its body font); the site used
+ *   it for Quintessential. Quintessential moves to --font-decorative; DS's
+ *   --font-display is left intact.
+ * - --font-serif is not a DS token; keep Playfair Display for the wordmark/copy.
+ */
+
+:root {
+	/* Colors — map site names to DS semantic tokens. */
+	--color-bg: var(--gray-100);
+	--color-fg: var(--gray-1200);
+	--color-muted: var(--text-tertiary);
+	--color-border: var(--border-color);
+	--color-accent: var(--accent);
+
+	/* Fonts the site still owns (loaded via Google Fonts in Layout.astro). */
+	--font-serif: "Playfair Display", ui-serif, Georgia, "Times New Roman", serif;
+	--font-decorative: "Quintessential", ui-serif, Georgia, serif;
+}

@@ -1,0 +1,69 @@
+---
+// Flex — DS styled('div', { display:flex, variants }).
+// Exact port of the variant API + defaultVariants.
+import { cx } from "../lib/cx";
+
+type AlignItems =
+	| "baseline"
+	| "center"
+	| "end"
+	| "flex-end"
+	| "flex-start"
+	| "start"
+	| "stretch";
+type AlignContent = "baseline" | "center" | "end" | "start" | "stretch";
+type Direction = "column" | "columnReverse" | "row" | "rowReverse";
+type Gap = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
+type Justify =
+	| "center"
+	| "end"
+	| "space-around"
+	| "space-between"
+	| "space-evenly"
+	| "start";
+type Wrap = "wrap" | "nowrap";
+
+interface Props {
+	as?: string;
+	alignItems?: AlignItems;
+	alignContent?: AlignContent;
+	direction?: Direction;
+	gap?: Gap;
+	justifyContent?: Justify | "flex-start";
+	wrap?: Wrap;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	// defaultVariants from the DS source.
+	alignItems = "center",
+	alignContent,
+	direction = "row",
+	gap = 1,
+	justifyContent = "flex-start",
+	wrap = "nowrap",
+	class: className,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+
+const cls = cx(
+	"ds-flex",
+	alignItems && `ds-flex--align-items-${alignItems}`,
+	alignContent && `ds-flex--align-content-${alignContent}`,
+	direction && `ds-flex--direction-${direction}`,
+	gap && `ds-flex--gap-${gap}`,
+	// 'flex-start' has no matching variant rule in the DS source — base display:flex
+	// already yields flex-start, so emit no class for it.
+	justifyContent &&
+		justifyContent !== "flex-start" &&
+		`ds-flex--justify-content-${justifyContent}`,
+	wrap && `ds-flex--wrap-${wrap}`,
+	className,
+);
+---
+
+<Tag class={cls} {...rest}><slot /></Tag>

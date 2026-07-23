@@ -1,0 +1,18 @@
+/* Aggregate component styles for @whois/design-system.
+ * Import this once per page that uses DS components (or globally in Layout). */
+@import "./box.css";
+@import "./flex.css";
+@import "./grid.css";
+@import "./text.css";
+@import "./heading.css";
+@import "./label.css";
+@import "./button.css";
+@import "./icon-button.css";
+@import "./card.css";
+@import "./callout.css";
+@import "./pill.css";
+@import "./anchor.css";
+@import "./list.css";
+@import "./inline-code.css";
+@import "./icon.css";
+@import "./visually-hidden.css";

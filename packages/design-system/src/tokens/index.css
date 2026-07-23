@@ -1,0 +1,8 @@
+/* The design-system token cascade. Import order matters — later wins:
+ *   1. tokens.generated.css  — untouched output of the published DS package.
+ *   2. tokens.overrides.css  — this site's hand-owned retunes.
+ *   3. bridge.css            — legacy site/Web-Component names → DS tokens.
+ */
+@import "./tokens.generated.css";
+@import "./tokens.overrides.css";
+@import "./bridge.css";

@@ -1,0 +1,77 @@
+---
+// GridItem — DS styled(Box, { position:relative, variants }) plus the
+// placement props (area/col/colSpan/…) the DS applies via its `css` prop,
+// rendered here as inline style. Mirrors Grid/GridItem.tsx + utils.spanToCSSValue.
+import { cx } from "../lib/cx";
+
+type Self = "start" | "center" | "end" | "stretch" | "baseline";
+
+interface Props {
+	as?: string;
+	area?: string;
+	col?: number | string;
+	colEnd?: number;
+	colSpan?: number | "auto";
+	colStart?: number;
+	row?: number | string;
+	rowEnd?: number;
+	rowSpan?: number | "auto";
+	rowStart?: number;
+	justifySelf?: Self;
+	alignSelf?: Self;
+	placeSelf?: Self;
+	class?: string;
+	style?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	area,
+	col,
+	colEnd,
+	colSpan,
+	colStart,
+	row,
+	rowEnd,
+	rowSpan,
+	rowStart,
+	justifySelf,
+	alignSelf,
+	placeSelf,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+
+// utils.spanToCSSValue: undefined | 'auto' | `span N/span N`
+const spanToCSSValue = (span?: number | "auto") =>
+	!span ? undefined : span === "auto" ? "auto" : `span ${span}/span ${span}`;
+
+const cls = cx(
+	"ds-grid-item",
+	alignSelf && `ds-grid-item--align-self-${alignSelf}`,
+	justifySelf && `ds-grid-item--justify-self-${justifySelf}`,
+	placeSelf && `ds-grid-item--place-self-${placeSelf}`,
+	className,
+);
+
+const styleObj: Record<string, string | undefined> = {
+	"grid-area": area,
+	"grid-column": (col as string) || spanToCSSValue(colSpan),
+	"grid-row": (row as string) || spanToCSSValue(rowSpan),
+	"grid-column-start": colStart != null ? String(colStart) : undefined,
+	"grid-column-end": colEnd != null ? String(colEnd) : undefined,
+	"grid-row-start": rowStart != null ? String(rowStart) : undefined,
+	"grid-row-end": rowEnd != null ? String(rowEnd) : undefined,
+};
+const layoutStyle = Object.entries(styleObj)
+	.filter(([, v]) => v != null)
+	.map(([k, v]) => `${k}:${v}`)
+	.join(";");
+const mergedStyle = [layoutStyle, style].filter(Boolean).join(";") || undefined;
+---
+
+<Tag class={cls} style={mergedStyle} {...rest}><slot /></Tag>

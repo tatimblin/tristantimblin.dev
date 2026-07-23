@@ -1,0 +1,16 @@
+---
+// VisuallyHidden — DS css({...}) applied to a polymorphic element.
+// Default element is 'p' (DS: as: Component = 'p').
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "p", class: className, ...rest } = Astro.props;
+const Tag = as as any;
+---
+
+<Tag class={cx("ds-visually-hidden", className)} {...rest}><slot /></Tag>
