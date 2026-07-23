@@ -39,9 +39,11 @@ stories-heading {
 	   paragraph reaches and pushes it away. This is the px "fix duration". */
 	--sh-hold: 300px;
 	/* Font sizes: the "&" is far larger than "other stories" so, sharing a
-	   baseline, its top pokes up into "tristan" while "other stories" does not. */
-	--sh-amp-size: clamp(8rem, 22vw, 20rem);
-	--sh-heading-size: clamp(3rem, 8vw, 6.5rem);
+	   baseline, its top pokes up into "tristan" while "other stories" does not.
+	   FIXED steps (not vw-clamps) that change only at breakpoints — kept in
+	   lockstep with --wordmark-size / --heading-size on .home in index.astro. */
+	--sh-amp-size: 6rem;
+	--sh-heading-size: 2rem;
 
 	display: block;
 	position: relative;
@@ -50,6 +52,28 @@ stories-heading {
 	   the hero owns --hero-height, the lockup's scroll-0 top is
 	   (--hero-height − --sh-overlap) from the page top. */
 	margin-block-start: calc(-1 * var(--sh-overlap));
+}
+
+/* Fixed lockup type steps at the DS breakpoints, matching --wordmark-size /
+   --heading-size on .home in index.astro. The "&" tracks the wordmark; "other
+   stories" tracks the copy heading. (Mobile-stacked overrides are further down.) */
+@media (min-width: 640px) {
+	stories-heading {
+		--sh-amp-size: 10rem;
+		--sh-heading-size: 2.5rem;
+	}
+}
+@media (min-width: 1024px) {
+	stories-heading {
+		--sh-amp-size: 15rem;
+		--sh-heading-size: 3rem;
+	}
+}
+@media (min-width: 1280px) {
+	stories-heading {
+		--sh-amp-size: 20rem;
+		--sh-heading-size: 3.25rem;
+	}
 }
 
 /* Reserve the pinned scroll distance in normal flow. The pin stays stuck for
@@ -195,7 +219,8 @@ stories-heading {
    the resting solid face renders statically (outline hidden). */
 @media (max-width: 900px) {
 	stories-heading {
-		--sh-amp-size: clamp(6rem, 22vw, 14rem);
+		--sh-amp-size: 6rem; /* matches --amp-stacked on .home */
+		--sh-heading-size: 2rem;
 		margin-block-start: var(--space-7, 3rem); /* no hero overlap when stacked */
 	}
 
@@ -242,6 +267,6 @@ stories-heading {
 
 @media (max-width: 640px) {
 	stories-heading {
-		--sh-amp-size: clamp(6rem, 30vw, 12rem);
+		--sh-amp-size: 6rem;
 	}
 }

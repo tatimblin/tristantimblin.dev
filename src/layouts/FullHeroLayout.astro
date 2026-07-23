@@ -1,0 +1,144 @@
+---
+// FullHeroLayout — a reusable page shell with three drop-in regions:
+//
+//   scene    (slot="scene")   full-bleed visual; owns --hero-height. The direct-
+//                             WebGL <dotted-grid> drops in here (any full-bleed
+//                             visual works — the Layout is scene-agnostic).
+//   heading  (slot="heading") the large heading region, inset to the container
+//                             gutter. Its slotted content self-manages: it may
+//                             ANIMATE (drop in <stories-heading> with its own
+//                             pin/parallax/reveal) or just flow relatively.
+//   content  (default slot)   a BARE, full-width opaque riser. Its only job is
+//                             the pin coupling — it's opaque + z-indexed so
+//                             content rising from below cleanly meets the pinned
+//                             heading. The consumer composes ALL grids/sections
+//                             here: full-bleed by default; a contained row opts
+//                             into gutters with the .fh-row helper.
+//
+// Wraps the base Layout (html/head/tokens/fonts/ClientRouter) unchanged.
+import Layout from "./Layout.astro";
+// DS component styles so consumers' <Grid>/<GridItem> resolve.
+import "@whois/design-system/styles.css";
+
+interface Props {
+	title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<Layout title={title}>
+	<div class="fh">
+		<!-- SCENE: full-bleed; height driven by --hero-height. -->
+		<div class="fh__scene"><slot name="scene" /></div>
+
+		<!-- HEADING: inset to the container gutter so a 12-col lockup lines up
+		     with the content rows below. Slotted content owns any animation. -->
+		<div class="fh__heading"><slot name="heading" /></div>
+
+		<!-- CONTENT: bare opaque riser. The consumer builds rows/sections here. -->
+		<div class="fh__content"><slot /></div>
+	</div>
+</Layout>
+
+<style>
+	.fh {
+		/* FIXED type steps (not vw-clamps): the wordmark + lockup change size only
+		   at breakpoints. The overlap formulas in the slotted heading are ratios of
+		   these sizes, so a fixed input yields a clean fixed overlap per step; a
+		   JS parallax measures real positions and adapts automatically. Base
+		   (mobile-first) values here; larger steps in the media queries below. */
+		--wordmark-size: 4.5rem;
+		--heading-size: 2rem;
+		/* Breathing room between the bottom of the heading and the fold. */
+		--hero-bottom-gap: var(--space-8);
+		/* Bottom-pin the text cluster to the fold: the scene fills 100svh minus the
+		   space the wordmark + heading occupy BELOW the scene's bottom edge. Reserve
+		   is font-relative so it tracks the (fixed) type at every step; max(0px, …)
+		   keeps the scene non-negative — text always wins on short screens and the
+		   scene becomes a thin strip. */
+		--hero-text-reserve: calc(
+			0.48 * var(--wordmark-size) + 0.7 * var(--heading-size) +
+				var(--hero-bottom-gap)
+		);
+		--hero-height: max(0px, calc(100svh - var(--hero-text-reserve)));
+		/* Container-aware gutter: the normal --container-pad on narrow screens, or
+		   the centering margin once the viewport exceeds --container-max. Shared by
+		   the wordmark, heading, and content rows so they all align to the same
+		   constrained column AND the content stays centered/capped like a container
+		   (no max-width + margin:auto needed, which would fight the grid). */
+		--hero-inset: max(
+			var(--container-pad),
+			calc((100% - var(--container-max)) / 2)
+		);
+	}
+
+	/* Fixed wordmark + heading steps at the DS breakpoints (sm 640 / lg 1024 /
+	   xl 1280). A slotted <stories-heading> steps --sh-amp-size / --sh-heading-size
+	   in lockstep from its own stylesheet. */
+	@media (min-width: 640px) {
+		.fh {
+			--wordmark-size: 8rem;
+			--heading-size: 2.5rem;
+		}
+	}
+	@media (min-width: 1024px) {
+		.fh {
+			--wordmark-size: 12rem;
+			--heading-size: 3rem;
+		}
+	}
+	@media (min-width: 1280px) {
+		.fh {
+			--wordmark-size: 16rem;
+			--heading-size: 3.25rem;
+		}
+	}
+
+	/* SCENE: full-bleed. Height comes from --hero-height; overflow visible so a
+	   wordmark straddling the bottom edge can spill onto the page below. */
+	.fh__scene {
+		--dotted-grid-height: var(--hero-height);
+		display: block;
+		overflow: visible;
+	}
+
+	/* HEADING: inset to the container gutter. z-index ABOVE the content riser so a
+	   pinned lockup stays visible while the content rises past it. */
+	.fh__heading {
+		padding-inline: var(--hero-inset);
+		position: relative;
+		z-index: 3;
+	}
+
+	/* CONTENT: bare, full-width opaque riser. No padding / max-width / grid — the
+	   consumer owns those. Opaque + z-indexed (below the heading) so content
+	   rising from below cleanly meets the pinned heading and pushes it away. */
+	.fh__content {
+		background: var(--color-bg);
+		position: relative;
+		z-index: 2;
+	}
+
+	/* Stacked layout (≤900px): the heading no longer overlaps the scene — it
+	   stacks with a lead + gap — so the cluster below the scene is taller. Rebuild
+	   the reserve. --amp-stacked mirrors a slotted lockup's stacked ampersand. */
+	@media (max-width: 900px) {
+		.fh {
+			--amp-stacked: 6rem;
+			--hero-text-reserve: calc(
+				0.41 * var(--wordmark-size) + 0.88 * var(--amp-stacked) +
+					var(--space-7) + var(--hero-bottom-gap)
+			);
+		}
+	}
+</style>
+
+<!-- .fh-row: the container helper for a CONTAINED content row (gutters, full
+     width to match the heading's inset). Contents opt in by wrapping in .fh-row;
+     full-bleed sections just omit it. Global so consumers can use it. -->
+<style is:global>
+	.fh-row {
+		padding-inline: var(--hero-inset);
+	}
+</style>

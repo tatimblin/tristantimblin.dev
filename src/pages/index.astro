@@ -1,7 +1,9 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import FullHeroLayout from "../layouts/FullHeroLayout.astro";
 import StoriesHeading from "../components/StoriesHeading.astro";
 import VideoCarousel from "../components/VideoCarousel.astro";
+import Grid from "@whois/design-system/Grid";
+import GridItem from "@whois/design-system/GridItem";
 import "@whois/stories-heading/styles.css";
 import "@whois/dotted-grid/styles.css";
 import "@whois/video-carousel/styles.css";
@@ -13,36 +15,43 @@ import "@whois/video-carousel/styles.css";
 	import "@whois/video-carousel";
 </script>
 
-<Layout>
-	<main class="home">
-		<!-- HERO: fabric video rendered as a dotted-grid halftone, with the
-		     "tristan" wordmark straddling its bottom edge. -->
-		<section class="hero">
-			<dotted-grid
-				class="hero__video"
-				src="/videos/fabric.web.mp4"
-				color="#ededed"
-				background="#0a0a0a"
-				cell-size="13"
-				dot-size="0.55"
-			>
-				<h1 class="wordmark" data-sh-anchor>tristan</h1>
-			</dotted-grid>
-		</section>
+<FullHeroLayout>
+	<!-- SCENE: fabric video as a dotted-grid halftone, with the "tristan"
+	     wordmark straddling its bottom edge and spilling onto the page below. -->
+	<dotted-grid
+		slot="scene"
+		class="hero__video"
+		src="/videos/fabric.web.mp4"
+		color="#121212"
+		background="#fff"
+		cell-size="8"
+		dot-size="0.35"
+		levels="1"
+		gamma="0.45"
+		contrast="0.95"
+		color-reveal="0"
+	>
+		<h1 class="wordmark">tristan</h1>
+	</dotted-grid>
 
-		<!-- TRAVELING LOCKUP: one "& other stories" whose big ampersand parallaxes
-		     from bottom-aligned (under "tristan") to top-aligned, with the
-		     font-swap reveal crossing at the ampersand's middle point. Copy and
-		     the meta + video carousel are placed into its grid via slots. -->
-		<StoriesHeading>
-			<div slot="copy">
+	<!-- HEADING: the animated "& other stories" lockup. Its big ampersand
+	     parallaxes from bottom-aligned (under "tristan") to top-aligned while the
+	     outline→solid font-swap reveal wipes, both over the pin duration. -->
+	<StoriesHeading slot="heading" />
+
+	<!-- CONTENT: the page owns its grid rows here. First row — body copy (cols
+	     4–7) + the video carousel (cols 9–12) — rises into the pinned lockup and
+	     pushes it away. A second row or a full-bleed section would just be more
+	     markup in this slot. -->
+	<div class="fh-row">
+		<Grid class="home__grid">
+			<GridItem class="home__copy">
 				<p>
 					Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-					eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-					ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-					aliquip ex ea commodo consequat. Duis aute irure dolor in
-					reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-					pariatur.
+					eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+					minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+					ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+					voluptate velit esse cillum dolore eu fugiat nulla pariatur.
 				</p>
 				<p>
 					Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
@@ -51,57 +60,32 @@ import "@whois/video-carousel/styles.css";
 					laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore
 					veritatis et quasi architecto beatae vitae dicta sunt explicabo.
 				</p>
-			</div>
-
-			<div slot="rail" class="rail">
-				<!-- The single video panel: an autoplaying dotted-grid carousel with a
-				     vertical date ruler/scrubber on its left. -->
+			</GridItem>
+			<GridItem class="home__rail">
 				<VideoCarousel />
-			</div>
-		</StoriesHeading>
-
-		<div class="scroll-spacer" aria-hidden="true"></div>
-	</main>
-</Layout>
+			</GridItem>
+		</Grid>
+	</div>
+</FullHeroLayout>
 
 <style>
-	.home {
-		padding-inline: var(--container-pad);
-		/* Hero video height — the single knob for the hero size. Because the
-		   wordmark lives INSIDE the grid and the lockup's overlap is keyed off
-		   --wordmark-size (not this), the "& other stories" ↔ "tristan" overlap
-		   holds no matter what this is set to. */
-		--hero-height: 80vh;
-		/* The "tristan" wordmark's font size. Shared with the lockup below so its
-		   overlap tracks the wordmark at every viewport width (the glyphs spill
-		   ~0.6em below the grid via translateY + line-height, so a fixed vh could
-		   never keep up on tall/wide windows — this scales WITH the type). */
-		--wordmark-size: clamp(6rem, 27vw, 34rem);
-	}
-
-	/* HERO -------------------------------------------------------------- */
-	.hero {
-		position: relative;
-		/* Break out of .home's padding so the dotted-grid video is full-bleed,
-		   running to both edges of the screen. */
-		margin-inline: calc(var(--container-pad) * -1);
-	}
-
+	/* SCENE ------------------------------------------------------------- */
+	/* Let the wordmark's lower half spill past the grid (the dotted-grid package
+	   sets overflow:hidden; override it here). Height is inherited from
+	   .fh__scene's --dotted-grid-height. */
 	.hero__video {
-		--dotted-grid-height: var(--hero-height);
 		display: block;
-		/* The wordmark straddles the bottom edge, so its lower half must spill
-		   past the grid onto the page background — let it overflow vertically. */
 		overflow: visible;
 	}
 
-	/* "tristan" lives INSIDE the grid, anchored to its bottom edge and pushed
-	   down so the lower portion falls onto the page below the hero. */
+	/* "tristan" lives INSIDE the scene, anchored to its bottom edge and pushed
+	   down so the lower portion falls onto the page below. */
 	.wordmark {
 		position: absolute;
-		/* Align the wordmark's left edge to the grid's column-1 line (the same
-		   line the ampersand rests on), even though the hero itself is full-bleed. */
-		left: var(--container-pad);
+		/* Align the wordmark's left edge to the shared container-aware inset (the
+		   same line the ampersand + copy rest on), even though the scene is
+		   full-bleed. */
+		left: var(--hero-inset);
 		bottom: 0;
 		margin: 0;
 		font-family: var(--font-serif);
@@ -109,46 +93,65 @@ import "@whois/video-carousel/styles.css";
 		font-size: var(--wordmark-size);
 		line-height: 0.82;
 		letter-spacing: -0.02em;
-		color: #fff;
-		/* Straddle the video's bottom edge: push the glyphs down so their lower
-		   portion falls onto the page background below the hero. */
+		color: var(--text-primary);
 		transform: translateY(42%);
 		pointer-events: none;
 		z-index: 1; /* above the grid canvas */
 	}
 
-	/* COPY -------------------------------------------------------------- */
-	.home :global(.sh__copy p) {
-		font-family: var(--font-serif);
-		font-size: var(--font-size-lg);
-		line-height: 1.6;
-		color: var(--color-fg);
-	}
-
-	.home :global(.sh__copy p + p) {
-		margin-block-start: var(--space-5);
-	}
-
-	/* RAIL (meta + carousel) -------------------------------------------- */
-	.rail {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-6);
-	}
-
-	/* The video panel fills the rail width; its own ruler sits to the left of the
-	   stage. */
-	.rail :global(.vc) {
-		width: 100%;
-	}
-
-	.scroll-spacer {
-		height: 60vh;
-	}
-
 	@media (max-width: 640px) {
 		.wordmark {
 			transform: translateY(30%);
+		}
+	}
+
+	/* CONTENT ROW ------------------------------------------------------- */
+	/* The 12-col template lives here (not the DS Grid's inline templateColumns
+	   prop) so it can be media-queried; <Grid> supplies display:grid. */
+	.home__grid {
+		grid-template-columns: repeat(12, 1fr);
+		column-gap: var(--space-5);
+	}
+
+	.home__copy {
+		grid-column: 4 / span 4;
+		min-width: 0;
+	}
+
+	.home__copy :global(p) {
+		font-family: var(--font-serif);
+		font-size: var(--font-size-4);
+		line-height: 1.6;
+		color: var(--text-secondary);
+	}
+
+	.home__copy :global(p + p) {
+		margin-block-start: var(--space-5);
+	}
+
+	/* Video carousel on the right, lifted so it starts ABOVE the paragraph. */
+	.home__rail {
+		grid-column: 9 / span 4;
+		grid-row: 1;
+		align-self: start;
+		margin-block-start: calc(-1 * var(--space-13, 128px));
+		min-width: 0;
+	}
+
+	.home__rail :global(.vc) {
+		width: 100%;
+	}
+
+	/* Stacked layout (≤900px): one column, in DOM order — copy then carousel. */
+	@media (max-width: 900px) {
+		.home__grid {
+			display: block;
+		}
+		.home__copy {
+			margin-block-start: var(--space-7);
+		}
+		.home__rail {
+			margin-block-start: var(--space-7);
 		}
 	}
 </style>
