@@ -16,8 +16,8 @@ import "@whois/video-carousel/styles.css";
 </script>
 
 <FullHeroLayout>
-	<!-- SCENE: fabric video as a dotted-grid halftone, with the "tristan"
-	     wordmark straddling its bottom edge and spilling onto the page below. -->
+	<!-- SCENE: fabric video as a dotted-grid halftone — a capped banner across
+	     the top of the page. -->
 	<dotted-grid
 		slot="scene"
 		class="hero__video"
@@ -30,13 +30,12 @@ import "@whois/video-carousel/styles.css";
 		gamma="0.45"
 		contrast="0.95"
 		color-reveal="0"
-	>
-		<h1 class="wordmark">tristan</h1>
-	</dotted-grid>
+	/>
 
-	<!-- HEADING: the animated "& other stories" lockup. Its big ampersand
-	     parallaxes from bottom-aligned (under "tristan") to top-aligned while the
-	     outline→solid font-swap reveal wipes, both over the pin duration. -->
+	<!-- HEADING: the full-width "tristan" wordmark, then the animated
+	     "& other stories" lockup. The big "&" overlaps the wordmark (indented) and
+	     parallaxes + fades on its own scroll position; "other stories" pins mid-
+	     viewport and wipes its outline→solid reveal. -->
 	<StoriesHeading slot="heading" />
 
 	<!-- CONTENT: the page owns its grid rows here. First row — body copy (cols
@@ -70,39 +69,10 @@ import "@whois/video-carousel/styles.css";
 
 <style>
 	/* SCENE ------------------------------------------------------------- */
-	/* Let the wordmark's lower half spill past the grid (the dotted-grid package
-	   sets overflow:hidden; override it here). Height is inherited from
-	   .fh__scene's --dotted-grid-height. */
+	/* The dotgrid banner. Height is inherited from .fh__scene's
+	   --dotted-grid-height; nothing straddles its edge anymore. */
 	.hero__video {
 		display: block;
-		overflow: visible;
-	}
-
-	/* "tristan" lives INSIDE the scene, anchored to its bottom edge and pushed
-	   down so the lower portion falls onto the page below. */
-	.wordmark {
-		position: absolute;
-		/* Align the wordmark's left edge to the shared container-aware inset (the
-		   same line the ampersand + copy rest on), even though the scene is
-		   full-bleed. */
-		left: var(--hero-inset);
-		bottom: 0;
-		margin: 0;
-		font-family: var(--font-serif);
-		font-weight: 500;
-		font-size: var(--wordmark-size);
-		line-height: 0.82;
-		letter-spacing: -0.02em;
-		color: var(--text-primary);
-		transform: translateY(42%);
-		pointer-events: none;
-		z-index: 1; /* above the grid canvas */
-	}
-
-	@media (max-width: 640px) {
-		.wordmark {
-			transform: translateY(30%);
-		}
 	}
 
 	/* CONTENT ROW ------------------------------------------------------- */
@@ -113,8 +83,10 @@ import "@whois/video-carousel/styles.css";
 		column-gap: var(--space-5);
 	}
 
+	/* Start at the left gutter (col 1) so the copy shares a left edge with "other
+	   stories"; span a readable column subset. */
 	.home__copy {
-		grid-column: 4 / span 4;
+		grid-column: 1 / span 5;
 		min-width: 0;
 	}
 
@@ -129,12 +101,28 @@ import "@whois/video-carousel/styles.css";
 		margin-block-start: var(--space-5);
 	}
 
-	/* Video carousel on the right, lifted so it starts ABOVE the paragraph. */
+	/* Video carousel on the right, lifted so it starts near the top of the fold —
+	   alongside the lockup rather than ~600px below it.
+
+	   Two things pull it up:
+	   1. The base lift (--space-13) so the carousel top sits ABOVE the paragraph.
+	   2. An offset for HALF the sticky-header track. StoriesHeading's .sh__track
+	      reserves scroll distance in normal flow — height =
+	      --sh-reveal (300px) + --sh-hold (300px) + --sh-pin-height — and that
+	      reserved block sits ABOVE this content region, pushing everything here
+	      (the carousel included) further down the page. Cancelling the FULL amount
+	      lifts the carousel to the very top; instead we cancel HALF (~324px) so the
+	      carousel rests at the MIDPOINT of the distance "other stories" scrolls
+	      through. --sh-reveal/--sh-hold default to 300px each (inlined here since
+	      those custom props live on the <stories-heading> element and aren't
+	      reliably in this scope); --sh-pin-height (~48px, the "other stories" line
+	      height) is JS-set on that element and not readable here. Half of
+	      (300 + 300 + 48) ≈ 324px. */
 	.home__rail {
 		grid-column: 9 / span 4;
 		grid-row: 1;
 		align-self: start;
-		margin-block-start: calc(-1 * var(--space-13, 128px));
+		margin-block-start: calc(-1 * var(--space-13, 128px) - 324px);
 		min-width: 0;
 	}
 

@@ -1,38 +1,48 @@
 ---
-// The "& other stories" lockup as a sticky heading.
+// The "tristan / & other stories" lockup.
 //
 // Structure (see packages/stories-heading for the mechanics):
-//   .sh__track  — reserves the pin duration in normal flow (its height is the
-//                 scroll distance the heading stays pinned).
-//     .sh__pin  — position:sticky; the lockup pins here at --sh-top.
-//       .sh__stage — 12-col grid: ampersand (col 1) · "other stories" (cols 4–7).
+//   .sh__wordmark — the full-width "tristan" SVG; fills gutter-to-gutter. JS
+//                   measures the glyph bbox and sets the viewBox so width:100%
+//                   fills exactly at any viewport (no hardcoded aspect ratio).
+//   .sh__amp      — the big "&", overlapping the wordmark (indented). It
+//                   parallaxes + fades on its OWN viewport position.
+//   .sh__track    — reserves the pin duration in normal flow for "other stories".
+//     .sh__pin    — position:sticky at --sh-top; "other stories" pins here.
+//       .sh__heading — the outline→solid font-swap reveal that wipes while pinned.
 //
-// The ampersand parallaxes (bottom→top aligned) and the outline→solid font-swap
-// wipes, both driven by one scroll progress over the pin duration.
+// The "&" and "other stories" are DECOUPLED: each has its own scroll driver.
 //
 // This component owns ONLY the lockup. The body copy + video carousel are the
 // page's responsibility: they live in the content region that FLOWS BELOW this
 // (see FullHeroLayout's .fh__content riser), which rises into the empty space the
 // pinned lockup reserves and pushes it away.
 //
-// Face-swapping pieces render TWICE — an outline layer and a solid layer in the
-// same cell — so the reveal clip can wipe one over the other.
+// "other stories" renders TWICE — an outline layer and a solid layer in the same
+// box — so the reveal clip can wipe one over the other.
 ---
 
 <stories-heading>
+	<h1 class="sh__wordmark">
+		<svg
+			class="sh__wordmark-svg"
+			role="img"
+			aria-label="tristan"
+			viewBox="0 0 1000 300"
+			preserveAspectRatio="xMinYMid meet"
+		>
+			<text x="0" y="240" class="sh__wordmark-text">tristan</text>
+		</svg>
+	</h1>
+
+	<div class="sh__amp" data-sh-amp aria-hidden="true">&amp;</div>
+
 	<div class="sh__track" data-sh-track>
 		<div class="sh__pin" data-sh-pin>
-			<div class="sh__stage" data-sh-stage>
-				<div class="sh__amp" aria-hidden="true">
-					<span class="sh__outline">&amp;</span>
-					<span class="sh__solid">&amp;</span>
-				</div>
-
-				<h2 class="sh__heading">
-					<span class="sh__outline" aria-hidden="true">other stories</span>
-					<span class="sh__solid">other stories</span>
-				</h2>
-			</div>
+			<h2 class="sh__heading">
+				<span class="sh__outline" aria-hidden="true">other stories</span>
+				<span class="sh__solid">other stories</span>
+			</h2>
 		</div>
 	</div>
 </stories-heading>
