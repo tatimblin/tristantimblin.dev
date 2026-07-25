@@ -1,0 +1,54 @@
+/* Widget grid — an Apple-widgets-style layout of discrete-size cells.
+ * Uniform square cells; widgets span 1–2 columns × 1–2 rows. grid-auto-flow:
+ * dense re-packs the layout when widgets are reordered or resized, so ordering
+ * is config-driven (DOM order + size) with no manual placement. */
+
+.ds-widget-grid {
+	display: grid;
+	/* Column count is the knob; cells stay square via aspect-ratio on children. */
+	grid-template-columns: repeat(var(--widget-cols, 4), 1fr);
+	grid-auto-rows: auto;
+	gap: var(--space-5); /* 24px, matches the home grid column-gap */
+	grid-auto-flow: dense; /* reflow: fill holes when a later item fits */
+}
+
+/* Base cell: 1×1, square. Size modifiers extend the span and aspect. */
+.ds-widget {
+	grid-column: span 1;
+	grid-row: span 1;
+	aspect-ratio: 1 / 1;
+}
+
+.ds-widget--w2 {
+	grid-column: span 2;
+}
+.ds-widget--h2 {
+	grid-row: span 2;
+}
+
+/* Aspect per size so cells read as clean N×M blocks regardless of track width. */
+.ds-widget--w2.ds-widget--h2 {
+	aspect-ratio: 1 / 1;
+} /* 2×2 square */
+.ds-widget--w2:not(.ds-widget--h2) {
+	aspect-ratio: 2 / 1;
+} /* wide 2×1 */
+.ds-widget:not(.ds-widget--w2).ds-widget--h2 {
+	aspect-ratio: 1 / 2;
+} /* tall 1×2 */
+
+/* Responsive: 4 → 2 cols on tablet, → 1 col on phone. Clamp oversized spans so
+   nothing overflows the narrower track. */
+@media (max-width: 900px) {
+	.ds-widget-grid {
+		--widget-cols: 2;
+	}
+}
+@media (max-width: 560px) {
+	.ds-widget-grid {
+		--widget-cols: 1;
+	}
+	.ds-widget--w2 {
+		grid-column: span 1;
+	} /* can't span 2 of 1 */
+}

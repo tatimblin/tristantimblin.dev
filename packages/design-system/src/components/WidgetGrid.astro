@@ -1,0 +1,22 @@
+---
+// WidgetGrid — an Apple-widgets-style grid of discrete-size <Widget> cells.
+// `cols` sets the column count (the --widget-cols knob); layout reflows via
+// grid-auto-flow: dense (see styles/widget-grid.css). Mirrors Grid.astro.
+import { cx } from "../lib/cx";
+
+interface Props {
+	cols?: number;
+	class?: string;
+	style?: string;
+	[key: string]: unknown;
+}
+
+const { cols, class: className, style, ...rest } = Astro.props;
+
+const colsStyle = cols ? `--widget-cols:${cols}` : undefined;
+const mergedStyle = [colsStyle, style].filter(Boolean).join(";") || undefined;
+---
+
+<div class={cx("ds-widget-grid", className)} style={mergedStyle} {...rest}>
+	<slot />
+</div>

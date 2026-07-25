@@ -1,0 +1,39 @@
+---
+// Widget — a standard cell in a <WidgetGrid>. Wraps a DS Card so every widget
+// gets the card chrome for free, and applies the span classes for its size.
+// Adding a widget is just: <Widget size="2x2" title="…">…content…</Widget>.
+import { cx } from "../lib/cx";
+import Card from "./Card.astro";
+
+type Size = "1x1" | "2x1" | "1x2" | "2x2";
+
+interface Props {
+	size?: Size;
+	title?: string;
+	depth?: 0 | 1 | 2 | 3;
+	variant?: "primary" | "secondary" | "tertiary";
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	size = "1x1",
+	title,
+	depth,
+	variant,
+	class: className,
+	...rest
+} = Astro.props;
+
+const [w, h] = size.split("x").map(Number);
+const cls = cx(
+	"ds-widget",
+	w === 2 && "ds-widget--w2",
+	h === 2 && "ds-widget--h2",
+	className,
+);
+---
+
+<Card class={cls} title={title} depth={depth} variant={variant} {...rest}>
+	<slot />
+</Card>

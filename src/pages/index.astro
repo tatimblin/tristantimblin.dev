@@ -4,6 +4,8 @@ import StoriesHeading from "../components/StoriesHeading.astro";
 import VideoCarousel from "../components/VideoCarousel.astro";
 import Grid from "@whois/design-system/Grid";
 import GridItem from "@whois/design-system/GridItem";
+import WidgetGrid from "@whois/design-system/WidgetGrid";
+import Widget from "@whois/design-system/Widget";
 import "@whois/stories-heading/styles.css";
 import "@whois/dotted-grid/styles.css";
 import "@whois/video-carousel/styles.css";
@@ -64,6 +66,55 @@ import "@whois/video-carousel/styles.css";
 				<VideoCarousel />
 			</GridItem>
 		</Grid>
+	</div>
+
+	<!-- WIDGETS: an Apple-widgets-style grid at the foot of the page. Mixed
+	     sizes in non-packed DOM order so grid-auto-flow: dense re-packs holes;
+	     every cell is a DS Card. Placeholder/skeleton content for now. -->
+	<div class="fh-row home__widgets">
+		<WidgetGrid cols={4}>
+			<Widget size="2x1" title="Now Playing">
+				<div class="wx-nowplaying">
+					<div class="wx-art"></div>
+					<div class="wx-lines">
+						<span class="wx-bar wx-bar--lg"></span>
+						<span class="wx-bar wx-bar--md"></span>
+						<span class="wx-progress"></span>
+					</div>
+				</div>
+			</Widget>
+
+			<Widget size="1x1" title="Rides">
+				<div class="wx-stat">
+					<span class="wx-stat-num">958</span>
+					<span class="wx-stat-label">rides</span>
+				</div>
+			</Widget>
+
+			<Widget size="2x2" title="Feature">
+				<div class="wx-block wx-block--fill"></div>
+			</Widget>
+
+			<Widget size="1x2" title="Activity">
+				<div class="wx-stack">
+					<span class="wx-bar wx-bar--md"></span>
+					<span class="wx-bar wx-bar--sm"></span>
+					<span class="wx-bar wx-bar--lg"></span>
+					<span class="wx-bar wx-bar--sm"></span>
+				</div>
+			</Widget>
+
+			<Widget size="1x1" variant="tertiary" class="wx-placeholder">
+				<span class="wx-plus">+</span>
+			</Widget>
+
+			<Widget size="1x1" title="Miles">
+				<div class="wx-stat">
+					<span class="wx-stat-num">1394</span>
+					<span class="wx-stat-label">miles</span>
+				</div>
+			</Widget>
+		</WidgetGrid>
 	</div>
 </FullHeroLayout>
 
@@ -141,5 +192,110 @@ import "@whois/video-carousel/styles.css";
 		.home__rail {
 			margin-block-start: var(--space-7);
 		}
+	}
+
+	/* WIDGETS ----------------------------------------------------------- */
+	.home__widgets {
+		margin-block-start: var(--space-10);
+		padding-block-end: var(--space-10);
+	}
+
+	/* Let each widget's slot content fill the card body below the header. */
+	.home__widgets :global(.ds-widget) {
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* Skeleton primitives — muted rounded blocks, theme-aware via DS tokens. */
+	.home__widgets :global(.wx-bar),
+	.home__widgets :global(.wx-block),
+	.home__widgets :global(.wx-art),
+	.home__widgets :global(.wx-progress) {
+		background: oklch(from var(--border-color) l c h / 60%);
+		border-radius: var(--border-radius-1);
+	}
+
+	.home__widgets :global(.wx-nowplaying) {
+		display: flex;
+		gap: var(--space-4);
+		align-items: center;
+		padding: var(--space-4);
+		flex: 1;
+	}
+	.home__widgets :global(.wx-art) {
+		width: 64px;
+		height: 64px;
+		border-radius: var(--border-radius-2);
+		flex: none;
+	}
+	.home__widgets :global(.wx-lines) {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		flex: 1;
+		min-width: 0;
+	}
+	.home__widgets :global(.wx-bar) {
+		height: 12px;
+	}
+	.home__widgets :global(.wx-bar--lg) {
+		width: 90%;
+	}
+	.home__widgets :global(.wx-bar--md) {
+		width: 60%;
+	}
+	.home__widgets :global(.wx-bar--sm) {
+		width: 40%;
+	}
+	.home__widgets :global(.wx-progress) {
+		height: 6px;
+		width: 100%;
+		margin-block-start: var(--space-2);
+	}
+
+	.home__widgets :global(.wx-stat) {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		gap: var(--space-1);
+		padding: var(--space-4);
+		flex: 1;
+	}
+	.home__widgets :global(.wx-stat-num) {
+		font-family: var(--font-numeric, var(--font-mono));
+		font-size: var(--font-size-7);
+		font-weight: var(--font-weight-600);
+		line-height: 1;
+		color: var(--text-primary);
+	}
+	.home__widgets :global(.wx-stat-label) {
+		font-size: var(--font-size-1);
+		color: var(--text-tertiary);
+	}
+
+	.home__widgets :global(.wx-block--fill) {
+		flex: 1;
+		margin: var(--space-4);
+	}
+
+	.home__widgets :global(.wx-stack) {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: var(--space-3);
+		padding: var(--space-4);
+		flex: 1;
+	}
+
+	.home__widgets :global(.wx-placeholder) {
+		border-style: dashed;
+	}
+	.home__widgets :global(.wx-placeholder) :global(.wx-plus) {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+		font-size: var(--font-size-7);
+		color: var(--text-tertiary);
 	}
 </style>
