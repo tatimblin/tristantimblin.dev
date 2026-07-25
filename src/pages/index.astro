@@ -18,17 +18,17 @@ import "@whois/video-carousel/styles.css";
 <FullHeroLayout>
 	<!-- SCENE: fabric video as a dotted-grid halftone — a capped banner across
 	     the top of the page. -->
+	<!-- No color/background attrs: the grid falls back to --color-fg / --color-bg
+	     and re-samples them each frame, so it inverts with the active theme. -->
 	<dotted-grid
 		slot="scene"
 		class="hero__video"
 		src="/videos/fabric.web.mp4"
-		color="#121212"
-		background="#fff"
 		cell-size="8"
-		dot-size="0.35"
-		levels="1"
-		gamma="0.45"
-		contrast="0.95"
+		dot-size="1"
+		levels="5"
+		gamma="0.35"
+		contrast="1.1"
 		color-reveal="0"
 	/>
 

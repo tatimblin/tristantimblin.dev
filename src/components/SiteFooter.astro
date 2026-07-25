@@ -1,0 +1,170 @@
+---
+// Global site footer — a basic full-width bar with a copyright line and the
+// light/dark theme toggle. Themes automatically via DS tokens (--color-fg /
+// --color-bg / --border-color). Dark is the site default; the toggle persists
+// the user's explicit choice in localStorage and re-tints the whole page,
+// including the animating <dotted-grid> visuals (they sample --color-fg /
+// --color-bg fresh each frame).
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+	<p class="site-footer__note">© {year} Tristan Timblin</p>
+	<div class="site-footer__controls">
+		<button
+			type="button"
+			class="site-footer__toggle"
+			data-sound-toggle
+			aria-label="Mute ruler sounds"
+			aria-pressed="false"
+		>
+			<span data-sound-toggle-label>Sound</span>
+		</button>
+		<button
+			type="button"
+			class="site-footer__toggle"
+			data-theme-toggle
+			aria-label="Switch to light theme"
+			aria-pressed="false"
+		>
+			<span data-theme-toggle-label>Light</span>
+		</button>
+	</div>
+</footer>
+
+<style>
+	.site-footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-4, 1rem);
+		padding-block: var(--space-5, 1.5rem);
+		padding-inline: var(--container-pad, clamp(1rem, 4vw, 2rem));
+		border-top: 1px solid var(--border-color, var(--color-border));
+		background: var(--color-bg);
+		color: var(--color-fg);
+	}
+
+	.site-footer__note {
+		font-size: var(--font-size-1, 0.875rem);
+		color: var(--text-tertiary, var(--color-muted));
+	}
+
+	.site-footer__controls {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2, 0.5rem);
+	}
+
+	.site-footer__toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5ch;
+		padding: 0.4rem 0.85rem;
+		font: inherit;
+		font-size: var(--font-size-1, 0.875rem);
+		color: var(--color-fg);
+		background: transparent;
+		border: 1px solid var(--border-color, var(--color-border));
+		border-radius: var(--radius, 12px);
+		cursor: pointer;
+		transition: border-color 0.15s ease, color 0.15s ease;
+	}
+
+	.site-footer__toggle:hover {
+		border-color: var(--color-accent, var(--accent));
+		color: var(--color-accent, var(--accent));
+	}
+
+	.site-footer__toggle:focus-visible {
+		outline: 2px solid var(--color-accent, var(--accent));
+		outline-offset: 2px;
+	}
+</style>
+
+<script>
+	// Bind the toggle each time the DOM is (re)painted. astro:page-load fires on
+	// the initial load AND after every view-transition navigation, so the handler
+	// survives ClientRouter swaps.
+	function bind() {
+		const btn = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+		if (!btn || btn.dataset.bound === "1") return;
+		btn.dataset.bound = "1";
+
+		const label = btn.querySelector<HTMLElement>("[data-theme-toggle-label]");
+		const root = document.documentElement;
+
+		const sync = () => {
+			const isDark = root.classList.contains("maximeheckel-dark");
+			// aria-pressed reflects "light active"; label/aria-label name the target.
+			btn.setAttribute("aria-pressed", String(!isDark));
+			btn.setAttribute(
+				"aria-label",
+				isDark ? "Switch to light theme" : "Switch to dark theme"
+			);
+			if (label) label.textContent = isDark ? "Light" : "Dark";
+		};
+
+		btn.addEventListener("click", () => {
+			const next = root.classList.contains("maximeheckel-dark")
+				? "light"
+				: "dark";
+			root.classList.remove("maximeheckel-light", "maximeheckel-dark");
+			root.classList.add("maximeheckel-" + next);
+			localStorage.setItem("theme", next);
+			sync();
+			// Nudge any paused/reduced-motion <dotted-grid> to repaint with the new
+			// tokens (the animating default path already re-tints every frame).
+			document.dispatchEvent(new Event("themechange"));
+		});
+
+		sync();
+	}
+
+	// Sound on/off for the video-carousel ruler ticks. Persists to localStorage
+	// (`sound`: "on"/absent = unmuted, "off" = muted) and broadcasts `soundchange`
+	// so the <video-carousel> refreshes its mute state live. Same rebind guard as
+	// the theme toggle so it survives ClientRouter view-transition swaps.
+	function bindSound() {
+		const btn = document.querySelector<HTMLButtonElement>("[data-sound-toggle]");
+		if (!btn || btn.dataset.bound === "1") return;
+		btn.dataset.bound = "1";
+
+		const label = btn.querySelector<HTMLElement>("[data-sound-toggle-label]");
+
+		const isMuted = () => {
+			try {
+				return localStorage.getItem("sound") === "off";
+			} catch {
+				return false;
+			}
+		};
+
+		const sync = () => {
+			const muted = isMuted();
+			// aria-pressed reflects "muted"; label names the current state.
+			btn.setAttribute("aria-pressed", String(muted));
+			btn.setAttribute(
+				"aria-label",
+				muted ? "Unmute ruler sounds" : "Mute ruler sounds"
+			);
+			if (label) label.textContent = muted ? "Muted" : "Sound";
+		};
+
+		btn.addEventListener("click", () => {
+			const next = isMuted() ? "on" : "off";
+			try {
+				localStorage.setItem("sound", next);
+			} catch {
+				/* storage unavailable — the event still updates live listeners */
+			}
+			sync();
+			document.dispatchEvent(new Event("soundchange"));
+		});
+
+		sync();
+	}
+
+	document.addEventListener("astro:page-load", bind);
+	document.addEventListener("astro:page-load", bindSound);
+</script>

@@ -42,6 +42,12 @@ stories-heading {
 	display: block;
 	position: relative;
 	z-index: 1; /* the lockup rides over the content riser where they overlap */
+	/* The lockup's box (and its pinned "other stories", at z-index 3) is full-width
+	   but only its left-aligned text is visible; its empty area would otherwise sit
+	   OVER content rising below (the video ruler at ~50vh) and swallow its
+	   drag/click. Let pointers fall THROUGH the decorative lockup — the visible text
+	   layers re-enable interaction below. */
+	pointer-events: none;
 }
 
 /* Fixed lockup type steps at the DS breakpoints (sm 640 / lg 1024 / xl 1280).
@@ -73,6 +79,7 @@ stories-heading {
 	margin: 0;
 	position: relative;
 	z-index: 1;
+	pointer-events: auto; /* the host opts pointers out; the visible glyphs opt back in */
 }
 
 .sh__wordmark-svg {
@@ -169,6 +176,10 @@ stories-heading {
 	   would then paint a full-width band across everything to its right (e.g. the
 	   carousel). fit-content confines that backdrop to the text itself. */
 	width: fit-content;
+	/* Re-enable interaction on the visible text (the track opts pointers out so the
+	   empty pinned area doesn't block content below); fit-content keeps this to the
+	   glyphs, so only the text itself is a pointer target. */
+	pointer-events: auto;
 	/* JS fits the single-line text width to a 6-col grid span and publishes the
 	   result as --sh-heading-fitsize; fall back to the fixed rem step until then
 	   (and on the ≤900px stacked layout, where JS clears the fit prop). */

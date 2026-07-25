@@ -4,6 +4,7 @@ import "../styles/global.css";
 // Design-system token cascade (generated DS tokens → site overrides → legacy
 // name bridge). Imported after global.css so its custom properties win.
 import "@whois/design-system/tokens.css";
+import SiteFooter from "../components/SiteFooter.astro";
 
 interface Props {
 	title?: string;
@@ -18,10 +19,12 @@ const { title = "The Hidden Girl" } = Astro.props;
 </script>
 
 <!doctype html>
-<!-- The design system's light OKLCH palette is applied via this static class
-     (its ThemeProvider is React-only; we don't ship it). Tokens resolve at
-     first paint with no JS and no FOUC. -->
-<html lang="en" class="maximeheckel-light">
+<!-- Dark is the site default. The DS's OKLCH palettes are applied via the
+     .maximeheckel-{light,dark} class on <html>; its ThemeProvider is React-only,
+     so we manage the class ourselves. The server renders the dark class and the
+     inline head script below re-applies any stored choice before first paint, so
+     tokens resolve with no JS dependency and no FOUC. -->
+<html lang="en" class="maximeheckel-dark">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -38,9 +41,24 @@ const { title = "The Hidden Girl" } = Astro.props;
 			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;560;600&family=Fira+Code:wght@400;500&family=Space+Grotesk:wght@400;500&family=Playfair+Display:wght@400;600;700&family=Quintessential&display=swap"
 		/>
 		<title>{title}</title>
+		<!-- No-FOUC theme init: apply the stored choice before first paint, and
+		     re-apply after each view-transition swap. Dark is the fallback. -->
+		<script is:inline>
+			(function () {
+				function apply() {
+					var t = localStorage.getItem("theme") === "light" ? "light" : "dark";
+					var r = document.documentElement;
+					r.classList.remove("maximeheckel-light", "maximeheckel-dark");
+					r.classList.add("maximeheckel-" + t);
+				}
+				apply();
+				document.addEventListener("astro:after-swap", apply);
+			})();
+		</script>
 		<ClientRouter />
 	</head>
 	<body>
 		<slot />
+		<SiteFooter />
 	</body>
 </html>

@@ -64,7 +64,7 @@ const {
 const first = clips[0];
 ---
 
-<video-carousel class="vc">
+<video-carousel class="vc" tick-src="/audio/tick_004.ogg">
 	<div class="vc__ruler" data-vc-ruler aria-label="Select clip by date">
 		{
 			clips.map((clip, i) => (
@@ -88,8 +88,6 @@ const first = clips[0];
 			class="vc__grid"
 			data-vc-grid
 			src={first?.src}
-			color="oklch(19.83% 0.01 266)"
-			background="oklch(98.08% 0.008 266)"
 			color-reveal
 			shimmer="6"
 			no-loop

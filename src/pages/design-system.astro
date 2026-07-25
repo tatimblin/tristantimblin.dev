@@ -68,9 +68,163 @@ const iconVariants = [
 	"success",
 	"warning",
 ] as const;
+
+// ── Token control panel ─────────────────────────────────────────────────────
+// A three.js/lil-gui-style panel that live-edits the DS tokens driving every
+// component below. Utility tokens (--space-*, --border-radius-*, --font-*) are
+// defined on :root; color tokens are defined per-theme on .maximeheckel-*. The
+// `scope` field tells the copy-config export (and the agent applying it) which
+// selector each token belongs under in tokens.overrides.css.
+type TokenControl = {
+	var: string; // CSS custom property, e.g. "--accent"
+	label: string;
+	type: "color" | "length" | "number";
+	min?: number;
+	max?: number;
+	step?: number;
+	unit?: string; // appended to slider value, e.g. "px"
+};
+type TokenGroup = {
+	title: string;
+	scope: "root" | "themed"; // :root vs .maximeheckel-<theme>
+	controls: TokenControl[];
+};
+
+const px = { type: "length", unit: "px" } as const;
+const TOKEN_GROUPS: TokenGroup[] = [
+	{
+		title: "Semantic (theme colors)",
+		scope: "themed",
+		controls: [
+			{ var: "--accent", label: "accent", type: "color" },
+			{ var: "--background", label: "background", type: "color" },
+			{ var: "--text-primary", label: "text-primary", type: "color" },
+			{ var: "--text-secondary", label: "text-secondary", type: "color" },
+			{ var: "--text-tertiary", label: "text-tertiary", type: "color" },
+			{ var: "--border-color", label: "border-color", type: "color" },
+			{ var: "--card-background", label: "card-background", type: "color" },
+			{ var: "--danger", label: "danger", type: "color" },
+			{ var: "--warning", label: "warning", type: "color" },
+			{ var: "--success", label: "success", type: "color" },
+			{ var: "--hyperlink", label: "hyperlink", type: "color" },
+		],
+	},
+	{
+		title: "Color scales",
+		scope: "themed",
+		controls: [
+			{ var: "--gray-100", label: "gray-100", type: "color" },
+			{ var: "--gray-400", label: "gray-400", type: "color" },
+			{ var: "--gray-900", label: "gray-900", type: "color" },
+			{ var: "--gray-1200", label: "gray-1200", type: "color" },
+			{ var: "--blue-400", label: "blue-400", type: "color" },
+			{ var: "--blue-900", label: "blue-900", type: "color" },
+			{ var: "--blue-1000", label: "blue-1000", type: "color" },
+			{ var: "--green-900", label: "green-900", type: "color" },
+			{ var: "--red-900", label: "red-900", type: "color" },
+			{ var: "--orange-900", label: "orange-900", type: "color" },
+			{ var: "--pink-900", label: "pink-900", type: "color" },
+		],
+	},
+	{
+		title: "Spacing",
+		scope: "root",
+		controls: [
+			{ var: "--space-2", label: "space-2", min: 0, max: 32, step: 1, ...px },
+			{ var: "--space-3", label: "space-3", min: 0, max: 48, step: 1, ...px },
+			{ var: "--space-4", label: "space-4", min: 0, max: 64, step: 1, ...px },
+			{ var: "--space-5", label: "space-5", min: 0, max: 80, step: 1, ...px },
+			{ var: "--space-6", label: "space-6", min: 0, max: 96, step: 1, ...px },
+		],
+	},
+	{
+		title: "Radius",
+		scope: "root",
+		controls: [
+			{ var: "--border-radius-0", label: "radius-0", min: 0, max: 32, step: 1, ...px },
+			{ var: "--border-radius-1", label: "radius-1", min: 0, max: 40, step: 1, ...px },
+			{ var: "--border-radius-2", label: "radius-2", min: 0, max: 48, step: 1, ...px },
+			{ var: "--border-radius-3", label: "radius-3", min: 0, max: 64, step: 1, ...px },
+		],
+	},
+	{
+		title: "Typography",
+		scope: "root",
+		controls: [
+			{ var: "--font-size-1", label: "font-size-1", min: 10, max: 24, step: 1, ...px },
+			{ var: "--font-size-3", label: "font-size-3", min: 12, max: 28, step: 1, ...px },
+			{ var: "--font-size-4", label: "font-size-4", min: 12, max: 32, step: 1, ...px },
+			{ var: "--font-size-5", label: "font-size-5", min: 14, max: 40, step: 1, ...px },
+			{ var: "--font-size-6", label: "font-size-6", min: 16, max: 48, step: 1, ...px },
+			{ var: "--font-size-7", label: "font-size-7", min: 20, max: 64, step: 1, ...px },
+			{ var: "--font-size-8", label: "font-size-8", min: 24, max: 88, step: 1, ...px },
+			{ var: "--font-weight-400", label: "weight-400", type: "number", min: 100, max: 900, step: 10 },
+			{ var: "--font-weight-500", label: "weight-500", type: "number", min: 100, max: 900, step: 10 },
+			{ var: "--font-weight-600", label: "weight-600", type: "number", min: 100, max: 900, step: 10 },
+		],
+	},
+];
 ---
 
 <Layout title="Design System">
+	<!-- Live token editor. Sliders/pickers write inline custom properties onto
+	     <html> (which beats the class-scoped stylesheet), so every component in
+	     the catalogue re-renders instantly. "Copy config" exports the changed
+	     tokens as JSON for the agent to apply to tokens.overrides.css. -->
+	<aside class="ds-controls" data-token-controls aria-label="design token controls">
+		<header class="ds-controls__top">
+			<h2 class="ds-controls__title">tokens</h2>
+			<span class="ds-controls__theme" data-theme-name></span>
+		</header>
+		<p class="ds-controls__note">
+			Color edits apply to the current theme. Drag to preview; Copy config
+			exports changed tokens as JSON.
+		</p>
+		<div class="ds-controls__body">
+			{TOKEN_GROUPS.map((group) => (
+				<fieldset class="ds-controls__group" data-scope={group.scope}>
+					<legend>{group.title}</legend>
+					{group.controls.map((c) =>
+						c.type === "color" ? (
+							<label class="ds-controls__row ds-controls__row--color">
+								<span class="ds-controls__label">{c.label}</span>
+								<span class="ds-controls__colorwrap">
+									<input type="color" data-var={c.var} data-role="swatch" />
+									<input
+										type="text"
+										class="ds-controls__text"
+										data-var={c.var}
+										data-role="value"
+										spellcheck="false"
+									/>
+								</span>
+							</label>
+						) : (
+							<label class="ds-controls__row">
+								<span class="ds-controls__label">
+									{c.label}
+									<output data-out={c.var}></output>
+								</span>
+								<input
+									type="range"
+									data-var={c.var}
+									data-unit={c.unit ?? ""}
+									min={c.min}
+									max={c.max}
+									step={c.step}
+								/>
+							</label>
+						)
+					)}
+				</fieldset>
+			))}
+		</div>
+		<footer class="ds-controls__actions">
+			<button type="button" data-copy>Copy config</button>
+			<button type="button" data-reset>Reset</button>
+		</footer>
+	</aside>
+
 	<main class="ds-demo">
 		<h1 class="ds-demo__title">@whois/design-system — component catalogue</h1>
 
@@ -359,12 +513,314 @@ const iconVariants = [
 	</main>
 </Layout>
 
+<script>
+	// Live token editor: reflect each control onto an inline custom property on
+	// <html>, which overrides the class-scoped stylesheet so the catalogue below
+	// updates instantly. "Copy config" exports only the changed tokens as JSON,
+	// split into root/themed so the agent can drop them into tokens.overrides.css.
+	function initTokenControls() {
+		const panel = document.querySelector<HTMLElement>("[data-token-controls]");
+		if (!panel || panel.dataset.bound === "true") return;
+		panel.dataset.bound = "true";
+
+		const root = document.documentElement;
+		const scopeOf = (varName: string): "root" | "themed" => {
+			const fs = panel
+				.querySelector(`[data-var="${varName}"]`)
+				?.closest<HTMLElement>("[data-scope]");
+			return (fs?.dataset.scope as "root" | "themed") ?? "themed";
+		};
+		const currentTheme = () =>
+			root.classList.contains("maximeheckel-light")
+				? "maximeheckel-light"
+				: "maximeheckel-dark";
+
+		// Resolve any CSS color (incl. oklch) to #rrggbb by painting a pixel and
+		// reading its bytes — canvas serializes oklch as "oklch(...)", not hex, so
+		// we sample the rasterized RGB instead. Returns null on an unparseable value.
+		const canvas = document.createElement("canvas");
+		canvas.width = canvas.height = 1;
+		const canvasCtx = canvas.getContext("2d", { willReadFrequently: true });
+		const hex2 = (n: number) => n.toString(16).padStart(2, "0");
+		const toHex = (color: string): string | null => {
+			if (!canvasCtx) return null;
+			// Reject values the canvas can't parse (it keeps the prior fillStyle).
+			canvasCtx.fillStyle = "#000000";
+			canvasCtx.fillStyle = color;
+			if (canvasCtx.fillStyle === "#000000" && !/^(#000000|black)$/i.test(color.trim()))
+				return null;
+			canvasCtx.clearRect(0, 0, 1, 1);
+			canvasCtx.fillRect(0, 0, 1, 1);
+			const [r, g, b] = canvasCtx.getImageData(0, 0, 1, 1).data;
+			return `#${hex2(r)}${hex2(g)}${hex2(b)}`;
+		};
+
+		// Changed tokens keyed by var name → { value, scope }. Empty = pristine.
+		const changed = new Map<string, { value: string; scope: "root" | "themed" }>();
+		const baselines = new Map<string, string>();
+
+		const outputs = panel.querySelectorAll<HTMLOutputElement>("[data-out]");
+
+		// Seed every control from the resolved baseline for the active theme.
+		function seed() {
+			// Drop any live-preview overrides we set (leave other inline styles alone).
+			for (const varName of changed.keys()) root.style.removeProperty(varName);
+			changed.clear();
+			baselines.clear();
+			const cs = getComputedStyle(root);
+
+			panel.querySelectorAll<HTMLInputElement>("[data-var]").forEach((input) => {
+				const varName = input.dataset.var!;
+				const base = cs.getPropertyValue(varName).trim();
+				baselines.set(varName, base);
+
+				const role = input.dataset.role;
+				if (input.type === "range") {
+					input.value = parseFloat(base).toString();
+					const out = panel.querySelector<HTMLElement>(`[data-out="${varName}"]`);
+					if (out) out.textContent = base;
+				} else if (role === "value") {
+					input.value = base; // text field holds the true (maybe oklch) value
+				} else if (role === "swatch") {
+					const hex = toHex(base);
+					if (hex) input.value = hex;
+				}
+			});
+
+			const nameEl = panel.querySelector<HTMLElement>("[data-theme-name]");
+			if (nameEl) nameEl.textContent = currentTheme().replace("maximeheckel-", "");
+		}
+
+		function apply(varName: string, value: string) {
+			root.style.setProperty(varName, value);
+			const base = baselines.get(varName);
+			if (base !== undefined && value === base) changed.delete(varName);
+			else changed.set(varName, { value, scope: scopeOf(varName) });
+		}
+
+		panel.querySelectorAll<HTMLInputElement>("[data-var]").forEach((input) => {
+			const varName = input.dataset.var!;
+			input.addEventListener("input", () => {
+				if (input.type === "range") {
+					const value = input.value + (input.dataset.unit || "");
+					const out = panel.querySelector<HTMLElement>(`[data-out="${varName}"]`);
+					if (out) out.textContent = value;
+					apply(varName, value);
+				} else if (input.dataset.role === "swatch") {
+					// Mirror the picker into the paired text field (the source of truth).
+					const text = panel.querySelector<HTMLInputElement>(
+						`input[data-var="${varName}"][data-role="value"]`,
+					);
+					if (text) text.value = input.value;
+					apply(varName, input.value);
+				} else {
+					// Text field: keep the swatch in sync when the value is hex-able.
+					const swatch = panel.querySelector<HTMLInputElement>(
+						`input[data-var="${varName}"][data-role="swatch"]`,
+					);
+					const hex = toHex(input.value);
+					if (swatch && hex) swatch.value = hex;
+					apply(varName, input.value);
+				}
+			});
+		});
+
+		const copyBtn = panel.querySelector<HTMLButtonElement>("[data-copy]");
+		copyBtn?.addEventListener("click", async () => {
+			const rootTokens: Record<string, string> = {};
+			const themed: Record<string, string> = {};
+			for (const [varName, { value, scope }] of changed) {
+				(scope === "root" ? rootTokens : themed)[varName] = value;
+			}
+			const config = {
+				target: "packages/design-system/src/tokens/tokens.overrides.css",
+				theme: currentTheme(),
+				root: rootTokens,
+				themed,
+			};
+			const json = JSON.stringify(config, null, 2);
+			try {
+				await navigator.clipboard.writeText(json);
+			} catch {
+				// Clipboard blocked (e.g. insecure context): log so it's still grabbable.
+				console.log(json);
+			}
+			const label = copyBtn.textContent;
+			copyBtn.textContent = changed.size ? "Copied!" : "No changes";
+			setTimeout(() => (copyBtn.textContent = label), 1200);
+		});
+
+		panel
+			.querySelector<HTMLButtonElement>("[data-reset]")
+			?.addEventListener("click", () => seed());
+
+		seed();
+		// Re-seed when the site theme toggles (SiteFooter dispatches themechange).
+		document.addEventListener("themechange", () => seed());
+	}
+
+	document.addEventListener("astro:page-load", initTokenControls);
+</script>
+
 <style>
 	.ds-demo {
 		max-width: 1000px;
 		margin-inline: auto;
 		padding: var(--space-10) var(--space-6);
 		color: var(--text-primary);
+	}
+	/* Keep the catalogue clear of the fixed panel on wide screens. */
+	@media (min-width: 901px) {
+		.ds-demo {
+			margin-inline: 0 auto;
+			padding-right: calc(280px + var(--space-8));
+		}
+	}
+
+	/* ── Token control panel ─────────────────────────────────────────────── */
+	.ds-controls {
+		position: fixed;
+		top: var(--space-4);
+		right: var(--space-4);
+		z-index: 20;
+		width: 264px;
+		max-height: calc(100vh - var(--space-8));
+		display: flex;
+		flex-direction: column;
+		padding: var(--space-4);
+		background: var(--card-background);
+		border: 1px solid var(--border-color);
+		border-radius: var(--border-radius-2);
+		box-shadow: 0 8px 30px oklch(0% 0 0 / 35%);
+		color: var(--text-primary);
+		font-family: var(--font-mono);
+		font-size: var(--font-size-1);
+	}
+	.ds-controls__top {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-2);
+	}
+	.ds-controls__title {
+		margin: 0;
+		font-size: var(--font-size-3);
+		font-family: var(--font-mono);
+	}
+	.ds-controls__theme {
+		font-size: var(--font-size-1);
+		color: var(--accent);
+	}
+	.ds-controls__note {
+		margin: var(--space-1) 0 var(--space-2);
+		font-family: var(--font-display);
+		font-size: 0.72rem;
+		line-height: 1.35;
+		color: var(--text-tertiary);
+	}
+	.ds-controls__body {
+		flex: 1;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		padding-right: var(--space-1);
+	}
+	.ds-controls__group {
+		margin: 0;
+		padding: var(--space-2) 0 0;
+		border: none;
+		border-top: 1px solid var(--border-color);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+	.ds-controls__group legend {
+		padding: 0;
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--text-secondary);
+	}
+	.ds-controls__row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+	.ds-controls__label {
+		display: flex;
+		justify-content: space-between;
+		gap: var(--space-2);
+		color: var(--text-secondary);
+	}
+	.ds-controls__label output {
+		font-variant-numeric: tabular-nums;
+		color: var(--text-tertiary);
+	}
+	.ds-controls__row input[type="range"] {
+		width: 100%;
+		accent-color: var(--accent);
+	}
+	.ds-controls__colorwrap {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+	.ds-controls__colorwrap input[type="color"] {
+		width: 28px;
+		height: 24px;
+		flex: none;
+		padding: 0;
+		border: 1px solid var(--border-color);
+		border-radius: var(--border-radius-0);
+		background: none;
+		cursor: pointer;
+	}
+	.ds-controls__text {
+		flex: 1;
+		min-width: 0;
+		padding: 0.25rem 0.4rem;
+		border: 1px solid var(--input-border);
+		border-radius: var(--border-radius-0);
+		background: var(--input-background);
+		color: var(--text-primary);
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+	}
+	.ds-controls__actions {
+		display: flex;
+		gap: var(--space-2);
+		margin-top: var(--space-3);
+		padding-top: var(--space-3);
+		border-top: 1px solid var(--border-color);
+	}
+	.ds-controls__actions button {
+		flex: 1;
+		padding: 0.4rem 0.5rem;
+		border: 1px solid var(--border-color);
+		border-radius: var(--border-radius-1);
+		background: var(--accent);
+		color: var(--white, #fff);
+		font: inherit;
+		font-size: 0.78rem;
+		cursor: pointer;
+	}
+	.ds-controls__actions button[data-reset] {
+		background: transparent;
+		color: var(--text-secondary);
+	}
+
+	/* On narrow screens: dock to a scrollable bottom sheet, don't cover content. */
+	@media (max-width: 900px) {
+		.ds-controls {
+			top: auto;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			width: auto;
+			max-height: 45vh;
+			border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
+		}
 	}
 	.ds-demo__title {
 		font-family: var(--font-display);

@@ -10,9 +10,12 @@
  *
  * Notes:
  * - The WebGL <dotted-grid> reads --color-fg / --color-bg through a canvas
- *   fillStyle. We alias them to plain OKLCH scale tokens (--gray-1200 /
- *   --gray-100), NOT the relative-color --foreground (oklch(from …)), to avoid
- *   any canvas relative-color support gap.
+ *   fillStyle. --color-fg aliases --text-primary and --color-bg the plain
+ *   --gray-100 scale token (NOT the relative-color --foreground oklch(from …),
+ *   to avoid any canvas relative-color support gap). Using --text-primary for
+ *   the foreground keeps ONE colour across the whole lockup: the "tristan"
+ *   wordmark + "&" fill with --text-primary, and "other stories" + the dotted
+ *   grids + body text all resolve --color-fg to the same token.
  * - --font-display collides: DS uses it for Inter (its body font); the site used
  *   it for Quintessential. Quintessential moves to --font-decorative; DS's
  *   --font-display is left intact.
@@ -22,7 +25,7 @@
 :root {
 	/* Colors — map site names to DS semantic tokens. */
 	--color-bg: var(--gray-100);
-	--color-fg: var(--gray-1200);
+	--color-fg: var(--text-primary);
 	--color-muted: var(--text-tertiary);
 	--color-border: var(--border-color);
 	--color-accent: var(--accent);

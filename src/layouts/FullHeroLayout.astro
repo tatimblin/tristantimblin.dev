@@ -53,14 +53,29 @@ const { title } = Astro.props;
 		   (The "tristan" wordmark is now a full-width SVG that fills the gutters at
 		   any size, so it no longer has a fixed type step here.) */
 		--heading-size: 2rem;
-		/* The dotgrid is now a capped BANNER at the top of the page (not a full
-		   viewport backdrop), so it no longer reserves room for text below it. */
-		--hero-height: 55svh;
 		/* Full-width within the gutters: every hero region (banner, wordmark,
 		   heading, content rows) insets to --container-pad and spans edge-to-edge.
 		   Dropping the container-centering branch is the "remove max-width on the
 		   grid" step — the wordmark now fills gutter-to-gutter. */
 		--hero-inset: var(--container-pad);
+		/* Split the "tristan" wordmark on the dot-grid banner's bottom edge: the
+		   heading region is pulled UP by half the wordmark's height so the letters'
+		   vertical midline lands on that edge — top half over the grid, bottom half
+		   on the page background. The wordmark SVG renders at 80% of the heading's
+		   content width with a fixed ~3.67:1 glyph aspect ratio (constant brand
+		   text), so half-height = 0.5 · (0.8 · contentWidth) / 3.67 ≈ 0.109 ·
+		   (100vw − 2·inset). Expressed in vw (NOT %) so it resolves against the
+		   viewport width in EVERY context — the negative top-margin AND the
+		   --hero-height calc below (where a % would wrongly resolve against a
+		   height). Tracks every viewport with no JS; tune via --hero-split-frac. */
+		--hero-split-frac: 0.109;
+		--hero-split: calc(
+			var(--hero-split-frac) * (100vw - 2 * var(--hero-inset))
+		);
+		/* Banner height (portrait / pre-hydration fallback). In LANDSCAPE the
+		   slotted <stories-heading> JS (fitFold) overrides this inline so the
+		   wordmark's bottom lands on the fold, accounting for the split pull-up. */
+		--hero-height: 55svh;
 	}
 
 	/* Fixed heading steps at the DS breakpoints (sm 640 / lg 1024 / xl 1280). A
@@ -96,6 +111,15 @@ const { title } = Astro.props;
 		padding-inline: var(--hero-inset);
 		position: relative;
 		z-index: 3;
+		/* Pull up so the wordmark's midline sits on the banner's bottom edge. The
+		   negative margin overlaps the scene; z-index 3 keeps the lockup on top. */
+		margin-block-start: calc(-1 * var(--hero-split));
+		/* This region is full-width and tall at z-index 3, but the slotted lockup
+		   only paints its left-aligned text — a pinned heading's empty area would
+		   sit OVER content rising below (e.g. the video ruler at ~50vh) and swallow
+		   its drag/click. Let pointers fall THROUGH the region; slotted content
+		   re-enables interaction on its visible parts (pointer-events: auto). */
+		pointer-events: none;
 	}
 
 	/* CONTENT: bare, full-width opaque riser. No padding / max-width / grid — the

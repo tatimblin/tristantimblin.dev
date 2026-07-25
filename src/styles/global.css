@@ -37,8 +37,11 @@
   box-sizing: border-box;
 }
 
-html {
+.maximeheckel-light {
   color-scheme: light;
+}
+.maximeheckel-dark {
+  color-scheme: dark;
 }
 
 body {

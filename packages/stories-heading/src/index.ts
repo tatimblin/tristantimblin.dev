@@ -154,9 +154,17 @@ export class StoriesHeadingElement extends HTMLElement {
 		}
 
 		const wmHeight = this.wordmarkSvg.getBoundingClientRect().height;
-		// Wordmark bottom at the fold: any positive --sh-heading-gap then drops the
-		// heading below it.
-		const hero = Math.max(0, window.innerHeight - wmHeight);
+		// The layout may pull the heading region UP (negative top margin) to split
+		// the wordmark on the banner's bottom edge, which raises the wordmark bottom
+		// by the same amount. Read that resolved margin and add it back so the bottom
+		// still lands on the fold; any positive --sh-heading-gap then drops "other
+		// stories" below it. (A custom prop's calc() string isn't parseable, but the
+		// computed margin resolves to px.)
+		const headingEl = this.closest<HTMLElement>(".fh__heading");
+		const pullUp = headingEl
+			? -Math.min(0, parseFloat(getComputedStyle(headingEl).marginTop) || 0)
+			: 0;
+		const hero = Math.max(0, window.innerHeight - wmHeight + pullUp);
 		fh.style.setProperty("--hero-height", `${hero.toFixed(1)}px`);
 	}
 
@@ -378,11 +386,11 @@ export class StoriesHeadingElement extends HTMLElement {
 			"--sh-amp-shift",
 			`${(StoriesHeadingElement.AMP_PARALLAX * p).toFixed(2)}px`
 		);
-		const floor = StoriesHeadingElement.AMP_FLOOR;
-		this.style.setProperty(
-			"--sh-amp-opacity",
-			(1 - (1 - floor) * p).toFixed(4)
-		);
+		// const floor = StoriesHeadingElement.AMP_FLOOR;
+		// this.style.setProperty(
+		// 	"--sh-amp-opacity",
+		// 	(1 - (1 - floor) * p).toFixed(4)
+		// );
 	}
 
 	/**
