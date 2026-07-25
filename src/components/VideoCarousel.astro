@@ -65,37 +65,42 @@ const first = clips[0];
 ---
 
 <video-carousel class="vc" tick-src="/audio/tick_004.ogg">
-	<div class="vc__ruler" data-vc-ruler aria-label="Select clip by date">
-		{
-			clips.map((clip, i) => (
-				<button
-					type="button"
-					class="vc__tick vc__tick--major"
-					data-index={i}
-					data-src={clip.src}
-					data-desc={clip.description}
-					data-loc={clip.location}
-					data-date={clip.date}
-					data-alt={clip.alt}
-					aria-label={`${clip.description} — ${clip.location} — ${clip.date}`}
-				/>
-			))
-		}
-	</div>
+	{/* Ruler + video share a row so the ruler's height tracks the VIDEO box only
+	   (not the caption). On mobile this row collapses and the ruler drops below the
+	   card as a horizontal strip (see styles.css + the orientation logic in JS). */}
+	<div class="vc__main">
+		<div class="vc__ruler" data-vc-ruler aria-label="Select clip by date">
+			{
+				clips.map((clip, i) => (
+					<button
+						type="button"
+						class="vc__tick vc__tick--major"
+						data-index={i}
+						data-src={clip.src}
+						data-desc={clip.description}
+						data-loc={clip.location}
+						data-date={clip.date}
+						data-alt={clip.alt}
+						aria-label={`${clip.description} — ${clip.location} — ${clip.date}`}
+					/>
+				))
+			}
+		</div>
 
-	<div class="vc__stage" data-vc-stage>
-		<dotted-grid
-			class="vc__grid"
-			data-vc-grid
-			src={first?.src}
-			color-reveal
-			shimmer="6"
-			no-loop
-		></dotted-grid>
-		<figcaption class="vc__caption">
-			<span class="vc__desc" data-vc-desc>{first?.description}</span>
-			<span class="vc__loc" data-vc-loc>{first?.location}</span>
-			<span class="vc__date" data-vc-date>{first?.date}</span>
-		</figcaption>
+		<div class="vc__stage" data-vc-stage>
+			<dotted-grid
+				class="vc__grid"
+				data-vc-grid
+				src={first?.src}
+				color-reveal
+				shimmer="6"
+				no-loop
+			></dotted-grid>
+			<figcaption class="vc__caption">
+				<span class="vc__desc" data-vc-desc>{first?.description}</span>
+				<span class="vc__loc" data-vc-loc>{first?.location}</span>
+				<span class="vc__date" data-vc-date>{first?.date}</span>
+			</figcaption>
+		</div>
 	</div>
 </video-carousel>
