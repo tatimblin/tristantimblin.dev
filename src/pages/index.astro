@@ -9,12 +9,18 @@ import Widget from "@whois/design-system/Widget";
 import "@whois/stories-heading/styles.css";
 import "@whois/dotted-grid/styles.css";
 import "@whois/video-carousel/styles.css";
+import "@tristimb/spotify-stream-player/style.css";
+
+// Spotify SSE proxy endpoint — replace with the deployed server URL. Until it
+// points at a reachable server the <spotify-player> shows its skeleton state.
+const SPOTIFY_SSE_URL = "https://REPLACE_ME/";
 ---
 
 <script>
 	import "@whois/stories-heading";
 	import "@whois/dotted-grid";
 	import "@whois/video-carousel";
+	import "@tristimb/spotify-stream-player";
 </script>
 
 <FullHeroLayout>
@@ -73,15 +79,8 @@ import "@whois/video-carousel/styles.css";
 	     every cell is a DS Card. Placeholder/skeleton content for now. -->
 	<div class="fh-row home__widgets">
 		<WidgetGrid cols={4}>
-			<Widget size="2x1" title="Now Playing">
-				<div class="wx-nowplaying">
-					<div class="wx-art"></div>
-					<div class="wx-lines">
-						<span class="wx-bar wx-bar--lg"></span>
-						<span class="wx-bar wx-bar--md"></span>
-						<span class="wx-progress"></span>
-					</div>
-				</div>
+			<Widget size="2x2" title="Now Playing" class="wx-nowplaying-widget">
+				<spotify-player src={SPOTIFY_SSE_URL}></spotify-player>
 			</Widget>
 
 			<Widget size="1x1" title="Rides">
@@ -206,35 +205,23 @@ import "@whois/video-carousel/styles.css";
 		flex-direction: column;
 	}
 
+	/* Now Playing — the <spotify-player> web component brings its own internal
+	   styling; we only size and pad it to fill the card body. */
+	.home__widgets :global(.wx-nowplaying-widget spotify-player) {
+		display: block;
+		width: 100%;
+		flex: 1;
+		min-height: 0;
+		padding: var(--space-4);
+	}
+
 	/* Skeleton primitives — muted rounded blocks, theme-aware via DS tokens. */
 	.home__widgets :global(.wx-bar),
-	.home__widgets :global(.wx-block),
-	.home__widgets :global(.wx-art),
-	.home__widgets :global(.wx-progress) {
+	.home__widgets :global(.wx-block) {
 		background: oklch(from var(--border-color) l c h / 60%);
 		border-radius: var(--border-radius-1);
 	}
 
-	.home__widgets :global(.wx-nowplaying) {
-		display: flex;
-		gap: var(--space-4);
-		align-items: center;
-		padding: var(--space-4);
-		flex: 1;
-	}
-	.home__widgets :global(.wx-art) {
-		width: 64px;
-		height: 64px;
-		border-radius: var(--border-radius-2);
-		flex: none;
-	}
-	.home__widgets :global(.wx-lines) {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-		flex: 1;
-		min-width: 0;
-	}
 	.home__widgets :global(.wx-bar) {
 		height: 12px;
 	}
@@ -246,11 +233,6 @@ import "@whois/video-carousel/styles.css";
 	}
 	.home__widgets :global(.wx-bar--sm) {
 		width: 40%;
-	}
-	.home__widgets :global(.wx-progress) {
-		height: 6px;
-		width: 100%;
-		margin-block-start: var(--space-2);
 	}
 
 	.home__widgets :global(.wx-stat) {

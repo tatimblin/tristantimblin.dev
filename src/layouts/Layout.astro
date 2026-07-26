@@ -16,6 +16,46 @@ const { title = "The Hidden Girl" } = Astro.props;
 
 <script>
 	import "scroll-timeline-polyfill/dist/scroll-timeline.js";
+	import Lenis from "lenis";
+	import "lenis/dist/lenis.css";
+
+	declare global {
+		interface Window {
+			__lenis?: Lenis;
+		}
+	}
+
+	// Smooth scroll, initialized once and shared across view-transition
+	// navigations. Lenis drives the real window scroll (no transform hack), so it
+	// composes with the scroll-timeline polyfill and the scroll-listener web
+	// components (stories-heading, video-carousel) without changes to them.
+	function initLenis() {
+		if (window.__lenis) return window.__lenis;
+		// Honor reduced-motion: leave native scrolling untouched.
+		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+
+		// Subtle smoothing, close to native. Touch stays native by default in
+		// Lenis 1.x (syncTouch is off), so this is desktop wheel/trackpad only.
+		const lenis = new Lenis({ lerp: 0.18, smoothWheel: true });
+		window.__lenis = lenis;
+
+		function raf(time) {
+			lenis.raf(time);
+			requestAnimationFrame(raf);
+		}
+		requestAnimationFrame(raf);
+		return lenis;
+	}
+
+	initLenis();
+
+	// After a view-transition swap, re-measure the new page and reset to top.
+	document.addEventListener("astro:after-swap", () => {
+		const lenis = window.__lenis;
+		if (!lenis) return;
+		lenis.scrollTo(0, { immediate: true });
+		lenis.resize();
+	});
 </script>
 
 <!doctype html>
