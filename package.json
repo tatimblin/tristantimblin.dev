@@ -10,7 +10,7 @@
     "astro": "bunx --bun astro"
   },
   "dependencies": {
-    "@tristimb/spotify-stream-player": "file:../spotify-stream-player/client",
+    "@tristimb/spotify-stream-player": "^0.5.0",
     "@whois/design-system": "workspace:*",
     "@whois/dotted-grid": "workspace:*",
     "@whois/gallery-carousel": "workspace:*",

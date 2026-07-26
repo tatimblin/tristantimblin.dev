@@ -9,11 +9,11 @@ import Widget from "@whois/design-system/Widget";
 import "@whois/stories-heading/styles.css";
 import "@whois/dotted-grid/styles.css";
 import "@whois/video-carousel/styles.css";
-import "@tristimb/spotify-stream-player/style.css";
 
-// Spotify SSE proxy endpoint — replace with the deployed server URL. Until it
-// points at a reachable server the <spotify-player> shows its skeleton state.
-const SPOTIFY_SSE_URL = "https://REPLACE_ME/";
+// Spotify SSE proxy endpoint (Cloud Run). The <spotify-player> shows its skeleton
+// state until a message arrives. The component ships its own styles (Shadow DOM);
+// it's themed from here via the ::part()/--ssp-* API in the widget CSS below.
+const SPOTIFY_SSE_URL = "https://spotify-stream-player-j2yxapx3oa-uk.a.run.app/";
 ---
 
 <script>
@@ -79,8 +79,8 @@ const SPOTIFY_SSE_URL = "https://REPLACE_ME/";
 	     every cell is a DS Card. Placeholder/skeleton content for now. -->
 	<div class="fh-row home__widgets">
 		<WidgetGrid cols={4}>
-			<Widget size="2x2" title="Now Playing" class="wx-nowplaying-widget">
-				<spotify-player src={SPOTIFY_SSE_URL}></spotify-player>
+			<Widget size="1x1" class="wx-nowplaying-widget">
+				<spotify-player src={SPOTIFY_SSE_URL} layout="cover" tint></spotify-player>
 			</Widget>
 
 			<Widget size="1x1" title="Rides">
@@ -205,14 +205,53 @@ const SPOTIFY_SSE_URL = "https://REPLACE_ME/";
 		flex-direction: column;
 	}
 
-	/* Now Playing — the <spotify-player> web component brings its own internal
-	   styling; we only size and pad it to fill the card body. */
+	/* Clip the component's full-bleed album gradient to the card's rounded
+	   corners (the tinted background bleeds to every edge). */
+	.home__widgets :global(.wx-nowplaying-widget) {
+		overflow: hidden;
+	}
+
+	/* Now Playing — the <spotify-player> web component is styled entirely through
+	   its public API: size it to fill the card body, then map DS tokens onto the
+	   component's --ssp-* custom properties + tune a couple of ::part()s. Under
+	   `tint` the component paints an album-derived gradient and owns its own
+	   (light) text color, so we don't set one here. Kept in :global() so Astro
+	   doesn't rewrite the custom-element/::part() selectors. */
 	.home__widgets :global(.wx-nowplaying-widget spotify-player) {
 		display: block;
 		width: 100%;
 		flex: 1;
 		min-height: 0;
-		padding: var(--space-4);
+		padding: 0; /* gradient is full-bleed; inner spacing lives on ::part(root) */
+		--ssp-gap: var(--space-2);
+		--ssp-title-size: var(--font-size-3);
+		--ssp-subtitle-size: var(--font-size-1);
+		--ssp-timestamp-size: 11px;
+		--ssp-progress-height: 6px;
+		--ssp-radius: var(--border-radius-2);
+		/* soft/tinted bar: pale translucent white over the album gradient */
+		--ssp-accent: oklch(1 0 0 / 0.9);
+		--ssp-track: oklch(1 0 0 / 0.25);
+	}
+	/* Inner spacing so the gradient is full-bleed but art/text stay inset. */
+	.home__widgets :global(.wx-nowplaying-widget spotify-player)::part(root) {
+		padding: var(--space-3);
+	}
+	.home__widgets :global(.wx-nowplaying-widget spotify-player)::part(art) {
+		border-radius: var(--border-radius-0);
+		/* Reuse the card's own DS depth shadow (--card-shadow, set by
+		   .ds-card--depth-N). It inherits through the shadow boundary, so the art
+		   lifts with the same shadow the card uses. */
+		box-shadow: var(--card-shadow);
+	}
+	/* The album frame clips its contents (overflow:hidden in the component); allow
+	   the art's box-shadow to escape it. The art already fits the frame, so nothing
+	   else is actually clipped. */
+	.home__widgets :global(.wx-nowplaying-widget spotify-player)::part(album) {
+		overflow: visible;
+	}
+	.home__widgets :global(.wx-nowplaying-widget spotify-player)::part(album-text) {
+		display: none;
 	}
 
 	/* Skeleton primitives — muted rounded blocks, theme-aware via DS tokens. */
