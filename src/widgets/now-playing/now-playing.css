@@ -1,0 +1,59 @@
+/* Now Playing widget styles.
+ *
+ * Plain CSS (not an Astro scoped <style>) so the ::part() selectors that pierce
+ * the <spotify-player> shadow DOM survive verbatim — Astro would otherwise add a
+ * scope hash and break them. Selectors are global by nature (they reach into a
+ * web component's shadow DOM); the .wx-nowplaying-* prefix keeps them contained.
+ * The .home__widgets prefix matches the page's widget-grid containment. */
+
+/* Clip the component's full-bleed album gradient to the card's rounded corners
+   (the tinted background bleeds to every edge). */
+.home__widgets .wx-nowplaying-widget {
+	overflow: hidden;
+}
+
+/* The <spotify-player> web component is styled entirely through its public API:
+   size it to fill the card body, then map DS tokens onto the component's --ssp-*
+   custom properties + tune a couple of ::part()s. Under `tint` the component
+   paints an album-derived gradient and owns its own (light) text color, so we
+   don't set one here. */
+.home__widgets .wx-nowplaying-widget spotify-player {
+	display: block;
+	width: 100%;
+	flex: 1;
+	min-height: 0;
+	padding: 0; /* gradient is full-bleed; inner spacing lives on ::part(root) */
+	--ssp-gap: var(--space-2);
+	--ssp-title-size: var(--font-size-3);
+	--ssp-subtitle-size: var(--font-size-1);
+	--ssp-timestamp-size: 11px;
+	--ssp-progress-height: 6px;
+	--ssp-radius: var(--border-radius-2);
+	/* soft/tinted bar: pale translucent white over the album gradient */
+	--ssp-accent: oklch(1 0 0 / 0.9);
+	--ssp-track: oklch(1 0 0 / 0.25);
+}
+
+/* Inner spacing so the gradient is full-bleed but art/text stay inset. */
+.home__widgets .wx-nowplaying-widget spotify-player::part(root) {
+	padding: var(--space-3);
+}
+
+.home__widgets .wx-nowplaying-widget spotify-player::part(art) {
+	border-radius: var(--border-radius-0);
+	/* Reuse the card's own DS depth shadow (--card-shadow, set by
+	   .ds-card--depth-N). It inherits through the shadow boundary, so the art
+	   lifts with the same shadow the card uses. */
+	box-shadow: var(--card-shadow);
+}
+
+/* The album frame clips its contents (overflow:hidden in the component); allow
+   the art's box-shadow to escape it. The art already fits the frame, so nothing
+   else is actually clipped. */
+.home__widgets .wx-nowplaying-widget spotify-player::part(album) {
+	overflow: visible;
+}
+
+.home__widgets .wx-nowplaying-widget spotify-player::part(album-text) {
+	display: none;
+}

@@ -1,0 +1,17 @@
+---
+// Now Playing — a self-contained widget rendering the live Spotify player
+// (@tristimb/spotify-stream-player) in a design-system Widget card. Styling,
+// the SSE endpoint, and the web-component registration all live in this module;
+// the page just drops <NowPlaying /> into its <WidgetGrid>.
+import Widget from "@whois/design-system/Widget";
+import { SPOTIFY_SSE_URL } from "./config";
+import "./now-playing.css";
+---
+
+<script>
+	import "@tristimb/spotify-stream-player";
+</script>
+
+<Widget size="1x1" class="wx-nowplaying-widget">
+	<spotify-player src={SPOTIFY_SSE_URL} layout="cover" tint></spotify-player>
+</Widget>

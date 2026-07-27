@@ -6,21 +6,17 @@ import Grid from "@whois/design-system/Grid";
 import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
 import Widget from "@whois/design-system/Widget";
+import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import "@whois/stories-heading/styles.css";
 import "@whois/dotted-grid/styles.css";
 import "@whois/video-carousel/styles.css";
-
-// Spotify SSE proxy endpoint (Cloud Run). The <spotify-player> shows its skeleton
-// state until a message arrives. The component ships its own styles (Shadow DOM);
-// it's themed from here via the ::part()/--ssp-* API in the widget CSS below.
-const SPOTIFY_SSE_URL = "https://spotify-stream-player-j2yxapx3oa-uk.a.run.app/";
+import "../widgets/widgets.css";
 ---
 
 <script>
 	import "@whois/stories-heading";
 	import "@whois/dotted-grid";
 	import "@whois/video-carousel";
-	import "@tristimb/spotify-stream-player";
 </script>
 
 <FullHeroLayout>
@@ -79,9 +75,7 @@ const SPOTIFY_SSE_URL = "https://spotify-stream-player-j2yxapx3oa-uk.a.run.app/"
 	     every cell is a DS Card. Placeholder/skeleton content for now. -->
 	<div class="fh-row home__widgets">
 		<WidgetGrid cols={4}>
-			<Widget size="1x1" class="wx-nowplaying-widget">
-				<spotify-player src={SPOTIFY_SSE_URL} layout="cover" tint></spotify-player>
-			</Widget>
+			<NowPlaying />
 
 			<Widget size="1x1" title="Rides">
 				<div class="wx-stat">
@@ -205,118 +199,7 @@ const SPOTIFY_SSE_URL = "https://spotify-stream-player-j2yxapx3oa-uk.a.run.app/"
 		flex-direction: column;
 	}
 
-	/* Clip the component's full-bleed album gradient to the card's rounded
-	   corners (the tinted background bleeds to every edge). */
-	.home__widgets :global(.wx-nowplaying-widget) {
-		overflow: hidden;
-	}
-
-	/* Now Playing — the <spotify-player> web component is styled entirely through
-	   its public API: size it to fill the card body, then map DS tokens onto the
-	   component's --ssp-* custom properties + tune a couple of ::part()s. Under
-	   `tint` the component paints an album-derived gradient and owns its own
-	   (light) text color, so we don't set one here. Kept in :global() so Astro
-	   doesn't rewrite the custom-element/::part() selectors. */
-	.home__widgets :global(.wx-nowplaying-widget spotify-player) {
-		display: block;
-		width: 100%;
-		flex: 1;
-		min-height: 0;
-		padding: 0; /* gradient is full-bleed; inner spacing lives on ::part(root) */
-		--ssp-gap: var(--space-2);
-		--ssp-title-size: var(--font-size-3);
-		--ssp-subtitle-size: var(--font-size-1);
-		--ssp-timestamp-size: 11px;
-		--ssp-progress-height: 6px;
-		--ssp-radius: var(--border-radius-2);
-		/* soft/tinted bar: pale translucent white over the album gradient */
-		--ssp-accent: oklch(1 0 0 / 0.9);
-		--ssp-track: oklch(1 0 0 / 0.25);
-	}
-	/* Inner spacing so the gradient is full-bleed but art/text stay inset. */
-	.home__widgets :global(.wx-nowplaying-widget spotify-player)::part(root) {
-		padding: var(--space-3);
-	}
-	.home__widgets :global(.wx-nowplaying-widget spotify-player)::part(art) {
-		border-radius: var(--border-radius-0);
-		/* Reuse the card's own DS depth shadow (--card-shadow, set by
-		   .ds-card--depth-N). It inherits through the shadow boundary, so the art
-		   lifts with the same shadow the card uses. */
-		box-shadow: var(--card-shadow);
-	}
-	/* The album frame clips its contents (overflow:hidden in the component); allow
-	   the art's box-shadow to escape it. The art already fits the frame, so nothing
-	   else is actually clipped. */
-	.home__widgets :global(.wx-nowplaying-widget spotify-player)::part(album) {
-		overflow: visible;
-	}
-	.home__widgets :global(.wx-nowplaying-widget spotify-player)::part(album-text) {
-		display: none;
-	}
-
-	/* Skeleton primitives — muted rounded blocks, theme-aware via DS tokens. */
-	.home__widgets :global(.wx-bar),
-	.home__widgets :global(.wx-block) {
-		background: oklch(from var(--border-color) l c h / 60%);
-		border-radius: var(--border-radius-1);
-	}
-
-	.home__widgets :global(.wx-bar) {
-		height: 12px;
-	}
-	.home__widgets :global(.wx-bar--lg) {
-		width: 90%;
-	}
-	.home__widgets :global(.wx-bar--md) {
-		width: 60%;
-	}
-	.home__widgets :global(.wx-bar--sm) {
-		width: 40%;
-	}
-
-	.home__widgets :global(.wx-stat) {
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
-		gap: var(--space-1);
-		padding: var(--space-4);
-		flex: 1;
-	}
-	.home__widgets :global(.wx-stat-num) {
-		font-family: var(--font-numeric, var(--font-mono));
-		font-size: var(--font-size-7);
-		font-weight: var(--font-weight-600);
-		line-height: 1;
-		color: var(--text-primary);
-	}
-	.home__widgets :global(.wx-stat-label) {
-		font-size: var(--font-size-1);
-		color: var(--text-tertiary);
-	}
-
-	.home__widgets :global(.wx-block--fill) {
-		flex: 1;
-		margin: var(--space-4);
-	}
-
-	.home__widgets :global(.wx-stack) {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		gap: var(--space-3);
-		padding: var(--space-4);
-		flex: 1;
-	}
-
-	.home__widgets :global(.wx-placeholder) {
-		border-style: dashed;
-	}
-	.home__widgets :global(.wx-placeholder) :global(.wx-plus) {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex: 1;
-		font-size: var(--font-size-7);
-		color: var(--text-tertiary);
-	}
+	/* Generic widget primitives (.wx-stat*, .wx-bar*, .wx-block*, .wx-stack,
+	   .wx-placeholder) live in ../widgets/widgets.css; each widget's bespoke look
+	   lives in its own module (e.g. ../widgets/now-playing/). */
 </style>
