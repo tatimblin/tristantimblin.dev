@@ -1,0 +1,54 @@
+name: BayWheels Stats Collection
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Daily at 3 AM UTC
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write  # Required to commit and push changes
+
+jobs:
+  collect-stats:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          repository: tatimblin/baywheels-stats
+          token: ${{ secrets.GH_PAT }}
+          path: .github/actions/baywheels-stats
+      
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      
+      - name: Refresh session tokens
+        uses: ./.github/actions/baywheels-stats/refresh-session
+        with:
+          github_token: ${{ secrets.GH_PAT }}
+        env:
+          BAYWHEELS_COOKIES: ${{ secrets.BAYWHEELS_COOKIES }}
+      
+      - name: Query statistics
+        id: query
+        uses: ./.github/actions/baywheels-stats/query-stats
+        with:
+          github_token: ${{ secrets.GH_PAT }}
+        env:
+          BAYWHEELS_COOKIES: ${{ secrets.BAYWHEELS_COOKIES }}
+      
+      - name: Save to CSV and commit
+        uses: ./.github/actions/baywheels-stats/csv-output
+        with:
+          date: ${{ steps.date.outputs.date }}
+          rides: ${{ steps.query.outputs.number_of_rides }}
+          distance: ${{ steps.query.outputs.total_distance }}
+          time: ${{ steps.query.outputs.total_time }}
+          file_path: 'src/widgets/bike-stats/bike-stats.csv'

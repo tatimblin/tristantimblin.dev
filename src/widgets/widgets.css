@@ -1,6 +1,6 @@
 /* Shared widget primitives — generic building blocks reused across widgets
- * (stats, skeleton bars/blocks, the "+" placeholder). Widget-specific looks live
- * in each widget's own module (e.g. widgets/now-playing/now-playing.css).
+ * (currently the stat block). Widget-specific looks live in each widget's own
+ * module (e.g. widgets/now-playing/now-playing.css).
  *
  * Plain CSS imported once by the page; the .home__widgets prefix scopes these to
  * the widget grid. Kept global (not an Astro scoped <style>) so widgets rendered
@@ -24,51 +24,5 @@
 }
 .home__widgets .wx-stat-label {
 	font-size: var(--font-size-1);
-	color: var(--text-tertiary);
-}
-
-/* Skeleton primitives — muted rounded blocks, theme-aware via DS tokens. */
-.home__widgets .wx-bar,
-.home__widgets .wx-block {
-	background: oklch(from var(--border-color) l c h / 60%);
-	border-radius: var(--border-radius-1);
-}
-
-.home__widgets .wx-bar {
-	height: 12px;
-}
-.home__widgets .wx-bar--lg {
-	width: 90%;
-}
-.home__widgets .wx-bar--md {
-	width: 60%;
-}
-.home__widgets .wx-bar--sm {
-	width: 40%;
-}
-
-.home__widgets .wx-block--fill {
-	flex: 1;
-	margin: var(--space-4);
-}
-
-.home__widgets .wx-stack {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	gap: var(--space-3);
-	padding: var(--space-4);
-	flex: 1;
-}
-
-.home__widgets .wx-placeholder {
-	border-style: dashed;
-}
-.home__widgets .wx-placeholder .wx-plus {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex: 1;
-	font-size: var(--font-size-7);
 	color: var(--text-tertiary);
 }

@@ -37,18 +37,11 @@
 	aspect-ratio: 1 / 2;
 } /* tall 1×2 */
 
-/* Responsive: 4 → 2 cols on tablet, → 1 col on phone. Clamp oversized spans so
-   nothing overflows the narrower track. */
+/* Responsive: 4 → 2 cols at/below tablet, held at 2 on phone. Override
+   grid-template-columns directly (not the --widget-cols var) so it beats the
+   inline `--widget-cols:N` that the `cols` prop sets on the element. */
 @media (max-width: 900px) {
 	.ds-widget-grid {
-		--widget-cols: 2;
+		grid-template-columns: repeat(2, 1fr);
 	}
-}
-@media (max-width: 560px) {
-	.ds-widget-grid {
-		--widget-cols: 1;
-	}
-	.ds-widget--w2 {
-		grid-column: span 1;
-	} /* can't span 2 of 1 */
 }
