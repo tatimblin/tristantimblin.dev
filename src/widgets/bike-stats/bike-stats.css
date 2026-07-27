@@ -1,0 +1,121 @@
+/* Baywheels (bike stats) widget styles.
+ *
+ * Plain CSS (not an Astro scoped <style>) so these globally-reaching selectors
+ * survive verbatim. The .wx-baywheels/.wx-bw-* prefix keeps them contained; the
+ * .home__widgets prefix matches the page's widget-grid containment. Generic
+ * primitives (.wx-stat*) live in ../widgets.css; this file only overrides them
+ * for the compact baywheels layout. */
+
+/* A branded 1×1: wordmark across the top, three ride stats stacked beneath,
+   over a subtle aurora background + bike watermark. */
+.home__widgets .wx-baywheels {
+	position: relative;
+	gap: var(--space-2);
+	padding: var(--space-4);
+	overflow: hidden; /* clip the bike watermark to the card's rounded corners */
+
+	/* "Northern lights" background — an overlapping stack of soft radial
+	   glows in the baywheels palette, kept very subtle: the base is the
+	   theme background, so the card mostly reads as normal, with just faint
+	   aurora tints (biased lower/right, behind the bike and away from the
+	   top-left text). Each glow fades to transparent so it melts into the
+	   base. Alpha values are intentionally low (~0.06–0.14). */
+	--bw-blue: #523be4;
+	--bw-magenta: #cf0090;
+	background:
+		radial-gradient(
+			60% 55% at 62% 34%,
+			rgba(82, 59, 228, 0.14) 0%,
+			transparent 100%
+		),
+		radial-gradient(
+			34% 54% at 14% 84%,
+			rgba(207, 0, 144, 0.1) 0%,
+			transparent 100%
+		),
+		radial-gradient(
+			40% 52% at 92% 96%,
+			rgba(123, 99, 255, 0.1) 0%,
+			transparent 100%
+		),
+		radial-gradient(
+			30% 40% at 30% 20%,
+			rgba(207, 0, 144, 0.06) 0%,
+			transparent 100%
+		),
+		radial-gradient(
+			72% 84% at 44% 18%,
+			rgba(82, 59, 228, 0.08) 0%,
+			transparent 100%
+		),
+		var(--color-bg);
+}
+/* The lyft e-bike as a watermark behind the stats. The bike faces left, so
+   sizing to 200% width + anchoring left top keeps the front/upper half
+   (handlebars + basket + front wheel top) in view; z-index:0 sits it above
+   the card fill but below the content (which is lifted to z-index:1). */
+.home__widgets .wx-baywheels::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background-image: url("/images/lyft-ebike-sideview.png");
+	background-repeat: no-repeat;
+	background-position: var(--space-6) var(--space-4); /* nudge right; 16px gap above */
+	background-size: 200% auto;
+	pointer-events: none;
+	/* Hidden + offset at rest. JS adds .is-in on first scroll-into-view, which
+	   slides the bike from further right (translateX) into place + fades in. */
+	opacity: 0;
+	transform: translateX(var(--bw-slide, 56px));
+	transition:
+		transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
+		opacity 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.home__widgets .wx-baywheels.is-in::before {
+	transform: translateX(0);
+	opacity: 0.66;
+}
+@media (prefers-reduced-motion: reduce) {
+	.home__widgets .wx-baywheels::before {
+		transition: none;
+		transform: none;
+		opacity: 0.66;
+	}
+}
+.home__widgets .wx-bw-head {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+}
+.home__widgets .wx-bw-logo {
+	width: auto;
+	max-width: 130px;
+	height: auto;
+}
+/* Three compact stats stacked vertically down the left, directly under the
+   logo with a gap; override the .wx-stat defaults (which pad and grow to
+   fill). */
+.home__widgets .wx-bw-stats {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: flex-start;
+	gap: var(--space-2);
+	padding-block-start: var(--space-4);
+	flex: 1;
+}
+/* Number + label side-by-side per row so each stat reads on one line. */
+.home__widgets .wx-baywheels .wx-stat {
+	padding: 0;
+	flex: 0 0 auto;
+	flex-direction: row;
+	align-items: baseline;
+	gap: var(--space-1);
+}
+.home__widgets .wx-baywheels .wx-stat-num {
+	font-size: var(--font-size-5);
+}

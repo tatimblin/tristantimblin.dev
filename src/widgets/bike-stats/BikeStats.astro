@@ -1,0 +1,53 @@
+---
+// Bike Stats (Baywheels) — a self-contained widget showing ride totals in a
+// design-system Widget card, over an aurora background + animated bike
+// watermark. Data, styling, and the reveal animation all live in this module;
+// the page just drops <BikeStats /> into its <WidgetGrid>.
+import Widget from "@whois/design-system/Widget";
+import { getBikeStats } from "./bike-stats";
+import "./bike-stats.css";
+
+// Read at build time (frontmatter runs in Node) from bike-stats.csv, which the
+// baywheels-stats GitHub Action appends to daily.
+const bike = getBikeStats();
+---
+
+<script>
+	// Slide the baywheels bike watermark in from the right the first time the
+	// widget scrolls into view. One-shot: unobserve after the first reveal.
+	const bw = document.querySelector<HTMLElement>(".wx-baywheels");
+	if (bw) {
+		const io = new IntersectionObserver(
+			(entries, observer) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) {
+						bw.classList.add("is-in");
+						observer.unobserve(entry.target);
+					}
+				}
+			},
+			{ threshold: 0.35 },
+		);
+		io.observe(bw);
+	}
+</script>
+
+<Widget size="1x1" class="wx-baywheels">
+	<div class="wx-bw-head">
+		<img class="wx-bw-logo" src="/images/baywheels-logo.svg" alt="baywheels" />
+	</div>
+	<div class="wx-bw-stats">
+		<div class="wx-stat">
+			<span class="wx-stat-num">{bike.rides}</span>
+			<span class="wx-stat-label">rides</span>
+		</div>
+		<div class="wx-stat">
+			<span class="wx-stat-num">{bike.miles}</span>
+			<span class="wx-stat-label">miles</span>
+		</div>
+		<div class="wx-stat">
+			<span class="wx-stat-num">{bike.hours}</span>
+			<span class="wx-stat-label">hours</span>
+		</div>
+	</div>
+</Widget>

@@ -7,6 +7,7 @@ import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
 import Widget from "@whois/design-system/Widget";
 import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
+import BikeStats from "../widgets/bike-stats/BikeStats.astro";
 import "@whois/stories-heading/styles.css";
 import "@whois/dotted-grid/styles.css";
 import "@whois/video-carousel/styles.css";
@@ -77,12 +78,7 @@ import "../widgets/widgets.css";
 		<WidgetGrid cols={4}>
 			<NowPlaying />
 
-			<Widget size="1x1" title="Rides">
-				<div class="wx-stat">
-					<span class="wx-stat-num">958</span>
-					<span class="wx-stat-label">rides</span>
-				</div>
-			</Widget>
+			<BikeStats />
 
 			<Widget size="2x2" title="Feature">
 				<div class="wx-block wx-block--fill"></div>
@@ -99,13 +95,6 @@ import "../widgets/widgets.css";
 
 			<Widget size="1x1" variant="tertiary" class="wx-placeholder">
 				<span class="wx-plus">+</span>
-			</Widget>
-
-			<Widget size="1x1" title="Miles">
-				<div class="wx-stat">
-					<span class="wx-stat-num">1394</span>
-					<span class="wx-stat-label">miles</span>
-				</div>
 			</Widget>
 		</WidgetGrid>
 	</div>
@@ -202,4 +191,5 @@ import "../widgets/widgets.css";
 	/* Generic widget primitives (.wx-stat*, .wx-bar*, .wx-block*, .wx-stack,
 	   .wx-placeholder) live in ../widgets/widgets.css; each widget's bespoke look
 	   lives in its own module (e.g. ../widgets/now-playing/). */
+
 </style>
