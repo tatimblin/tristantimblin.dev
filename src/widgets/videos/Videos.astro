@@ -1,0 +1,150 @@
+---
+// Videos — the video carousel adopted into the widget grid as a 1×2 cell on the
+// grid's right edge, with the date ruler protruding into the page gutter. The
+// carousel's true layout home is this cell; a scroll-driven lift (see the
+// <script> below) makes it visually START high on the page and PARALLAX down to
+// dock here as the grid scrolls into view. On mobile it goes full width and the
+// lift is disabled. The generic carousel lives in ../../components; this module
+// owns only its grid placement + docking behaviour.
+import Widget from "@whois/design-system/Widget";
+import VideoCarousel from "../../components/VideoCarousel.astro";
+import "./videos.css";
+---
+
+<Widget size="1x2" class="wx-videos" depth={0} variant="tertiary">
+	<VideoCarousel rulerSide="right" />
+</Widget>
+
+<script>
+	// Two-phase scroll dock via a transform (--vc-dock-lift) on the widget. Its true
+	// layout home is the 1×2 grid cell at the foot of the page — the transform only
+	// shifts where it PAINTS, so the grid keeps the cell reserved and the other
+	// widgets flow around it throughout.
+	//
+	//   1. RELATIVE — the card is raised a CONSTANT `travel` above its slot, so it
+	//      scrolls 1:1 with the page (behaves like an ordinary in-flow element,
+	//      just offset up). It enters naturally from the bottom of the viewport;
+	//      because the offset is constant its document position is fixed → it can't
+	//      fling up the page or climb. This lasts until the card is COMPLETELY in
+	//      view (its raised bottom edge reaches the viewport bottom).
+	//   2. PARALLAX — from there, the constant lift eases to 0 over `settle` px of
+	//      scroll, so the card slows/holds while the grid rises to meet it and it
+	//      settles into its real cell. Past that it's a locked, ordinary grid cell.
+	//
+	// Each frame:
+	//   naturalTop = rect.top − currentLift          // slot's paint pos, transform-free
+	//   fullInView = vh − H + travel                 // naturalTop when raised card is all on screen
+	//   dockLine   = DOCK_VH · vh                     // naturalTop at which lift hits 0
+	//   q          = clamp01((fullInView − naturalTop) / (fullInView − dockLine))
+	//   lift       = −travel · (1 − ease(q))         // −travel (phase 1) → 0 (phase 2 end)
+	// naturalTop is measured transform-invariantly (minus the lift we applied) so it
+	// never feeds back; the whole thing self-calibrates across resize/layout shifts.
+	// ease = smoothstep so the hand-off from 1:1 scrolling into the parallax has no
+	// velocity jump. Docking completes at the fixed dockLine (independent of travel)
+	// so it always fully settles as the grid frames, no matter how high it enters.
+	//
+	// `travel` (the raise / parallax distance) is set in CSS via --vc-travel on the
+	// widget (default 55vh); larger = enters higher + more parallax. DOCK_VH is how
+	// far down the viewport the cell is when it finishes settling into the grid.
+	const TRAVEL_FALLBACK = 0.55; // --vc-travel fallback, fraction of viewport height
+	const DOCK_VH = 0.3; // cell's viewport-top (vh) when fully docked
+	const SELECTOR = ".wx-videos";
+
+	const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+	const smoothstep = (t: number) => t * t * (3 - 2 * t);
+
+	/** Resolve a CSS length custom property (vh or px) on el to pixels. */
+	function cssPx(el: HTMLElement, prop: string, fallbackPx: number): number {
+		const raw = getComputedStyle(el).getPropertyValue(prop).trim();
+		if (!raw) return fallbackPx;
+		if (raw.endsWith("vh")) return (parseFloat(raw) / 100) * window.innerHeight;
+		const n = parseFloat(raw);
+		return Number.isFinite(n) ? n : fallbackPx;
+	}
+
+	class DockLift {
+		private el: HTMLElement;
+		private lift = 0;
+		private rafId: number | null = null;
+		private mobileMQ = window.matchMedia("(max-width: 900px)");
+		private reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+		private offs: Array<() => void> = [];
+
+		constructor(el: HTMLElement) {
+			this.el = el;
+			const onScroll = () => this.schedule();
+			const onResize = () => this.schedule();
+			const onMQ = () => this.schedule();
+			window.addEventListener("scroll", onScroll, { passive: true });
+			window.addEventListener("resize", onResize, { passive: true });
+			this.mobileMQ.addEventListener("change", onMQ);
+			this.reduced.addEventListener("change", onMQ);
+			this.offs.push(
+				() => window.removeEventListener("scroll", onScroll),
+				() => window.removeEventListener("resize", onResize),
+				() => this.mobileMQ.removeEventListener("change", onMQ),
+				() => this.reduced.removeEventListener("change", onMQ)
+			);
+			this.update();
+		}
+
+		private schedule() {
+			if (this.rafId !== null) return;
+			this.rafId = requestAnimationFrame(() => {
+				this.rafId = null;
+				this.update();
+			});
+		}
+
+		private setLift(px: number) {
+			this.lift = px;
+			this.el.style.setProperty("--vc-dock-lift", `${px.toFixed(2)}px`);
+		}
+
+		private update() {
+			// Mobile / reduced-motion: render docked, no lift.
+			if (this.mobileMQ.matches || this.reduced.matches) {
+				if (this.lift !== 0) this.setLift(0);
+				return;
+			}
+			const vh = window.innerHeight;
+			const rect = this.el.getBoundingClientRect();
+			const naturalTop = rect.top - this.lift; // strip the applied transform
+			const height = rect.height;
+			const travel = cssPx(this.el, "--vc-travel", TRAVEL_FALLBACK * vh);
+
+			// Phase 1 (relative): constant −travel lift until the raised card is fully
+			// in view, i.e. its raised bottom (naturalTop − travel + height) ≤ vh.
+			const fullInView = vh - height + travel;
+			// Phase 2 (parallax): ease the lift to 0 as the cell travels from there up
+			// to the fixed dock line — so it always fully settles regardless of travel.
+			const dockLine = DOCK_VH * vh;
+			const span = Math.max(1, fullInView - dockLine);
+			const q = clamp01((fullInView - naturalTop) / span);
+			this.setLift(-travel * (1 - smoothstep(q)));
+		}
+
+		destroy() {
+			if (this.rafId !== null) cancelAnimationFrame(this.rafId);
+			this.rafId = null;
+			this.offs.forEach((off) => off());
+			this.offs = [];
+			this.el.style.removeProperty("--vc-dock-lift");
+		}
+	}
+
+	// Bind on every page load (initial + after each ClientRouter view transition),
+	// and tear down before a swap so listeners don't accumulate across navigations.
+	let instance: DockLift | null = null;
+	function init() {
+		const el = document.querySelector<HTMLElement>(SELECTOR);
+		if (!el || instance) return;
+		instance = new DockLift(el);
+	}
+	function teardown() {
+		instance?.destroy();
+		instance = null;
+	}
+	document.addEventListener("astro:page-load", init);
+	document.addEventListener("astro:before-swap", teardown);
+</script>

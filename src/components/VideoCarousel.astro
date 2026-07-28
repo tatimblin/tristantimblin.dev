@@ -17,11 +17,14 @@ interface Clip {
 
 interface Props {
 	clips?: Clip[];
+	/** Which side the date ruler sits on relative to the video card. */
+	rulerSide?: "left" | "right";
 }
 
 // Placeholder list. Reuses the two videos that actually exist in /public/videos
 // as stand-ins; swap in real footage + metadata later.
 const {
+	rulerSide = "left",
 	clips = [
 		{
 			src: "/videos/beach.web.mp4",
@@ -64,7 +67,7 @@ const {
 const first = clips[0];
 ---
 
-<video-carousel class="vc" tick-src="/audio/tick_004.ogg">
+<video-carousel class="vc" tick-src="/audio/tick_004.ogg" ruler-side={rulerSide}>
 	{/* Ruler + video share a row so the ruler's height tracks the VIDEO box only
 	   (not the caption). On mobile this row collapses and the ruler drops below the
 	   card as a horizontal strip (see styles.css + the orientation logic in JS). */}
@@ -93,8 +96,15 @@ const first = clips[0];
 				data-vc-grid
 				src={first?.src}
 				color-reveal
-				shimmer="6"
+				shimmer="2"
 				no-loop
+				cell-size="5"
+				dot-size="2"
+				levels="10"
+				gamma="0.5"
+				contrast="1.1"
+				color-reveal="0"
+				color="#7f7f7f"
 			></dotted-grid>
 			<figcaption class="vc__caption">
 				<span class="vc__desc" data-vc-desc>{first?.description}</span>

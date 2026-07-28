@@ -1,12 +1,13 @@
 ---
 import FullHeroLayout from "../layouts/FullHeroLayout.astro";
 import StoriesHeading from "../components/StoriesHeading.astro";
-import VideoCarousel from "../components/VideoCarousel.astro";
 import Grid from "@whois/design-system/Grid";
 import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
+import Widget from "@whois/design-system/Widget";
 import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import BikeStats from "../widgets/bike-stats/BikeStats.astro";
+import Videos from "../widgets/videos/Videos.astro";
 import "@whois/stories-heading/styles.css";
 import "@whois/dotted-grid/styles.css";
 import "@whois/video-carousel/styles.css";
@@ -28,12 +29,13 @@ import "../widgets/widgets.css";
 		slot="scene"
 		class="hero__video"
 		src="/videos/fabric.web.mp4"
-		cell-size="8"
+		cell-size="6"
 		dot-size="1"
-		levels="5"
-		gamma="0.35"
+		levels="10"
+		gamma="0.5"
 		contrast="1.1"
 		color-reveal="0"
+		color="#7f7f7f"
 	/>
 
 	<!-- HEADING: the full-width "tristan" wordmark, then the animated
@@ -43,9 +45,9 @@ import "../widgets/widgets.css";
 	<StoriesHeading slot="heading" />
 
 	<!-- CONTENT: the page owns its grid rows here. First row — body copy (cols
-	     4–7) + the video carousel (cols 9–12) — rises into the pinned lockup and
-	     pushes it away. A second row or a full-bleed section would just be more
-	     markup in this slot. -->
+	     1–5) — rises into the pinned lockup and pushes it away. The video carousel
+	     no longer lives here: it's a cell in the widget grid below that
+	     parallaxes UP to visually sit alongside this row (see widgets/videos). -->
 	<div class="fh-row">
 		<Grid class="home__grid">
 			<GridItem class="home__copy">
@@ -64,9 +66,6 @@ import "../widgets/widgets.css";
 					veritatis et quasi architecto beatae vitae dicta sunt explicabo.
 				</p>
 			</GridItem>
-			<GridItem class="home__rail">
-				<VideoCarousel />
-			</GridItem>
 		</Grid>
 	</div>
 
@@ -75,9 +74,17 @@ import "../widgets/widgets.css";
 	     every cell is a DS Card. Placeholder/skeleton content for now. -->
 	<div class="fh-row home__widgets">
 		<WidgetGrid cols={4}>
+			<Videos />
+
 			<NowPlaying />
 
 			<BikeStats />
+
+			<!-- Placeholder 1×1 to fill column 3 alongside the 1×2 video cell; swap
+			     for a real widget as more land. -->
+			<Widget size="1x1" class="wx-soon">
+				<span class="wx-soon__label">more soon</span>
+			</Widget>
 		</WidgetGrid>
 	</div>
 </FullHeroLayout>
@@ -116,44 +123,12 @@ import "../widgets/widgets.css";
 		margin-block-start: var(--space-5);
 	}
 
-	/* Video carousel on the right, lifted so it starts near the top of the fold —
-	   alongside the lockup rather than ~600px below it.
-
-	   Two things pull it up:
-	   1. The base lift (--space-13) so the carousel top sits ABOVE the paragraph.
-	   2. An offset for HALF the sticky-header track. StoriesHeading's .sh__track
-	      reserves scroll distance in normal flow — height =
-	      --sh-reveal (300px) + --sh-hold (300px) + --sh-pin-height — and that
-	      reserved block sits ABOVE this content region, pushing everything here
-	      (the carousel included) further down the page. Cancelling the FULL amount
-	      lifts the carousel to the very top; instead we cancel HALF (~324px) so the
-	      carousel rests at the MIDPOINT of the distance "other stories" scrolls
-	      through. --sh-reveal/--sh-hold default to 300px each (inlined here since
-	      those custom props live on the <stories-heading> element and aren't
-	      reliably in this scope); --sh-pin-height (~48px, the "other stories" line
-	      height) is JS-set on that element and not readable here. Half of
-	      (300 + 300 + 48) ≈ 324px. */
-	.home__rail {
-		grid-column: 9 / span 4;
-		grid-row: 1;
-		align-self: start;
-		margin-block-start: calc(-1 * var(--space-13, 128px) - 324px);
-		min-width: 0;
-	}
-
-	.home__rail :global(.vc) {
-		width: 100%;
-	}
-
-	/* Stacked layout (≤900px): one column, in DOM order — copy then carousel. */
+	/* Stacked layout (≤900px): single column (only the copy lives here now). */
 	@media (max-width: 900px) {
 		.home__grid {
 			display: block;
 		}
 		.home__copy {
-			margin-block-start: var(--space-7);
-		}
-		.home__rail {
 			margin-block-start: var(--space-7);
 		}
 	}
@@ -172,5 +147,17 @@ import "../widgets/widgets.css";
 
 	/* Shared widget primitives (.wx-stat*) live in ../widgets/widgets.css; each
 	   widget's bespoke look lives in its own module (e.g. ../widgets/now-playing/). */
+
+	/* Placeholder tile filling column 3 until another real widget lands. */
+	.home__widgets :global(.wx-soon) {
+		align-items: center;
+		justify-content: center;
+	}
+	.home__widgets :global(.wx-soon__label) {
+		font-size: var(--font-size-1);
+		color: var(--text-tertiary);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
 
 </style>

@@ -1,0 +1,90 @@
+/* Videos widget — the video carousel docked as a 1×2 cell on the grid's right
+ * edge, ruler protruding into the page gutter, with a scroll-driven parallax
+ * lift.
+ *
+ * Plain CSS (not an Astro scoped <style>) so the .vc__* selectors reaching into
+ * the video-carousel's light DOM survive verbatim. The .wx-videos / .home__widgets
+ * prefixes keep everything contained to this widget + the page's grid. */
+
+/* SINGLE SOURCE OF TRUTH for the ruler's protrusion width. Mirrors the package's
+   --vc-ruler-w formula (date gutter + longest tick + end pad). Defined on the
+   grid so it inherits down to .vc__main; the grid reserves this much space to its
+   right (plus the ruler↔card gap) so the ruler overhangs into the page gutter
+   rather than stealing a content column. Keep in sync with
+   packages/video-carousel/src/styles.css → --vc-ruler-w. */
+.home__widgets .ds-widget-grid {
+	--vc-ruler-gutter: calc(4.5rem + 32px + 0.5rem);
+	padding-inline-end: calc(var(--vc-ruler-gutter) + var(--space-4));
+}
+
+/* The video cell: pinned to the rightmost column, spanning the top two rows.
+   Numeric column (not -1/-2): the grid has no explicit row template, so negative
+   lines are unreliable with grid-auto-flow: dense + implicit tracks.
+   grid-auto-flow: dense then packs the auto-placed 1×1 widgets around this. */
+.home__widgets .wx-videos {
+	grid-column: var(--widget-cols, 4) / span 1;
+	grid-row: 1 / span 2;
+	/* Explicit 2-row span sets the height; drop the ds-widget--h2 1/2 aspect so it
+	   doesn't fight the row span. */
+	aspect-ratio: auto;
+
+	/* Neutralise the DS card chrome: the carousel's own .vc__stage is the visible
+	   tile, and the ruler must escape to the right. */
+	border: none;
+	background: none;
+	overflow: visible;
+
+	/* TRAVEL: how far the carousel is raised above its real cell during the
+	   entrance (and thus the parallax distance it closes as it docks). Read by the
+	   parallax script (Videos.astro). During phase 1 the card scrolls 1:1 with the
+	   page at this constant offset (behaves like an in-flow element); once fully in
+	   view it parallaxes this distance to 0, settling into the grid. Larger =
+	   enters higher + more parallax. Tune here, not in JS. */
+	--vc-travel: 80vh;
+
+	/* Parallax hook: lifted UP the page when scrolled to top, eased to 0 as the
+	   grid docks into view (value written by the <script> in Videos.astro).
+	   Defaults to 0 → no-JS / reduced-motion / mobile render docked. */
+	transform: translateY(var(--vc-dock-lift, 0px));
+	will-change: transform;
+	position: relative;
+	z-index: 1;
+}
+
+/* Top-align the carousel within the (possibly taller) 2-row cell. */
+.home__widgets .wx-videos video-carousel {
+	justify-content: flex-start;
+}
+
+/* Widen the ruler+card row beyond the cell so the CARD fills the full cell width
+   (its right edge aligns with the grid's right column edge) and the ruler + its
+   gap overhang into the reserved gutter. stage is flex:1 → takes the 100%; the
+   fixed-width ruler takes the overflow. */
+.home__widgets .wx-videos .vc__main {
+	width: calc(100% + var(--vc-ruler-gutter) + var(--space-4));
+}
+
+/* Let the stage fill the cell width (override the height-cap-derived max-width). */
+.home__widgets .wx-videos .vc__stage {
+	max-width: none;
+	width: 100%;
+}
+
+/* MOBILE (≤900px, where the grid collapses to 2 cols) --------------------------
+   Full-width cell, ~3 rows tall, no parallax, no reserved gutter — the ruler
+   fits inside the wide cell (vertical 640–900, horizontal below the card ≤640,
+   both handled by the package). */
+@media (max-width: 900px) {
+	.home__widgets .ds-widget-grid {
+		padding-inline-end: 0;
+	}
+	.home__widgets .wx-videos {
+		grid-column: 1 / span 2;
+		grid-row: auto / span 3;
+		aspect-ratio: auto;
+		transform: none;
+	}
+	.home__widgets .wx-videos .vc__main {
+		width: 100%;
+	}
+}
