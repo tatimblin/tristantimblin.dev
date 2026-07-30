@@ -18,9 +18,16 @@ const formattedDate = new Date(date).toLocaleDateString("en-US", {
 	month: "long",
 	day: "numeric",
 });
+// Tailor the social card to this item: use its own image (a video's poster, or
+// the image itself). Falls back to the site default /og.png when neither exists.
+const cardImage = type === "video" ? poster : media;
 ---
 
-<Layout title={`${title} — Gallery`}>
+<Layout
+	title={`${title} — Gallery`}
+	description={alt}
+	image={cardImage}
+>
 	<main class="detail-page">
 		<nav class="detail-nav">
 			<a href="/gallery">&larr; Gallery</a>

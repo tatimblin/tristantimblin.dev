@@ -1,0 +1,62 @@
+---
+// All of the site's SEO surface lives here so Layout.astro can pull it in with
+// a single <Seo /> line. Owns: the astro-seo <SEO> component (title, meta
+// description, Open Graph, Twitter card, canonical) and the schema.org Person
+// JSON-LD that describes Tristan Timblin.
+import { SEO } from "astro-seo";
+import type { Person, WithContext } from "schema-dts";
+
+interface Props {
+	title?: string;
+	description?: string;
+	/** Path or absolute URL to the social card; defaults to /og.jpg. */
+	image?: string;
+	noindex?: boolean;
+}
+
+const SITE_NAME = "Tristan Timblin";
+const DEFAULT_DESCRIPTION =
+	"Tristan Timblin — a craftsman who builds things to be used, finding creativity through empathetic design.";
+
+const {
+	title = SITE_NAME,
+	description = DEFAULT_DESCRIPTION,
+	image,
+	noindex = false,
+} = Astro.props;
+
+// Astro.site is the configured origin (https://tristantimblin.dev). Everything
+// social/canonical must be absolute, so resolve against it.
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(image ?? "/og.jpg", Astro.site).href;
+
+const person: WithContext<Person> = {
+	"@context": "https://schema.org",
+	"@type": "Person",
+	name: "Tristan Timblin",
+	url: Astro.site?.href ?? "https://tristantimblin.dev/",
+	jobTitle: "Software Engineer",
+	description:
+		"A craftsman who builds things to be used, finding creativity through empathetic design.",
+	image: new URL("/og.jpg", Astro.site).href,
+	sameAs: [
+		"https://github.com/tatimblin",
+		"https://www.linkedin.com/in/tristan-timblin/",
+	],
+};
+---
+
+<SEO
+	title={title}
+	description={description}
+	canonical={canonical}
+	noindex={noindex}
+	openGraph={{
+		basic: { title, type: "website", image: ogImage, url: canonical },
+		optional: { description, siteName: SITE_NAME },
+		image: { alt: `${SITE_NAME}` },
+	}}
+	twitter={{ card: "summary", title, description, image: ogImage }}
+/>
+
+<script type="application/ld+json" set:html={JSON.stringify(person)} is:inline />

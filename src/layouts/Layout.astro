@@ -5,12 +5,18 @@ import "../styles/global.css";
 // name bridge). Imported after global.css so its custom properties win.
 import "@whois/design-system/tokens.css";
 import SiteFooter from "../components/SiteFooter.astro";
+import Seo from "../components/Seo.astro";
 
 interface Props {
 	title?: string;
+	description?: string;
+	/** Path or absolute URL to the social card; defaults to /og.png. */
+	image?: string;
+	/** Ask crawlers to skip this page (e.g. scratch/experiments pages). */
+	noindex?: boolean;
 }
 
-const { title = "The Hidden Girl" } = Astro.props;
+const { title, description, image, noindex } = Astro.props;
 ---
 
 
@@ -80,7 +86,7 @@ const { title = "The Hidden Girl" } = Astro.props;
 			rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;560;600&family=Fira+Code:wght@400;500&family=Space+Grotesk:wght@400;500&family=Playfair+Display:wght@400;600;700&family=Quintessential&display=swap"
 		/>
-		<title>{title}</title>
+		<Seo title={title} description={description} image={image} noindex={noindex} />
 		<!-- No-FOUC theme init: apply the stored choice before first paint, and
 		     re-apply after each view-transition swap. Dark is the fallback. -->
 		<script is:inline>
