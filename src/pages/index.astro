@@ -11,6 +11,7 @@ import Videos from "../widgets/videos/Videos.astro";
 import "@whois/stories-heading/styles.css";
 import "@whois/dotted-grid/styles.css";
 import "@whois/video-carousel/styles.css";
+import "@whois/wobble-text/styles.css";
 import "../widgets/widgets.css";
 ---
 
@@ -18,6 +19,7 @@ import "../widgets/widgets.css";
 	import "@whois/stories-heading";
 	import "@whois/dotted-grid";
 	import "@whois/video-carousel";
+	import "@whois/wobble-text";
 </script>
 
 <FullHeroLayout>
@@ -34,7 +36,6 @@ import "../widgets/widgets.css";
 		levels="10"
 		gamma="0.5"
 		contrast="1.1"
-		color-reveal="0"
 		color="#7f7f7f"
 	/>
 
@@ -51,20 +52,26 @@ import "../widgets/widgets.css";
 	<div class="fh-row">
 		<Grid class="home__grid">
 			<GridItem class="home__copy">
-				<p>
-					Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-					eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-					minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-					ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-					voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-				</p>
-				<p>
-					Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
-					officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde
-					omnis iste natus error sit voluptatem accusantium doloremque
-					laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore
-					veritatis et quasi architecto beatae vitae dicta sunt explicabo.
-				</p>
+				<wobble-text scale="2.8" speed="0.3">
+					<p>
+						I am a craftsman, I create things to be used. Even if they often are
+						not, it is for the love of the process. I find my creativite nature
+						through empathetic design, where with a deep understanding of another
+						I can build them worlds.
+					</p>
+					<blockquote class="home__quote" cite="https://future-sf.com/fiction/1700/">
+						I'm arrogant enough to demand the Reader's complete, total
+						attention. The Reader should likewise demand that the Writer puts all
+						of herself into her text, to infuse it with her soul. We deserve each
+						other. It's an act of love to read and an act of love to write.
+						However idealized or pretentious that may sound, it's also the
+						truth.
+						<cite class="home__cite">&mdash; Ken Liu, in <a class="home__cite-link" href="https://future-sf.com/fiction/1700/">&ldquo;Good Stories&rdquo;</a></cite>
+					</blockquote>
+					<p>
+						So I build to be read. With care in what won't be seen.
+					</p>
+				</wobble-text>
 			</GridItem>
 		</Grid>
 	</div>
@@ -110,6 +117,7 @@ import "../widgets/widgets.css";
 	.home__copy {
 		grid-column: 1 / span 5;
 		min-width: 0;
+		padding-block-start: var(--space-5);
 	}
 
 	.home__copy :global(p) {
@@ -121,6 +129,42 @@ import "../widgets/widgets.css";
 
 	.home__copy :global(p + p) {
 		margin-block-start: var(--space-5);
+	}
+
+	/* Ken Liu passage set apart from the surrounding copy: same serif register,
+	   but indented + italic + darker to mark it as borrowed words. */
+	.home__quote {
+		margin: 0;
+		margin-block: var(--space-5) var(--space-6);
+		padding-inline-start: var(--space-5);
+		margin-inline-start: var(--space-4);
+		border-inline-start: 2px solid var(--text-tertiary, currentColor);
+		font-family: var(--font-serif);
+		font-size: var(--font-size-3);
+		line-height: 1.6;
+		font-style: italic;
+		/* One neutral step quieter than the body (--text-secondary), so the
+		   borrowed words recede. --text-primary is a blue accent in dark mode. */
+		color: var(--text-tertiary);
+	}
+
+	.home__cite {
+		display: block;
+		margin-block-start: var(--space-3);
+		font-size: var(--font-size-2);
+		font-style: normal;
+		color: var(--text-tertiary, var(--text-secondary));
+	}
+
+	.home__cite-link {
+		color: inherit;
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+		text-decoration-thickness: from-font;
+	}
+
+	.home__cite-link:hover {
+		color: var(--text-secondary);
 	}
 
 	/* Stacked layout (≤900px): single column (only the copy lives here now). */
