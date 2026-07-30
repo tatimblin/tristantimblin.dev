@@ -184,9 +184,21 @@ stories-heading {
 	   result as --sh-heading-fitsize; fall back to the fixed rem step until then
 	   (and on the ≤900px stacked layout, where JS clears the fit prop). */
 	font-size: var(--sh-heading-fitsize, var(--sh-heading-size));
+	/* Both faces MUST share one weight: the layers overlay glyph-for-glyph, so a
+	   weight mismatch gives them different advance widths that drift apart
+	   cumulatively across the word (the fill creeps past the outline by the end).
+	   The outline sets 600; match it here so the solid layer doesn't inherit the
+	   UA <h2> bold (700). */
+	font-weight: 600;
 	line-height: 0.85;
 	letter-spacing: -0.01em;
 	white-space: nowrap;
+	/* fit-content sizes the box to the text ADVANCE width, but a serif glyph's ink
+	   (the trailing "s") overshoots its advance via the right side-bearing — and the
+	   solid layer's clip-path (border-box) would shave it. Trailing padding gives the
+	   ink (and the wobble-text displacement) room; the solid layer's --color-bg
+	   backdrop makes the extra width invisible against the page. */
+	padding-inline-end: 0.12em;
 }
 
 /* --- Two-layer face swap ----------------------------------------------- */

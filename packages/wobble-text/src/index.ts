@@ -72,10 +72,12 @@ export class WobbleTextElement extends HTMLElement {
 
 		const filter = document.createElementNS(SVG_NS, "filter");
 		filter.setAttribute("id", this._filterId);
-		filter.setAttribute("x", "-5%");
-		filter.setAttribute("y", "-5%");
-		filter.setAttribute("width", "110%");
-		filter.setAttribute("height", "110%");
+		// Generous padding around the box so displaced glyphs at the edges (e.g. the
+		// trailing letter at a high `scale`) aren't clipped by the filter region.
+		filter.setAttribute("x", "-20%");
+		filter.setAttribute("y", "-20%");
+		filter.setAttribute("width", "140%");
+		filter.setAttribute("height", "140%");
 		filter.setAttribute("color-interpolation-filters", "linearRGB");
 
 		const turbulence = document.createElementNS(SVG_NS, "feTurbulence");
