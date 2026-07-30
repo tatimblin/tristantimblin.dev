@@ -77,9 +77,21 @@ hlg_prefix() {
 # the earlier spatial smartblur.
 DENOISE_STRETCH="atadenoise=0a=0.02:0b=0.04:1a=0.02:1b=0.04:s=9,normalize=independence=0:strength=0.7"
 
+# Reusable filter fragments for the per-clip overrides below.
+#   HLG    — the standard HLG->SDR tonemap prefix (same as hlg_prefix() emits).
+#   HLG_C15— tonemap variant with a stronger contrast lift (for flat sources).
+#   POSTERn— quantize luma into N flat plateaus so neighbouring cells share a
+#            tone; the shader's levels then land in fewer, BOLDER dot-size bands
+#            (reads as defined light/dark blocks instead of a smooth speckle).
+HLG="eq=contrast=1.18:saturation=1.25:gamma=0.92,format=yuv420p,setparams=range=tv:colorspace=bt709:color_primaries=bt709:color_trc=bt709"
+HLG_C15="eq=contrast=1.5:saturation=1.25:gamma=0.92,format=yuv420p,setparams=range=tv:colorspace=bt709:color_primaries=bt709:color_trc=bt709"
+POSTER6="lutyuv=y='round(val/255*5)/5*255'"   # 6 levels
+POSTER4="lutyuv=y='round(val/255*3)/3*255'"   # 4 levels
+
 # Mean luma (0-255) of $1 through filter chain $2, sampled over SAMPLE_FRAMES.
+# $SS_ARGS (set per clip) lets an override trim the input before measuring.
 measure() {
-  ffmpeg -hide_banner -loglevel info -i "$1" \
+  ffmpeg -hide_banner -loglevel info $SS_ARGS -i "$1" \
     -vf "$2,signalstats,metadata=print:key=lavfi.signalstats.YAVG" \
     -frames:v "$SAMPLE_FRAMES" -an -f null - 2>&1 \
     | sed -n 's/.*YAVG=\([0-9.]*\).*/\1/p' \
@@ -91,20 +103,46 @@ for in in "$SRC_DIR"/*.mov; do
   base=$(basename "$in"); base="${base%.*}"
   out="${OUT_DIR}/${base}.web.mp4"
 
-  pre=$(hlg_prefix "$in")
-  chain="scale=960:-2:flags=lanczos,${pre}${DENOISE_STRETCH}"
+  # Per-clip overrides: three clips can't be served by the uniform recipe (each
+  # fails the halftone in a different way — verified by measurement + live A/B;
+  # see docs/plans/2026-07-30-001). Each sets its own pre-darken CHAIN, and may
+  # set SS_ARGS (input trim), a brighter mean TARGET, and a wider/deeper
+  # bisection. Everything after (bisected darken, saturation, encode) is shared.
+  # The default branch is byte-identical to the uniform recipe, so the other
+  # ~23 clips reproduce exactly on a re-run.
+  SS_ARGS=""; target="$TARGET"; bis_hi=1.0; bis_steps=7
+  case "$base" in
+    IMG_0722)  # banyan: fine branches alias into speckle. Center crop + 360px
+               # AREA downscale (each pixel pre-averages sub-cell detail so the
+               # grid resolves masses) + 6-level posterize for bold blocks.
+      chain="crop=iw*0.6:ih*0.6,scale=360:-2:flags=area,${HLG},eq=contrast=1.3,${POSTER6},${DENOISE_STRETCH}"
+      bis_hi=1.5; bis_steps=8 ;;
+    IMG_1514)  # seals: flat mid-grey, no highlights. Stronger contrast + a
+               # highlight curve + brighter mean (55) so tones separate, then
+               # 6-level posterize for defined blocks.
+      chain="scale=960:-2:flags=lanczos,${HLG_C15},curves=master='0/0 0.5/0.45 0.8/0.9 1/1',${POSTER6},${DENOISE_STRETCH}"
+      target=55; bis_hi=1.5; bis_steps=8 ;;
+    IMG_7644)  # golf: nearly static. Trim to the swing (t6.5, 4.5s) + 4-level
+               # posterize for bold snapping shapes on a low-motion subject.
+      SS_ARGS="-ss 6.5 -t 4.5"
+      chain="scale=960:-2:flags=lanczos,eq=contrast=1.3,${POSTER4},${DENOISE_STRETCH}"
+      bis_hi=1.5; bis_steps=8 ;;
+    *)         # every other clip: the uniform recipe, unchanged.
+      pre=$(hlg_prefix "$in")
+      chain="scale=960:-2:flags=lanczos,${pre}${DENOISE_STRETCH}" ;;
+  esac
 
-  # Bisection on the luma multiply to hit the dark TARGET after the stretch.
-  lo=0.05; hi=1.0; scale=1.0
-  for i in $(seq 1 7); do
+  # Bisection on the luma multiply to hit the (per-clip) TARGET after the stretch.
+  lo=0.05; hi=$bis_hi; scale=1.0
+  for i in $(seq 1 "$bis_steps"); do
     scale=$(awk "BEGIN{printf \"%.4f\", ($lo+$hi)/2}")
     m=$(measure "$in" "${chain},lutyuv=y=val*${scale}")
-    if awk "BEGIN{exit !(${m} > ${TARGET})}"; then hi=$scale; else lo=$scale; fi
+    if awk "BEGIN{exit !(${m} > ${target})}"; then hi=$scale; else lo=$scale; fi
   done
 
   vf="${chain},lutyuv=y=val*${scale},eq=saturation=1.4,format=yuv420p"
-  echo "Encoding ${base}  (hlg=$([ -n "$pre" ] && echo yes || echo no), y-scale=${scale} -> mean~${TARGET})"
-  ffmpeg -hide_banner -loglevel error -y -i "$in" -vf "$vf" -an \
+  echo "Encoding ${base}  (y-scale=${scale} -> mean~${target}$([ -n "$SS_ARGS" ] && echo ", trimmed")$([ "$base" = IMG_0722 -o "$base" = IMG_1514 -o "$base" = IMG_7644 ] && echo ", override"))"
+  ffmpeg -hide_banner -loglevel error -y $SS_ARGS -i "$in" -vf "$vf" -an \
     -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 26 -preset slow \
     -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
     -movflags +faststart "$out"
