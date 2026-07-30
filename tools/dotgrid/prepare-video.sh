@@ -158,7 +158,7 @@ ffmpeg -hide_banner -loglevel error -y \
   -an \
   -c:v libx264 -profile:v high -pix_fmt yuv420p \
   -crf "$CRF" -preset slow \
-  "${OUT_COLOR[@]}" \
+  ${OUT_COLOR[@]+"${OUT_COLOR[@]}"} \
   -movflags +faststart \
   "$OUT"
 
