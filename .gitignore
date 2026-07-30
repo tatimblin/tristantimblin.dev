@@ -24,3 +24,8 @@ pnpm-debug.log*
 .idea/
 
 .playwright-mcp/
+
+# Raw carousel video originals: kept locally as prepare-carousel.sh inputs, but
+# not committed. Only the made-for-web web/*.web.mp4 renders are tracked.
+public/videos/website-carousel/*.mov
+public/videos/website-carousel/*.MOV
