@@ -21,45 +21,210 @@ interface Props {
 	rulerSide?: "left" | "right";
 }
 
-// Placeholder list. Reuses the two videos that actually exist in /public/videos
-// as stand-ins; swap in real footage + metadata later.
+// Real footage prepared by tools/dotgrid/prepare-video.sh into
+// /public/videos/website-carousel/web (960px, audio-stripped, faststart H.264;
+// iPhone HLG sources tonemapped + brightness-normalized for the halftone look).
+// Location + date come from each clip's embedded capture metadata (GPS reverse-
+// geocoded); descriptions are read from the footage. Ordered oldest→newest so
+// autoplay steps forward in time along the date ruler.
 const {
 	rulerSide = "left",
 	clips = [
 		{
-			src: "/videos/beach.web.mp4",
-			description: "Beach",
-			location: "Lake Tahoe, CA",
-			date: "June 2025",
-			alt: "Halftone clip — Lake Tahoe",
+			src: "/videos/website-carousel/web/fisker-top-down.web.mp4",
+			description: "Started at Fisker",
+			location: "",
+			date: "April 2023",
+			alt: "Halftone clip — started at Fisker",
 		},
 		{
-			src: "/videos/fabric.web.mp4",
-			description: "Fabric",
+			src: "/videos/website-carousel/web/fisker-close.web.mp4",
+			description: "Fisker Ocean release",
+			location: "",
+			date: "June 2023",
+			alt: "Halftone clip — Fisker Ocean release",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_1922.web.mp4",
+			description: "Coffee run",
+			location: "",
+			date: "April 2024",
+			alt: "Halftone clip — coffee run",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_2102.web.mp4",
+			description: "Sonoma coast",
+			location: "Sonoma County, CA",
+			date: "June 2024",
+			alt: "Halftone clip — Sonoma coast",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_2347.web.mp4",
+			description: "Polaroids",
+			location: "Rehoboth Beach, DE",
+			date: "Sept 2024",
+			alt: "Halftone clip — Rehoboth Beach",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0068.web.mp4",
+			description: "Sigma Derby",
+			location: "Las Vegas, NV",
+			date: "April 2025",
+			alt: "Halftone clip — Las Vegas",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0073.web.mp4",
+			description: "Beach bonfire",
 			location: "Ocean Beach, SF",
-			date: "March 2024",
+			date: "April 2025",
 			alt: "Halftone clip — Ocean Beach",
 		},
 		{
-			src: "/videos/beach.web.mp4",
-			description: "Beach",
-			location: "Big Sur, CA",
-			date: "Sept 2024",
-			alt: "Halftone clip — Big Sur",
+			src: "/videos/website-carousel/web/IMG_0081.web.mp4",
+			description: "Backyard maple",
+			location: "Alameda, CA",
+			date: "April 2025",
+			alt: "Halftone clip — Alameda",
 		},
 		{
-			src: "/videos/fabric.web.mp4",
-			description: "Fabric",
-			location: "Point Reyes, CA",
-			date: "Jan 2025",
-			alt: "Halftone clip — Point Reyes",
+			src: "/videos/website-carousel/web/IMG_0157.web.mp4",
+			description: "Tide pools",
+			location: "Cabo San Lucas, MX",
+			date: "April 2025",
+			alt: "Halftone clip — Cabo San Lucas",
 		},
 		{
-			src: "/videos/beach.web.mp4",
-			description: "Beach",
-			location: "Marin Headlands",
+			src: "/videos/website-carousel/web/IMG_0339.web.mp4",
+			description: "Community orchestra",
+			location: "Mission District, SF",
 			date: "May 2025",
-			alt: "Halftone clip — Marin Headlands",
+			alt: "Halftone clip — Mission District",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0360.web.mp4",
+			description: "Redwoods",
+			location: "Mount Tamalpais, CA",
+			date: "May 2025",
+			alt: "Halftone clip — Mount Tamalpais",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0416.web.mp4",
+			description: "Live show",
+			location: "San Francisco, CA",
+			date: "June 2025",
+			alt: "Halftone clip — San Francisco",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0563.web.mp4",
+			description: "Lakeside",
+			location: "Lake Tahoe, CA",
+			date: "Aug 2025",
+			alt: "Halftone clip — Lake Tahoe",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0567.web.mp4",
+			description: "Riverside table",
+			location: "Lake Tahoe, CA",
+			date: "Aug 2025",
+			alt: "Halftone clip — Lake Tahoe",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0623.web.mp4",
+			description: "Outside Lands",
+			location: "Golden Gate Park, SF",
+			date: "Aug 2025",
+			alt: "Halftone clip — Outside Lands",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0689.web.mp4",
+			description: "Bikeshare",
+			location: "San Francisco, CA",
+			date: "Sept 2025",
+			alt: "Halftone clip — San Francisco",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0706.web.mp4",
+			description: "Jungle overlook",
+			location: "Road to Hana, Maui",
+			date: "Sept 2025",
+			alt: "Halftone clip — Road to Hana",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0722.web.mp4",
+			description: "Banyan tree",
+			location: "Maui, HI",
+			date: "Sept 2025",
+			alt: "Halftone clip — Maui",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0730.web.mp4",
+			description: "Sunset swim",
+			location: "Wailea, Maui",
+			date: "Sept 2025",
+			alt: "Halftone clip — Wailea",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0809.web.mp4",
+			description: "Coast trail",
+			location: "Devil's Slide, CA",
+			date: "Oct 2025",
+			alt: "Halftone clip — Devil's Slide",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0880.web.mp4",
+			description: "Snoqualmie Falls",
+			location: "Snoqualmie, WA",
+			date: "Nov 2025",
+			alt: "Halftone clip — Snoqualmie Falls",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_0884.web.mp4",
+			description: "Birthday",
+			location: "",
+			date: "Nov 2025",
+			alt: "Halftone clip — birthday",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_1212.web.mp4",
+			description: "Zoox robotaxi",
+			location: "San Francisco, CA",
+			date: "Feb 2026",
+			alt: "Halftone clip — Zoox robotaxi",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_1296.web.mp4",
+			description: "Dolores Park",
+			location: "San Francisco, CA",
+			date: "April 2026",
+			alt: "Halftone clip — Dolores Park",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_2465.web.mp4",
+			description: "Sidewalk garden",
+			location: "San Francisco, CA",
+			date: "June 2026",
+			alt: "Halftone clip — San Francisco",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_7644.web.mp4",
+			description: "Golf links",
+			location: "Half Moon Bay, CA",
+			date: "July 2026",
+			alt: "Halftone clip — Half Moon Bay",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_1499.web.mp4",
+			description: "Courtyard fountain",
+			location: "Moss Beach, CA",
+			date: "July 2026",
+			alt: "Halftone clip — Moss Beach",
+		},
+		{
+			src: "/videos/website-carousel/web/IMG_1514.web.mp4",
+			description: "Harbor seals",
+			location: "Moss Beach, CA",
+			date: "July 2026",
+			alt: "Halftone clip — Moss Beach",
 		},
 	],
 } = Astro.props;
@@ -96,20 +261,19 @@ const first = clips[0];
 				data-vc-grid
 				src={first?.src}
 				color-reveal
-				shimmer="2"
+				shimmer="1.5"
 				no-loop
-				cell-size="5"
-				dot-size="2"
+				cell-size="4"
+				dot-size="0.5"
 				levels="10"
-				gamma="0.5"
-				contrast="1.1"
+				gamma="0.25"
+				contrast="1"
 				color-reveal="0"
 				color="#7f7f7f"
 			></dotted-grid>
 			<figcaption class="vc__caption">
 				<span class="vc__desc" data-vc-desc>{first?.description}</span>
 				<span class="vc__loc" data-vc-loc>{first?.location}</span>
-				<span class="vc__date" data-vc-date>{first?.date}</span>
 			</figcaption>
 		</div>
 	</div>
