@@ -6,7 +6,7 @@
       "dependencies": {
         "@astrojs/rss": "^4.0.19",
         "@astrojs/sitemap": "^3.7.3",
-        "@tristimb/spotify-stream-player": "^0.5.1",
+        "@tristimb/spotify-stream-player": "^0.5.2",
         "@whois/design-system": "workspace:*",
         "@whois/dotted-grid": "workspace:*",
         "@whois/gallery-carousel": "workspace:*",
@@ -303,7 +303,7 @@
 
     "@stitches/react": ["@stitches/react@1.2.8", "", { "peerDependencies": { "react": ">= 16.3.0" } }, "sha512-9g9dWI4gsSVe8bNLlb+lMkBYsnIKCZTmvqvDG+Avnn69XfmHZKiaMrx7cgTaddq7aTPPmXiTsbFcUy0xgI4+wA=="],
 
-    "@tristimb/spotify-stream-player": ["@tristimb/spotify-stream-player@0.5.1", "", {}, "sha512-MlIppL8CM/5b/OQZkh4+Q1g1QqwoBgXVByfRbUwaNC4Y6pLLNYsbvl1VzN3AO3WSe0x27Q+NRcB7xPfa7w0lnQ=="],
+    "@tristimb/spotify-stream-player": ["@tristimb/spotify-stream-player@0.5.2", "", {}, "sha512-JTMTpE7us+377S1Hn1gmmIyhP9SZcFABfpT0AGn/WB+DWFTOzgi36mgYf8lT70RTr09EynMYpZwFUmPDBtpuOg=="],
 
     "@types/debug": ["@types/debug@4.1.13", "", { "dependencies": { "@types/ms": "*" } }, "sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw=="],
 

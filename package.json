@@ -12,7 +12,7 @@
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
-    "@tristimb/spotify-stream-player": "^0.5.1",
+    "@tristimb/spotify-stream-player": "^0.5.2",
     "@whois/design-system": "workspace:*",
     "@whois/dotted-grid": "workspace:*",
     "@whois/gallery-carousel": "workspace:*",
