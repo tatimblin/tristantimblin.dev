@@ -20,7 +20,7 @@
     "@whois/stories-heading": "workspace:*",
     "@whois/video-carousel": "workspace:*",
     "@whois/wobble-text": "workspace:*",
-    "astro": "6.4.8",
+    "astro": "7.1.1",
     "astro-seo": "^1.1.0",
     "lenis": "^1.3.25",
     "scroll-timeline-polyfill": "^1.1.0"
