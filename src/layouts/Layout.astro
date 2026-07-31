@@ -14,9 +14,25 @@ interface Props {
 	image?: string;
 	/** Ask crawlers to skip this page (e.g. scratch/experiments pages). */
 	noindex?: boolean;
+	/** Article SEO surface, forwarded to <Seo />. Defaults keep pages as "website". */
+	type?: "website" | "article";
+	canonical?: string;
+	publishDate?: Date;
+	modifiedDate?: Date | null;
+	tags?: string[];
 }
 
-const { title, description, image, noindex } = Astro.props;
+const {
+	title,
+	description,
+	image,
+	noindex,
+	type,
+	canonical,
+	publishDate,
+	modifiedDate,
+	tags,
+} = Astro.props;
 ---
 
 
@@ -86,7 +102,23 @@ const { title, description, image, noindex } = Astro.props;
 			rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;560;600&family=Fira+Code:wght@400;500&family=Space+Grotesk:wght@400;500&family=Playfair+Display:wght@400;600;700&family=Quintessential&display=swap"
 		/>
-		<Seo title={title} description={description} image={image} noindex={noindex} />
+		<link
+			rel="alternate"
+			type="application/rss+xml"
+			title="txt — Tristan Timblin"
+			href="/rss.xml"
+		/>
+		<Seo
+			title={title}
+			description={description}
+			image={image}
+			noindex={noindex}
+			type={type}
+			canonical={canonical}
+			publishDate={publishDate}
+			modifiedDate={modifiedDate}
+			tags={tags}
+		/>
 		<!-- No-FOUC theme init: apply the stored choice before first paint, and
 		     re-apply after each view-transition swap. Dark is the fallback. -->
 		<script is:inline>

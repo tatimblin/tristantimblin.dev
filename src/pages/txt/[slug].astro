@@ -1,0 +1,35 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection, render } from "astro:content";
+import TxtPostLayout from "../../layouts/TxtPostLayout.astro";
+
+export const getStaticPaths = (async () => {
+	const posts = (await getCollection("txt")).filter(
+		(post) => import.meta.env.PROD === false || !post.data.draft
+	);
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: { post },
+	}));
+}) satisfies GetStaticPaths;
+
+const { post } = Astro.props;
+const { title, excerpt, icon, tags, date, modified, image, canonical } = post.data;
+const { Content } = await render(post);
+
+// Use the post's own social card when set; otherwise <Seo> falls back to /og.jpg.
+const cardImage = image ?? undefined;
+---
+
+<TxtPostLayout
+	title={title}
+	description={excerpt}
+	icon={icon}
+	tags={tags}
+	date={date}
+	modified={modified}
+	image={cardImage}
+	canonical={canonical ?? undefined}
+>
+	<Content />
+</TxtPostLayout>

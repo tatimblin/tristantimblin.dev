@@ -1,0 +1,36 @@
+---
+// Base article layout: the SEO seam for posts. Owns nothing visual — it forwards
+// article metadata (canonical, OG type, BlogPosting JSON-LD via <Seo />) down to
+// Layout.astro and renders a bare slot. Future custom-theme post layouts should
+// wrap THIS layout so they inherit the article SEO without duplicating it.
+import Layout from "./Layout.astro";
+
+interface Props {
+	title?: string;
+	description?: string;
+	/** Path or absolute URL to the social card; falls back to /og.jpg. */
+	image?: string;
+	canonical?: string;
+	publishDate?: Date;
+	modifiedDate?: Date | null;
+	tags?: string[];
+	noindex?: boolean;
+}
+
+const { title, description, image, canonical, publishDate, modifiedDate, tags, noindex } =
+	Astro.props;
+---
+
+<Layout
+	title={title}
+	description={description}
+	image={image}
+	canonical={canonical}
+	publishDate={publishDate}
+	modifiedDate={modifiedDate}
+	tags={tags}
+	noindex={noindex}
+	type="article"
+>
+	<slot />
+</Layout>

@@ -4,7 +4,7 @@
 // description, Open Graph, Twitter card, canonical) and the schema.org Person
 // JSON-LD that describes Tristan Timblin.
 import { SEO } from "astro-seo";
-import type { Person, WithContext } from "schema-dts";
+import type { BlogPosting, Person, WithContext } from "schema-dts";
 
 interface Props {
 	title?: string;
@@ -12,6 +12,14 @@ interface Props {
 	/** Path or absolute URL to the social card; defaults to /og.jpg. */
 	image?: string;
 	noindex?: boolean;
+	/** "article" switches OG type and emits BlogPosting JSON-LD. */
+	type?: "website" | "article";
+	/** Override the canonical URL (e.g. a syndicated post's origin). */
+	canonical?: string;
+	/** Article dates (ignored unless type === "article"). */
+	publishDate?: Date;
+	modifiedDate?: Date | null;
+	tags?: string[];
 }
 
 const SITE_NAME = "Tristan Timblin";
@@ -23,12 +31,23 @@ const {
 	description = DEFAULT_DESCRIPTION,
 	image,
 	noindex = false,
+	type = "website",
+	canonical: canonicalOverride,
+	publishDate,
+	modifiedDate,
+	tags,
 } = Astro.props;
 
 // Astro.site is the configured origin (https://tristantimblin.dev). Everything
 // social/canonical must be absolute, so resolve against it.
-const canonical = new URL(Astro.url.pathname, Astro.site).href;
-const ogImage = new URL(image ?? "/og.jpg", Astro.site).href;
+const canonical = canonicalOverride ?? new URL(Astro.url.pathname, Astro.site).href;
+// Default to the small square card (300×300). iMessage/Slack/Discord render a
+// compact preview from a small image rather than a full-width hero. Callers can
+// still pass a larger per-page image to opt into a big card.
+const ogImage = new URL(image ?? "/og-small.jpg", Astro.site).href;
+// Declared so consumers size the preview without downloading the image first.
+// Only trustworthy for the default card; a custom `image` may differ, so omit.
+const ogImageIsDefault = !image;
 
 const person: WithContext<Person> = {
 	"@context": "https://schema.org",
@@ -44,6 +63,23 @@ const person: WithContext<Person> = {
 		"https://www.linkedin.com/in/tristan-timblin/",
 	],
 };
+
+// For posts, describe the article itself and attribute it to the same Person.
+const blogPosting: WithContext<BlogPosting> | null =
+	type === "article"
+		? {
+				"@context": "https://schema.org",
+				"@type": "BlogPosting",
+				headline: title,
+				description,
+				image: ogImage,
+				author: { "@type": "Person", name: person.name, url: person.url },
+				mainEntityOfPage: canonical,
+				...(publishDate && { datePublished: publishDate.toISOString() }),
+				...(modifiedDate && { dateModified: modifiedDate.toISOString() }),
+				...(tags?.length && { keywords: tags.join(", ") }),
+			}
+		: null;
 ---
 
 <SEO
@@ -52,11 +88,18 @@ const person: WithContext<Person> = {
 	canonical={canonical}
 	noindex={noindex}
 	openGraph={{
-		basic: { title, type: "website", image: ogImage, url: canonical },
+		basic: { title, type: type === "article" ? "article" : "website", image: ogImage, url: canonical },
 		optional: { description, siteName: SITE_NAME },
-		image: { alt: `${SITE_NAME}` },
+		image: ogImageIsDefault
+			? { alt: SITE_NAME, width: 300, height: 300 }
+			: { alt: SITE_NAME },
 	}}
 	twitter={{ card: "summary", title, description, image: ogImage }}
 />
 
 <script type="application/ld+json" set:html={JSON.stringify(person)} is:inline />
+{
+	blogPosting && (
+		<script type="application/ld+json" set:html={JSON.stringify(blogPosting)} is:inline />
+	)
+}

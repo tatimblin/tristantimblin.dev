@@ -1,0 +1,65 @@
+---
+// Default post layout: the semantic structure for a post. Wraps ArticleLayout
+// (which owns SEO) and lays out the reading experience as plain semantic HTML —
+// no <style>, no classes. Styling/theming is a later phase; a future custom
+// theme would be a sibling layout that also wraps ArticleLayout.
+import ArticleLayout from "./ArticleLayout.astro";
+
+interface Props {
+	title: string;
+	description?: string;
+	icon?: string;
+	tags?: string[];
+	date: Date;
+	modified?: Date | null;
+	image?: string;
+	canonical?: string;
+}
+
+const { title, description, icon, tags = [], date, modified, image, canonical } = Astro.props;
+
+const fmt = (d: Date) =>
+	new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
+---
+
+<ArticleLayout
+	title={title}
+	description={description}
+	image={image}
+	canonical={canonical}
+	publishDate={date}
+	modifiedDate={modified}
+	tags={tags}
+>
+	<main>
+		<nav>
+			<a href="/txt">&larr; txt</a>
+		</nav>
+
+		<article>
+			<header>
+				{icon && <p aria-hidden="true">{icon}</p>}
+				<h1>{title}</h1>
+				<p>
+					<time datetime={iso(date)}>{fmt(date)}</time>
+					{modified && (
+						<span>
+							{" · Updated "}
+							<time datetime={iso(modified)}>{fmt(modified)}</time>
+						</span>
+					)}
+				</p>
+				{tags.length > 0 && (
+					<ul>
+						{tags.map((tag) => (
+							<li>{tag}</li>
+						))}
+					</ul>
+				)}
+			</header>
+
+			<slot />
+		</article>
+	</main>
+</ArticleLayout>

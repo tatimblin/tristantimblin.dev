@@ -10,6 +10,7 @@
     "astro": "bunx --bun astro"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
     "@tristimb/spotify-stream-player": "^0.5.0",
     "@whois/design-system": "workspace:*",
