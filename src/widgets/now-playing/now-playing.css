@@ -57,3 +57,13 @@
 .home__widgets .wx-nowplaying-widget spotify-player::part(album-text) {
 	display: none;
 }
+
+/* Keep the title and artist on a single line so a long name can't wrap to a
+   second row and steal height from the album art (which flexes to fill the
+   leftover space) — that reflow would resize the cover on every track change.
+   The component watches for this overflow and, when a line is too wide, scrolls
+   it in a continuous car-radio marquee instead of clipping it. */
+.home__widgets .wx-nowplaying-widget spotify-player::part(title),
+.home__widgets .wx-nowplaying-widget spotify-player::part(artist) {
+	white-space: nowrap;
+}
