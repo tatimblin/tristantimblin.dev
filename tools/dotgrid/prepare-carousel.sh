@@ -22,8 +22,18 @@
 # temporally COHERENT and survives. Measured: ~+40% more frame-to-frame activity
 # preserved than smartblur, and noise-heavy clips came out cleaner, not worse.
 #
+# Scale to 540px wide, not the source's 960+. The halftone renders at ~534px CSS
+# and point-samples ONE pixel per ~4px grid cell, so it can only ever resolve
+# ~130px of real detail — a 960px source is ~3x more pixels than the effect shows.
+# Those extra pixels aren't free: every frame is decoded and texImage2D-uploaded
+# to the GPU at full size (960x1706 RGBA ≈ 6.25 MB/frame vs 540x960 ≈ 1.98 MB),
+# and that decode+upload bandwidth is the mobile stutter bottleneck (~3x less at
+# 540px). We also cap output to 30fps (-r 30 below): a couple of source clips are
+# 60fps, which doubles decode+upload for detail the dot grid can't show. 540px
+# stays 4-6x oversampled for what the grid reads, so the halftone is unchanged.
+#
 # The chain, per clip:
-#   scale 960 -> [HLG tonemap for iPhone HDR] -> atadenoise (temporal denoise:
+#   scale 540 -> [HLG tonemap for iPhone HDR] -> atadenoise (temporal denoise:
 #   kills random noise, keeps coherent light/motion) -> normalize (per-frame
 #   histogram stretch to full range: restores blacks AND highlights)
 #   -> lutyuv luma darkening bisected to a DARK mean target (chroma-preserving,
@@ -120,16 +130,16 @@ for in in "$SRC_DIR"/*.mov; do
     IMG_1514)  # seals: flat mid-grey, no highlights. Stronger contrast + a
                # highlight curve + brighter mean (55) so tones separate, then
                # 6-level posterize for defined blocks.
-      chain="scale=960:-2:flags=lanczos,${HLG_C15},curves=master='0/0 0.5/0.45 0.8/0.9 1/1',${POSTER6},${DENOISE_STRETCH}"
+      chain="scale=540:-2:flags=lanczos,${HLG_C15},curves=master='0/0 0.5/0.45 0.8/0.9 1/1',${POSTER6},${DENOISE_STRETCH}"
       target=55; bis_hi=1.5; bis_steps=8 ;;
     IMG_7644)  # golf: nearly static. Trim to the swing (t6.5, 4.5s) + 4-level
                # posterize for bold snapping shapes on a low-motion subject.
       SS_ARGS="-ss 6.5 -t 4.5"
-      chain="scale=960:-2:flags=lanczos,eq=contrast=1.3,${POSTER4},${DENOISE_STRETCH}"
+      chain="scale=540:-2:flags=lanczos,eq=contrast=1.3,${POSTER4},${DENOISE_STRETCH}"
       bis_hi=1.5; bis_steps=8 ;;
     *)         # every other clip: the uniform recipe, unchanged.
       pre=$(hlg_prefix "$in")
-      chain="scale=960:-2:flags=lanczos,${pre}${DENOISE_STRETCH}" ;;
+      chain="scale=540:-2:flags=lanczos,${pre}${DENOISE_STRETCH}" ;;
   esac
 
   # Bisection on the luma multiply to hit the (per-clip) TARGET after the stretch.
@@ -143,7 +153,7 @@ for in in "$SRC_DIR"/*.mov; do
   vf="${chain},lutyuv=y=val*${scale},eq=saturation=1.4,format=yuv420p"
   echo "Encoding ${base}  (y-scale=${scale} -> mean~${target}$([ -n "$SS_ARGS" ] && echo ", trimmed")$([ "$base" = IMG_0722 -o "$base" = IMG_1514 -o "$base" = IMG_7644 ] && echo ", override"))"
   ffmpeg -hide_banner -loglevel error -y $SS_ARGS -i "$in" -vf "$vf" -an \
-    -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 26 -preset slow \
+    -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 26 -preset slow -r 30 \
     -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
     -movflags +faststart "$out"
 done
