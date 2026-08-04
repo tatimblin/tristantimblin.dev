@@ -272,17 +272,24 @@ export class StoriesHeadingElement extends HTMLElement {
 		if (!this.heading) return;
 
 		const hostWidth = this.getBoundingClientRect().width;
-		// Stacked layout (or not rendered): drop the fit, fall back to the rem step.
-		if (hostWidth < StoriesHeadingElement.FIT_MIN_WIDTH) {
+		if (!(hostWidth > 0)) {
+			// Not rendered: drop the fit, fall back to the rem step.
 			this.style.removeProperty("--sh-heading-fitsize");
 			return;
 		}
 
-		const gap = StoriesHeadingElement.GRID_GAP;
-		const cols = StoriesHeadingElement.GRID_COLUMNS;
-		const span = StoriesHeadingElement.FIT_SPAN;
-		const colW = (hostWidth - (cols - 1) * gap) / cols;
-		const target = span * colW + (span - 1) * gap;
+		// Below FIT_MIN_WIDTH (the one-column mobile layout) fit "other stories" to
+		// ~70vw on a single line; above it fit to a 6-col span of the content grid.
+		let target: number;
+		if (hostWidth < StoriesHeadingElement.FIT_MIN_WIDTH) {
+			target = 0.7 * window.innerWidth;
+		} else {
+			const gap = StoriesHeadingElement.GRID_GAP;
+			const cols = StoriesHeadingElement.GRID_COLUMNS;
+			const span = StoriesHeadingElement.FIT_SPAN;
+			const colW = (hostWidth - (cols - 1) * gap) / cols;
+			target = span * colW + (span - 1) * gap;
+		}
 		if (!(target > 0)) return;
 
 		// Natural single-line ink width of "other stories" at a reference px size.
