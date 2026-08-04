@@ -242,13 +242,21 @@ stories-heading {
 }
 
 /* --- Tablet / mobile ---------------------------------------------------- */
-/* Stop pinning and stack in one column, in DOM order: wordmark, "&", "other
-   stories", then (page-owned) copy + carousel. The pin/reveal are a large-screen
-   affordance; here the resting solid face renders statically (outline hidden). */
+/* Keep the pin + outline→solid reveal, but tuned for one column: a SHORTER
+   --sh-reveal so the wipe plays over a small scroll, the "&" static (no
+   parallax), and the wordmark filling the full gutter width. "other stories"
+   still pins and is pushed away by the rising copy — same mechanism as desktop. */
 @media (max-width: 900px) {
 	stories-heading {
 		--sh-amp-size: 6rem;
 		--sh-heading-size: 2rem;
+		/* Reveal wipe plays over 100px of scroll (vs 300px on desktop). */
+		--sh-reveal: 100px;
+		/* Stay fixed only ~1em of the HEADING (roughly the text's own height) after
+		   the wipe before the rising copy pushes it away — a short hold vs 300px on
+		   desktop. Keyed to the fitted heading size (em on the track would resolve
+		   against the track's 16px, not the ~50px text). */
+		--sh-hold: var(--sh-heading-fitsize, var(--sh-heading-size));
 	}
 
 	/* The "&" stays absolutely positioned over the wordmark (JS aligns it to the
@@ -258,27 +266,9 @@ stories-heading {
 		opacity: 1;
 	}
 
-	.sh__track {
-		height: auto;
-		margin-block-start: var(--sh-heading-gap);
-	}
-
-	.sh__pin {
-		position: static;
-	}
-
-	/* Show only the solid face, back in normal flow so it has height. */
-	.sh__outline {
-		display: none;
-	}
-
-	.sh__heading {
-		white-space: normal;
-	}
-
-	.sh__heading .sh__solid {
-		position: static;
-		clip-path: none;
+	/* Wordmark fills the full inner width (gutter-to-gutter) on mobile. */
+	.sh__wordmark-svg {
+		width: 100%;
 	}
 }
 
