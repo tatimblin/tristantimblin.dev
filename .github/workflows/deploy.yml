@@ -19,6 +19,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Pull the actual video/audio bytes (stored in Git LFS), not the
+          # pointer files — otherwise the build ships broken media.
+          lfs: true
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
