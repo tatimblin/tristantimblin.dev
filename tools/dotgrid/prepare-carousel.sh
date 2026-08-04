@@ -22,15 +22,21 @@
 # temporally COHERENT and survives. Measured: ~+40% more frame-to-frame activity
 # preserved than smartblur, and noise-heavy clips came out cleaner, not worse.
 #
-# Scale to 540px wide, not the source's 960+. The halftone renders at ~534px CSS
+# Scale to 360px wide, not the source's 960+. The halftone renders at ~534px CSS
 # and point-samples ONE pixel per ~4px grid cell, so it can only ever resolve
-# ~130px of real detail — a 960px source is ~3x more pixels than the effect shows.
-# Those extra pixels aren't free: every frame is decoded and texImage2D-uploaded
-# to the GPU at full size (960x1706 RGBA ≈ 6.25 MB/frame vs 540x960 ≈ 1.98 MB),
-# and that decode+upload bandwidth is the mobile stutter bottleneck (~3x less at
-# 540px). We also cap output to 30fps (-r 30 below): a couple of source clips are
-# 60fps, which doubles decode+upload for detail the dot grid can't show. 540px
-# stays 4-6x oversampled for what the grid reads, so the halftone is unchanged.
+# ~130px of real detail — even 360px is still ~3x more pixels than the effect
+# shows. Those extra pixels aren't free: every frame is decoded and texImage2D-
+# uploaded to the GPU at full size (360x640 RGBA ≈ 0.88 MB/frame vs the old
+# 540x960 ≈ 1.98 MB, and vs a 960x1706 source ≈ 6.25 MB), and that decode+upload
+# bandwidth is the mobile stutter bottleneck (~2.25x less than 540px, ~7x less
+# than source). We also cap output to 30fps (-r 30 below): a couple of source
+# clips are 60fps, which doubles decode+upload for detail the dot grid can't show.
+# 360px stays ~3x oversampled for what the grid reads, so the halftone is unchanged.
+#
+# We emit TWO files per clip from the same filtered frames: an H.264 .web.mp4
+# (universal fallback, +faststart) and a smaller AV1 (or VP9 where SVT-AV1 is
+# unavailable) .web.webm that modern browsers prefer via a <source> list. The
+# dotted-grid element picks the first playable one.
 #
 # The chain, per clip:
 #   scale 540 -> [HLG tonemap for iPhone HDR] -> atadenoise (temporal denoise:
@@ -108,6 +114,18 @@ measure() {
     | awk '{s+=$1;n++} END{if(n) printf "%.2f", s/n; else print "0"}'
 }
 
+# Pick the WebM encoder once: prefer AV1 (SVT-AV1) for the best size/quality, fall
+# back to VP9 where the build lacks libsvtav1. Both are widely supported by the
+# browsers that get the .webm; anything older falls back to the H.264 .mp4.
+if ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libsvtav1; then
+  WEBM_ARGS=(-c:v libsvtav1 -crf 34 -preset 6 -pix_fmt yuv420p)
+  WEBM_CODEC="av1 (libsvtav1)"
+else
+  WEBM_ARGS=(-c:v libvpx-vp9 -crf 34 -b:v 0 -row-mt 1 -pix_fmt yuv420p)
+  WEBM_CODEC="vp9 (libvpx-vp9)"
+fi
+echo "WebM codec: ${WEBM_CODEC}"
+
 shopt -s nullglob nocaseglob
 for in in "$SRC_DIR"/*.mov; do
   base=$(basename "$in"); base="${base%.*}"
@@ -130,16 +148,16 @@ for in in "$SRC_DIR"/*.mov; do
     IMG_1514)  # seals: flat mid-grey, no highlights. Stronger contrast + a
                # highlight curve + brighter mean (55) so tones separate, then
                # 6-level posterize for defined blocks.
-      chain="scale=540:-2:flags=lanczos,${HLG_C15},curves=master='0/0 0.5/0.45 0.8/0.9 1/1',${POSTER6},${DENOISE_STRETCH}"
+      chain="scale=360:-2:flags=lanczos,${HLG_C15},curves=master='0/0 0.5/0.45 0.8/0.9 1/1',${POSTER6},${DENOISE_STRETCH}"
       target=55; bis_hi=1.5; bis_steps=8 ;;
     IMG_7644)  # golf: nearly static. Trim to the swing (t6.5, 4.5s) + 4-level
                # posterize for bold snapping shapes on a low-motion subject.
       SS_ARGS="-ss 6.5 -t 4.5"
-      chain="scale=540:-2:flags=lanczos,eq=contrast=1.3,${POSTER4},${DENOISE_STRETCH}"
+      chain="scale=360:-2:flags=lanczos,eq=contrast=1.3,${POSTER4},${DENOISE_STRETCH}"
       bis_hi=1.5; bis_steps=8 ;;
     *)         # every other clip: the uniform recipe, unchanged.
       pre=$(hlg_prefix "$in")
-      chain="scale=540:-2:flags=lanczos,${pre}${DENOISE_STRETCH}" ;;
+      chain="scale=360:-2:flags=lanczos,${pre}${DENOISE_STRETCH}" ;;
   esac
 
   # Bisection on the luma multiply to hit the (per-clip) TARGET after the stretch.
@@ -156,6 +174,13 @@ for in in "$SRC_DIR"/*.mov; do
     -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 26 -preset slow -r 30 \
     -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
     -movflags +faststart "$out"
+
+  # Second pass: same filtered frames -> a smaller AV1/VP9 .web.webm that modern
+  # browsers prefer. No +faststart (WebM streams progressively without it).
+  webm="${OUT_DIR}/${base}.web.webm"
+  ffmpeg -hide_banner -loglevel error -y $SS_ARGS -i "$in" -vf "$vf" -an \
+    "${WEBM_ARGS[@]}" -r 30 \
+    -colorspace bt709 -color_primaries bt709 -color_trc bt709 "$webm"
 done
 
 echo "Done -> ${OUT_DIR}"
