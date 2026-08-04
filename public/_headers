@@ -1,0 +1,10 @@
+# Cloudflare Pages custom headers (https://developers.cloudflare.com/pages/configuration/headers/)
+#
+# Videos and audio are static, permanent assets with stable filenames — cache them
+# hard so repeat visits and the carousel's next-clip prefetch cost nothing. If a
+# clip is ever re-encoded it keeps its name; bump the path or filename to bust.
+/videos/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/audio/*
+  Cache-Control: public, max-age=31536000, immutable

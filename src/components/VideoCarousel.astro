@@ -230,6 +230,12 @@ const {
 } = Astro.props;
 
 const first = clips[0];
+
+// Each clip ships an H.264 .web.mp4 (universal fallback) and a smaller AV1/VP9
+// .web.webm alongside it (see tools/dotgrid/prepare-carousel.sh). The .webm sits
+// next to the .mp4 with the same stem, so derive its URL rather than authoring it
+// per clip. The <dotted-grid> prefers the webm where the browser can play it.
+const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 ---
 
 <video-carousel class="vc" tick-src="/audio/tick_004.ogg" ruler-side={rulerSide}>
@@ -245,6 +251,7 @@ const first = clips[0];
 						class="vc__tick vc__tick--major"
 						data-index={i}
 						data-src={clip.src}
+						data-src-webm={toWebm(clip.src)}
 						data-desc={clip.description}
 						data-loc={clip.location}
 						data-date={clip.date}
@@ -260,15 +267,14 @@ const first = clips[0];
 				class="vc__grid"
 				data-vc-grid
 				src={first?.src}
+				src-webm={first ? toWebm(first.src) : undefined}
 				color-reveal
 				shimmer="1"
 				no-loop
-				cell-size="3.5"
-				dot-size="0.05"
-				levels="4"
-				gamma="0.15"
-				contrast="1.15"
-				color-reveal
+				cell-size="4"
+				levels="10"
+				gamma="0.5"
+				contrast="1.1"
 				color="#7f7f7f"
 			></dotted-grid>
 			<figcaption class="vc__caption">
