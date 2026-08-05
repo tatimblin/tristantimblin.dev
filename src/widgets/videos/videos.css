@@ -40,7 +40,7 @@
 	   page at this constant offset (behaves like an in-flow element); once fully in
 	   view it parallaxes this distance to 0, settling into the grid. Larger =
 	   enters higher + more parallax. Tune here, not in JS. */
-	--vc-travel: 110vh;
+	--vc-travel: calc(var(--sh-pin-height) + 15vh);
 
 	/* Parallax hook: lifted UP the page when scrolled to top, eased to 0 as the
 	   grid docks into view (value written by the <script> in Videos.astro).
