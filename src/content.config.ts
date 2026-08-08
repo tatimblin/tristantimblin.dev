@@ -14,7 +14,7 @@ const gallery = defineCollection({
 });
 
 const txt = defineCollection({
-	loader: glob({ pattern: "**/*.md", base: "./src/content/txt" }),
+	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/txt" }),
 	schema: z.object({
 		title: z.string(),
 		date: z.coerce.date(),

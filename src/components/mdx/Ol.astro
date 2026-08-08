@@ -1,0 +1,7 @@
+---
+// MDX `ol` → DS List (ordered; renders <ol> with counter markers on items).
+import List from "@whois/design-system/List";
+const props = Astro.props;
+---
+
+<List {...props} variant="ordered"><slot /></List>

@@ -2,6 +2,7 @@
 import type { GetStaticPaths } from "astro";
 import { getCollection, render } from "astro:content";
 import TxtPostLayout from "../../layouts/TxtPostLayout.astro";
+import { mdxComponents } from "../../components/mdx-components";
 
 export const getStaticPaths = (async () => {
 	const posts = (await getCollection("txt")).filter(
@@ -31,5 +32,5 @@ const cardImage = image ?? undefined;
 	image={cardImage}
 	canonical={canonical ?? undefined}
 >
-	<Content />
+	<Content components={mdxComponents} />
 </TxtPostLayout>

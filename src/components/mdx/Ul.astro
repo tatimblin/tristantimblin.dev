@@ -1,0 +1,7 @@
+---
+// MDX `ul` → DS List (unordered; renders <ul> with arrow markers on items).
+import List from "@whois/design-system/List";
+const props = Astro.props;
+---
+
+<List {...props} variant="unordered"><slot /></List>

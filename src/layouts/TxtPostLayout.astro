@@ -1,9 +1,22 @@
 ---
-// Default post layout: the semantic structure for a post. Wraps ArticleLayout
-// (which owns SEO) and lays out the reading experience as plain semantic HTML —
-// no <style>, no classes. Styling/theming is a later phase; a future custom
-// theme would be a sibling layout that also wraps ArticleLayout.
+// Default post layout: the reading experience for a /txt post. Wraps
+// ArticleLayout (which owns SEO) and composes the chrome from
+// @whois/design-system components — the post BODY arrives via <slot /> already
+// mapped to DS components (see src/components/mdx-components.ts, applied at the
+// <Content> render site in txt/[slug].astro).
+//
+// Only genuinely component-less bits are scoped CSS on the tokens: the reading
+// measure, and the body's `pre`/`code`/`img`/`hr`/`del` (reached through the
+// slotted content with `.txt-prose :global(…)`).
 import ArticleLayout from "./ArticleLayout.astro";
+import Anchor from "@whois/design-system/Anchor";
+import Heading from "@whois/design-system/Heading";
+import Text from "@whois/design-system/Text";
+import Pill from "@whois/design-system/Pill";
+import Flex from "@whois/design-system/Flex";
+// DS component styles (Anchor/Heading/Text/Pill/List/…) are not global — import
+// once here so this layout and the mapped body components resolve.
+import "@whois/design-system/styles.css";
 
 interface Props {
 	title: string;
@@ -32,16 +45,16 @@ const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
 	modifiedDate={modified}
 	tags={tags}
 >
-	<main>
-		<nav>
-			<a href="/txt">&larr; txt</a>
+	<main class="txt-post">
+		<nav class="txt-post__nav">
+			<Anchor href="/txt" arrow="left">txt</Anchor>
 		</nav>
 
 		<article>
-			<header>
-				{icon && <p aria-hidden="true">{icon}</p>}
-				<h1>{title}</h1>
-				<p>
+			<header class="txt-post__header">
+				{icon && <p class="txt-post__icon" aria-hidden="true">{icon}</p>}
+				<Heading as="h1" size={4}>{title}</Heading>
+				<Text as="p" size={1} variant="tertiary" family="numeric" class="txt-post__meta">
 					<time datetime={iso(date)}>{fmt(date)}</time>
 					{modified && (
 						<span>
@@ -49,17 +62,135 @@ const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
 							<time datetime={iso(modified)}>{fmt(modified)}</time>
 						</span>
 					)}
-				</p>
+				</Text>
 				{tags.length > 0 && (
-					<ul>
+					<Flex gap={2} wrap="wrap" class="txt-post__tags">
 						{tags.map((tag) => (
-							<li>{tag}</li>
+							<Pill variant="info">{tag}</Pill>
 						))}
-					</ul>
+					</Flex>
 				)}
 			</header>
 
-			<slot />
+			<div class="txt-prose">
+				<slot />
+			</div>
 		</article>
 	</main>
 </ArticleLayout>
+
+<style>
+	/* Outer envelope + reading measure. The DS components own their own type and
+	   color; this only positions them and sets the comfortable line length. */
+	.txt-post {
+		max-width: 68ch;
+		margin-inline: auto;
+		padding-inline: var(--container-pad);
+		padding-block: var(--space-6);
+	}
+
+	.txt-post__nav {
+		margin-bottom: var(--space-6);
+	}
+
+	.txt-post__header {
+		margin-bottom: var(--space-7);
+	}
+
+	.txt-post__icon {
+		margin: 0 0 var(--space-3);
+		font-size: var(--font-size-7);
+		line-height: 1;
+	}
+
+	.txt-post__meta {
+		display: block;
+		margin-block: var(--space-3) var(--space-5);
+	}
+
+	/* Prose body — the slotted <Content /> is mapped to DS components, so most
+	   elements style themselves. These rules cover only the tags left as raw
+	   HTML (code/pre/img/hr/del) plus vertical rhythm between top-level blocks.
+	   `:global()` is required because the body is slotted, not authored here. */
+	.txt-prose :global(> * + *) {
+		margin-block-start: var(--space-5);
+	}
+
+	/* Fenced code blocks. Shiki runs with theme "css-variables" (astro.config),
+	   so token colors come from the --astro-code-* vars — mapped here onto the
+	   DS --token-* palette so highlighting tracks the light/dark toggle. Shiki
+	   writes the surface as an inline background from --astro-code-color-background,
+	   so that var drives the panel color (with our border/radius around it). */
+	.txt-prose :global(pre.astro-code) {
+		--astro-code-background: var(--code-snippet-background);
+		--astro-code-foreground: var(--text-primary);
+		--astro-code-token-comment: var(--token-comment);
+		--astro-code-token-keyword: var(--token-keyword);
+		--astro-code-token-string: var(--token-selector);
+		--astro-code-token-string-expression: var(--token-selector);
+		--astro-code-token-constant: var(--token-symbol);
+		--astro-code-token-parameter: var(--token-operator);
+		--astro-code-token-function: var(--token-function);
+		--astro-code-token-punctuation: var(--token-punctuation);
+		--astro-code-token-link: var(--hyperlink);
+	}
+	.txt-prose :global(pre) {
+		margin-block: var(--space-6);
+		padding: var(--space-4);
+		overflow-x: auto;
+		background: var(--code-snippet-background);
+		border: 1px solid var(--border-color);
+		border-radius: var(--border-radius-2);
+		font-family: var(--font-mono);
+		font-size: var(--font-size-1);
+		line-height: 1.6;
+	}
+	.txt-prose :global(pre code) {
+		padding: 0;
+		background: none;
+		border: 0;
+		font: inherit;
+	}
+
+	/* Inline code (anything not inside a <pre>). */
+	.txt-prose :global(:not(pre) > code) {
+		padding: 0.15em 0.4em;
+		background: var(--code-snippet-background);
+		border: 1px solid var(--border-color);
+		border-radius: var(--border-radius-0);
+		font-family: var(--font-mono);
+		font-size: 0.9em;
+		color: var(--text-primary);
+	}
+
+	/* Post images (leading hero + inline). */
+	.txt-prose :global(img) {
+		width: 100%;
+		height: auto;
+		margin-block: var(--space-6);
+		border-radius: var(--radius);
+	}
+
+	/* Blockquote — quiet editorial left-rule (matches the homepage passage
+	   treatment); the mapped <p> inside supplies the type. */
+	.txt-prose :global(blockquote) {
+		margin-inline: 0;
+		padding-inline-start: var(--space-5);
+		border-inline-start: 2px solid var(--text-tertiary);
+		font-style: italic;
+		color: var(--text-tertiary);
+	}
+	.txt-prose :global(blockquote p) {
+		color: inherit;
+	}
+
+	.txt-prose :global(hr) {
+		border: 0;
+		border-top: 1px solid var(--border-color);
+		margin-block: var(--space-7);
+	}
+
+	.txt-prose :global(del) {
+		color: var(--text-tertiary);
+	}
+</style>

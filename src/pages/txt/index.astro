@@ -1,6 +1,12 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
+import Anchor from "@whois/design-system/Anchor";
+import Heading from "@whois/design-system/Heading";
+import Text from "@whois/design-system/Text";
+import Flex from "@whois/design-system/Flex";
+// DS component styles are not global — import once for this page.
+import "@whois/design-system/styles.css";
 
 const posts = (await getCollection("txt"))
 	.filter((post) => import.meta.env.PROD === false || !post.data.draft)
@@ -12,25 +18,73 @@ const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
 ---
 
 <Layout title="txt — Tristan Timblin" description="Writing by Tristan Timblin.">
-	<main>
-		<h1>txt</h1>
+	<main class="txt-index">
+		<Heading as="h1" size={4} class="txt-index__title">txt</Heading>
 		{
 			posts.length > 0 ? (
-				<ul>
+				<Flex as="ul" direction="column" alignItems="stretch" gap={5} class="txt-index__list">
 					{posts.map((post) => (
-						<li>
-							<a href={`/txt/${post.id}`}>
-								{post.data.icon && <span aria-hidden="true">{post.data.icon} </span>}
-								{post.data.title}
-							</a>
-							<time datetime={iso(post.data.date)}>{fmt(post.data.date)}</time>
-							<p>{post.data.excerpt}</p>
+						<li class="txt-index__item">
+							<Anchor href={`/txt/${post.id}`} class="txt-index__link">
+								<Heading as="h2" size={2}>
+									{post.data.icon && <span aria-hidden="true">{post.data.icon} </span>}
+									{post.data.title}
+								</Heading>
+							</Anchor>
+							<Text as="time" size={1} variant="tertiary" family="numeric" class="txt-index__date" datetime={iso(post.data.date)}>
+								{fmt(post.data.date)}
+							</Text>
+							<Text as="p" size={4} variant="secondary">{post.data.excerpt}</Text>
 						</li>
 					))}
-				</ul>
+				</Flex>
 			) : (
-				<p>No posts yet.</p>
+				<Text as="p" variant="tertiary">No posts yet.</Text>
 			)
 		}
 	</main>
 </Layout>
+
+<style>
+	.txt-index {
+		max-width: 68ch;
+		margin-inline: auto;
+		padding-inline: var(--container-pad);
+		padding-block: var(--space-7);
+	}
+
+	.txt-index__title {
+		margin-bottom: var(--space-7);
+	}
+
+	.txt-index__list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	/* Quiet divider between entries; the last one carries none. */
+	.txt-index__item {
+		padding-bottom: var(--space-5);
+		border-bottom: 1px solid var(--border-color);
+	}
+	.txt-index__item:last-child {
+		padding-bottom: 0;
+		border-bottom: 0;
+	}
+
+	/* The Anchor wraps a Heading; keep it block + inherit color so the title
+	   isn't tinted like a body link, and let the Heading own the type. */
+	.txt-index__link {
+		display: block;
+		color: var(--text-primary);
+	}
+	.txt-index__link:hover {
+		color: var(--accent);
+	}
+
+	.txt-index__date {
+		display: block;
+		margin-block: var(--space-1) var(--space-2);
+	}
+</style>
