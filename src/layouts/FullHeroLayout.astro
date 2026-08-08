@@ -1,10 +1,11 @@
 ---
 // FullHeroLayout — a reusable page shell with three drop-in regions:
 //
-//   scene    (slot="scene")   full-bleed CAPPED banner; owns --hero-height. The
+//   scene    (slot="scene")   full-viewport BACKGROUND layer (100svh, absolute),
+//                             faded top+bottom; owns --hero-height. The
 //                             direct-WebGL <dotted-grid> drops in here (any
 //                             full-bleed visual works — the Layout is
-//                             scene-agnostic).
+//                             scene-agnostic). Heading + content flow OVER it.
 //   heading  (slot="heading") the large heading region, inset to the gutter but
 //                             full-width within it. Its slotted content
 //                             self-manages: it may ANIMATE (drop in
@@ -47,6 +48,8 @@ const { title, description, image } = Astro.props;
 
 <style>
 	.fh {
+		/* Positioning context for the absolute scene layer below. */
+		position: relative;
 		/* FIXED type steps (not vw-clamps): the lockup heading changes size only at
 		   breakpoints. The overlap formulas in the slotted heading are ratios of
 		   these sizes, so a fixed input yields a clean fixed overlap per step; a
@@ -55,29 +58,21 @@ const { title, description, image } = Astro.props;
 		   (The "tristan" wordmark is now a full-width SVG that fills the gutters at
 		   any size, so it no longer has a fixed type step here.) */
 		--heading-size: 2rem;
-		/* Full-width within the gutters: every hero region (banner, wordmark,
-		   heading, content rows) insets to --container-pad and spans edge-to-edge.
-		   Dropping the container-centering branch is the "remove max-width on the
-		   grid" step — the wordmark now fills gutter-to-gutter. */
+		/* Full-width within the gutters: every hero region (scene, wordmark,
+		   heading, content rows) insets to --container-pad and spans edge-to-edge. */
 		--hero-inset: var(--container-pad);
-		/* Split the "tristan" wordmark on the dot-grid banner's bottom edge: the
-		   heading region is pulled UP by half the wordmark's height so the letters'
-		   vertical midline lands on that edge — top half over the grid, bottom half
-		   on the page background. The wordmark SVG renders at 80% of the heading's
-		   content width with a fixed ~3.67:1 glyph aspect ratio (constant brand
-		   text), so half-height = 0.5 · (0.8 · contentWidth) / 3.67 ≈ 0.109 ·
-		   (100vw − 2·inset). Expressed in vw (NOT %) so it resolves against the
-		   viewport width in EVERY context — the negative top-margin AND the
-		   --hero-height calc below (where a % would wrongly resolve against a
-		   height). Tracks every viewport with no JS; tune via --hero-split-frac. */
+		/* Full-viewport scene height. svh (not vh) so the mobile URL bar doesn't
+		   change it. The scene is an absolute background layer; the heading region
+		   below reserves the same height so the lockup sits above the fold. */
+		--hero-height: 100svh;
+		/* Half the wordmark's rendered height, as a fraction of the inner width: the
+		   full-width SVG has a ~3.68:1 glyph aspect, so half-height ≈ 0.109 · innerW.
+		   Used only by the CSS fallback for --hero-lead until the JS measures and sets
+		   --hero-lead directly (2 · split ≈ the wordmark height to skip past). */
 		--hero-split-frac: 0.109;
 		--hero-split: calc(
 			var(--hero-split-frac) * (100vw - 2 * var(--hero-inset))
 		);
-		/* Banner height (portrait / pre-hydration fallback). In LANDSCAPE the
-		   slotted <stories-heading> JS (fitFold) overrides this inline so the
-		   wordmark's bottom lands on the fold, accounting for the split pull-up. */
-		--hero-height: 55svh;
 	}
 
 	/* Fixed heading steps at the DS breakpoints (sm 640 / lg 1024 / xl 1280). A
@@ -99,23 +94,49 @@ const { title, description, image } = Astro.props;
 		}
 	}
 
-	/* SCENE: full-bleed banner. Height comes from --hero-height; nothing straddles
-	   its edge now, so overflow can be hidden. */
+	/* SCENE: a full-viewport BACKGROUND layer, pinned to the top of .fh. The
+	   heading + content flow OVER it (higher z-index). Top+bottom fade masks blend
+	   it into the page so it has no hard seam. */
 	.fh__scene {
-		--dotted-grid-height: var(--hero-height);
-		display: block;
+		--dotted-grid-height: 100svh;
+		position: absolute;
+		inset: 0 0 auto 0;
+		height: 100svh;
+		z-index: 0;
 		overflow: hidden;
+		/* Fade the scene out at the top and bottom edges. Stops tunable. */
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 12%,
+			#000 78%,
+			transparent 100%
+		);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 12%,
+			#000 78%,
+			transparent 100%
+		);
 	}
 
-	/* HEADING: inset to the container gutter. z-index ABOVE the content riser so a
-	   pinned lockup stays visible while the content rises past it. */
+	/* HEADING: inset to the container gutter, over the scene. A LEAD space above the
+	   wordmark drops the whole lockup down so "other stories" (which pins at the
+	   slotted --sh-top, 50vh) rests at that pin line — the reveal reads 0 at rest,
+	   and the wordmark + "&" + "other stories" + intro all sit above the fold. The
+	   slotted <stories-heading> JS measures the wordmark and sets --hero-lead so the
+	   track top lands on the pin line at any viewport; --hero-split is the CSS-calc
+	   fallback (half the wordmark's height, per the ~3.68:1 glyph aspect). z-index
+	   ABOVE the content riser so the pinned lockup stays visible while copy rises. */
 	.fh__heading {
 		padding-inline: var(--hero-inset);
+		padding-block-start: var(
+			--hero-lead,
+			calc(50svh - 2 * var(--hero-split) - var(--space-4))
+		);
 		position: relative;
 		z-index: 3;
-		/* Pull up so the wordmark's midline sits on the banner's bottom edge. The
-		   negative margin overlaps the scene; z-index 3 keeps the lockup on top. */
-		margin-block-start: calc(-1 * var(--hero-split));
 		/* This region is full-width and tall at z-index 3, but the slotted lockup
 		   only paints its left-aligned text — a pinned heading's empty area would
 		   sit OVER content rising below (e.g. the video ruler at ~50vh) and swallow

@@ -1,10 +1,13 @@
 ---
 import FullHeroLayout from "../layouts/FullHeroLayout.astro";
 import StoriesHeading from "../components/StoriesHeading.astro";
+import SiteHeader from "../components/SiteHeader.astro";
 import Grid from "@whois/design-system/Grid";
 import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
 import Widget from "@whois/design-system/Widget";
+import Button from "@whois/design-system/Button";
+import "@whois/design-system/styles.css";
 import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import BikeStats from "../widgets/bike-stats/BikeStats.astro";
 import Videos from "../widgets/videos/Videos.astro";
@@ -26,8 +29,8 @@ import "../widgets/widgets.css";
 	title="Tristan Timblin"
 	description="Tristan Timblin — a craftsman who builds things to be used, finding creativity through empathetic design."
 >
-	<!-- SCENE: fabric video as a dotted-grid halftone — a capped banner across
-	     the top of the page. -->
+	<!-- SCENE: fabric video as a dotted-grid halftone — a full-viewport background
+	     layer, faded at the top+bottom edges (see FullHeroLayout .fh__scene). -->
 	<!-- No color/background attrs: the grid falls back to --color-fg / --color-bg
 	     and re-samples them each frame, so it inverts with the active theme. -->
 	<dotted-grid
@@ -43,11 +46,30 @@ import "../widgets/widgets.css";
 		color="#7f7f7f"
 	/>
 
+	<!-- HEADER: brand + nav, overlaying the top of the scene (z-index 4). Lives in
+	     the heading slot so it renders inside the hero over the dotgrid. -->
+	<SiteHeader slot="heading" />
+
 	<!-- HEADING: the full-width "tristan" wordmark, then the animated
 	     "& other stories" lockup. The big "&" overlaps the wordmark (indented) and
 	     parallaxes + fades on its own scroll position; "other stories" pins mid-
-	     viewport and wipes its outline→solid reveal. -->
-	<StoriesHeading slot="heading" />
+	     viewport and wipes its outline→solid reveal.
+	     INTRO + CTAs are passed as the default slot: they ride INSIDE the pin,
+	     directly under "other stories", so the whole lockup reads as one group. -->
+	<StoriesHeading slot="heading">
+		<!-- A short "who I am" lede and DS Button links. Static (no reveal). The
+		     parent regions opt pointers out; .hero-intro opts back in. -->
+		<div class="hero-intro">
+			<p class="hero-intro__lede">
+				I'm Tristan — a software craftsman building things to be used, with care
+				in what won't be seen.
+			</p>
+			<div class="hero-intro__cta">
+				<Button variant="primary" rounded as="a" href="#work">See my work</Button>
+				<Button variant="secondary" rounded as="a" href="/txt">Writing</Button>
+			</div>
+		</div>
+	</StoriesHeading>
 
 	<!-- CONTENT: the page owns its grid rows here. First row — body copy (cols
 	     1–5) — rises into the pinned lockup and pushes it away. The video carousel
@@ -102,10 +124,50 @@ import "../widgets/widgets.css";
 
 <style>
 	/* SCENE ------------------------------------------------------------- */
-	/* The dotgrid banner. Height is inherited from .fh__scene's
-	   --dotted-grid-height; nothing straddles its edge anymore. */
+	/* The dotgrid scene. Sized by FullHeroLayout's .fh__scene (100svh absolute
+	   background layer); nothing here overrides that. */
 	.hero__video {
 		display: block;
+	}
+
+	/* HERO INTRO + CTAs ------------------------------------------------- */
+	/* Sits with the lockup in the lower-left of the first screen. The parent
+	   .fh__heading opts pointers out (so its empty area doesn't block content
+	   rising below); this block opts back in for its lede + buttons. */
+	/* Intro lede + CTAs pushed to opposite ends of the hero width (lede left,
+	   buttons right), like the reference. Stacks on the ≤900px layout. */
+	.hero-intro {
+		pointer-events: auto;
+		margin-block-start: var(--space-6);
+		display: flex;
+		flex-direction: row;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: var(--space-6);
+	}
+
+	.hero-intro__lede {
+		margin: 0;
+		max-width: 48ch;
+		font-family: var(--font-serif);
+		font-size: var(--font-size-4);
+		line-height: 1.5;
+		color: var(--text-secondary);
+	}
+
+	.hero-intro__cta {
+		display: flex;
+		gap: var(--space-4);
+		flex-wrap: wrap;
+		flex-shrink: 0;
+	}
+
+	@media (max-width: 900px) {
+		.hero-intro {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: var(--space-5);
+		}
 	}
 
 	/* CONTENT ROW ------------------------------------------------------- */

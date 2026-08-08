@@ -201,6 +201,67 @@ stories-heading {
 	padding-inline-end: 0.12em;
 }
 
+/* Sub-lockup: page-authored intro + CTAs. Authored inside the pin, but on the
+   desktop layout it's lifted OUT of flow (position: fixed, below) so it reserves
+   NO space in the pin/track — the rising body copy meets "other stories" with no
+   gap between them.
+
+   FADE-ON-SCROLL: rather than travelling up with the lockup, the intro/CTAs FADE
+   OUT in place, FLEETINGLY — the fade completes within the first sliver of scroll,
+   before "other stories" reaches its sticky offset and begins its reveal. Driven
+   purely by CSS: a scroll-progress timeline on the root scroller (the same
+   scroll-timeline mechanism Section.astro uses; the site ships the polyfill), so
+   no JS runs per frame. visibility flips to hidden at the end of the fade so the
+   invisible bar stops capturing pointer events. */
+.sh__sub {
+	margin-block-start: var(--space-5, 1.5rem);
+	pointer-events: auto;
+	animation: sh-sub-fade linear both;
+	animation-timeline: scroll(root block);
+	/* Fleeting: fully shown at the very top, fully faded within the first 100px of
+	   scroll. Explicit px (not vh) so the scroll-timeline polyfill resolves the
+	   range correctly (a vh length here made it stretch across the whole page). */
+	animation-range: 0 100px;
+}
+
+@keyframes sh-sub-fade {
+	from {
+		opacity: 1;
+		visibility: visible;
+	}
+	to {
+		opacity: 0;
+		visibility: hidden;
+	}
+}
+
+/* Desktop: fix the sub to the viewport bottom, inset to the hero gutter, so it
+   hangs below "other stories" at rest, takes no flow space, and stays put while it
+   fades. (≤900px keeps it in normal flow under the stacked lockup.) */
+@media (min-width: 901px) {
+	.sh__sub {
+		position: fixed;
+		left: var(--hero-inset, var(--container-pad));
+		right: var(--hero-inset, var(--container-pad));
+		bottom: var(--space-6, 2rem);
+		margin: 0;
+		z-index: 3;
+	}
+}
+
+/* Reduced motion: no fade and no fixed lift — the intro/CTAs stay in normal flow
+   under the lockup, fully shown, and scroll away with the page like everything
+   else (a permanently-fixed bar with no fade would otherwise overlay the page). */
+@media (prefers-reduced-motion: reduce) {
+	.sh__sub {
+		position: static;
+		margin-block-start: var(--space-5, 1.5rem);
+		animation: none;
+		opacity: 1;
+		visibility: visible;
+	}
+}
+
 /* --- Two-layer face swap ----------------------------------------------- */
 
 /* The outline face stays in normal flow and defines the box. The solid face is

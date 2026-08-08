@@ -39,8 +39,13 @@
 	   parallax script (Videos.astro). During phase 1 the card scrolls 1:1 with the
 	   page at this constant offset (behaves like an in-flow element); once fully in
 	   view it parallaxes this distance to 0, settling into the grid. Larger =
-	   enters higher + more parallax. Tune here, not in JS. */
-	--vc-travel: calc(var(--sh-pin-height) + 15vh);
+	   enters higher + more parallax. Tune here, not in JS.
+	   A 38vh lift so the carousel enters from below the fold as the hero scrolls
+	   away and then parallaxes a longer distance as it docks (more travel = more
+	   parallax). Kept in vh so it resolves on this element — the previous
+	   calc(var(--sh-pin-height) + …) referenced a property scoped to
+	   <stories-heading>, so it never resolved here and fell back to the JS 55vh. */
+	--vc-travel: 38vh;
 
 	/* Parallax hook: lifted UP the page when scrolled to top, eased to 0 as the
 	   grid docks into view (value written by the <script> in Videos.astro).

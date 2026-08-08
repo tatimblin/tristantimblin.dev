@@ -43,6 +43,10 @@
 				<span class="sh__outline" aria-hidden="true">other stories</span>
 				<span class="sh__solid"><wobble-text scale="5" speed="0.3">other stories</wobble-text></span>
 			</h2>
+			<!-- Sub-lockup (intro + CTAs, authored by the page) rides INSIDE the pin so
+			     it clusters directly under "other stories" — both at rest and while the
+			     lockup is pinned — instead of being pushed a full track-height below. -->
+			<div class="sh__sub"><slot /></div>
 		</div>
 	</div>
 </stories-heading>

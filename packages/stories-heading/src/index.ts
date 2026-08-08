@@ -45,6 +45,12 @@ export class StoriesHeadingElement extends HTMLElement {
 	private wordmarkSvg: SVGSVGElement | null = null;
 	private wordmarkText: SVGTextElement | null = null;
 	private inkCanvas: HTMLCanvasElement | null = null;
+	/** The full-viewport dotgrid scene layer, if this lockup overlays one. The
+	    outline→solid reveal is GATED until "other stories" clears the scene's
+	    bottom edge, so the solid layer's opaque --color-bg backdrop never knocks a
+	    black rectangle out of the halftone dots (it only paints over the plain page
+	    background below the scene). */
+	private scene: HTMLElement | null = null;
 
 	private resizeObserver: ResizeObserver | null = null;
 	private reducedMotion: MediaQueryList | null = null;
@@ -73,6 +79,9 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.heading = this.querySelector<HTMLElement>(".sh__heading");
 		this.wordmarkSvg = this.querySelector<SVGSVGElement>(".sh__wordmark-svg");
 		this.wordmarkText = this.querySelector<SVGTextElement>(".sh__wordmark-text");
+		// The dotgrid scene the lockup overlays (for gating the reveal); may be absent
+		// (e.g. a hero with no scene) — the reveal then plays normally.
+		this.scene = this.closest<HTMLElement>(".fh")?.querySelector<HTMLElement>(".fh__scene") ?? null;
 
 		this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 		const onMotionChange = () => this.update();
@@ -133,39 +142,58 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * Size the dotgrid banner (--hero-height on the .fh layout) so the "tristan"
-	 * wordmark is the ONLY thing above the fold and "other stories" sits just BELOW
-	 * it: place the wordmark's bottom exactly at the fold, so the heading (which
-	 * follows after --sh-heading-gap) starts below the fold. hero + wordmark ==
-	 * viewport height. Only applied on a LANDSCAPE viewport (wider than tall);
-	 * portrait/square keeps the CSS default banner. Also skipped when stacked.
+	 * The dotgrid scene is a full-viewport background layer (--hero-height ==
+	 * 100svh, CSS); the lockup overlays it. Drop the whole lockup DOWN by a lead
+	 * space (--hero-lead on .fh__heading) so the WHOLE group (wordmark + "&" +
+	 * "other stories" + the slotted intro/CTAs) rests near the BOTTOM of the first
+	 * screen, over the dotgrid — leaving a bottom margin (PAD) and a top margin that
+	 * clears the header. lead = vh − PAD − pinContentHeight − wordmarkHeight −
+	 * headingGap, from the just-measured wordmark/pin metrics (no scroll
+	 * dependency). Recomputed on resize/font-load; clamped so it always clears the
+	 * header. Skipped on the ≤900px stacked layout (CSS fallback lead applies).
 	 */
 	private fitFold() {
 		const fh = this.closest<HTMLElement>(".fh");
-		if (!fh || !this.wordmarkSvg) return;
+		const headingEl = this.closest<HTMLElement>(".fh__heading");
+		if (!fh || !headingEl) return;
 
-		const landscape = window.innerWidth > window.innerHeight;
+		// Legacy inline height from the old capped-banner layout — clear it so the
+		// CSS 100svh wins.
+		fh.style.removeProperty("--hero-height");
+
 		if (
-			!landscape ||
 			this.getBoundingClientRect().width < StoriesHeadingElement.FIT_MIN_WIDTH
 		) {
-			fh.style.removeProperty("--hero-height");
+			headingEl.style.removeProperty("--hero-lead");
 			return;
 		}
 
-		const wmHeight = this.wordmarkSvg.getBoundingClientRect().height;
-		// The layout may pull the heading region UP (negative top margin) to split
-		// the wordmark on the banner's bottom edge, which raises the wordmark bottom
-		// by the same amount. Read that resolved margin and add it back so the bottom
-		// still lands on the fold; any positive --sh-heading-gap then drops "other
-		// stories" below it. (A custom prop's calc() string isn't parseable, but the
-		// computed margin resolves to px.)
-		const headingEl = this.closest<HTMLElement>(".fh__heading");
-		const pullUp = headingEl
-			? -Math.min(0, parseFloat(getComputedStyle(headingEl).marginTop) || 0)
+		const vh = window.innerHeight;
+		// A min top space so the wordmark clears the overlaid header.
+		const headerClear = 0.13 * vh;
+		const wmHeight = this.wordmarkSvg?.getBoundingClientRect().height ?? 0;
+		// Pin content (just "other stories" now — the intro/CTAs are position:fixed,
+		// out of flow, so they no longer add to the pin height).
+		const pinHeight = this.pin?.offsetHeight ?? 0;
+		// Gap between the wordmark and the track (the --sh-heading-gap margin).
+		const gap = this.track
+			? parseFloat(getComputedStyle(this.track).marginTop) || 0
 			: 0;
-		const hero = Math.max(0, window.innerHeight - wmHeight + pullUp);
-		fh.style.setProperty("--hero-height", `${hero.toFixed(1)}px`);
+		// The intro/CTAs are position:fixed to the viewport bottom, so their top is a
+		// stable viewport coordinate — measure it directly and place "other stories"
+		// a FIXED small gap above it (viewport-independent, so a taller screen never
+		// opens up more space between them). Fall back to a vh estimate pre-layout.
+		const sub = this.querySelector<HTMLElement>(".sh__sub");
+		const subRect = sub?.getBoundingClientRect();
+		const SUB_GAP = 0.02 * vh; // small, constant breathing room above the intro
+		const subTop = subRect && subRect.height > 0 ? subRect.top : vh - 0.12 * vh;
+		// lead = subTop − SUB_GAP − pinHeight − gap − wmHeight, so:
+		//   wordmark top = lead → track/other-stories bottom = subTop − SUB_GAP.
+		const lead = Math.max(
+			headerClear,
+			subTop - SUB_GAP - pinHeight - gap - wmHeight
+		);
+		headingEl.style.setProperty("--hero-lead", `${lead.toFixed(1)}px`);
 	}
 
 	/**
@@ -401,14 +429,30 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * Reveal progress 0→1: 0 the instant the pin sticks (the track's top reaches
-	 * the sticky offset --sh-top), 1 after --sh-reveal has been scrolled past that
-	 * point. Reads the sticky offset from computed style, so it tracks --sh-top.
+	 * Reveal progress 0→1 for the outline→solid wipe, GATED on the dotgrid scene:
+	 * the solid layer's opaque --color-bg backdrop would knock a black rectangle out
+	 * of the halftone dots, so the wipe stays at 0 until "other stories" has cleared
+	 * the scene's bottom edge (where the background is plain --color-bg and the
+	 * backdrop is invisible). From that point the wipe plays over --sh-reveal of
+	 * further scroll. With no scene present it falls back to the old pin-based
+	 * progress so the component still works standalone.
 	 */
 	private revealProgress(): number {
-		if (!this.track || !this.pin) return 1;
+		if (!this.heading) return 1;
 		const revealPx = this.cssPx("--sh-reveal", 0.6 * window.innerHeight);
 		if (revealPx <= 0) return 1;
+
+		// Scene-gated path: measure the heading's top against the scene's bottom edge.
+		if (this.scene) {
+			const sceneBottom = this.scene.getBoundingClientRect().bottom;
+			const headingTop = this.heading.getBoundingClientRect().top;
+			// 0 while the text overlaps the scene (headingTop above sceneBottom);
+			// grows as it descends past the scene edge, complete after --sh-reveal.
+			return clamp01((headingTop - sceneBottom) / revealPx);
+		}
+
+		// Fallback (no scene): original pin-based progress.
+		if (!this.track || !this.pin) return 1;
 		const stickyTop = parseFloat(getComputedStyle(this.pin).top) || 0;
 		const top = this.track.getBoundingClientRect().top;
 		return clamp01((stickyTop - top) / revealPx);

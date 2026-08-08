@@ -1,0 +1,85 @@
+---
+// Hero site header — the brand + nav bar that overlays the top of the
+// full-viewport dotgrid scene (AXIOM-style). Mirrors SiteFooter's model: fixed
+// markup + scoped <style> using DS tokens, so it re-tints with the theme toggle
+// (the <dotted-grid> samples --color-fg / --color-bg fresh each frame, and this
+// bar tracks the same tokens).
+//
+// Hero-only: it's rendered inside the landing hero (not global) because other
+// pages have their own headers and no dark scene to overlay.
+//
+// Nav is data-driven so adding links is a one-line edit.
+const links = [{ label: "Writing", href: "/txt" }];
+---
+
+<header class="site-header">
+	<a class="site-header__brand" href="/">tristantimblin.dev</a>
+	<nav class="site-header__nav" aria-label="Primary">
+		{
+			links.map((link) => (
+				<a class="site-header__link" href={link.href}>
+					{link.label}
+				</a>
+			))
+		}
+	</nav>
+</header>
+
+<style>
+	/* Overlay the top of the hero scene. Absolute (not fixed) so it scrolls away
+	   with the hero. z-index 4 sits above .fh__heading (3) and the scene (0). */
+	.site-header {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 4;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-4, 1rem);
+		padding-inline: var(--container-pad, clamp(1rem, 4vw, 2rem));
+		padding-block: var(--space-4, 1rem);
+		background: transparent;
+		/* Let pointers fall through the empty bar to the scene; the brand + links
+		   re-enable interaction on themselves (same pattern as the lockup). */
+		pointer-events: none;
+	}
+
+	.site-header__brand {
+		pointer-events: auto;
+		font-family: var(--font-mono, "Fira Code", monospace);
+		font-size: var(--font-size-1, 0.875rem);
+		font-weight: var(--font-weight-500, 500);
+		letter-spacing: -0.01em;
+		color: var(--color-fg);
+		text-decoration: none;
+		transition: color 0.15s ease;
+	}
+
+	.site-header__nav {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-5, 1.5rem);
+	}
+
+	.site-header__link {
+		pointer-events: auto;
+		font-size: var(--font-size-1, 0.875rem);
+		color: var(--color-fg);
+		text-decoration: none;
+		transition: color 0.15s ease;
+	}
+
+	.site-header__brand:hover,
+	.site-header__link:hover {
+		color: var(--color-accent, var(--accent));
+	}
+
+	.site-header__brand:focus-visible,
+	.site-header__link:focus-visible {
+		outline: 2px solid var(--color-accent, var(--accent));
+		outline-offset: 2px;
+		border-radius: var(--border-radius-0, 4px);
+	}
+</style>
