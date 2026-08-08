@@ -19,6 +19,10 @@ interface Props {
 	clips?: Clip[];
 	/** Which side the date ruler sits on relative to the video card. */
 	rulerSide?: "left" | "right";
+	/** Pin the ruler axis (bypasses the ≤640px auto-flip). Omit for responsive. */
+	orientation?: "vertical" | "horizontal";
+	/** Extra class(es) forwarded to the <video-carousel> host. */
+	class?: string;
 }
 
 // Real footage prepared by tools/dotgrid/prepare-video.sh into
@@ -29,6 +33,8 @@ interface Props {
 // autoplay steps forward in time along the date ruler.
 const {
 	rulerSide = "left",
+	orientation,
+	class: className,
 	clips = [
 		{
 			src: "/videos/website-carousel/web/fisker-top-down.web.mp4",
@@ -238,7 +244,12 @@ const first = clips[0];
 const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 ---
 
-<video-carousel class="vc" tick-src="/audio/tick_004.ogg" ruler-side={rulerSide}>
+<video-carousel
+	class:list={["vc", className]}
+	tick-src="/audio/tick_004.ogg"
+	ruler-side={rulerSide}
+	orientation={orientation}
+>
 	{/* Ruler + video share a row so the ruler's height tracks the VIDEO box only
 	   (not the caption). On mobile this row collapses and the ruler drops below the
 	   card as a horizontal strip (see styles.css + the orientation logic in JS). */}

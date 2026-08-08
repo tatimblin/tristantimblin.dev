@@ -76,20 +76,14 @@
 }
 
 /* MOBILE (≤900px, where the grid collapses to 2 cols) --------------------------
-   Full-width cell, ~3 rows tall, no parallax, no reserved gutter — the ruler
-   fits inside the wide cell (vertical 640–900, horizontal below the card ≤640,
-   both handled by the package). */
+   The carousel is promoted into the HERO scene at this breakpoint (see
+   src/pages/index.astro → .hero-carousel), so the footer copy is hidden here to
+   avoid showing it twice. Drop the reserved ruler gutter too. */
 @media (max-width: 900px) {
 	.home__widgets .ds-widget-grid {
 		padding-inline-end: 0;
 	}
 	.home__widgets .wx-videos {
-		grid-column: 1 / span 2;
-		grid-row: auto / span 3;
-		aspect-ratio: auto;
-		transform: none;
-	}
-	.home__widgets .wx-videos .vc__main {
-		width: 100%;
+		display: none;
 	}
 }
