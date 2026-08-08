@@ -3,10 +3,15 @@ import Layout from "../layouts/Layout.astro";
 import "@whois/dotted-grid/styles.css";
 
 const SOURCES = [
-	{ label: "fabric", src: "/videos/fabric.web.mp4" },
-	{ label: "beach", src: "/videos/beach.web.mp4" },
+	{
+		label: "fabric",
+		src: "/videos/fabric.web.mp4",
+		webm: "/videos/fabric.web.webm",
+	},
+	{ label: "beach", src: "/videos/beach.web.mp4", webm: "/videos/beach.web.webm" },
 ];
 const SRC = SOURCES[0].src;
+const SRC_WEBM = SOURCES[0].webm;
 ---
 
 <script>
@@ -38,6 +43,10 @@ const SRC = SOURCES[0].src;
 		// Source switcher: swap the video the effect samples.
 		panel.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((btn) => {
 			btn.addEventListener("click", () => {
+				// Set src-webm before src: the element reads src-webm fresh when the
+				// src change triggers a (gapless) reload, so the pair stays consistent.
+				if (btn.dataset.webm) hero.setAttribute("src-webm", btn.dataset.webm);
+				else hero.removeAttribute("src-webm");
 				hero.setAttribute("src", btn.dataset.src!);
 				panel
 					.querySelectorAll("[data-src]")
@@ -53,13 +62,13 @@ const SRC = SOURCES[0].src;
 >
 	<main class="dotgrid-demo">
 		<!-- Full-viewport hero preview, driven live by the control panel. -->
-		<dotted-grid data-hero src={SRC}></dotted-grid>
+		<dotted-grid data-hero src={SRC} src-webm={SRC_WEBM}></dotted-grid>
 
 		<aside class="controls" data-controls aria-label="dotted-grid controls">
 			<h2>&lt;dotted-grid&gt;</h2>
 			<div class="sources">
 				{SOURCES.map((s, i) => (
-					<button type="button" data-src={s.src} class={i === 0 ? "is-active" : ""}>
+					<button type="button" data-src={s.src} data-webm={s.webm} class={i === 0 ? "is-active" : ""}>
 						{s.label}
 					</button>
 				))}

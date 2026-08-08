@@ -9,6 +9,21 @@
 # needs the color data intact. This never mutates the input; it writes a new
 # optimized file, so it is safe to re-run.
 #
+# Output size matters more than it looks: every frame is decoded and uploaded
+# to the GPU (texImage2D) at full resolution EACH frame, and the shader point-
+# samples ONE pixel per grid cell — so pixels beyond ~(clientWidth / cell-size)
+# columns are decoded, uploaded, and thrown away. The hero renders ~cell-size 6
+# across a ≤1440px column, so it can only ever resolve ~240 columns; a 480px
+# source is already ~2x oversampled. The default width is therefore 480 (was
+# 960): ~4x less decode+upload bandwidth for a halftone that looks identical.
+# See prepare-carousel.sh's header for the same reasoning at 360px.
+#
+# Two files are emitted from the same filtered frames: the H.264 .web.mp4
+# (universal fallback, +faststart) and a smaller AV1 (or VP9 where SVT-AV1 is
+# unavailable) .web.webm that modern browsers prefer. The <dotted-grid> element
+# is pointed at both via src (mp4) + src-webm (webm) and picks the first playable
+# one. Pass -W 0 to skip the WebM pass (mp4 only).
+#
 # Handles two source kinds:
 #   * Web/SDR sources (e.g. fabric.mp4): straight scale + re-encode.
 #   * Raw iPhone footage (HEVC 10-bit, HLG/BT.2020 HDR, rotated): pass -t to
@@ -30,13 +45,15 @@
 # fabric's 23) or brighter.
 #
 # Usage:
-#   prepare-video.sh [-i in] [-o out] [-w width] [-f fps] [-q crf] [-t] [-n] [-m luma]
+#   prepare-video.sh [-i in] [-o out] [-w width] [-f fps] [-q crf] [-W webmcrf] [-t] [-n] [-m luma]
 #
 #   -i  input file      (default: public/videos/fabric.mp4)
-#   -o  output file     (default: public/videos/fabric.web.mp4)
-#   -w  target width    (default: 960; height auto to preserve aspect)
+#   -o  output file     (default: public/videos/fabric.web.mp4; the WebM
+#                        companion is the same path with a .webm extension)
+#   -w  target width    (default: 480; height auto to preserve aspect)
 #   -f  frame rate      (default: 0 = keep source fps)
 #   -q  H.264 CRF       (default: 26; lower = higher quality/larger file)
+#   -W  WebM CRF        (default: 34; 0 disables the WebM companion, mp4 only)
 #   -t  tonemap HDR     (HLG/BT.2020 -> BT.709 SDR contrast/saturation correction)
 #   -n  normalize luma  (darken to the target mean brightness for the dot look)
 #   -m  target luma     (mean luma 0-255 for -n; default 35 — a touch brighter
@@ -45,6 +62,8 @@
 # Examples:
 #   prepare-video.sh                                                 # fabric (SDR)
 #   prepare-video.sh -w 640 -q 28                                    # smaller/lighter
+#   prepare-video.sh -i public/videos/beach.web.mp4 \
+#     -o public/videos/beach.web.mp4 -w 480                          # re-encode in place
 #   prepare-video.sh -i public/videos/IMG_0697.MOV \
 #     -o public/videos/beach.web.mp4 -t -n                           # iPhone HDR, matched
 #
@@ -52,28 +71,27 @@
 # ffmpeg build has neither, so -t approximates the tonemap with an eq contrast/
 # saturation/gamma curve tuned on HLG iPhone footage. Good enough for a halftone
 # hero (the shader only reads luminance); revisit if a zscale build is available.
-#
-# A WebM/AV1 companion (better compression) could be added later with a second
-# ffmpeg pass; not built here to keep this single-format.
 set -euo pipefail
 
 IN="public/videos/fabric.mp4"
 OUT="public/videos/fabric.web.mp4"
-WIDTH=960
+WIDTH=480
 FPS=0
 CRF=26
+WEBM_CRF=34
 TONEMAP=0
 NORMALIZE=0
 TARGET_LUMA=35
 SAMPLE_FRAMES=40 # frames sampled when measuring mean luma
 
-while getopts "i:o:w:f:q:tnm:h" opt; do
+while getopts "i:o:w:f:q:W:tnm:h" opt; do
   case "$opt" in
     i) IN="$OPTARG" ;;
     o) OUT="$OPTARG" ;;
     w) WIDTH="$OPTARG" ;;
     f) FPS="$OPTARG" ;;
     q) CRF="$OPTARG" ;;
+    W) WEBM_CRF="$OPTARG" ;;
     t) TONEMAP=1 ;;
     n) NORMALIZE=1 ;;
     m) TARGET_LUMA="$OPTARG" ;;
@@ -152,6 +170,15 @@ fi
 
 echo "Encoding $IN -> $OUT (width=${WIDTH}, crf=${CRF}, fps=$([ "$FPS" -gt 0 ] && echo "$FPS" || echo "source"), tonemap=$([ "$TONEMAP" -eq 1 ] && echo "on" || echo "off"), normalize=$([ "$NORMALIZE" -eq 1 ] && echo "on" || echo "off"))"
 
+# Re-encoding in place (IN == OUT, e.g. downscaling an existing .web.mp4) would
+# have ffmpeg -y clobber the input mid-read. Write to a temp and move on success.
+mp4_target="$OUT"
+same_path=0
+if [ -e "$IN" ] && [ "$IN" -ef "$OUT" ] 2>/dev/null; then
+  same_path=1
+  mp4_target="${OUT}.tmp.mp4"
+fi
+
 ffmpeg -hide_banner -loglevel error -y \
   -i "$IN" \
   -vf "$VF" \
@@ -160,13 +187,42 @@ ffmpeg -hide_banner -loglevel error -y \
   -crf "$CRF" -preset slow \
   ${OUT_COLOR[@]+"${OUT_COLOR[@]}"} \
   -movflags +faststart \
-  "$OUT"
+  "$mp4_target"
+
+# WebM companion (AV1 via SVT-AV1, else VP9) from the same filter chain. Modern
+# browsers prefer it via src-webm; -W 0 skips it. Read from the just-written mp4
+# so an in-place re-encode doesn't re-read a now-replaced input, and so the WebM
+# is derived from identical (already-filtered) frames — a plain transcode, so no
+# -vf here beyond the format the encoder needs.
+webm_out=""
+if [ "$WEBM_CRF" -gt 0 ] 2>/dev/null; then
+  webm_out="${OUT%.*}.webm"
+  if ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libsvtav1; then
+    webm_args=(-c:v libsvtav1 -crf "$WEBM_CRF" -preset 6 -pix_fmt yuv420p)
+    webm_codec="av1 (libsvtav1)"
+  else
+    webm_args=(-c:v libvpx-vp9 -crf "$WEBM_CRF" -b:v 0 -row-mt 1 -pix_fmt yuv420p)
+    webm_codec="vp9 (libvpx-vp9)"
+  fi
+  echo "Encoding WebM companion -> ${webm_out} (${webm_codec}, crf=${WEBM_CRF})"
+  ffmpeg -hide_banner -loglevel error -y \
+    -i "$mp4_target" \
+    -an \
+    "${webm_args[@]}" \
+    ${OUT_COLOR[@]+"${OUT_COLOR[@]}"} \
+    "$webm_out"
+fi
+
+# Move the in-place temp into its final name now that all reads are done.
+if [ "$same_path" -eq 1 ]; then
+  mv -f "$mp4_target" "$OUT"
+fi
 
 # Report before/after size and the resulting stream summary.
 in_size=$(du -h "$IN"  | cut -f1)
 out_size=$(du -h "$OUT" | cut -f1)
 echo ""
-echo "Done. Source: ${in_size}  ->  Optimized: ${out_size}"
+echo "Done. Source: ${in_size}  ->  Optimized: ${out_size}$([ -n "$webm_out" ] && echo "  (webm: $(du -h "$webm_out" | cut -f1))")"
 echo "Output stream:"
 ffprobe -v error \
   -show_entries stream=codec_name,width,height,r_frame_rate,pix_fmt,color_transfer \
