@@ -99,26 +99,24 @@ const { title, description, image } = Astro.props;
 	   it into the page so it has no hard seam. */
 	.fh__scene {
 		--dotted-grid-height: 100svh;
+		/* The edge fade, hoisted so a consumer can retarget it. A mask applies to the
+		   WHOLE subtree and no z-index escapes it — so a scene with legible UI near an
+		   edge (e.g. the carousel's date ruler along the bottom) sets this to `none`
+		   here and re-applies the same gradient to its visual layer alone. */
+		--fh-scene-mask: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 12%,
+			#000 78%,
+			transparent 100%
+		);
 		position: absolute;
 		inset: 0 0 auto 0;
 		height: 100svh;
 		z-index: 0;
 		overflow: hidden;
-		/* Fade the scene out at the top and bottom edges. Stops tunable. */
-		-webkit-mask-image: linear-gradient(
-			to bottom,
-			transparent 0,
-			#000 12%,
-			#000 78%,
-			transparent 100%
-		);
-		mask-image: linear-gradient(
-			to bottom,
-			transparent 0,
-			#000 12%,
-			#000 78%,
-			transparent 100%
-		);
+		-webkit-mask-image: var(--fh-scene-mask);
+		mask-image: var(--fh-scene-mask);
 	}
 
 	/* HEADING: inset to the container gutter, over the scene. A LEAD space above the

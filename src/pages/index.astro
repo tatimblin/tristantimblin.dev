@@ -69,16 +69,22 @@ import "../widgets/widgets.css";
 	     directly under "other stories", so the whole lockup reads as one group. -->
 	<StoriesHeading slot="heading">
 		<!-- A short "who I am" lede and DS Button links. Static (no reveal). The
-		     parent regions opt pointers out; .hero-intro opts back in. -->
-		<div class="hero-intro">
-			<p class="hero-intro__lede">
-				American programmar and writer
-			</p>
-			<div class="hero-intro__cta">
+		     parent regions opt pointers out; .hero-intro opts back in.
+		     On the SAME 12-col grid as the body copy below (.home__grid) so the lede
+		     shares its exact measure — cols 1–5 — instead of an eyeballed max-width;
+		     the CTAs take the far columns and stay right-aligned to the gutter. -->
+		<Grid class="hero-intro" align="end">
+			<GridItem class="hero-intro__lede">
+				<p>
+					American computer programmer, author, and painter. Building backends
+					systems for high-throughput IoT.
+				</p>
+			</GridItem>
+			<GridItem class="hero-intro__cta">
 				<Button variant="primary" rounded as="a" href="#work">See my work</Button>
 				<Button variant="secondary" rounded as="a" href="/txt">Writing</Button>
-			</div>
-		</div>
+			</GridItem>
+		</Grid>
 	</StoriesHeading>
 
 	<!-- CONTENT: the page owns its grid rows here. First row — body copy (cols
@@ -91,9 +97,9 @@ import "../widgets/widgets.css";
 				<wobble-text scale="2.8" speed="0.3">
 					<p>
 						I am a craftsman, I create things to be used. Even if they often are
-						not, it is for the love of the process. I find my creativite nature
-						through empathetic design, where with a deep understanding of another
-						I can build them worlds.
+						not, it is for the love of the process. My creativite nature comes
+						through in empathetic design, where with a deep understanding of
+						another I can build them worlds.
 					</p>
 					<blockquote class="home__quote" cite="https://future-sf.com/fiction/1700/">
 						I'm arrogant enough to demand the Reader's complete, total
@@ -162,6 +168,16 @@ import "../widgets/widgets.css";
 		:global(.hero-carousel) {
 			display: block;
 		}
+
+		/* Move the scene's top/bottom edge fade OFF the scene wrapper and onto the
+		   carousel's video layer alone (below). A mask applies to its whole subtree
+		   and nothing — no z-index — paints outside it, so leaving it on .fh__scene
+		   dragged the bottom-pinned date ruler + caption into the fade-to-transparent
+		   band and made the year labels unreadable. The clip still blends into the
+		   page identically; only the overlay UI escapes. */
+		:global(.fh__scene:has(.hero-carousel)) {
+			--fh-scene-mask: none;
+		}
 	}
 
 	/* FULL-BLEED HERO CAROUSEL (≤900px) --------------------------------------
@@ -189,10 +205,28 @@ import "../widgets/widgets.css";
 		width: 100%;
 		background: none;
 	}
+	/* The clip itself carries the scene's top/bottom edge fade (lifted off
+	   .fh__scene above) so it still melts into the page — but the ruler + caption,
+	   which are siblings of this layer rather than descendants, stay unmasked and
+	   fully opaque. Same gradient stops as FullHeroLayout's --fh-scene-mask. */
 	:global(.hero-carousel .vc__grid) {
 		width: 100%;
 		height: 100%;
 		aspect-ratio: auto;
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 12%,
+			#000 78%,
+			transparent 100%
+		);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 12%,
+			#000 78%,
+			transparent 100%
+		);
 	}
 
 	/* Horizontal ruler pinned along the BOTTOM edge, above the video, over an
@@ -205,6 +239,11 @@ import "../widgets/widgets.css";
 		right: 0;
 		bottom: 0;
 		z-index: 2;
+		/* The package rests the ruler at 0.5 and brightens it on :hover/:focus-within
+		   — cues a touch device never fires, so it would sit permanently half-faded
+		   here. This is the primary scrubber of a full-bleed hero, not a secondary
+		   affordance, so it reads at full strength from the start. */
+		--vc-rest-opacity: 1;
 		background: linear-gradient(
 			to top,
 			rgba(0, 0, 0, 0.55),
@@ -241,21 +280,25 @@ import "../widgets/widgets.css";
 	/* Sits with the lockup in the lower-left of the first screen. The parent
 	   .fh__heading opts pointers out (so its empty area doesn't block content
 	   rising below); this block opts back in for its lede + buttons. */
-	/* Intro lede + CTAs pushed to opposite ends of the hero width (lede left,
-	   buttons right), like the reference. Stacks on the ≤900px layout. */
+	/* Intro lede + CTAs on the shared 12-col grid (see .home__grid): the lede
+	   occupies cols 1–5 — the SAME span as the body copy below — so both blocks
+	   share one measure and one left edge. The CTAs sit in the last columns,
+	   right-aligned to the gutter. Stacks on the ≤900px layout. */
 	.hero-intro {
 		pointer-events: auto;
 		margin-block-start: var(--space-6);
-		display: flex;
-		flex-direction: row;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: var(--space-6);
+		grid-template-columns: repeat(12, 1fr);
+		column-gap: var(--space-5);
 	}
 
 	.hero-intro__lede {
+		/* Matches .home__copy exactly — change both together. */
+		grid-column: 1 / span 5;
+		min-width: 0;
+	}
+
+	.hero-intro__lede p {
 		margin: 0;
-		max-width: 48ch;
 		font-family: var(--font-serif);
 		font-size: var(--font-size-4);
 		line-height: 1.5;
@@ -263,17 +306,22 @@ import "../widgets/widgets.css";
 	}
 
 	.hero-intro__cta {
+		/* Trailing columns, contents flushed to the right gutter. */
+		grid-column: 9 / span 4;
 		display: flex;
 		gap: var(--space-4);
 		flex-wrap: wrap;
-		flex-shrink: 0;
+		justify-content: flex-end;
 	}
 
 	@media (max-width: 900px) {
+		/* Single column: the grid collapses, both blocks stack full-width. */
 		.hero-intro {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: var(--space-5);
+			display: block;
+		}
+		.hero-intro__cta {
+			margin-block-start: var(--space-5);
+			justify-content: flex-start;
 		}
 	}
 

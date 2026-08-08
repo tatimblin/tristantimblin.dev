@@ -216,7 +216,16 @@ stories-heading {
 .sh__sub {
 	margin-block-start: var(--space-5, 1.5rem);
 	pointer-events: auto;
-	animation: sh-sub-fade linear both;
+	/* LONGHANDS ONLY — do NOT collapse into `animation: sh-sub-fade linear both`.
+	   The minifier merges an adjacent animation-timeline INTO that shorthand,
+	   emitting `animation: linear both sh-sub-fade scroll(root)`. A timeline is not
+	   a valid `animation` component (the shorthand RESETS animation-timeline), so
+	   the whole declaration is invalid-at-computed-value and dropped — silently
+	   killing the fade in production while dev still worked. */
+	animation-name: sh-sub-fade;
+	animation-timing-function: linear;
+	animation-fill-mode: both;
+	/* Non-shorthandable properties last, so there is no shorthand to fold into. */
 	animation-timeline: scroll(root block);
 	/* Fleeting: fully shown at the very top, fully faded within the first 100px of
 	   scroll. Explicit px (not vh) so the scroll-timeline polyfill resolves the
