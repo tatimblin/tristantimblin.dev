@@ -1,0 +1,9 @@
+---
+// MDX `a` → DS Anchor. `underline` gives the hover underline; external links
+// get the DS external-icon affordance automatically. href + rest pass through.
+import Anchor from "@whois/design-system/Anchor";
+const { href, ...rest } = Astro.props;
+const external = typeof href === "string" && /^https?:\/\//.test(href);
+---
+
+<Anchor href={href} underline external={external} {...rest}><slot /></Anchor>

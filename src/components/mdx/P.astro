@@ -1,0 +1,9 @@
+---
+// MDX `p` → DS Text. Reading-body preset: 18px (size 4), secondary color; the
+// Text `spaced` default (line-height 1.75) suits long-form prose. Attributes
+// from MDX pass through.
+import Text from "@whois/design-system/Text";
+const props = Astro.props;
+---
+
+<Text {...props} as="p" size={4} variant="secondary"><slot /></Text>
