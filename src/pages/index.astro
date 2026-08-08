@@ -2,6 +2,7 @@
 import FullHeroLayout from "../layouts/FullHeroLayout.astro";
 import StoriesHeading from "../components/StoriesHeading.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import VideoCarousel from "../components/VideoCarousel.astro";
 import Grid from "@whois/design-system/Grid";
 import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
@@ -46,6 +47,16 @@ import "../widgets/widgets.css";
 		color="#7f7f7f"
 	/>
 
+	<!-- SCENE (mobile only): the video carousel promoted into the hero as the
+	     full-bleed background, replacing fabric ≤900px (see .hero-carousel styles
+	     + videos.css which hides the footer copy at the same breakpoint). Portrait
+	     clip cover-fills; ruler pinned vertical to the right edge. -->
+	<VideoCarousel
+		slot="scene"
+		class="hero-carousel"
+		orientation="horizontal"
+	/>
+
 	<!-- HEADER: brand + nav, overlaying the top of the scene (z-index 4). Lives in
 	     the heading slot so it renders inside the hero over the dotgrid. -->
 	<SiteHeader slot="heading" />
@@ -61,8 +72,7 @@ import "../widgets/widgets.css";
 		     parent regions opt pointers out; .hero-intro opts back in. -->
 		<div class="hero-intro">
 			<p class="hero-intro__lede">
-				I'm Tristan — a software craftsman building things to be used, with care
-				in what won't be seen.
+				American programmar and writer
 			</p>
 			<div class="hero-intro__cta">
 				<Button variant="primary" rounded as="a" href="#work">See my work</Button>
@@ -124,10 +134,107 @@ import "../widgets/widgets.css";
 
 <style>
 	/* SCENE ------------------------------------------------------------- */
-	/* The dotgrid scene. Sized by FullHeroLayout's .fh__scene (100svh absolute
-	   background layer); nothing here overrides that. */
+	/* Two stacked scene layers inside FullHeroLayout's .fh__scene (100svh absolute
+	   background layer). Both fill it; only one shows per breakpoint:
+	     >900px  → fabric dotgrid (.hero__video), carousel hidden.
+	     ≤900px  → video carousel (.hero-carousel) full-bleed, fabric hidden;
+	               the footer carousel is hidden at the same breakpoint (videos.css).
+	   NB: `.hero-carousel` lands on the <video-carousel> host, which belongs to
+	   VideoCarousel.astro's style scope — so these rules must be :global() to reach
+	   it from here. `.hero__video` is authored in this file, so it stays scoped. */
 	.hero__video {
+		position: absolute;
+		inset: 0;
 		display: block;
+	}
+
+	/* Desktop: fabric is the scene; the carousel lives only in the footer widget. */
+	:global(.hero-carousel) {
+		position: absolute;
+		inset: 0;
+		display: none;
+	}
+
+	@media (max-width: 900px) {
+		.hero__video {
+			display: none;
+		}
+		:global(.hero-carousel) {
+			display: block;
+		}
+	}
+
+	/* FULL-BLEED HERO CAROUSEL (≤900px) --------------------------------------
+	   Reach into the carousel's light-DOM .vc__* classes (mirrors videos.css) so
+	   the portrait clip cover-fills the viewport and the HORIZONTAL date ruler +
+	   caption pin along the bottom edge (like a film scrubber). "other stories"
+	   parallaxes DOWN over this bottom strip as the lockup settles. Only rendered
+	   ≤900px (display gated above); harmless above it (element is display:none). */
+
+	/* .vc__main is a flex row (ruler + stage); here it just fills the scene box so
+	   its children can absolutely position within it. */
+	:global(.hero-carousel .vc__main) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		display: block;
+	}
+
+	/* Stage (video + caption) fills the whole scene; the dotgrid shader cover-maps
+	   the portrait clip so it crops to fill with no letterbox/stretch. */
+	:global(.hero-carousel .vc__stage) {
+		position: absolute;
+		inset: 0;
+		max-width: none;
+		width: 100%;
+		background: none;
+	}
+	:global(.hero-carousel .vc__grid) {
+		width: 100%;
+		height: 100%;
+		aspect-ratio: auto;
+	}
+
+	/* Horizontal ruler pinned along the BOTTOM edge, above the video, over an
+	   upward-fading scrim that dissolves into the clip. Orientation is locked
+	   horizontal (attr), so the package's horizontal tick math applies and
+	   mainSize() reads clientWidth (now the scene width). */
+	:global(.hero-carousel .vc__ruler) {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 2;
+		background: linear-gradient(
+			to top,
+			rgba(0, 0, 0, 0.55),
+			transparent
+		);
+		/* Room for the tick strip + the year-label row + edge breathing space. */
+		padding-inline: var(--space-4);
+		padding-block: var(--space-3) var(--space-4);
+	}
+
+	/* Year labels (below their tick in horizontal mode) read light over the clip. */
+	:global(.hero-carousel .vc__tick-year) {
+		color: var(--color-fg);
+	}
+
+	/* Caption as overlay text (no white panel): light, sitting just ABOVE the
+	   bottom ruler strip. Above the video, below the heading lockup. */
+	:global(.hero-carousel .vc__caption) {
+		position: absolute;
+		left: var(--space-4);
+		right: var(--space-4);
+		/* Clear the ruler strip below (tick height + year row + its padding). */
+		bottom: calc(var(--space-7) + var(--space-4));
+		z-index: 1;
+		padding: 0;
+		background: none;
+		color: var(--color-fg);
+	}
+	:global(.hero-carousel .vc__loc) {
+		color: var(--text-secondary, var(--color-fg));
 	}
 
 	/* HERO INTRO + CTAs ------------------------------------------------- */
@@ -254,6 +361,16 @@ import "../widgets/widgets.css";
 	.home__widgets :global(.ds-widget) {
 		display: flex;
 		flex-direction: column;
+	}
+
+	/* Mobile (≤900px): the video carousel is promoted into the hero scene (see
+	   .hero-carousel), so hide the footer copy here. Authored in THIS scope (not
+	   videos.css) so it out-specifies the .ds-widget flex rule above — a plain
+	   .wx-videos selector in videos.css loses to this scoped .home__widgets rule. */
+	@media (max-width: 900px) {
+		.home__widgets :global(.wx-videos) {
+			display: none;
+		}
 	}
 
 	/* Shared widget primitives (.wx-stat*) live in ../widgets/widgets.css; each

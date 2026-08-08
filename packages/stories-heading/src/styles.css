@@ -313,11 +313,13 @@ stories-heading {
 		--sh-heading-size: 2rem;
 		/* Reveal wipe plays over 100px of scroll (vs 300px on desktop). */
 		--sh-reveal: 100px;
-		/* Stay fixed only ~1em of the HEADING (roughly the text's own height) after
-		   the wipe before the rising copy pushes it away — a short hold vs 300px on
-		   desktop. Keyed to the fitted heading size (em on the track would resolve
-		   against the track's 16px, not the ~50px text). */
-		--sh-hold: var(--sh-heading-fitsize, var(--sh-heading-size));
+		/* Hold FIXED long enough that "other stories" stays pinned (at --sh-top =
+		   50vh) while the full-bleed hero scene — including its bottom date ruler —
+		   scrolls up and PAST it, so the heading parallaxes OVER the ruler and comes
+		   to rest below the dotgrid, right above the rising paragraph. The scene is
+		   100svh and the pin sits at 50vh, so ~50vh of hold clears the scene's lower
+		   half; a little extra guarantees it lands outside the dotgrid. */
+		--sh-hold: 55vh;
 	}
 
 	/* The "&" stays absolutely positioned over the wordmark (JS aligns it to the
@@ -330,6 +332,23 @@ stories-heading {
 	/* Wordmark fills the full inner width (gutter-to-gutter) on mobile. */
 	.sh__wordmark-svg {
 		width: 100%;
+	}
+}
+
+/* Mobile, motion allowed: lift the sub-lockup OUT of flow — the desktop rule
+   (position: fixed) is gated min-width:901px, so without this the intro/CTAs
+   stay in normal flow inside the pin and their box keeps reserving ~1 block of
+   space between "other stories" and the paragraph even after they fade out.
+   Absolute within the pin (position:sticky → containing block) pins them just
+   below the heading at rest but reserves NO flow space, so the rising copy meets
+   "other stories" directly. Guarded to no-preference so the reduced-motion
+   fallback (static + in-flow, further down) still wins. */
+@media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+	.sh__sub {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
 	}
 }
 
