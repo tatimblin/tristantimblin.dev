@@ -26,6 +26,61 @@ import "../widgets/widgets.css";
 	import "@whois/wobble-text";
 </script>
 
+<script>
+	// FLOOR WIRING (≤900px, where the carousel IS the hero scene).
+	//
+	// The carousel measures how much of its bottom edge its own overlay UI (date
+	// scrubber ∪ caption) occupies and announces it; FullHeroLayout consumes that as
+	// --hero-floor to keep the heading group clear of it. The relay is needed because
+	// custom properties inherit DOWNWARD only — .fh is an ANCESTOR of the carousel, so
+	// it cannot read a property set on the carousel host.
+	//
+	// Above 900px the carousel is display:none in the hero (fabric is the scene) and
+	// reports 0-height boxes, so the floor stays 0 and the hero is a plain 100svh —
+	// which is why this is gated rather than always-on.
+	function wireHeroFloor() {
+		const fh = document.querySelector<HTMLElement>(".fh");
+		const carousel = document.querySelector<HTMLElement>(".hero-carousel");
+		if (!fh || !carousel) return;
+
+		// This module runs at script scope AND on astro:page-load, which ClientRouter
+		// also fires for the FIRST load — so without a marker the same carousel gets two
+		// sets of listeners, each with its own `latest`. They then disagree on a
+		// media-query change and the later one wins, which can remove a floor the other
+		// had correctly set (and nothing re-publishes it, since the carousel only
+		// dispatches when the extent CHANGES). Wire each element exactly once.
+		if (carousel.dataset.heroFloorWired) return;
+		carousel.dataset.heroFloorWired = "true";
+
+		const mq = window.matchMedia("(max-width: 900px)");
+
+		const apply = () => {
+			// Read the carousel's own published property rather than caching the event's
+			// value: it is the single source of truth, so a missed/early dispatch can't
+			// leave this relay stuck at 0. Falls back to the package's CSS default.
+			const raw = getComputedStyle(carousel)
+				.getPropertyValue("--vc-bottom-ui-extent")
+				.trim();
+			const extent = parseFloat(raw);
+			if (mq.matches && Number.isFinite(extent) && extent > 0) {
+				fh.style.setProperty("--hero-floor", `${extent.toFixed(1)}px`);
+			} else {
+				fh.style.removeProperty("--hero-floor");
+			}
+		};
+
+		carousel.addEventListener("video-carousel:metrics", apply);
+		mq.addEventListener("change", apply);
+		// Apply once on wire, in case the carousel measured before this ran.
+		apply();
+	}
+
+	wireHeroFloor();
+	// Layout uses ClientRouter view transitions: re-wire on each navigation, since the
+	// elements are replaced (the data- marker keeps a re-wire of the SAME node a no-op).
+	document.addEventListener("astro:page-load", wireHeroFloor);
+</script>
+
 <FullHeroLayout
 	title="Tristan Timblin"
 	description="Tristan Timblin — a craftsman who builds things to be used, finding creativity through empathetic design."
@@ -50,7 +105,9 @@ import "../widgets/widgets.css";
 	<!-- SCENE (mobile only): the video carousel promoted into the hero as the
 	     full-bleed background, replacing fabric ≤900px (see .hero-carousel styles
 	     + videos.css which hides the footer copy at the same breakpoint). Portrait
-	     clip cover-fills; ruler pinned vertical to the right edge. -->
+	     clip cover-fills; the date ruler is pinned HORIZONTAL along the bottom edge
+	     as a film scrubber, and publishes how much of that edge it occupies so the
+	     heading group can rest above it (--hero-floor; see the script below). -->
 	<VideoCarousel
 		slot="scene"
 		class="hero-carousel"
@@ -237,7 +294,11 @@ import "../widgets/widgets.css";
 		position: absolute;
 		left: 0;
 		right: 0;
-		bottom: 0;
+		/* Lift the strip off the screen edge by OFFSETTING it, not by padding it: the
+		   ticks/labels are absolutely positioned against the padding box (whose top edge
+		   is the border box's), so padding-block would shrink their room and clip the
+		   year labels against the ruler's `overflow: hidden` rather than inset them. */
+		bottom: var(--space-4);
 		z-index: 2;
 		/* The package rests the ruler at 0.5 and brightens it on :hover/:focus-within
 		   — cues a touch device never fires, so it would sit permanently half-faded
@@ -249,9 +310,9 @@ import "../widgets/widgets.css";
 			rgba(0, 0, 0, 0.55),
 			transparent
 		);
-		/* Room for the tick strip + the year-label row + edge breathing space. */
+		/* Horizontal breathing space only — see the bottom offset above for why the
+		   vertical edge gap is not padding. */
 		padding-inline: var(--space-4);
-		padding-block: var(--space-3) var(--space-4);
 	}
 
 	/* Year labels (below their tick in horizontal mode) read light over the clip. */
@@ -265,8 +326,10 @@ import "../widgets/widgets.css";
 		position: absolute;
 		left: var(--space-4);
 		right: var(--space-4);
-		/* Clear the ruler strip below (tick height + year row + its padding). */
-		bottom: calc(var(--space-7) + var(--space-4));
+		/* Clear the ruler strip below: its height plus its bottom offset plus a gap.
+		   DERIVED from the package's own published geometry so the two can't drift apart
+		   — the old hardcoded 56px already disagreed with the real strip by ~14px. */
+		bottom: calc(var(--vc-ruler-h) + var(--space-4) + var(--space-3));
 		z-index: 1;
 		padding: 0;
 		background: none;
@@ -284,9 +347,14 @@ import "../widgets/widgets.css";
 	   occupies cols 1–5 — the SAME span as the body copy below — so both blocks
 	   share one measure and one left edge. The CTAs sit in the last columns,
 	   right-aligned to the gutter. Stacks on the ≤900px layout. */
+	/* NO top margin: .sh__sub already supplies the single --sh-heading-gap that binds
+	   the intro to "other stories" as one group. A margin here stacked on top of it
+	   and split the lockup in two. */
 	.hero-intro {
-		pointer-events: auto;
-		margin-block-start: var(--space-6);
+		/* Pointers fall through the full-width box (it overlays the scene's date
+		   scrubber on mobile, and its empty area would swallow the drag); the lede
+		   text and buttons opt back in below. */
+		pointer-events: none;
 		grid-template-columns: repeat(12, 1fr);
 		column-gap: var(--space-5);
 	}
@@ -299,6 +367,7 @@ import "../widgets/widgets.css";
 
 	.hero-intro__lede p {
 		margin: 0;
+		pointer-events: auto;
 		font-family: var(--font-serif);
 		font-size: var(--font-size-4);
 		line-height: 1.5;
@@ -312,6 +381,11 @@ import "../widgets/widgets.css";
 		gap: var(--space-4);
 		flex-wrap: wrap;
 		justify-content: flex-end;
+	}
+
+	/* The buttons themselves are the pointer targets (the wrapper opts out). */
+	.hero-intro__cta :global(.ds-button) {
+		pointer-events: auto;
 	}
 
 	@media (max-width: 900px) {

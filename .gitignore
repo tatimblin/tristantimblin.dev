@@ -25,6 +25,10 @@ pnpm-debug.log*
 
 .playwright-mcp/
 
+# Playwright test output (see tests/hero-fold.spec.ts)
+test-results/
+playwright-report/
+
 # Raw carousel video originals: kept locally as prepare-carousel.sh inputs, but
 # not committed. Only the made-for-web web/*.web.mp4 renders are tracked.
 public/videos/website-carousel/*.mov

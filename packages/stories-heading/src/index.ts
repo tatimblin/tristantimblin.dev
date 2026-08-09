@@ -44,6 +44,9 @@ export class StoriesHeadingElement extends HTMLElement {
 	private heading: HTMLElement | null = null;
 	private wordmarkSvg: SVGSVGElement | null = null;
 	private wordmarkText: SVGTextElement | null = null;
+	/** The slotted intro/CTA wrapper. Out of flow on the mobile layout, so it is
+	    observed separately — its growth is invisible to the host's own box. */
+	private sub: HTMLElement | null = null;
 	private inkCanvas: HTMLCanvasElement | null = null;
 	/** The full-viewport dotgrid scene layer, if this lockup overlays one. The
 	    outline→solid reveal is GATED until "other stories" clears the scene's
@@ -56,6 +59,10 @@ export class StoriesHeadingElement extends HTMLElement {
 	private reducedMotion: MediaQueryList | null = null;
 	private listeners: Array<() => void> = [];
 	private rafId: number | null = null;
+	/** Last value written per fold property, so an unchanged re-measure writes
+	    nothing — measure() runs from a ResizeObserver, and a write there that
+	    resizes anything downstream would log an RO-loop warning (see setPx). */
+	private lastWritten = new Map<string, number>();
 
 	/** The "&"'s parallax distance (px) at full progress, and its fade floor. */
 	private static readonly AMP_PARALLAX = 100;
@@ -66,7 +73,8 @@ export class StoriesHeadingElement extends HTMLElement {
 
 	/** Grid the "other stories" fit targets: N columns of a 12-col content grid
 	   with a 24px (var(--space-5)) gutter, matching .home__grid. Below this host
-	   width (the ≤900px stacked layout) the fit is skipped for the rem fallback. */
+	   width (the ≤900px stacked layout) the fit is skipped for the rem fallback.
+	   Applies to the TYPE fit only — fitFold() runs at every width. */
 	private static readonly GRID_COLUMNS = 12;
 	private static readonly GRID_GAP = 24;
 	private static readonly FIT_SPAN = 6;
@@ -79,6 +87,7 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.heading = this.querySelector<HTMLElement>(".sh__heading");
 		this.wordmarkSvg = this.querySelector<SVGSVGElement>(".sh__wordmark-svg");
 		this.wordmarkText = this.querySelector<SVGTextElement>(".sh__wordmark-text");
+		this.sub = this.querySelector<HTMLElement>(".sh__sub");
 		// The dotgrid scene the lockup overlays (for gating the reveal); may be absent
 		// (e.g. a hero with no scene) — the reveal then plays normally.
 		this.scene = this.closest<HTMLElement>(".fh")?.querySelector<HTMLElement>(".fh__scene") ?? null;
@@ -107,6 +116,14 @@ export class StoriesHeadingElement extends HTMLElement {
 			this.schedule();
 		});
 		this.resizeObserver.observe(this);
+		// The sub-lockup (intro + CTAs) is position:absolute on the mobile layout, so its
+		// growth never changes the host's box — observing only the host would miss a
+		// re-wrapped lede or a CTA row wrapping to two lines, which is exactly the
+		// content growth --sh-group-h exists to absorb. Observe it directly.
+		if (this.sub) this.resizeObserver.observe(this.sub);
+		// Same for the pin: "other stories" is JS-fit, and under reduced motion the sub
+		// lives inside the pin's flow.
+		if (this.pin) this.resizeObserver.observe(this.pin);
 
 		// Measure now, then again after fonts load — the wordmark's glyph metrics
 		// (hence its bbox) shift once the web font swaps in.
@@ -142,58 +159,128 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * The dotgrid scene is a full-viewport background layer (--hero-height ==
-	 * 100svh, CSS); the lockup overlays it. Drop the whole lockup DOWN by a lead
-	 * space (--hero-lead on .fh__heading) so the WHOLE group (wordmark + "&" +
-	 * "other stories" + the slotted intro/CTAs) rests near the BOTTOM of the first
-	 * screen, over the dotgrid — leaving a bottom margin (PAD) and a top margin that
-	 * clears the header. lead = vh − PAD − pinContentHeight − wordmarkHeight −
-	 * headingGap, from the just-measured wordmark/pin metrics (no scroll
-	 * dependency). Recomputed on resize/font-load; clamped so it always clears the
-	 * header. Skipped on the ≤900px stacked layout (CSS fallback lead applies).
+	 * BOTTOM-ANCHOR THE LOCKUP GROUP above the scene's reserved bottom edge.
+	 *
+	 * The scene is a full-bleed background layer whose own UI may hug its BOTTOM edge
+	 * (the carousel's date scrubber + caption, declared as --hero-floor by the
+	 * layout). The group — wordmark + "&" + "other stories" + the slotted intro/CTAs —
+	 * must rest ABOVE that floor, never through it. Two clamps, in a fixed order:
+	 *
+	 *   lead   = max(headerClear, 100svh − floor − foldGap − group)   ① spend whitespace
+	 *   height = max(100svh, lead + group + foldGap + floor)          ② then grow
+	 *
+	 * ① bottom-anchors the group by SHRINKING the lead, so a group that grows (longer
+	 * copy, larger dynamic type, a narrower screen forcing more wrapping) first eats
+	 * the whitespace under the site header. Only when the lead bottoms out at
+	 * headerClear — no whitespace left — does the group's bottom pass the fold, and ②
+	 * grows the hero by exactly that overflow. Growing is the last resort.
+	 *
+	 * BOTH clamps live in CSS (see FullHeroLayout). This method only MEASURES and
+	 * publishes content sizes:
+	 *
+	 *   --sh-group-h      the group's full height (wordmark → intro bottom)
+	 *   --sh-wordmark-h   the wordmark's rendered height
+	 *   --sh-header-clear the minimum lead that clears the site header
+	 *
+	 * That split is what makes the system acyclic. If JS instead computed the lead
+	 * from the scene's measured height, every grown state would be its own fixed point
+	 * (a taller scene justifies the same tall lead that made it grow) and the hero
+	 * would stay expanded on viewports where it fits. Publishing only content sizes —
+	 * none of which depend on the lead or the hero height — leaves CSS to resolve the
+	 * clamps against a true `100svh`, in the correct units, every layout pass.
+	 *
+	 * Also publishes --sh-top: the sticky line must FOLLOW the group. A fixed 50svh
+	 * line clamps the pin whenever the bottom-anchored lead would place it higher,
+	 * silently dragging "other stories" away from the wordmark. Deriving it from the
+	 * lead makes the clamp coincide with the natural position — zero slack at rest, so
+	 * "other stories" sits exactly one --sh-heading-gap below the wordmark.
+	 *
+	 * Every input is a measured size, never a vh ratio, and every one is
+	 * SCROLL-INVARIANT — not because this runs on scroll (it doesn't; measure() runs
+	 * from resize / the ResizeObserver / fonts.ready) but because a resize can land at
+	 * any scroll position, and the fold must not depend on where the page happens to
+	 * be. Hence the sub is measured RELATIVE TO THE PIN: that difference is invariant
+	 * to the sticky pin detaching, and it is also correct under reduced motion (where
+	 * .sh__sub returns to normal flow and is already inside pin.offsetHeight — summing
+	 * the parts would double-count it). A viewport-FIXED sub is excluded from the group
+	 * entirely (see below), since its distance from the pin does move with scroll.
+	 * Runs at every width; the ≤900px layout needs it MOST, since that is where the
+	 * scene's bottom UI and the group compete for one screen.
 	 */
 	private fitFold() {
 		const fh = this.closest<HTMLElement>(".fh");
-		const headingEl = this.closest<HTMLElement>(".fh__heading");
-		if (!fh || !headingEl) return;
+		if (!fh) return;
 
-		// Legacy inline height from the old capped-banner layout — clear it so the
-		// CSS 100svh wins.
+		// Legacy inline height from the old capped-banner layout — clear it so the CSS
+		// max() (which we feed with measured content sizes) wins.
 		fh.style.removeProperty("--hero-height");
 
-		if (
-			this.getBoundingClientRect().width < StoriesHeadingElement.FIT_MIN_WIDTH
-		) {
-			headingEl.style.removeProperty("--hero-lead");
-			return;
-		}
-
-		const vh = window.innerHeight;
-		// A min top space so the wordmark clears the overlaid header.
-		const headerClear = 0.13 * vh;
 		const wmHeight = this.wordmarkSvg?.getBoundingClientRect().height ?? 0;
-		// Pin content (just "other stories" now — the intro/CTAs are position:fixed,
-		// out of flow, so they no longer add to the pin height).
-		const pinHeight = this.pin?.offsetHeight ?? 0;
+		if (!(wmHeight > 0)) return; // not laid out yet; a later measure() will catch it
+
 		// Gap between the wordmark and the track (the --sh-heading-gap margin).
-		const gap = this.track
+		const headingGap = this.track
 			? parseFloat(getComputedStyle(this.track).marginTop) || 0
 			: 0;
-		// The intro/CTAs are position:fixed to the viewport bottom, so their top is a
-		// stable viewport coordinate — measure it directly and place "other stories"
-		// a FIXED small gap above it (viewport-independent, so a taller screen never
-		// opens up more space between them). Fall back to a vh estimate pre-layout.
-		const sub = this.querySelector<HTMLElement>(".sh__sub");
-		const subRect = sub?.getBoundingClientRect();
-		const SUB_GAP = 0.02 * vh; // small, constant breathing room above the intro
-		const subTop = subRect && subRect.height > 0 ? subRect.top : vh - 0.12 * vh;
-		// lead = subTop − SUB_GAP − pinHeight − gap − wmHeight, so:
-		//   wordmark top = lead → track/other-stories bottom = subTop − SUB_GAP.
-		const lead = Math.max(
-			headerClear,
-			subTop - SUB_GAP - pinHeight - gap - wmHeight
-		);
-		headingEl.style.setProperty("--hero-lead", `${lead.toFixed(1)}px`);
+
+		// The group's extent BELOW the wordmark, and the sub's contribution to the floor.
+		//
+		// The sub-lockup is laid out one of two ways, and each puts it on a different
+		// side of the group/floor line:
+		//   · position:fixed (the desktop layout) — anchored to the VIEWPORT bottom, so
+		//     it is not part of the group at all; it behaves exactly like scene-owned
+		//     bottom UI. Its height + bottom offset becomes a floor contribution, and
+		//     the group ends at "other stories".
+		//   · absolute below the pin (mobile) or static inside it (reduced motion) —
+		//     genuinely part of the group, measured PIN-RELATIVE so the number is
+		//     invariant to scroll (the pin detaches from its sticky line as the page
+		//     scrolls) and correct in both modes (the static case is already inside
+		//     pin.offsetHeight, so summing the parts would double-count it).
+		// Measuring `bottom − pinTop` on a FIXED sub would make the group's height drift
+		// with scroll — the bug this split avoids.
+		const pinRect = this.pin?.getBoundingClientRect();
+		const subRect = this.sub?.getBoundingClientRect();
+		const subFixed =
+			!!this.sub && getComputedStyle(this.sub).position === "fixed";
+
+		// Fractional (getBoundingClientRect), not offsetHeight — the two are mixed in the
+		// Math.max below, and offsetHeight rounds to whole px.
+		let belowWordmark = pinRect?.height ?? 0;
+		let subFloor = 0;
+		if (subRect && subRect.height > 0 && subFixed) {
+			subFloor = subRect.height + (window.innerHeight - subRect.bottom);
+		} else if (pinRect && subRect && subRect.height > 0) {
+			belowWordmark = Math.max(pinRect.height, subRect.bottom - pinRect.top);
+		}
+
+		// Min top space so the wordmark clears the overlaid header — MEASURED from the
+		// header's own box (absolutely positioned at the top of .fh, with its own
+		// padding), rather than a vh ratio that guesses at it.
+		const headerH =
+			fh.querySelector<HTMLElement>(".site-header")?.getBoundingClientRect()
+				.height ?? 0;
+
+		this.setPx(fh, "--sh-group-h", wmHeight + headingGap + belowWordmark, "groupH");
+		this.setPx(fh, "--sh-wordmark-h", wmHeight, "wordmarkH");
+		this.setPx(fh, "--sh-header-clear", headerH + headingGap, "headerClear");
+		// A viewport-fixed sub reserves the bottom edge just like scene-owned UI, so it
+		// stacks onto the floor the group must clear (0 on the mobile layout, where the
+		// sub travels WITH the group and is already inside --sh-group-h).
+		this.setPx(fh, "--sh-sub-floor", subFloor, "subFloor");
+	}
+
+	/**
+	 * Write a px custom property, skipping sub-pixel-identical rewrites. measure() runs
+	 * from a ResizeObserver — including one on the sub-lockup, whose height these
+	 * writes can change — and an unguarded write there logs "ResizeObserver loop
+	 * completed with undelivered notifications". The guard makes the observe → publish
+	 * → re-layout round trip terminate on the first pass that changes nothing.
+	 */
+	private setPx(el: HTMLElement, prop: string, value: number, key: string) {
+		const prev = this.lastWritten.get(key);
+		if (prev !== undefined && Math.abs(prev - value) < 0.5) return;
+		this.lastWritten.set(key, value);
+		el.style.setProperty(prop, `${value.toFixed(1)}px`);
 	}
 
 	/**
@@ -390,6 +477,8 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.resizeObserver = null;
 		this.listeners.forEach((off) => off());
 		this.listeners = [];
+		this.lastWritten.clear();
+		this.sub = null;
 	}
 
 	/** Coalesce scroll-driven updates to one write per frame. */
@@ -470,11 +559,22 @@ export class StoriesHeadingElement extends HTMLElement {
 		return clamp01((start - ampTop) / (start - end));
 	}
 
-	/** Resolve a CSS length custom property on the host to pixels. */
+	/**
+	 * Resolve a CSS length custom property on the host to pixels.
+	 *
+	 * Only safe for properties authored as a BARE length or a <n>vh-family token:
+	 * getComputedStyle does not resolve units (or evaluate calc()) inside a custom
+	 * property — it hands back the authored token — so a `calc(...)` value yields NaN
+	 * and silently takes the fallback. The fold properties (--sh-top, --sh-hold,
+	 * --hero-lead) are now calc() expressions for exactly that reason: they are read
+	 * via real box measurements or resolved longhands, never through here. The one
+	 * caller is --sh-reveal, which is always plain px.
+	 */
 	private cssPx(prop: string, fallback: number): number {
 		const raw = getComputedStyle(this).getPropertyValue(prop).trim();
 		if (!raw) return fallback;
-		if (raw.endsWith("vh")) return (parseFloat(raw) / 100) * window.innerHeight;
+		const vh = /^(-?[\d.]+)(?:s|l|d)?vh$/.exec(raw);
+		if (vh) return (parseFloat(vh[1]) / 100) * window.innerHeight;
 		const n = parseFloat(raw);
 		return Number.isFinite(n) ? n : fallback;
 	}
