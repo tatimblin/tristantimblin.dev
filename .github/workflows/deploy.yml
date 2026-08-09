@@ -3,13 +3,18 @@ name: Deploy site to Cloudflare Pages
 on:
   push:
     branches: ["master"]
+  # Also on PRs, so the test gate below runs BEFORE a merge rather than after it
+  # (the deploy job is master-only — see its `if` — so this never publishes).
+  pull_request:
+    branches: ["master"]
   workflow_dispatch:
 
 # Allow one deployment at a time; let an in-progress deploy finish so a live
-# deploy is never interrupted.
+# deploy is never interrupted. Keyed by ref so a PR's test-only run shares no
+# queue with a master deploy — and a new push to a PR supersedes its own run.
 concurrency:
-  group: "cloudflare-pages"
-  cancel-in-progress: false
+  group: "cloudflare-pages-${{ github.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Layout invariants that only a real engine can confirm — chiefly the mobile hero
@@ -51,6 +56,8 @@ jobs:
 
   deploy:
     needs: test
+    # Publish only from master. On a PR the workflow runs solely to gate on `test`.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
