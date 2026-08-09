@@ -12,7 +12,45 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Layout invariants that only a real engine can confirm — chiefly the mobile hero
+  # fold, where the heading group and the scene's bottom UI are in separate
+  # coordinate systems and nothing in flow reserves space between them
+  # (tests/hero-fold.spec.ts). Gates the deploy.
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          lfs: true
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: bunx playwright install --with-deps chromium
+
+      # The Playwright config builds the site and serves it with `astro preview`.
+      - name: Run layout tests
+        run: bun run test
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read

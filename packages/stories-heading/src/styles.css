@@ -19,9 +19,17 @@
 
 stories-heading {
 	--sh-clip: 1;
-	/* Where "other stories" pins: mid-viewport. Keyed to vh so it never depends
-	   on the banner height. */
-	--sh-top: 50vh;
+	/* Where "other stories" pins. The sticky line must FOLLOW the group: a fixed line
+	   clamps the pin whenever the bottom-anchored lead would place it lower, which
+	   silently opens a gap between the wordmark and "other stories" (34px of slack on
+	   a short phone). Derived from the same lead the layout uses, so the clamp
+	   coincides with the group's natural position — zero slack at rest, and
+	   "other stories" sits exactly one --sh-heading-gap under the wordmark.
+	   Falls back to mid-viewport when used outside a .fh hero (--hero-lead unset). */
+	--sh-top: calc(
+		var(--hero-lead, 50svh) + var(--sh-wordmark-h, 0px) +
+			var(--sh-heading-gap)
+	);
 	/* Scroll distance over which the outline→solid reveal plays out while pinned. */
 	--sh-reveal: 300px;
 	/* Extra scroll the heading stays FIXED after the reveal, before the rising
@@ -214,8 +222,16 @@ stories-heading {
    no JS runs per frame. visibility flips to hidden at the end of the fade so the
    invisible bar stops capturing pointer events. */
 .sh__sub {
-	margin-block-start: var(--space-5, 1.5rem);
-	pointer-events: auto;
+	/* ONE gap, matching --sh-heading-gap (wordmark → "other stories"), so the whole
+	   lockup reads as a single group on one internal rhythm and the intro sits
+	   directly beneath "other stories". The page's slotted content must not add its
+	   own top margin here — that stacked to 32px and split the group in two. */
+	margin-block-start: var(--sh-heading-gap);
+	/* The visible content is the lede text + buttons; this WRAPPER is a full-width
+	   box, and where it overlays the scene's bottom UI its empty area would swallow
+	   the scrubber's drag. Pointers fall through; the slotted content opts back in
+	   (same pattern as .fh__heading / the host / .sh__heading / .site-header). */
+	pointer-events: none;
 	/* LONGHANDS ONLY — do NOT collapse into `animation: sh-sub-fade linear both`.
 	   The minifier merges an adjacent animation-timeline INTO that shorthand,
 	   emitting `animation: linear both sh-sub-fade scroll(root)`. A timeline is not
@@ -264,7 +280,7 @@ stories-heading {
 @media (prefers-reduced-motion: reduce) {
 	.sh__sub {
 		position: static;
-		margin-block-start: var(--space-5, 1.5rem);
+		margin-block-start: var(--sh-heading-gap);
 		animation: none;
 		opacity: 1;
 		visibility: visible;
@@ -322,13 +338,16 @@ stories-heading {
 		--sh-heading-size: 2rem;
 		/* Reveal wipe plays over 100px of scroll (vs 300px on desktop). */
 		--sh-reveal: 100px;
-		/* Hold FIXED long enough that "other stories" stays pinned (at --sh-top =
-		   50vh) while the full-bleed hero scene — including its bottom date ruler —
-		   scrolls up and PAST it, so the heading parallaxes OVER the ruler and comes
-		   to rest below the dotgrid, right above the rising paragraph. The scene is
-		   100svh and the pin sits at 50vh, so ~50vh of hold clears the scene's lower
-		   half; a little extra guarantees it lands outside the dotgrid. */
-		--sh-hold: 55vh;
+		/* Hold FIXED long enough that "other stories" stays pinned while the full-bleed
+		   hero scene — including its bottom date scrubber — scrolls up and PAST it, so
+		   the heading parallaxes OVER that strip and comes to rest below the scene,
+		   right above the rising paragraph. DERIVED, not tuned: the distance from the
+		   pin line to the scene's bottom edge is exactly --hero-height − --sh-top, so
+		   that plus a margin is what clears it — and it stays correct now that the
+		   scene can grow past 100svh (and that --sh-top follows the group). */
+		--sh-hold: calc(
+			var(--hero-height, 100svh) - var(--sh-top) + var(--space-6)
+		);
 	}
 
 	/* The "&" stays absolutely positioned over the wordmark (JS aligns it to the
