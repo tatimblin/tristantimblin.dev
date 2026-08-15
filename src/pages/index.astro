@@ -81,6 +81,15 @@ import "../widgets/widgets.css";
 	document.addEventListener("astro:page-load", wireHeroFloor);
 </script>
 
+<!-- NB: no preloadMedia here, deliberately. Preloading the hero clip looks like an
+     obvious win — <dotted-grid> only creates its <video> in connectedCallback, so
+     the clip isn't requested until the page bundle has run (measured: 218ms vs a
+     bundle finishing at 54ms). But A/B under 500kbps/200ms throttling showed no
+     benefit (~6.5s vs ~6.0s to first halftone pixels, i.e. slightly worse, within
+     noise): the clip is only ~60KB, and on this page it contends with the video
+     carousel's own clips for the same connection, so promoting it just reorders the
+     queue. The Layout still supports `preloadMedia` for a page whose hero asset is
+     genuinely the critical path — this one's isn't. -->
 <FullHeroLayout
 	title="Tristan Timblin"
 	description="Tristan Timblin — a craftsman who builds things to be used, finding creativity through empathetic design."
@@ -89,6 +98,12 @@ import "../widgets/widgets.css";
 	     layer, faded at the top+bottom edges (see FullHeroLayout .fh__scene). -->
 	<!-- No color/background attrs: the grid falls back to --color-fg / --color-bg
 	     and re-samples them each frame, so it inverts with the active theme. -->
+	<!-- `intro`: develop the halftone in on arrival, brightest dots first, so the
+	     scene resolves out of the page colour instead of snapping to full strength
+	     the moment the first video frame decodes. Runs once, starts at that first
+	     frame, and is skipped entirely under prefers-reduced-motion.
+	     The short hold (intro-delay) lets the wordmark land first, so the scene
+	     develops UNDER settled type rather than competing with it for attention. -->
 	<dotted-grid
 		slot="scene"
 		class="hero__video"
@@ -100,6 +115,8 @@ import "../widgets/widgets.css";
 		gamma="0.5"
 		contrast="1.1"
 		color="#7f7f7f"
+		intro-delay="600"
+		intro="3200"
 	/>
 
 	<!-- SCENE (mobile only): the video carousel promoted into the hero as the
@@ -108,10 +125,16 @@ import "../widgets/widgets.css";
 	     clip cover-fills; the date ruler is pinned HORIZONTAL along the bottom edge
 	     as a film scrubber, and publishes how much of that edge it occupies so the
 	     heading group can rest above it (--hero-floor; see the script below). -->
+	<!-- intro/introDelay match the fabric scene above so BOTH hero variants make the
+	     same entrance — the halftone develops in brightest-dots-first after a short
+	     hold, whichever scene the breakpoint is showing. Runs once, on the first
+	     clip; later clips swap in without re-developing. -->
 	<VideoCarousel
 		slot="scene"
 		class="hero-carousel"
 		orientation="horizontal"
+		introDelay={600}
+		intro={3200}
 	/>
 
 	<!-- HEADER: brand + nav, overlaying the top of the scene (z-index 4). Lives in
@@ -150,7 +173,12 @@ import "../widgets/widgets.css";
 	     parallaxes UP to visually sit alongside this row (see widgets/videos). -->
 	<div class="fh-row">
 		<Grid class="home__grid">
-			<GridItem class="home__copy">
+			<!-- Eases in as it is scrolled to. Marked on the grid CELL rather than on
+			     <wobble-text> inside it, so the reveal's opacity and the element's
+			     `filter` stay on separate boxes (a filter on the same element as a
+			     fading ancestor is the containing-block hazard called out in
+			     src/lib/reveal.ts). -->
+			<GridItem class="home__copy" data-reveal>
 				<wobble-text scale="2.8" speed="0.3">
 					<p>
 						I am a craftsman, I create things to be used. Even if they often are
@@ -177,7 +205,15 @@ import "../widgets/widgets.css";
 
 	<!-- WIDGETS: an Apple-widgets-style grid at the foot of the page. Mixed
 	     sizes in non-packed DOM order so grid-auto-flow: dense re-packs holes;
-	     every cell is a DS Card. Placeholder/skeleton content for now. -->
+	     every cell is a DS Card. Placeholder/skeleton content for now.
+
+	     The cells carry data-reveal so the row eases in as one staggered group when
+	     scrolled to (see src/lib/reveal.ts). Order follows the VISUAL left-to-right
+	     packing, which grid-auto-flow: dense makes differ from DOM order: the 1×2
+	     video cell is authored first but lands in the last column, so it reveals
+	     last. data-reveal-order exists for exactly this mismatch.
+	     Each widget's own <Widget> forwards data-* through Card → Box, so no wrapper
+	     element is needed (which would also disturb the dense packing). -->
 	<div class="fh-row home__widgets">
 		<WidgetGrid cols={4}>
 			<Videos />
@@ -188,7 +224,13 @@ import "../widgets/widgets.css";
 
 			<!-- Placeholder 1×1 to fill column 3 alongside the 1×2 video cell; swap
 			     for a real widget as more land. -->
-			<Widget size="1x1" class="wx-soon">
+			<Widget
+				size="1x1"
+				class="wx-soon"
+				data-reveal
+				data-reveal-group="widgets"
+				data-reveal-order="2"
+			>
 				<span class="wx-soon__label">more soon</span>
 			</Widget>
 		</WidgetGrid>
@@ -286,18 +328,22 @@ import "../widgets/widgets.css";
 		);
 	}
 
-	/* Horizontal ruler pinned along the BOTTOM edge, above the video, over an
-	   upward-fading scrim that dissolves into the clip. Orientation is locked
-	   horizontal (attr), so the package's horizontal tick math applies and
-	   mainSize() reads clientWidth (now the scene width). */
+	/* Horizontal ruler pinned along the BOTTOM edge, above the video, over a scrim
+	   that backs the year row and dissolves downward into the clip. Orientation is
+	   locked horizontal (attr), so the package's horizontal tick math applies and
+	   mainSize() reads clientWidth (now the scene width). The package anchors this
+	   axis baseline-down — ticks stand on the ruler's bottom edge and grow upward,
+	   years above them — which is what lets the tick ROOTS fade out below without
+	   touching the labels. */
 	:global(.hero-carousel .vc__ruler) {
 		position: absolute;
 		left: 0;
 		right: 0;
 		/* Lift the strip off the screen edge by OFFSETTING it, not by padding it: the
-		   ticks/labels are absolutely positioned against the padding box (whose top edge
-		   is the border box's), so padding-block would shrink their room and clip the
-		   year labels against the ruler's `overflow: hidden` rather than inset them. */
+		   ticks/labels are absolutely positioned against the padding box (whose edges
+		   coincide with the border box's), so padding-block would shrink their room and
+		   clip the year labels against the ruler's `overflow: hidden` rather than inset
+		   them. */
 		bottom: var(--space-4);
 		z-index: 2;
 		/* The package rests the ruler at 0.5 and brightens it on :hover/:focus-within
@@ -305,9 +351,40 @@ import "../widgets/widgets.css";
 		   here. This is the primary scrubber of a full-bleed hero, not a secondary
 		   affordance, so it reads at full strength from the start. */
 		--vc-rest-opacity: 1;
+		/* DISSOLVE THE TICK ROOTS. Without this the ticks all stop dead on one line
+		   at the strip's baseline, reading as an implied hard rule across the hero.
+		   The band is measured DOWN from the bottom edge and sized from the package's
+		   own tick geometry (a fraction of the growth extent), so it covers only the
+		   feet of the ticks — the year row sits above --vc-max-tick-h and stays fully
+		   opaque. This is deliberately NOT the scene-wide --fh-scene-mask, whose band
+		   spans 78%→100% of the hero and would drag the labels to ~40% alpha (the
+		   unreadable-years bug that mask was lifted off the ruler to fix). */
+		--vc-ruler-fade: calc(var(--vc-max-tick-h) * 0.6);
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			#000 0,
+			#000 calc(100% - var(--vc-ruler-fade)),
+			transparent 100%
+		);
+		mask-image: linear-gradient(
+			to bottom,
+			#000 0,
+			#000 calc(100% - var(--vc-ruler-fade)),
+			transparent 100%
+		);
+		/* Legibility wash behind the year row, dissolving DOWNWARD into the clip (and
+		   into the mask above, so it never darkens the band being faded to nothing).
+		   Runs to-bottom because the years are the top-most element on this axis; when
+		   they sat below the ticks this gradient ran the other way.
+		   A raw black alpha, not a theme token: it backs light text over VIDEO, so a
+		   theme-aware surface colour would flip to near-white in light mode and destroy
+		   the contrast it exists to provide. Named locals so the two stops are tunable
+		   in one place. */
+		--vc-scrim-color: 0, 0, 0;
+		--vc-scrim-alpha: 0.55;
 		background: linear-gradient(
-			to top,
-			rgba(0, 0, 0, 0.55),
+			to bottom,
+			rgba(var(--vc-scrim-color), var(--vc-scrim-alpha)),
 			transparent
 		);
 		/* Horizontal breathing space only — see the bottom offset above for why the
@@ -315,7 +392,7 @@ import "../widgets/widgets.css";
 		padding-inline: var(--space-4);
 	}
 
-	/* Year labels (below their tick in horizontal mode) read light over the clip. */
+	/* Year labels (above their tick in horizontal mode) read light over the clip. */
 	:global(.hero-carousel .vc__tick-year) {
 		color: var(--color-fg);
 	}

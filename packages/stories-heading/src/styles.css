@@ -98,7 +98,17 @@ stories-heading {
 
 .sh__wordmark-text {
 	font-family: var(--font-serif, "Playfair Display", Georgia, serif);
-	font-weight: 500;
+	/* 400, not 500. Playfair Display is loaded at 400/600/700 only (see the Google
+	   Fonts URL in the site's Layout), so a request for 500 fell through CSS font
+	   matching — which prefers weights <= the requested one when it is under 400 or
+	   in the 400-500 band — and rendered 400 anyway. Stating 400 makes the
+	   declaration honest about what actually paints.
+	   Deliberately NOT "fix the font instead": loading a real 500 would change the
+	   wordmark's ink metrics, which JS measures into --sh-group-h and thence the
+	   whole hero fold, so it is a design decision (slightly heavier wordmark) rather
+	   than a bug fix. If that is ever wanted, add 500 to the font URL and re-run
+	   tests/hero-fold.spec.ts. */
+	font-weight: 400;
 	letter-spacing: -0.02em;
 	fill: var(--text-primary, #ededed);
 	/* SVG user units; the viewBox is resized to the real glyph bbox in JS, so

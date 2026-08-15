@@ -11,7 +11,13 @@ interface Props {
 const { slug, title, media, type, poster, alt } = Astro.props;
 ---
 
-<a href={`/gallery/${slug}`} class="gallery-grid-item">
+<!-- data-reveal sits on the LINK, not on the media inside it: the <img>/<video>
+     carries a `transition:name` for the view transition into the detail page, and
+     animating a named element's opacity means the transition snapshots it
+     mid-fade. Revealing the wrapper leaves the named box untouched. The
+     coordinator finds the media by descending, so readiness still gates on the
+     real decode. -->
+<a href={`/gallery/${slug}`} class="gallery-grid-item" data-reveal>
 	{
 		type === "video" ? (
 			<video

@@ -12,6 +12,12 @@ import "./now-playing.css";
 	import "@tristimb/spotify-stream-player";
 </script>
 
-<Widget size="1x1" class="wx-nowplaying-widget">
+<Widget
+	size="1x1"
+	class="wx-nowplaying-widget"
+	data-reveal
+	data-reveal-group="widgets"
+	data-reveal-order="0"
+>
 	<spotify-player src={SPOTIFY_SSE_URL} layout="cover" tint></spotify-player>
 </Widget>

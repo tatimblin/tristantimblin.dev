@@ -23,6 +23,16 @@ interface Props {
 	orientation?: "vertical" | "horizontal";
 	/** Extra class(es) forwarded to the <video-carousel> host. */
 	class?: string;
+	/**
+	 * Develop the halftone in on first arrival, brightest dots first (the stage's
+	 * <dotted-grid> `intro`). Opt-in per consumer rather than always-on: it is an
+	 * ENTRANCE, so it earns its keep where the carousel IS the hero and the visitor
+	 * is looking straight at it, but not for the footer widget, which is already
+	 * mid-page behind a scroll-driven dock.
+	 * `intro` is the wipe duration in ms, `introDelay` the hold before it starts.
+	 */
+	intro?: number;
+	introDelay?: number;
 }
 
 // Real footage prepared by tools/dotgrid/prepare-video.sh into
@@ -35,6 +45,8 @@ const {
 	rulerSide = "left",
 	orientation,
 	class: className,
+	intro,
+	introDelay,
 	clips = [
 		{
 			src: "/videos/website-carousel/web/fisker-top-down.web.mp4",
@@ -274,6 +286,10 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 		</div>
 
 		<div class="vc__stage" data-vc-stage>
+			{/* The intro wipe (when a consumer opts in) runs ONCE, on the first clip —
+			   the element latches it, so stepping to the next clip swaps the source
+			   without re-developing the frame. That is what makes it usable here: an
+			   entrance for the carousel, not an effect on every advance. */}
 			<dotted-grid
 				class="vc__grid"
 				data-vc-grid
@@ -287,6 +303,8 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				gamma="0.5"
 				contrast="1.1"
 				color="#7f7f7f"
+				intro={intro}
+				intro-delay={introDelay}
 			></dotted-grid>
 			<figcaption class="vc__caption">
 				<span class="vc__desc" data-vc-desc>{first?.description}</span>

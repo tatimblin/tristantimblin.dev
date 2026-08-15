@@ -133,8 +133,28 @@ export class StoriesHeadingElement extends HTMLElement {
 			document.fonts.ready.then(() => {
 				this.measure();
 				this.schedule();
+				this.announceReady();
 			});
+		} else {
+			this.announceReady();
 		}
+	}
+
+	/**
+	 * Publish "the lockup has settled at its final metrics" — after the post-font
+	 * re-measure, since that is the pass that can still move the wordmark's box.
+	 *
+	 * Note the lockup is deliberately NOT hidden waiting for this: the homepage's
+	 * LCP element is the wordmark text itself, so holding it back for the webfont
+	 * would trade a one-frame reflow for real, measured LCP. The remeasure jump is
+	 * addressed by getting the font there sooner (preload) rather than by covering
+	 * it up. This event exists so a consumer can sequence against the lockup without
+	 * re-deriving when fonts landed.
+	 */
+	private announceReady() {
+		if (this.dataset.ready) return;
+		this.dataset.ready = "true";
+		this.dispatchEvent(new CustomEvent("stories-heading:ready", { bubbles: true }));
 	}
 
 	/**
@@ -479,6 +499,8 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.listeners = [];
 		this.lastWritten.clear();
 		this.sub = null;
+		// Re-measured from scratch on re-connect, so allow the announcement again.
+		delete this.dataset.ready;
 	}
 
 	/** Coalesce scroll-driven updates to one write per frame. */

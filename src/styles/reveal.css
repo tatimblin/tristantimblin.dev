@@ -1,0 +1,61 @@
+/* Asset-arrival reveal — the motion half of src/lib/reveal.ts.
+ *
+ * Marked elements ([data-reveal]) start invisible and ease in once their asset has
+ * decoded and they've scrolled into view. Only `opacity` and `translate` are ever
+ * touched, and `translate` only BELOW the fold — see the module's header for why
+ * the hero is opacity-free and why no geometric property may appear here.
+ *
+ * THE HIDDEN RULE REQUIRES TWO CONDITIONS: `html.reveal-armed` (set by the inline
+ * head script in Layout.astro, which also schedules its own removal) AND the
+ * absence of the revealed state. Either one going away reveals the content, so
+ * every failure path — no JS, a bundle that 404s, a throw, a hung asset — lands on
+ * VISIBLE. The un-armed document is the visible document. */
+
+@media (prefers-reduced-motion: no-preference) {
+	html.reveal-armed [data-reveal]:not([data-reveal-state="in"]) {
+		opacity: 0;
+		/* `translate`, NOT `transform`: it composes with the JS-driven transforms
+		   already on some of these elements (the widget grid's --vc-dock-lift, the
+		   bike watermark's --bw-slide) instead of clobbering them. Verified to
+		   stack rather than replace. */
+		translate: 0 var(--reveal-rise);
+	}
+}
+
+/* LONGHANDS, not the `transition` shorthand. A shorthand carrying an unresolved
+   custom property is invalid-at-computed-value and drops the WHOLE declaration —
+   the same class of silent, production-only failure as the animation-timeline
+   shorthand trap documented in stories-heading/styles.css. Longhands fail
+   independently, so a missing token costs the timing, not the reveal. */
+[data-reveal] {
+	transition-property: opacity, translate;
+	transition-duration: var(--duration-reveal);
+	transition-timing-function: var(--ease-reveal);
+}
+
+[data-reveal][data-reveal-state="in"] {
+	opacity: 1;
+	translate: none;
+}
+
+/* Reduced motion: the end state, applied unconditionally and instantly. The
+   coordinator additionally never arms under this preference, so this is the
+   belt to that braces — content is simply present. Mirrors the shape of the
+   bike-stats reveal's own reduced-motion block. */
+@media (prefers-reduced-motion: reduce) {
+	[data-reveal],
+	html.reveal-armed [data-reveal]:not([data-reveal-state="in"]) {
+		opacity: 1;
+		translate: none;
+		transition: none;
+	}
+}
+
+/* A hidden region must never print blank. */
+@media print {
+	[data-reveal],
+	html.reveal-armed [data-reveal]:not([data-reveal-state="in"]) {
+		opacity: 1;
+		translate: none;
+	}
+}

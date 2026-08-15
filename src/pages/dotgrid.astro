@@ -19,18 +19,35 @@ const SRC_WEBM = SOURCES[0].webm;
 
 	// Live controls: reflect each input onto the hero <dotted-grid> attributes.
 	// Boolean attrs (invert/paused) toggle presence; the rest set a value.
-	const hero = document.querySelector<HTMLElement>("[data-hero]");
+	//
+	// Resolved on every use, not captured once: the "replay intro" button below
+	// swaps in a FRESH element (the only honest way to re-run a one-shot entrance),
+	// so a captured reference would leave every other slider driving a discarded
+	// node while the visible one ignored them.
+	const hero = () => document.querySelector<HTMLElement>("[data-hero]");
 	const panel = document.querySelector<HTMLElement>("[data-controls]");
-	if (hero && panel) {
+	if (hero() && panel) {
 		const sync = (input: HTMLInputElement) => {
-			const attr = input.dataset.attr!;
+			const attr = input.dataset.attr;
+			// The intro delay/duration sliders have no data-attr: they feed the replay
+			// button below rather than an attribute, since the wipe is a one-shot
+			// entrance that would otherwise re-latch on every drag. Their readout is
+			// named after the slider so both stay in step.
+			if (!attr) {
+				const key = input.dataset.introMs !== undefined ? "intro-ms" : "intro-delay-ms";
+				const out = panel.querySelector<HTMLElement>(`[data-out="${key}"]`);
+				if (out) out.textContent = input.value;
+				return;
+			}
+			const el = hero();
+			if (!el) return;
 			if (input.type === "checkbox") {
-				input.checked ? hero.setAttribute(attr, "") : hero.removeAttribute(attr);
+				input.checked ? el.setAttribute(attr, "") : el.removeAttribute(attr);
 			} else if (input.dataset.zeroOff !== undefined && input.value === "0") {
 				// "absent = off" attrs (color-reveal, shimmer): 0 removes the attr.
-				hero.removeAttribute(attr);
+				el.removeAttribute(attr);
 			} else {
-				hero.setAttribute(attr, input.value);
+				el.setAttribute(attr, input.value);
 			}
 			const out = panel.querySelector<HTMLElement>(`[data-out="${attr}"]`);
 			if (out) out.textContent = input.value;
@@ -40,14 +57,36 @@ const SRC_WEBM = SOURCES[0].webm;
 			sync(input); // apply initial state on load
 		});
 
+		// Replay the intro wipe. It latches after running (an entrance, not a loop),
+		// and the latch lives in the element instance — so the honest way to replay it
+		// is to give the page a FRESH element with the attribute already set, exactly
+		// as a real page load would. Copies the current attributes across so the
+		// replay reflects whatever the other sliders are set to.
+		const replay = panel.querySelector<HTMLButtonElement>("[data-replay-intro]");
+		const msInput = panel.querySelector<HTMLInputElement>("[data-intro-ms]");
+		const delayInput = panel.querySelector<HTMLInputElement>("[data-intro-delay-ms]");
+		replay?.addEventListener("click", () => {
+			const current = document.querySelector<HTMLElement>("[data-hero]");
+			if (!current) return;
+			const fresh = document.createElement("dotted-grid");
+			for (const { name, value } of Array.from(current.attributes)) {
+				fresh.setAttribute(name, value);
+			}
+			fresh.setAttribute("intro-delay", delayInput?.value ?? "600");
+			fresh.setAttribute("intro", msInput?.value ?? "3200");
+			current.replaceWith(fresh);
+		});
+
 		// Source switcher: swap the video the effect samples.
 		panel.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((btn) => {
 			btn.addEventListener("click", () => {
 				// Set src-webm before src: the element reads src-webm fresh when the
 				// src change triggers a (gapless) reload, so the pair stays consistent.
-				if (btn.dataset.webm) hero.setAttribute("src-webm", btn.dataset.webm);
-				else hero.removeAttribute("src-webm");
-				hero.setAttribute("src", btn.dataset.src!);
+				const el = hero();
+				if (!el) return;
+				if (btn.dataset.webm) el.setAttribute("src-webm", btn.dataset.webm);
+				else el.removeAttribute("src-webm");
+				el.setAttribute("src", btn.dataset.src!);
 				panel
 					.querySelectorAll("[data-src]")
 					.forEach((b) => b.classList.toggle("is-active", b === btn));
@@ -125,6 +164,23 @@ const SRC_WEBM = SOURCES[0].webm;
 				<span>crosshatch <output data-out="crosshatch"></output></span>
 				<input type="range" data-attr="crosshatch" data-zero-off min="0" max="1" step="0.05" value="0.35" />
 			</label>
+			<label>
+				<span>intro-jitter <output data-out="intro-jitter"></output></span>
+				<input type="range" data-attr="intro-jitter" min="0" max="0.5" step="0.02" value="0.16" />
+			</label>
+			<!-- The intro wipe is a one-shot ENTRANCE, so it can't be driven by a live
+			     slider like the other knobs: it runs once per element and latches. These
+			     two feed the replay button, which re-runs it on a fresh element at the
+			     chosen delay + duration (see the handler in the page script). -->
+			<label>
+				<span>intro delay ms <output data-out="intro-delay-ms">600</output></span>
+				<input type="range" data-intro-delay-ms min="0" max="3000" step="100" value="600" />
+			</label>
+			<label>
+				<span>intro ms <output data-out="intro-ms">3200</output></span>
+				<input type="range" data-intro-ms min="300" max="8000" step="100" value="3200" />
+			</label>
+			<button type="button" data-replay-intro>replay intro ▶</button>
 			<div class="row">
 				<label class="color">
 					<span>color</span>

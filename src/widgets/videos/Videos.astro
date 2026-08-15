@@ -11,7 +11,20 @@ import VideoCarousel from "../../components/VideoCarousel.astro";
 import "./videos.css";
 ---
 
-<Widget size="1x2" class="wx-videos" depth={0} variant="tertiary">
+<!-- data-reveal-order 3: last in the staggered widget row. The cell is authored
+     first but `grid-auto-flow: dense` packs it into the final column, so revealing
+     in DOM order would run right-to-left. NB the reveal writes `translate` while
+     the dock lift below writes `transform` — two independent properties, so they
+     compose instead of overwriting each other. -->
+<Widget
+	size="1x2"
+	class="wx-videos"
+	depth={0}
+	variant="tertiary"
+	data-reveal
+	data-reveal-group="widgets"
+	data-reveal-order="3"
+>
 	<VideoCarousel rulerSide="right" />
 </Widget>
 

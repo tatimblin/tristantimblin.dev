@@ -11,4 +11,35 @@
 
 :root {
 	/* e.g. --accent: oklch(60% 0.2 240); */
+
+	/* MOTION -----------------------------------------------------------------
+	 * The DS ships no easing/duration tokens, so every timing on the site used to
+	 * be a hand-typed literal. These name the vocabulary the code had already
+	 * converged on, so the same curve isn't re-derived (or subtly mistyped) at
+	 * each call site. New motion should reach for one of these before inventing
+	 * a value.
+	 *
+	 * --ease-reveal is the house curve: an easeOutQuint-ish decelerate that
+	 * settles without overshoot. It was already in use, spelled identically, for
+	 * the bike watermark's slide-in and the carousel ruler's settle. */
+	--ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
+
+	/* Durations, each named for the gesture it belongs to rather than its length,
+	 * so a retune changes the feel everywhere that gesture appears.
+	 *   reveal — an asset/section easing in for the first time (the slowest; it is
+	 *            a one-time entrance, so it can afford to be luxurious).
+	 *   settle — a control coming to rest after input (ruler strip scroll).
+	 *   swap   — a momentary dip while media is exchanged under the viewer. */
+	--duration-reveal: 900ms;
+	--duration-settle: 420ms;
+	--duration-swap: 260ms;
+
+	/* How far a revealing element rises as it fades in. A --space-* step rather
+	 * than a bespoke length so the motion shares the layout's rhythm. */
+	--reveal-rise: var(--space-4);
+
+	/* Delay between successive members of a staggered reveal group. Small: it
+	 * multiplies by the member's index, so a large value makes late items in a
+	 * long group feel abandoned. */
+	--reveal-stagger: 90ms;
 }

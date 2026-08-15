@@ -69,8 +69,8 @@
 	opacity: 0;
 	transform: translateX(var(--bw-slide, 56px));
 	transition:
-		transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
-		opacity 900ms cubic-bezier(0.22, 1, 0.36, 1);
+		transform var(--duration-reveal) var(--ease-reveal),
+		opacity var(--duration-reveal) var(--ease-reveal);
 }
 .home__widgets .wx-baywheels.is-in::before {
 	transform: translateX(0);

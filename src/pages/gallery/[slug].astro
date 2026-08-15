@@ -33,7 +33,12 @@ const cardImage = type === "video" ? poster : media;
 			<a href="/gallery">&larr; Gallery</a>
 		</nav>
 
-		<figure class="detail-media">
+		<!-- data-reveal on the FIGURE, not the media: the child carries a
+		     `transition:name` for the view transition from the grid, and animating a
+		     named element's own opacity would be captured mid-fade in the snapshot.
+		     This is the page's main subject, so it is eager (no lazy loading) — the
+		     reveal only smooths its arrival. -->
+		<figure class="detail-media" data-reveal>
 			{
 				type === "video" ? (
 					<video
@@ -49,6 +54,7 @@ const cardImage = type === "video" ? poster : media;
 					<img
 						src={media}
 						alt={alt}
+						decoding="async"
 						transition:name={`gallery-${item.id}`}
 					/>
 				)

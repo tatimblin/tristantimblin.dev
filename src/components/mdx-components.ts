@@ -9,7 +9,11 @@
 // TxtPostLayout (`.txt-prose :global(…)`):
 //   - `code`: MDX maps it globally, so mapping to InlineCode would also wrap
 //     fenced-block `<pre><code>`. Inline + block code are handled in CSS.
-//   - `pre`, `img`, `hr`, `del`: no clean 1:1 DS component.
+//   - `pre`, `hr`, `del`: no clean 1:1 DS component.
+//
+// `img` IS mapped (to ./mdx/Img.astro) — not for a DS component, but because
+// markdown cannot express width/height, lazy loading, or a reveal hook, and the
+// missing intrinsic dimensions were reflowing posts as each photo decoded.
 import H2 from "@whois/design-system/H2";
 import H3 from "@whois/design-system/H3";
 import H4 from "@whois/design-system/H4";
@@ -21,10 +25,12 @@ import P from "./mdx/P.astro";
 import A from "./mdx/A.astro";
 import Ul from "./mdx/Ul.astro";
 import Ol from "./mdx/Ol.astro";
+import Img from "./mdx/Img.astro";
 
 export const mdxComponents = {
 	p: P,
 	a: A,
+	img: Img,
 	h2: H2,
 	h3: H3,
 	h4: H4,
