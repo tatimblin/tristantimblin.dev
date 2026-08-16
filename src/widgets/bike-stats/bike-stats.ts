@@ -74,8 +74,9 @@ function freshness(diff: number | null): BikeStats["freshness"] {
 export function getBikeStats(): BikeStats {
 	const rows = parse(csv);
 
-	// Pick the newest row by date — the file appends but has historically held
-	// duplicate and slightly out-of-order rows, so "max date" beats "last line".
+	// Pick the newest row by date. The writer now upserts one sorted row per
+	// date, so the last line is already the newest — but max-date is kept as a
+	// cheap safeguard against any stray ordering regression in the write path.
 	const latest = rows.reduce((max, r) =>
 		new Date(r.date) > new Date(max.date) ? r : max,
 	);
