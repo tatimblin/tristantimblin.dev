@@ -421,12 +421,21 @@ test.describe("ruler — mobile scrubber orientation", () => {
 		);
 
 		const geo = await page.evaluate(() => {
-			const ruler = document.querySelector<HTMLElement>(".hero-carousel .vc__ruler")!;
-			const cs = getComputedStyle(ruler);
-			const r = ruler.getBoundingClientRect();
-			// The fade band, derived the same way the CSS derives it.
-			const extent = parseFloat(cs.getPropertyValue("--vc-max-tick-h")) || 0;
-			const band = extent * 0.6;
+			// The dissolve now lives on .vc__main (the clip's and the strip's shared
+			// parent) so ONE band covers both — see the note in src/pages/index.astro.
+			// The band is therefore measured against THAT box, not the ruler's.
+			const main = document.querySelector<HTMLElement>(".hero-carousel .vc__main")!;
+			const carousel = document.querySelector<HTMLElement>(".hero-carousel")!;
+			const cs = getComputedStyle(main);
+
+			// Resolve the band to px by probing a real box: getComputedStyle returns the
+			// authored calc() for a custom property, unevaluated.
+			const probe = document.createElement("div");
+			probe.style.height = "var(--hero-vc-dissolve)";
+			carousel.appendChild(probe);
+			const band = probe.getBoundingClientRect().height;
+			probe.remove();
+
 			const labels = Array.from(
 				document.querySelectorAll<HTMLElement>(".hero-carousel .vc__tick-year")
 			).map((l) => Number(l.getBoundingClientRect().bottom.toFixed(1)));
@@ -435,16 +444,146 @@ test.describe("ruler — mobile scrubber orientation", () => {
 			).map((t) => Number(t.getBoundingClientRect().bottom.toFixed(1)));
 			return {
 				masked: cs.maskImage !== "none" && cs.maskImage.includes("gradient"),
-				fadeStart: Number((r.bottom - band).toFixed(1)),
+				fadeStart: Number((main.getBoundingClientRect().bottom - band).toFixed(1)),
 				labels,
 				ticks,
 			};
 		});
 
 		expect(geo.masked).toBe(true);
-		// Every label is clear of the fade band — the whole reason the years moved up.
+		// Every label is clear of the fade band — the whole reason the years moved up,
+		// and the constraint that sizes the band (a taller one starts eating the type).
 		for (const bottom of geo.labels) expect(bottom).toBeLessThanOrEqual(geo.fadeStart);
 		// And the ticks reach into it, so they dissolve instead of ending on a hard line.
 		for (const bottom of geo.ticks) expect(bottom).toBeGreaterThan(geo.fadeStart);
+	});
+
+	test("the scrubber is bottom-aligned with the clip, under ONE shared fade", async ({
+		page,
+	}) => {
+		// THE TWO BUGS THIS PINS, both of which showed up as the ruler looking wrong
+		// against the halftone at the bottom of the mobile hero:
+		//
+		//  1. SWALLOWED BY THE FADE. The clip's bottom fade used to start at 78% of the
+		//     hero height, which at 390x844 put it ~120px ABOVE the bottom UI — the
+		//     caption and the whole ruler sat inside it, and the halftone behind the
+		//     ticks measured 9% of its mid-video strength (luminance 10.0 vs 24.6), so
+		//     the scrubber appeared to float on flat black.
+		//
+		//  2. TWO FADES. Fixing (1) by giving the clip and the strip their own bottom
+		//     gradients produced a second artifact: each `100%` resolves against its own
+		//     box (full scene vs a ~46px strip), so the two ramps disagreed and each had
+		//     its own hard start edge — read as two stacked fade-outs.
+		//
+		// The fix is one band on their shared parent (.vc__main) with both boxes
+		// BOTTOM-ALIGNED, so a single gradient covers the pair. These assertions encode
+		// that architecture: exactly one masked layer, and no descendant re-masking.
+		// Geometry rather than pixels — the scene is live video, so luminance is too
+		// noisy to assert on, but "which layer carries the mask" is exact.
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto("/");
+		await page.waitForFunction(
+			() => !!document.querySelector(".hero-carousel[data-ready]"),
+			undefined,
+			{ timeout: 6000 }
+		);
+
+		const geo = await page.evaluate(() => {
+			const carousel = document.querySelector<HTMLElement>(".hero-carousel")!;
+			const main = document.querySelector<HTMLElement>(".hero-carousel .vc__main")!;
+			const grid = document.querySelector<HTMLElement>(".hero-carousel .vc__grid")!;
+			const ruler = document.querySelector<HTMLElement>(
+				".hero-carousel .vc__ruler"
+			)!;
+			const caption = document.querySelector<HTMLElement>(
+				".hero-carousel .vc__caption"
+			)!;
+
+			const probe = document.createElement("div");
+			probe.style.height = "var(--hero-vc-dissolve)";
+			carousel.appendChild(probe);
+			const dissolve = probe.getBoundingClientRect().height;
+			probe.remove();
+
+			const m = main.getBoundingClientRect();
+			return {
+				dissolve,
+				mainMask: getComputedStyle(main).maskImage,
+				gridMask: getComputedStyle(grid).maskImage,
+				rulerMask: getComputedStyle(ruler).maskImage,
+				mainBottom: m.bottom,
+				rulerBottom: ruler.getBoundingClientRect().bottom,
+				fadeStart: m.bottom - dissolve,
+				yearBottoms: Array.from(
+					document.querySelectorAll<HTMLElement>(".hero-carousel .vc__tick-year")
+				).map((l) => l.getBoundingClientRect().bottom),
+				captionBottom: caption.getBoundingClientRect().bottom,
+			};
+		});
+
+		// ONE masked layer: the shared parent carries the gradient...
+		expect(geo.mainMask).toContain("gradient");
+		// ...and neither child re-masks, which is what created the second fade.
+		expect(geo.gridMask).toBe("none");
+		expect(geo.rulerMask).toBe("none");
+
+		// Anchored to the bottom EDGE, not a percentage of the hero (bug 1).
+		expect(geo.mainMask).toContain("calc");
+		expect(geo.mainMask).not.toContain("78%");
+
+		// BOTTOM-ALIGNED: the strip and the clip end on the same line, so the single
+		// band reaches both at the same height.
+		expect(Math.abs(geo.mainBottom - geo.rulerBottom)).toBeLessThan(0.5);
+
+		// The band is bounded by what it must spare: the year row stays out of it (a
+		// taller band dimmed the labels — measured alpha 0.34 at 2.4x the strip height),
+		// while the caption above is untouched.
+		for (const bottom of geo.yearBottoms) {
+			expect(bottom).toBeLessThanOrEqual(geo.fadeStart);
+		}
+		expect(geo.captionBottom).toBeLessThan(geo.fadeStart);
+	});
+
+	test("nothing paints a hard-edged band across the strip", async ({ page }) => {
+		// THE BUG THIS PINS. The ruler carried a legibility scrim — a to-bottom black
+		// wash behind the year row — whose hard TOP edge darkened the strip, after which
+		// the halftone brightened again before the real bottom dissolve. Measured
+		// background luminance (dot pattern averaged out): ~14 under the wash, recovering
+		// to ~25 below it, then fading. A decline, a recovery, then a second decline
+		// reads as two fade-outs stacked on one edge.
+		//
+		// Asserted as a STYLE contract rather than by sampling pixels: the scene is live
+		// video behind a halftone shader, so a luminance threshold here would be flaky.
+		// What must hold is that nothing paints an opaque, hard-edged band across the
+		// strip — any wash has to be feathered at both ends.
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto("/");
+		await page.waitForFunction(
+			() => !!document.querySelector(".hero-carousel[data-ready]"),
+			undefined,
+			{ timeout: 6000 }
+		);
+
+		const bg = await page.evaluate(() => {
+			const ruler = document.querySelector<HTMLElement>(
+				".hero-carousel .vc__ruler"
+			)!;
+			const cs = getComputedStyle(ruler);
+			return { image: cs.backgroundImage, color: cs.backgroundColor };
+		});
+
+		// No background layer at all is the shipped answer. If one is ever reintroduced
+		// it must START transparent — a gradient whose first stop is opaque is exactly
+		// the hard top edge that produced the phantom second fade.
+		const hasImage = bg.image !== "none" && bg.image.trim() !== "";
+		if (hasImage) {
+			const firstStop = bg.image.slice(0, bg.image.indexOf(",", bg.image.indexOf("(")));
+			expect(
+				/rgba\([^)]*,\s*0\s*\)|transparent/.test(firstStop),
+				`the ruler's background must start transparent (feathered), got: ${bg.image}`
+			).toBe(true);
+		}
+		// And no flat opaque fill, which would band the strip with two hard edges.
+		expect(bg.color === "rgba(0, 0, 0, 0)" || bg.color === "transparent").toBe(true);
 	});
 });
