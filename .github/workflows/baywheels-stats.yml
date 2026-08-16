@@ -29,21 +29,30 @@ jobs:
         id: date
         run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
       
-      - name: Refresh session tokens
-        uses: ./.github/actions/baywheels-stats/refresh-session
-        with:
-          github_token: ${{ secrets.GH_PAT }}
-        env:
-          BAYWHEELS_COOKIES: ${{ secrets.BAYWHEELS_COOKIES }}
-      
+      # Mobile OAuth path: query-stats mints an access token from the durable
+      # refresh token and persists the rotated token back to secrets itself, so
+      # no separate browser refresh step is needed.
       - name: Query statistics
         id: query
         uses: ./.github/actions/baywheels-stats/query-stats
         with:
           github_token: ${{ secrets.GH_PAT }}
         env:
+          LYFT_CLIENT_BASIC: ${{ secrets.LYFT_CLIENT_BASIC }}
+          LYFT_REFRESH_TOKEN: ${{ secrets.LYFT_REFRESH_TOKEN }}
+          LYFT_DEVICE_HEADERS: ${{ secrets.LYFT_DEVICE_HEADERS }}
+          # Fallback for the browser cookie flow if mobile secrets are unset.
           BAYWHEELS_COOKIES: ${{ secrets.BAYWHEELS_COOKIES }}
-      
+
+      - name: Guard against a stale/failed read
+        run: |
+          RIDES='${{ steps.query.outputs.number_of_rides }}'
+          if [ -z "$RIDES" ] || [ "$RIDES" = "null" ]; then
+            echo "::error::Stats query returned no ride count - auth likely broken. Not committing."
+            exit 1
+          fi
+          echo "Ride count: $RIDES"
+
       - name: Save to CSV and commit
         uses: ./.github/actions/baywheels-stats/csv-output
         with:
