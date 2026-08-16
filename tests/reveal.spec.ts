@@ -188,7 +188,17 @@ test.describe("reveal — safety", () => {
 
 		// ClientRouter swaps the document; the coordinator must tear down and rebuild
 		// without double-binding or stranding anything hidden.
-		await page.getByRole("link", { name: "Writing" }).first().click();
+		//
+		// Navigate by dispatching the click rather than locator.click(): the CTA lives
+		// inside the hero lockup, which parallaxes and (on desktop) is position:fixed, so
+		// waiting for an "actionable" stable box is a slow-runner flake waiting to
+		// happen. The navigation is what this test cares about, not the hit-testing.
+		await page.evaluate(() => {
+			const link = Array.from(document.querySelectorAll<HTMLAnchorElement>("a")).find(
+				(a) => a.textContent?.trim() === "Writing"
+			);
+			link?.click();
+		});
 		await page.waitForURL("**/txt");
 		await settleReveal(page);
 		expect((await readReveal(page)).faded).toBe(0);
@@ -252,7 +262,16 @@ test.describe("reveal — below-the-fold behaviour", () => {
 		// revealed EARLY, which the state assertion above already establishes.
 		if (held?.armed) expect(held.opacity).toBe(0);
 
-		await page.locator(".home__widgets").scrollIntoViewIfNeeded();
+		// Plain scroll, NOT locator.scrollIntoViewIfNeeded(): that waits for the element
+		// to be "actionable", i.e. for its box to stop moving. This row never fully
+		// settles — the reveal transition and the video widget's scroll-driven dock lift
+		// both animate it — so on a slow runner the wait times out and the test fails
+		// with a 30s timeout rather than a real assertion. (It passed locally purely
+		// because the animations finished inside the actionability poll; CI is slower.)
+		// We only need the row on screen so the IntersectionObserver fires.
+		await page.evaluate(() =>
+			document.querySelector(".home__widgets")?.scrollIntoView({ block: "center" })
+		);
 
 		// The stagger is implemented as transition-delay, so assert the MECHANISM
 		// rather than racing the animation and sampling opacities mid-flight.
