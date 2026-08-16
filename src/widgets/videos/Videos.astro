@@ -25,7 +25,10 @@ import "./videos.css";
 	data-reveal-group="widgets"
 	data-reveal-order="3"
 >
-	<VideoCarousel rulerSide="right" />
+	{/* Clip changes get the threshold transition here too, so the carousel behaves the
+	    same wherever it appears. No `intro` though: this cell is mid-page behind a
+	    scroll-driven dock, so a develop-in entrance would play unseen. */}
+	<VideoCarousel rulerSide="right" xfade={1600} xfadeMode="threshold" xfadeLive />
 </Widget>
 
 <script>

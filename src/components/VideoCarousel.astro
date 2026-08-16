@@ -33,6 +33,16 @@ interface Props {
 	 */
 	intro?: number;
 	introDelay?: number;
+	/**
+	 * Animate clip-to-clip changes instead of cutting: `xfade` is the transition's
+	 * length in ms, `xfadeMode` picks the style (`threshold` | `rain`), and
+	 * `xfadeLive` keeps BOTH clips playing through the blend — which also advances
+	 * each clip one transition early, so the change overlaps the outgoing clip's tail
+	 * rather than starting after it. Opt-in per consumer, like `intro`.
+	 */
+	xfade?: number;
+	xfadeMode?: "threshold" | "rain";
+	xfadeLive?: boolean;
 }
 
 // Real footage prepared by tools/dotgrid/prepare-video.sh into
@@ -47,6 +57,9 @@ const {
 	class: className,
 	intro,
 	introDelay,
+	xfade,
+	xfadeMode,
+	xfadeLive,
 	clips = [
 		{
 			src: "/videos/website-carousel/web/fisker-top-down.web.mp4",
@@ -305,6 +318,9 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				color="#7f7f7f"
 				intro={intro}
 				intro-delay={introDelay}
+				xfade={xfade}
+				xfade-mode={xfadeMode}
+				xfade-live={xfadeLive ? "" : undefined}
 			></dotted-grid>
 			<figcaption class="vc__caption">
 				<span class="vc__desc" data-vc-desc>{first?.description}</span>

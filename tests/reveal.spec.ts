@@ -210,11 +210,47 @@ test.describe("reveal — below-the-fold behaviour", () => {
 		// (If this ever fails because the viewport grew tall enough to include the
 		// widgets, the fix is a taller page or a shorter viewport — not deleting the
 		// assertion, which is the whole point of in-view gating.)
-		const heldOpacity = await page.evaluate(() => {
+		//
+		// Wait for the coordinator to have MARKED the group with some state before
+		// measuring, rather than assuming it ran by the time page.goto resolved: under
+		// parallel load (this suite also builds pages carrying a dozen WebGL contexts)
+		// the module can land a beat later, which made this the one flaky assertion in
+		// the file. Waiting specifically for "pending" is wrong — by the time the wait
+		// runs the group may already have flipped to "in" — so wait for ANY state, then
+		// assert the held one below.
+		await page.waitForFunction(
+			() =>
+				document
+					.querySelector('[data-reveal-group="widgets"]')
+					?.hasAttribute("data-reveal-state") === true,
+			undefined,
+			{ timeout: 6000 }
+		);
+		const held = await page.evaluate(() => {
 			const el = document.querySelector<HTMLElement>('[data-reveal-group="widgets"]');
-			return el ? Number(getComputedStyle(el).opacity) : null;
+			return el
+				? {
+						opacity: Number(getComputedStyle(el).opacity),
+						state: el.dataset.revealState,
+						armed: document.documentElement.classList.contains("reveal-armed"),
+					}
+				: null;
 		});
-		expect(heldOpacity).toBe(0);
+
+		// The row is below the fold, so it must never have been REVEALED — its state
+		// stays "pending" until it is actually scrolled to.
+		expect(held?.state).toBe("pending");
+
+		// While ARMED, a pending row must be fully invisible — that is in-view gating
+		// doing its job, and the assertion that would catch a real regression.
+		//
+		// Once DISARMED the opacity is not assertable: the inline script's 3s
+		// terminality backstop un-hides everything by dropping the class, and the row
+		// then fades over ~900ms, so a sample can legitimately land anywhere in 0..1.
+		// (On a slow machine the backstop can beat this check entirely.) The reveal's
+		// own terminality is covered by test 2; here we only care that nothing was
+		// revealed EARLY, which the state assertion above already establishes.
+		if (held?.armed) expect(held.opacity).toBe(0);
 
 		await page.locator(".home__widgets").scrollIntoViewIfNeeded();
 

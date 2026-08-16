@@ -174,6 +174,16 @@ class RevealCoordinator {
 			return;
 		}
 
+		// Mark every target explicitly as pending. The hidden CSS rule is written as
+		// :not([data-reveal-state="in"]), so it already matches an unmarked element and
+		// the reveal LOOKS right without this — but then "pending" exists only in the
+		// documentation, and nothing (a test, a devtools inspection, a future consumer
+		// keying off the state) can distinguish "held deliberately" from "the
+		// coordinator never saw this element".
+		for (const el of targets) {
+			if (el.dataset.revealState !== "in") el.dataset.revealState = "pending";
+		}
+
 		for (const [, members] of this.groupBy(targets)) this.runGroup(members);
 	}
 
