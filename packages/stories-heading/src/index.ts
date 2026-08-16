@@ -32,6 +32,11 @@ function clamp01(x: number): number {
  *   --sh-amp-shift      the "&"'s parallax translateY (px, positive = down).
  *   --sh-amp-opacity    the "&"'s opacity (1 → floor).
  *   --sh-heading-fitsize font-size (px) fitting "other stories" to a 6-col span.
+ *   --sh-sub-opacity    the intro/CTAs' fade (1 → 0 over the first sliver of scroll).
+ *   --sh-sub-visibility `hidden` once that fade completes, so the invisible bar
+ *                       stops taking pointer events. BOTH default to shown when
+ *                       unset — see the .sh__sub note in styles.css for why this
+ *                       fade is driven here rather than by `animation-timeline`.
  *
  * Lifecycle mirrors the sibling packages: a `listeners` cleanup array, a `rafId`
  * guard, a `ResizeObserver`, reduced-motion handling, and full teardown (Layout
@@ -498,6 +503,10 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.listeners.forEach((off) => off());
 		this.listeners = [];
 		this.lastWritten.clear();
+		// Never leave a teardown mid-fade: drop the published fade so a re-connected
+		// host starts from the stylesheet's shown-by-default state rather than
+		// inheriting a stale `hidden` with no driver left to clear it.
+		this.clearSubFade();
 		this.sub = null;
 		// Re-measured from scratch on re-connect, so allow the announcement again.
 		delete this.dataset.ready;
@@ -513,13 +522,22 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	private update() {
-		// Reduced motion: stories shown, "&" at rest (no drift, full opacity).
+		// Reduced motion: stories shown, "&" at rest (no drift, full opacity), and the
+		// intro NOT faded — the stylesheet pins it visible and in flow, so publishing a
+		// fade here would fight it.
 		if (this.reducedMotion?.matches) {
 			this.style.setProperty("--sh-clip", "0");
 			this.style.setProperty("--sh-amp-shift", "0px");
 			this.style.setProperty("--sh-amp-opacity", "1");
+			this.clearSubFade();
 			return;
 		}
+
+		// 0. The intro/CTAs fade out over the first sliver of scroll. Published from
+		// here rather than by a scroll-timeline: see the long note on .sh__sub in
+		// styles.css for why that CSS mechanism failed VISIBLE-side-down on engines
+		// without native support.
+		this.updateSubFade();
 
 		// 1. "other stories" reveal: outline→solid wipe over --sh-reveal of pin.
 		const revealed = this.revealProgress();
@@ -537,6 +555,61 @@ export class StoriesHeadingElement extends HTMLElement {
 		// 	"--sh-amp-opacity",
 		// 	(1 - (1 - floor) * p).toFixed(4)
 		// );
+	}
+
+	/**
+	 * Fade the intro/CTAs out over the first --sh-sub-fade-px of scroll, and flip
+	 * visibility at the end so the invisible bar stops taking pointer events.
+	 *
+	 * Reads the scroll offset from the DOCUMENT, not from the sub's own box: on the
+	 * desktop layout the sub is position:fixed (it does not move as the page scrolls,
+	 * so its rect carries no progress signal), and on mobile it is absolutely
+	 * positioned inside a sticky pin, whose travel is the PIN's mechanism rather than
+	 * this fade's. `scrollY` is the same quantity the old `scroll(root)` timeline read,
+	 * so the motion is unchanged where that mechanism worked.
+	 */
+	private updateSubFade() {
+		const span = this.subFadePx();
+		// A zero/negative span would divide to Infinity; treat it as "no fade".
+		if (!(span > 0)) {
+			this.clearSubFade();
+			return;
+		}
+		const p = clamp01(
+			(window.scrollY || document.documentElement.scrollTop || 0) / span
+		);
+		const opacity = 1 - p;
+		this.style.setProperty("--sh-sub-opacity", opacity.toFixed(4));
+		// Only at the very end, matching the old keyframe's discrete visibility step.
+		this.style.setProperty(
+			"--sh-sub-visibility",
+			p >= 1 ? "hidden" : "visible"
+		);
+	}
+
+	/** Drop the published fade so the stylesheet's shown-by-default values apply. */
+	private clearSubFade() {
+		this.style.removeProperty("--sh-sub-opacity");
+		this.style.removeProperty("--sh-sub-visibility");
+	}
+
+	/**
+	 * The fade's scroll distance, in px, from --sh-sub-fade-px on .sh__sub.
+	 *
+	 * Read via the SUB's computed style rather than the host's, because that is where
+	 * the property is authored. Not read through cssPx(): that resolves against the
+	 * host. Falls back to the authored default if the property is missing or
+	 * unparseable (a token typo must degrade to a working fade, not to none).
+	 */
+	private subFadePx(): number {
+		const DEFAULT = 100;
+		if (!this.sub) return DEFAULT;
+		const raw = getComputedStyle(this.sub)
+			.getPropertyValue("--sh-sub-fade-px")
+			.trim();
+		if (!raw) return DEFAULT;
+		const n = parseFloat(raw);
+		return Number.isFinite(n) && n > 0 ? n : DEFAULT;
 	}
 
 	/**

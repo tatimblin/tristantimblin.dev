@@ -225,12 +225,41 @@ stories-heading {
    gap between them.
 
    FADE-ON-SCROLL: rather than travelling up with the lockup, the intro/CTAs FADE
-   OUT in place, FLEETINGLY — the fade completes within the first sliver of scroll,
-   before "other stories" reaches its sticky offset and begins its reveal. Driven
-   purely by CSS: a scroll-progress timeline on the root scroller (the same
-   scroll-timeline mechanism Section.astro uses; the site ships the polyfill), so
-   no JS runs per frame. visibility flips to hidden at the end of the fade so the
-   invisible bar stops capturing pointer events. */
+   OUT in place, FLEETINGLY — the fade completes within the first sliver of scroll
+   (--sh-sub-fade-px), before "other stories" reaches its sticky offset and begins
+   its reveal. visibility flips to hidden at the end of the fade so the invisible
+   bar stops capturing pointer events.
+
+   DRIVEN BY JS, NOT A SCROLL-TIMELINE — and the difference is a bug, not a taste:
+   this WAS `animation-timeline: scroll(root)` over a 100px range, and the intro
+   then failed to appear at all on any engine without native scroll-timeline
+   support (Firefox: measured hidden at scroll 0 on 5/12 cold loads, and on 3/4
+   in-page navigations home).
+
+   The failure is structural, and it is the mirror image of the fail-visible rule
+   in src/lib/reveal.ts. An engine that does not know `animation-timeline` DROPS
+   that declaration and keeps the rest, so the animation lands on the DOCUMENT
+   timeline with `animation-duration: auto` — which resolves to 0s. With
+   `fill-mode: both` a 0s animation is instantly FINISHED, so the element is
+   painted at its TO keyframe: opacity 0, visibility hidden. The fade's end state,
+   forever, at every scroll position. The polyfill is what was supposed to cover
+   that gap, but it only adopts an animation from its `animationstart` hook, so
+   whether it wins is a race against first paint — which is exactly why the symptom
+   was intermittent rather than total.
+
+   Neither half of that is fixable in CSS. `@supports (animation-timeline: scroll())`
+   gates the declaration correctly but the polyfill does NOT transpile @supports
+   conditions (verified against the shipped bundle), so gating deletes the fade on
+   the very engines it exists for; and parking the time-based fallback in its
+   before-phase with a huge `animation-delay` keeps it visible only by ensuring
+   `animationstart` never fires, which kills the polyfill too.
+
+   So the driver moved to JS — where this component ALREADY runs a coalesced
+   per-frame scroll handler for --sh-clip and the "&" parallax. The sub's fade is
+   one more published property on that same rAF, costing no extra listener and no
+   extra frame, and it now behaves identically on every engine with no polyfill in
+   the path. Both properties DEFAULT TO SHOWN, so a bundle that 404s or throws
+   leaves the intro visible rather than invisible. */
 .sh__sub {
 	/* ONE gap, matching --sh-heading-gap (wordmark → "other stories"), so the whole
 	   lockup reads as a single group on one internal rhythm and the intro sits
@@ -242,32 +271,15 @@ stories-heading {
 	   the scrubber's drag. Pointers fall through; the slotted content opts back in
 	   (same pattern as .fh__heading / the host / .sh__heading / .site-header). */
 	pointer-events: none;
-	/* LONGHANDS ONLY — do NOT collapse into `animation: sh-sub-fade linear both`.
-	   The minifier merges an adjacent animation-timeline INTO that shorthand,
-	   emitting `animation: linear both sh-sub-fade scroll(root)`. A timeline is not
-	   a valid `animation` component (the shorthand RESETS animation-timeline), so
-	   the whole declaration is invalid-at-computed-value and dropped — silently
-	   killing the fade in production while dev still worked. */
-	animation-name: sh-sub-fade;
-	animation-timing-function: linear;
-	animation-fill-mode: both;
-	/* Non-shorthandable properties last, so there is no shorthand to fold into. */
-	animation-timeline: scroll(root block);
-	/* Fleeting: fully shown at the very top, fully faded within the first 100px of
-	   scroll. Explicit px (not vh) so the scroll-timeline polyfill resolves the
-	   range correctly (a vh length here made it stretch across the whole page). */
-	animation-range: 0 100px;
-}
-
-@keyframes sh-sub-fade {
-	from {
-		opacity: 1;
-		visibility: visible;
-	}
-	to {
-		opacity: 0;
-		visibility: hidden;
-	}
+	/* The scroll distance the fade plays over, so the timing lives here in CSS with
+	   the rest of the lockup's tuning. Authored as a BARE px length, never a calc():
+	   the driver parses this token directly, and getComputedStyle does not evaluate
+	   calc() inside a custom property (the constraint documented on cssPx). */
+	--sh-sub-fade-px: 100px;
+	/* THE FALLBACKS ARE THE POINT: unset (no JS yet, a dead bundle, a throw before
+	   the first update) must read as fully shown. Never invert these. */
+	opacity: var(--sh-sub-opacity, 1);
+	visibility: var(--sh-sub-visibility, visible);
 }
 
 /* Desktop: fix the sub to the viewport bottom, inset to the hero gutter, so it
@@ -286,12 +298,24 @@ stories-heading {
 
 /* Reduced motion: no fade and no fixed lift — the intro/CTAs stay in normal flow
    under the lockup, fully shown, and scroll away with the page like everything
-   else (a permanently-fixed bar with no fade would otherwise overlay the page). */
+   else (a permanently-fixed bar with no fade would otherwise overlay the page).
+   The JS driver ALSO skips publishing the fade under this preference, so these
+   declarations are the belt to that braces; they override the custom properties
+   outright rather than trusting the driver to have stayed away. */
 @media (prefers-reduced-motion: reduce) {
 	.sh__sub {
 		position: static;
 		margin-block-start: var(--sh-heading-gap);
-		animation: none;
+		opacity: 1;
+		visibility: visible;
+	}
+}
+
+/* A hidden intro must never print blank, and print has no scroll position to fade
+   against. Mirrors the print block in src/styles/reveal.css. */
+@media print {
+	.sh__sub {
+		position: static;
 		opacity: 1;
 		visibility: visible;
 	}
