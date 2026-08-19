@@ -1,4 +1,6 @@
 ---
+import { intrinsicSize } from "../lib/intrinsicSize";
+
 interface Props {
 	slug: string;
 	title: string;
@@ -9,6 +11,14 @@ interface Props {
 }
 
 const { slug, title, media, type, poster, alt } = Astro.props;
+
+// Reserve each cell's box up front so the masonry column doesn't reflow as lazy
+// images decode (the CLS this grid used to have — the same fix mdx/Img.astro applies
+// to post images, sharing the one build-time header reader). Images read from the
+// media file; videos read from their poster (the frame that actually paints, since
+// they're preload="none"). The CSS still drives the rendered size (width:100%;
+// height:auto) — width/height only publish the ASPECT.
+const size = type === "video" ? intrinsicSize(poster ?? "") : intrinsicSize(media);
 ---
 
 <!-- data-reveal sits on the LINK, not on the media inside it: the <img>/<video>
@@ -26,6 +36,8 @@ const { slug, title, media, type, poster, alt } = Astro.props;
 				preload="none"
 				muted
 				aria-label={alt}
+				width={size?.w}
+				height={size?.h}
 				transition:name={`gallery-${slug}`}
 			/>
 		) : (
@@ -33,6 +45,9 @@ const { slug, title, media, type, poster, alt } = Astro.props;
 				src={media}
 				alt={alt}
 				loading="lazy"
+				decoding="async"
+				width={size?.w}
+				height={size?.h}
 				transition:name={`gallery-${slug}`}
 			/>
 		)

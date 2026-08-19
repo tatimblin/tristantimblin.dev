@@ -30,7 +30,10 @@
 	--color-border: var(--border-color);
 	--color-accent: var(--accent);
 
-	/* Fonts the site still owns (loaded via Google Fonts in Layout.astro). */
-	--font-serif: "Playfair Display", ui-serif, Georgia, "Times New Roman", serif;
+	/* Fonts the site still owns (loaded via Google Fonts in Layout.astro).
+	   "Playfair Fallback" is the metric-matched Georgia face (src/styles/fonts.css)
+	   that holds the web font's exact box so the swap doesn't reflow the copy. */
+	--font-serif: "Playfair Display", "Playfair Fallback", ui-serif, Georgia,
+		"Times New Roman", serif;
 	--font-decorative: "Quintessential", ui-serif, Georgia, serif;
 }
