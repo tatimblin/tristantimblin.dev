@@ -13,6 +13,14 @@
 	flex-direction: column;
 	padding: var(--widget-pad);
 
+	/* The strip the bottom-anchored 8×7 grid leaves free at the top for the header.
+	   The grid fills the body (tile − 2·pad) and is 8:7, so its height is 7/8 of the
+	   body and the leftover top strip is exactly body ÷ 8. All derived from the
+	   design-system cell size, the card padding, and the column count — no magic px,
+	   scales with the tile. (--widget-cell is the tile's own inline size.) */
+	--gh-body: calc(var(--widget-cell) - 2 * var(--widget-pad));
+	--gh-strip: calc(var(--gh-body) / var(--gh-cols, 8));
+
 	/* Contribution intensity scale. Level 0 is a theme-aware faint fill (fades
 	   with the card in both themes); 1–4 are GitHub's canonical greens. Defaults
 	   are the dark-theme greens; the light-theme block below swaps in GitHub's
@@ -32,30 +40,32 @@
 
 /* Header — GitHub icon + username. A link to the profile, kept OUTSIDE the toggle
    button (so tapping it never flips, and to avoid an invalid <a>-in-<button>).
-   Absolutely positioned as a top-left OVERLAY so it doesn't reserve space: the
-   grid fills the whole tile with even padding on every side, and the header sits
-   over its top-left corner (on both the grid and the language view). A soft text
-   shadow keeps it legible over the squares. */
+   Occupies exactly the free top strip (see --gh-strip) and centres its content in
+   it — so the "space for the heading" scales with the tile and the padding stays
+   even on the other three sides. Overlays the same strip on the language view. */
 .home__widgets .wx-gh-head {
 	position: absolute;
 	z-index: 2;
-	top: var(--space-2); /* tucked toward the top edge, clear of the bottom-anchored grid */
-	left: var(--widget-pad);
+	/* Sits at the even padding (top matches the L/R/B sides); the bottom-anchored
+	   grid then leaves the rest of the strip as clear space beneath the text. */
+	inset-block-start: var(--widget-pad);
+	inset-inline-start: var(--widget-pad);
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-2);
 	color: var(--text-primary); /* drives the currentColor icon stroke */
 	text-decoration: none;
-	font-size: var(--widget-font-md); /* fluid; ≡ --font-size-3 (16px) at the desktop cell */
+	/* Cap the type/icon to the strip (less a token's breathing room) so the header
+	   always fits with a small gap beneath it, even on the smallest tiles. */
+	font-size: min(var(--widget-font-md), calc(var(--gh-strip) - var(--space-1)));
 	font-weight: var(--font-weight-600);
 	line-height: 1;
 	text-shadow: 0 1px 3px var(--color-bg);
 }
-/* Scale the header icon with the card too (overrides the DS .ds-icon--size-4's
-   fixed 20px — this selector out-specifies the size class). */
 .home__widgets .wx-gh-head .ds-icon {
-	width: var(--widget-icon);
-	height: var(--widget-icon);
+	block-size: min(var(--widget-icon), calc(var(--gh-strip) - var(--space-1)));
+	inline-size: auto;
+	aspect-ratio: 1;
 }
 .home__widgets .wx-gh-head:hover .wx-gh-user {
 	text-decoration: underline;
@@ -103,8 +113,8 @@
 .home__widgets .wx-gh-face--langs {
 	opacity: 0;
 	visibility: hidden;
-	/* Clear the header overlay (icon-height + a gap) so the bar/list sit below it. */
-	padding-top: calc(var(--widget-icon) + var(--space-2));
+	/* Clear the header strip so the bar/list sit below it (same strip as the grid). */
+	padding-top: var(--gh-strip);
 }
 .home__widgets .wx-github.is-flipped .wx-gh-face--grid {
 	opacity: 0;
@@ -132,8 +142,11 @@
 	/* Tight iOS-style spacing (a small fraction of the square), scaling gently with
 	   the tile off the shared --widget-cell. */
 	gap: clamp(2px, calc(var(--widget-cell) * 0.012), 6px);
-	width: 100%;
 	aspect-ratio: calc(var(--gh-cols, 8) / 7);
+	/* Fill the width; being 8:7 the grid is a bit shorter than the tile and, bottom-
+	   anchored (see the grid face), leaves an even strip at the top for the header
+	   overlay — while the bottom and side padding stay even. */
+	width: 100%;
 }
 .home__widgets .wx-gh-cell {
 	border-radius: 18%; /* subtle inner rounding, less than the grid's outer corners */
@@ -209,13 +222,4 @@
 	margin-left: auto;
 	color: var(--text-tertiary);
 	font-family: var(--font-numeric, var(--font-mono));
-}
-
-/* Small tiles (narrow 2-col phones): tighten the even padding a little so the
-   squares stay chunky on a small card. Keyed to the CARD size via the widget
-   container, so large 2-col tablet tiles keep the normal padding. */
-@container widget (max-width: 520px) {
-	.home__widgets .wx-github {
-		padding: var(--space-3);
-	}
 }

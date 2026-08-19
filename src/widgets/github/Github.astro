@@ -51,6 +51,7 @@ const cornerOf = (date: string): string | undefined =>
 <Widget
 	size="1x1"
 	class="wx-github"
+	style={`--gh-cols:${weeks.length}`}
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="2"
@@ -74,7 +75,7 @@ const cornerOf = (date: string): string | undefined =>
 	>
 		<!-- Face A: contribution grid -->
 		<div class="wx-gh-face wx-gh-face--grid">
-			<div class="wx-gh-grid" style={`--gh-cols:${weeks.length}`}>
+			<div class="wx-gh-grid">
 				{
 					weeks.map((week, wi) =>
 						week.map((day) => (
