@@ -23,10 +23,13 @@
 	flex: 1;
 	min-height: 0;
 	padding: 0; /* gradient is full-bleed; inner spacing lives on ::part(root) */
+	/* Fluid: the --ssp-* / --widget-* custom props inherit through the shadow
+	   boundary, so the component's text scales with the card (≡ current tokens at
+	   the desktop cell size). */
 	--ssp-gap: var(--space-2);
-	--ssp-title-size: var(--font-size-3);
-	--ssp-subtitle-size: var(--font-size-1);
-	--ssp-timestamp-size: 11px;
+	--ssp-title-size: var(--widget-font-md);
+	--ssp-subtitle-size: var(--widget-font-sm);
+	--ssp-timestamp-size: var(--widget-font-xs);
 	--ssp-progress-height: 6px;
 	--ssp-radius: var(--border-radius-2);
 	/* soft/tinted bar: pale translucent white over the album gradient */
@@ -34,9 +37,11 @@
 	--ssp-track: oklch(1 0 0 / 0.25);
 }
 
-/* Inner spacing so the gradient is full-bleed but art/text stay inset. */
+/* Inner spacing so the gradient is full-bleed but art/text stay inset. Anchored
+   to its own 12px base (not --widget-pad, whose 16px floor would shrink the art),
+   scaling with the card via the shared --widget-cell primitive. */
 .home__widgets .wx-nowplaying-widget spotify-player::part(root) {
-	padding: var(--space-3);
+	padding: clamp(var(--space-3), calc(var(--widget-cell) * 0.040), var(--space-5));
 }
 
 .home__widgets .wx-nowplaying-widget spotify-player::part(art) {

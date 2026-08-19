@@ -11,7 +11,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
-	padding: var(--space-4);
+	padding: var(--widget-pad);
 
 	/* Contribution intensity scale. Level 0 is a theme-aware faint fill (fades
 	   with the card in both themes); 1–4 are GitHub's canonical greens. Defaults
@@ -41,9 +41,15 @@
 	gap: var(--space-2);
 	color: var(--text-primary); /* drives the currentColor icon stroke */
 	text-decoration: none;
-	font-size: var(--font-size-3);
+	font-size: var(--widget-font-md); /* fluid; ≡ --font-size-3 (16px) at the desktop cell */
 	font-weight: var(--font-weight-600);
 	line-height: 1;
+}
+/* Scale the header icon with the card too (overrides the DS .ds-icon--size-4's
+   fixed 20px — this selector out-specifies the size class). */
+.home__widgets .wx-gh-head .ds-icon {
+	width: var(--widget-icon);
+	height: var(--widget-icon);
 }
 .home__widgets .wx-gh-head:hover .wx-gh-user {
 	text-decoration: underline;
@@ -110,7 +116,9 @@
 	display: grid;
 	grid-template-columns: repeat(var(--gh-cols, 8), 1fr);
 	grid-template-rows: repeat(7, 1fr);
-	gap: var(--space-1);
+	/* Airier iOS-style spacing that grows with the tile (scales off the shared
+	   --widget-cell, like the rest of the widget). */
+	gap: clamp(5px, calc(var(--widget-cell) * 0.025), 14px);
 	flex: 1 1 auto;
 	min-height: 0;
 	width: auto;
@@ -136,7 +144,7 @@
 }
 .home__widgets .wx-gh-caption {
 	flex: none; /* fixed; the grid flexes to fill the space above it */
-	font-size: var(--font-size-1);
+	font-size: var(--widget-font-sm);
 	color: var(--text-tertiary);
 }
 
@@ -163,7 +171,7 @@
 	display: flex;
 	align-items: center;
 	gap: var(--space-2);
-	font-size: var(--font-size-1);
+	font-size: var(--widget-font-sm);
 	line-height: 1.2;
 }
 .home__widgets .wx-gh-dot {

@@ -12,17 +12,17 @@
 	flex-direction: column;
 	justify-content: flex-end;
 	gap: var(--space-1);
-	padding: var(--space-4);
+	padding: var(--widget-pad);
 	flex: 1;
 }
 .home__widgets .wx-stat-num {
 	font-family: var(--font-numeric, var(--font-mono));
-	font-size: var(--font-size-7);
+	font-size: var(--widget-font-xl); /* fluid; ≡ --font-size-7 (32px) at the desktop cell */
 	font-weight: var(--font-weight-600);
 	line-height: 1;
 	color: var(--text-primary);
 }
 .home__widgets .wx-stat-label {
-	font-size: var(--font-size-1);
+	font-size: var(--widget-font-sm); /* fluid; ≡ --font-size-1 (14px) at the desktop cell */
 	color: var(--text-tertiary);
 }
