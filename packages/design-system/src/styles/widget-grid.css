@@ -10,6 +10,44 @@
 	grid-auto-rows: auto;
 	gap: var(--space-5); /* 24px, matches the home grid column-gap */
 	grid-auto-flow: dense; /* reflow: fill holes when a later item fits */
+
+	/* FLUID SCALING (container queries) ------------------------------------
+	   The grid has no max-width, so on large screens its cells balloon while
+	   token-based padding/type stay fixed — a CSS grid scales BOXES, never
+	   font-size. So the grid is a query container and widgets scale their
+	   padding/type/icons off the SINGLE CELL size (grid width ÷ columns), not
+	   their own card width. Keying to the cell — not the card — means a 2-wide
+	   (or 2×2) widget scales IDENTICALLY to a 1×1, never larger. Widget
+	   descendants read `cqi` against this grid. Everything is clamp()-bounded:
+	   equal to today's tokens on normal/small cells, growing only on large ones
+	   (~1.4× cap). */
+	container-type: inline-size;
+	container-name: widget;
+
+	/* Effective column count, mirroring the VISUAL grid. Its own var (not
+	   --widget-cols, which the `cols` prop sets inline and would out-rank the
+	   ≤900px rule below) so the 2-col mode computes an exact cell size. */
+	--widget-cols-eff: var(--widget-cols, 4);
+	/* One 1×1 cell's inline size = (grid width − total gaps) ÷ columns. */
+	--widget-cell: calc(
+		(100cqi - (var(--widget-cols-eff) - 1) * var(--space-5)) /
+			var(--widget-cols-eff)
+	);
+
+	/* The scale widgets consume. Each = clamp(current token, cell × f, cap), with
+	   f = token ÷ ~300px REFERENCE cell. A 300px cell is larger than any tile on a
+	   normal desktop (a 1×1 is ~290px even at 1440), so the clamp floor holds and
+	   widgets look IDENTICAL to today up to ~1500px; only larger cells grow, capped
+	   at ~1.4× the token. Retune the whole system by shifting the 300px anchor (the
+	   coefficients below are token/300). */
+	--widget-pad: clamp(var(--space-4), calc(var(--widget-cell) * 0.053), var(--space-6));
+	--widget-gap: clamp(var(--space-2), calc(var(--widget-cell) * 0.027), var(--space-4));
+	--widget-font-xs: clamp(11px, calc(var(--widget-cell) * 0.037), 15px);
+	--widget-font-sm: clamp(14px, calc(var(--widget-cell) * 0.047), 18px);
+	--widget-font-md: clamp(16px, calc(var(--widget-cell) * 0.053), 22px);
+	--widget-font-lg: clamp(20px, calc(var(--widget-cell) * 0.067), 28px);
+	--widget-font-xl: clamp(32px, calc(var(--widget-cell) * 0.107), 48px);
+	--widget-icon: clamp(20px, calc(var(--widget-cell) * 0.067), 30px);
 }
 
 /* Base cell: 1×1, square. Size modifiers extend the span and aspect. */
@@ -43,5 +81,6 @@
 @media (max-width: 900px) {
 	.ds-widget-grid {
 		grid-template-columns: repeat(2, 1fr);
+		--widget-cols-eff: 2; /* keep --widget-cell exact in the 2-col mode */
 	}
 }
