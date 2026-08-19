@@ -6,11 +6,11 @@ import VideoCarousel from "../components/VideoCarousel.astro";
 import Grid from "@whois/design-system/Grid";
 import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
-import Widget from "@whois/design-system/Widget";
 import Button from "@whois/design-system/Button";
 import "@whois/design-system/styles.css";
 import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import BikeStats from "../widgets/bike-stats/BikeStats.astro";
+import Github from "../widgets/github/Github.astro";
 import Videos from "../widgets/videos/Videos.astro";
 import "@whois/stories-heading/styles.css";
 import "@whois/dotted-grid/styles.css";
@@ -225,17 +225,8 @@ import "../widgets/widgets.css";
 
 			<BikeStats />
 
-			<!-- Placeholder 1×1 to fill column 3 alongside the 1×2 video cell; swap
-			     for a real widget as more land. -->
-			<Widget
-				size="1x1"
-				class="wx-soon"
-				data-reveal
-				data-reveal-group="widgets"
-				data-reveal-order="2"
-			>
-				<span class="wx-soon__label">more soon</span>
-			</Widget>
+			<!-- 1×1 in column 3 alongside the 1×2 video cell. -->
+			<Github />
 		</WidgetGrid>
 	</div>
 </FullHeroLayout>
@@ -494,9 +485,8 @@ import "../widgets/widgets.css";
 	.hero-intro__lede p {
 		margin: 0;
 		pointer-events: auto;
-		/* Sans uppercase statement line (site --font-sans, the de-facto uppercase
-		   recipe used by .wx-soon__label) — a quieter, more graphic register than the
-		   serif it replaced, still prominent at --text-secondary. */
+		/* Sans uppercase statement line (site --font-sans) — a quieter, more graphic
+		   register than the serif it replaced, still prominent at --text-secondary. */
 		font-family: var(--font-sans);
 		font-size: var(--font-size-3);
 		line-height: 1.5;
@@ -628,17 +618,4 @@ import "../widgets/widgets.css";
 
 	/* Shared widget primitives (.wx-stat*) live in ../widgets/widgets.css; each
 	   widget's bespoke look lives in its own module (e.g. ../widgets/now-playing/). */
-
-	/* Placeholder tile filling column 3 until another real widget lands. */
-	.home__widgets :global(.wx-soon) {
-		align-items: center;
-		justify-content: center;
-	}
-	.home__widgets :global(.wx-soon__label) {
-		font-size: var(--font-size-1);
-		color: var(--text-tertiary);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-	}
-
 </style>
