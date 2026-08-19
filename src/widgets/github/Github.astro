@@ -11,10 +11,10 @@ import "./github.css";
 
 const gh = getGithubStats();
 
-// Show a SQUARE 7×7 grid (7 weeks × 7 weekday rows) so it fills the square tile
-// with even padding on all sides. (github.json keeps more weeks; the widget just
-// shows the most recent seven.)
-const weeks = gh.weeks.slice(-7);
+// Show 8 weeks × 7 weekday rows. The 8:7 grid is a touch wider than tall, so when
+// it fills the width and sits at the BOTTOM of the tile it leaves a strip of space
+// at the top for the header — while the bottom and side padding stay even.
+const weeks = gh.weeks.slice(-8);
 
 // Each day sits at its weekday row (Sun=1 … Sat=7) so partial weeks (the current
 // one) stay aligned to the correct rows. Parse as UTC to match the API dates.

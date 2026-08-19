@@ -39,7 +39,7 @@
 .home__widgets .wx-gh-head {
 	position: absolute;
 	z-index: 2;
-	top: var(--widget-pad);
+	top: var(--space-2); /* tucked toward the top edge, clear of the bottom-anchored grid */
 	left: var(--widget-pad);
 	display: inline-flex;
 	align-items: center;
@@ -95,6 +95,11 @@
 		opacity var(--duration-swap) var(--ease-reveal),
 		visibility var(--duration-swap) var(--ease-reveal);
 }
+/* Grid face: pin the (shorter) grid to the bottom so the free strip is at the top,
+   under the header. */
+.home__widgets .wx-gh-face--grid {
+	justify-content: flex-end;
+}
 .home__widgets .wx-gh-face--langs {
 	opacity: 0;
 	visibility: hidden;
@@ -115,19 +120,20 @@
 	}
 }
 
-/* Contribution grid — a SQUARE 7×7 (7 weeks × 7 weekday rows). Each cell is placed
-   at its own row/column inline, so the current (partial) week stays aligned. The
-   grid fills the square tile body, so the squares carry EVEN padding (= the card's
-   --widget-pad) on all four sides, and the cells come out square. */
+/* Contribution grid — 8 weeks × 7 weekday rows. Fills the tile WIDTH and derives
+   its height from the 8:7 aspect, so it's a bit shorter than the tile; bottom-
+   anchored (see the grid face) it leaves an even strip of space at the top for the
+   header overlay while the bottom and side padding stay even (= --widget-pad).
+   Cells come out square. */
 .home__widgets .wx-gh-grid {
 	display: grid;
-	grid-template-columns: repeat(var(--gh-cols, 7), 1fr);
+	grid-template-columns: repeat(var(--gh-cols, 8), 1fr);
 	grid-template-rows: repeat(7, 1fr);
 	/* Tight iOS-style spacing (a small fraction of the square), scaling gently with
 	   the tile off the shared --widget-cell. */
 	gap: clamp(2px, calc(var(--widget-cell) * 0.012), 6px);
 	width: 100%;
-	height: 100%;
+	aspect-ratio: calc(var(--gh-cols, 8) / 7);
 }
 .home__widgets .wx-gh-cell {
 	border-radius: 18%; /* subtle inner rounding, less than the grid's outer corners */
