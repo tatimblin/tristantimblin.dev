@@ -32,10 +32,10 @@
 
 /* Header — GitHub icon + username. A link to the profile, kept OUTSIDE the toggle
    button (so tapping it never flips, and to avoid an invalid <a>-in-<button>).
-   Only shown on the flipped (language) view — the default grid tile is just the
-   contribution squares, like the iOS widget. Absolutely positioned so it doesn't
-   reserve space in the grid view (the grid fills the whole tile), then fades in as
-   an overlay above the language list. */
+   Absolutely positioned as a top-left OVERLAY so it doesn't reserve space: the
+   grid fills the whole tile with even padding on every side, and the header sits
+   over its top-left corner (on both the grid and the language view). A soft text
+   shadow keeps it legible over the squares. */
 .home__widgets .wx-gh-head {
 	position: absolute;
 	z-index: 2;
@@ -49,18 +49,7 @@
 	font-size: var(--widget-font-md); /* fluid; ≡ --font-size-3 (16px) at the desktop cell */
 	font-weight: var(--font-weight-600);
 	line-height: 1;
-	/* Hidden on the grid view; revealed with the flip. */
-	opacity: 0;
-	visibility: hidden;
-	pointer-events: none;
-	transition:
-		opacity var(--duration-swap) var(--ease-reveal),
-		visibility var(--duration-swap) var(--ease-reveal);
-}
-.home__widgets .wx-github.is-flipped .wx-gh-head {
-	opacity: 1;
-	visibility: visible;
-	pointer-events: auto;
+	text-shadow: 0 1px 3px var(--color-bg);
 }
 /* Scale the header icon with the card too (overrides the DS .ds-icon--size-4's
    fixed 20px — this selector out-specifies the size class). */
@@ -126,24 +115,19 @@
 	}
 }
 
-/* Contribution grid — 7 weekday rows × N week columns. Each cell is placed at its
-   own row/column inline, so the current (partial) week stays aligned. The grid
-   fills the available body height (flex:1) and derives its width from the aspect
-   ratio, so it scales to fit WITHOUT overflowing into the header/caption; cells
-   stay square via the matching column/row counts. */
+/* Contribution grid — a SQUARE 7×7 (7 weeks × 7 weekday rows). Each cell is placed
+   at its own row/column inline, so the current (partial) week stays aligned. The
+   grid fills the square tile body, so the squares carry EVEN padding (= the card's
+   --widget-pad) on all four sides, and the cells come out square. */
 .home__widgets .wx-gh-grid {
 	display: grid;
-	grid-template-columns: repeat(var(--gh-cols, 8), 1fr);
+	grid-template-columns: repeat(var(--gh-cols, 7), 1fr);
 	grid-template-rows: repeat(7, 1fr);
 	/* Tight iOS-style spacing (a small fraction of the square), scaling gently with
 	   the tile off the shared --widget-cell. */
 	gap: clamp(2px, calc(var(--widget-cell) * 0.012), 6px);
-	flex: 1 1 auto;
-	min-height: 0;
-	width: auto;
-	max-width: 100%;
-	aspect-ratio: calc(var(--gh-cols, 8) / 7);
-	margin-inline: auto; /* centre horizontally when height-limited */
+	width: 100%;
+	height: 100%;
 }
 .home__widgets .wx-gh-cell {
 	border-radius: 18%; /* subtle inner rounding, less than the grid's outer corners */
@@ -175,11 +159,6 @@
 }
 .home__widgets .wx-gh-cell[data-level="4"] {
 	background: var(--gh-l4);
-}
-.home__widgets .wx-gh-caption {
-	flex: none; /* fixed; the grid flexes to fill the space above it */
-	font-size: var(--widget-font-sm);
-	color: var(--text-tertiary);
 }
 
 /* Language breakdown — a stacked share bar over a compact legend. */
@@ -226,18 +205,11 @@
 	font-family: var(--font-numeric, var(--font-mono));
 }
 
-/* Small tiles (narrow 2-col phones): the contribution grid is what matters, so
-   let it dominate the tile like the iOS widget. Tighten the padding, drop the
-   caption, and shrink the inter-cell gap — together these roughly TRIPLE the
-   square size on a phone (a ~5px square with a 5px gap becomes a chunky ~16px
-   square). Keyed to the CARD size via the widget container, so large 2-col
-   tablet tiles (which have room) keep the caption and normal spacing. */
+/* Small tiles (narrow 2-col phones): tighten the even padding a little so the
+   squares stay chunky on a small card. Keyed to the CARD size via the widget
+   container, so large 2-col tablet tiles keep the normal padding. */
 @container widget (max-width: 520px) {
 	.home__widgets .wx-github {
 		padding: var(--space-3);
-		gap: var(--space-2);
-	}
-	.home__widgets .wx-gh-caption {
-		display: none;
 	}
 }
