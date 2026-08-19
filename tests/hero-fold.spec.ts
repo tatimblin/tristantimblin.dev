@@ -93,6 +93,23 @@ async function readFold(page: Page, opts: { requireBottomUi?: boolean } = {}): P
 
 		const lead = parseFloat(getComputedStyle(q<HTMLElement>(".fh__heading")!).paddingBlockStart) || 0;
 
+		// Resolve --sh-heading-gap to pixels. It's authored as a calc()
+		// (calc(-1 * var(--space-N))) so "other stories" tucks UP into the wordmark,
+		// and an unregistered custom property's getPropertyValue returns that raw
+		// calc() string — parseFloat of which is NaN. Apply it to a throwaway element
+		// and read the computed (resolved) length back instead.
+		const resolveLen = (host: HTMLElement, value: string) => {
+			const probe = document.createElement("div");
+			probe.style.position = "absolute";
+			probe.style.visibility = "hidden";
+			probe.style.marginTop = value;
+			host.appendChild(probe);
+			const pxVal = parseFloat(getComputedStyle(probe).marginTop) || 0;
+			probe.remove();
+			return pxVal;
+		};
+		const headingGap = resolveLen(q<HTMLElement>("stories-heading")!, "var(--sh-heading-gap)");
+
 		return {
 			sceneHeight: scene.height,
 			innerHeight: window.innerHeight,
@@ -101,11 +118,7 @@ async function readFold(page: Page, opts: { requireBottomUi?: boolean } = {}): P
 			leadAtMinimum: Math.abs(lead - px("--sh-header-clear")) < 1.5,
 			wordmarkToOtherStories: otherStories.top - wordmark.bottom,
 			otherStoriesToIntro: intro.top - otherStories.bottom,
-			headingGap: parseFloat(
-				getComputedStyle(q<HTMLElement>("stories-heading")!).getPropertyValue(
-					"--sh-heading-gap"
-				)
-			) || 0,
+			headingGap,
 			introGap:
 				parseFloat(getComputedStyle(q<HTMLElement>(".sh__sub")!).marginBlockStart) || 0,
 			wordmarkClearsHeader: wordmark.top - header.bottom,

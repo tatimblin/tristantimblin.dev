@@ -266,6 +266,13 @@ export class StoriesHeadingElement extends HTMLElement {
 		const subRect = this.sub?.getBoundingClientRect();
 		const subFixed =
 			!!this.sub && getComputedStyle(this.sub).position === "fixed";
+		// The sub is translated by --sh-sub-shift — a scroll-driven upward drift so it
+		// hangs stationary in the viewport while it fades. That transform moves subRect
+		// WITH scroll, so strip it back out of the pin-relative extent below: --sh-group-h
+		// must stay scroll-invariant (measure() can run from a resize at any scroll
+		// position). At rest the shift is 0, so this is a no-op there.
+		const subShift =
+			parseFloat(getComputedStyle(this).getPropertyValue("--sh-sub-shift")) || 0;
 
 		// Fractional (getBoundingClientRect), not offsetHeight — the two are mixed in the
 		// Math.max below, and offsetHeight rounds to whole px.
@@ -274,7 +281,10 @@ export class StoriesHeadingElement extends HTMLElement {
 		if (subRect && subRect.height > 0 && subFixed) {
 			subFloor = subRect.height + (window.innerHeight - subRect.bottom);
 		} else if (pinRect && subRect && subRect.height > 0) {
-			belowWordmark = Math.max(pinRect.height, subRect.bottom - pinRect.top);
+			belowWordmark = Math.max(
+				pinRect.height,
+				subRect.bottom - subShift - pinRect.top
+			);
 		}
 
 		// Min top space so the wordmark clears the overlaid header — MEASURED from the
@@ -286,7 +296,10 @@ export class StoriesHeadingElement extends HTMLElement {
 
 		this.setPx(fh, "--sh-group-h", wmHeight + headingGap + belowWordmark, "groupH");
 		this.setPx(fh, "--sh-wordmark-h", wmHeight, "wordmarkH");
-		this.setPx(fh, "--sh-header-clear", headerH + headingGap, "headerClear");
+		// A negative heading-gap (the sub tucks UP into the wordmark) shortens the group
+		// via --sh-group-h above, but it must NOT reduce the header clearance — the
+		// wordmark still has to clear the overlaid header. Only a positive gap adds slack.
+		this.setPx(fh, "--sh-header-clear", headerH + Math.max(0, headingGap), "headerClear");
 		// A viewport-fixed sub reserves the bottom edge just like scene-owned UI, so it
 		// stacks onto the floor the group must clear (0 on the mobile layout, where the
 		// sub travels WITH the group and is already inside --sh-group-h).
