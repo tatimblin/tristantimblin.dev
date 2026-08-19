@@ -13,6 +13,15 @@
 	flex-direction: column;
 	padding: var(--widget-pad);
 
+	/* Header sizing + the headroom reserved for it at the top. The icon scales with
+	   the tile (so it shrinks on small phone tiles); the headroom is the icon plus a
+	   token's gap. The bottom-anchored grid fills the width and takes the rest of the
+	   height, so the bottom and side padding stay even and the gap under the header is
+	   exactly that token. All derived from the DS cell size + tokens — no magic px.
+	   (--widget-cell is the tile's own inline size.) */
+	--gh-icon: clamp(12px, calc(var(--widget-cell) * 0.07), 28px);
+	--gh-headroom: calc(var(--gh-icon) + var(--space-2));
+
 	/* Contribution intensity scale. Level 0 is a theme-aware faint fill (fades
 	   with the card in both themes); 1–4 are GitHub's canonical greens. Defaults
 	   are the dark-theme greens; the light-theme block below swaps in GitHub's
@@ -32,30 +41,28 @@
 
 /* Header — GitHub icon + username. A link to the profile, kept OUTSIDE the toggle
    button (so tapping it never flips, and to avoid an invalid <a>-in-<button>).
-   Absolutely positioned as a top-left OVERLAY so it doesn't reserve space: the
-   grid fills the whole tile with even padding on every side, and the header sits
-   over its top-left corner (on both the grid and the language view). A soft text
-   shadow keeps it legible over the squares. */
+   Sits at the top-left, its top matching the even L/R/B padding; the grid takes the
+   rest of the height, leaving a token-sized gap beneath the text. Overlays the same
+   spot on the language view. */
 .home__widgets .wx-gh-head {
 	position: absolute;
 	z-index: 2;
-	top: var(--space-2); /* tucked toward the top edge, clear of the bottom-anchored grid */
-	left: var(--widget-pad);
+	inset-block-start: var(--widget-pad);
+	inset-inline-start: var(--widget-pad);
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-2);
 	color: var(--text-primary); /* drives the currentColor icon stroke */
 	text-decoration: none;
-	font-size: var(--widget-font-md); /* fluid; ≡ --font-size-3 (16px) at the desktop cell */
+	font-size: min(var(--widget-font-md), var(--gh-icon));
 	font-weight: var(--font-weight-600);
 	line-height: 1;
 	text-shadow: 0 1px 3px var(--color-bg);
 }
-/* Scale the header icon with the card too (overrides the DS .ds-icon--size-4's
-   fixed 20px — this selector out-specifies the size class). */
 .home__widgets .wx-gh-head .ds-icon {
-	width: var(--widget-icon);
-	height: var(--widget-icon);
+	block-size: var(--gh-icon);
+	inline-size: auto;
+	aspect-ratio: 1;
 }
 .home__widgets .wx-gh-head:hover .wx-gh-user {
 	text-decoration: underline;
@@ -103,8 +110,8 @@
 .home__widgets .wx-gh-face--langs {
 	opacity: 0;
 	visibility: hidden;
-	/* Clear the header overlay (icon-height + a gap) so the bar/list sit below it. */
-	padding-top: calc(var(--widget-icon) + var(--space-2));
+	/* Clear the header headroom so the bar/list sit below it (same as the grid). */
+	padding-top: var(--gh-headroom);
 }
 .home__widgets .wx-github.is-flipped .wx-gh-face--grid {
 	opacity: 0;
@@ -120,11 +127,11 @@
 	}
 }
 
-/* Contribution grid — 8 weeks × 7 weekday rows. Fills the tile WIDTH and derives
-   its height from the 8:7 aspect, so it's a bit shorter than the tile; bottom-
-   anchored (see the grid face) it leaves an even strip of space at the top for the
-   header overlay while the bottom and side padding stay even (= --widget-pad).
-   Cells come out square. */
+/* Contribution grid — 9 weeks × 7 weekday rows. Fills the tile WIDTH and derives
+   fills the width and takes all the height except the header headroom, bottom-
+   anchored — so the bottom and side padding stay even (= --widget-pad) and only a
+   token-sized gap sits under the header. Reserving the header's height (rather than
+   forcing a square) keeps the gap small; the cells end up all but square. */
 .home__widgets .wx-gh-grid {
 	display: grid;
 	grid-template-columns: repeat(var(--gh-cols, 8), 1fr);
@@ -133,7 +140,7 @@
 	   the tile off the shared --widget-cell. */
 	gap: clamp(2px, calc(var(--widget-cell) * 0.012), 6px);
 	width: 100%;
-	aspect-ratio: calc(var(--gh-cols, 8) / 7);
+	block-size: calc(100% - var(--gh-headroom));
 }
 .home__widgets .wx-gh-cell {
 	border-radius: 18%; /* subtle inner rounding, less than the grid's outer corners */
@@ -209,13 +216,4 @@
 	margin-left: auto;
 	color: var(--text-tertiary);
 	font-family: var(--font-numeric, var(--font-mono));
-}
-
-/* Small tiles (narrow 2-col phones): tighten the even padding a little so the
-   squares stay chunky on a small card. Keyed to the CARD size via the widget
-   container, so large 2-col tablet tiles keep the normal padding. */
-@container widget (max-width: 520px) {
-	.home__widgets .wx-github {
-		padding: var(--space-3);
-	}
 }

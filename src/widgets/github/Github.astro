@@ -11,9 +11,9 @@ import "./github.css";
 
 const gh = getGithubStats();
 
-// Show 8 weeks × 7 weekday rows. The 8:7 grid is a touch wider than tall, so when
-// it fills the width and sits at the BOTTOM of the tile it leaves a strip of space
-// at the top for the header — while the bottom and side padding stay even.
+// Show 8 weeks × 7 weekday rows. Fills the tile width and sits at the bottom, with
+// a small headroom reserved at the top for the header (see --gh-headroom); bottom
+// and side padding stay even.
 const weeks = gh.weeks.slice(-8);
 
 // Each day sits at its weekday row (Sun=1 … Sat=7) so partial weeks (the current
@@ -51,6 +51,7 @@ const cornerOf = (date: string): string | undefined =>
 <Widget
 	size="1x1"
 	class="wx-github"
+	style={`--gh-cols:${weeks.length}`}
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="2"
@@ -74,7 +75,7 @@ const cornerOf = (date: string): string | undefined =>
 	>
 		<!-- Face A: contribution grid -->
 		<div class="wx-gh-face wx-gh-face--grid">
-			<div class="wx-gh-grid" style={`--gh-cols:${weeks.length}`}>
+			<div class="wx-gh-grid">
 				{
 					weeks.map((week, wi) =>
 						week.map((day) => (
