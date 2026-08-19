@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "tristantimblin.dev",
@@ -18,7 +19,6 @@
         "astro": "^7.1.6",
         "astro-seo": "^1.1.0",
         "lenis": "^1.3.25",
-        "scroll-timeline-polyfill": "^1.1.0",
       },
       "devDependencies": {
         "@maximeheckel/design-system": "4.2.3",
@@ -56,9 +56,6 @@
       "name": "@whois/wobble-text",
       "version": "0.0.1",
     },
-  },
-  "patchedDependencies": {
-    "scroll-timeline-polyfill@1.1.0": "patches/scroll-timeline-polyfill@1.1.0.patch",
   },
   "packages": {
     "@astrojs/check": ["@astrojs/check@0.9.10", "", { "dependencies": { "@astrojs/language-server": "^2.16.7", "chokidar": "^4.0.3", "kleur": "^4.1.5", "yargs": "^18.0.0" }, "peerDependencies": { "typescript": "^5.0.0 || ^6.0.0" }, "bin": { "astro-check": "./bin/astro-check.js" } }, "sha512-zgx/UQMozdjOa3bOxjgeCFdtpE3c9rRX6xHwa+2QXvy8z8Akifu2AtubHyv/zzC2znO8dl8fFWL4K+Ba9kS8HQ=="],
@@ -960,8 +957,6 @@
     "schema-dts": ["schema-dts@2.0.0", "", { "dependencies": { "schema-dts-lib": "^1.0.0" } }, "sha512-t7NoCy3Rn5GHGx6p7s1qIYK/AeIb8ZxJNR9WUNFkwMv2CiiGZBmqqYWc2FlZVm5ZbiHMY4OvBWhj7QtyrFO2Jw=="],
 
     "schema-dts-lib": ["schema-dts-lib@1.0.0", "", { "peerDependencies": { "typescript": ">=4.9.5" } }, "sha512-9MEO5vpQH9JdBioUupqluzxSYxPLjhmqRUudk15adUl/ypnRsM2/M1kN3AmVJQeG7nZqcL68H8JlGqQQT6vy9A=="],
-
-    "scroll-timeline-polyfill": ["scroll-timeline-polyfill@1.1.0", "", {}, "sha512-BpL3gk3Ynt/5VYaDFUNUP/FTkDldwKQnWcA07g/mDHkMVS9pQUyUXBpsy4RZYAgsfFeI1tWcnPNrEFtCpQoO9Q=="],
 
     "semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
 

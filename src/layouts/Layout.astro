@@ -4,6 +4,8 @@ import "../styles/global.css";
 // Asset-arrival reveal (the motion; the scheduling lives in src/lib/reveal.ts and
 // the arming script in this file's <head>).
 import "../styles/reveal.css";
+// Metric-matched fallback faces, so the Google-font swap doesn't reflow the copy.
+import "../styles/fonts.css";
 // Design-system token cascade (generated DS tokens → site overrides → legacy
 // name bridge). Imported after global.css so its custom properties win.
 import "@whois/design-system/tokens.css";
@@ -56,7 +58,6 @@ const {
 	// the inline arming script in <head> owns the fail-visible backstop, so if this
 	// module never arrives the page simply shows everything.
 	import "../lib/reveal";
-	import "scroll-timeline-polyfill/dist/scroll-timeline.js";
 	import Lenis from "lenis";
 	import "lenis/dist/lenis.css";
 
@@ -68,15 +69,21 @@ const {
 
 	// Smooth scroll, initialized once and shared across view-transition
 	// navigations. Lenis drives the real window scroll (no transform hack), so it
-	// composes with the scroll-timeline polyfill and the scroll-listener web
-	// components (stories-heading, video-carousel) without changes to them.
+	// composes with the scroll-listener web components (stories-heading,
+	// video-carousel) without changes to them.
 	function initLenis() {
 		if (window.__lenis) return window.__lenis;
 		// Honor reduced-motion: leave native scrolling untouched.
 		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
 
-		// Subtle smoothing, close to native. Touch stays native by default in
-		// Lenis 1.x (syncTouch is off), so this is desktop wheel/trackpad only.
+		// Wheel/trackpad only. Lenis 1.x keeps touch native (syncTouch off), so on a
+		// touch device it smooths NOTHING — yet the raf() loop below would still run
+		// every frame forever, a pure main-thread/battery cost with no visual payoff.
+		// Gate on a fine pointer so phones and tablets never start that loop; desktop
+		// wheel/trackpad smoothing is unchanged.
+		if (!window.matchMedia("(pointer: fine)").matches) return null;
+
+		// Subtle smoothing, close to native.
 		const lenis = new Lenis({ lerp: 0.18, smoothWheel: true });
 		window.__lenis = lenis;
 
@@ -124,11 +131,24 @@ const {
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<!-- DS fonts (Inter, Fira Code, Space Grotesk) + the site's own faces
 		     (Playfair Display for the wordmark/copy, Quintessential for the
-		     decorative outline). The DS package ships no font files. -->
+		     decorative outline). The DS package ships no font files.
+
+		     Loaded NON-RENDER-BLOCKING: `media="print"` lets the browser fetch the
+		     stylesheet without holding up first paint, then `onload` flips it to
+		     `all` to apply it. Text paints immediately in the metric-matched fallback
+		     (src/styles/fonts.css) and swaps in place with no reflow. The <noscript>
+		     copy keeps the fonts working with JS disabled; the two preconnects above
+		     still warm the gstatic connection so the woff2 arrive as early as
+		     possible. -->
 		<link
 			rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;560;600&family=Fira+Code:wght@400;500&family=Space+Grotesk:wght@400;500&family=Playfair+Display:wght@400;600;700&family=Quintessential&display=swap"
+			media="print"
+			onload="this.media='all'"
 		/>
+		<noscript>
+			<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;560;600&family=Fira+Code:wght@400;500&family=Space+Grotesk:wght@400;500&family=Playfair+Display:wght@400;600;700&family=Quintessential&display=swap" />
+		</noscript>
 		<link
 			rel="alternate"
 			type="application/rss+xml"

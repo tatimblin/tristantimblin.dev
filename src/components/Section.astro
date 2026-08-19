@@ -19,8 +19,15 @@ const animationName =
 			: shrink
 				? "section-shrink"
 				: undefined;
+// Gated on native scroll-timeline support. The site dropped the scroll-timeline
+// polyfill (nothing else used it), so without this @supports guard a browser that
+// doesn't know `animation-timeline: view()` would drop only that one declaration
+// and run `animation: … both` on the document timeline — a 0s animation that snaps
+// straight to its 100% keyframe (fully bled) and stays there. Gating the whole
+// block means unsupported engines simply keep the canvas's default (contained)
+// clip-path — a clean static state — instead of that broken snap.
 const css = revealId && animationName
-	? `.${revealId} .section__canvas { animation: ${animationName} linear both; animation-timeline: view(); animation-range: ${revealRange}; }`
+	? `@supports (animation-timeline: view()) { .${revealId} .section__canvas { animation: ${animationName} linear both; animation-timeline: view(); animation-range: ${revealRange}; } }`
 	: undefined;
 ---
 

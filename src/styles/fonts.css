@@ -1,0 +1,50 @@
+/* FONT LOADING — metric-matched fallbacks.
+ *
+ * The site's faces are fetched from Google Fonts (see the non-blocking <link> in
+ * Layout.astro). `font-display: swap` means text paints immediately in a system
+ * fallback and swaps to the web font once it lands — but the two fonts have
+ * DIFFERENT metrics, so the swap used to reflow every paragraph: the classic
+ * "flash, then the styling snaps in" the page felt like on a cold mobile load.
+ *
+ * The fix is a metric-adjusted fallback face for each of the two dominant faces.
+ * Each wraps a near-universal system font (Georgia / Arial) and overrides its
+ * metrics so it occupies the SAME box as the real web font — same line-box height
+ * (ascent/descent) and same lowercase size (size-adjust from the xHeight ratio).
+ * With the fallback pre-sized to the web font, the swap is metrically invisible:
+ * text no longer jumps.
+ *
+ * These faces go in front of the plain system stack in --font-serif (Playfair) and
+ * --font-display (Inter); see bridge.css / tokens.overrides.css.
+ *
+ * DERIVED, NOT GUESSED. The override percentages were computed from the actual
+ * woff2 the site serves:
+ *   size-adjust      = webfont.xHeight / fallback.xHeight
+ *   ascent-override  = webfont.typoAscent  / upm / size-adjust
+ *   descent-override = webfont.typoDescent / upm / size-adjust
+ *   line-gap-override= webfont.typoLineGap / upm / size-adjust
+ * Web-font metrics (per em): Playfair asc 1.0820 desc 0.2510 gap 0 xHeight 0.5140;
+ * Inter asc 0.9688 desc 0.2412 gap 0 xHeight 0.5459. Fallback xHeights: Georgia
+ * 0.4814, Arial 0.5186. Re-run the same formula if the fonts are ever changed —
+ * or delete these faces and drop them from the stacks; the plain system fallback
+ * still works, it just reflows on swap again. */
+
+/* Playfair Display (serif copy) → Georgia, matched. */
+@font-face {
+	font-family: "Playfair Fallback";
+	src: local("Georgia");
+	size-adjust: 106.77%;
+	ascent-override: 101.34%;
+	descent-override: 23.51%;
+	line-gap-override: 0%;
+}
+
+/* Inter (DS body / --font-display) → Arial, matched. Arial is the metric proxy for
+   the system-ui stack that follows; -apple-system/Segoe/Roboto are all close to it. */
+@font-face {
+	font-family: "Inter Fallback";
+	src: local("Arial");
+	size-adjust: 105.26%;
+	ascent-override: 92.04%;
+	descent-override: 22.91%;
+	line-gap-override: 0%;
+}

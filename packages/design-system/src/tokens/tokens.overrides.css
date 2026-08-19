@@ -12,6 +12,13 @@
 :root {
 	/* e.g. --accent: oklch(60% 0.2 240); */
 
+	/* TYPE — metric-matched fallback in front of the system stack.
+	 * DS generates --font-display as `'Inter', var(--font-fallback)`. "Inter
+	 * Fallback" (src/styles/fonts.css) is an Arial face pre-sized to Inter's
+	 * metrics, so the swap from fallback → Inter doesn't reflow body text. It sits
+	 * between Inter and the plain system stack, which stays as the last resort. */
+	--font-display: "Inter", "Inter Fallback", var(--font-fallback);
+
 	/* MOTION -----------------------------------------------------------------
 	 * The DS ships no easing/duration tokens, so every timing on the site used to
 	 * be a hand-typed literal. These name the vocabulary the code had already
