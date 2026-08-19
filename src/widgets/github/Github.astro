@@ -11,6 +11,11 @@ import "./github.css";
 
 const gh = getGithubStats();
 
+// Show 8 weeks × 7 weekday rows. The 8:7 grid is a touch wider than tall, so when
+// it fills the width and sits at the BOTTOM of the tile it leaves a strip of space
+// at the top for the header — while the bottom and side padding stay even.
+const weeks = gh.weeks.slice(-8);
+
 // Each day sits at its weekday row (Sun=1 … Sat=7) so partial weeks (the current
 // one) stay aligned to the correct rows. Parse as UTC to match the API dates.
 const weekday = (date: string): number =>
@@ -24,16 +29,16 @@ const langs = gh.languages.slice(0, 5);
 // — the iOS-widget look. The current (last) week is partial, so its bottom corner
 // is its latest present day, not necessarily Saturday. Dates are unique, so each
 // corner tag lands on exactly one cell.
-const cornerDate = (week: typeof gh.weeks[number] | undefined, edge: "top" | "bottom") => {
+const cornerDate = (week: typeof weeks[number] | undefined, edge: "top" | "bottom") => {
 	if (!week?.length) return null;
 	const sorted = [...week].sort((a, b) => weekday(a.date) - weekday(b.date));
 	return (edge === "top" ? sorted[0] : sorted[sorted.length - 1]).date;
 };
 const corner = {
-	tl: cornerDate(gh.weeks[0], "top"),
-	bl: cornerDate(gh.weeks[0], "bottom"),
-	tr: cornerDate(gh.weeks[gh.weeks.length - 1], "top"),
-	br: cornerDate(gh.weeks[gh.weeks.length - 1], "bottom"),
+	tl: cornerDate(weeks[0], "top"),
+	bl: cornerDate(weeks[0], "bottom"),
+	tr: cornerDate(weeks[weeks.length - 1], "top"),
+	br: cornerDate(weeks[weeks.length - 1], "bottom"),
 };
 const cornerOf = (date: string): string | undefined =>
 	date === corner.tl ? "tl"
@@ -69,9 +74,9 @@ const cornerOf = (date: string): string | undefined =>
 	>
 		<!-- Face A: contribution grid -->
 		<div class="wx-gh-face wx-gh-face--grid">
-			<div class="wx-gh-grid" style={`--gh-cols:${gh.weeks.length}`}>
+			<div class="wx-gh-grid" style={`--gh-cols:${weeks.length}`}>
 				{
-					gh.weeks.map((week, wi) =>
+					weeks.map((week, wi) =>
 						week.map((day) => (
 							<span
 								class="wx-gh-cell"
@@ -84,9 +89,6 @@ const cornerOf = (date: string): string | undefined =>
 					)
 				}
 			</div>
-			<span class="wx-gh-caption">
-				{gh.totalContributions.toLocaleString("en-US")} contributions
-			</span>
 		</div>
 
 		<!-- Face B: language breakdown -->
