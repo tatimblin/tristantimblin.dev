@@ -18,6 +18,29 @@ const weekday = (date: string): number =>
 
 // Cap the language rows so the flip side stays legible in a 1×1.
 const langs = gh.languages.slice(0, 5);
+
+// Tag the grid's four structural corners (first/last week × top/bottom row) so
+// their OUTER corner can be rounded more than the squares' subtle inner rounding
+// — the iOS-widget look. The current (last) week is partial, so its bottom corner
+// is its latest present day, not necessarily Saturday. Dates are unique, so each
+// corner tag lands on exactly one cell.
+const cornerDate = (week: typeof gh.weeks[number] | undefined, edge: "top" | "bottom") => {
+	if (!week?.length) return null;
+	const sorted = [...week].sort((a, b) => weekday(a.date) - weekday(b.date));
+	return (edge === "top" ? sorted[0] : sorted[sorted.length - 1]).date;
+};
+const corner = {
+	tl: cornerDate(gh.weeks[0], "top"),
+	bl: cornerDate(gh.weeks[0], "bottom"),
+	tr: cornerDate(gh.weeks[gh.weeks.length - 1], "top"),
+	br: cornerDate(gh.weeks[gh.weeks.length - 1], "bottom"),
+};
+const cornerOf = (date: string): string | undefined =>
+	date === corner.tl ? "tl"
+	: date === corner.tr ? "tr"
+	: date === corner.bl ? "bl"
+	: date === corner.br ? "br"
+	: undefined;
 ---
 
 <Widget
@@ -53,6 +76,7 @@ const langs = gh.languages.slice(0, 5);
 							<span
 								class="wx-gh-cell"
 								data-level={day.level}
+								data-corner={cornerOf(day.date)}
 								style={`grid-column:${wi + 1};grid-row:${weekday(day.date)}`}
 								title={`${day.count} contribution${day.count === 1 ? "" : "s"} on ${day.date}`}
 							/>
