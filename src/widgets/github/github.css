@@ -13,13 +13,14 @@
 	flex-direction: column;
 	padding: var(--widget-pad);
 
-	/* The strip the bottom-anchored 8×7 grid leaves free at the top for the header.
-	   The grid fills the body (tile − 2·pad) and is 8:7, so its height is 7/8 of the
-	   body and the leftover top strip is exactly body ÷ 8. All derived from the
-	   design-system cell size, the card padding, and the column count — no magic px,
-	   scales with the tile. (--widget-cell is the tile's own inline size.) */
-	--gh-body: calc(var(--widget-cell) - 2 * var(--widget-pad));
-	--gh-strip: calc(var(--gh-body) / var(--gh-cols, 8));
+	/* Header sizing + the headroom reserved for it at the top. The icon scales with
+	   the tile (so it shrinks on small phone tiles); the headroom is the icon plus a
+	   token's gap. The bottom-anchored grid fills the width and takes the rest of the
+	   height, so the bottom and side padding stay even and the gap under the header is
+	   exactly that token. All derived from the DS cell size + tokens — no magic px.
+	   (--widget-cell is the tile's own inline size.) */
+	--gh-icon: clamp(12px, calc(var(--widget-cell) * 0.07), 28px);
+	--gh-headroom: calc(var(--gh-icon) + var(--space-2));
 
 	/* Contribution intensity scale. Level 0 is a theme-aware faint fill (fades
 	   with the card in both themes); 1–4 are GitHub's canonical greens. Defaults
@@ -40,14 +41,12 @@
 
 /* Header — GitHub icon + username. A link to the profile, kept OUTSIDE the toggle
    button (so tapping it never flips, and to avoid an invalid <a>-in-<button>).
-   Occupies exactly the free top strip (see --gh-strip) and centres its content in
-   it — so the "space for the heading" scales with the tile and the padding stays
-   even on the other three sides. Overlays the same strip on the language view. */
+   Sits at the top-left, its top matching the even L/R/B padding; the grid takes the
+   rest of the height, leaving a token-sized gap beneath the text. Overlays the same
+   spot on the language view. */
 .home__widgets .wx-gh-head {
 	position: absolute;
 	z-index: 2;
-	/* Sits at the even padding (top matches the L/R/B sides); the bottom-anchored
-	   grid then leaves the rest of the strip as clear space beneath the text. */
 	inset-block-start: var(--widget-pad);
 	inset-inline-start: var(--widget-pad);
 	display: inline-flex;
@@ -55,15 +54,13 @@
 	gap: var(--space-2);
 	color: var(--text-primary); /* drives the currentColor icon stroke */
 	text-decoration: none;
-	/* Cap the type/icon to the strip (less a token's breathing room) so the header
-	   always fits with a small gap beneath it, even on the smallest tiles. */
-	font-size: min(var(--widget-font-md), calc(var(--gh-strip) - var(--space-1)));
+	font-size: min(var(--widget-font-md), var(--gh-icon));
 	font-weight: var(--font-weight-600);
 	line-height: 1;
 	text-shadow: 0 1px 3px var(--color-bg);
 }
 .home__widgets .wx-gh-head .ds-icon {
-	block-size: min(var(--widget-icon), calc(var(--gh-strip) - var(--space-1)));
+	block-size: var(--gh-icon);
 	inline-size: auto;
 	aspect-ratio: 1;
 }
@@ -113,8 +110,8 @@
 .home__widgets .wx-gh-face--langs {
 	opacity: 0;
 	visibility: hidden;
-	/* Clear the header strip so the bar/list sit below it (same strip as the grid). */
-	padding-top: var(--gh-strip);
+	/* Clear the header headroom so the bar/list sit below it (same as the grid). */
+	padding-top: var(--gh-headroom);
 }
 .home__widgets .wx-github.is-flipped .wx-gh-face--grid {
 	opacity: 0;
@@ -130,11 +127,11 @@
 	}
 }
 
-/* Contribution grid — 8 weeks × 7 weekday rows. Fills the tile WIDTH and derives
-   its height from the 8:7 aspect, so it's a bit shorter than the tile; bottom-
-   anchored (see the grid face) it leaves an even strip of space at the top for the
-   header overlay while the bottom and side padding stay even (= --widget-pad).
-   Cells come out square. */
+/* Contribution grid — 9 weeks × 7 weekday rows. Fills the tile WIDTH and derives
+   fills the width and takes all the height except the header headroom, bottom-
+   anchored — so the bottom and side padding stay even (= --widget-pad) and only a
+   token-sized gap sits under the header. Reserving the header's height (rather than
+   forcing a square) keeps the gap small; the cells end up all but square. */
 .home__widgets .wx-gh-grid {
 	display: grid;
 	grid-template-columns: repeat(var(--gh-cols, 8), 1fr);
@@ -142,11 +139,8 @@
 	/* Tight iOS-style spacing (a small fraction of the square), scaling gently with
 	   the tile off the shared --widget-cell. */
 	gap: clamp(2px, calc(var(--widget-cell) * 0.012), 6px);
-	aspect-ratio: calc(var(--gh-cols, 8) / 7);
-	/* Fill the width; being 8:7 the grid is a bit shorter than the tile and, bottom-
-	   anchored (see the grid face), leaves an even strip at the top for the header
-	   overlay — while the bottom and side padding stay even. */
 	width: 100%;
+	block-size: calc(100% - var(--gh-headroom));
 }
 .home__widgets .wx-gh-cell {
 	border-radius: 18%; /* subtle inner rounding, less than the grid's outer corners */

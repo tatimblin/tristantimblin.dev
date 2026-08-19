@@ -28,10 +28,10 @@
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
-// How many trailing weeks of the calendar to keep. The widget is a compact
-// square (7 weekday rows), so ~8 columns keeps the grid roughly square — the
-// iOS-widget look — rather than a wide year-long strip.
-const WEEKS_TO_KEEP = 8;
+// How many trailing weeks of the calendar to keep in github.json. The widget
+// shows the most recent few of these (a compact, roughly-square grid); keeping a
+// small buffer here means tweaking the displayed column count needs no reseed.
+const WEEKS_TO_KEEP = 12;
 // Languages shown in the breakdown (top N by aggregated byte size).
 const TOP_LANGUAGES = 6;
 // Languages excluded from the breakdown. Linguist counts vendored/generated
