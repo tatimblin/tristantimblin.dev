@@ -116,9 +116,9 @@
 	display: grid;
 	grid-template-columns: repeat(var(--gh-cols, 8), 1fr);
 	grid-template-rows: repeat(7, 1fr);
-	/* Airier iOS-style spacing that grows with the tile (scales off the shared
-	   --widget-cell, like the rest of the widget). */
-	gap: clamp(5px, calc(var(--widget-cell) * 0.025), 14px);
+	/* Tight iOS-style spacing (a small fraction of the square), scaling gently with
+	   the tile off the shared --widget-cell. */
+	gap: clamp(2px, calc(var(--widget-cell) * 0.012), 6px);
 	flex: 1 1 auto;
 	min-height: 0;
 	width: auto;
@@ -127,8 +127,23 @@
 	margin-inline: auto; /* centre horizontally when height-limited */
 }
 .home__widgets .wx-gh-cell {
-	border-radius: 25%; /* rounded squares that scale with cell size */
+	border-radius: 18%; /* subtle inner rounding, less than the grid's outer corners */
 	background: var(--gh-l0);
+}
+/* The grid's four structural corner cells round their OUTER corner more, so the
+   block reads as a rounded rectangle (echoing the card) while the inner squares
+   stay crisp — the iOS-widget look. */
+.home__widgets .wx-gh-cell[data-corner="tl"] {
+	border-top-left-radius: 45%;
+}
+.home__widgets .wx-gh-cell[data-corner="tr"] {
+	border-top-right-radius: 45%;
+}
+.home__widgets .wx-gh-cell[data-corner="bl"] {
+	border-bottom-left-radius: 45%;
+}
+.home__widgets .wx-gh-cell[data-corner="br"] {
+	border-bottom-right-radius: 45%;
 }
 .home__widgets .wx-gh-cell[data-level="1"] {
 	background: var(--gh-l1);
@@ -205,8 +220,5 @@
 	}
 	.home__widgets .wx-gh-caption {
 		display: none;
-	}
-	.home__widgets .wx-gh-grid {
-		gap: 3px;
 	}
 }
