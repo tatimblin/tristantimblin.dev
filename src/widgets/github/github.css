@@ -116,7 +116,9 @@
 	display: grid;
 	grid-template-columns: repeat(var(--gh-cols, 8), 1fr);
 	grid-template-rows: repeat(7, 1fr);
-	gap: var(--space-1);
+	/* Airier iOS-style spacing that grows with the tile (scales off the shared
+	   --widget-cell, like the rest of the widget). */
+	gap: clamp(5px, calc(var(--widget-cell) * 0.025), 14px);
 	flex: 1 1 auto;
 	min-height: 0;
 	width: auto;
