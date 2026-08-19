@@ -1,0 +1,45 @@
+name: GitHub Stats Collection
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # Daily at 4 AM UTC (offset from baywheels' 3 AM)
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write  # Required to commit and push the refreshed JSON
+
+jobs:
+  collect-stats:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Fetches the contribution calendar + top languages (incl. private repos)
+      # via the GitHub GraphQL API and writes src/widgets/github/github.json. The
+      # script exits non-zero if the calendar is empty (stale-auth guard), so a
+      # broken token never commits an empty widget.
+      - name: Fetch GitHub stats
+        run: bun tools/github-stats/fetch.mjs
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- src/widgets/github/github.json; then
+            echo "No change to github.json — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/widgets/github/github.json
+          git commit -m "Update GitHub stats - $(date +'%Y-%m-%d')"
+          git push

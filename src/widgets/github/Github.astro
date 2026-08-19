@@ -1,0 +1,131 @@
+---
+// GitHub widget — an iOS-widget-style 1×1 card. A persistent header (GitHub icon
+// + username) links out to the profile; the rest of the card is a toggle: tap it
+// to cross-fade the contribution grid out and the language breakdown in (tap
+// again to flip back). Data is read at build time from github.json (see
+// ./github.ts); only the flip is client-side.
+import Widget from "@whois/design-system/Widget";
+import Icon from "@whois/design-system/Icon";
+import { getGithubStats } from "./github";
+import "./github.css";
+
+const gh = getGithubStats();
+
+// Each day sits at its weekday row (Sun=1 … Sat=7) so partial weeks (the current
+// one) stay aligned to the correct rows. Parse as UTC to match the API dates.
+const weekday = (date: string): number =>
+	(new Date(`${date}T00:00:00Z`).getUTCDay() ?? 0) + 1;
+
+// Cap the language rows so the flip side stays legible in a 1×1.
+const langs = gh.languages.slice(0, 5);
+---
+
+<Widget
+	size="1x1"
+	class="wx-github"
+	data-reveal
+	data-reveal-group="widgets"
+	data-reveal-order="2"
+>
+	<a
+		class="wx-gh-head"
+		href={gh.profileUrl}
+		target="_blank"
+		rel="noopener noreferrer"
+		aria-label={`@${gh.username} on GitHub`}
+	>
+		<Icon name="github" size={4} />
+		<span class="wx-gh-user">{gh.username}</span>
+	</a>
+
+	<button
+		class="wx-gh-body"
+		type="button"
+		aria-pressed="false"
+		aria-label="Show language breakdown"
+	>
+		<!-- Face A: contribution grid -->
+		<div class="wx-gh-face wx-gh-face--grid">
+			<div class="wx-gh-grid" style={`--gh-cols:${gh.weeks.length}`}>
+				{
+					gh.weeks.map((week, wi) =>
+						week.map((day) => (
+							<span
+								class="wx-gh-cell"
+								data-level={day.level}
+								style={`grid-column:${wi + 1};grid-row:${weekday(day.date)}`}
+								title={`${day.count} contribution${day.count === 1 ? "" : "s"} on ${day.date}`}
+							/>
+						)),
+					)
+				}
+			</div>
+			<span class="wx-gh-caption">
+				{gh.totalContributions.toLocaleString("en-US")} contributions
+			</span>
+		</div>
+
+		<!-- Face B: language breakdown -->
+		<div class="wx-gh-face wx-gh-face--langs" aria-hidden="true">
+			<div class="wx-gh-bar">
+				{
+					langs.map((l) => (
+						<span
+							class="wx-gh-bar-seg"
+							style={`width:${l.percent}%;background:${l.color}`}
+						/>
+					))
+				}
+			</div>
+			<ul class="wx-gh-lang-list">
+				{
+					langs.map((l) => (
+						<li class="wx-gh-lang">
+							<span class="wx-gh-dot" style={`background:${l.color}`} />
+							<span class="wx-gh-lang-name">{l.name}</span>
+							<span class="wx-gh-lang-pct">{l.percent}%</span>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</button>
+</Widget>
+
+<script>
+	// Flip the card between the contribution grid and the language breakdown.
+	// Pure class toggle — no network, no persisted state. Bound per page-load and
+	// torn down before a view-transition swap so handlers don't accumulate (the
+	// same lifecycle idiom as videos/Videos.astro).
+	function bind() {
+		const widget = document.querySelector<HTMLElement>(".wx-github");
+		const button = widget?.querySelector<HTMLButtonElement>(".wx-gh-body");
+		if (!widget || !button) return () => {};
+
+		const gridFace = widget.querySelector(".wx-gh-face--grid");
+		const langFace = widget.querySelector(".wx-gh-face--langs");
+
+		const onClick = () => {
+			const flipped = widget.classList.toggle("is-flipped");
+			button.setAttribute("aria-pressed", String(flipped));
+			button.setAttribute(
+				"aria-label",
+				flipped ? "Show contribution graph" : "Show language breakdown",
+			);
+			gridFace?.setAttribute("aria-hidden", String(flipped));
+			langFace?.setAttribute("aria-hidden", String(!flipped));
+		};
+
+		button.addEventListener("click", onClick);
+		return () => button.removeEventListener("click", onClick);
+	}
+
+	let teardown: (() => void) | null = null;
+	document.addEventListener("astro:page-load", () => {
+		teardown = bind();
+	});
+	document.addEventListener("astro:before-swap", () => {
+		teardown?.();
+		teardown = null;
+	});
+</script>
