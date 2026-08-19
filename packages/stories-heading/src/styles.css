@@ -24,7 +24,8 @@ stories-heading {
 	   silently opens a gap between the wordmark and "other stories" (34px of slack on
 	   a short phone). Derived from the same lead the layout uses, so the clamp
 	   coincides with the group's natural position — zero slack at rest, and
-	   "other stories" sits exactly one --sh-heading-gap under the wordmark.
+	   "other stories" sits exactly one --sh-heading-gap from the wordmark (now negative,
+	   so it overlaps up into it).
 	   Falls back to mid-viewport when used outside a .fh hero (--hero-lead unset). */
 	--sh-top: calc(
 		var(--hero-lead, 50svh) + var(--sh-wordmark-h, 0px) +
@@ -43,9 +44,16 @@ stories-heading {
 	/* How far the "&" is indented from the left gutter so it sits OVER the
 	   wordmark rather than at the edge — proportional to its own size. */
 	--sh-amp-indent: calc(0.8 * var(--sh-amp-size));
-	/* Gap between "tristan" and "other stories" so the heading sits directly
-	   below the wordmark. */
-	--sh-heading-gap: var(--space-4, 1rem);
+	/* Vertical offset from "tristan" to "other stories". NEGATIVE so the heading tucks
+	   UP into the wordmark's baseline whitespace and the two read as one tight lockup
+	   ("tristan" has no descenders, so the overlap lands in clear space). Drives both
+	   the track's flow margin and the --sh-top sticky line together, so they stay
+	   coincident (zero slack at rest). DS-token based. */
+	--sh-heading-gap: calc(-1 * var(--space-5));
+	/* Separation from "other stories" down to the intro/CTAs — the intro is page copy
+	   that follows the heading, not a subhead of it. Halved on mobile (see the ≤900px
+	   block) where the tighter column wants less air. */
+	--sh-sub-gap: var(--space-10);
 
 	display: block;
 	position: relative;
@@ -86,7 +94,9 @@ stories-heading {
 .sh__wordmark {
 	margin: 0;
 	position: relative;
-	z-index: 1;
+	/* Above the pinned "other stories" (z-index 3): now that the heading tucks UP into
+	   the wordmark (negative --sh-heading-gap), "tristan" must paint OVER it, not under. */
+	z-index: 4;
 	pointer-events: auto; /* the host opts pointers out; the visible glyphs opt back in */
 }
 
@@ -132,7 +142,7 @@ stories-heading {
 	--sh-amp-stroke: 1px; /* the normal (foreground) outline */
 	--sh-amp-halo: 0.625rem; /* the wider background-colour ring around it */
 	position: absolute;
-	z-index: 2; /* over the wordmark */
+	z-index: 5; /* over the wordmark (4) and the pinned "other stories" (3) */
 	top: var(--sh-amp-top, 0);
 	left: var(--sh-amp-indent);
 	font-family: var(--font-serif, "Playfair Display", Georgia, serif);
@@ -170,8 +180,8 @@ stories-heading {
    the lockup is what the paragraph rises into. */
 .sh__track {
 	position: relative;
-	/* Sit directly below "tristan" (the "&" is absolutely positioned and takes no
-	   flow space, so this follows the wordmark) with a small gap. */
+	/* Follow "tristan" (the "&" is absolutely positioned and takes no flow space) with
+	   a NEGATIVE --sh-heading-gap, so "other stories" tucks up into the wordmark. */
 	margin-block-start: var(--sh-heading-gap);
 	height: calc(var(--sh-reveal) + var(--sh-hold) + var(--sh-pin-height, 0px));
 }
@@ -219,16 +229,16 @@ stories-heading {
 	padding-inline-end: 0.12em;
 }
 
-/* Sub-lockup: page-authored intro + CTAs. Authored inside the pin, but on the
-   desktop layout it's lifted OUT of flow (position: fixed, below) so it reserves
-   NO space in the pin/track — the rising body copy meets "other stories" with no
-   gap between them.
+/* Sub-lockup: page-authored intro + CTAs. Authored inside the pin and lifted OUT of
+   flow (position: absolute; top:100%, below) so it hangs directly beneath
+   "other stories" as one group while reserving NO space in the pin/track — the rising
+   body copy meets "other stories" with no gap between them.
 
-   FADE-ON-SCROLL: rather than travelling up with the lockup, the intro/CTAs FADE
-   OUT in place, FLEETINGLY — the fade completes within the first sliver of scroll
-   (--sh-sub-fade-px), before "other stories" reaches its sticky offset and begins
-   its reveal. visibility flips to hidden at the end of the fade so the invisible
-   bar stops capturing pointer events.
+   FADE-ON-SCROLL: the intro/CTAs travel UP with the page and FADE OUT together,
+   FLEETINGLY — the fade completes within the first sliver of scroll (--sh-sub-fade-px),
+   before "other stories" reaches its sticky offset and begins its reveal, so the whole
+   move happens while the lockup is still scrolling normally. visibility flips to hidden
+   at the end of the fade so the invisible bar stops capturing pointer events.
 
    DRIVEN BY JS, NOT A SCROLL-TIMELINE — and the difference is a bug, not a taste:
    this WAS `animation-timeline: scroll(root)` over a 100px range, and the intro
@@ -261,11 +271,11 @@ stories-heading {
    the path. Both properties DEFAULT TO SHOWN, so a bundle that 404s or throws
    leaves the intro visible rather than invisible. */
 .sh__sub {
-	/* ONE gap, matching --sh-heading-gap (wordmark → "other stories"), so the whole
-	   lockup reads as a single group on one internal rhythm and the intro sits
-	   directly beneath "other stories". The page's slotted content must not add its
-	   own top margin here — that stacked to 32px and split the group in two. */
-	margin-block-start: var(--sh-heading-gap);
+	/* Separate the intro from "other stories": it is page copy that follows the
+	   heading, NOT a subhead of it, so it sits a clear step below rather than tight to
+	   the wordmark→heading rhythm (--sh-heading-gap). The page's slotted content must
+	   not add its OWN top margin on top of this — author the whole gap here. */
+	margin-block-start: var(--sh-sub-gap);
 	/* The visible content is the lede text + buttons; this WRAPPER is a full-width
 	   box, and where it overlays the scene's bottom UI its empty area would swallow
 	   the scrubber's drag. Pointers fall through; the slotted content opts back in
@@ -280,32 +290,25 @@ stories-heading {
 	   the first update) must read as fully shown. Never invert these. */
 	opacity: var(--sh-sub-opacity, 1);
 	visibility: var(--sh-sub-visibility, visible);
+	/* Absolute inside the sticky (pinned) lockup, the intro would otherwise hang
+	   stationary in the viewport while it fades. The driver publishes --sh-sub-shift
+	   (−scrollY, clamped to the fade span) so the intro travels UP with the page as it
+	   fades instead of reading as a fixed bar. Default 0px — unset must not move it. */
+	transform: translateY(var(--sh-sub-shift, 0px));
 }
 
-/* Desktop: fix the sub to the viewport bottom, inset to the hero gutter, so it
-   hangs below "other stories" at rest, takes no flow space, and stays put while it
-   fades. (≤900px keeps it in normal flow under the stacked lockup.) */
-@media (min-width: 901px) {
-	.sh__sub {
-		position: fixed;
-		left: var(--hero-inset, var(--container-pad));
-		right: var(--hero-inset, var(--container-pad));
-		bottom: var(--space-6, 2rem);
-		margin: 0;
-		z-index: 3;
-	}
-}
-
-/* Reduced motion: no fade and no fixed lift — the intro/CTAs stay in normal flow
-   under the lockup, fully shown, and scroll away with the page like everything
-   else (a permanently-fixed bar with no fade would otherwise overlay the page).
+/* Reduced motion: no fade and no out-of-flow lift — the intro/CTAs stay in normal
+   flow under the lockup, fully shown, and scroll away with the page like everything
+   else (a permanently out-of-flow bar with no fade would otherwise overlay the page).
    The JS driver ALSO skips publishing the fade under this preference, so these
    declarations are the belt to that braces; they override the custom properties
    outright rather than trusting the driver to have stayed away. */
 @media (prefers-reduced-motion: reduce) {
 	.sh__sub {
 		position: static;
-		margin-block-start: var(--sh-heading-gap);
+		/* Same intro separation as the base rule (see there); restated because this
+		   block resets position and reads as the reduced-motion source of truth. */
+		margin-block-start: var(--sh-sub-gap);
 		opacity: 1;
 		visibility: visible;
 	}
@@ -370,6 +373,13 @@ stories-heading {
 	stories-heading {
 		--sh-amp-size: 6rem;
 		--sh-heading-size: 2rem;
+		/* Half the desktop overlap: the wordmark is much shorter here, so the desktop
+		   −24px ate proportionally twice as far into it and read too tight. −12px keeps
+		   the same proportional tuck as desktop. */
+		--sh-heading-gap: calc(-1 * var(--space-3));
+		/* Half the desktop intro separation (64px → 32px): the tighter single column
+		   wants less air between "other stories" and the intro. */
+		--sh-sub-gap: var(--space-6);
 		/* Reveal wipe plays over 100px of scroll (vs 300px on desktop). */
 		--sh-reveal: 100px;
 		/* Hold FIXED long enough that "other stories" stays pinned while the full-bleed
@@ -397,15 +407,14 @@ stories-heading {
 	}
 }
 
-/* Mobile, motion allowed: lift the sub-lockup OUT of flow — the desktop rule
-   (position: fixed) is gated min-width:901px, so without this the intro/CTAs
-   stay in normal flow inside the pin and their box keeps reserving ~1 block of
-   space between "other stories" and the paragraph even after they fade out.
-   Absolute within the pin (position:sticky → containing block) pins them just
-   below the heading at rest but reserves NO flow space, so the rising copy meets
-   "other stories" directly. Guarded to no-preference so the reduced-motion
-   fallback (static + in-flow, further down) still wins. */
-@media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+/* Motion allowed (all widths): lift the sub-lockup OUT of flow so it hangs directly
+   below "other stories" as one group. Absolute within the pin (position:sticky →
+   containing block) places it just below the heading and reserves NO flow space, so
+   the rising copy meets "other stories" directly, and — because the fade completes
+   before the pin reaches its sticky offset — it travels UP with the page and fades
+   rather than staying glued to any edge. Guarded to no-preference so the reduced-motion
+   fallback (static + in-flow, above) still wins. */
+@media (prefers-reduced-motion: no-preference) {
 	.sh__sub {
 		position: absolute;
 		top: 100%;

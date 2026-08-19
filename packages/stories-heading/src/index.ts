@@ -252,17 +252,16 @@ export class StoriesHeadingElement extends HTMLElement {
 		//
 		// The sub-lockup is laid out one of two ways, and each puts it on a different
 		// side of the group/floor line:
-		//   · position:fixed (the desktop layout) — anchored to the VIEWPORT bottom, so
-		//     it is not part of the group at all; it behaves exactly like scene-owned
-		//     bottom UI. Its height + bottom offset becomes a floor contribution, and
-		//     the group ends at "other stories".
-		//   · absolute below the pin (mobile) or static inside it (reduced motion) —
-		//     genuinely part of the group, measured PIN-RELATIVE so the number is
-		//     invariant to scroll (the pin detaches from its sticky line as the page
-		//     scrolls) and correct in both modes (the static case is already inside
-		//     pin.offsetHeight, so summing the parts would double-count it).
-		// Measuring `bottom − pinTop` on a FIXED sub would make the group's height drift
-		// with scroll — the bug this split avoids.
+		//   · absolute below the pin (motion allowed, all widths) or static inside it
+		//     (reduced motion) — genuinely part of the group, measured PIN-RELATIVE so
+		//     the number is invariant to scroll (the pin detaches from its sticky line as
+		//     the page scrolls) and correct in both modes (the static case is already
+		//     inside pin.offsetHeight, so summing the parts would double-count it).
+		//   · position:fixed — anchored to the VIEWPORT bottom, so it is not part of the
+		//     group at all and behaves like scene-owned bottom UI (its height + bottom
+		//     offset becomes a floor contribution). No shipped layout sets this now, but
+		//     the branch is kept defensively; measuring `bottom − pinTop` on a FIXED sub
+		//     would make the group's height drift with scroll — the bug this split avoids.
 		const pinRect = this.pin?.getBoundingClientRect();
 		const subRect = this.sub?.getBoundingClientRect();
 		const subFixed =
@@ -561,12 +560,11 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * Fade the intro/CTAs out over the first --sh-sub-fade-px of scroll, and flip
 	 * visibility at the end so the invisible bar stops taking pointer events.
 	 *
-	 * Reads the scroll offset from the DOCUMENT, not from the sub's own box: on the
-	 * desktop layout the sub is position:fixed (it does not move as the page scrolls,
-	 * so its rect carries no progress signal), and on mobile it is absolutely
-	 * positioned inside a sticky pin, whose travel is the PIN's mechanism rather than
-	 * this fade's. `scrollY` is the same quantity the old `scroll(root)` timeline read,
-	 * so the motion is unchanged where that mechanism worked.
+	 * Reads the scroll offset from the DOCUMENT, not from the sub's own box: the sub is
+	 * absolutely positioned inside a sticky pin, whose travel is the PIN's mechanism
+	 * rather than this fade's, so its own rect carries no clean progress signal.
+	 * `scrollY` is the same quantity the old `scroll(root)` timeline read, so the motion
+	 * is unchanged where that mechanism worked.
 	 */
 	private updateSubFade() {
 		const span = this.subFadePx();
@@ -575,11 +573,18 @@ export class StoriesHeadingElement extends HTMLElement {
 			this.clearSubFade();
 			return;
 		}
-		const p = clamp01(
-			(window.scrollY || document.documentElement.scrollTop || 0) / span
-		);
+		const y = window.scrollY || document.documentElement.scrollTop || 0;
+		const p = clamp01(y / span);
 		const opacity = 1 - p;
 		this.style.setProperty("--sh-sub-opacity", opacity.toFixed(4));
+		// The intro sits absolute inside the sticky pin, which is pinned across the whole
+		// hero — so without this it would hang STATIONARY in the viewport while it fades,
+		// reading as a fixed bar. Translate it up 1:1 with scroll so it travels WITH the
+		// page as it fades, then stops once hidden. Clamped to the fade span (it is
+		// visibility:hidden past there, so further travel is wasted). Transform-only, so
+		// it never disturbs the fold/pin measurement that relies on the sub reserving no
+		// flow space.
+		this.style.setProperty("--sh-sub-shift", `${(-Math.min(y, span)).toFixed(2)}px`);
 		// Only at the very end, matching the old keyframe's discrete visibility step.
 		this.style.setProperty(
 			"--sh-sub-visibility",
@@ -590,6 +595,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	/** Drop the published fade so the stylesheet's shown-by-default values apply. */
 	private clearSubFade() {
 		this.style.removeProperty("--sh-sub-opacity");
+		this.style.removeProperty("--sh-sub-shift");
 		this.style.removeProperty("--sh-sub-visibility");
 	}
 

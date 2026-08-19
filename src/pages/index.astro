@@ -102,8 +102,8 @@ import "../widgets/widgets.css";
 	     scene resolves out of the page colour instead of snapping to full strength
 	     the moment the first video frame decodes. Runs once, starts at that first
 	     frame, and is skipped entirely under prefers-reduced-motion.
-	     The short hold (intro-delay) lets the wordmark land first, so the scene
-	     develops UNDER settled type rather than competing with it for attention. -->
+	     No hold (intro-delay="0"): the develop-in starts immediately on the first
+	     frame — kept subtle by the eased ramp and the scene's low opacity. -->
 	<dotted-grid
 		slot="scene"
 		class="hero__video"
@@ -115,7 +115,7 @@ import "../widgets/widgets.css";
 		gamma="0.5"
 		contrast="1.1"
 		color="#7f7f7f"
-		intro-delay="600"
+		intro-delay="0"
 		intro="3200"
 	/>
 
@@ -126,14 +126,14 @@ import "../widgets/widgets.css";
 	     as a film scrubber, and publishes how much of that edge it occupies so the
 	     heading group can rest above it (--hero-floor; see the script below). -->
 	<!-- intro/introDelay match the fabric scene above so BOTH hero variants make the
-	     same entrance — the halftone develops in brightest-dots-first after a short
-	     hold, whichever scene the breakpoint is showing. Runs once, on the first
+	     same entrance — the halftone develops in brightest-dots-first with no hold,
+	     whichever scene the breakpoint is showing. Runs once, on the first
 	     clip; later clips swap in without re-developing. -->
 	<VideoCarousel
 		slot="scene"
 		class="hero-carousel"
 		orientation="horizontal"
-		introDelay={600}
+		introDelay={0}
 		intro={3200}
 		xfade={1600}
 		xfadeMode="threshold"
@@ -159,8 +159,8 @@ import "../widgets/widgets.css";
 		<Grid class="hero-intro" align="end">
 			<GridItem class="hero-intro__lede">
 				<p>
-					American computer programmer, author, and painter. Building backends
-					systems for high-throughput IoT.
+					American computer programmer and human-computer interaction engineer, known
+					for novel computer interfaces and high-throughput IoT systems.
 				</p>
 			</GridItem>
 			<GridItem class="hero-intro__cta">
@@ -254,6 +254,10 @@ import "../widgets/widgets.css";
 		position: absolute;
 		inset: 0;
 		display: block;
+		/* Dial the halftone back so it reads as a faint texture under the type rather
+		   than a strong field competing with it. Keeps the dot structure; just quieter
+		   against the page in both themes. */
+		opacity: 0.55;
 	}
 
 	/* Desktop: fabric is the scene; the carousel lives only in the footer widget. */
@@ -371,6 +375,10 @@ import "../widgets/widgets.css";
 		aspect-ratio: auto;
 		-webkit-mask-image: none;
 		mask-image: none;
+		/* Match the desktop fabric (.hero__video): dial the halftone back so it reads as
+		   a faint texture under the type. The ruler is a separate layer and keeps its
+		   own (already-faint) opacity. */
+		opacity: 0.55;
 	}
 
 	/* Horizontal ruler, BOTTOM-ALIGNED with the halftone so the shared dissolve on
@@ -392,11 +400,11 @@ import "../widgets/widgets.css";
 		   that would re-introduce that mismatch. */
 		bottom: 0;
 		z-index: 2;
-		/* The package rests the ruler at 0.5 and brightens it on :hover/:focus-within
-		   — cues a touch device never fires, so it would sit permanently half-faded
-		   here. This is the primary scrubber of a full-bleed hero, not a secondary
-		   affordance, so it reads at full strength from the start. */
-		--vc-rest-opacity: 1;
+		/* Rest the ruler faint so it reads as a subtle scrubber rather than a strong
+		   band along the hero's foot; it still brightens toward full on drag/focus (the
+		   package animates opacity on interaction). Matches the package's 0.5 default,
+		   restated here because the hero override sits at this specificity. */
+		--vc-rest-opacity: 0.5;
 		/* NO MASK OF ITS OWN. The tick-root dissolve that used to live here is now part
 		   of the ONE band on .vc__main: a gradient on this element resolves 100% against
 		   the ~46px strip while the parent's resolves against the full scene, so the two
@@ -425,9 +433,13 @@ import "../widgets/widgets.css";
 		padding-inline: var(--space-4);
 	}
 
-	/* Year labels (above their tick in horizontal mode) read light over the clip. */
+	/* Year labels (above their tick in horizontal mode) sit faint like the ticks. The
+	   label is text — far more ink than a 1px tick — so at full --color-fg it read
+	   bolder than the hairline ticks even under the ruler's shared 0.5 rest-opacity.
+	   --color-muted drops its weight to match, so the whole ruler reads as one quiet
+	   affordance. Legible enough now that the halftone behind it is itself dialed back. */
 	:global(.hero-carousel .vc__tick-year) {
-		color: var(--color-fg);
+		color: var(--color-muted);
 	}
 
 	/* Caption as overlay text (no white panel): light, sitting just ABOVE the
@@ -482,9 +494,14 @@ import "../widgets/widgets.css";
 	.hero-intro__lede p {
 		margin: 0;
 		pointer-events: auto;
-		font-family: var(--font-serif);
-		font-size: var(--font-size-4);
+		/* Sans uppercase statement line (site --font-sans, the de-facto uppercase
+		   recipe used by .wx-soon__label) — a quieter, more graphic register than the
+		   serif it replaced, still prominent at --text-secondary. */
+		font-family: var(--font-sans);
+		font-size: var(--font-size-3);
 		line-height: 1.5;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
 		color: var(--text-secondary);
 	}
 
