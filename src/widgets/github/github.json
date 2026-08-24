@@ -1,47 +1,8 @@
 {
-	"updated": "2026-08-23",
+	"updated": "2026-08-24",
 	"username": "tatimblin",
-	"totalContributions": 1111,
+	"totalContributions": 1125,
 	"weeks": [
-		{
-			"days": [
-				{
-					"date": "2026-05-31",
-					"count": 1,
-					"level": 1
-				},
-				{
-					"date": "2026-06-01",
-					"count": 1,
-					"level": 1
-				},
-				{
-					"date": "2026-06-02",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2026-06-03",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2026-06-04",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2026-06-05",
-					"count": 2,
-					"level": 1
-				},
-				{
-					"date": "2026-06-06",
-					"count": 0,
-					"level": 0
-				}
-			]
-		},
 		{
 			"days": [
 				{
@@ -470,17 +431,26 @@
 					"level": 1
 				}
 			]
+		},
+		{
+			"days": [
+				{
+					"date": "2026-08-23",
+					"count": 14,
+					"level": 2
+				}
+			]
 		}
 	],
 	"languages": [
 		{
 			"name": "Rust",
-			"percent": 41.9,
+			"percent": 42.3,
 			"color": "#dea584"
 		},
 		{
 			"name": "TypeScript",
-			"percent": 24,
+			"percent": 23.8,
 			"color": "#3178c6"
 		},
 		{
