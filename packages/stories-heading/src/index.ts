@@ -207,6 +207,9 @@ export class StoriesHeadingElement extends HTMLElement {
 		// this reads.
 		this.alignHeadingLayers();
 		this.fitHeading();
+		// AFTER fitHeading: the tuck is derived from the heading's ink metrics at its
+		// FITTED size, so it has to read the size the fit just landed on.
+		this.fitHeadingTuck();
 
 		if (this.pin) {
 			this.style.setProperty(
@@ -458,6 +461,67 @@ export class StoriesHeadingElement extends HTMLElement {
 		const size = (target / natural) * REF;
 		if (!Number.isFinite(size) || size <= 0) return;
 		this.style.setProperty("--sh-heading-fitsize", `${size.toFixed(2)}px`);
+	}
+
+	/**
+	 * SIT "OTHER STORIES" SO ONLY ITS TALL LETTERS OVERLAP THE WORDMARK.
+	 *
+	 * The lockup reads as one unit because the heading tucks UP into the whitespace under
+	 * "tristan" (which has no descenders, so that space is clear). How far up is the
+	 * whole question, and the answer is a TYPOGRAPHIC relationship, not a spacing step:
+	 * the heading's X-HEIGHT LINE should land on the wordmark's BASELINE. Then the
+	 * ascenders — the t's and the h, plus the i's tittle — poke above that baseline and
+	 * nothing else does. Round letters (o, e, r, s) sit entirely below it.
+	 *
+	 * DERIVED, NOT TUNED, and the difference has already bitten once. This was two
+	 * hand-picked px tokens, one per breakpoint. Both were chosen against the previous
+	 * faces, and self-hosting the type (the Migra/Mondwest swap) moved the metrics out
+	 * from under them: the same numbers then read as too much overlap. A ratio of the
+	 * face's own ink cannot go stale that way — it re-derives from whatever CSS resolves.
+	 *
+	 * Measured on the OUTLINE layer: it is the one in normal flow, so it defines the box,
+	 * and it is what is actually on screen at rest (the solid layer is clipped away until
+	 * the wipe, and alignHeadingLayers has matched its ink height to this one anyway).
+	 *
+	 * SCROLL-INVARIANT, which is why it is expressed against the PIN rather than the
+	 * viewport or the wordmark. measure() can run from a resize at any scroll position,
+	 * and the pin is sticky — its distance from the wordmark IS the scroll offset once it
+	 * detaches. The heading's baseline relative to the pin, by contrast, is pure layout:
+	 * the heading is in the pin's flow. At rest the pin's top coincides with the track's,
+	 * which sits one --sh-heading-gap below the wordmark's ink bottom, so
+	 *
+	 *     xHeightLine = wordmarkBaseline + gap + (baseline − pinTop) − xHeight
+	 *
+	 * and setting that equal to the wordmark's baseline gives the gap below. Neither term
+	 * on the right depends on the gap, so this lands in ONE pass — no feedback, and the
+	 * re-measure the write triggers computes the same number and is skipped by setPx.
+	 */
+	private fitHeadingTuck(): void {
+		if (!this.heading || !this.pin) return;
+		const outline = this.heading.querySelector(".sh__outline");
+		if (!outline) return;
+		const text = this.textHost(outline);
+
+		if (!this.inkCanvas) this.inkCanvas = document.createElement("canvas");
+		const ctx = this.inkCanvas.getContext("2d");
+		if (!ctx) return;
+
+		const cs = getComputedStyle(text);
+		const size = parseFloat(cs.fontSize);
+		if (!(size > 0)) return;
+
+		// x-height = the ink ascent of "x": no ascender, no descender, so its ink top IS
+		// the x-height line. Asking the face directly beats any table of per-font ratios.
+		ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
+		const xHeight = ctx.measureText("x").actualBoundingBoxAscent;
+		if (!Number.isFinite(xHeight) || xHeight <= 0) return;
+
+		const baseline = this.baselineOf(text);
+		if (baseline === null) return;
+		const pinTop = this.pin.getBoundingClientRect().top;
+
+		// Negative: the heading rises into the wordmark by its own ascender overshoot.
+		this.setPx(this, "--sh-heading-gap", xHeight - (baseline - pinTop), "headingGap");
 	}
 
 	/**

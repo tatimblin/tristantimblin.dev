@@ -50,8 +50,18 @@ stories-heading {
 	   UP into the wordmark's baseline whitespace and the two read as one tight lockup
 	   ("tristan" has no descenders, so the overlap lands in clear space). Drives both
 	   the track's flow margin and the --sh-top sticky line together, so they stay
-	   coincident (zero slack at rest). DS-token based. */
-	--sh-heading-gap: calc(-1 * var(--space-5));
+	   coincident (zero slack at rest). DS-token based.
+
+	   A PRE-JS FALLBACK ONLY. fitHeadingTuck() in index.ts MEASURES this and overwrites
+	   it on the host, because the right value is a typographic relationship rather than a
+	   spacing step: the heading's x-height line should land on the wordmark's baseline, so
+	   only the tall letters (the t's, the h, the i's tittle) cross it. That is the face's
+	   own ascender overshoot, and it re-derives when the type changes.
+	   Which is not hypothetical — this WAS a hand-picked token per breakpoint, chosen
+	   against the previous faces, and self-hosting the type moved the metrics out from
+	   under both. Keep this token close to the measured answer (it governs the first
+	   frame) but do not tune the LOOK here; tune it in fitHeadingTuck or not at all. */
+	--sh-heading-gap: calc(-1 * var(--space-4));
 	/* Separation from "other stories" down to the intro/CTAs — the intro is page copy
 	   that follows the heading, not a subhead of it. Halved on mobile (see the ≤900px
 	   block) where the tighter column wants less air. */
@@ -424,10 +434,11 @@ stories-heading {
 	stories-heading {
 		--sh-amp-size: 6rem;
 		--sh-heading-size: 2rem;
-		/* Half the desktop overlap: the wordmark is much shorter here, so the desktop
-		   −24px ate proportionally twice as far into it and read too tight. −12px keeps
-		   the same proportional tuck as desktop. */
-		--sh-heading-gap: calc(-1 * var(--space-3));
+		/* Pre-JS fallback for the smaller heading here (see the base rule). The measured
+		   tuck works out to ~0.14 of the heading's font-size at BOTH breakpoints — the
+		   ratio is a property of the face, not of the screen — so this step is simply the
+		   nearest token to that at this size. fitHeadingTuck() overwrites it either way. */
+		--sh-heading-gap: calc(-1 * var(--space-2));
 		/* Half the desktop intro separation (64px → 32px): the tighter single column
 		   wants less air between "other stories" and the intro. */
 		--sh-sub-gap: var(--space-3);

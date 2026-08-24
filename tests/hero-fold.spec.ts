@@ -364,6 +364,84 @@ test.describe("hero fold — mobile", () => {
 	});
 });
 
+test.describe("lockup tuck — only the tall letters overlap", () => {
+	// THE REGRESSION THIS EXISTS FOR, which has already happened once. "other stories"
+	// tucks UP into the whitespace under "tristan" so the two read as one lockup. How far
+	// up was two hand-picked px tokens, one per breakpoint — chosen against the faces the
+	// site used at the time. Self-hosting the type (the Migra/Mondwest swap) moved both
+	// faces' metrics out from under those numbers, and the same tokens then read as the
+	// words colliding. Nothing failed; it just looked wrong until someone noticed.
+	//
+	// The tuck is derived now (fitHeadingTuck in stories-heading), from the relationship
+	// that actually defines the look: THE HEADING'S X-HEIGHT LINE SITS ON THE WORDMARK'S
+	// BASELINE. Everything that rises above that line — the t's, the h, the i's tittle —
+	// crosses into the wordmark, and nothing else does. This asserts that relationship
+	// directly, so the next font change fails loudly here instead of drifting.
+	for (const vp of [
+		{ name: "mobile", width: 390, height: 844 },
+		{ name: "desktop", width: 1440, height: 900 },
+	]) {
+		test(`the x-height line sits on the wordmark baseline at ${vp.name}`, async ({
+			page,
+		}) => {
+			await page.setViewportSize({ width: vp.width, height: vp.height });
+			await page.goto("/");
+			await page
+				.locator("stories-heading[data-ready]")
+				.waitFor({ state: "attached", timeout: 10_000 });
+			await settle(page);
+
+			const ink = await page.evaluate(() => {
+				const q = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
+				const outline = q<HTMLElement>(".sh__outline");
+
+				// The engine's own answer for the baseline: a zero-height inline-block sits
+				// ON it by definition. Same probe the package uses — reconstructing it from
+				// font metrics is what this whole approach exists to avoid.
+				const probe = document.createElement("span");
+				probe.style.cssText =
+					"display:inline-block;width:0;height:0;overflow:hidden";
+				outline.appendChild(probe);
+				const baseline = probe.getBoundingClientRect().bottom;
+				probe.remove();
+
+				const cs = getComputedStyle(outline);
+				const ctx = document.createElement("canvas").getContext("2d")!;
+				ctx.font = `${cs.fontWeight} ${parseFloat(cs.fontSize)}px ${cs.fontFamily}`;
+				// "x" has no ascender and no descender, so its ink top IS the x-height line.
+				const xHeight = ctx.measureText("x").actualBoundingBoxAscent;
+				const ascent = ctx.measureText("other stories").actualBoundingBoxAscent;
+
+				// The wordmark's SVG viewBox is fit to its glyph ink and "tristan" has no
+				// descenders, so the box's bottom edge is its baseline.
+				return {
+					xHeightLine: baseline - xHeight,
+					wordmarkBaseline: q(".sh__wordmark-svg").getBoundingClientRect().bottom,
+					inkOverlap:
+						q(".sh__wordmark-svg").getBoundingClientRect().bottom -
+						(baseline - ascent),
+					ascenderOvershoot: ascent - xHeight,
+					xHeight,
+				};
+			});
+
+			// Sanity: the metrics really were readable, so the equalities below can't pass
+			// by both sides being zero.
+			expect(ink.xHeight).toBeGreaterThan(0);
+			expect(ink.ascenderOvershoot).toBeGreaterThan(0);
+
+			// THE RELATIONSHIP: the x-height line lands on the wordmark's baseline.
+			expect(Math.abs(ink.xHeightLine - ink.wordmarkBaseline)).toBeLessThan(1);
+
+			// Equivalently, stated as what you SEE: exactly the ascender overshoot crosses
+			// into the wordmark — the tall letters and nothing else. Too small and the
+			// lockup breaks into two lines; too large and the words collide, which is the
+			// direction the font swap pushed it.
+			expect(ink.inkOverlap).toBeCloseTo(ink.ascenderOvershoot, 0);
+		});
+	}
+});
+
 test.describe("hero fold — desktop", () => {
 	test("the group is tight and its height does not drift with scroll", async ({
 		page,
