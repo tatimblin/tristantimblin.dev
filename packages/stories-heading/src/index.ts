@@ -93,6 +93,19 @@ export class StoriesHeadingElement extends HTMLElement {
 	    large is only a slightly taller opaque mask, over page background. */
 	private static readonly COVER_SLACK = 8;
 
+	/** Optical clearance added to the measured tuck, in px.
+	    fitHeadingTuck() computes the point where the heading's x-height line sits exactly
+	    ON the wordmark's baseline. That is the mathematically exact reading of "only the
+	    tall letters overlap", and on screen it is a shade tight: the ascender tips land
+	    hard against the wordmark's letterforms with nothing between them. A couple of
+	    pixels of daylight lets the two words breathe without loosening the lockup — the
+	    round letters still sit below the baseline and the tall ones still cross it.
+	    FLAT px, not a ratio, and deliberately so: this is a fixed optical clearance
+	    between two edges, not a proportion of either face. Same reasoning as COVER_SLACK
+	    above. If it ever needs to scale with the type instead, multiply by the heading's
+	    font-size at the call site — one line. */
+	private static readonly TUCK_CLEARANCE = 2;
+
 	/** Vertical offset of the "&" from the wordmark baseline, as a fraction of the
 	    "&"'s own font-size (so it scales across viewports). POSITIVE lifts it above
 	    the baseline; negative drops it below. It sits just under the baseline so the
@@ -469,9 +482,10 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * The lockup reads as one unit because the heading tucks UP into the whitespace under
 	 * "tristan" (which has no descenders, so that space is clear). How far up is the
 	 * whole question, and the answer is a TYPOGRAPHIC relationship, not a spacing step:
-	 * the heading's X-HEIGHT LINE should land on the wordmark's BASELINE. Then the
-	 * ascenders — the t's and the h, plus the i's tittle — poke above that baseline and
-	 * nothing else does. Round letters (o, e, r, s) sit entirely below it.
+	 * the heading's X-HEIGHT LINE should land on the wordmark's BASELINE, plus a couple
+	 * of pixels of optical clearance (TUCK_CLEARANCE). Then the ascenders — the t's and
+	 * the h, plus the i's tittle — poke above that baseline and nothing else does. Round
+	 * letters (o, e, r, s) sit entirely below it.
 	 *
 	 * DERIVED, NOT TUNED, and the difference has already bitten once. This was two
 	 * hand-picked px tokens, one per breakpoint. Both were chosen against the previous
@@ -520,8 +534,14 @@ export class StoriesHeadingElement extends HTMLElement {
 		if (baseline === null) return;
 		const pinTop = this.pin.getBoundingClientRect().top;
 
-		// Negative: the heading rises into the wordmark by its own ascender overshoot.
-		this.setPx(this, "--sh-heading-gap", xHeight - (baseline - pinTop), "headingGap");
+		// Negative: the heading rises into the wordmark by its own ascender overshoot,
+		// less the optical clearance that keeps the tips off the wordmark's letterforms.
+		this.setPx(
+			this,
+			"--sh-heading-gap",
+			xHeight - (baseline - pinTop) + StoriesHeadingElement.TUCK_CLEARANCE,
+			"headingGap"
+		);
 	}
 
 	/**

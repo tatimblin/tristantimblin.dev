@@ -374,9 +374,18 @@ test.describe("lockup tuck — only the tall letters overlap", () => {
 	//
 	// The tuck is derived now (fitHeadingTuck in stories-heading), from the relationship
 	// that actually defines the look: THE HEADING'S X-HEIGHT LINE SITS ON THE WORDMARK'S
-	// BASELINE. Everything that rises above that line — the t's, the h, the i's tittle —
-	// crosses into the wordmark, and nothing else does. This asserts that relationship
-	// directly, so the next font change fails loudly here instead of drifting.
+	// BASELINE, give or take a couple of px of optical clearance. Everything that rises
+	// above that line — the t's, the h, the i's tittle — crosses into the wordmark, and
+	// nothing else does.
+	//
+	// ASSERTED AS BOUNDS, NOT AS AN EXACT POSITION, and the distinction is what makes this
+	// test durable. "Only the tall letters overlap" admits a small range: the x-height line
+	// may sit anywhere from ON the baseline to a hair below it. Where exactly it lands
+	// inside that range is a tuning choice (TUCK_CLEARANCE), and pinning the tuned value
+	// would mean every future nudge to the look breaks a test that is supposed to be about
+	// the RULE. So the bounds are the two ways the rule can actually be violated: the round
+	// letters crossing the baseline (collision — the direction the font swap pushed it), or
+	// the gap opening so far that the lockup reads as two separate lines.
 	for (const vp of [
 		{ name: "mobile", width: 390, height: 844 },
 		{ name: "desktop", width: 1440, height: 900 },
@@ -425,19 +434,27 @@ test.describe("lockup tuck — only the tall letters overlap", () => {
 				};
 			});
 
-			// Sanity: the metrics really were readable, so the equalities below can't pass
-			// by both sides being zero.
+			// Sanity: the metrics really were readable, so the bounds below can't pass by
+			// every quantity being zero.
 			expect(ink.xHeight).toBeGreaterThan(0);
 			expect(ink.ascenderOvershoot).toBeGreaterThan(0);
 
-			// THE RELATIONSHIP: the x-height line lands on the wordmark's baseline.
-			expect(Math.abs(ink.xHeightLine - ink.wordmarkBaseline)).toBeLessThan(1);
+			// The TALL letters do cross into the wordmark — without this the two words
+			// separate and stop reading as one lockup.
+			expect(ink.inkOverlap).toBeGreaterThan(0);
 
-			// Equivalently, stated as what you SEE: exactly the ascender overshoot crosses
-			// into the wordmark — the tall letters and nothing else. Too small and the
-			// lockup breaks into two lines; too large and the words collide, which is the
-			// direction the font swap pushed it.
-			expect(ink.inkOverlap).toBeCloseTo(ink.ascenderOvershoot, 0);
+			const clearance = ink.xHeightLine - ink.wordmarkBaseline;
+
+			// The ROUND letters do not. This is the collision guard, and it is the one the
+			// font swap tripped: on the previous hand-picked tuck the x-height line sat
+			// 5.3px ABOVE the baseline, i.e. the bowls of the o/e/r/s were running into
+			// "tristan". Anything at or below the baseline is fine.
+			expect(clearance).toBeGreaterThanOrEqual(-0.5);
+
+			// ...and it stays TIGHT. Bounded as a fraction of the ascender overshoot rather
+			// than in px, because "still reads as one lockup" scales with the type — the
+			// same 3px gap is invisible at 129px and a chasm at 52px.
+			expect(clearance).toBeLessThan(0.25 * ink.ascenderOvershoot);
 		});
 	}
 });
