@@ -209,6 +209,44 @@ test.describe("reveal — safety", () => {
 		expect(state.faded).toBe(0);
 		expect(state.pending).toBe(0);
 	});
+
+	test("7. LIFECYCLE: widget-owned reveals re-arm after a round trip", async ({
+		page,
+	}) => {
+		// The bike watermark has its OWN IntersectionObserver (BikeStats.astro), separate
+		// from the reveal coordinator. Astro executes a component's bundled script exactly
+		// once, but ClientRouter replaces the DOM on every navigation — so an observer
+		// wired at module scope ends up watching a detached node while the fresh element
+		// never gets `.is-in`. Its resting state is `opacity: 0`, so the regression is
+		// INVISIBLE CONTENT, not a missing flourish. Measured before the fix: 0.66 on
+		// first load, 0 after a round trip.
+		const watermark = () =>
+			page
+				.locator(".wx-baywheels")
+				.evaluate((el: Element) =>
+					parseFloat(getComputedStyle(el, "::before").opacity)
+				);
+
+		await page.goto("/");
+		await page.locator(".wx-baywheels").scrollIntoViewIfNeeded();
+		await settleReveal(page);
+		expect(await watermark()).toBeGreaterThan(0);
+
+		// Dispatch the click rather than hit-test it, per test 6.
+		await page.evaluate(() => {
+			const link = Array.from(
+				document.querySelectorAll<HTMLAnchorElement>("a")
+			).find((a) => a.textContent?.trim() === "Writing");
+			link?.click();
+		});
+		await page.waitForURL("**/txt");
+		await page.goBack();
+		await page.waitForURL((u) => u.pathname === "/");
+
+		await page.locator(".wx-baywheels").scrollIntoViewIfNeeded();
+		await settleReveal(page);
+		expect(await watermark()).toBeGreaterThan(0);
+	});
 });
 
 test.describe("reveal — below-the-fold behaviour", () => {

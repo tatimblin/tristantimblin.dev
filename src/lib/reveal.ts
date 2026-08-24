@@ -231,7 +231,13 @@ class RevealCoordinator {
 		return Number.isFinite(raw) ? raw : members.indexOf(el);
 	}
 
-	/** One-shot IntersectionObserver, in the BikeStats.astro idiom. */
+	/**
+	 * One-shot IntersectionObserver: resolve on first intersection, then unobserve.
+	 *
+	 * Only the OBSERVER SHAPE is shared with the widgets' own reveals — this module
+	 * owns its lifecycle separately (initReveal is bound to astro:page-load below,
+	 * which is what makes it survive a ClientRouter swap).
+	 */
 	private whenInView(el: HTMLElement): Promise<void> {
 		return new Promise<void>((resolve) => {
 			const io = new IntersectionObserver(
