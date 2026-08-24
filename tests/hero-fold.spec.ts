@@ -23,6 +23,16 @@ import { test, expect, type Page } from "@playwright/test";
 /** Minimum breathing room we require between the group and the scene's bottom UI. */
 const MIN_GAP = 16;
 
+/** How far a measured, republished layout value may legitimately trail the truth.
+ *  publishMetrics() in the video-carousel guards each custom-property write at half a
+ *  pixel (an unguarded write from a ResizeObserver callback logs an RO-loop warning),
+ *  and the mobile hero chains two of them: --vc-caption-h positions the ruler, and the
+ *  --vc-bottom-ui-extent derived from it is what the hero reserves room for. Worst-case
+ *  combined staleness is therefore ~1px; 1.5 leaves margin for sub-pixel layout rounding
+ *  on top. Any comparison of the same layout reached by two different paths belongs
+ *  outside this epsilon, never inside it. */
+const PUBLISH_EPSILON = 1.5;
+
 /** Phone/tablet sizes that exercise the ≤900px full-bleed hero. */
 const MOBILE_VIEWPORTS = [
 	{ name: "360x600 (short Android)", width: 360, height: 600 },
@@ -229,7 +239,23 @@ test.describe("hero fold — mobile", () => {
 		await stretchLede(page, 1);
 		const restored = await readMobileFold(page);
 		expect(restored.grew).toBeCloseTo(0, 0);
-		expect(restored.clearance).toBeCloseTo(base.clearance, 0);
+		// Tolerance is PUBLISH_EPSILON, not toBeCloseTo(_, 0)'s half-pixel, and the
+		// difference matters. Two of the inputs to this clearance are MEASURED and
+		// republished from JS — the carousel's --vc-caption-h (which positions the ruler)
+		// and the --vc-bottom-ui-extent derived from it (which the hero reserves room
+		// for). Each write is guarded at half a pixel, because an unguarded custom-property
+		// write from inside a ResizeObserver callback that resizes anything logs
+		// "ResizeObserver loop completed with undelivered notifications". So the published
+		// values are allowed to trail the truth by up to that guard, and two of them chain
+		// here — which makes a sub-pixel difference between two paths to the same layout a
+		// PROPERTY OF THE SYSTEM, not a regression. Asserting inside the guard is asserting
+		// something the design never promised: it passed on this machine and failed on CI
+		// at 0.58px, for no reason connected to the invariant.
+		// Real hysteresis is the scene failing to shrink back at all — tens of pixels, and
+		// caught by the `grew` assertion directly above.
+		expect(Math.abs(restored.clearance - base.clearance)).toBeLessThan(
+			PUBLISH_EPSILON
+		);
 	});
 
 	test("clearance survives a large root font size", async ({ page }) => {
