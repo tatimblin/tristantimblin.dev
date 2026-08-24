@@ -3,8 +3,7 @@
    Structure:
      .sh__wordmark  the full-width "tristan" SVG; width:100% fills gutter-to-gutter
                     (JS sizes the viewBox to the glyph bbox, so no baked ratio).
-     .sh__amp       the big "&", overlapping the wordmark (indented) and painting OVER
-                    "other stories" too — it is the lockup's TOP layer. It parallaxes
+     .sh__amp       the big "&", overlapping the wordmark (indented). It parallaxes
                     + fades on its OWN viewport position — decoupled from below.
      .sh__track     reserves the pin duration in normal flow for "other stories"
                     (height = --sh-reveal + --sh-hold + --sh-pin-height).
@@ -107,12 +106,11 @@ stories-heading {
 .sh__wordmark {
 	margin: 0;
 	position: relative;
-	/* The BOTTOM of the lockup's three layers: the "&" (6) over "other stories" (5)
+	/* The BOTTOM of the lockup's three layers: "other stories" (5) over the "&" (4)
 	   over "tristan" (3). The heading tucks UP into the wordmark (negative
-	   --sh-heading-gap), so "other stories" knocks its background-filled outline
+	   --sh-heading-gap), so "other stories" now knocks its background-filled outline
 	   glyphs out of "tristan" where they cross — the same fill-and-stroke treatment
-	   the "&" uses against both of them, extended to the whole lockup.
-	   All three levels are restated in each other's comments; change one, change them. */
+	   the "&" already uses against the wordmark, extended to the whole lockup. */
 	z-index: 3;
 	pointer-events: auto; /* the host opts pointers out; the visible glyphs opt back in */
 }
@@ -159,15 +157,19 @@ stories-heading {
 	--sh-amp-stroke: 1px; /* the normal (foreground) outline */
 	--sh-amp-halo: 0.625rem; /* the wider background-colour ring around it */
 	position: absolute;
-	/* THE TOP of the lockup: above "other stories" (5) and the wordmark (3), so the
-	   glyph reads as one continuous mark laid over the pair rather than something
-	   threaded between them. It is drawn to survive that — filled with --color-bg and
-	   stroked in the foreground, with a wider background-colour halo behind it
-	   (::before) — so it knocks a clean hole in whatever it crosses instead of
-	   tangling with it. Must EXCEED .sh__pin's 5: the pin is positioned with a
-	   z-index, so it forms a stacking context and every layer of "other stories" —
-	   outline, solid, backdrop — is bounded by that single number. */
-	z-index: 6;
+	/* BETWEEN the two words: over the wordmark (3), under "other stories" (5).
+	   A DELIBERATE MIDDLE, not a leftover. Both neighbours were tried on screen:
+	     · Over everything (6) — the "&" wins the lockup outright, which is louder
+	       than it should be for what is essentially a connective mark.
+	     · Under everything (2) — it vanishes. The "&" is sized at AMP_SIZE_RATIO of
+	       the wordmark's ink height and offset by 0.8 of its own size, so it lands
+	       ENTIRELY inside the wordmark's box with no part in clear space; behind an
+	       opaque fill there is nothing left to see. Getting it back would mean making
+	       its interior transparent and dropping the halo (see --sh-amp-halo) — a
+	       different mark, not a different depth.
+	   Here it knocks its clean hole through "tristan" and then "other stories" — itself
+	   only an outline — reads back across it. Each word gets to cross one thing. */
+	z-index: 4;
 	top: var(--sh-amp-top, 0);
 	left: var(--sh-amp-indent);
 	font-family: var(--font-serif, ui-serif, Georgia, serif);
@@ -215,9 +217,9 @@ stories-heading {
 .sh__pin {
 	position: sticky;
 	top: var(--sh-top);
-	/* Ride ABOVE the opaque content riser so it stays visible as copy rises, and above
-	   the wordmark (3) — but BELOW the "&" (6), so the lockup stacks
-	   "&" → "other stories" → "tristan".
+	/* Ride ABOVE the opaque content riser so it stays visible as copy rises, and
+	   above both the "&" (4) and the wordmark (3), so the lockup stacks
+	   "other stories" → "&" → "tristan".
 	   The solid layer's opaque --color-bg backdrop sits at this level too, but it is
 	   fully clipped away at rest (--sh-clip 1) and its reveal is gated until the
 	   phrase has cleared the scene — see the `scene` field in index.ts. */
