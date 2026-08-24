@@ -227,10 +227,47 @@ test.describe("reveal — safety", () => {
 					parseFloat(getComputedStyle(el, "::before").opacity)
 				);
 
+		// POLL, don't sample. `.is-in` starts a CSS TRANSITION on ::before, so the
+		// watermark takes ~1.5s to reach its resting 0.66 — and settleReveal() does not
+		// cover it (that waits on the [data-reveal] coordinator's opacity, which is a
+		// different mechanism on a different element). Sampling once therefore caught the
+		// fade mid-flight at 0 and reported the lifecycle regression that this test
+		// exists to detect, on a widget that was in fact revealing perfectly well.
+		//
+		// Polling still catches the REAL regression: when the observer is left watching a
+		// detached node, the resting state is opacity 0 forever, so this never settles
+		// above 0 and fails on the timeout instead of on a race.
+		const expectWatermarkShown = async (when: string) =>
+			expect
+				.poll(watermark, {
+					timeout: 8000,
+					message: `the bike watermark never faded in (${when})`,
+				})
+				.toBeGreaterThan(0);
+
+		// Plain scroll, NOT locator.scrollIntoViewIfNeeded() — see the note on the same
+		// call in "the widget row is held until scrolled to". This widget sits in
+		// .home__widgets, the row that never fully settles (its reveal transition and the
+		// video widget's scroll-driven dock lift both animate it), so waiting for the box
+		// to stop moving times out at 30s on a slow runner instead of asserting anything.
+		// We only need it on screen so its IntersectionObserver fires.
+		const show = async () => {
+			// Wait for the element FIRST. ClientRouter swaps the DOM asynchronously after
+			// the URL changes, so page.waitForURL() can return while the previous page's
+			// body is still mounted — at which point .wx-baywheels is null, the optional
+			// chain below silently no-ops, and the widget is never brought into view. The
+			// assertion then fails on a widget that was simply never scrolled to, which
+			// reads as the lifecycle regression rather than as the race it is.
+			await page.locator(".wx-baywheels").waitFor({ state: "attached" });
+			await page.evaluate(() =>
+				document.querySelector(".wx-baywheels")?.scrollIntoView({ block: "center" })
+			);
+		};
+
 		await page.goto("/");
-		await page.locator(".wx-baywheels").scrollIntoViewIfNeeded();
+		await show();
 		await settleReveal(page);
-		expect(await watermark()).toBeGreaterThan(0);
+		await expectWatermarkShown("first load");
 
 		// Dispatch the click rather than hit-test it, per test 6.
 		await page.evaluate(() => {
@@ -243,9 +280,9 @@ test.describe("reveal — safety", () => {
 		await page.goBack();
 		await page.waitForURL((u) => u.pathname === "/");
 
-		await page.locator(".wx-baywheels").scrollIntoViewIfNeeded();
+		await show();
 		await settleReveal(page);
-		expect(await watermark()).toBeGreaterThan(0);
+		await expectWatermarkShown("after a round trip");
 	});
 });
 
