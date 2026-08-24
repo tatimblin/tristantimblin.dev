@@ -1,9 +1,9 @@
 /* Design-system tokens (spacing --space-*, type --font-size-*, colors, radii,
    fonts) come from @whois/design-system/tokens.css, imported AFTER this file in
    Layout.astro. This block defines only what the DS layer does NOT provide:
-   the site's section palette, the sans/serif faces DS lacks, a few named
-   font-size aliases still used by legacy components, and layout knobs. The
-   legacy --color-* / --font-decorative names are bridged onto DS tokens there. */
+   the site's section palette, a few named font-size aliases still used by legacy
+   components, and layout knobs. The legacy --color-* names are bridged onto DS
+   tokens there, as is --font-sans below. */
 :root {
   --section-1-bg: #bcd6ee;
   --section-1-fg: #14305a;
@@ -12,8 +12,10 @@
   --section-3-bg: #b8dcb8;
   --section-3-fg: #143d1f;
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  /* Legacy alias for the body face. The role tokens (--font-hero, --font-heading,
+     --font-subheading, --font-body) are defined in the DS token layer; this name
+     stays because a handful of pre-DS rules still reference it. */
+  --font-sans: var(--font-body);
 
   /* Named font-size aliases still referenced by legacy components (DS uses a
      numeric --font-size-1..8 scale instead). */
@@ -50,6 +52,12 @@ body {
   color: var(--color-fg);
   background: var(--color-bg);
   -webkit-font-smoothing: antialiased;
+  /* PP Mondwest ships a single cut, and the DS asks for 500/560 in cards,
+     buttons and widget stats. Faux-bolding a bitmap face smears its pixel grid
+     into mush, so refuse the synthesis: those components already carry their
+     emphasis in colour and size. Real weight comes from Migra (two cuts) or from
+     --font-subheading, which IS a bold. */
+  font-synthesis-weight: none;
   overflow-x: clip;
 }
 
@@ -61,6 +69,20 @@ h5,
 h6,
 p {
   margin: 0;
+}
+
+/* Bare headings take the heading face. Family and weight travel together: Migra
+   is one family with two cuts, so a family without a weight lands on whichever
+   the browser guesses. The DS Heading components set the same pair at higher
+   specificity (packages/design-system/src/styles/heading.css). */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
 }
 
 h1 {

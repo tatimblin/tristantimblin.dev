@@ -8,3 +8,9 @@
 
 /audio/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Self-hosted web fonts (public/fonts, built by tools/fonts/build.sh). Content-
+# addressed by hand: a re-subset of the same face keeps its filename, so bump the
+# filename when a face is genuinely replaced.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

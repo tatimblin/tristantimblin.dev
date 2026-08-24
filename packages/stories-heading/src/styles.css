@@ -94,9 +94,12 @@ stories-heading {
 .sh__wordmark {
 	margin: 0;
 	position: relative;
-	/* Above the pinned "other stories" (z-index 3): now that the heading tucks UP into
-	   the wordmark (negative --sh-heading-gap), "tristan" must paint OVER it, not under. */
-	z-index: 4;
+	/* The BOTTOM of the lockup's three layers: "other stories" (5) over the "&" (4)
+	   over "tristan" (3). The heading tucks UP into the wordmark (negative
+	   --sh-heading-gap), so "other stories" now knocks its background-filled outline
+	   glyphs out of "tristan" where they cross — the same fill-and-stroke treatment
+	   the "&" already uses against the wordmark, extended to the whole lockup. */
+	z-index: 3;
 	pointer-events: auto; /* the host opts pointers out; the visible glyphs opt back in */
 }
 
@@ -107,18 +110,18 @@ stories-heading {
 }
 
 .sh__wordmark-text {
-	font-family: var(--font-serif, "Playfair Display", Georgia, serif);
-	/* 400, not 500. Playfair Display is loaded at 400/600/700 only (see the Google
-	   Fonts URL in the site's Layout), so a request for 500 fell through CSS font
-	   matching — which prefers weights <= the requested one when it is under 400 or
-	   in the 400-500 band — and rendered 400 anyway. Stating 400 makes the
-	   declaration honest about what actually paints.
-	   Deliberately NOT "fix the font instead": loading a real 500 would change the
-	   wordmark's ink metrics, which JS measures into --sh-group-h and thence the
-	   whole hero fold, so it is a design decision (slightly heavier wordmark) rather
-	   than a bug fix. If that is ever wanted, add 500 to the font URL and re-run
-	   tests/hero-fold.spec.ts. */
-	font-weight: 400;
+	font-family: var(--font-serif, ui-serif, Georgia, serif);
+	/* Migra MEDIUM, deliberately lighter than the rest of the lockup. The wordmark
+	   is set enormous, and at that size the bold cut's stroke contrast turns heavy
+	   and closes up the counters; the medium keeps the high-contrast serif reading
+	   as a display face rather than a slab. The "&" and "other stories" stay on
+	   --font-hero-weight (700) — they are set far smaller and need the weight to
+	   hold up against the wordmark beside them.
+	   The token, not a literal 500, so "Migra Medium" is spelled in exactly one
+	   place. Changing this moves the wordmark's ink metrics, which JS measures into
+	   --sh-group-h and thence the whole hero fold — re-run tests/hero-fold.spec.ts
+	   after any change here. */
+	font-weight: var(--font-heading-weight, 500);
 	letter-spacing: -0.02em;
 	fill: var(--text-primary, #ededed);
 	/* SVG user units; the viewBox is resized to the real glyph bbox in JS, so
@@ -142,12 +145,12 @@ stories-heading {
 	--sh-amp-stroke: 1px; /* the normal (foreground) outline */
 	--sh-amp-halo: 0.625rem; /* the wider background-colour ring around it */
 	position: absolute;
-	z-index: 5; /* over the wordmark (4) and the pinned "other stories" (3) */
+	z-index: 4; /* between "other stories" (5) above and the wordmark (3) below */
 	top: var(--sh-amp-top, 0);
 	left: var(--sh-amp-indent);
-	font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+	font-family: var(--font-serif, ui-serif, Georgia, serif);
 	font-size: var(--sh-amp-size);
-	font-weight: 600;
+	font-weight: var(--font-hero-weight, 700);
 	line-height: 1;
 	letter-spacing: -0.02em;
 	color: var(--color-bg, #0a0a0a);
@@ -190,8 +193,13 @@ stories-heading {
 .sh__pin {
 	position: sticky;
 	top: var(--sh-top);
-	/* Ride ABOVE the opaque content riser so it stays visible as copy rises. */
-	z-index: 3;
+	/* Ride ABOVE the opaque content riser so it stays visible as copy rises, and
+	   above both the "&" (4) and the wordmark (3), so the lockup stacks
+	   "other stories" → "&" → "tristan".
+	   The solid layer's opaque --color-bg backdrop sits at this level too, but it is
+	   fully clipped away at rest (--sh-clip 1) and its reveal is gated until the
+	   phrase has cleared the scene — see the `scene` field in index.ts. */
+	z-index: 5;
 }
 
 /* Flush to the left gutter — the same left column the body copy starts on, so
@@ -212,14 +220,17 @@ stories-heading {
 	   result as --sh-heading-fitsize; fall back to the fixed rem step until then
 	   (and on the ≤900px stacked layout, where JS clears the fit prop). */
 	font-size: var(--sh-heading-fitsize, var(--sh-heading-size));
-	/* Both faces MUST share one weight: the layers overlay glyph-for-glyph, so a
-	   weight mismatch gives them different advance widths that drift apart
-	   cumulatively across the word (the fill creeps past the outline by the end).
-	   The outline sets 600; match it here so the solid layer doesn't inherit the
-	   UA <h2> bold (700). */
-	font-weight: 600;
+	/* The OUTLINE layer's weight (the solid layer overrides it with its own). Stated
+	   here rather than left to inherit so the layer never picks up the UA <h2> bold.
+	   The two layers no longer share a face — see .sh__solid — so they no longer
+	   share advance widths either; the JS fit sizes this box to the WIDER of the
+	   two, which is what keeps the clip-path from shaving either one. */
+	font-weight: var(--font-hero-weight, 700);
 	line-height: 0.85;
-	letter-spacing: -0.01em;
+	/* Named so the solid layer can ADD its registration tracking to it rather than
+	   restate the value and drift from it. */
+	--sh-tracking: -0.01em;
+	letter-spacing: var(--sh-tracking);
 	white-space: nowrap;
 	/* fit-content sizes the box to the text ADVANCE width, but a serif glyph's ink
 	   (the trailing "s") overshoots its advance via the right side-bearing — and the
@@ -331,27 +342,62 @@ stories-heading {
 .sh__heading .sh__solid {
 	position: absolute;
 	inset: 0;
+	/* ...but with the TOP edge lifted clear of the ink. line-height 0.85 means both
+	   layers' ascenders paint above this box, and the box is both the opaque mask's
+	   extent and the clip-path's reference — so at inset:0 the outline's tallest
+	   glyphs poked out above the mask and the solid's own tips got clipped off.
+	   alignHeadingLayers() in index.ts measures how far to lift. */
+	top: calc(-1 * var(--sh-solid-cover, 0em));
+}
+
+/* The baseline registration rides the TEXT, not the layer box.
+   It cannot go on .sh__solid itself: that box is both the opaque mask and the
+   clip-path's reference box, and a transform moves it bodily — so shifting the box
+   to seat the baseline dragged the mask straight back down over the cover lift, and
+   the two corrections cancelled. Transforming the inner wrapper leaves the box (and
+   therefore the mask and the wipe) exactly where the cover put it. */
+.sh__solid > * {
+	transform: translateY(var(--sh-solid-shift, 0em));
 }
 
 /* Outline (shown first): a light stroke of the outline face, FILLED with the
-   background colour. --sh-outline-font selects the face; while testing the wipe
-   alignment it is the same serif as the solid layer so glyphs register exactly.
-   Switch it to --font-display for the final decorative swap. */
+   background colour. --sh-outline-font selects the face; by default it is the same
+   hero face as the solid layer so glyphs register exactly through the wipe. Point
+   it at another face (--font-subheading, say) to make the wipe a typeface swap as
+   well as a fill — but check the alignment, since a different face means different
+   advance widths and the two layers will drift across the word. */
 .sh__outline {
 	font-family: var(
 		--sh-outline-font,
-		var(--font-serif, "Playfair Display", Georgia, serif)
+		var(--font-serif, ui-serif, Georgia, serif)
 	);
-	font-weight: 600;
+	font-weight: var(--font-hero-weight, 700);
 	color: var(--color-bg, #0a0a0a);
 	-webkit-text-stroke: 1px var(--color-fg, #ededed);
 }
 
-/* Solid (revealed): the resting Playfair face, on an opaque backdrop so the
-   wipe both swaps the typeface and masks the outline beneath it. Hidden from the
-   top by --sh-clip → fully shown at --sh-clip 0. */
+/* Solid (revealed): the pixel sub-heading face, on an opaque backdrop so the wipe
+   masks the outline beneath it. Hidden from the top by --sh-clip → fully shown at
+   --sh-clip 0.
+   THE WIPE IS A TYPEFACE SWAP, not just a fill: the phrase resolves out of the
+   hero serif's outline into Mondwest. The two faces therefore have DIFFERENT
+   advance widths and do not register glyph-for-glyph — deliberate, and the reason
+   measureHeadingWidth() in index.ts fits the box to the wider of the two layers
+   instead of to the in-flow outline alone.
+   Weight 400 because FS Mondwest ships a single cut; it IS the bold, and asking it
+   for the outline's 700 would only invite a synthesised one. */
 .sh__solid {
-	font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+	font-family: var(--font-subheading, ui-monospace, monospace);
+	font-weight: 400;
+	/* Registration onto the outline — four corrections, all measured per-face by
+	   alignHeadingLayers() in index.ts, none of them a hand-tuned nudge:
+	     scale  matches the painted ink height (Mondwest's ascenders run tall off the
+	            shared x-height, so it overshot by a fifth),
+	     cover  lifts this box's top clear of both layers' ink (see the rule above),
+	     shift  drops its baseline onto the outline's,
+	     track  closes the advance difference so both start AND end on the same x. */
+	font-size: calc(1em * var(--sh-solid-scale, 1));
+	letter-spacing: calc(var(--sh-tracking) + var(--sh-solid-track, 0em));
 	color: var(--color-fg, #ededed);
 	background: var(--color-bg, #0a0a0a);
 	clip-path: inset(calc(var(--sh-clip) * 100%) 0 0 0);

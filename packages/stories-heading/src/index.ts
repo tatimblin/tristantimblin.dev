@@ -72,9 +72,20 @@ export class StoriesHeadingElement extends HTMLElement {
 	/** The "&"'s parallax distance (px) at full progress, and its fade floor. */
 	private static readonly AMP_PARALLAX = 100;
 	private static readonly AMP_FLOOR = 0.15;
-	/** Upward lift of the "&" above the wordmark baseline, as a fraction of the
-	    "&"'s own font-size (so it scales across viewports). */
-	private static readonly AMP_LIFT = 0.12;
+	/** Extra px the solid layer's mask reaches beyond the tallest ink it must cover.
+	    Three things Canvas's ink metrics do not know about: the outline's 1px
+	    text-stroke, sub-pixel rounding, and — the reason this is 8 and not 2 — the
+	    displacement filter the solid layer's text runs through (<wobble-text scale>),
+	    which shoves glyphs a few px off their measured box in both directions. Too
+	    small and a wobbling ascender tip clips against the box edge; the cost of too
+	    large is only a slightly taller opaque mask, over page background. */
+	private static readonly COVER_SLACK = 8;
+
+	/** Vertical offset of the "&" from the wordmark baseline, as a fraction of the
+	    "&"'s own font-size (so it scales across viewports). POSITIVE lifts it above
+	    the baseline; negative drops it below. It sits just under the baseline so the
+	    glyph hangs into the wordmark's descender whitespace. */
+	private static readonly AMP_LIFT = -0.06;
 
 	/** Grid the "other stories" fit targets: N columns of a 12-col content grid
 	   with a 24px (var(--space-5)) gutter, matching .home__grid. Below this host
@@ -171,6 +182,12 @@ export class StoriesHeadingElement extends HTMLElement {
 	private measure() {
 		this.fitWordmark();
 		this.fitAmp();
+		// BEFORE the fit, not after: alignHeadingLayers narrows the solid layer, and
+		// fitHeading sizes the box to the WIDER layer — run the other way round and
+		// each re-measure feeds the other a different answer, so the fit never settles.
+		// The corrections are ratios of font-size, so they are valid at whatever size
+		// this reads.
+		this.alignHeadingLayers();
 		this.fitHeading();
 
 		if (this.pin) {
@@ -455,22 +472,290 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * Advance width (px) of the "other stories" text at `sizePx`, via Canvas
-	 * measureText using the heading's computed face/weight/letter-spacing — same
-	 * approach as measureInk(). Letter-spacing adds (n-1)*spacing since measureText
-	 * omits it. Returns null if the 2D context or the text is missing.
+	 * REGISTER THE SOLID LAYER ON THE OUTLINE.
+	 *
+	 * The wipe swaps typefaces mid-phrase, so the two layers are set in faces with
+	 * different metrics and do not line up on their own: Mondwest painted ~0.15em
+	 * low and ~0.28em long. They can never match glyph-for-glyph — different
+	 * typefaces — but they can share a bottom edge and an end, which is what makes
+	 * the swap read as one phrase resolving rather than two words sliding past.
+	 *
+	 * MEASURED, NOT MODELLED. The obvious approach — derive the baseline from each
+	 * face's ascent/descent — lands wrong, because engines disagree about which of a
+	 * font's three competing vertical metric pairs (hhea, OS/2 typo, OS/2 win) forms
+	 * the content area, and Canvas reports a fourth answer. So this zeroes its own
+	 * corrections, reads where the two layers ACTUALLY paint, and derives the offsets
+	 * from that. Ground truth costs one forced layout in a method that already reads
+	 * geometry throughout.
+	 *
+	 * Both corrections are published in em — they are proportional to font-size — so
+	 * they survive every step of the fit without re-measuring, and they are derived
+	 * from whatever faces the CSS resolves, so re-pointing --font-subheading
+	 * re-derives them rather than stranding a hardcoded nudge.
+	 *
+	 *   --sh-solid-shift  translateY putting the solid's bottom edge on the outline's.
+	 *   --sh-solid-track  extra letter-spacing closing the advance difference, so both
+	 *                     layers start AND end on the same x.
+	 */
+	private alignHeadingLayers(): void {
+		if (!this.heading) return;
+		const outline = this.heading.querySelector(".sh__outline");
+		const solid = this.heading.querySelector(".sh__solid");
+		if (!outline || !solid) return;
+
+		if (!this.inkCanvas) this.inkCanvas = document.createElement("canvas");
+		const ctx = this.inkCanvas.getContext("2d");
+		if (!ctx) return;
+
+		// Zero every correction so the next read sees the raw faces, not the last
+		// answer. All three go before ANY read, so one reflow covers them.
+		this.style.removeProperty("--sh-solid-scale");
+		this.style.removeProperty("--sh-solid-cover");
+		this.style.removeProperty("--sh-solid-shift");
+		this.style.removeProperty("--sh-solid-track");
+
+		// SIZE — match the painted INK HEIGHT, not the font-size.
+		//
+		// The two faces are already normalised to a common x-height (the size-adjust
+		// in fonts.css), which is right for running text but not for two words laid
+		// on top of each other: Mondwest draws much taller ascenders off that same
+		// x-height, so "other stories" — whose t, h and t are its only tall letters —
+		// overshot the outline by a fifth of its height and read as sitting high.
+		// Scaling the solid until its ink box matches makes the swap look like ONE
+		// word changing its skin. The cost is that Mondwest's lowercase now sits a
+		// touch smaller than the outline's; that is the trade a two-face wipe makes,
+		// and matching the block wins because the block is what the eye compares.
+		// Measure the element that actually HOLDS the text, not the layer wrapper.
+		// The solid layer wraps its phrase in <wobble-text>, which is display:block —
+		// so the wrapper's own line box is an empty one sitting below the real text,
+		// and every metric read off it describes nothing that paints.
+		const outText = this.textHost(outline);
+		const solText = this.textHost(solid);
+
+		const outHeight = this.inkHeight(ctx, outText);
+		const solHeight = this.inkHeight(ctx, solText);
+		if (outHeight !== null && solHeight !== null && solHeight > 0) {
+			this.setNum("--sh-solid-scale", outHeight / solHeight);
+		}
+
+		// Everything below is relative to the SOLID's own font-size, which the scale
+		// above has just changed — read it back rather than reusing the heading's.
+		const size = parseFloat(getComputedStyle(solid).fontSize);
+		if (!(size > 0)) return;
+
+		// COVER — lift the top of the solid's box until it contains all the ink.
+		//
+		// The heading sets line-height 0.85, so BOTH layers paint above their own line
+		// box: ascenders always exceed 0.85em. That box is the solid layer's border
+		// box, and it does double duty — it bounds the opaque --color-bg mask AND it is
+		// the clip-path's reference. So the un-lifted box both let the outline's tallest
+		// glyphs (the t's apex, the i's tittle) survive above the mask, and clipped the
+		// tips off the solid's own ascenders.
+		//
+		// Raising the top edge fixes both at once. It also moves the text down, since
+		// the text lays out from the box top — which is why the baseline is measured
+		// AFTER this, and corrects for it.
+		const outTop = this.inkTop(ctx, outText);
+		const solTop = this.inkTop(ctx, solText);
+		if (outTop !== null && solTop !== null) {
+			const boxTop = solid.getBoundingClientRect().top;
+			const highest = Math.min(outTop, solTop);
+			const cover =
+				boxTop - highest + StoriesHeadingElement.COVER_SLACK;
+			this.setEm("--sh-solid-cover", Math.max(0, cover) / size);
+		}
+
+		// VERTICAL — sit the two layers on ONE BASELINE, which is the only line the
+		// eye reads two different typefaces against.
+		//
+		// Not the Range box's bottom: that is the CONTENT AREA (the face's own
+		// ascent+descent), and the two faces' content areas differ enormously —
+		// Mondwest's is ~1.7x the outline's after its optical size-adjust — so
+		// matching their bottoms hangs the solid well above the outline. Not the
+		// font's descent metric either; that was the first attempt and engines
+		// disagree about which of a face's three metric pairs forms the box.
+		//
+		// A zero-height inline-block sits ON the baseline by definition, so dropping
+		// one into each layer and reading where it lands asks the layout engine
+		// directly instead of reconstructing its answer.
+		const outBase = this.baselineOf(outText);
+		const solBase = this.baselineOf(solText);
+		if (outBase !== null && solBase !== null) {
+			this.setEm("--sh-solid-shift", (outBase - solBase) / size);
+		}
+
+		// HORIZONTAL — the layers already share a left edge (both start at the box's
+		// content edge), so closing the width difference lands the right edge too.
+		//
+		// How much width one step of tracking buys is NOT worth deriving. The obvious
+		// model — one step per gap between characters — is wrong (CSS adds a step
+		// after the last character too), and the next model down is wrong again once
+		// a pixel face's advances land on subpixel boundaries. So PROBE it: apply a
+		// known amount of tracking, see how far the edge actually moved, and scale.
+		// One extra reflow in a method that already forces one, for an answer that
+		// cannot drift out of sync with the layout engine.
+		const outWidth = this.textWidth(outText);
+		const solWidth = this.textWidth(solText);
+		if (outWidth === null || solWidth === null) return;
+		const gap = outWidth - solWidth;
+		const probe = 1 / size; // 1px of tracking, expressed in em (of the solid)
+		this.setEm("--sh-solid-track", probe);
+		const probed = this.textWidth(solText);
+		if (probed === null) return;
+		const perPx = probed - solWidth; // px of width per px of tracking
+		this.setEm(
+			"--sh-solid-track",
+			Math.abs(perPx) > 0.01 ? gap / perPx / size : 0,
+		);
+	}
+
+	/**
+	 * The element inside a layer that actually holds the text.
+	 *
+	 * A layer is not always a plain span around a phrase — the solid one wraps its
+	 * text in <wobble-text> for the displacement effect, and that element is
+	 * display:block. Measuring the wrapper then reads an empty line box beside the
+	 * real one and reports a baseline ~70px off. Descend through single-element
+	 * wrappers that contribute no text of their own until the text is reached.
+	 */
+	private textHost(el: Element): Element {
+		let node = el;
+		for (let depth = 0; depth < 4; depth++) {
+			const children = Array.from(node.children);
+			if (children.length !== 1) break;
+			// Stop if this element contributes text OUTSIDE its single child — then it
+			// is the one laying out the phrase, not a wrapper around it.
+			const own = Array.from(node.childNodes).some(
+				(n) => n.nodeType === Node.TEXT_NODE && (n.textContent || "").trim(),
+			);
+			if (own) break;
+			node = children[0];
+		}
+		return node;
+	}
+
+	/**
+	 * Viewport y of the TOP of a layer's painted ink — its baseline less however far
+	 * its tallest glyph rises above it.
+	 */
+	private inkTop(ctx: CanvasRenderingContext2D, el: Element): number | null {
+		const baseline = this.baselineOf(el);
+		if (baseline === null) return null;
+		const cs = getComputedStyle(el);
+		const size = parseFloat(cs.fontSize);
+		if (!(size > 0)) return null;
+		ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
+		const ascent = ctx.measureText((el.textContent || "").trim() || "M")
+			.actualBoundingBoxAscent;
+		return Number.isFinite(ascent) ? baseline - ascent : null;
+	}
+
+	/**
+	 * Painted ink height (px) of a layer's text at its CURRENT font-size — the
+	 * distance from the top of its tallest glyph to the bottom of its lowest, which
+	 * is the block the eye actually compares between the two faces.
+	 */
+	private inkHeight(ctx: CanvasRenderingContext2D, el: Element): number | null {
+		const cs = getComputedStyle(el);
+		const size = parseFloat(cs.fontSize);
+		if (!(size > 0)) return null;
+		ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
+		const m = ctx.measureText((el.textContent || "").trim() || "M");
+		const height = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
+		return Number.isFinite(height) && height > 0 ? height : null;
+	}
+
+	/** Write a unitless custom property, skipping identical rewrites (see setPx). */
+	private setNum(prop: string, value: number): void {
+		if (!Number.isFinite(value) || value <= 0) return;
+		const next = value.toFixed(4);
+		if (this.style.getPropertyValue(prop) === next) return;
+		this.style.setProperty(prop, next);
+	}
+
+	/** Write an em custom property, skipping identical rewrites (see setPx). */
+	private setEm(prop: string, value: number): void {
+		if (!Number.isFinite(value)) return;
+		const next = `${value.toFixed(4)}em`;
+		if (this.style.getPropertyValue(prop) === next) return;
+		this.style.setProperty(prop, next);
+	}
+
+	/**
+	 * A layer's text baseline in viewport coordinates.
+	 *
+	 * An inline-block with no in-flow line boxes takes its bottom margin edge as its
+	 * baseline, so a zero-sized one appended to the text lands exactly on it. This
+	 * measures the engine's own answer rather than rebuilding it from font metrics,
+	 * which is the whole point — see alignHeadingLayers.
+	 */
+	private baselineOf(el: Element): number | null {
+		const probe = document.createElement("span");
+		probe.setAttribute("aria-hidden", "true");
+		probe.style.cssText =
+			"display:inline-block;width:0;height:0;overflow:hidden";
+		el.appendChild(probe);
+		const bottom = probe.getBoundingClientRect().bottom;
+		probe.remove();
+		return Number.isFinite(bottom) ? bottom : null;
+	}
+
+	/**
+	 * A layer's natural single-line text width (px).
+	 *
+	 * Both layers are stretched to the heading's box (the outline by flow, the solid
+	 * by inset:0), so their own rects describe the BOX, and a Range over them is
+	 * clamped to it too — which silently reports "no difference" exactly when the
+	 * solid has been scaled narrower than the box. `width: max-content` for the
+	 * duration of the read lifts that clamp and lets the text report its own size.
+	 */
+	private textWidth(el: Element): number | null {
+		const style = (el as HTMLElement).style;
+		const previous = style.width;
+		style.width = "max-content";
+		const range = document.createRange();
+		range.selectNodeContents(el);
+		const width = range.getBoundingClientRect().width;
+		range.detach();
+		style.width = previous;
+		return width > 0 ? width : null;
+	}
+
+	/**
+	 * Advance width (px) of the "other stories" text at `sizePx`.
+	 *
+	 * The OUTLINE layer only — it is the one in normal flow, so it is what
+	 * fit-content sizes the box to. The solid layer is not consulted even though it
+	 * carries a different face: alignHeadingLayers() has already matched the two to
+	 * within a fraction of a pixel, and it expresses that match in em, so it holds at
+	 * whatever size this fit lands on. Measuring the solid here instead measures it
+	 * WITHOUT its scale correction — which read ~20% wide, shrank the heading to suit,
+	 * and moved the whole hero fold underneath it.
 	 */
 	private measureHeadingWidth(sizePx: number): number | null {
 		if (!this.heading) return null;
 		if (!this.inkCanvas) this.inkCanvas = document.createElement("canvas");
 		const ctx = this.inkCanvas.getContext("2d");
 		if (!ctx) return null;
-		const cs = getComputedStyle(this.heading);
-		// .sh__heading wraps BOTH the outline and solid face layers, so its
-		// textContent is the phrase DOUBLED — measure a single layer instead.
-		const layer = this.heading.querySelector(".sh__solid, .sh__outline");
-		const text = ((layer ?? this.heading).textContent || "").trim();
+		// .sh__heading wraps BOTH layers, so ITS textContent is the phrase DOUBLED.
+		const outline = this.heading.querySelector(".sh__outline");
+		if (!outline) return null;
+		return this.measureLayerWidth(ctx, this.textHost(outline), sizePx);
+	}
+
+	/**
+	 * One layer's advance width at `sizePx`, via Canvas measureText using THAT
+	 * element's computed face/weight/letter-spacing — same approach as measureInk().
+	 * Letter-spacing adds (n-1)*spacing since measureText omits it.
+	 */
+	private measureLayerWidth(
+		ctx: CanvasRenderingContext2D,
+		el: Element,
+		sizePx: number,
+	): number | null {
+		const text = (el.textContent || "").trim();
 		if (!text) return null;
+		const cs = getComputedStyle(el);
 		ctx.font = `${cs.fontWeight} ${sizePx}px ${cs.fontFamily}`;
 		const advance = ctx.measureText(text).width;
 		// letter-spacing — measureText ignores it; add it back at `sizePx`. The

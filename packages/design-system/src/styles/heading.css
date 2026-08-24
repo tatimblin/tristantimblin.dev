@@ -4,7 +4,24 @@
    spaced), so use a doubled selector to guarantee the win regardless of
    stylesheet import order. */
 .ds-heading.ds-heading {
-	font-weight: var(--font-weight-600);
+	/* The site's heading face. Family and weight travel as a pair: Migra is one
+	   family with a 500 and a 700 cut, so a family set without a weight lands on
+	   whichever the browser considers nearest. This is the single place H1-H3 pick
+	   up the face; the bare h1-h6 element rules in the site's global.css set the
+	   same pair one specificity step lower, for headings outside the component. */
+	font-family: var(--font-heading);
+	font-weight: var(--font-heading-weight, var(--font-weight-600));
 	line-height: 1.5;
 	letter-spacing: -0.3px;
+}
+
+/* DS size-1 headings (H4, and any <Heading size={1}>) are the site's SUB-HEADING
+   role and take FS Mondwest instead — the smallest heading step is a label, and
+   the bitmap face reads as one at that size where it would shout at H1.
+   Heading remaps DS size 1 → Text size 4, hence the class; pairing it with
+   .ds-heading keeps this off the size-4 body Text that MDX paragraphs use.
+   Weight 400 because FS Mondwest ships a single cut — it IS the bold. */
+.ds-heading.ds-text--size-4 {
+	font-family: var(--font-subheading);
+	font-weight: 400;
 }

@@ -199,7 +199,25 @@ test.describe("hero fold — mobile", () => {
 
 		// 2. PRECEDENCE (growth half) — once the whitespace is gone the lead pins at
 		// its minimum and the hero, only then, exceeds one screen.
-		for (const times of [3, 6]) {
+		//
+		// SEARCH for the multiplier that spends the lead rather than hardcoding one.
+		// How many repetitions that takes is a property of the lede's TYPEFACE, not of
+		// the fold: this was `[3, 6]`, and when the lede moved to a more compact face
+		// x3 stopped reaching the spent regime — so the assertions below quietly went
+		// from testing the growth half to testing the dormant one, and failed for a
+		// reason that had nothing to do with the invariant. Finding the boundary keeps
+		// this half pointed at the behaviour it exists to pin down.
+		let spentAt = 0;
+		for (let times = 2; times <= 16 && !spentAt; times++) {
+			await stretchLede(page, times);
+			if ((await readMobileFold(page)).leadAtMinimum) spentAt = times;
+		}
+		expect(
+			spentAt,
+			"the lede should spend the whole lead within 16 repetitions"
+		).toBeGreaterThan(0);
+
+		for (const times of [spentAt, spentAt * 2]) {
 			await stretchLede(page, times);
 			const grown = await readMobileFold(page);
 			expect(grown.clearance).toBeGreaterThanOrEqual(MIN_GAP);

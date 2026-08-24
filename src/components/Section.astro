@@ -106,12 +106,12 @@ const css = revealId && animationName
 		--section-fg: var(--section-1-fg);
 	}
 
-	.section--1 :global(h2) {
-		font-family: var(--font-decorative);
-	}
-
+	/* Section 1 used to swap in a decorative face for its heading and copy. That
+	   face (Quintessential) is gone; the heading now shares the site's heading face
+	   like every other h2, and only the enlarged copy still sets this section
+	   apart. */
 	.section--1 .section__content :global(p) {
-		font-family: var(--font-decorative);
+		font-family: var(--font-body);
 		font-size: var(--font-size-xl);
 		line-height: 1.5;
 	}

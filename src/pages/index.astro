@@ -92,7 +92,7 @@ import "../widgets/widgets.css";
      genuinely the critical path — this one's isn't. -->
 <FullHeroLayout
 	title="Tristan Timblin"
-	description="Tristan Timblin — a craftsman who builds things to be used, finding creativity through empathetic design."
+	description="Tristan Timblin — American computer programmer and human-computer interaction engineer."
 >
 	<!-- SCENE: fabric video as a dotted-grid halftone — a full-viewport background
 	     layer, faded at the top+bottom edges (see FullHeroLayout .fh__scene). -->
@@ -159,8 +159,7 @@ import "../widgets/widgets.css";
 		<Grid class="hero-intro" align="end">
 			<GridItem class="hero-intro__lede">
 				<p>
-					American computer programmer and human-computer interaction engineer, known
-					for novel computer interfaces and high-throughput IoT systems.
+					American computer programmer and human-computer interaction engineer.
 				</p>
 			</GridItem>
 			<GridItem class="hero-intro__cta">
@@ -485,9 +484,11 @@ import "../widgets/widgets.css";
 	.hero-intro__lede p {
 		margin: 0;
 		pointer-events: auto;
-		/* Sans uppercase statement line (site --font-sans) — a quieter, more graphic
-		   register than the serif it replaced, still prominent at --text-secondary. */
-		font-family: var(--font-sans);
+		/* Uppercase statement line in the sub-heading face — a quieter, more graphic
+		   register than the hero face above it, still prominent at --text-secondary.
+		   FS Mondwest is normalised onto Migra's x-height in fonts.css, so the
+		   --font-size-1 step means the same here as anywhere else. */
+		font-family: var(--font-subheading);
 		font-size: var(--font-size-1);
 		line-height: 1.5;
 		text-transform: uppercase;
@@ -537,7 +538,7 @@ import "../widgets/widgets.css";
 	}
 
 	.home__copy :global(p) {
-		font-family: var(--font-serif);
+		font-family: var(--font-body);
 		font-size: var(--font-size-4);
 		line-height: 1.6;
 		color: var(--text-secondary);
@@ -547,18 +548,20 @@ import "../widgets/widgets.css";
 		margin-block-start: var(--space-5);
 	}
 
-	/* Ken Liu passage set apart from the surrounding copy: same serif register,
-	   but indented + italic + darker to mark it as borrowed words. */
+	/* Ken Liu passage set apart from the surrounding copy: same body face, but
+	   indented + ruled + darker to mark it as borrowed words. NOT italic — PP
+	   Mondwest has no italic cut and a synthesised oblique shears a bitmap face
+	   off its pixel grid; the rule, the indent and the quieter colour already do
+	   the marking. */
 	.home__quote {
 		margin: 0;
 		margin-block: var(--space-5) var(--space-6);
 		padding-inline-start: var(--space-5);
 		margin-inline-start: var(--space-4);
 		border-inline-start: 2px solid var(--text-tertiary, currentColor);
-		font-family: var(--font-serif);
+		font-family: var(--font-body);
 		font-size: var(--font-size-3);
 		line-height: 1.6;
-		font-style: italic;
 		/* One neutral step quieter than the body (--text-secondary), so the
 		   borrowed words recede. --text-primary is a blue accent in dark mode. */
 		color: var(--text-tertiary);

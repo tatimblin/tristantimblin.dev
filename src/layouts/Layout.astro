@@ -4,7 +4,8 @@ import "../styles/global.css";
 // Asset-arrival reveal (the motion; the scheduling lives in src/lib/reveal.ts and
 // the arming script in this file's <head>).
 import "../styles/reveal.css";
-// Metric-matched fallback faces, so the Google-font swap doesn't reflow the copy.
+// The site's four self-hosted faces, plus the metric-matched fallbacks that keep
+// the swap from reflowing the copy.
 import "../styles/fonts.css";
 // Design-system token cascade (generated DS tokens → site overrides → legacy
 // name bridge). Imported after global.css so its custom properties win.
@@ -127,28 +128,45 @@ const {
 				<link rel="preload" href={m.href} as={m.as} type={m.type} />
 			))
 		}
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<!-- DS fonts (Inter, Fira Code, Space Grotesk) + the site's own faces
-		     (Playfair Display for the wordmark/copy, Quintessential for the
-		     decorative outline). The DS package ships no font files.
+		<!-- The two faces that paint above the fold on EVERY page: the body face
+		     (every paragraph) and the hero cut of Migra (the wordmark lockup). They
+		     are @font-face'd in src/styles/fonts.css, which the browser only
+		     discovers after the stylesheet parses — preloading starts the fetch
+		     during HTML parse instead, so the swap happens before first scroll
+		     rather than after it.
 
-		     Loaded NON-RENDER-BLOCKING: `media="print"` lets the browser fetch the
-		     stylesheet without holding up first paint, then `onload` flips it to
-		     `all` to apply it. Text paints immediately in the metric-matched fallback
-		     (src/styles/fonts.css) and swaps in place with no reflow. The <noscript>
-		     copy keeps the fonts working with JS disabled; the two preconnects above
-		     still warm the gstatic connection so the woff2 arrive as early as
-		     possible. -->
+		     `crossorigin` is REQUIRED even though these are same-origin: fonts are
+		     always fetched in CORS mode, and a preload without it is treated as a
+		     different request, discarded, and fetched a second time.
+
+		     BOTH Migra cuts are here because the hero lockup uses both: the wordmark
+		     is set in the medium and the "&" / "other stories" in the bold. Missing
+		     either one leaves half the lockup swapping late.
+
+		     fs-mondwest-bold is left to normal discovery — 7 KB, and it only sets
+		     small-type labels. Its metric-matched fallback holds the layout until it
+		     lands. -->
 		<link
-			rel="stylesheet"
-			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;560;600&family=Fira+Code:wght@400;500&family=Space+Grotesk:wght@400;500&family=Playfair+Display:wght@400;600;700&family=Quintessential&display=swap"
-			media="print"
-			onload="this.media='all'"
+			rel="preload"
+			href="/fonts/ppmondwest-regular.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
 		/>
-		<noscript>
-			<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;560;600&family=Fira+Code:wght@400;500&family=Space+Grotesk:wght@400;500&family=Playfair+Display:wght@400;600;700&family=Quintessential&display=swap" />
-		</noscript>
+		<link
+			rel="preload"
+			href="/fonts/migra-medium.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
+		<link
+			rel="preload"
+			href="/fonts/migra-bold.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
 		<link
 			rel="alternate"
 			type="application/rss+xml"
