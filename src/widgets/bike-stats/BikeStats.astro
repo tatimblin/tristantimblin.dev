@@ -15,8 +15,22 @@ const bike = getBikeStats();
 <script>
 	// Slide the baywheels bike watermark in from the right the first time the
 	// widget scrolls into view. One-shot: unobserve after the first reveal.
-	const bw = document.querySelector<HTMLElement>(".wx-baywheels");
-	if (bw) {
+	//
+	// WIRED ON astro:page-load, NOT AT MODULE SCOPE — and the difference is a bug,
+	// not a style choice. Astro bundles this into a module that executes exactly
+	// ONCE, but the Layout uses ClientRouter, which REPLACES the DOM on every
+	// navigation. A module-scope observer therefore ends up watching a detached
+	// element while the fresh .wx-baywheels never receives .is-in — and the resting
+	// state in bike-stats.css is `opacity: 0`, so the bike stays invisible until a
+	// hard reload. (Reduced-motion users never saw it: that block forces it shown.)
+	//
+	// The data- marker keeps a re-wire of the SAME node a no-op, so the first load
+	// (where ClientRouter also fires astro:page-load) doesn't double-observe. Same
+	// shape as the hero-floor relay in src/pages/index.astro.
+	function wireBikeReveal() {
+		const bw = document.querySelector<HTMLElement>(".wx-baywheels");
+		if (!bw || bw.dataset.bikeRevealWired) return;
+		bw.dataset.bikeRevealWired = "true";
 		const io = new IntersectionObserver(
 			(entries, observer) => {
 				for (const entry of entries) {
@@ -30,6 +44,9 @@ const bike = getBikeStats();
 		);
 		io.observe(bw);
 	}
+
+	wireBikeReveal();
+	document.addEventListener("astro:page-load", wireBikeReveal);
 </script>
 
 <Widget
