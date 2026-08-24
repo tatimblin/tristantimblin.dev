@@ -12,6 +12,8 @@ const { as: Tag = "h1" } = Astro.props;
 <style>
 	.page-subtitle {
 		margin-block: var(--space-2) 0;
+		/* The sub-heading face: this line is a label under the title, not copy. */
+		font-family: var(--font-subheading);
 		font-size: var(--font-size-lg);
 		font-weight: 400;
 		color: var(--color-muted);

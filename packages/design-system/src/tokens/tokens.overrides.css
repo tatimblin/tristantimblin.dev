@@ -12,12 +12,45 @@
 :root {
 	/* e.g. --accent: oklch(60% 0.2 240); */
 
-	/* TYPE — metric-matched fallback in front of the system stack.
-	 * DS generates --font-display as `'Inter', var(--font-fallback)`. "Inter
-	 * Fallback" (src/styles/fonts.css) is an Arial face pre-sized to Inter's
-	 * metrics, so the swap from fallback → Inter doesn't reflow body text. It sits
-	 * between Inter and the plain system stack, which stays as the last resort. */
-	--font-display: "Inter", "Inter Fallback", var(--font-fallback);
+	/* TYPE --------------------------------------------------------------------
+	 * The site's four faces, named by the ROLE they play rather than by what they
+	 * are, so a face can be swapped in one place without every call site having to
+	 * know it changed. The @font-face rules are in src/styles/fonts.css; the files
+	 * are self-hosted under /fonts (nothing is fetched from Google Fonts).
+	 *
+	 * Each stack is: the web font → its metric-matched fallback (an adjusted system
+	 * face that holds the web font's exact box, so the swap doesn't reflow) → a
+	 * plain generic stack as the last resort.
+	 *
+	 * Migra ships as two discrete cuts under one family, so a role that uses it
+	 * needs BOTH the family and the weight — hence the -weight companions. Reach
+	 * for the pair together; setting the family without the weight lands on
+	 * whichever cut the browser thinks is closest. */
+	--font-hero: "Migra", "Migra Fallback", ui-serif, Georgia, serif;
+	--font-hero-weight: 700;
+	--font-heading: var(--font-hero);
+	--font-heading-weight: 500;
+	--font-subheading: "FS Mondwest", "FS Mondwest Fallback", ui-monospace, Menlo,
+		monospace;
+	--font-body: "PP Mondwest", "PP Mondwest Fallback", ui-sans-serif, system-ui,
+		sans-serif;
+
+	/* The DS's own font tokens, retargeted onto those roles. --font-display is the
+	 * DS's default face (it generates it as Inter); pointing it at the body face
+	 * keeps DS components on the site's type without touching the generated layer.
+	 *
+	 * --font-mono / --font-numeric were Fira Code and Space Grotesk, both from
+	 * Google Fonts. Neither role (code blocks, widget stat numerals) has a face in
+	 * the four above — Mondwest is not monospaced — so they resolve to the system
+	 * mono stack, which costs nothing to load and is what a reader's terminal
+	 * already looks like.
+	 *
+	 * --font-mono-code is referenced by text.css (family="code") and inline-code.css
+	 * but was never defined anywhere, so both resolved to nothing. Defined here. */
+	--font-display: var(--font-body);
+	--font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	--font-numeric: var(--font-mono);
+	--font-mono-code: var(--font-mono);
 
 	/* MOTION -----------------------------------------------------------------
 	 * The DS ships no easing/duration tokens, so every timing on the site used to

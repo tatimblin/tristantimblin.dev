@@ -184,15 +184,30 @@ Rules:
 
 All resolve globally from `@whois/design-system/tokens.css` (imported in Layout):
 spacing `--space-0..15`, radii `--border-radius-0..3`, type `--font-size-1..8`
-(no `-2`), weights `--font-weight-400/500/600`, fonts `--font-display`(Inter) /
-`--font-mono` / `--font-numeric`, and the light-theme colors
+(no `-2`), weights `--font-weight-400/500/600`, and the light-theme colors
 `--text-primary/secondary/tertiary`, `--accent`, `--background`,
 `--card-background`, `--border-color`, `--danger`/`--warning`/`--success`
 (+ `-emphasis`), the `--gray/blue/green/red/orange/pink-*` scales, `--white`, and
 `--hyperlink`. Legacy site aliases live in `bridge.css` (`--color-fg`,
-`--color-bg`, `--font-serif`, `--font-decorative`, …). Breakpoints (from Stitches
-media): `xs 480 / sm 640 / md 768 / lg 1024 / xl 1280` → standard
+`--color-bg`, `--font-serif`, …). Breakpoints (from Stitches media):
+`xs 480 / sm 640 / md 768 / lg 1024 / xl 1280` → standard
 `@media (min-width: …)`.
+
+**Fonts are named by role, not by family** (`tokens.overrides.css`; the faces are
+self-hosted from `/fonts`, built by `tools/fonts/build.sh`):
+
+| Token | Face | Where |
+| --- | --- | --- |
+| `--font-hero` + `--font-hero-weight` | Migra Bold | the hero lockup |
+| `--font-heading` + `--font-heading-weight` | Migra Medium | `h1`–`h3`, DS `H1`–`H3` |
+| `--font-subheading` | FS Mondwest Bold | small-type labels, DS `H4` |
+| `--font-body` | PP Mondwest | everything else |
+
+Migra is ONE family with two cuts, so a role that uses it needs the family AND
+the weight — set only the family and the browser picks the cut. The DS's own
+`--font-display` aliases `--font-body`; `--font-mono` / `--font-numeric` /
+`--font-mono-code` are the system mono stack (no web font). Live specimens are in
+the catalogue's first section.
 
 **Do not invent tokens.** If the DS style references one not listed, transcribe it
 verbatim (it resolves from the theme). Shadows come from the `Shadows[0..3]`

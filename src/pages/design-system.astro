@@ -164,6 +164,35 @@ const TOKEN_GROUPS: TokenGroup[] = [
 		],
 	},
 ];
+
+// The four type roles, for the catalogue's faces block. Each specimen sets the
+// family AND the weight, the way a call site should.
+const faces = [
+	{
+		token: "--font-hero",
+		name: "Migra Bold",
+		use: "the hero lockup — wordmark, \u201cother stories\u201d, the ampersand",
+		css: "font-family: var(--font-hero); font-weight: var(--font-hero-weight);",
+	},
+	{
+		token: "--font-heading",
+		name: "Migra Medium",
+		use: "h1\u2013h3, DS H1\u2013H3, bare headings",
+		css: "font-family: var(--font-heading); font-weight: var(--font-heading-weight);",
+	},
+	{
+		token: "--font-subheading",
+		name: "FS Mondwest Bold",
+		use: "small-type labels \u2014 hero lede, page subtitles, DS H4",
+		css: "font-family: var(--font-subheading);",
+	},
+	{
+		token: "--font-body",
+		name: "PP Mondwest",
+		use: "everything else; --font-sans and the DS --font-display alias it",
+		css: "font-family: var(--font-body);",
+	},
+];
 ---
 
 <Layout
@@ -232,6 +261,28 @@ const TOKEN_GROUPS: TokenGroup[] = [
 		<h1 class="ds-demo__title">@whois/design-system — component catalogue</h1>
 
 		<!-- TYPOGRAPHY ----------------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Faces — the four roles</h2>
+			<p class="ds-demo__note">
+				Self-hosted from <code>/fonts</code> (built by <code>tools/fonts/build.sh</code>,
+				@font-face'd in <code>src/styles/fonts.css</code>). Reach for the ROLE token, not
+				the family name. Migra is one family with two cuts, so its roles carry a weight
+				companion — set both or the browser picks the cut for you.
+			</p>
+			<Flex direction="column" gap={3} alignItems="start">
+				{faces.map((f) => (
+					<div class="ds-demo__face">
+						<span class="ds-demo__face-token">{f.token}</span>
+						<span class="ds-demo__face-name">{f.name}</span>
+						<span class="ds-demo__face-use">{f.use}</span>
+						<span class="ds-demo__face-specimen" style={f.css}>
+							Hamburgefonstiv 123
+						</span>
+					</div>
+				))}
+			</Flex>
+		</section>
+
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Text — sizes</h2>
 			<Flex direction="column" gap={2} alignItems="start">
@@ -839,6 +890,57 @@ const TOKEN_GROUPS: TokenGroup[] = [
 		font-size: var(--font-size-5);
 		color: var(--text-secondary);
 		margin-bottom: var(--space-4);
+	}
+
+	.ds-demo__note {
+		max-width: 68ch;
+		margin-block: calc(-1 * var(--space-3)) var(--space-5);
+		font-size: var(--font-size-1);
+		line-height: 1.6;
+		color: var(--text-tertiary);
+	}
+
+	.ds-demo__note code {
+		font-family: var(--font-mono-code);
+	}
+
+	/* One row per face: the token that selects it, what it is, where it goes, and a
+	   specimen set in it. The specimen is last so the four line up for comparison. */
+	.ds-demo__face {
+		display: grid;
+		grid-template-columns: minmax(0, 18ch) minmax(0, 17ch) minmax(0, 1fr);
+		gap: var(--space-2) var(--space-4);
+		align-items: baseline;
+		width: 100%;
+	}
+
+	.ds-demo__face-token {
+		font-family: var(--font-mono-code);
+		font-size: var(--font-size-1);
+		color: var(--accent);
+	}
+
+	.ds-demo__face-name {
+		font-size: var(--font-size-1);
+		color: var(--text-secondary);
+	}
+
+	.ds-demo__face-use {
+		font-size: var(--font-size-1);
+		color: var(--text-tertiary);
+	}
+
+	.ds-demo__face-specimen {
+		grid-column: 1 / -1;
+		font-size: var(--font-size-7);
+		line-height: 1.2;
+		color: var(--text-primary);
+	}
+
+	@media (max-width: 700px) {
+		.ds-demo__face {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	/* Grid demo cells — a visible box so columns + gutters read clearly. */
