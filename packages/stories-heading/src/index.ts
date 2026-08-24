@@ -27,16 +27,20 @@ function clamp01(x: number): number {
  *   [data-sh-pin]      — position:sticky element holding "other stories".
  *   .sh__solid         — the solid-face layer in "other stories"; clipped in.
  *
- * Host custom properties read by the stylesheet:
- *   --sh-clip           fraction 1→0 of the solid layer hidden from the top (wipe).
- *   --sh-amp-shift      the "&"'s parallax translateY (px, positive = down).
- *   --sh-amp-opacity    the "&"'s opacity (1 → floor).
+ * Custom properties published per frame. Each goes on the ELEMENT THAT CONSUMES IT,
+ * never on the host: custom properties inherit, so a host write invalidates style for
+ * the whole lockup subtree — the wordmark SVG, both heading layers and the
+ * displacement filter over them — once a frame in order to restyle one box.
+ *   --sh-clip           (.sh__solid) fraction 1→0 of the solid layer hidden (wipe).
+ *   --sh-amp-shift      (.sh__amp)   parallax translateY (px, positive = down).
+ *   --sh-amp-opacity    (.sh__amp)   opacity (1 → floor).
+ *   --sh-sub-opacity    (.sh__sub)   the intro's fade over the first sliver of scroll.
+ *   --sh-sub-visibility (.sh__sub)   `hidden` once that fade completes, so the
+ *                       invisible block stops taking pointer events. BOTH default to
+ *                       shown when unset — see the .sh__sub note in styles.css for why
+ *                       this fade is driven here rather than by `animation-timeline`.
+ * Published from measure() instead (layout-rate, so the host is fine):
  *   --sh-heading-fitsize font-size (px) fitting "other stories" to a 6-col span.
- *   --sh-sub-opacity    the intro/CTAs' fade (1 → 0 over the first sliver of scroll).
- *   --sh-sub-visibility `hidden` once that fade completes, so the invisible bar
- *                       stops taking pointer events. BOTH default to shown when
- *                       unset — see the .sh__sub note in styles.css for why this
- *                       fade is driven here rather than by `animation-timeline`.
  *
  * Lifecycle mirrors the sibling packages: a `listeners` cleanup array, a `rafId`
  * guard, a `ResizeObserver`, reduced-motion handling, and full teardown (Layout
@@ -49,9 +53,12 @@ export class StoriesHeadingElement extends HTMLElement {
 	private heading: HTMLElement | null = null;
 	private wordmarkSvg: SVGSVGElement | null = null;
 	private wordmarkText: SVGTextElement | null = null;
-	/** The slotted intro/CTA wrapper. Out of flow on the mobile layout, so it is
-	    observed separately — its growth is invisible to the host's own box. */
+	/** The slotted intro wrapper — a static sibling of the pin, so it scrolls with the
+	    page under its own steam. Observed separately all the same: it lives inside the
+	    track's explicit height, so its growth never changes the host's own box. */
 	private sub: HTMLElement | null = null;
+	/** The solid ("other stories") layer — the sole consumer of --sh-clip. */
+	private solid: HTMLElement | null = null;
 	private inkCanvas: HTMLCanvasElement | null = null;
 	/** The full-viewport dotgrid scene layer, if this lockup overlays one. The
 	    outline→solid reveal is GATED until "other stories" clears the scene's
@@ -68,6 +75,11 @@ export class StoriesHeadingElement extends HTMLElement {
 	    nothing — measure() runs from a ResizeObserver, and a write there that
 	    resizes anything downstream would log an RO-loop warning (see setPx). */
 	private lastWritten = new Map<string, number>();
+	/** Scroll-invariant CSS tokens, resolved in measure() rather than per frame.
+	    Reading them in update() meant a getComputedStyle — a forced style recalc — on
+	    every frame of every scroll, for two values only a resize can change. */
+	private revealPx = 0;
+	private subFade = 0;
 
 	/** The "&"'s parallax distance (px) at full progress, and its fade floor. */
 	private static readonly AMP_PARALLAX = 100;
@@ -104,6 +116,7 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.wordmarkSvg = this.querySelector<SVGSVGElement>(".sh__wordmark-svg");
 		this.wordmarkText = this.querySelector<SVGTextElement>(".sh__wordmark-text");
 		this.sub = this.querySelector<HTMLElement>(".sh__sub");
+		this.solid = this.querySelector<HTMLElement>(".sh__solid");
 		// The dotgrid scene the lockup overlays (for gating the reveal); may be absent
 		// (e.g. a hero with no scene) — the reveal then plays normally.
 		this.scene = this.closest<HTMLElement>(".fh")?.querySelector<HTMLElement>(".fh__scene") ?? null;
@@ -180,6 +193,11 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * not rendered (e.g. display:none), so guard it.
 	 */
 	private measure() {
+		// Resolve the scroll-invariant tokens at layout rate, so update() never has to
+		// call getComputedStyle (see revealPx / subFade).
+		this.revealPx = this.cssPx("--sh-reveal", 0.6 * window.innerHeight);
+		this.subFade = this.readSubFadePx();
+
 		this.fitWordmark();
 		this.fitAmp();
 		// BEFORE the fit, not after: alignHeadingLayers narrows the solid layer, and
@@ -241,11 +259,11 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * SCROLL-INVARIANT — not because this runs on scroll (it doesn't; measure() runs
 	 * from resize / the ResizeObserver / fonts.ready) but because a resize can land at
 	 * any scroll position, and the fold must not depend on where the page happens to
-	 * be. Hence the sub is measured RELATIVE TO THE PIN: that difference is invariant
-	 * to the sticky pin detaching, and it is also correct under reduced motion (where
-	 * .sh__sub returns to normal flow and is already inside pin.offsetHeight — summing
-	 * the parts would double-count it). A viewport-FIXED sub is excluded from the group
-	 * entirely (see below), since its distance from the pin does move with scroll.
+	 * be. Hence the sub is measured RELATIVE TO THE TRACK — the nearest box around it
+	 * that is in NORMAL FLOW. The sub is a static child of the track, so that
+	 * difference is pure layout and cannot move with scroll. The PIN would not do:
+	 * it is sticky, so it detaches from the track as the page scrolls and the gap
+	 * between the two IS the scroll offset.
 	 * Runs at every width; the ≤900px layout needs it MOST, since that is where the
 	 * scene's bottom UI and the group compete for one screen.
 	 */
@@ -265,43 +283,18 @@ export class StoriesHeadingElement extends HTMLElement {
 			? parseFloat(getComputedStyle(this.track).marginTop) || 0
 			: 0;
 
-		// The group's extent BELOW the wordmark, and the sub's contribution to the floor.
-		//
-		// The sub-lockup is laid out one of two ways, and each puts it on a different
-		// side of the group/floor line:
-		//   · absolute below the pin (motion allowed, all widths) or static inside it
-		//     (reduced motion) — genuinely part of the group, measured PIN-RELATIVE so
-		//     the number is invariant to scroll (the pin detaches from its sticky line as
-		//     the page scrolls) and correct in both modes (the static case is already
-		//     inside pin.offsetHeight, so summing the parts would double-count it).
-		//   · position:fixed — anchored to the VIEWPORT bottom, so it is not part of the
-		//     group at all and behaves like scene-owned bottom UI (its height + bottom
-		//     offset becomes a floor contribution). No shipped layout sets this now, but
-		//     the branch is kept defensively; measuring `bottom − pinTop` on a FIXED sub
-		//     would make the group's height drift with scroll — the bug this split avoids.
+		// The group's extent BELOW the wordmark: whichever reaches lower, the pinned
+		// heading or the intro flowing under it. Both are measured against the TRACK —
+		// see the note above on why the pin cannot be the reference. Fractional
+		// (getBoundingClientRect), not offsetHeight: the two are mixed in the Math.max
+		// below, and offsetHeight rounds to whole px.
 		const pinRect = this.pin?.getBoundingClientRect();
 		const subRect = this.sub?.getBoundingClientRect();
-		const subFixed =
-			!!this.sub && getComputedStyle(this.sub).position === "fixed";
-		// The sub is translated by --sh-sub-shift — a scroll-driven upward drift so it
-		// hangs stationary in the viewport while it fades. That transform moves subRect
-		// WITH scroll, so strip it back out of the pin-relative extent below: --sh-group-h
-		// must stay scroll-invariant (measure() can run from a resize at any scroll
-		// position). At rest the shift is 0, so this is a no-op there.
-		const subShift =
-			parseFloat(getComputedStyle(this).getPropertyValue("--sh-sub-shift")) || 0;
+		const trackRect = this.track?.getBoundingClientRect();
 
-		// Fractional (getBoundingClientRect), not offsetHeight — the two are mixed in the
-		// Math.max below, and offsetHeight rounds to whole px.
 		let belowWordmark = pinRect?.height ?? 0;
-		let subFloor = 0;
-		if (subRect && subRect.height > 0 && subFixed) {
-			subFloor = subRect.height + (window.innerHeight - subRect.bottom);
-		} else if (pinRect && subRect && subRect.height > 0) {
-			belowWordmark = Math.max(
-				pinRect.height,
-				subRect.bottom - subShift - pinRect.top
-			);
+		if (trackRect && subRect && subRect.height > 0) {
+			belowWordmark = Math.max(belowWordmark, subRect.bottom - trackRect.top);
 		}
 
 		// Min top space so the wordmark clears the overlaid header — MEASURED from the
@@ -317,10 +310,6 @@ export class StoriesHeadingElement extends HTMLElement {
 		// via --sh-group-h above, but it must NOT reduce the header clearance — the
 		// wordmark still has to clear the overlaid header. Only a positive gap adds slack.
 		this.setPx(fh, "--sh-header-clear", headerH + Math.max(0, headingGap), "headerClear");
-		// A viewport-fixed sub reserves the bottom edge just like scene-owned UI, so it
-		// stacks onto the floor the group must clear (0 on the mobile layout, where the
-		// sub travels WITH the group and is already inside --sh-group-h).
-		this.setPx(fh, "--sh-sub-floor", subFloor, "subFloor");
 	}
 
 	/**
@@ -805,6 +794,7 @@ export class StoriesHeadingElement extends HTMLElement {
 		// inheriting a stale `hidden` with no driver left to clear it.
 		this.clearSubFade();
 		this.sub = null;
+		this.solid = null;
 		// Re-measured from scratch on re-connect, so allow the announcement again.
 		delete this.dataset.ready;
 	}
@@ -820,52 +810,63 @@ export class StoriesHeadingElement extends HTMLElement {
 
 	private update() {
 		// Reduced motion: stories shown, "&" at rest (no drift, full opacity), and the
-		// intro NOT faded — the stylesheet pins it visible and in flow, so publishing a
-		// fade here would fight it.
+		// intro NOT faded — the stylesheet pins it visible, so publishing a fade here
+		// would fight it.
 		if (this.reducedMotion?.matches) {
-			this.style.setProperty("--sh-clip", "0");
-			this.style.setProperty("--sh-amp-shift", "0px");
-			this.style.setProperty("--sh-amp-opacity", "1");
+			this.solid?.style.setProperty("--sh-clip", "0");
+			this.amp?.style.setProperty("--sh-amp-shift", "0px");
+			this.amp?.style.setProperty("--sh-amp-opacity", "1");
 			this.clearSubFade();
 			return;
 		}
 
-		// 0. The intro/CTAs fade out over the first sliver of scroll. Published from
-		// here rather than by a scroll-timeline: see the long note on .sh__sub in
-		// styles.css for why that CSS mechanism failed VISIBLE-side-down on engines
-		// without native support.
+		// 0. The intro fades out over the first sliver of scroll. Published from here
+		// rather than by a scroll-timeline: see the long note on .sh__sub in styles.css
+		// for why that CSS mechanism failed VISIBLE-side-down on engines without native
+		// support. NB opacity ONLY — the sub's MOTION is plain flow layout now, because
+		// a JS transform cannot stay in register with a compositor-driven scroll.
 		this.updateSubFade();
 
 		// 1. "other stories" reveal: outline→solid wipe over --sh-reveal of pin.
 		const revealed = this.revealProgress();
-		this.style.setProperty("--sh-clip", (1 - revealed).toFixed(4));
+		this.solid?.style.setProperty("--sh-clip", (1 - revealed).toFixed(4));
 
 		// 2. "&" parallax + fade from its own viewport position: drifts DOWN
 		// (positive translateY) as it fades to the floor.
 		const p = this.ampProgress();
-		this.style.setProperty(
+		this.amp?.style.setProperty(
 			"--sh-amp-shift",
 			`${(StoriesHeadingElement.AMP_PARALLAX * p).toFixed(2)}px`
 		);
 		// const floor = StoriesHeadingElement.AMP_FLOOR;
-		// this.style.setProperty(
+		// this.amp?.style.setProperty(
 		// 	"--sh-amp-opacity",
 		// 	(1 - (1 - floor) * p).toFixed(4)
 		// );
 	}
 
 	/**
-	 * Fade the intro/CTAs out over the first --sh-sub-fade-px of scroll, and flip
-	 * visibility at the end so the invisible bar stops taking pointer events.
+	 * Fade the intro out over the first --sh-sub-fade-px of scroll, and flip visibility
+	 * at the end so the invisible block stops taking pointer events.
 	 *
-	 * Reads the scroll offset from the DOCUMENT, not from the sub's own box: the sub is
-	 * absolutely positioned inside a sticky pin, whose travel is the PIN's mechanism
-	 * rather than this fade's, so its own rect carries no clean progress signal.
-	 * `scrollY` is the same quantity the old `scroll(root)` timeline read, so the motion
-	 * is unchanged where that mechanism worked.
+	 * OPACITY ONLY. This used to publish a translateY(-scrollY) alongside it, because
+	 * the sub was absolutely positioned inside the sticky pin and had to be given back
+	 * the ordinary scrolling that position took away. That is now done by flow layout
+	 * (see the .sh__sub note in styles.css), and it had to be: a transform written from
+	 * a scroll handler runs on the main thread while the scroll itself runs on the
+	 * compositor, so on a touch device the element trailed the page by however many
+	 * frames the main thread was behind — visible as a laggy, rubber-banding intro that
+	 * no optimisation of this handler could have cured. Opacity survives that same lag
+	 * gracefully: arriving a frame late reads as a marginally slower fade, not as text
+	 * sliding out of register with everything around it.
+	 *
+	 * Reads the scroll offset from the DOCUMENT rather than the sub's own box: the fade
+	 * is anchored to the top of the page, not to the element's travel, and `scrollY` is
+	 * the same quantity the old `scroll(root)` timeline read — so the timing is
+	 * unchanged from where that mechanism worked.
 	 */
 	private updateSubFade() {
-		const span = this.subFadePx();
+		const span = this.subFade;
 		// A zero/negative span would divide to Infinity; treat it as "no fade".
 		if (!(span > 0)) {
 			this.clearSubFade();
@@ -873,18 +874,9 @@ export class StoriesHeadingElement extends HTMLElement {
 		}
 		const y = window.scrollY || document.documentElement.scrollTop || 0;
 		const p = clamp01(y / span);
-		const opacity = 1 - p;
-		this.style.setProperty("--sh-sub-opacity", opacity.toFixed(4));
-		// The intro sits absolute inside the sticky pin, which is pinned across the whole
-		// hero — so without this it would hang STATIONARY in the viewport while it fades,
-		// reading as a fixed bar. Translate it up 1:1 with scroll so it travels WITH the
-		// page as it fades, then stops once hidden. Clamped to the fade span (it is
-		// visibility:hidden past there, so further travel is wasted). Transform-only, so
-		// it never disturbs the fold/pin measurement that relies on the sub reserving no
-		// flow space.
-		this.style.setProperty("--sh-sub-shift", `${(-Math.min(y, span)).toFixed(2)}px`);
+		this.sub?.style.setProperty("--sh-sub-opacity", (1 - p).toFixed(4));
 		// Only at the very end, matching the old keyframe's discrete visibility step.
-		this.style.setProperty(
+		this.sub?.style.setProperty(
 			"--sh-sub-visibility",
 			p >= 1 ? "hidden" : "visible"
 		);
@@ -892,9 +884,8 @@ export class StoriesHeadingElement extends HTMLElement {
 
 	/** Drop the published fade so the stylesheet's shown-by-default values apply. */
 	private clearSubFade() {
-		this.style.removeProperty("--sh-sub-opacity");
-		this.style.removeProperty("--sh-sub-shift");
-		this.style.removeProperty("--sh-sub-visibility");
+		this.sub?.style.removeProperty("--sh-sub-opacity");
+		this.sub?.style.removeProperty("--sh-sub-visibility");
 	}
 
 	/**
@@ -904,8 +895,11 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * the property is authored. Not read through cssPx(): that resolves against the
 	 * host. Falls back to the authored default if the property is missing or
 	 * unparseable (a token typo must degrade to a working fade, not to none).
+	 *
+	 * Called from measure(), NOT from update(): getComputedStyle forces a style recalc,
+	 * and this is a constant between resizes. It was previously read once per frame.
 	 */
-	private subFadePx(): number {
+	private readSubFadePx(): number {
 		const DEFAULT = 100;
 		if (!this.sub) return DEFAULT;
 		const raw = getComputedStyle(this.sub)
@@ -927,7 +921,8 @@ export class StoriesHeadingElement extends HTMLElement {
 	 */
 	private revealProgress(): number {
 		if (!this.heading) return 1;
-		const revealPx = this.cssPx("--sh-reveal", 0.6 * window.innerHeight);
+		// Cached in measure(); reading it here meant a getComputedStyle every frame.
+		const revealPx = this.revealPx;
 		if (revealPx <= 0) return 1;
 
 		// Scene-gated path: measure the heading's top against the scene's bottom edge.

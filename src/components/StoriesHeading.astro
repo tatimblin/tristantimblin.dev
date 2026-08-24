@@ -10,6 +10,8 @@
 //   .sh__track    — reserves the pin duration in normal flow for "other stories".
 //     .sh__pin    — position:sticky at --sh-top; "other stories" pins here.
 //       .sh__heading — the outline→solid font-swap reveal that wipes while pinned.
+//     .sh__sub    — the page-authored intro, a STATIC SIBLING of the pin (not a
+//                   child of it) so it scrolls with the page under its own steam.
 //
 // The "&" and "other stories" are DECOUPLED: each has its own scroll driver.
 //
@@ -43,10 +45,20 @@
 				<span class="sh__outline" aria-hidden="true">other stories</span>
 				<span class="sh__solid"><wobble-text scale="5" speed="0.3">other stories</wobble-text></span>
 			</h2>
-			<!-- Sub-lockup (intro + CTAs, authored by the page) rides INSIDE the pin so
-			     it clusters directly under "other stories" — both at rest and while the
-			     lockup is pinned — instead of being pushed a full track-height below. -->
-			<div class="sh__sub"><slot /></div>
 		</div>
+		<!-- Sub-lockup (the page-authored intro). A STATIC SIBLING OF THE PIN, and the
+		     sibling part is the whole point: it flows directly below the pin's NATURAL
+		     position — which is the top of the track, i.e. exactly under "other stories"
+		     at rest — but, not being sticky itself, it then scrolls away with the page
+		     under the browser's own compositor.
+		     It used to live INSIDE the pin (absolute, top:100%), which glued it to the
+		     viewport and forced JS to fake normal scrolling by writing
+		     translateY(-scrollY) every frame. That transform is main-thread work racing
+		     a compositor-thread scroll, so on touch devices it was permanently a few
+		     frames behind the page — the "laggy intro". Nothing can make that smooth;
+		     the fix is to not do it. Keep this OUT of the pin.
+		     The track has an explicit height, so this reserves no extra flow space —
+		     it overlays the empty region the rising body copy fills, exactly as before. -->
+		<div class="sh__sub"><slot /></div>
 	</div>
 </stories-heading>

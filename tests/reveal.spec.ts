@@ -227,10 +227,47 @@ test.describe("reveal — safety", () => {
 					parseFloat(getComputedStyle(el, "::before").opacity)
 				);
 
+		// POLL, don't sample. `.is-in` starts a CSS TRANSITION on ::before, so the
+		// watermark takes ~1.5s to reach its resting 0.66 — and settleReveal() does not
+		// cover it (that waits on the [data-reveal] coordinator's opacity, which is a
+		// different mechanism on a different element). Sampling once therefore caught the
+		// fade mid-flight at 0 and reported the lifecycle regression that this test
+		// exists to detect, on a widget that was in fact revealing perfectly well.
+		//
+		// Polling still catches the REAL regression: when the observer is left watching a
+		// detached node, the resting state is opacity 0 forever, so this never settles
+		// above 0 and fails on the timeout instead of on a race.
+		const expectWatermarkShown = async (when: string) =>
+			expect
+				.poll(watermark, {
+					timeout: 8000,
+					message: `the bike watermark never faded in (${when})`,
+				})
+				.toBeGreaterThan(0);
+
+		// Plain scroll, NOT locator.scrollIntoViewIfNeeded() — see the note on the same
+		// call in "the widget row is held until scrolled to". This widget sits in
+		// .home__widgets, the row that never fully settles (its reveal transition and the
+		// video widget's scroll-driven dock lift both animate it), so waiting for the box
+		// to stop moving times out at 30s on a slow runner instead of asserting anything.
+		// We only need it on screen so its IntersectionObserver fires.
+		const show = async () => {
+			// Wait for the element FIRST. ClientRouter swaps the DOM asynchronously after
+			// the URL changes, so page.waitForURL() can return while the previous page's
+			// body is still mounted — at which point .wx-baywheels is null, the optional
+			// chain below silently no-ops, and the widget is never brought into view. The
+			// assertion then fails on a widget that was simply never scrolled to, which
+			// reads as the lifecycle regression rather than as the race it is.
+			await page.locator(".wx-baywheels").waitFor({ state: "attached" });
+			await page.evaluate(() =>
+				document.querySelector(".wx-baywheels")?.scrollIntoView({ block: "center" })
+			);
+		};
+
 		await page.goto("/");
-		await page.locator(".wx-baywheels").scrollIntoViewIfNeeded();
+		await show();
 		await settleReveal(page);
-		expect(await watermark()).toBeGreaterThan(0);
+		await expectWatermarkShown("first load");
 
 		// Dispatch the click rather than hit-test it, per test 6.
 		await page.evaluate(() => {
@@ -243,9 +280,9 @@ test.describe("reveal — safety", () => {
 		await page.goBack();
 		await page.waitForURL((u) => u.pathname === "/");
 
-		await page.locator(".wx-baywheels").scrollIntoViewIfNeeded();
+		await show();
 		await settleReveal(page);
-		expect(await watermark()).toBeGreaterThan(0);
+		await expectWatermarkShown("after a round trip");
 	});
 });
 
@@ -403,7 +440,7 @@ test.describe("reveal — below-the-fold behaviour", () => {
 });
 
 test.describe("ruler — mobile scrubber orientation", () => {
-	test("years sit ABOVE the ticks, on one level row", async ({ page }) => {
+	test("years sit BELOW the ticks, on one level row", async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto("/");
 		// The strip is generated on hydration; wait for the element to announce it.
@@ -422,7 +459,7 @@ test.describe("ruler — mobile scrubber orientation", () => {
 				const t = tick.getBoundingClientRect();
 				const l = label.getBoundingClientRect();
 				return {
-					labelBottom: Number(l.bottom.toFixed(1)),
+					labelTop: Number(l.top.toFixed(1)),
 					tickTop: Number(t.top.toFixed(1)),
 					tickBottom: Number(t.bottom.toFixed(1)),
 					tickHeight: Number(t.height.toFixed(1)),
@@ -433,23 +470,27 @@ test.describe("ruler — mobile scrubber orientation", () => {
 		expect(rows.length).toBeGreaterThan(1);
 
 		for (const row of rows) {
-			// The year reads above its tick.
-			expect(row.labelBottom).toBeLessThanOrEqual(row.tickTop + 0.5);
+			// The year reads below its tick. This is the BASELINE-UP arrangement: ticks
+			// hang off the strip's top edge (facing the clip) and grow downward, so the
+			// clip's dissolve lands on them and is spent before it reaches the type.
+			expect(row.labelTop).toBeGreaterThanOrEqual(row.tickBottom - 0.5);
 		}
 
-		// Ticks are magnified per-frame toward the centre marker, so their TOPS vary.
+		// Ticks are magnified per-frame toward the centre marker, so their BOTTOMS vary.
 		// The label row must nonetheless stay level — that only holds if the labels are
 		// anchored to the shared baseline rather than to each tick's moving edge (the
 		// bobbing-label bug fixed in b207f96, mirrored onto this axis).
-		const labelBottoms = new Set(rows.map((r) => r.labelBottom));
-		const tickBaselines = new Set(rows.map((r) => r.tickBottom));
-		expect(labelBottoms.size).toBe(1);
+		const labelTops = new Set(rows.map((r) => r.labelTop));
+		const tickBaselines = new Set(rows.map((r) => r.tickTop));
+		expect(labelTops.size).toBe(1);
 		expect(tickBaselines.size).toBe(1);
 		// And the magnification really is live, so "level" isn't passing by accident.
 		expect(new Set(rows.map((r) => r.tickHeight)).size).toBeGreaterThan(1);
 	});
 
-	test("the tick roots fade out; the year labels do not", async ({ page }) => {
+	test("the ticks stand in the dissolve; the year labels sit past it", async ({
+		page,
+	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto("/");
 		await page.waitForFunction(
@@ -459,48 +500,55 @@ test.describe("ruler — mobile scrubber orientation", () => {
 		);
 
 		const geo = await page.evaluate(() => {
-			// The dissolve now lives on .vc__main (the clip's and the strip's shared
-			// parent) so ONE band covers both — see the note in src/pages/index.astro.
-			// The band is therefore measured against THAT box, not the ruler's.
-			const main = document.querySelector<HTMLElement>(".hero-carousel .vc__main")!;
+			// The dissolve lives on .vc__grid — the CLIP alone — and runs from the ruler's
+			// top edge down over the tick growth extent. See the foot-of-the-scene note in
+			// src/pages/index.astro. It is measured against the clip's box.
+			const grid = document.querySelector<HTMLElement>(".hero-carousel .vc__grid")!;
 			const carousel = document.querySelector<HTMLElement>(".hero-carousel")!;
-			const cs = getComputedStyle(main);
 
 			// Resolve the band to px by probing a real box: getComputedStyle returns the
 			// authored calc() for a custom property, unevaluated.
 			const probe = document.createElement("div");
-			probe.style.height = "var(--hero-vc-dissolve)";
 			carousel.appendChild(probe);
+			probe.style.height = "var(--hero-vc-ruler-top)";
+			const rulerTop = probe.getBoundingClientRect().height;
+			probe.style.height = "var(--hero-vc-dissolve)";
 			const band = probe.getBoundingClientRect().height;
 			probe.remove();
 
+			const gridBottom = grid.getBoundingClientRect().bottom;
 			const labels = Array.from(
 				document.querySelectorAll<HTMLElement>(".hero-carousel .vc__tick-year")
-			).map((l) => Number(l.getBoundingClientRect().bottom.toFixed(1)));
+			).map((l) => Number(l.getBoundingClientRect().top.toFixed(1)));
 			const ticks = Array.from(
 				document.querySelectorAll<HTMLElement>(".hero-carousel .vc__tick")
-			).map((t) => Number(t.getBoundingClientRect().bottom.toFixed(1)));
+			).map((t) => Number(t.getBoundingClientRect().top.toFixed(1)));
 			return {
-				masked: cs.maskImage !== "none" && cs.maskImage.includes("gradient"),
-				fadeStart: Number((main.getBoundingClientRect().bottom - band).toFixed(1)),
+				masked:
+					getComputedStyle(grid).maskImage !== "none" &&
+					getComputedStyle(grid).maskImage.includes("gradient"),
+				// Where the clip starts dissolving, and where it is fully gone.
+				fadeStart: Number((gridBottom - rulerTop).toFixed(1)),
+				fadeEnd: Number((gridBottom - rulerTop + band).toFixed(1)),
 				labels,
 				ticks,
 			};
 		});
 
 		expect(geo.masked).toBe(true);
-		// Every label is clear of the fade band — the whole reason the years moved up,
-		// and the constraint that sizes the band (a taller one starts eating the type).
-		for (const bottom of geo.labels) expect(bottom).toBeLessThanOrEqual(geo.fadeStart);
-		// And the ticks reach into it, so they dissolve instead of ending on a hard line.
-		for (const bottom of geo.ticks) expect(bottom).toBeGreaterThan(geo.fadeStart);
+		// Every label is clear of the fade — the whole reason the years moved BELOW the
+		// ticks, and the constraint that sizes the band (a taller one eats the type).
+		for (const top of geo.labels) expect(top).toBeGreaterThanOrEqual(geo.fadeEnd);
+		// And the ticks begin inside it, so they emerge out of the dissolving halftone
+		// instead of starting on a hard line.
+		for (const top of geo.ticks) expect(top).toBeLessThan(geo.fadeEnd);
 	});
 
-	test("the scrubber is bottom-aligned with the clip, under ONE shared fade", async ({
+	test("ONE fade, on the clip alone, with the strip and caption below it", async ({
 		page,
 	}) => {
-		// THE TWO BUGS THIS PINS, both of which showed up as the ruler looking wrong
-		// against the halftone at the bottom of the mobile hero:
+		// THE THREE BUGS THIS PINS, all of which showed up as the foot of the mobile hero
+		// looking wrong:
 		//
 		//  1. SWALLOWED BY THE FADE. The clip's bottom fade used to start at 78% of the
 		//     hero height, which at 390x844 put it ~120px ABOVE the bottom UI — the
@@ -513,11 +561,16 @@ test.describe("ruler — mobile scrubber orientation", () => {
 		//     box (full scene vs a ~46px strip), so the two ramps disagreed and each had
 		//     its own hard start edge — read as two stacked fade-outs.
 		//
-		// The fix is one band on their shared parent (.vc__main) with both boxes
-		// BOTTOM-ALIGNED, so a single gradient covers the pair. These assertions encode
-		// that architecture: exactly one masked layer, and no descendant re-masking.
-		// Geometry rather than pixels — the scene is live video, so luminance is too
-		// noisy to assert on, but "which layer carries the mask" is exact.
+		//  3. THE CAPTION READ AS HERO COPY. It used to sit ABOVE the ruler, which put it
+		//     directly under the intro lede where it looked like one more line of the
+		//     page's own text rather than a label on the video.
+		//
+		// The fix for all three is one gradient on the CLIP ONLY, ending at the ruler's
+		// tick band, with the strip and then the caption stacked below it in that order.
+		// These assertions encode that architecture: exactly one masked layer, no
+		// ancestor or sibling re-masking, and the reading order of the foot. Geometry
+		// rather than pixels — the scene is live video, so luminance is too noisy to
+		// assert on, but "which layer carries the mask" is exact.
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto("/");
 		await page.waitForFunction(
@@ -538,48 +591,154 @@ test.describe("ruler — mobile scrubber orientation", () => {
 			)!;
 
 			const probe = document.createElement("div");
-			probe.style.height = "var(--hero-vc-dissolve)";
 			carousel.appendChild(probe);
+			probe.style.height = "var(--hero-vc-ruler-top)";
+			const rulerTopVar = probe.getBoundingClientRect().height;
+			probe.style.height = "var(--hero-vc-dissolve)";
 			const dissolve = probe.getBoundingClientRect().height;
 			probe.remove();
 
-			const m = main.getBoundingClientRect();
+			const g = grid.getBoundingClientRect();
+			const r = ruler.getBoundingClientRect();
+			const c = caption.getBoundingClientRect();
 			return {
-				dissolve,
-				mainMask: getComputedStyle(main).maskImage,
 				gridMask: getComputedStyle(grid).maskImage,
+				mainMask: getComputedStyle(main).maskImage,
 				rulerMask: getComputedStyle(ruler).maskImage,
-				mainBottom: m.bottom,
-				rulerBottom: ruler.getBoundingClientRect().bottom,
-				fadeStart: m.bottom - dissolve,
-				yearBottoms: Array.from(
+				fadeStart: g.bottom - rulerTopVar,
+				fadeEnd: g.bottom - rulerTopVar + dissolve,
+				rulerTop: r.top,
+				rulerBottom: r.bottom,
+				captionTop: c.top,
+				captionBottom: c.bottom,
+				sceneBottom: document
+					.querySelector<HTMLElement>(".fh__scene")!
+					.getBoundingClientRect().bottom,
+				rulerOpacity: getComputedStyle(ruler).opacity,
+				captionOpacity: getComputedStyle(caption).opacity,
+				yearTops: Array.from(
 					document.querySelectorAll<HTMLElement>(".hero-carousel .vc__tick-year")
-				).map((l) => l.getBoundingClientRect().bottom),
-				captionBottom: caption.getBoundingClientRect().bottom,
+				).map((l) => l.getBoundingClientRect().top),
 			};
 		});
 
-		// ONE masked layer: the shared parent carries the gradient...
-		expect(geo.mainMask).toContain("gradient");
-		// ...and neither child re-masks, which is what created the second fade.
-		expect(geo.gridMask).toBe("none");
+		// ONE masked layer: the clip carries the gradient...
+		expect(geo.gridMask).toContain("gradient");
+		// ...and neither the shared parent nor the strip re-masks. The parent is the one
+		// that matters most here: a mask there applies to the WHOLE subtree, which is
+		// what dragged the ruler and caption into the fade (bug 1).
+		expect(geo.mainMask).toBe("none");
 		expect(geo.rulerMask).toBe("none");
 
-		// Anchored to the bottom EDGE, not a percentage of the hero (bug 1).
-		expect(geo.mainMask).toContain("calc");
-		expect(geo.mainMask).not.toContain("78%");
+		// Anchored to measured geometry, not a percentage of the hero (bug 1).
+		expect(geo.gridMask).toContain("calc");
+		expect(geo.gridMask).not.toContain("78%");
 
-		// BOTTOM-ALIGNED: the strip and the clip end on the same line, so the single
-		// band reaches both at the same height.
-		expect(Math.abs(geo.mainBottom - geo.rulerBottom)).toBeLessThan(0.5);
+		// The dissolve BEGINS at the ruler's top edge, so the ticks emerge out of it.
+		expect(Math.abs(geo.fadeStart - geo.rulerTop)).toBeLessThan(1);
+		// ...and is spent before the year row (bug 2's constraint, mirrored).
+		for (const top of geo.yearTops) expect(top).toBeGreaterThanOrEqual(geo.fadeEnd);
 
-		// The band is bounded by what it must spare: the year row stays out of it (a
-		// taller band dimmed the labels — measured alpha 0.34 at 2.4x the strip height),
-		// while the caption above is untouched.
-		for (const bottom of geo.yearBottoms) {
-			expect(bottom).toBeLessThanOrEqual(geo.fadeStart);
+		// READING ORDER (bug 3): ruler, THEN caption, and the caption is the last thing
+		// in the scene. This is what stops the caption reading as hero copy.
+		expect(geo.captionTop).toBeGreaterThanOrEqual(geo.rulerBottom);
+		expect(geo.captionBottom).toBeLessThanOrEqual(geo.sceneBottom);
+
+		// Both rest at the same lowered opacity, so they read as one band of video
+		// chrome rather than as page text.
+		expect(geo.captionOpacity).toBe(geo.rulerOpacity);
+		expect(Number(geo.rulerOpacity)).toBeLessThan(1);
+	});
+
+	test("the foot re-stacks when the caption wraps", async ({ page }) => {
+		// THE BUG THIS PINS, which was silent and permanent. The caption's height is an
+		// INPUT to where the ruler sits (the hero lifts the strip by exactly that much to
+		// clear it), and the ruler's top is in turn what the hero reserves room for. So
+		// publishMetrics() has to write --vc-caption-h BEFORE it measures the ruler —
+		// otherwise it reports the position the ruler is about to leave.
+		//
+		// Nothing would ever correct that: publishMetrics runs from a ResizeObserver, and
+		// the consequence of the write is that the ruler MOVES, not that it resizes, so no
+		// second callback is delivered. The published extent stays one caption-height
+		// short forever. Measured at a two-line caption: 27px short, and the heading group
+		// overlapped the ruler by 3px.
+		//
+		// Asserted as an INVARIANT ACROSS WRAP COUNTS rather than against fixed numbers:
+		// what must hold is that the three bands keep their spacing however tall the
+		// caption gets.
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto("/");
+		await page.waitForFunction(
+			() => !!document.querySelector(".hero-carousel[data-ready]"),
+			undefined,
+			{ timeout: 6000 }
+		);
+
+		const measure = () =>
+			page.evaluate(() => {
+				const host = document.querySelector<HTMLElement>(".hero-carousel")!;
+				const r = (s: string) =>
+					document.querySelector<HTMLElement>(s)!.getBoundingClientRect();
+
+				// The ruler's top edge as the STYLESHEET computes it, resolved to px by
+				// probing a real box (getComputedStyle hands back the authored calc()).
+				const probe = document.createElement("div");
+				probe.style.height = "var(--hero-vc-ruler-top)";
+				host.appendChild(probe);
+				const wantExtent = probe.getBoundingClientRect().height;
+				probe.remove();
+
+				const ruler = r(".hero-carousel .vc__ruler");
+				const caption = r(".hero-carousel .vc__caption");
+				return {
+					// What JS published vs. what CSS actually laid out. These must agree —
+					// their disagreement IS the staleness.
+					published: parseFloat(
+						getComputedStyle(host).getPropertyValue("--vc-bottom-ui-extent")
+					),
+					laidOut: host.getBoundingClientRect().bottom - ruler.top,
+					wantExtent,
+					captionGap: caption.top - ruler.bottom,
+					clearance: ruler.top - r(".hero-intro").bottom,
+				};
+			});
+
+		const setCaption = (desc: string, loc: string) =>
+			page.evaluate(
+				([d, l]) => {
+					document.querySelector(".hero-carousel .vc__desc")!.textContent = d;
+					document.querySelector(".hero-carousel .vc__loc")!.textContent = l;
+				},
+				[desc, loc]
+			);
+
+		const rows = [await measure()];
+		for (const [desc, loc] of [
+			["JOINED FISKER AND THEN SOME MORE WORDS HERE", "SAN FRANCISCO CALIFORNIA"],
+			[
+				"A MUCH LONGER DESCRIPTION THAT IS GUARANTEED TO WRAP ONTO SEVERAL LINES",
+				"SOMEWHERE VERY FAR AWAY INDEED",
+			],
+		]) {
+			await setCaption(desc, loc);
+			// The RO → publish → re-layout round trip needs a couple of frames.
+			await page.waitForTimeout(600);
+			rows.push(await measure());
 		}
-		expect(geo.captionBottom).toBeLessThan(geo.fadeStart);
+
+		for (const row of rows) {
+			// The published extent describes where the ruler REALLY is (the staleness bug),
+			// and matches what the stylesheet asked for.
+			expect(Math.abs(row.published - row.laidOut)).toBeLessThan(1);
+			expect(Math.abs(row.published - row.wantExtent)).toBeLessThan(1);
+			// The caption never collides with the strip above it...
+			expect(row.captionGap).toBeGreaterThan(0);
+			// ...and the heading group still clears the whole foot.
+			expect(row.clearance).toBeGreaterThan(0);
+		}
+
+		// The caption really did grow, so the invariants above aren't holding vacuously.
+		expect(new Set(rows.map((r) => Math.round(r.laidOut))).size).toBe(rows.length);
 	});
 
 	test("nothing paints a hard-edged band across the strip", async ({ page }) => {

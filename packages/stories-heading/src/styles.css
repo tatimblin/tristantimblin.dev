@@ -15,7 +15,9 @@
    Two INDEPENDENT scroll drivers (JS):
      --sh-clip        1→0: fraction of "other stories" solid layer hidden (wipe).
      --sh-amp-shift   the "&"'s parallax translateY.
-     --sh-amp-opacity the "&"'s fade (1 → --sh-amp-floor). */
+     --sh-amp-opacity the "&"'s fade (1 → --sh-amp-floor).
+   Each is published on the ELEMENT that consumes it, not on the host: they are
+   custom properties, so a per-frame write on the host restyles the whole subtree. */
 
 stories-heading {
 	--sh-clip: 1;
@@ -53,7 +55,7 @@ stories-heading {
 	/* Separation from "other stories" down to the intro/CTAs — the intro is page copy
 	   that follows the heading, not a subhead of it. Halved on mobile (see the ≤900px
 	   block) where the tighter column wants less air. */
-	--sh-sub-gap: var(--space-10);
+	--sh-sub-gap: var(--space-5);
 
 	display: block;
 	position: relative;
@@ -240,16 +242,28 @@ stories-heading {
 	padding-inline-end: 0.12em;
 }
 
-/* Sub-lockup: page-authored intro + CTAs. Authored inside the pin and lifted OUT of
-   flow (position: absolute; top:100%, below) so it hangs directly beneath
-   "other stories" as one group while reserving NO space in the pin/track — the rising
-   body copy meets "other stories" with no gap between them.
+/* Sub-lockup: the page-authored intro. A STATIC SIBLING of the pin inside the
+   track (see StoriesHeading.astro), so it flows directly beneath "other stories"
+   at rest and then SCROLLS AWAY WITH THE PAGE on the browser's own compositor.
+   The track's height is explicit, so this reserves no flow space of its own — the
+   rising body copy still meets "other stories" directly.
 
-   FADE-ON-SCROLL: the intro/CTAs travel UP with the page and FADE OUT together,
-   FLEETINGLY — the fade completes within the first sliver of scroll (--sh-sub-fade-px),
-   before "other stories" reaches its sticky offset and begins its reveal, so the whole
-   move happens while the lockup is still scrolling normally. visibility flips to hidden
-   at the end of the fade so the invisible bar stops capturing pointer events.
+   IT USED TO BE `position: absolute` INSIDE THE STICKY PIN, and that is the bug
+   this rule exists to prevent coming back. A sticky ancestor is the containing
+   block for an absolute child, so the intro was glued to the viewport; to make it
+   look like ordinary page content the driver wrote translateY(-scrollY) on it
+   every frame. Main-thread transform vs. compositor-thread scroll: on any touch
+   device the intro rode a few frames behind the rest of the page, permanently,
+   and no amount of making the handler cheaper fixes that — the two are simply not
+   the same clock. Flow layout does the identical motion for free and in perfect
+   register. Do not re-introduce a scroll-linked transform here.
+
+   FADE-ON-SCROLL: opacity only, over the first --sh-sub-fade-px of scroll, so the
+   intro is gone before it travels up into the pinned "other stories" it would
+   otherwise slide behind. visibility flips at the end so the invisible block stops
+   taking pointer events. Opacity is safe to drive from JS where position was not:
+   a late opacity frame reads as a slightly slow fade, not as text sliding out of
+   register with its neighbours.
 
    DRIVEN BY JS, NOT A SCROLL-TIMELINE — and the difference is a bug, not a taste:
    this WAS `animation-timeline: scroll(root)` over a 100px range, and the intro
@@ -275,21 +289,22 @@ stories-heading {
    before-phase with a huge `animation-delay` keeps it visible only by ensuring
    `animationstart` never fires, which kills the polyfill too.
 
-   So the driver moved to JS — where this component ALREADY runs a coalesced
-   per-frame scroll handler for --sh-clip and the "&" parallax. The sub's fade is
-   one more published property on that same rAF, costing no extra listener and no
-   extra frame, and it now behaves identically on every engine with no polyfill in
-   the path. Both properties DEFAULT TO SHOWN, so a bundle that 404s or throws
-   leaves the intro visible rather than invisible. */
+   So the driver stays in JS — where this component ALREADY runs a coalesced
+   per-frame scroll handler for --sh-clip and the "&" parallax. The properties are
+   published ON THIS ELEMENT rather than on the host: they are custom properties, so
+   writing them on the host invalidated style for the ENTIRE lockup subtree (the
+   wordmark SVG, both heading layers and their filter) once a frame to restyle one
+   box. Both properties DEFAULT TO SHOWN, so a bundle that 404s or throws leaves the
+   intro visible rather than invisible. */
 .sh__sub {
 	/* Separate the intro from "other stories": it is page copy that follows the
 	   heading, NOT a subhead of it, so it sits a clear step below rather than tight to
 	   the wordmark→heading rhythm (--sh-heading-gap). The page's slotted content must
 	   not add its OWN top margin on top of this — author the whole gap here. */
 	margin-block-start: var(--sh-sub-gap);
-	/* The visible content is the lede text + buttons; this WRAPPER is a full-width
-	   box, and where it overlays the scene's bottom UI its empty area would swallow
-	   the scrubber's drag. Pointers fall through; the slotted content opts back in
+	/* The visible content is the lede text; this WRAPPER is a full-width box, and
+	   where it overlays the scene's bottom UI its empty area would swallow the
+	   scrubber's drag. Pointers fall through; the slotted content opts back in
 	   (same pattern as .fh__heading / the host / .sh__heading / .site-header). */
 	pointer-events: none;
 	/* The scroll distance the fade plays over, so the timing lives here in CSS with
@@ -301,25 +316,16 @@ stories-heading {
 	   the first update) must read as fully shown. Never invert these. */
 	opacity: var(--sh-sub-opacity, 1);
 	visibility: var(--sh-sub-visibility, visible);
-	/* Absolute inside the sticky (pinned) lockup, the intro would otherwise hang
-	   stationary in the viewport while it fades. The driver publishes --sh-sub-shift
-	   (−scrollY, clamped to the fade span) so the intro travels UP with the page as it
-	   fades instead of reading as a fixed bar. Default 0px — unset must not move it. */
-	transform: translateY(var(--sh-sub-shift, 0px));
 }
 
-/* Reduced motion: no fade and no out-of-flow lift — the intro/CTAs stay in normal
-   flow under the lockup, fully shown, and scroll away with the page like everything
-   else (a permanently out-of-flow bar with no fade would otherwise overlay the page).
-   The JS driver ALSO skips publishing the fade under this preference, so these
-   declarations are the belt to that braces; they override the custom properties
-   outright rather than trusting the driver to have stayed away. */
+/* Reduced motion: no fade. The intro is already in normal flow (it is a plain
+   static sibling of the pin now, in every mode), so the only thing left to undo is
+   the scroll-driven opacity. The JS driver ALSO skips publishing the fade under
+   this preference, so these declarations are the belt to that braces; they override
+   the custom properties outright rather than trusting the driver to have stayed
+   away. */
 @media (prefers-reduced-motion: reduce) {
 	.sh__sub {
-		position: static;
-		/* Same intro separation as the base rule (see there); restated because this
-		   block resets position and reads as the reduced-motion source of truth. */
-		margin-block-start: var(--sh-sub-gap);
 		opacity: 1;
 		visibility: visible;
 	}
@@ -329,7 +335,6 @@ stories-heading {
    against. Mirrors the print block in src/styles/reveal.css. */
 @media print {
 	.sh__sub {
-		position: static;
 		opacity: 1;
 		visibility: visible;
 	}
@@ -425,7 +430,7 @@ stories-heading {
 		--sh-heading-gap: calc(-1 * var(--space-3));
 		/* Half the desktop intro separation (64px → 32px): the tighter single column
 		   wants less air between "other stories" and the intro. */
-		--sh-sub-gap: var(--space-6);
+		--sh-sub-gap: var(--space-3);
 		/* Reveal wipe plays over 100px of scroll (vs 300px on desktop). */
 		--sh-reveal: 100px;
 		/* Hold FIXED long enough that "other stories" stays pinned while the full-bleed
@@ -450,22 +455,6 @@ stories-heading {
 	/* Wordmark fills the full inner width (gutter-to-gutter) on mobile. */
 	.sh__wordmark-svg {
 		width: 100%;
-	}
-}
-
-/* Motion allowed (all widths): lift the sub-lockup OUT of flow so it hangs directly
-   below "other stories" as one group. Absolute within the pin (position:sticky →
-   containing block) places it just below the heading and reserves NO flow space, so
-   the rising copy meets "other stories" directly, and — because the fade completes
-   before the pin reaches its sticky offset — it travels UP with the page and fades
-   rather than staying glued to any edge. Guarded to no-preference so the reduced-motion
-   fallback (static + in-flow, above) still wins. */
-@media (prefers-reduced-motion: no-preference) {
-	.sh__sub {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
 	}
 }
 
