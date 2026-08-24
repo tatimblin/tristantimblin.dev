@@ -81,6 +81,18 @@ export class StoriesHeadingElement extends HTMLElement {
 	private revealPx = 0;
 	private subFade = 0;
 
+	/** The "&"'s size, as a fraction of the wordmark's RENDERED INK HEIGHT.
+	    Tied to the wordmark rather than to a breakpoint so the glyph holds the same
+	    proportion at every viewport — the wordmark is itself full-width, so this is
+	    effectively a ratio of the screen too, and the CSS --sh-amp-size steps exist only
+	    for the pre-measure frame.
+	    Ink height, not font-size: fitWordmark() sets the SVG viewBox to the real glyph
+	    bounds, so the two are the same thing here and the ratio means what it looks like.
+	    The glyph is baseline-aligned to the wordmark (see fitAmp), so growth goes UPWARD
+	    into the word — which is the point, now that the "&" paints over the whole lockup
+	    rather than being threaded between its layers. */
+	private static readonly AMP_SIZE_RATIO = 0.65;
+
 	/** The "&"'s parallax distance (px) at full progress, and its fade floor. */
 	private static readonly AMP_PARALLAX = 100;
 	private static readonly AMP_FLOOR = 0.15;
@@ -343,7 +355,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * Size the "&" to ~1/2 of the wordmark's rendered ink height and drop it so its
+	 * Size the "&" to AMP_SIZE_RATIO of the wordmark's rendered ink height and drop it so its
 	 * own baseline sits on the wordmark's baseline. The "&" is absolutely positioned
 	 * inside the host; the wordmark <svg> is its offset parent's first child, so its
 	 * offsetTop/height locate the wordmark box. Within a font, the baseline sits
@@ -361,8 +373,7 @@ export class StoriesHeadingElement extends HTMLElement {
 		const wmHeight = wmRect.height;
 		if (!(wmHeight > 0)) return;
 
-		// "&" font-size = 1/2 of the wordmark's rendered ink height.
-		const ampSize = wmHeight / 2;
+		const ampSize = wmHeight * StoriesHeadingElement.AMP_SIZE_RATIO;
 		this.style.setProperty("--sh-amp-size", `${ampSize.toFixed(2)}px`);
 
 		// The wordmark box IS its ink (fitWordmark set the viewBox to the ink
