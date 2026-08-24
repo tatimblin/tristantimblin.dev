@@ -29,12 +29,25 @@ import { test, expect, type Page } from "@playwright/test";
  *                   state, which is what every unsupported/failed path lands on.
  *   4. NO TIMELINE  no scroll/view-timeline drives the sub any more — the mechanism
  *                   whose fallback is invisible content must not come back.
+ *   6. SCROLLS FREE the intro's MOTION is flow layout, not a scroll-driven transform.
+ *
+ * On (6): the intro was once `position: absolute` inside the sticky pin, which glued it
+ * to the viewport, so the driver wrote translateY(-scrollY) on it every frame to fake
+ * ordinary scrolling. Touch scrolling runs on the compositor thread and that transform
+ * ran on the main one, so on a phone the intro rode permanently a few frames behind the
+ * rest of the page — visibly laggy, and unfixable by making the handler cheaper, since
+ * the two are not the same clock. It is a static sibling of the pin now and the browser
+ * moves it for free. This test fails if anything re-pins it.
  */
 
 interface Sub {
 	opacity: number;
 	visibility: string;
 	position: string;
+	/** Viewport-space top edge, for checking it travels with the page. */
+	top: number;
+	/** Any transform on the element — must stay `none`; see (6) in the header. */
+	transform: string;
 	/** Animations attached to the element, with the timeline class driving each. */
 	animations: Array<{ name: string; timeline: string | null; playState: string }>;
 }
@@ -48,6 +61,8 @@ async function readSub(page: Page): Promise<Sub> {
 			opacity: Number(cs.opacity),
 			visibility: cs.visibility,
 			position: cs.position,
+			top: el.getBoundingClientRect().top,
+			transform: cs.transform,
 			animations: el.getAnimations().map((a) => ({
 				name: (a as CSSAnimation).animationName ?? "(unnamed)",
 				timeline: a.timeline?.constructor?.name ?? null,
@@ -166,6 +181,34 @@ test.describe("hero intro — the fade at rest", () => {
 		expect(timelines.filter((t) => /ScrollTimeline|ViewTimeline/.test(t))).toEqual(
 			[]
 		);
+	});
+
+	test("6. SCROLLS FREE: the intro moves with the page, untouched by JS", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 390, height: 664 });
+		await page.goto("/");
+		await page
+			.locator("stories-heading[data-ready]")
+			.waitFor({ state: "attached", timeout: 10_000 });
+
+		await scrollTo(page, 0);
+		const rest = await readSub(page);
+		// Not sticky, not absolute inside the sticky pin — a plain in-flow box. This is
+		// the structural half of the assertion: it is what makes the rest possible.
+		expect(rest.position).toBe("static");
+		expect(rest.transform).toBe("none");
+
+		// And the behavioural half: its viewport position falls by exactly the scroll
+		// distance, because flow layout — not a driver — is what moves it. A tolerance of
+		// 1px covers sub-pixel layout only; a re-pinned intro is off by the whole 60px,
+		// and one "helpfully" re-animated by JS drifts by whatever the shift was.
+		for (const y of [30, 60]) {
+			await scrollTo(page, y);
+			const now = await readSub(page);
+			expect(now.transform).toBe("none");
+			expect(Math.abs(now.top - (rest.top - y))).toBeLessThan(1);
+		}
 	});
 
 	test("5. REDUCED MOTION: shown, in flow, and never faded", async ({

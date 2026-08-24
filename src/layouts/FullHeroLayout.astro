@@ -136,10 +136,12 @@ const { title, description, image, preloadMedia } = Astro.props;
 		   ① LEAD — bottom-anchor the group above the floor, but never above the
 		   header. This is the compression budget: a group that grows eats this
 		   whitespace first, sliding up toward the header. */
-		/* The TOTAL bottom reserve: scene-owned UI plus any part of the heading region
-		   that is itself viewport-anchored (the desktop layout fixes the intro/CTAs to
-		   the viewport bottom, which reserves the edge exactly like scene UI does). */
-		--hero-reserve: calc(var(--hero-floor) + var(--sh-sub-floor, 0px));
+		/* The TOTAL bottom reserve. Scene-owned UI is all of it: every part of the
+		   heading region now scrolls with the page, so nothing there is anchored to the
+		   viewport bottom. (The intro used to be, via an absolute box inside the sticky
+		   pin; it published a --sh-sub-floor that stacked on here. It is plain flow
+		   content now — see the .sh__sub note in stories-heading's styles.css.) */
+		--hero-reserve: var(--hero-floor);
 		--hero-lead: max(
 			var(--sh-header-clear, 0px),
 			calc(

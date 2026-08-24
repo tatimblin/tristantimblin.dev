@@ -6,7 +6,6 @@ import VideoCarousel from "../components/VideoCarousel.astro";
 import Grid from "@whois/design-system/Grid";
 import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
-import Button from "@whois/design-system/Button";
 import "@whois/design-system/styles.css";
 import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import BikeStats from "../widgets/bike-stats/BikeStats.astro";
@@ -148,23 +147,19 @@ import "../widgets/widgets.css";
 	     "& other stories" lockup. The big "&" overlaps the wordmark (indented) and
 	     parallaxes + fades on its own scroll position; "other stories" pins mid-
 	     viewport and wipes its outline→solid reveal.
-	     INTRO + CTAs are passed as the default slot: they ride INSIDE the pin,
-	     directly under "other stories", so the whole lockup reads as one group. -->
+	     The INTRO is passed as the default slot: it flows directly beneath
+	     "other stories" (as a static sibling of the pin, so it scrolls away with the
+	     page rather than hanging pinned), and the two read as one group. -->
 	<StoriesHeading slot="heading">
-		<!-- A short "who I am" lede and DS Button links. Static (no reveal). The
-		     parent regions opt pointers out; .hero-intro opts back in.
+		<!-- A short "who I am" lede. Static (no reveal). The parent regions opt
+		     pointers out; .hero-intro opts back in.
 		     On the SAME 12-col grid as the body copy below (.home__grid) so the lede
-		     shares its exact measure — cols 1–5 — instead of an eyeballed max-width;
-		     the CTAs take the far columns and stay right-aligned to the gutter. -->
+		     shares its exact measure — cols 1–5 — instead of an eyeballed max-width. -->
 		<Grid class="hero-intro" align="end">
 			<GridItem class="hero-intro__lede">
 				<p>
 					American computer programmer and human-computer interaction engineer.
 				</p>
-			</GridItem>
-			<GridItem class="hero-intro__cta">
-				<Button variant="primary" rounded as="a" href="#work">See my work</Button>
-				<Button variant="secondary" rounded as="a" href="/txt">Writing</Button>
 			</GridItem>
 		</Grid>
 	</StoriesHeading>
@@ -277,11 +272,10 @@ import "../widgets/widgets.css";
 	}
 
 	/* FULL-BLEED HERO CAROUSEL (≤900px) --------------------------------------
-	   Reach into the carousel's light-DOM .vc__* classes (mirrors videos.css) so
-	   the portrait clip cover-fills the viewport and the HORIZONTAL date ruler +
-	   caption pin along the bottom edge (like a film scrubber). "other stories"
-	   parallaxes DOWN over this bottom strip as the lockup settles. Only rendered
-	   ≤900px (display gated above); harmless above it (element is display:none). */
+	   Reach into the carousel's light-DOM .vc__* classes (mirrors videos.css) so the
+	   portrait clip cover-fills the viewport and its overlay UI stacks along the
+	   bottom edge. Only rendered ≤900px (display gated above); harmless above it
+	   (element is display:none). */
 
 	/* .vc__main is a flex row (ruler + stage); here it just fills the scene box so
 	   its children can absolutely position within it. */
@@ -301,175 +295,179 @@ import "../widgets/widgets.css";
 		width: 100%;
 		background: none;
 	}
-	/* THE BOTTOM DISSOLVE — ONE band, over ONE layer, covering BOTH the halftone and
-	   the ruler.
 
-	   Why it is applied to .vc__main (their shared parent) and not to each of them:
-	   two separate masks CANNOT produce one fade. Each would resolve `100%` against
-	   its own box, so the halftone (full-height) and the strip (~46px) get different
-	   gradient geometry, and each has its own hard start edge — which is exactly the
-	   "two fade-outs" artifact. Masking the common ancestor makes the dot grid and the
-	   scrubber a single image that dissolves together, so there is one gesture and no
-	   internal seam. Nothing may re-mask a descendant, or the second fade returns.
+	/* THE FOOT OF THE SCENE — three bands, stacked, read top to bottom:
 
-	   BOTTOM-ALIGNED. Both are anchored to the same bottom edge (the ruler at
-	   `bottom: 0`, the halftone filling to it), so the band acts on both at the same
-	   height rather than catching one before the other.
+	     clip  ──────────────────────────  the halftone, filling the scene
+	           ░░ dissolve ░░              spent across the ruler's tick band
+	     ruler  ╷ ╷╷ ╷ ╷╷╷ ╷              ticks hang from its top, growing DOWN
+	            2023   2024   2025         years at the foot of the strip
+	     caption  JOINED FISKER            what the clip is, dimmed to match
 
-	   SIZED BY WHAT IT MUST SPARE, not by how soft it looks in isolation. Now that one
-	   band acts on the clip AND the strip, its height is bounded by the strip's own
-	   anatomy: the ticks stand on the bottom edge and the year labels sit above them,
-	   so a band taller than the tick growth extent starts eating the labels. Measured
-	   at 553x844 — the mask's alpha at the year row by band size:
-	     2.4x --vc-ruler-h (109px) → 0.34   labels and ticks both nearly gone
-	     1.0x --vc-ruler-h  (46px) → 0.81   labels dimmed
-	     0.6x --vc-max-tick-h (14px) → 1.0  labels crisp, only the tick FEET dissolve
-	   Hence the tick extent, not the strip height. It is the same length the ruler's
-	   own tick-root fade used before this consolidation, which is the point: that value
-	   was already tuned to dissolve feet without touching type. */
+	   WHY THIS ORDER. The intro copy sits directly above this foot, and with the
+	   caption previously ABOVE the ruler it landed immediately under the lede and
+	   read as another line of hero copy rather than as a label on the video. Putting
+	   the ruler between them breaks that misreading: the scrubber is unmistakably
+	   chrome, so everything below it reads as belonging to the clip, not to the page.
+	   The caption's rest opacity is the second half of that separation — it matches
+	   the ruler (see --vc-rest-opacity) so the pair reads as one quiet band of
+	   video UI, distinct from the full-strength hero type above.
+
+	   THE DISSOLVE IS ONE BAND, ON THE CLIP ALONE. It runs from the ruler's top edge
+	   down over the tick growth extent, so the ticks emerge OUT of the fading halftone
+	   and the year row sits on clean page background just past its end. It must not be
+	   raised to the ruler's shared parent (.vc__main): that would drag the strip and
+	   the caption into the fade with it — the exact bug that put the ruler on flat
+	   black, measured at 9% of mid-video halftone strength. And nothing below may
+	   re-mask, or the two ramps resolve `100%` against different boxes and the pair
+	   reads as two stacked fade-outs. One gradient, one layer, the clip only. */
 	:global(.hero-carousel) {
-		--hero-vc-dissolve: calc(var(--vc-max-tick-h) * 0.6);
+		/* Inset of the whole foot from the scene's bottom edge. */
+		--hero-vc-foot: var(--space-5);
+		/* Separation between the ruler's year row and the caption below it. */
+		--hero-vc-cap-gap: var(--space-4);
+		/* The dissolve's height: EXACTLY the tick growth extent, so the fade is spent
+		   by the time it reaches the year row. Sized by what it must spare, not by how
+		   soft it looks in isolation — the ticks stand within this band and the labels
+		   sit past its end, so a taller one starts eating the type (measured on the
+		   previous, mirrored layout: at 2.4x the strip height the labels were at 0.34
+		   alpha and effectively gone). */
+		--hero-vc-dissolve: var(--vc-max-tick-h);
+		/* Scene bottom → the ruler's TOP edge, which is where the dissolve begins.
+		   DERIVED from the package's own published geometry — --vc-caption-h is
+		   MEASURED per clip and per width (the text rewraps), --vc-ruler-h is the
+		   strip's real height — so the three bands cannot drift apart. An earlier
+		   hardcoded 56px here already disagreed with the real strip by ~14px. */
+		--hero-vc-ruler-top: calc(
+			var(--hero-vc-foot) + var(--vc-caption-h) + var(--hero-vc-cap-gap) +
+				var(--vc-ruler-h)
+		);
+		/* Rest opacity for BOTH pieces of overlay UI. Declared on the HOST rather than
+		   on .vc__ruler so the package's own `opacity: var(--vc-rest-opacity)` and the
+		   caption rule below read ONE value and stay tied together — dimming one
+		   without the other is what made the caption read as hero copy. The ruler still
+		   brightens to full on drag/focus (the package animates that). */
+		--vc-rest-opacity: 0.5;
 	}
 
-	/* THE SINGLE MASKED LAYER. The top fade (the scene's upper edge) lives here too,
-	   so the whole scene — clip + overlay UI — is one continuously masked image.
-
-	   THE BOTTOM STOP IS NOT 78%, and that was the original bug: at 78% of the hero
-	   height the band began ~120px ABOVE the bottom UI, so the caption and the entire
-	   ruler sat INSIDE it. Measured at 390x844, the halftone behind the scrubber was at
-	   ~9% of its mid-video strength (luminance 10.0 vs 24.6) and the ticks appeared to
-	   float on flat black. Anchoring to the bottom EDGE puts the ruler at the START of
-	   the dissolve instead of buried in it. */
+	/* NOT masked here — see the note above. The shared-parent mask this used to carry
+	   is now on .vc__grid alone, so the ruler and caption escape the fade entirely. */
 	:global(.hero-carousel .vc__main) {
+		-webkit-mask-image: none;
+		mask-image: none;
+	}
+
+	/* THE SINGLE MASKED LAYER: the clip. Top edge fades into the page (the scene's
+	   upper edge, folded in here because .fh__scene's own mask is switched off on this
+	   breakpoint); bottom edge dissolves across the tick band and is fully out by the
+	   year row. */
+	:global(.hero-carousel .vc__grid) {
+		width: 100%;
+		height: 100%;
+		aspect-ratio: auto;
+		/* Match the desktop fabric (.hero__video): dial the halftone back so it reads as
+		   a faint texture under the type. The overlay UI is a separate layer and keeps
+		   its own (already-faint) rest opacity. */
+		opacity: 0.55;
 		-webkit-mask-image: linear-gradient(
 			to bottom,
 			transparent 0,
 			#000 12%,
-			#000 calc(100% - var(--hero-vc-dissolve)),
-			transparent 100%
+			#000 calc(100% - var(--hero-vc-ruler-top)),
+			transparent
+				calc(100% - var(--hero-vc-ruler-top) + var(--hero-vc-dissolve))
 		);
 		mask-image: linear-gradient(
 			to bottom,
 			transparent 0,
 			#000 12%,
-			#000 calc(100% - var(--hero-vc-dissolve)),
-			transparent 100%
+			#000 calc(100% - var(--hero-vc-ruler-top)),
+			transparent
+				calc(100% - var(--hero-vc-ruler-top) + var(--hero-vc-dissolve))
 		);
 	}
 
-	/* The clip fills the masked layer. It carries NO mask of its own — see .vc__main
-	   above: a second gradient here is what read as a second fade. */
-	:global(.hero-carousel .vc__grid) {
-		width: 100%;
-		height: 100%;
-		aspect-ratio: auto;
-		-webkit-mask-image: none;
-		mask-image: none;
-		/* Match the desktop fabric (.hero__video): dial the halftone back so it reads as
-		   a faint texture under the type. The ruler is a separate layer and keeps its
-		   own (already-faint) opacity. */
-		opacity: 0.55;
-	}
-
-	/* Horizontal ruler, BOTTOM-ALIGNED with the halftone so the shared dissolve on
-	   .vc__main acts on both at the same height. Orientation is locked horizontal
-	   (attr), so the package's horizontal tick math applies and mainSize() reads
-	   clientWidth (now the scene width). The package anchors this axis baseline-down —
-	   ticks stand on the ruler's bottom edge and grow upward, years above them — so the
-	   shared band catches the tick FEET first and the year row last, which is what
-	   makes one gradient work for the whole strip. */
+	/* Horizontal ruler, lifted to sit directly ABOVE the caption. Orientation is
+	   locked horizontal (attr), so the package's horizontal tick math applies and
+	   mainSize() reads clientWidth (now the scene width). The package anchors this axis
+	   baseline-UP — ticks hang from the ruler's top edge and grow downward, years below
+	   them — which is what lets the clip's dissolve land on the tick band and be spent
+	   before it reaches the type. */
 	:global(.hero-carousel .vc__ruler) {
 		position: absolute;
 		left: 0;
 		right: 0;
-		/* FLUSH WITH THE CLIP'S BOTTOM EDGE. Not an inset: the ruler and the halftone
-		   must share one bottom baseline, or the single mask on .vc__main reaches them at
-		   different heights and the offset strip reads as a separate element fading on
-		   its own schedule. The visual breathing room comes from the dissolve itself —
-		   the strip's feet are already melting into the page — rather than from a gap
-		   that would re-introduce that mismatch. */
-		bottom: 0;
+		/* Clear the caption below it. DERIVED from the measured caption height, not a
+		   constant: the caption text changes per clip and rewraps at every width, and a
+		   fixed offset would let the two collide on the wrapping case. */
+		bottom: calc(
+			var(--hero-vc-foot) + var(--vc-caption-h) + var(--hero-vc-cap-gap)
+		);
 		z-index: 2;
-		/* Rest the ruler faint so it reads as a subtle scrubber rather than a strong
-		   band along the hero's foot; it still brightens toward full on drag/focus (the
-		   package animates opacity on interaction). Matches the package's 0.5 default,
-		   restated here because the hero override sits at this specificity. */
-		--vc-rest-opacity: 0.5;
-		/* NO MASK OF ITS OWN. The tick-root dissolve that used to live here is now part
-		   of the ONE band on .vc__main: a gradient on this element resolves 100% against
-		   the ~46px strip while the parent's resolves against the full scene, so the two
-		   ramps disagree and the pair reads as two fades. The shared mask covers the
-		   ticks' feet for free, because the strip is bottom-aligned with the clip. */
+		/* NO MASK OF ITS OWN. The strip now sits below the clip's dissolve rather than
+		   inside it, so it has nothing to fade against — and a gradient here would
+		   resolve 100% against the ~46px strip while the clip's resolves against the
+		   full scene, so the two ramps disagree and the pair reads as two fades. */
 		-webkit-mask-image: none;
 		mask-image: none;
 		/* NO LEGIBILITY SCRIM. There used to be one here — a to-bottom black wash at
-		   0.55 alpha behind the year row — and it READ AS A SECOND FADE-OUT. Measured
-		   background luminance down the hero (dot pattern averaged out, UI text hidden):
-		   the wash dimmed the strip to ~14, the grid then RECOVERED to ~25 just below
-		   it, and only after that did the real bottom dissolve run. Two declines with a
+		   0.55 alpha behind the year row — and it READ AS A SECOND FADE-OUT: measured
+		   background luminance down the hero dimmed to ~14 under the wash, RECOVERED to
+		   ~25 just below it, then fell again for the real dissolve. Two declines with a
 		   brightening between them is, to the eye, two fades — the scrim's own hard top
-		   edge being the first.
-		   The labels do not need it. They are --color-fg over a halftone whose dots are
-		   sparse and dark, and the strip now rests on unfaded grid rather than in the
-		   dissolve, so contrast is carried by the ink itself. Any wash reintroduced here
-		   MUST be feathered at BOTH edges (transparent → alpha → transparent), or it
-		   brings the phantom second fade back with it. */
+		   edge being the first. The labels do not need it: they now rest on plain page
+		   background, past the end of the dissolve entirely. Any wash reintroduced here
+		   MUST be feathered at BOTH edges (transparent → alpha → transparent). */
 		background: none;
 		/* Horizontal breathing space only. Never padding-block: the ticks and year
 		   labels are absolutely positioned against the padding box (whose edges coincide
 		   with the border box's), so vertical padding would shrink their room and clip
 		   the year digits against the ruler's `overflow: hidden` rather than inset them.
-		   The vertical edge treatment is the shared dissolve, not a gap. */
+		   The vertical separation is the foot arithmetic above, not a pad. */
 		padding-inline: var(--space-4);
 	}
 
-	/* Year labels (above their tick in horizontal mode) sit faint like the ticks. The
+	/* Year labels (below their tick in horizontal mode) sit faint like the ticks. The
 	   label is text — far more ink than a 1px tick — so at full --color-fg it read
-	   bolder than the hairline ticks even under the ruler's shared 0.5 rest-opacity.
+	   bolder than the hairline ticks even under the ruler's shared rest opacity.
 	   --color-muted drops its weight to match, so the whole ruler reads as one quiet
-	   affordance. Legible enough now that the halftone behind it is itself dialed back. */
+	   affordance. */
 	:global(.hero-carousel .vc__tick-year) {
 		color: var(--color-muted);
 	}
 
-	/* Caption as overlay text (no white panel): light, sitting just ABOVE the
-	   bottom ruler strip. Above the video, below the heading lockup. */
+	/* Caption LAST, at the foot of the stack: overlay text (no white panel) below the
+	   ruler, dimmed to the same rest opacity so it reads as part of the video's chrome
+	   rather than as another line of the hero lede above. */
 	:global(.hero-carousel .vc__caption) {
 		position: absolute;
 		left: var(--space-4);
 		right: var(--space-4);
-		/* Clear the ruler strip below: its height (the strip is bottom-aligned at 0, so
-		   that height IS its top edge) plus a gap. DERIVED from the package's own
-		   published geometry so the two can't drift apart — the old hardcoded 56px
-		   already disagreed with the real strip by ~14px.
-		   Sits ABOVE the dissolve's start, so the caption stays legible while the strip
-		   beneath it melts away — it is the one piece of bottom UI the shared band is
-		   meant to spare. */
-		bottom: calc(var(--vc-ruler-h) + var(--space-4));
+		bottom: var(--hero-vc-foot);
 		z-index: 1;
 		padding: 0;
 		background: none;
 		color: var(--color-fg);
+		opacity: var(--vc-rest-opacity, 0.5);
 	}
 	:global(.hero-carousel .vc__loc) {
 		color: var(--text-secondary, var(--color-fg));
 	}
 
-	/* HERO INTRO + CTAs ------------------------------------------------- */
+	/* HERO INTRO -------------------------------------------------------- */
 	/* Sits with the lockup in the lower-left of the first screen. The parent
 	   .fh__heading opts pointers out (so its empty area doesn't block content
-	   rising below); this block opts back in for its lede + buttons. */
-	/* Intro lede + CTAs on the shared 12-col grid (see .home__grid): the lede
-	   occupies cols 1–5 — the SAME span as the body copy below — so both blocks
-	   share one measure and one left edge. The CTAs sit in the last columns,
-	   right-aligned to the gutter. Stacks on the ≤900px layout. */
+	   rising below); this block opts back in for its lede. */
+	/* Intro lede on the shared 12-col grid (see .home__grid): it occupies cols 1–5 —
+	   the SAME span as the body copy below — so both blocks share one measure and one
+	   left edge. Stacks on the ≤900px layout. */
 	/* NO top margin: .sh__sub already supplies the single --sh-heading-gap that binds
 	   the intro to "other stories" as one group. A margin here stacked on top of it
 	   and split the lockup in two. */
 	.hero-intro {
 		/* Pointers fall through the full-width box (it overlays the scene's date
 		   scrubber on mobile, and its empty area would swallow the drag); the lede
-		   text and buttons opt back in below. */
+		   text opts back in below. */
 		pointer-events: none;
 		grid-template-columns: repeat(12, 1fr);
 		column-gap: var(--space-5);
@@ -496,28 +494,10 @@ import "../widgets/widgets.css";
 		color: var(--text-secondary);
 	}
 
-	.hero-intro__cta {
-		/* Trailing columns, contents flushed to the right gutter. */
-		grid-column: 9 / span 4;
-		display: flex;
-		gap: var(--space-4);
-		flex-wrap: wrap;
-		justify-content: flex-end;
-	}
-
-	/* The buttons themselves are the pointer targets (the wrapper opts out). */
-	.hero-intro__cta :global(.ds-button) {
-		pointer-events: auto;
-	}
-
 	@media (max-width: 900px) {
-		/* Single column: the grid collapses, both blocks stack full-width. */
+		/* Single column: the grid collapses, the lede goes full-width. */
 		.hero-intro {
 			display: block;
-		}
-		.hero-intro__cta {
-			margin-block-start: var(--space-5);
-			justify-content: flex-start;
 		}
 	}
 

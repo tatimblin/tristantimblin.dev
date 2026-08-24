@@ -5,10 +5,10 @@ import { test, expect, type Page } from "@playwright/test";
  *
  * On the ≤900px layout the hero scene is full-bleed and the video carousel's date
  * scrubber + caption hug its BOTTOM edge, while the heading lockup group (wordmark →
- * "other stories" → intro → CTAs) rests above them. Nothing in normal flow reserves
+ * "other stories" → intro) rests above them. Nothing in normal flow reserves
  * space between the two — the scene is absolutely positioned and the intro is out of
  * flow — so "they don't overlap" is a property of the fold arithmetic, not of the
- * document order. When that arithmetic was a hardcoded offset, the CTAs overlapped the
+ * document order. When that arithmetic was a hardcoded offset, the intro overlapped the
  * caption by 25px at 360×600 and by 2px at 390×664 with a 20px root font.
  *
  * These tests assert the arithmetic directly:
@@ -64,7 +64,6 @@ async function readFold(page: Page, opts: { requireBottomUi?: boolean } = {}): P
 		const wordmark = rect(".sh__wordmark-svg")!;
 		const otherStories = rect(".sh__heading")!;
 		const intro = rect(".hero-intro")!;
-		const cta = rect(".hero-intro__cta")!;
 		const header = rect(".site-header")!;
 
 		// The scene's own bottom UI — whichever of the two protrudes higher. On the
@@ -87,9 +86,8 @@ async function readFold(page: Page, opts: { requireBottomUi?: boolean } = {}): P
 		}
 		const uiTop = bottomUi.length ? Math.min(...bottomUi) : scene.bottom;
 
-		// The group's bottom is the lowest of its parts (the CTAs usually, but a long
-		// lede with no CTA wrap can win).
-		const groupBottom = Math.max(intro.bottom, cta.bottom, otherStories.bottom);
+		// The group's bottom is the lowest of its parts.
+		const groupBottom = Math.max(intro.bottom, otherStories.bottom);
 
 		const lead = parseFloat(getComputedStyle(q<HTMLElement>(".fh__heading")!).paddingBlockStart) || 0;
 
@@ -267,8 +265,10 @@ test.describe("hero fold — mobile", () => {
 		await page.goto("/");
 		await settle(page);
 
-		// 4. REACHABILITY — .hero-intro is a full-width box with only a narrow column of
-		// visible text; its empty area overlays the scrubber and must not swallow drags.
+		// 4. REACHABILITY — the heading region (.fh__heading → the lockup host → .sh__sub)
+		// is a stack of full-width, mostly EMPTY boxes laid over the scene's bottom UI.
+		// Every one of them opts pointers out so the scrubber underneath stays draggable;
+		// only the visible copy opts back in. Probe both sides of that contract.
 		const hits = await page.evaluate(() => {
 			const q = (s: string) => document.querySelector(s)!;
 			const at = (x: number, y: number) => {
@@ -284,8 +284,8 @@ test.describe("hero fold — mobile", () => {
 				};
 			};
 			const ruler = q(".hero-carousel .vc__ruler").getBoundingClientRect();
-			const cta = q(".hero-intro__cta").getBoundingClientRect();
-			const button = q(".hero-intro__cta .ds-button").getBoundingClientRect();
+			const sub = q(".sh__sub").getBoundingClientRect();
+			const caption = q(".hero-carousel .vc__caption").getBoundingClientRect();
 			const lede = q(".hero-intro__lede p").getBoundingClientRect();
 			return {
 				// The tick strip near the ruler's top edge. Clamped to the viewport: the
@@ -296,18 +296,21 @@ test.describe("hero fold — mobile", () => {
 					Math.min(ruler.left + ruler.width / 2, window.innerWidth - 4),
 					ruler.top + 4
 				),
-				// The CTA row's empty tail, to the right of the last button.
-				ctaEmptyArea: at(cta.right - 6, cta.top + cta.height / 2),
-				button: at(button.left + button.width / 2, button.top + button.height / 2),
+				// The gap between the bottom of the intro and the scene's caption: covered
+				// by the heading region's empty boxes, and nothing there may take the hit.
+				belowIntro: at(
+					window.innerWidth / 2,
+					(sub.bottom + caption.top) / 2
+				),
 				ledeText: at(lede.left + 20, lede.top + 6),
 			};
 		});
 
 		expect(hits.ruler.inCarousel).toBe(true);
-		// The invisible part of the intro lets pointers through to the scene...
-		expect(hits.ctaEmptyArea.inIntro).toBe(false);
-		// ...while the visible controls and copy stay interactive.
-		expect(hits.button.inIntro).toBe(true);
+		// The empty area below the intro lets pointers through to the scene...
+		expect(hits.belowIntro.inIntro).toBe(false);
+		expect(hits.belowIntro.inCarousel).toBe(true);
+		// ...while the visible copy stays interactive (selectable).
 		expect(hits.ledeText.inIntro).toBe(true);
 	});
 });
