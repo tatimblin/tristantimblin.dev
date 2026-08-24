@@ -187,6 +187,43 @@ const { title, description, image, preloadMedia } = Astro.props;
 		--sh-group-h: calc(2 * var(--hero-split) + 42svh);
 	}
 
+	/* MOBILE (≤900px): TOP-ANCHOR the group instead of bottom-anchoring it.
+	   The lockup sits directly under the site header and the scene runs on beneath it,
+	   so the clip — not whitespace — fills the middle of the screen, and the scrubber
+	   keeps the foot to itself.
+
+	   This switches OFF clamp ① only. Above, the lead is a COMPRESSION BUDGET: it is
+	   whatever whitespace is left once the group has been pushed down to rest on the
+	   floor, so a growing group eats that whitespace first and the hero grows only when
+	   it runs out. Here there is no budget to spend — the lead is simply the minimum
+	   that clears the header, at every group size.
+
+	   Clamp ② is untouched and still does the real work: --hero-height is
+	   max(100svh, lead + group + gap + reserve), so the moment a group grows past what
+	   one screen can hold above the scrubber, the scene grows by exactly that overflow.
+	   The "group never overlaps the scene's bottom UI" guarantee is therefore unchanged;
+	   only the order of concessions is. On this breakpoint growth is the FIRST resort
+	   rather than the last, because there is no longer anything cheaper to give up.
+
+	   The fallback is the pre-hydration frame only: --sh-header-clear is MEASURED from
+	   the header's own box (see fitFold), and until that lands --space-9 stands in — a
+	   touch over the ~54px the header actually occupies, so the wordmark errs toward
+	   clearing it rather than colliding with it. */
+	@media (max-width: 900px) {
+		.fh {
+			/* Breathing room between the header and the wordmark. Top-anchoring alone
+			   puts the lockup hard against the header, which reads as crowded; this is
+			   the gap that lets it sit rather than stick. A DS step, not a chosen number,
+			   and the ONE place it is authored — the wordmark's distance from the header
+			   is exactly this, since --sh-header-clear is what the header itself
+			   occupies. */
+			--hero-top-gap: var(--space-10);
+			--hero-lead: calc(
+				var(--sh-header-clear, var(--space-9)) + var(--hero-top-gap)
+			);
+		}
+	}
+
 	/* Fixed heading steps at the DS breakpoints (sm 640 / lg 1024 / xl 1280). A
 	   slotted <stories-heading> steps --sh-amp-size / --sh-heading-size in lockstep
 	   from its own stylesheet. */
