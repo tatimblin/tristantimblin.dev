@@ -18,7 +18,7 @@ function clamp01(x: number): number {
  *      progress past its sticky offset.
  *   2. "&" parallax + fade — driven by the "&"'s OWN viewport position: as its
  *      top travels from ~60% of the viewport up to ~10%, it drifts DOWN
- *      (--sh-amp-shift) and fades (--sh-amp-opacity 1 → --sh-amp-floor).
+ *      (--sh-amp-shift) and dissolves (--sh-amp-opacity), gone as the drift ends.
  *
  * Light-DOM contract (authored by the Astro wrapper):
  *   .sh__wordmark-text — the SVG <text> whose bbox seeds the viewBox.
@@ -105,9 +105,18 @@ export class StoriesHeadingElement extends HTMLElement {
 	    rather than being threaded between its layers. */
 	private static readonly AMP_SIZE_RATIO = 0.65;
 
-	/** The "&"'s parallax distance (px) at full progress, and its fade floor. */
+	/** The "&"'s parallax distance (px) at full progress. */
 	private static readonly AMP_PARALLAX = 100;
-	private static readonly AMP_FLOOR = 0.15;
+	/** How far into that drift the fade starts, 0–1. It holds fully opaque until here,
+	    then reaches 0 exactly as the drift ends — so the movement reads on its own
+	    before the mark begins to leave, instead of the "&" being permanently half-there.
+	    MUST MATCH the 40% stop in the sh-amp-parallax keyframes; this constant only
+	    drives the fallback path, and the two describing different curves would mean the
+	    "&" behaves differently per engine. */
+	private static readonly AMP_FADE_START = 0.4;
+	/** The translateY currently applied to the "&", so ampProgress() can subtract it
+	    back out — see there. Fallback path only. */
+	private ampShift = 0;
 	/** Extra px the solid layer's mask reaches beyond the tallest ink it must cover.
 	    Three things Canvas's ink metrics do not know about: the outline's 1px
 	    text-stroke, sub-pixel rounding, and — the reason this is 8 and not 2 — the
@@ -935,6 +944,7 @@ export class StoriesHeadingElement extends HTMLElement {
 		// would fight it.
 		if (this.reducedMotion?.matches) {
 			this.solid?.style.setProperty("--sh-clip", "0");
+			this.ampShift = 0;
 			this.amp?.style.setProperty("--sh-amp-shift", "0px");
 			this.amp?.style.setProperty("--sh-amp-opacity", "1");
 			this.clearSubFade();
@@ -955,15 +965,19 @@ export class StoriesHeadingElement extends HTMLElement {
 		// 2. "&" parallax + fade from its own viewport position: drifts DOWN
 		// (positive translateY) as it fades to the floor.
 		const p = this.ampProgress();
+		this.ampShift = StoriesHeadingElement.AMP_PARALLAX * p;
 		this.amp?.style.setProperty(
 			"--sh-amp-shift",
-			`${(StoriesHeadingElement.AMP_PARALLAX * p).toFixed(2)}px`
+			`${this.ampShift.toFixed(2)}px`
 		);
-		// const floor = StoriesHeadingElement.AMP_FLOOR;
-		// this.amp?.style.setProperty(
-		// 	"--sh-amp-opacity",
-		// 	(1 - (1 - floor) * p).toFixed(4)
-		// );
+		// Hold, then dissolve — the same curve the keyframes describe (see AMP_FADE_START).
+		const fadeStart = StoriesHeadingElement.AMP_FADE_START;
+		const opacity =
+			p <= fadeStart ? 1 : 1 - (p - fadeStart) / (1 - fadeStart);
+		this.amp?.style.setProperty(
+			"--sh-amp-opacity",
+			clamp01(opacity).toFixed(4)
+		);
 	}
 
 	/**
@@ -1070,7 +1084,15 @@ export class StoriesHeadingElement extends HTMLElement {
 		if (!this.amp) return 0;
 		const start = 0.6 * window.innerHeight; // begin drifting/fading here
 		const end = 0.1 * window.innerHeight; // fully drifted/faded here
-		const ampTop = this.amp.getBoundingClientRect().top;
+		// STRIP THE TRANSFORM WE APPLIED LAST FRAME. getBoundingClientRect() includes it,
+		// so feeding the moved position back in makes the parallax damp itself: every
+		// pixel of drift pushes the "&" further from the finish line it is measured
+		// against, and the effect takes AMP_PARALLAX px of extra scroll to complete.
+		// Measured before this: a 450px range played out over 550px — exactly 450 + the
+		// 100px of drift — against the CSS path's true 450. Invisible until there was a
+		// second implementation to compare with. Same correction as the dock lift in
+		// Videos.astro, which strips its own lift for the same reason.
+		const ampTop = this.amp.getBoundingClientRect().top - this.ampShift;
 		return clamp01((start - ampTop) / (start - end));
 	}
 
