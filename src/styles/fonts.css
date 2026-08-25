@@ -37,6 +37,8 @@
  *   FS Mondwest  upm 2048  asc 0.7256  desc 0.2954  gap 0       xHeight 0.2822
  *   PP Mondwest  upm 4096  asc 0.7598  desc 0.2400  gap 0.0200  xHeight 0.4400
  *   Neue Montrl  upm 1000  asc 0.9580  desc 0.2420  gap 0       xHeight 0.5100
+ * (All four Neue Montreal cuts share those metrics — Semibold's x-height differs by
+ * 0.001 em — so one size-adjust and one fallback cover the whole family.)
  * Fallback x-heights: Georgia 0.4814, Arial 0.5186.
  * Re-run the same arithmetic if a face is ever swapped — or delete the fallback
  * faces and drop them from the stacks; the plain system fallback still works, it
@@ -86,24 +88,35 @@
 	src: url("/fonts/ppmondwest-regular.woff2") format("woff2");
 }
 
-/* PP Neue Montreal Light — UI text: the small, functional type that labels things
-   rather than says them. Widget headers, stat labels and figures, the ruler's year
-   marks. A neo-grotesque among three highly-voiced faces, chosen for exactly that:
-   it recedes, so the display faces keep the personality and the interface reads as
+/* PP Neue Montreal — UI text: the small, functional type that labels things rather
+   than says them. Widget headers, stat labels and figures, the ruler's year marks.
+   A neo-grotesque among three highly-voiced faces, chosen for exactly that: it
+   recedes, so the display faces keep the personality and the interface reads as
    interface.
-   The smallest correction on the site — its glyphs already sit close to Migra's
-   x-height (0.510 vs 0.530), so 103.9% is a nudge rather than a rescue. Declared at
-   weight 300, the cut's real usWeightClass, so nothing can ask this file for a
-   weight it does not have and get a synthesised one; the family has other cuts if a
-   second weight is ever wanted (PPNeueMontrealText-Book is the small-size optical
-   size, if this reads thin). */
+   TWO CUTS UNDER ONE FAMILY, on the same reasoning as Migra above: the browser
+   matches by font-weight and never synthesises. Regular carries the labels; Semibold
+   is what the widget figures ask for and, until this cut existed, silently did not
+   get (global.css refuses faux-bolding, so the request rendered at the one weight
+   that had shipped).
+   The smallest correction on the site — the glyphs already sit close to Migra's
+   x-height (0.510 vs 0.530), so 103.9% is a nudge rather than a rescue. It is the
+   same on both cuts because their metrics are identical. */
 @font-face {
 	font-family: "Neue Montreal";
 	font-style: normal;
-	font-weight: 300;
+	font-weight: 400;
 	font-display: swap;
 	size-adjust: 103.9%;
-	src: url("/fonts/neue-montreal-light.woff2") format("woff2");
+	src: url("/fonts/neue-montreal-regular.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Neue Montreal";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	size-adjust: 103.9%;
+	src: url("/fonts/neue-montreal-semibold.woff2") format("woff2");
 }
 
 /* --- Metric-matched fallbacks ------------------------------------------ */
@@ -132,9 +145,10 @@
 	line-gap-override: 2.36%;
 }
 
-/* Neue Montreal → Arial. Both are neo-grotesques, so this is the closest
-   metric pairing on the page; the 97% ascent follows Neue Montreal's tall typo
-   ascender (0.958/em), not an error. */
+/* Neue Montreal → Arial. Both are neo-grotesques, so this is the closest metric
+   pairing on the page; the 97% ascent follows Neue Montreal's tall typo ascender
+   (0.958/em), not an error. No font-weight here, so this one face covers BOTH cuts —
+   which is correct, since they share their metrics exactly. */
 @font-face {
 	font-family: "Neue Montreal Fallback";
 	src: local("Arial");

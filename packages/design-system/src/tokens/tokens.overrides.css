@@ -38,7 +38,8 @@
 	 * widget headers, stat figures and labels, the carousel ruler's year marks. The
 	 * other four faces all have a strong voice, which is right for a wordmark or a
 	 * paragraph and wrong for a number in a card; Neue Montreal recedes, so the
-	 * interface reads as interface. One cut (Light/300) — see fonts.css. */
+	 * interface reads as interface. Two cuts, Regular (400) and Semibold (600) — set
+	 * the weight alongside the family for the heavier one, exactly as with Migra. */
 	--font-ui: "Neue Montreal", "Neue Montreal Fallback", ui-sans-serif, system-ui,
 		sans-serif;
 

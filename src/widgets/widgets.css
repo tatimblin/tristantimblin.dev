@@ -27,11 +27,10 @@
 .home__widgets .wx-stat-num {
 	font-family: var(--font-numeric, var(--font-mono));
 	font-size: var(--widget-font-xl); /* fluid; ≡ --font-size-7 (32px) at the desktop cell */
-	/* --font-ui ships a single cut (Light/300), and global.css sets
-	   font-synthesis-weight: none — so this asks for a weight the face does not have
-	   and gets the real 300 back rather than a faux bold. Left in place deliberately:
-	   it is the right intent, it costs nothing, and it starts working the day a
-	   second cut is added. The figures carry their emphasis by size and colour. */
+	/* Resolves to Neue Montreal's real Semibold cut. It did not always: the face
+	   shipped as a single Light, and global.css refuses faux-bolding, so this
+	   declaration rendered at the one weight available. It is a real weight now, which
+	   is what gives the figures their step above the labels beneath them. */
 	font-weight: var(--font-weight-600);
 	line-height: 1;
 	color: var(--text-primary);
