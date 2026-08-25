@@ -1,3 +1,8 @@
+/** Clamp `x` to [0, 1]. */
+function clamp01(x: number): number {
+	return x < 0 ? 0 : x > 1 ? 1 : x;
+}
+
 /**
  * `<stories-heading>` — the "tristan / & other stories" lockup.
  *
@@ -22,11 +27,18 @@
  *   [data-sh-pin]      — position:sticky element holding "other stories".
  *   .sh__solid         — the solid-face layer in "other stories"; clipped in.
  *
- * NOTHING HERE RUNS ON SCROLL. The wipe, the intro fade and the "&" parallax are CSS
- * scroll-progress timelines (see the foot of styles.css), so the compositor advances
- * them and no main-thread work can fall behind a touch scroll. This class does only
- * layout-rate work — measuring type, publishing the fold — driven by resize, the
- * ResizeObserver and fonts.ready.
+ * SCROLL EFFECTS ARE CSS FIRST, JS ONLY AS A FALLBACK. The wipe, the intro fade and
+ * the "&" parallax are CSS scroll-progress timelines (see the foot of styles.css). On
+ * an engine that has them — every engine this site's scroll ever felt slow on — this
+ * class registers NO scroll listener at all and does only layout-rate work.
+ *
+ * Firefox does not have them (measured: 153 reports
+ * `CSS.supports("animation-timeline", "scroll()")` false), and the @supports gate that
+ * keeps the CSS safe there also means the effects simply would not exist. So the old
+ * per-frame driver is kept, behind that exact feature test, and runs only where CSS
+ * cannot. It is the slower path by construction — a main-thread handler cannot stay in
+ * step with a compositor scroll — which is the point: nobody gets it who doesn't need
+ * it. Delete it the day Firefox ships scroll-driven animations.
  *
  * Published from measure():
  *   --sh-heading-fitsize font-size (px) fitting "other stories" to a 6-col span.
@@ -48,6 +60,20 @@ export class StoriesHeadingElement extends HTMLElement {
 	private heading: HTMLElement | null = null;
 	private wordmarkSvg: SVGSVGElement | null = null;
 	private wordmarkText: SVGTextElement | null = null;
+	/** True when the browser drives the scroll effects itself, so this class must not.
+	    Read ONCE at connect: it cannot change for the lifetime of a document, and
+	    CSS.supports() is a parse, not something to repeat per frame. */
+	private cssDrivesScroll = false;
+	/** The solid ("other stories") layer — only the JS fallback writes to it. */
+	private solid: HTMLElement | null = null;
+	private reducedMotion: MediaQueryList | null = null;
+	private rafId: number | null = null;
+	/** Scroll-invariant tokens, resolved in measure() rather than per frame (fallback
+	    path only). Reading them in update() meant a getComputedStyle — a forced style
+	    recalc — on every frame of every scroll, for values only a resize can change. */
+	private revealPx = 0;
+	private subFade = 0;
+
 	/** The slotted intro wrapper — a static sibling of the pin, so it scrolls with the
 	    page under its own steam. Observed separately all the same: it lives inside the
 	    track's explicit height, so its growth never changes the host's own box. */
@@ -131,20 +157,41 @@ export class StoriesHeadingElement extends HTMLElement {
 		// (e.g. a hero with no scene) — the reveal then plays normally.
 		this.scene = this.closest<HTMLElement>(".fh")?.querySelector<HTMLElement>(".fh__scene") ?? null;
 
-		// NO SCROLL LISTENER. Every scroll-linked effect this component has is a CSS
-		// scroll-progress timeline now (see the foot of styles.css) — the compositor
-		// advances them, so there is nothing here that has to keep up with a scroll.
-		// What remains is layout-rate work: measuring the type, publishing the fold.
+		// THE FEATURE TEST THAT DECIDES WHETHER ANY OF THE BELOW EXISTS. With scroll
+		// timelines the browser owns every scroll effect and this class registers no
+		// scroll listener at all; without them (Firefox) the fallback driver below runs.
+		// Matches the @supports condition in styles.css exactly — if the two ever
+		// disagree, one path or the other runs twice or not at all.
+		this.cssDrivesScroll =
+			typeof CSS !== "undefined" &&
+			typeof CSS.supports === "function" &&
+			CSS.supports("animation-timeline", "scroll()");
+
+		if (!this.cssDrivesScroll) {
+			this.solid = this.querySelector<HTMLElement>(".sh__solid");
+			this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+			const onMotionChange = () => this.update();
+			this.reducedMotion.addEventListener("change", onMotionChange);
+			this.listeners.push(() =>
+				this.reducedMotion?.removeEventListener("change", onMotionChange)
+			);
+
+			const onScroll = () => this.schedule();
+			window.addEventListener("scroll", onScroll, { passive: true });
+			this.listeners.push(() => window.removeEventListener("scroll", onScroll));
+		}
 
 		// A viewport resize changes the wordmark bbox fit and the pinned distance.
 		const onResize = () => {
 			this.measure();
+			if (!this.cssDrivesScroll) this.schedule();
 		};
 		window.addEventListener("resize", onResize, { passive: true });
 		this.listeners.push(() => window.removeEventListener("resize", onResize));
 
 		this.resizeObserver = new ResizeObserver(() => {
 			this.measure();
+			if (!this.cssDrivesScroll) this.schedule();
 		});
 		this.resizeObserver.observe(this);
 		// The sub-lockup (intro + CTAs) is position:absolute on the mobile layout, so its
@@ -159,9 +206,11 @@ export class StoriesHeadingElement extends HTMLElement {
 		// Measure now, then again after fonts load — the wordmark's glyph metrics
 		// (hence its bbox) shift once the web font swaps in.
 		this.measure();
+		if (!this.cssDrivesScroll) this.update();
 		if (document.fonts?.ready) {
 			document.fonts.ready.then(() => {
 				this.measure();
+				if (!this.cssDrivesScroll) this.schedule();
 				this.announceReady();
 			});
 		} else {
@@ -193,6 +242,13 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * not rendered (e.g. display:none), so guard it.
 	 */
 	private measure() {
+		// Fallback-path only: resolve the scroll-invariant tokens at layout rate so
+		// update() never calls getComputedStyle. Skipped entirely when CSS drives.
+		if (!this.cssDrivesScroll) {
+			this.revealPx = this.cssPx("--sh-reveal", 0.6 * window.innerHeight);
+			this.subFade = this.readSubFadePx();
+		}
+
 		this.fitWordmark();
 		this.fitAmp();
 		// BEFORE the fit, not after: alignHeadingLayers narrows the solid layer, and
@@ -847,16 +903,196 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	disconnectedCallback() {
+		if (this.rafId !== null) cancelAnimationFrame(this.rafId);
+		this.rafId = null;
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
 		this.listeners.forEach((off) => off());
 		this.listeners = [];
 		this.lastWritten.clear();
+		// Never leave a teardown mid-fade: drop anything the fallback published, so a
+		// re-connected host starts from the stylesheet's shown-by-default state.
+		this.clearSubFade();
 		this.sub = null;
+		this.solid = null;
 		// Re-measured from scratch on re-connect, so allow the announcement again.
 		delete this.dataset.ready;
 	}
 
+
+	/** Coalesce scroll-driven updates to one write per frame. */
+	private schedule() {
+		if (this.rafId !== null) return;
+		this.rafId = requestAnimationFrame(() => {
+			this.rafId = null;
+			this.update();
+		});
+	}
+
+	private update() {
+		// Reduced motion: stories shown, "&" at rest (no drift, full opacity), and the
+		// intro NOT faded — the stylesheet pins it visible, so publishing a fade here
+		// would fight it.
+		if (this.reducedMotion?.matches) {
+			this.solid?.style.setProperty("--sh-clip", "0");
+			this.amp?.style.setProperty("--sh-amp-shift", "0px");
+			this.amp?.style.setProperty("--sh-amp-opacity", "1");
+			this.clearSubFade();
+			return;
+		}
+
+		// 0. The intro fades out over the first sliver of scroll. Published from here
+		// rather than by a scroll-timeline: see the long note on .sh__sub in styles.css
+		// for why that CSS mechanism failed VISIBLE-side-down on engines without native
+		// support. NB opacity ONLY — the sub's MOTION is plain flow layout now, because
+		// a JS transform cannot stay in register with a compositor-driven scroll.
+		this.updateSubFade();
+
+		// 1. "other stories" reveal: outline→solid wipe over --sh-reveal of pin.
+		const revealed = this.revealProgress();
+		this.solid?.style.setProperty("--sh-clip", (1 - revealed).toFixed(4));
+
+		// 2. "&" parallax + fade from its own viewport position: drifts DOWN
+		// (positive translateY) as it fades to the floor.
+		const p = this.ampProgress();
+		this.amp?.style.setProperty(
+			"--sh-amp-shift",
+			`${(StoriesHeadingElement.AMP_PARALLAX * p).toFixed(2)}px`
+		);
+		// const floor = StoriesHeadingElement.AMP_FLOOR;
+		// this.amp?.style.setProperty(
+		// 	"--sh-amp-opacity",
+		// 	(1 - (1 - floor) * p).toFixed(4)
+		// );
+	}
+
+	/**
+	 * Fade the intro out over the first --sh-sub-fade-px of scroll, and flip visibility
+	 * at the end so the invisible block stops taking pointer events.
+	 *
+	 * OPACITY ONLY. This used to publish a translateY(-scrollY) alongside it, because
+	 * the sub was absolutely positioned inside the sticky pin and had to be given back
+	 * the ordinary scrolling that position took away. That is now done by flow layout
+	 * (see the .sh__sub note in styles.css), and it had to be: a transform written from
+	 * a scroll handler runs on the main thread while the scroll itself runs on the
+	 * compositor, so on a touch device the element trailed the page by however many
+	 * frames the main thread was behind — visible as a laggy, rubber-banding intro that
+	 * no optimisation of this handler could have cured. Opacity survives that same lag
+	 * gracefully: arriving a frame late reads as a marginally slower fade, not as text
+	 * sliding out of register with everything around it.
+	 *
+	 * Reads the scroll offset from the DOCUMENT rather than the sub's own box: the fade
+	 * is anchored to the top of the page, not to the element's travel, and `scrollY` is
+	 * the same quantity the old `scroll(root)` timeline read — so the timing is
+	 * unchanged from where that mechanism worked.
+	 */
+	private updateSubFade() {
+		const span = this.subFade;
+		// A zero/negative span would divide to Infinity; treat it as "no fade".
+		if (!(span > 0)) {
+			this.clearSubFade();
+			return;
+		}
+		const y = window.scrollY || document.documentElement.scrollTop || 0;
+		const p = clamp01(y / span);
+		this.sub?.style.setProperty("--sh-sub-opacity", (1 - p).toFixed(4));
+		// Only at the very end, matching the old keyframe's discrete visibility step.
+		this.sub?.style.setProperty(
+			"--sh-sub-visibility",
+			p >= 1 ? "hidden" : "visible"
+		);
+	}
+
+	/** Drop the published fade so the stylesheet's shown-by-default values apply. */
+	private clearSubFade() {
+		this.sub?.style.removeProperty("--sh-sub-opacity");
+		this.sub?.style.removeProperty("--sh-sub-visibility");
+	}
+
+	/**
+	 * The fade's scroll distance, in px, from --sh-sub-fade-px on .sh__sub.
+	 *
+	 * Read via the SUB's computed style rather than the host's, because that is where
+	 * the property is authored. Not read through cssPx(): that resolves against the
+	 * host. Falls back to the authored default if the property is missing or
+	 * unparseable (a token typo must degrade to a working fade, not to none).
+	 *
+	 * Called from measure(), NOT from update(): getComputedStyle forces a style recalc,
+	 * and this is a constant between resizes. It was previously read once per frame.
+	 */
+	private readSubFadePx(): number {
+		const DEFAULT = 100;
+		if (!this.sub) return DEFAULT;
+		const raw = getComputedStyle(this.sub)
+			.getPropertyValue("--sh-sub-fade-px")
+			.trim();
+		if (!raw) return DEFAULT;
+		const n = parseFloat(raw);
+		return Number.isFinite(n) && n > 0 ? n : DEFAULT;
+	}
+
+	/**
+	 * Reveal progress 0→1 for the outline→solid wipe, GATED on the dotgrid scene:
+	 * the solid layer's opaque --color-bg backdrop would knock a black rectangle out
+	 * of the halftone dots, so the wipe stays at 0 until "other stories" has cleared
+	 * the scene's bottom edge (where the background is plain --color-bg and the
+	 * backdrop is invisible). From that point the wipe plays over --sh-reveal of
+	 * further scroll. With no scene present it falls back to the old pin-based
+	 * progress so the component still works standalone.
+	 */
+	private revealProgress(): number {
+		if (!this.heading) return 1;
+		// Cached in measure(); reading it here meant a getComputedStyle every frame.
+		const revealPx = this.revealPx;
+		if (revealPx <= 0) return 1;
+
+		// Scene-gated path: measure the heading's top against the scene's bottom edge.
+		if (this.scene) {
+			const sceneBottom = this.scene.getBoundingClientRect().bottom;
+			const headingTop = this.heading.getBoundingClientRect().top;
+			// 0 while the text overlaps the scene (headingTop above sceneBottom);
+			// grows as it descends past the scene edge, complete after --sh-reveal.
+			return clamp01((headingTop - sceneBottom) / revealPx);
+		}
+
+		// Fallback (no scene): original pin-based progress.
+		if (!this.track || !this.pin) return 1;
+		const stickyTop = parseFloat(getComputedStyle(this.pin).top) || 0;
+		const top = this.track.getBoundingClientRect().top;
+		return clamp01((stickyTop - top) / revealPx);
+	}
+
+	/**
+	 * "&" progress 0→1 from its OWN position: 0 while its top is at/below 60% of
+	 * the viewport, 1 once it has risen to 10%. Independent of the pin.
+	 */
+	private ampProgress(): number {
+		if (!this.amp) return 0;
+		const start = 0.6 * window.innerHeight; // begin drifting/fading here
+		const end = 0.1 * window.innerHeight; // fully drifted/faded here
+		const ampTop = this.amp.getBoundingClientRect().top;
+		return clamp01((start - ampTop) / (start - end));
+	}
+
+	/**
+	 * Resolve a CSS length custom property on the host to pixels.
+	 *
+	 * Only safe for properties authored as a BARE length or a <n>vh-family token:
+	 * getComputedStyle does not resolve units (or evaluate calc()) inside a custom
+	 * property — it hands back the authored token — so a `calc(...)` value yields NaN
+	 * and silently takes the fallback. The fold properties (--sh-top, --sh-hold,
+	 * --hero-lead) are now calc() expressions for exactly that reason: they are read
+	 * via real box measurements or resolved longhands, never through here. The one
+	 * caller is --sh-reveal, which is always plain px.
+	 */
+	private cssPx(prop: string, fallback: number): number {
+		const raw = getComputedStyle(this).getPropertyValue(prop).trim();
+		if (!raw) return fallback;
+		const vh = /^(-?[\d.]+)(?:s|l|d)?vh$/.exec(raw);
+		if (vh) return (parseFloat(vh[1]) / 100) * window.innerHeight;
+		const n = parseFloat(raw);
+		return Number.isFinite(n) ? n : fallback;
+	}
 }
 
 if (

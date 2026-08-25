@@ -28,6 +28,20 @@ export default defineConfig({
 			name: "chromium",
 			use: { ...devices["Desktop Chrome"] },
 		},
+		{
+			// FIREFOX RUNS ONE SPEC, deliberately. The lockup's scroll effects are CSS
+			// scroll-progress timelines with a JS fallback for engines that lack them, and
+			// Firefox IS that engine (153 reports the feature unsupported) — so the
+			// fallback has no coverage at all from a Chromium-only suite. That is how it
+			// shipped broken: the CSS gate correctly excluded Firefox and nothing was left
+			// to drive the effect there.
+			// Scoped to that one file rather than the whole suite because the rest measures
+			// geometry against Chromium's exact layout and font rasterisation; running it
+			// all in a second engine would be a much larger job for no extra safety here.
+			name: "firefox",
+			use: { ...devices["Desktop Firefox"] },
+			testMatch: /scroll-fallback\.spec\.ts/,
+		},
 	],
 
 	webServer: {

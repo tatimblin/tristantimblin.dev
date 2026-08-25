@@ -305,7 +305,12 @@ stories-heading {
    deleted the fade on exactly the engines it existed for. Section.astro dropped that
    polyfill, so the gate now means what it says: no feature, no animation, and the
    static state below is what shows. Keep it gated, and keep these declarations
-   SHOWN — that pair is the whole safety property. */
+   SHOWN — that pair is the whole safety property.
+
+   AND THE JS DRIVER IS STILL THERE, for the engines the gate excludes. Firefox has no
+   scroll timelines (measured on 153), so without a fallback the gate would trade a
+   laggy fade for no fade at all. index.ts runs the old per-frame driver behind the
+   same feature test, and only there — see cssDrivesScroll. */
 .sh__sub {
 	/* Separate the intro from "other stories": it is page copy that follows the
 	   heading, NOT a subhead of it, so it sits a clear step below rather than tight to
@@ -321,11 +326,15 @@ stories-heading {
 	   rest of the lockup's tuning — it is read straight into the animation-range below. */
 	--sh-sub-fade-px: 100px;
 	/* THE STATIC STATE, and it must stay SHOWN. This is what every path that does not
-	   run the animation lands on: an engine without scroll timelines, reduced motion,
-	   print. Never invert these — inverted, each of those paths becomes invisible
-	   content, which is precisely the bug this component already shipped once. */
-	opacity: 1;
-	visibility: visible;
+	   run the animation lands on: reduced motion, print, and an engine without scroll
+	   timelines before its JS fallback has published anything. Never invert these —
+	   inverted, each of those paths becomes invisible content, which is precisely the
+	   bug this component already shipped once.
+	   The custom properties exist for that fallback driver (index.ts publishes them on
+	   engines without scroll timelines); UNSET they read as fully shown, which is the
+	   point of writing them as var() with these defaults rather than as literals. */
+	opacity: var(--sh-sub-opacity, 1);
+	visibility: var(--sh-sub-visibility, visible);
 }
 
 /* Reduced motion: no fade. The intro is already in normal flow (it is a plain
@@ -529,6 +538,16 @@ stories-heading {
 		   registration to avoid stepping discretely at 50%. --sh-clip remains the
 		   static, un-animated state for engines that skip this block. */
 		.sh__solid {
+			/* clip-path is NOT a compositor-animatable property — unlike the opacity and
+			   transform below, it costs a main-thread style+paint per frame, and this
+			   layer is expensive to paint (it carries <wobble-text>'s displacement
+			   filter). The hint gets it its own layer so that repaint stays local
+			   instead of dirtying the heading around it. Measured over 3 runs at 8x CPU
+			   throttle, scrolling the wipe's whole range: worst frame 88.1ms → 73.3ms,
+			   median 48.0 → 45.1. It does not make the wipe composited; nothing can,
+			   short of rebuilding the effect out of transforms, which would put a
+			   transform on the very boxes alignHeadingLayers measures. */
+			will-change: clip-path;
 			animation-name: sh-heading-wipe;
 			animation-timing-function: linear;
 			animation-fill-mode: both;
