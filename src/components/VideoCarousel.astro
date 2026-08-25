@@ -43,6 +43,21 @@ interface Props {
 	xfade?: number;
 	xfadeMode?: "threshold" | "rain";
 	xfadeLive?: boolean;
+	/**
+	 * THE HALFTONE LOOK, per instance. These were fixed on the element until the two
+	 * consumers wanted different ones: the footer widget is a small card mid-page and
+	 * carries the brighter, coarser grid the defaults describe, while the mobile hero —
+	 * where this carousel IS the full-bleed scene, at 0.55 opacity under the wordmark —
+	 * wants the finer, dimmer one it had before. A default that suits a thumbnail does
+	 * not suit a full screen, so the look belongs to the consumer rather than the
+	 * component.
+	 * Defaults are the widget's values; pass any subset to override.
+	 */
+	cellSize?: number;
+	levels?: number;
+	gamma?: number;
+	contrast?: number;
+	color?: string;
 }
 
 // Real footage prepared by tools/dotgrid/prepare-video.sh into
@@ -60,6 +75,11 @@ const {
 	xfade,
 	xfadeMode,
 	xfadeLive,
+	cellSize = 7,
+	levels = 15,
+	gamma = 0.5,
+	contrast = 1.2,
+	color = "#fff",
 	clips = [
 		{
 			src: "/videos/website-carousel/web/fisker-top-down.web.mp4",
@@ -311,11 +331,11 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				color-reveal
 				shimmer="1"
 				no-loop
-				cell-size="7"
-				levels="15"
-				gamma="0.5"
-				contrast="1.2"
-				color="#fff"
+				cell-size={cellSize}
+				levels={levels}
+				gamma={gamma}
+				contrast={contrast}
+				color={color}
 				intro={intro}
 				intro-delay={introDelay}
 				xfade={xfade}
