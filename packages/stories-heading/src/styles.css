@@ -12,12 +12,10 @@
                     rising body copy fills before bumping the heading away.
      .sh__heading   the outline→solid font-swap reveal that wipes while pinned.
 
-   Two INDEPENDENT scroll drivers (JS):
-     --sh-clip        1→0: fraction of "other stories" solid layer hidden (wipe).
-     --sh-amp-shift   the "&"'s parallax translateY.
-     --sh-amp-opacity the "&"'s fade (1 → --sh-amp-floor).
-   Each is published on the ELEMENT that consumes it, not on the host: they are
-   custom properties, so a per-frame write on the host restyles the whole subtree. */
+   THE SCROLL-DRIVEN EFFECTS ARE CSS, NOT JS. All three — the outline→solid wipe,
+   the intro fade, the "&" parallax — run on scroll-progress timelines, so the
+   compositor advances them and there is no per-frame main-thread work to fall
+   behind a touch scroll. See the block at the foot of this file. */
 
 stories-heading {
 	--sh-clip: 1;
@@ -283,41 +281,36 @@ stories-heading {
    FADE-ON-SCROLL: opacity only, over the first --sh-sub-fade-px of scroll, so the
    intro is gone before it travels up into the pinned "other stories" it would
    otherwise slide behind. visibility flips at the end so the invisible block stops
-   taking pointer events. Opacity is safe to drive from JS where position was not:
-   a late opacity frame reads as a slightly slow fade, not as text sliding out of
-   register with its neighbours.
+   taking pointer events. The animation itself is at the foot of this file, with the
+   component's other two scroll-driven effects.
 
-   DRIVEN BY JS, NOT A SCROLL-TIMELINE — and the difference is a bug, not a taste:
-   this WAS `animation-timeline: scroll(root)` over a 100px range, and the intro
-   then failed to appear at all on any engine without native scroll-timeline
-   support (Firefox: measured hidden at scroll 0 on 5/12 cold loads, and on 3/4
-   in-page navigations home).
+   THE FADE HAS BEEN A SCROLL-TIMELINE, THEN JS, AND IS A SCROLL-TIMELINE AGAIN. That
+   is not indecision; each move fixed the previous one's real defect, and the reasoning
+   is worth keeping because both failure modes are easy to walk back into.
 
-   The failure is structural, and it is the mirror image of the fail-visible rule
-   in src/lib/reveal.ts. An engine that does not know `animation-timeline` DROPS
-   that declaration and keeps the rest, so the animation lands on the DOCUMENT
-   timeline with `animation-duration: auto` — which resolves to 0s. With
-   `fill-mode: both` a 0s animation is instantly FINISHED, so the element is
-   painted at its TO keyframe: opacity 0, visibility hidden. The fade's end state,
-   forever, at every scroll position. The polyfill is what was supposed to cover
-   that gap, but it only adopts an animation from its `animationstart` hook, so
-   whether it wins is a race against first paint — which is exactly why the symptom
-   was intermittent rather than total.
+   As a scroll-timeline it once failed INVISIBLE. An engine that does not know
+   `animation-timeline` drops that declaration and keeps the rest, so the animation
+   lands on the DOCUMENT timeline with `duration: auto` — which resolves to 0s — and
+   `fill: both` paints the element at its TO keyframe: opacity 0, visibility hidden.
+   The fade's end state, forever, at every scroll position. Measured on Firefox at the
+   time: hidden at scroll 0 on 5/12 cold loads.
 
-   Neither half of that is fixable in CSS. `@supports (animation-timeline: scroll())`
-   gates the declaration correctly but the polyfill does NOT transpile @supports
-   conditions (verified against the shipped bundle), so gating deletes the fade on
-   the very engines it exists for; and parking the time-based fallback in its
-   before-phase with a huge `animation-delay` keeps it visible only by ensuring
-   `animationstart` never fires, which kills the polyfill too.
+   As JS it failed LATE. A scroll handler runs on the main thread while the scroll runs
+   on the compositor, so on a phone it trailed the page — the same mismatch documented
+   above for the transform.
 
-   So the driver stays in JS — where this component ALREADY runs a coalesced
-   per-frame scroll handler for --sh-clip and the "&" parallax. The properties are
-   published ON THIS ELEMENT rather than on the host: they are custom properties, so
-   writing them on the host invalidated style for the ENTIRE lockup subtree (the
-   wordmark SVG, both heading layers and their filter) once a frame to restyle one
-   box. Both properties DEFAULT TO SHOWN, so a bundle that 404s or throws leaves the
-   intro visible rather than invisible. */
+   It is CSS again because the thing that made the gate unusable is gone. `@supports`
+   always described the right condition; the problem was that the site bundled a
+   scroll-timeline polyfill which does not transpile @supports conditions, so gating
+   deleted the fade on exactly the engines it existed for. Section.astro dropped that
+   polyfill, so the gate now means what it says: no feature, no animation, and the
+   static state below is what shows. Keep it gated, and keep these declarations
+   SHOWN — that pair is the whole safety property.
+
+   AND THE JS DRIVER IS STILL THERE, for the engines the gate excludes. Firefox has no
+   scroll timelines (measured on 153), so without a fallback the gate would trade a
+   laggy fade for no fade at all. index.ts runs the old per-frame driver behind the
+   same feature test, and only there — see cssDrivesScroll. */
 .sh__sub {
 	/* Separate the intro from "other stories": it is page copy that follows the
 	   heading, NOT a subhead of it, so it sits a clear step below rather than tight to
@@ -329,13 +322,17 @@ stories-heading {
 	   scrubber's drag. Pointers fall through; the slotted content opts back in
 	   (same pattern as .fh__heading / the host / .sh__heading / .site-header). */
 	pointer-events: none;
-	/* The scroll distance the fade plays over, so the timing lives here in CSS with
-	   the rest of the lockup's tuning. Authored as a BARE px length, never a calc():
-	   the driver parses this token directly, and getComputedStyle does not evaluate
-	   calc() inside a custom property (the constraint documented on cssPx). */
+	/* The scroll distance the fade plays over, so the timing lives here in CSS with the
+	   rest of the lockup's tuning — it is read straight into the animation-range below. */
 	--sh-sub-fade-px: 100px;
-	/* THE FALLBACKS ARE THE POINT: unset (no JS yet, a dead bundle, a throw before
-	   the first update) must read as fully shown. Never invert these. */
+	/* THE STATIC STATE, and it must stay SHOWN. This is what every path that does not
+	   run the animation lands on: reduced motion, print, and an engine without scroll
+	   timelines before its JS fallback has published anything. Never invert these —
+	   inverted, each of those paths becomes invisible content, which is precisely the
+	   bug this component already shipped once.
+	   The custom properties exist for that fallback driver (index.ts publishes them on
+	   engines without scroll timelines); UNSET they read as fully shown, which is the
+	   point of writing them as var() with these defaults rather than as literals. */
 	opacity: var(--sh-sub-opacity, 1);
 	visibility: var(--sh-sub-visibility, visible);
 }
@@ -469,8 +466,12 @@ stories-heading {
 	}
 
 	/* The "&" stays absolutely positioned over the wordmark (JS aligns it to the
-	   baseline) but is static — no parallax/fade — in the stacked layout. */
+	   baseline) but is static — no parallax/fade — in the stacked layout.
+	   `animation: none`, not just `transform: none`: an animation with fill:both
+	   outranks a normal declaration, so overriding the transform alone would lose to
+	   the parallax timeline. Switching the animation off is what actually stops it. */
 	.sh__amp {
+		animation: none;
 		transform: none;
 		opacity: 1;
 	}
@@ -484,5 +485,126 @@ stories-heading {
 @media (max-width: 640px) {
 	stories-heading {
 		--sh-amp-size: 6rem;
+	}
+}
+
+/* --- SCROLL-DRIVEN EFFECTS ---------------------------------------------------
+   Every scroll-linked animation in this component, in one place, on scroll-progress
+   timelines rather than a scroll handler.
+
+   WHY NOT JS. These used to be a `scroll` listener writing custom properties from a
+   coalesced rAF. That work runs on the MAIN thread while the scroll itself runs on
+   the COMPOSITOR, so on a touch device the effects trailed the page by however many
+   frames the main thread was behind — the same mismatch that made the intro's old
+   translateY(-scrollY) unusable (see .sh__sub). No optimisation of the handler fixes
+   it; the two are not the same clock. A scroll timeline hands the progress to the
+   compositor, which is the only way to stay in step.
+
+   WHY THIS IS SAFE NOW, when the same mechanism was ripped out of .sh__sub before.
+   That failure was never really about scroll timelines: an engine that does not know
+   `animation-timeline` drops ONLY that declaration and runs the rest on the document
+   timeline, where `duration: auto` resolves to 0s and `fill: both` paints the element
+   at its TO keyframe forever. For the intro that keyframe was opacity 0 — content
+   invisible, permanently. `@supports` gates it correctly, but the site then bundled a
+   scroll-timeline polyfill that does not transpile @supports conditions, so gating
+   deleted the effect on the very engines it existed for. The polyfill is gone now
+   (Section.astro dropped it), so the gate below is clean: engines with the feature
+   animate, engines without keep the static state above and nothing snaps to a
+   to-keyframe. Never remove the @supports wrapper.
+
+   REDUCED MOTION is the outer gate, not an override. An animation with `fill: both`
+   beats a normal declaration in the cascade, so a `@media (prefers-reduced-motion:
+   reduce)` rule further down could NOT switch these off — it has to be that the
+   animation is never applied at all.
+
+   THE RANGES ARE MEASURED GEOMETRY, not tuned numbers. Each is the same arithmetic
+   the old JS did, rearranged to be a function of scroll offset:
+
+     wipe   started when "other stories" cleared the scene's bottom edge, i.e. when
+            headingTop == sceneBottom. The heading is sticky at --sh-top and the
+            scene's bottom sits --hero-height down the document, so that is scroll
+            offset (--hero-height − --sh-top), running for --sh-reveal.
+     intro  0 → --sh-sub-fade-px of scroll, exactly as before.
+     "&"    its own viewport position: from its top at 60vh to its top at 10vh. The
+            "&" sits --sh-amp-top below the host, which starts --hero-lead down the
+            document, so those are scroll offsets (top − 60vh) and (top − 10vh).
+            vh, not svh: the JS this replaces measured window.innerHeight, and this
+            effect only runs above 900px where the two agree. */
+
+@media (prefers-reduced-motion: no-preference) {
+	@supports (animation-timeline: scroll()) {
+		/* THE WIPE. Animates clip-path directly rather than the --sh-clip number it
+		   replaces: inset() interpolates natively, so this needs no @property
+		   registration to avoid stepping discretely at 50%. --sh-clip remains the
+		   static, un-animated state for engines that skip this block. */
+		.sh__solid {
+			/* clip-path is NOT a compositor-animatable property — unlike the opacity and
+			   transform below, it costs a main-thread style+paint per frame, and this
+			   layer is expensive to paint (it carries <wobble-text>'s displacement
+			   filter). The hint gets it its own layer so that repaint stays local
+			   instead of dirtying the heading around it. Measured over 3 runs at 8x CPU
+			   throttle, scrolling the wipe's whole range: worst frame 88.1ms → 73.3ms,
+			   median 48.0 → 45.1. It does not make the wipe composited; nothing can,
+			   short of rebuilding the effect out of transforms, which would put a
+			   transform on the very boxes alignHeadingLayers measures. */
+			will-change: clip-path;
+			animation-name: sh-heading-wipe;
+			animation-timing-function: linear;
+			animation-fill-mode: both;
+			animation-timeline: scroll(root block);
+			animation-range: calc(var(--hero-height) - var(--sh-top))
+				calc(var(--hero-height) - var(--sh-top) + var(--sh-reveal));
+		}
+
+		.sh__sub {
+			animation-name: sh-sub-fade;
+			animation-timing-function: linear;
+			animation-fill-mode: both;
+			animation-timeline: scroll(root block);
+			animation-range: 0 var(--sh-sub-fade-px);
+		}
+
+		.sh__amp {
+			animation-name: sh-amp-parallax;
+			animation-timing-function: linear;
+			animation-fill-mode: both;
+			animation-timeline: scroll(root block);
+			animation-range: calc(var(--hero-lead) + var(--sh-amp-top) - 60vh)
+				calc(var(--hero-lead) + var(--sh-amp-top) - 10vh);
+		}
+	}
+}
+
+@keyframes sh-heading-wipe {
+	from {
+		clip-path: inset(100% 0 0 0);
+	}
+	to {
+		clip-path: inset(0 0 0 0);
+	}
+}
+
+/* visibility flips discretely at the end, so the invisible block stops taking
+   pointer events — the same discrete step the old driver published. */
+@keyframes sh-sub-fade {
+	from {
+		opacity: 1;
+		visibility: visible;
+	}
+	99.9% {
+		visibility: visible;
+	}
+	to {
+		opacity: 0;
+		visibility: hidden;
+	}
+}
+
+@keyframes sh-amp-parallax {
+	from {
+		transform: translateY(0);
+	}
+	to {
+		transform: translateY(100px);
 	}
 }

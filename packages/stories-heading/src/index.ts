@@ -27,24 +27,31 @@ function clamp01(x: number): number {
  *   [data-sh-pin]      — position:sticky element holding "other stories".
  *   .sh__solid         — the solid-face layer in "other stories"; clipped in.
  *
- * Custom properties published per frame. Each goes on the ELEMENT THAT CONSUMES IT,
- * never on the host: custom properties inherit, so a host write invalidates style for
- * the whole lockup subtree — the wordmark SVG, both heading layers and the
- * displacement filter over them — once a frame in order to restyle one box.
- *   --sh-clip           (.sh__solid) fraction 1→0 of the solid layer hidden (wipe).
- *   --sh-amp-shift      (.sh__amp)   parallax translateY (px, positive = down).
- *   --sh-amp-opacity    (.sh__amp)   opacity (1 → floor).
- *   --sh-sub-opacity    (.sh__sub)   the intro's fade over the first sliver of scroll.
- *   --sh-sub-visibility (.sh__sub)   `hidden` once that fade completes, so the
- *                       invisible block stops taking pointer events. BOTH default to
- *                       shown when unset — see the .sh__sub note in styles.css for why
- *                       this fade is driven here rather than by `animation-timeline`.
- * Published from measure() instead (layout-rate, so the host is fine):
- *   --sh-heading-fitsize font-size (px) fitting "other stories" to a 6-col span.
+ * SCROLL EFFECTS ARE CSS FIRST, JS ONLY AS A FALLBACK. The wipe, the intro fade and
+ * the "&" parallax are CSS scroll-progress timelines (see the foot of styles.css). On
+ * an engine that has them — every engine this site's scroll ever felt slow on — this
+ * class registers NO scroll listener at all and does only layout-rate work.
  *
- * Lifecycle mirrors the sibling packages: a `listeners` cleanup array, a `rafId`
- * guard, a `ResizeObserver`, reduced-motion handling, and full teardown (Layout
- * uses ClientRouter view transitions).
+ * Firefox does not have them (measured: 153 reports
+ * `CSS.supports("animation-timeline", "scroll()")` false), and the @supports gate that
+ * keeps the CSS safe there also means the effects simply would not exist. So the old
+ * per-frame driver is kept, behind that exact feature test, and runs only where CSS
+ * cannot. It is the slower path by construction — a main-thread handler cannot stay in
+ * step with a compositor scroll — which is the point: nobody gets it who doesn't need
+ * it. Delete it the day Firefox ships scroll-driven animations.
+ *
+ * Published from measure():
+ *   --sh-heading-fitsize font-size (px) fitting "other stories" to a 6-col span.
+ *   --sh-heading-gap     the measured tuck of "other stories" into the wordmark.
+ *   --sh-amp-size/-top   the "&"'s size and its baseline-aligned position.
+ *   --sh-solid-*         the four registration corrections onto the outline.
+ *   --sh-pin-height      the pin's height, so the track can reserve its scroll.
+ * ...and onto .fh, for the hero fold: --sh-group-h, --sh-wordmark-h and
+ * --sh-header-clear. Those also FEED THE CSS RANGES the timelines animate over, which
+ * is why they have to stay correct even though nothing reads them per frame.
+ *
+ * Lifecycle mirrors the sibling packages: a `listeners` cleanup array, a
+ * `ResizeObserver`, and full teardown (Layout uses ClientRouter view transitions).
  */
 export class StoriesHeadingElement extends HTMLElement {
 	private track: HTMLElement | null = null;
@@ -53,12 +60,24 @@ export class StoriesHeadingElement extends HTMLElement {
 	private heading: HTMLElement | null = null;
 	private wordmarkSvg: SVGSVGElement | null = null;
 	private wordmarkText: SVGTextElement | null = null;
+	/** True when the browser drives the scroll effects itself, so this class must not.
+	    Read ONCE at connect: it cannot change for the lifetime of a document, and
+	    CSS.supports() is a parse, not something to repeat per frame. */
+	private cssDrivesScroll = false;
+	/** The solid ("other stories") layer — only the JS fallback writes to it. */
+	private solid: HTMLElement | null = null;
+	private reducedMotion: MediaQueryList | null = null;
+	private rafId: number | null = null;
+	/** Scroll-invariant tokens, resolved in measure() rather than per frame (fallback
+	    path only). Reading them in update() meant a getComputedStyle — a forced style
+	    recalc — on every frame of every scroll, for values only a resize can change. */
+	private revealPx = 0;
+	private subFade = 0;
+
 	/** The slotted intro wrapper — a static sibling of the pin, so it scrolls with the
 	    page under its own steam. Observed separately all the same: it lives inside the
 	    track's explicit height, so its growth never changes the host's own box. */
 	private sub: HTMLElement | null = null;
-	/** The solid ("other stories") layer — the sole consumer of --sh-clip. */
-	private solid: HTMLElement | null = null;
 	private inkCanvas: HTMLCanvasElement | null = null;
 	/** The full-viewport dotgrid scene layer, if this lockup overlays one. The
 	    outline→solid reveal is GATED until "other stories" clears the scene's
@@ -68,18 +87,11 @@ export class StoriesHeadingElement extends HTMLElement {
 	private scene: HTMLElement | null = null;
 
 	private resizeObserver: ResizeObserver | null = null;
-	private reducedMotion: MediaQueryList | null = null;
 	private listeners: Array<() => void> = [];
-	private rafId: number | null = null;
 	/** Last value written per fold property, so an unchanged re-measure writes
 	    nothing — measure() runs from a ResizeObserver, and a write there that
 	    resizes anything downstream would log an RO-loop warning (see setPx). */
 	private lastWritten = new Map<string, number>();
-	/** Scroll-invariant CSS tokens, resolved in measure() rather than per frame.
-	    Reading them in update() meant a getComputedStyle — a forced style recalc — on
-	    every frame of every scroll, for two values only a resize can change. */
-	private revealPx = 0;
-	private subFade = 0;
 
 	/** The "&"'s size, as a fraction of the wordmark's RENDERED INK HEIGHT.
 	    Tied to the wordmark rather than to a breakpoint so the glyph holds the same
@@ -141,33 +153,45 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.wordmarkSvg = this.querySelector<SVGSVGElement>(".sh__wordmark-svg");
 		this.wordmarkText = this.querySelector<SVGTextElement>(".sh__wordmark-text");
 		this.sub = this.querySelector<HTMLElement>(".sh__sub");
-		this.solid = this.querySelector<HTMLElement>(".sh__solid");
 		// The dotgrid scene the lockup overlays (for gating the reveal); may be absent
 		// (e.g. a hero with no scene) — the reveal then plays normally.
 		this.scene = this.closest<HTMLElement>(".fh")?.querySelector<HTMLElement>(".fh__scene") ?? null;
 
-		this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-		const onMotionChange = () => this.update();
-		this.reducedMotion.addEventListener("change", onMotionChange);
-		this.listeners.push(() =>
-			this.reducedMotion?.removeEventListener("change", onMotionChange)
-		);
+		// THE FEATURE TEST THAT DECIDES WHETHER ANY OF THE BELOW EXISTS. With scroll
+		// timelines the browser owns every scroll effect and this class registers no
+		// scroll listener at all; without them (Firefox) the fallback driver below runs.
+		// Matches the @supports condition in styles.css exactly — if the two ever
+		// disagree, one path or the other runs twice or not at all.
+		this.cssDrivesScroll =
+			typeof CSS !== "undefined" &&
+			typeof CSS.supports === "function" &&
+			CSS.supports("animation-timeline", "scroll()");
 
-		const onScroll = () => this.schedule();
-		window.addEventListener("scroll", onScroll, { passive: true });
-		this.listeners.push(() => window.removeEventListener("scroll", onScroll));
+		if (!this.cssDrivesScroll) {
+			this.solid = this.querySelector<HTMLElement>(".sh__solid");
+			this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+			const onMotionChange = () => this.update();
+			this.reducedMotion.addEventListener("change", onMotionChange);
+			this.listeners.push(() =>
+				this.reducedMotion?.removeEventListener("change", onMotionChange)
+			);
+
+			const onScroll = () => this.schedule();
+			window.addEventListener("scroll", onScroll, { passive: true });
+			this.listeners.push(() => window.removeEventListener("scroll", onScroll));
+		}
 
 		// A viewport resize changes the wordmark bbox fit and the pinned distance.
 		const onResize = () => {
 			this.measure();
-			this.schedule();
+			if (!this.cssDrivesScroll) this.schedule();
 		};
 		window.addEventListener("resize", onResize, { passive: true });
 		this.listeners.push(() => window.removeEventListener("resize", onResize));
 
 		this.resizeObserver = new ResizeObserver(() => {
 			this.measure();
-			this.schedule();
+			if (!this.cssDrivesScroll) this.schedule();
 		});
 		this.resizeObserver.observe(this);
 		// The sub-lockup (intro + CTAs) is position:absolute on the mobile layout, so its
@@ -182,11 +206,11 @@ export class StoriesHeadingElement extends HTMLElement {
 		// Measure now, then again after fonts load — the wordmark's glyph metrics
 		// (hence its bbox) shift once the web font swaps in.
 		this.measure();
-		this.update();
+		if (!this.cssDrivesScroll) this.update();
 		if (document.fonts?.ready) {
 			document.fonts.ready.then(() => {
 				this.measure();
-				this.schedule();
+				if (!this.cssDrivesScroll) this.schedule();
 				this.announceReady();
 			});
 		} else {
@@ -218,10 +242,12 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * not rendered (e.g. display:none), so guard it.
 	 */
 	private measure() {
-		// Resolve the scroll-invariant tokens at layout rate, so update() never has to
-		// call getComputedStyle (see revealPx / subFade).
-		this.revealPx = this.cssPx("--sh-reveal", 0.6 * window.innerHeight);
-		this.subFade = this.readSubFadePx();
+		// Fallback-path only: resolve the scroll-invariant tokens at layout rate so
+		// update() never calls getComputedStyle. Skipped entirely when CSS drives.
+		if (!this.cssDrivesScroll) {
+			this.revealPx = this.cssPx("--sh-reveal", 0.6 * window.innerHeight);
+			this.subFade = this.readSubFadePx();
+		}
 
 		this.fitWordmark();
 		this.fitAmp();
@@ -884,15 +910,15 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.listeners.forEach((off) => off());
 		this.listeners = [];
 		this.lastWritten.clear();
-		// Never leave a teardown mid-fade: drop the published fade so a re-connected
-		// host starts from the stylesheet's shown-by-default state rather than
-		// inheriting a stale `hidden` with no driver left to clear it.
+		// Never leave a teardown mid-fade: drop anything the fallback published, so a
+		// re-connected host starts from the stylesheet's shown-by-default state.
 		this.clearSubFade();
 		this.sub = null;
 		this.solid = null;
 		// Re-measured from scratch on re-connect, so allow the announcement again.
 		delete this.dataset.ready;
 	}
+
 
 	/** Coalesce scroll-driven updates to one write per frame. */
 	private schedule() {
