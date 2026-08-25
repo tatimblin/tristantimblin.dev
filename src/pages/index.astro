@@ -128,10 +128,22 @@ import "../widgets/widgets.css";
 	     same entrance — the halftone develops in brightest-dots-first with no hold,
 	     whichever scene the breakpoint is showing. Runs once, on the first
 	     clip; later clips swap in without re-developing. -->
+	<!-- HALFTONE: the finer, dimmer grid, which is NOT the component's default. Those
+	     defaults suit the footer widget — a small card, viewed directly, where a coarse
+	     bright grid reads as texture. Here the same clip is the full-bleed scene at 0.55
+	     opacity with the wordmark on top of it, and the coarser grid competes with the
+	     type instead of sitting under it. Same values the hero used before the defaults
+	     moved; gamma is the component default, restated so the whole look reads in one
+	     place rather than half here and half there. -->
 	<VideoCarousel
 		slot="scene"
 		class="hero-carousel"
 		orientation="horizontal"
+		cellSize={4}
+		levels={10}
+		gamma={0.5}
+		contrast={1.1}
+		color="#7f7f7f"
 		introDelay={0}
 		intro={3200}
 		xfade={1600}
