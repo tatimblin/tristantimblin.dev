@@ -23,6 +23,17 @@ SRC_MIGRA_BOLD="$ASSETS/migra.ttf"                                           # M
 SRC_MIGRA_MEDIUM="$ASSETS/migra-3.ttf"                                       # Migra Medium 500 — headings
 SRC_FS_MONDWEST="$ASSETS/fs-mondwest-bold.ttf/fs-mondwest-bold.ttf"          # FS Mondwest Bold — sub-headings
 SRC_PP_MONDWEST="$ASSETS/Bitmap Font Pack - Free for Personal Use/PPMondwest-Regular.otf"  # PP Mondwest — body
+# PP Neue Montreal — UI text (widget labels/figures, the ruler's year marks). TWO
+# cuts under one family, like Migra: the browser then matches by font-weight and
+# never synthesises. Regular carries the labels; Semibold is what the widget figures
+# have always asked for.
+# The OTFs are from Pangram Pangram's own pack, NOT the woff2 that floats around on
+# the font-mirror sites: that file reports itself as usWeightClass 700 "Bold" at
+# version 2.600 with 743 glyphs, i.e. a different cut of a different release from
+# what it is named after. Same rule as the four above — subset the vendor original.
+NM="$ASSETS/PP Neue Montreal - Free for Personal Use v3.0/otf"
+SRC_NEUE_MONTREAL_REGULAR="$NM/PPNeueMontreal-Regular.otf"    # 400 — UI text
+SRC_NEUE_MONTREAL_SEMIBOLD="$NM/PPNeueMontreal-Semibold.otf"  # 600 — widget figures
 
 # The google-fonts "latin" subset definition: ASCII + Latin-1, the OE/ij
 # ligatures, spacing modifiers, general punctuation (curly quotes, en/em dashes,
@@ -47,6 +58,8 @@ subset "$SRC_MIGRA_BOLD"   migra-bold.woff2
 subset "$SRC_MIGRA_MEDIUM" migra-medium.woff2
 subset "$SRC_FS_MONDWEST"  fs-mondwest-bold.woff2
 subset "$SRC_PP_MONDWEST"  ppmondwest-regular.woff2
+subset "$SRC_NEUE_MONTREAL_REGULAR"  neue-montreal-regular.woff2
+subset "$SRC_NEUE_MONTREAL_SEMIBOLD" neue-montreal-semibold.woff2
 
 # Repair two defects in the vendor Mondwest files: FS Mondwest's collapsed word
 # space and PP Mondwest's missing en-dash. Both are bugs in the sources, verified
