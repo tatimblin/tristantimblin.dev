@@ -58,6 +58,14 @@ interface Props {
 	gamma?: number;
 	contrast?: number;
 	color?: string;
+	/**
+	 * Cap on the halftone's render DPR. The shader's cost is per-pixel and the two
+	 * consumers differ by an order of magnitude in canvas area, so a full-bleed
+	 * consumer should pass 1 while the footer card keeps the element's default of 2.
+	 * See effectiveDpr() in packages/dotted-grid for what the cap does and why it must
+	 * stay an integer.
+	 */
+	maxDpr?: number;
 }
 
 // Real footage prepared by tools/dotgrid/prepare-video.sh into
@@ -76,6 +84,7 @@ const {
 	xfadeMode,
 	xfadeLive,
 	cellSize = 7,
+	maxDpr,
 	levels = 15,
 	gamma = 0.5,
 	contrast = 1.2,
@@ -331,6 +340,7 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				color-reveal
 				shimmer="1"
 				no-loop
+				max-dpr={maxDpr}
 				cell-size={cellSize}
 				levels={levels}
 				gamma={gamma}

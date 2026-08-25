@@ -108,6 +108,7 @@ import "../widgets/widgets.css";
 		class="hero__video"
 		src="/videos/fabric.web.mp4"
 		src-webm="/videos/fabric.web.webm"
+		max-dpr="1"
 		cell-size="9"
 		dot-scale="1"
 		levels="10"
@@ -128,6 +129,13 @@ import "../widgets/widgets.css";
 	     same entrance — the halftone develops in brightest-dots-first with no hold,
 	     whichever scene the breakpoint is showing. Runs once, on the first
 	     clip; later clips swap in without re-developing. -->
+	<!-- max-dpr: this canvas is FULL-BLEED, and the halftone's cost is per-pixel — at
+	     DPR 2 on a phone that is ~1.3 Mpx re-composited on every video frame. Measured
+	     at 8x CPU throttle while scrolling: 46.6ms median frame at 1.32 Mpx against
+	     11.8ms at 0.33 Mpx, i.e. the canvas was roughly three quarters of the frame and
+	     the cost tracks area. The footer widget's card is a fraction of the size and
+	     keeps the default cap. See effectiveDpr() for why a cap of 1 does not
+	     reintroduce lattice moiré (the upscale stays a whole number). -->
 	<!-- HALFTONE: the finer, dimmer grid, which is NOT the component's default. Those
 	     defaults suit the footer widget — a small card, viewed directly, where a coarse
 	     bright grid reads as texture. Here the same clip is the full-bleed scene at 0.55
@@ -139,6 +147,7 @@ import "../widgets/widgets.css";
 		slot="scene"
 		class="hero-carousel"
 		orientation="horizontal"
+		maxDpr={1}
 		cellSize={4}
 		levels={10}
 		gamma={0.5}
