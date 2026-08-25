@@ -1,10 +1,10 @@
-/* FONT LOADING — the site's four faces, self-hosted, plus metric-matched fallbacks.
+/* FONT LOADING — the site's five faces, self-hosted, plus metric-matched fallbacks.
  *
  * The files are built by tools/fonts/build.sh (latin subsets of the vendor
  * originals) and served from /fonts with a one-year immutable cache (public/_headers).
  * Nothing is fetched from a third party; the roles they fill are named by the
- * --font-hero / --font-heading / --font-subheading / --font-body tokens in the
- * design system's tokens.overrides.css.
+ * --font-hero / --font-heading / --font-subheading / --font-body / --font-ui
+ * tokens in the design system's tokens.overrides.css.
  *
  * TWO SEPARATE ADJUSTMENTS LIVE HERE. They look alike and do different jobs:
  *
@@ -36,6 +36,7 @@
  *   Migra        upm 1000  asc 0.7500  desc 0.2500  gap 0.1000  xHeight 0.5300
  *   FS Mondwest  upm 2048  asc 0.7256  desc 0.2954  gap 0       xHeight 0.2822
  *   PP Mondwest  upm 4096  asc 0.7598  desc 0.2400  gap 0.0200  xHeight 0.4400
+ *   Neue Montrl  upm 1000  asc 0.9580  desc 0.2420  gap 0       xHeight 0.5100
  * Fallback x-heights: Georgia 0.4814, Arial 0.5186.
  * Re-run the same arithmetic if a face is ever swapped — or delete the fallback
  * faces and drop them from the stacks; the plain system fallback still works, it
@@ -85,6 +86,26 @@
 	src: url("/fonts/ppmondwest-regular.woff2") format("woff2");
 }
 
+/* PP Neue Montreal Light — UI text: the small, functional type that labels things
+   rather than says them. Widget headers, stat labels and figures, the ruler's year
+   marks. A neo-grotesque among three highly-voiced faces, chosen for exactly that:
+   it recedes, so the display faces keep the personality and the interface reads as
+   interface.
+   The smallest correction on the site — its glyphs already sit close to Migra's
+   x-height (0.510 vs 0.530), so 103.9% is a nudge rather than a rescue. Declared at
+   weight 300, the cut's real usWeightClass, so nothing can ask this file for a
+   weight it does not have and get a synthesised one; the family has other cuts if a
+   second weight is ever wanted (PPNeueMontrealText-Book is the small-size optical
+   size, if this reads thin). */
+@font-face {
+	font-family: "Neue Montreal";
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	size-adjust: 103.9%;
+	src: url("/fonts/neue-montreal-light.woff2") format("woff2");
+}
+
 /* --- Metric-matched fallbacks ------------------------------------------ */
 
 /* Migra → Georgia. Both Migra cuts share these metrics (their typo values are
@@ -109,6 +130,18 @@
 	ascent-override: 89.56%;
 	descent-override: 28.29%;
 	line-gap-override: 2.36%;
+}
+
+/* Neue Montreal → Arial. Both are neo-grotesques, so this is the closest
+   metric pairing on the page; the 97% ascent follows Neue Montreal's tall typo
+   ascender (0.958/em), not an error. */
+@font-face {
+	font-family: "Neue Montreal Fallback";
+	src: local("Arial");
+	size-adjust: 102.20%;
+	ascent-override: 97.42%;
+	descent-override: 24.61%;
+	line-gap-override: 0%;
 }
 
 /* FS Mondwest → Arial. The 133% ascent is not a typo: FS Mondwest's vertical

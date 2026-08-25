@@ -6,6 +6,15 @@
  * the widget grid. Kept global (not an Astro scoped <style>) so widgets rendered
  * from their own components can rely on them. */
 
+/* UI TEXT. Every widget is chrome — labels, figures, small print — so the whole
+   grid is set in --font-ui rather than the body face. Applied once at the card
+   root so it reaches the DS-rendered parts too (headers, footers), which this file
+   does not otherwise style. A widget wanting the body voice for genuine prose can
+   still opt back in locally. */
+.home__widgets .ds-widget {
+	font-family: var(--font-ui);
+}
+
 /* Stat block — a big numeric value over a small label. */
 .home__widgets .wx-stat {
 	display: flex;
@@ -18,6 +27,11 @@
 .home__widgets .wx-stat-num {
 	font-family: var(--font-numeric, var(--font-mono));
 	font-size: var(--widget-font-xl); /* fluid; ≡ --font-size-7 (32px) at the desktop cell */
+	/* --font-ui ships a single cut (Light/300), and global.css sets
+	   font-synthesis-weight: none — so this asks for a weight the face does not have
+	   and gets the real 300 back rather than a faux bold. Left in place deliberately:
+	   it is the right intent, it costs nothing, and it starts working the day a
+	   second cut is added. The figures carry their emphasis by size and colour. */
 	font-weight: var(--font-weight-600);
 	line-height: 1;
 	color: var(--text-primary);
