@@ -600,11 +600,25 @@ stories-heading {
 	}
 }
 
+/* The "&" drifts DOWN and dissolves on the way, gone exactly as the drift ends.
+   The hold matters: fading from the first pixel would make it a glyph that is always
+   half-there, and the drift would never read on its own. Holding it opaque for the
+   first stretch lets the movement register first, and the fade then reads as the mark
+   leaving rather than as a permanently dim one.
+   TRANSFORM IS ONLY KEYED AT THE ENDS, deliberately — CSS interpolates each property
+   between the keyframes that mention it, so the 40% stop shapes opacity alone and the
+   drift stays linear across the whole range.
+   AMP_FADE_START in index.ts is this same 40%, for the fallback driver. Change both. */
 @keyframes sh-amp-parallax {
 	from {
 		transform: translateY(0);
+		opacity: 1;
+	}
+	40% {
+		opacity: 1;
 	}
 	to {
 		transform: translateY(100px);
+		opacity: 0;
 	}
 }
