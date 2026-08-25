@@ -6,6 +6,15 @@
  * the widget grid. Kept global (not an Astro scoped <style>) so widgets rendered
  * from their own components can rely on them. */
 
+/* UI TEXT. Every widget is chrome — labels, figures, small print — so the whole
+   grid is set in --font-ui rather than the body face. Applied once at the card
+   root so it reaches the DS-rendered parts too (headers, footers), which this file
+   does not otherwise style. A widget wanting the body voice for genuine prose can
+   still opt back in locally. */
+.home__widgets .ds-widget {
+	font-family: var(--font-ui);
+}
+
 /* Stat block — a big numeric value over a small label. */
 .home__widgets .wx-stat {
 	display: flex;
@@ -18,6 +27,10 @@
 .home__widgets .wx-stat-num {
 	font-family: var(--font-numeric, var(--font-mono));
 	font-size: var(--widget-font-xl); /* fluid; ≡ --font-size-7 (32px) at the desktop cell */
+	/* Resolves to Neue Montreal's real Semibold cut. It did not always: the face
+	   shipped as a single Light, and global.css refuses faux-bolding, so this
+	   declaration rendered at the one weight available. It is a real weight now, which
+	   is what gives the figures their step above the labels beneath them. */
 	font-weight: var(--font-weight-600);
 	line-height: 1;
 	color: var(--text-primary);
