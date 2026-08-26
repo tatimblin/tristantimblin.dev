@@ -1,0 +1,45 @@
+name: Ticker Data Collection
+
+on:
+  schedule:
+    - cron: '0 5 * * *'  # Daily at 5 AM UTC (offset from baywheels' 3 and github's 4)
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write  # Required to commit and push the refreshed JSON
+
+jobs:
+  collect-ticker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Fetches San Francisco conditions from Open-Meteo and AMZN/YEXT quotes
+      # from api.nasdaq.com, writing src/data/ticker.json. Both are keyless, so
+      # there is no secret here. A single source failing writes null for that key
+      # and the page drops the segment; the script only exits non-zero when EVERY
+      # source failed, so one flaky endpoint never overwrites good data with
+      # nothing — and never invents a number to fill the gap.
+      - name: Fetch ticker data
+        run: bun tools/ticker/fetch.mjs
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- src/data/ticker.json; then
+            echo "No change to ticker.json — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/ticker.json
+          git commit -m "Update ticker data - $(date +'%Y-%m-%d')"
+          git push
