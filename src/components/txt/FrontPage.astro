@@ -1,0 +1,486 @@
+---
+// The editorial front page: a lead with its art, a "Latest" rail beside it, and a
+// featured strip of thumbnail rows beneath.
+//
+// Shared by /txt and /txt/tag/<tag>, which is the whole point of it being a
+// component. A tag page is not a filtered LIST — it is a front page edited from a
+// smaller pile of stories, so it gets the same lead-plus-rail treatment rather
+// than degrading to a grid of uniform cards. Everything here is driven by the
+// `posts` it is handed; the ranking is positional, so it works the same whether
+// that is the whole collection or the three stories filed under "diy".
+//
+// CONVENTIONS gate rule 4: the same pattern now appears in two places, so it is a
+// component rather than a copy. It lives in src/components/ beside
+// GalleryGridItem, NOT in the design system — the package is a faithful 1:1 fork
+// of an upstream React DS, and this has no upstream counterpart.
+//
+// Type is plain h2/h3/p on scoped classes rather than DS Heading/Text.
+// heading.css authors `.ds-heading.ds-heading` (0,2,0) so it wins "regardless of
+// stylesheet import order", while Astro scopes component CSS with :where(),
+// leaving a scoped headline rule at (0,1,0) — the DS's line-height: 1.5 would beat
+// every headline here. Text is out for the same reason (spaced=true carries
+// line-height 1.75). Gate rule 3, page art direction.
+import type { CollectionEntry } from "astro:content";
+import { leadImage } from "../../lib/leadImage";
+import { intrinsicSize } from "../../lib/intrinsicSize";
+
+type Post = CollectionEntry<"txt">;
+
+interface Props {
+	/** Stories to lay out, newest first. */
+	posts: Post[];
+}
+
+const { posts } = Astro.props;
+
+// Pure slicing: cannot throw, cannot leave a hole, at any count. Each region
+// renders inside its own length guard, so an absent region takes its heading and
+// its rules with it — which is what makes a one-story tag page look deliberate.
+const lead: Post | null = posts[0] ?? null;
+const rail: Post[] = posts.slice(1, 3);
+const featured: Post[] = posts.slice(3);
+
+/** A story's art: the first image in its body, sized from the file at build time
+ *  so the browser reserves the right box before the bytes land. */
+function artOf(post: Post) {
+	const found = leadImage(post);
+	if (!found) return null;
+	const size = intrinsicSize(found.src);
+	return { src: found.src, w: size?.w, h: size?.h };
+}
+const leadArt = lead ? artOf(lead) : null;
+
+/** The rail story that gets the image-card treatment: the first one with art.
+ *  Art does not track position, and pinning this to index 0 left the rail as two
+ *  bare rows while a picture sat unused below it. */
+const railCardId = rail.find((post) => artOf(post))?.id ?? null;
+
+const fmt = (d: Date) =>
+	new Date(d).toLocaleDateString("en-US", {
+		year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
+	});
+const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
+
+/** Sentence-case in the DOM, uppercased in CSS: .toUpperCase() would make a
+ *  screen reader spell "AI" out letter by letter. */
+const kickerOf = (post: Post) => post.data.tags[0]?.replace(/-/g, " ") ?? "";
+const href = (post: Post) => `/txt/${post.id}`;
+---
+
+{lead && (
+	<>
+					<div class="front">
+						{/* LEAD — text column, then art, mirroring the reference's
+						    left-rail-plus-hero. No data-reveal: the art is this page's LCP
+						    element, and src/lib/reveal.ts is emphatic that gating one pays a
+						    real metric to hide a cosmetic one. */}
+						<article class="lead">
+							<p class="kicker">
+								{lead.data.icon && (
+									<span class="dingbat" aria-hidden="true">{lead.data.icon}</span>
+								)}
+								{kickerOf(lead)}
+							</p>
+							<h2 class="lead__hed">
+								<a class="stretch" href={href(lead)}>{lead.data.title}</a>
+							</h2>
+							<p class="meta">
+								<time datetime={iso(lead.data.date)}>{fmt(lead.data.date)}</time>
+							</p>
+							<p class="lead__deck">{lead.data.excerpt}</p>
+
+							{lead.data.tags.length > 0 && (
+								<div class="filed">
+									<p class="filed__label">Filed under</p>
+									<ul class="filed__list">
+										{lead.data.tags.map((tag) => (
+											<li class="filed__tag">{tag.replace(/-/g, " ")}</li>
+										))}
+									</ul>
+								</div>
+							)}
+
+						</article>
+
+						{leadArt && (
+							<figure class="lead__art">
+								<img
+									src={leadArt.src}
+									alt=""
+									width={leadArt.w}
+									height={leadArt.h}
+									loading="eager"
+									fetchpriority="high"
+								/>
+							</figure>
+						)}
+
+						{rail.length > 0 && (
+							<aside class="rail" aria-labelledby="rail-heading">
+								<h2 class="rail__heading" id="rail-heading">Latest</h2>
+								{rail.map((post, i) => {
+									const art = artOf(post);
+									// The card treatment goes to the first rail story that
+									// actually HAS art, not to index 0 — art does not track
+									// position, and pinning it to the first slot left the rail
+									// as two bare rows while a picture sat unused below it.
+									return post.id === railCardId && art ? (
+										<article class="railcard" data-reveal data-reveal-group="np-rail" data-reveal-order={i}>
+											<figure class="railcard__art">
+												<img src={art.src} alt="" width={art.w} height={art.h} loading="lazy" decoding="async" />
+											</figure>
+											<h3 class="railcard__hed">
+												<a class="stretch" href={href(post)}>{post.data.title}</a>
+											</h3>
+											<p class="meta">
+												<time datetime={iso(post.data.date)}>{fmt(post.data.date)}</time>
+											</p>
+										</article>
+									) : (
+										<article class="railrow" data-reveal data-reveal-group="np-rail" data-reveal-order={i}>
+											<h3 class="railrow__hed">
+												<a class="stretch" href={href(post)}>{post.data.title}</a>
+											</h3>
+											<p class="meta">
+												<time datetime={iso(post.data.date)}>{fmt(post.data.date)}</time>
+											</p>
+										</article>
+									);
+								})}
+							</aside>
+						)}
+					</div>
+
+					{featured.length > 0 && (
+						<section class="featured" aria-labelledby="featured-heading">
+							<h2 class="featured__heading" id="featured-heading">Featured</h2>
+							<ul class="featured__list" data-reveal data-reveal-group="np-featured">
+								{featured.map((post) => {
+									const art = artOf(post);
+									return (
+										<li class="row">
+											{art ? (
+												<figure class="row__thumb">
+													<img src={art.src} alt="" width={art.w} height={art.h} loading="lazy" decoding="async" />
+												</figure>
+											) : (
+												<span class="row__thumb row__thumb--empty" aria-hidden="true">
+													{post.data.icon}
+												</span>
+											)}
+											<div class="row__body">
+												<p class="kicker">{kickerOf(post)}</p>
+												<h3 class="row__hed">
+													<a class="stretch" href={href(post)}>{post.data.title}</a>
+												</h3>
+												<p class="meta">
+													<time datetime={iso(post.data.date)}>{fmt(post.data.date)}</time>
+												</p>
+											</div>
+										</li>
+									);
+								})}
+							</ul>
+						</section>
+					)}
+	</>
+)}
+
+<style>
+	/* ---- shared atoms ------------------------------------------------------ */
+
+	.kicker,
+	.meta {
+		margin: 0;
+		font-size: var(--font-size-1);
+		line-height: 1.3;
+		color: var(--text-tertiary);
+	}
+	.kicker {
+		font-family: var(--font-subheading);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.meta {
+		font-family: var(--font-ui);
+	}
+
+	/* The post's emoji as a section mark. Emoji render in the system colour font
+	   and ignore our faces, so inside a Migra headline they break its rhythm;
+	   on the kicker line they read as the dingbat they always were. */
+	.dingbat {
+		font-size: 1.1em;
+		line-height: 1;
+		margin-inline-end: var(--space-1);
+	}
+
+	/* Every headline is Migra. Family and weight travel together: two discrete
+	   cuts, and font-synthesis-weight is off globally. */
+	.lead__hed,
+	.railcard__hed,
+	.railrow__hed,
+	.row__hed,
+	.card__hed {
+		margin: 0;
+		font-family: var(--font-heading);
+		font-weight: var(--font-heading-weight);
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+		color: var(--text-primary);
+		text-wrap: balance;
+	}
+
+	/* One link per story, whole surface clickable. The ::after overlay needs a
+	   positioned ancestor, set explicitly on each container so it never depends on
+	   the `translate` reveal.css applies transiently to [data-reveal] elements. */
+	.stretch {
+		color: inherit;
+		text-decoration: none;
+	}
+	.stretch::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+	.lead,
+	.railcard,
+	.railrow,
+	.row,
+	.card {
+		position: relative;
+	}
+	.lead:hover .lead__hed,
+	.railcard:hover .railcard__hed,
+	.railrow:hover .railrow__hed,
+	.row:hover .row__hed,
+	.card:hover .card__hed {
+		color: var(--accent);
+	}
+
+	figure {
+		margin: 0;
+	}
+	img {
+		display: block;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+	}
+
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	/* ---- front page grid --------------------------------------------------- */
+
+	.front {
+		display: grid;
+		gap: var(--space-6);
+	}
+
+	@media (min-width: 1024px) {
+		/* text | hero | rail — the reference's three-track front page. The hero
+		   takes the largest share; the two text columns are near-equal. */
+		.front {
+			grid-template-columns: minmax(0, 3fr) minmax(0, 6fr) minmax(0, 3fr);
+			gap: var(--grid-gap);
+			align-items: start;
+		}
+		/* Column rules. `align-items: start` leaves each track only as tall as its own
+		   content, so a border on the column would stop wherever that column happened
+		   to end — a rule that quits halfway down the page reads as a mistake. The
+		   grid itself carries them instead, painted as two full-height hairlines
+		   positioned on the gutters, so they run the depth of the row whatever the
+		   columns do. */
+		.front {
+			position: relative;
+		}
+		.front::before,
+		.front::after {
+			content: "";
+			position: absolute;
+			inset-block: 0;
+			inline-size: 1px;
+			background: var(--paper-line);
+		}
+		/* Exactly the quarter points, with no gap correction — and that is not an
+		   approximation. For tracks of 3u/6u/3u with equal gaps g, the first gutter's
+		   centre is 3u + g/2, and the container is 12u + 2g, so C/4 = 3u + g/2 to the
+		   pixel whatever g is. Subtracting g/2 (the first attempt) put both rules on
+		   the column edges instead, 12px adrift. */
+		.front::before {
+			inset-inline-start: 25%;
+		}
+		.front::after {
+			inset-inline-start: 75%;
+		}
+	}
+	@media (min-width: 768px) and (max-width: 1023px) {
+		.front {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			gap: var(--grid-gap);
+			align-items: start;
+		}
+		.rail {
+			grid-column: 1 / -1;
+		}
+	}
+
+	/* ---- lead -------------------------------------------------------------- */
+
+	.lead__hed {
+		margin-block: var(--space-3) var(--space-3);
+		font-size: clamp(1.75rem, 2.6vw, 2.375rem);
+	}
+
+	.lead__deck {
+		margin: var(--space-3) 0 0;
+		font-family: var(--font-body);
+		font-size: var(--font-size-3);
+		line-height: 1.6;
+		color: var(--text-secondary);
+	}
+
+	/* 16/9, matching the collection's art (1200x674, x675, x728 — 1.65 to 1.78).
+	   A 4/3 box here cropped the sides clean off a screenshot, which for a picture
+	   of a terminal destroys the actual content. */
+	.lead__art {
+		border-radius: var(--border-radius-3);
+		overflow: hidden;
+		background: var(--paper-sunk);
+		aspect-ratio: 16 / 9;
+	}
+
+	/* The lead's own categories. This slot held a list of the other headlines,
+	   mirroring the reference's "Live Updates" — but with five stories the rail and
+	   the featured strip already show each of them exactly once, so that list was a
+	   second and third link to the same places. Tags are real metadata about the
+	   lead and duplicate nothing. */
+	.filed {
+		margin-block-start: var(--space-5);
+		padding-block-start: var(--space-4);
+		border-block-start: 1px solid var(--paper-line);
+	}
+	.filed__label {
+		margin: 0 0 var(--space-3);
+		font-family: var(--font-ui);
+		font-size: var(--font-size-1);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--text-tertiary);
+	}
+	.filed__list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+	.filed__tag {
+		padding: var(--space-2) var(--space-3);
+		border-radius: var(--border-radius-3);
+		background: var(--paper-sunk);
+		font-family: var(--font-ui);
+		font-size: var(--font-size-1);
+		line-height: 1;
+		color: var(--text-secondary);
+	}
+
+	/* ---- rail -------------------------------------------------------------- */
+
+	.rail {
+		display: grid;
+		gap: var(--space-3);
+		align-content: start;
+	}
+	.rail__heading,
+	.featured__heading {
+		margin: 0 0 var(--space-3);
+		padding-block-end: var(--space-2);
+		border-block-end: 1px solid var(--paper-line);
+		font-family: var(--font-ui);
+		font-weight: 600;
+		font-size: var(--font-size-1);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--text-tertiary);
+	}
+
+	.railcard__art {
+		border-radius: var(--border-radius-2);
+		overflow: hidden;
+		aspect-ratio: 16 / 9;
+		background: var(--paper-sunk);
+		margin-block-end: var(--space-3);
+	}
+	.railcard__hed {
+		font-size: var(--font-size-4);
+	}
+	.railcard .meta,
+	.railrow .meta {
+		margin-block-start: var(--space-2);
+	}
+
+	/* Compact rows in a sunk surface, as in the reference's Latest News list. */
+	.railrow {
+		padding: var(--space-4);
+		border-radius: var(--border-radius-2);
+		background: var(--paper-sunk);
+	}
+	.railrow__hed {
+		font-size: var(--font-size-3);
+	}
+
+	/* ---- featured rows ----------------------------------------------------- */
+
+	.featured {
+		margin-block-start: var(--space-8);
+		padding-block-start: var(--space-5);
+		border-block-start: 1px solid var(--paper-line);
+	}
+
+	.featured__list {
+		display: grid;
+		gap: var(--space-3);
+	}
+	@media (min-width: 768px) {
+		.featured__list {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: var(--grid-gap);
+		}
+	}
+
+	/* thumbnail + headline, the reference's most reusable pattern. */
+	.row {
+		display: grid;
+		grid-template-columns: 96px minmax(0, 1fr);
+		gap: var(--space-4);
+		align-items: center;
+		padding: var(--space-3);
+		border-radius: var(--border-radius-2);
+		transition: background 0.15s ease;
+	}
+	.row:hover {
+		background: var(--paper-sunk);
+	}
+	.row__thumb {
+		aspect-ratio: 1;
+		border-radius: var(--border-radius-1);
+		overflow: hidden;
+		background: var(--paper-sunk);
+	}
+	/* A story with no art still gets a square, filled with its dingbat, so the row
+	   grid never collapses into a ragged two-shape list. */
+	.row__thumb--empty {
+		display: grid;
+		place-items: center;
+		font-size: var(--font-size-6);
+		line-height: 1;
+	}
+	.row__hed {
+		margin-block: var(--space-1) var(--space-1);
+		font-size: var(--font-size-4);
+	}
+
+</style>

@@ -13,6 +13,10 @@ import "@whois/design-system/styles.css";
 interface Props {
 	title: string;
 	description?: string;
+	/** Forwarded to Layout — the tag archives opt out of indexing. */
+	noindex?: boolean;
+	/** The category currently being read, if this is a tag page. */
+	activeTag?: string;
 	/** Small caps that lead the wordmark, e.g. "The". */
 	wordmarkLead?: string;
 	/** The publication's name, set in the hero face. */
@@ -40,6 +44,8 @@ interface Props {
 const {
 	title,
 	description,
+	noindex,
+	activeTag,
 	wordmarkLead,
 	wordmark,
 	volume,
@@ -76,11 +82,22 @@ const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
 
 // Real destinations only — the nav mirrors the reference's tab group, but every
 // pill has somewhere to go.
+//
+// The section pill is marked aria-current="true", not "page", and the distinction
+// matters: the category chips below use "page" for the exact URL, and a document
+// with two elements both claiming to be the current PAGE tells a screen reader
+// nothing useful. "true" is the generic "this is the current item", which is what
+// a section tab actually is — and on /txt/tag/diy the Writing pill is a section
+// ancestor, not the page you are on.
+const path = Astro.url.pathname.replace(/\/+$/, "") || "/";
 const nav = [
 	{ label: "Home", href: "/" },
-	{ label: "Writing", href: "/txt", current: true },
+	{ label: "Writing", href: "/txt" },
 	{ label: "Gallery", href: "/gallery" },
-];
+].map((link) => ({
+	...link,
+	current: link.href === "/" ? path === "/" : path === link.href || path.startsWith(`${link.href}/`),
+}));
 
 const issueLine = [
 	volume ? `Vol. ${toRoman(volume)}` : null,
@@ -88,7 +105,7 @@ const issueLine = [
 ].filter(Boolean).join(" · ");
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} noindex={noindex}>
 	<div class="np">
 		<header class="np__bar">
 			<nav class="np__nav" aria-label="Primary">
@@ -96,7 +113,7 @@ const issueLine = [
 					<a
 						class:list={["np__pill", l.current && "np__pill--current"]}
 						href={l.href}
-						aria-current={l.current ? "page" : undefined}
+						aria-current={l.current ? "true" : undefined}
 					>
 						{l.label}
 					</a>
@@ -154,19 +171,28 @@ const issueLine = [
 
 		{
 			tags.length > 0 && (
-				// Hidden until the script below unhides it. A control that cannot work
-				// should not be on screen: without JS these would look like buttons and
-				// do nothing, so a no-JS visitor simply gets the full front page.
-				<div class="np__rail" data-chip-rail hidden>
-					<button class="np__chip np__chip--current" data-tag="" aria-pressed="true">
+				/* Ordinary links to real routes, not filter buttons. Each category has
+				   its own front page, so these work with scripting off, they are
+				   shareable, and nothing has to ship hidden waiting for JS to make it
+				   functional. aria-current marks the one being read. */
+				<nav class="np__rail" aria-label="Categories">
+					<a
+						class:list={["np__chip", !activeTag && "np__chip--current"]}
+						href="/txt"
+						aria-current={!activeTag ? "page" : undefined}
+					>
 						All
-					</button>
+					</a>
 					{tags.map((tag) => (
-						<button class="np__chip" data-tag={tag} aria-pressed="false">
+						<a
+							class:list={["np__chip", tag === activeTag && "np__chip--current"]}
+							href={`/txt/tag/${tag}`}
+							aria-current={tag === activeTag ? "page" : undefined}
+						>
 							{tag.replace(/-/g, " ")}
-						</button>
+						</a>
 					))}
-				</div>
+				</nav>
 			)
 		}
 
@@ -175,50 +201,6 @@ const issueLine = [
 </Layout>
 
 <script>
-	// Category filter. The page ships BOTH views server-rendered: the curated front
-	// page ([data-view="front"]) and a plain grid of every story ([data-view="all"]),
-	// with the grid hidden. Selecting a tag swaps which view is live and hides the
-	// non-matching cards inside the grid.
-	//
-	// Swapping views rather than filtering the curated layout in place is what keeps
-	// this honest: a front page is an edit — a lead, a rail, a featured strip — and
-	// pulling three of five stories out of it leaves holes shaped like the stories
-	// that were removed. A filtered result is a list, so it is rendered as one.
-	//
-	// `hidden` (not opacity/visibility) so the inactive view leaves the accessibility
-	// tree entirely and each story exposes exactly one link at a time.
-	function wireFilter() {
-		const rail = document.querySelector<HTMLElement>("[data-chip-rail]");
-		if (!rail || rail.dataset.wired) return;
-		rail.dataset.wired = "true";
-		rail.hidden = false;
-
-		const front = document.querySelector<HTMLElement>('[data-view="front"]');
-		const all = document.querySelector<HTMLElement>('[data-view="all"]');
-		if (!front || !all) return;
-
-		const chips = Array.from(rail.querySelectorAll<HTMLButtonElement>("[data-tag]"));
-		const cards = Array.from(all.querySelectorAll<HTMLElement>("[data-tags]"));
-
-		rail.addEventListener("click", (event) => {
-			const chip = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-tag]");
-			if (!chip) return;
-
-			const tag = chip.dataset.tag ?? "";
-			for (const c of chips) {
-				const on = c === chip;
-				c.setAttribute("aria-pressed", String(on));
-				c.classList.toggle("np__chip--current", on);
-			}
-
-			front.hidden = tag !== "";
-			all.hidden = tag === "";
-			for (const card of cards) {
-				card.hidden = tag !== "" && !(card.dataset.tags ?? "").split(" ").includes(tag);
-			}
-		});
-	}
-
 	// The wire's live segments. Date and time ship EMPTY in the HTML on purpose: a
 	// value baked in at build would be wrong the moment it shipped, and stamping one
 	// would make every rebuild produce a different file. They run in the PAPER's
@@ -261,7 +243,6 @@ const issueLine = [
 	}
 
 	function init() {
-		wireFilter();
 		startWire();
 	}
 
@@ -312,16 +293,6 @@ const issueLine = [
 </style>
 
 <style>
-	/* The [hidden] attribute is only `display: none` in the UA sheet, at the lowest
-	   specificity there is — so any class here that sets `display` silently defeats
-	   it. That is not theoretical: .np__rail is display:flex, which left the category
-	   chips on screen for a no-JS visitor, and .row/.card set display too, so
-	   filtered-out stories stayed visible AND stayed in the accessibility tree.
-	   Restate the rule at a specificity that wins. */
-	[hidden] {
-		display: none !important;
-	}
-
 	.np {
 		max-width: var(--container-max);
 		margin-inline: auto;
