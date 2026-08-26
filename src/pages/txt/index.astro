@@ -1,90 +1,655 @@
 ---
+// /txt as a news front page, in the shape of a modern news product rather than a
+// printed sheet: a lead with its art, a "Latest" rail beside it, a featured strip
+// of thumbnail rows beneath, all on warm paper in rounded surfaces.
+//
+// The chrome (top bar, wordmark, category rail, paper) is NewsroomLayout's.
+// This page owns the edit: which story leads, what sits in the rail, what runs
+// as a row.
+//
+// TWO VIEWS ship server-rendered. [data-view="front"] is the curated edit;
+// [data-view="all"] is a plain grid of every story, hidden until a category chip
+// is pressed. The layout's script swaps them. Rendering both is what lets the
+// filter be honest — see the note in NewsroomLayout's script.
+//
+// Type is plain h2/h3/p on scoped classes rather than DS Heading/Text:
+// heading.css authors `.ds-heading.ds-heading` (0,2,0) to win "regardless of
+// stylesheet import order", while Astro scopes page CSS with :where(), leaving a
+// scoped headline rule at (0,1,0) — so the DS's line-height: 1.5 would beat every
+// headline here. Text is out for the same reason (spaced=true → line-height 1.75).
+// CONVENTIONS gate rule 3, page art direction.
 import { getCollection } from "astro:content";
-import Layout from "../../layouts/Layout.astro";
-import Anchor from "@whois/design-system/Anchor";
-import Heading from "@whois/design-system/Heading";
-import Text from "@whois/design-system/Text";
-import Flex from "@whois/design-system/Flex";
-// DS component styles are not global — import once for this page.
-import "@whois/design-system/styles.css";
+import NewsroomLayout from "../../layouts/NewsroomLayout.astro";
+import { leadImage } from "../../lib/leadImage";
+import { intrinsicSize } from "../../lib/intrinsicSize";
+import { getTickerData, asOfLabel } from "../../lib/ticker";
 
 const posts = (await getCollection("txt"))
 	.filter((post) => import.meta.env.PROD === false || !post.data.draft)
 	.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 
+type Post = (typeof posts)[number];
+
+// Pure slicing: cannot throw, cannot leave a hole, at any post count. Each region
+// renders only inside its own length guard, so an absent region takes its heading
+// and its rules with it.
+const lead: Post | null = posts[0] ?? null;
+const rail: Post[] = posts.slice(1, 3);
+const featured: Post[] = posts.slice(3);
+
+/** A story's art: the first image in its body, sized from the file at build time
+ *  so the browser reserves the right box before the bytes land. */
+function artOf(post: Post) {
+	const found = leadImage(post);
+	if (!found) return null;
+	const size = intrinsicSize(found.src);
+	return { src: found.src, w: size?.w, h: size?.h };
+}
+const leadArt = lead ? artOf(lead) : null;
+
+/** The rail story that gets the image-card treatment: the first one with art. */
+const railCardId = rail.find((post) => artOf(post))?.id ?? null;
+
+const year = (post: Post) => new Date(post.data.date).getUTCFullYear();
+const volume = posts.length ? year(posts[0]) - year(posts[posts.length - 1]) + 1 : undefined;
+
+/** Roman numeral for the edition label in the ticker. NewsroomLayout formats the
+ *  masthead's own copy; this one is for the wire segment's text. */
+function toRomanLabel(n: number): string {
+	const table: Array<[number, string]> = [
+		[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
+		[100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
+		[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+	];
+	let rest = Math.floor(n);
+	let out = "";
+	for (const [value, numeral] of table) {
+		while (rest >= value) { out += numeral; rest -= value; }
+	}
+	return out;
+}
+
+// Every tag in the collection, most-used first, for the category rail.
+const tagCounts = new Map<string, number>();
+for (const post of posts) {
+	for (const tag of post.data.tags) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+}
+const allTags = [...tagCounts.entries()]
+	.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+	.map(([tag]) => tag);
+
+// Weather + quotes, fetched daily by .github/workflows/ticker.yml and read here
+// at build time. A source that failed is absent rather than zeroed, so the
+// segments below are built by filter rather than by placeholder.
+const wire = getTickerData();
+const asOf = asOfLabel(wire.updated, wire.timeZone);
+const signed = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}`;
+
+const tickerSegments = [
+	{ label: "Date", live: "date" as const },
+	{ label: "Time", live: "time" as const },
+	{ label: "Location", value: `${wire.city}, ${wire.region}` },
+	wire.weather
+		? { label: "Weather", value: `${wire.weather.tempF}\u00B0F ${wire.weather.label}` }
+		: null,
+	...wire.quotes.map((q) => ({
+		label: q.symbol,
+		value:
+			q.changePct === null
+				? `$${q.price.toFixed(2)}`
+				: `$${q.price.toFixed(2)} ${signed(q.changePct)}%`,
+		tone:
+			q.changePct === null || q.changePct === 0
+				? undefined
+				: ((q.changePct > 0 ? "up" : "down") as "up" | "down"),
+	})),
+	volume && posts.length
+		? { label: "Edition", value: `Vol. ${toRomanLabel(volume)} \u00B7 No. ${posts.length}` }
+		: null,
+	// Stamps the whole strip. The date and time segments are live, but weather and
+	// quotes are as of the last daily run — labelling that is the difference between
+	// a stale number and a wrong one.
+	asOf ? { label: "Wire", value: `Markets & weather as of ${asOf}` } : null,
+].filter(Boolean) as Array<{
+	label: string;
+	value?: string;
+	live?: "date" | "time";
+	tone?: "up" | "down";
+}>;
+
 const fmt = (d: Date) =>
-	new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+	new Date(d).toLocaleDateString("en-US", {
+		year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
+	});
 const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
+
+/** Sentence-case in the DOM, uppercased in CSS: .toUpperCase() would make a
+ *  screen reader spell "AI" out letter by letter. */
+const kickerOf = (post: Post) => post.data.tags[0]?.replace(/-/g, " ") ?? "";
+const href = (post: Post) => `/txt/${post.id}`;
 ---
 
-<Layout title="txt — Tristan Timblin" description="Writing by Tristan Timblin.">
-	<main class="txt-index">
-		<Heading as="h1" size={4} class="txt-index__title">txt</Heading>
-		{
-			posts.length > 0 ? (
-				<Flex as="ul" direction="column" alignItems="stretch" gap={5} class="txt-index__list">
-					{posts.map((post) => (
-						<li class="txt-index__item">
-							<Anchor href={`/txt/${post.id}`} class="txt-index__link">
-								<Heading as="h2" size={2}>
-									{post.data.icon && <span aria-hidden="true">{post.data.icon} </span>}
-									{post.data.title}
-								</Heading>
-							</Anchor>
-							<Text as="time" size={1} variant="tertiary" family="numeric" class="txt-index__date" datetime={iso(post.data.date)}>
-								{fmt(post.data.date)}
-							</Text>
-							<Text as="p" size={4} variant="secondary">{post.data.excerpt}</Text>
-						</li>
-					))}
-				</Flex>
-			) : (
-				<Text as="p" variant="tertiary">No posts yet.</Text>
-			)
-		}
-	</main>
-</Layout>
+<NewsroomLayout
+	title="The Ergonomist — Tristan Timblin"
+	description="Writing by Tristan Timblin."
+	wordmarkLead="The"
+	wordmark="Ergonomist"
+	volume={volume}
+	issue={posts.length || undefined}
+	dateline={lead?.data.date}
+	tags={allTags}
+	ticker={tickerSegments}
+>
+	{
+		posts.length === 0 ? (
+			<p class="np-empty">No stories yet.</p>
+		) : (
+			<>
+				<div data-view="front">
+					<div class="front">
+						{/* LEAD — text column, then art, mirroring the reference's
+						    left-rail-plus-hero. No data-reveal: the art is this page's LCP
+						    element, and src/lib/reveal.ts is emphatic that gating one pays a
+						    real metric to hide a cosmetic one. */}
+						<article class="lead">
+							<p class="kicker">
+								{lead.data.icon && (
+									<span class="dingbat" aria-hidden="true">{lead.data.icon}</span>
+								)}
+								{kickerOf(lead)}
+							</p>
+							<h2 class="lead__hed">
+								<a class="stretch" href={href(lead)}>{lead.data.title}</a>
+							</h2>
+							<p class="meta">
+								<time datetime={iso(lead.data.date)}>{fmt(lead.data.date)}</time>
+							</p>
+							<p class="lead__deck">{lead.data.excerpt}</p>
+
+							{lead.data.tags.length > 0 && (
+								<div class="filed">
+									<p class="filed__label">Filed under</p>
+									<ul class="filed__list">
+										{lead.data.tags.map((tag) => (
+											<li class="filed__tag">{tag.replace(/-/g, " ")}</li>
+										))}
+									</ul>
+								</div>
+							)}
+
+						</article>
+
+						{leadArt && (
+							<figure class="lead__art">
+								<img
+									src={leadArt.src}
+									alt=""
+									width={leadArt.w}
+									height={leadArt.h}
+									loading="eager"
+									fetchpriority="high"
+								/>
+							</figure>
+						)}
+
+						{rail.length > 0 && (
+							<aside class="rail" aria-labelledby="rail-heading">
+								<h2 class="rail__heading" id="rail-heading">Latest</h2>
+								{rail.map((post, i) => {
+									const art = artOf(post);
+									// The card treatment goes to the first rail story that
+									// actually HAS art, not to index 0 — art does not track
+									// position, and pinning it to the first slot left the rail
+									// as two bare rows while a picture sat unused below it.
+									return post.id === railCardId && art ? (
+										<article class="railcard" data-reveal data-reveal-group="np-rail" data-reveal-order={i}>
+											<figure class="railcard__art">
+												<img src={art.src} alt="" width={art.w} height={art.h} loading="lazy" decoding="async" />
+											</figure>
+											<h3 class="railcard__hed">
+												<a class="stretch" href={href(post)}>{post.data.title}</a>
+											</h3>
+											<p class="meta">
+												<time datetime={iso(post.data.date)}>{fmt(post.data.date)}</time>
+											</p>
+										</article>
+									) : (
+										<article class="railrow" data-reveal data-reveal-group="np-rail" data-reveal-order={i}>
+											<h3 class="railrow__hed">
+												<a class="stretch" href={href(post)}>{post.data.title}</a>
+											</h3>
+											<p class="meta">
+												<time datetime={iso(post.data.date)}>{fmt(post.data.date)}</time>
+											</p>
+										</article>
+									);
+								})}
+							</aside>
+						)}
+					</div>
+
+					{featured.length > 0 && (
+						<section class="featured" aria-labelledby="featured-heading">
+							<h2 class="featured__heading" id="featured-heading">Featured</h2>
+							<ul class="featured__list" data-reveal data-reveal-group="np-featured">
+								{featured.map((post) => {
+									const art = artOf(post);
+									return (
+										<li class="row">
+											{art ? (
+												<figure class="row__thumb">
+													<img src={art.src} alt="" width={art.w} height={art.h} loading="lazy" decoding="async" />
+												</figure>
+											) : (
+												<span class="row__thumb row__thumb--empty" aria-hidden="true">
+													{post.data.icon}
+												</span>
+											)}
+											<div class="row__body">
+												<p class="kicker">{kickerOf(post)}</p>
+												<h3 class="row__hed">
+													<a class="stretch" href={href(post)}>{post.data.title}</a>
+												</h3>
+												<p class="meta">
+													<time datetime={iso(post.data.date)}>{fmt(post.data.date)}</time>
+												</p>
+											</div>
+										</li>
+									);
+								})}
+							</ul>
+						</section>
+					)}
+				</div>
+
+				{/* Filtered results. Hidden until a chip is pressed; `hidden` keeps it out
+				    of the accessibility tree so each story exposes one link at a time. */}
+				<div data-view="all" hidden>
+					<h2 class="featured__heading">All stories</h2>
+					<ul class="cards">
+						{posts.map((post) => {
+							const art = artOf(post);
+							return (
+								<li class="card" data-tags={post.data.tags.join(" ")}>
+									{art && (
+										<figure class="card__art">
+											<img src={art.src} alt="" width={art.w} height={art.h} loading="lazy" decoding="async" />
+										</figure>
+									)}
+									<div class="card__body">
+										<p class="kicker">
+											{post.data.icon && <span class="dingbat" aria-hidden="true">{post.data.icon}</span>}
+											{kickerOf(post)}
+										</p>
+										<h3 class="card__hed">
+											<a class="stretch" href={href(post)}>{post.data.title}</a>
+										</h3>
+										<p class="meta">
+											<time datetime={iso(post.data.date)}>{fmt(post.data.date)}</time>
+										</p>
+										<p class="card__deck">{post.data.excerpt}</p>
+									</div>
+								</li>
+							);
+						})}
+					</ul>
+				</div>
+			</>
+		)
+	}
+</NewsroomLayout>
 
 <style>
-	.txt-index {
-		max-width: 68ch;
-		margin-inline: auto;
-		padding-inline: var(--container-pad);
-		padding-block: var(--space-7);
+	/* The [hidden] attribute is only `display: none` in the UA sheet, at the lowest
+	   specificity there is — so any class here that sets `display` silently defeats
+	   it. That is not theoretical: .np__rail is display:flex, which left the category
+	   chips on screen for a no-JS visitor, and .row/.card set display too, so
+	   filtered-out stories stayed visible AND stayed in the accessibility tree.
+	   Restate the rule at a specificity that wins. */
+	[hidden] {
+		display: none !important;
 	}
 
-	.txt-index__title {
-		margin-bottom: var(--space-7);
+	/* ---- shared atoms ------------------------------------------------------ */
+
+	.kicker,
+	.meta {
+		margin: 0;
+		font-size: var(--font-size-1);
+		line-height: 1.3;
+		color: var(--text-tertiary);
+	}
+	.kicker {
+		font-family: var(--font-subheading);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.meta {
+		font-family: var(--font-ui);
 	}
 
-	.txt-index__list {
+	/* The post's emoji as a section mark. Emoji render in the system colour font
+	   and ignore our faces, so inside a Migra headline they break its rhythm;
+	   on the kicker line they read as the dingbat they always were. */
+	.dingbat {
+		font-size: 1.1em;
+		line-height: 1;
+		margin-inline-end: var(--space-1);
+	}
+
+	/* Every headline is Migra. Family and weight travel together: two discrete
+	   cuts, and font-synthesis-weight is off globally. */
+	.lead__hed,
+	.railcard__hed,
+	.railrow__hed,
+	.row__hed,
+	.card__hed {
+		margin: 0;
+		font-family: var(--font-heading);
+		font-weight: var(--font-heading-weight);
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+		color: var(--text-primary);
+		text-wrap: balance;
+	}
+
+	/* One link per story, whole surface clickable. The ::after overlay needs a
+	   positioned ancestor, set explicitly on each container so it never depends on
+	   the `translate` reveal.css applies transiently to [data-reveal] elements. */
+	.stretch {
+		color: inherit;
+		text-decoration: none;
+	}
+	.stretch::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+	.lead,
+	.railcard,
+	.railrow,
+	.row,
+	.card {
+		position: relative;
+	}
+	.lead:hover .lead__hed,
+	.railcard:hover .railcard__hed,
+	.railrow:hover .railrow__hed,
+	.row:hover .row__hed,
+	.card:hover .card__hed {
+		color: var(--accent);
+	}
+
+	figure {
+		margin: 0;
+	}
+	img {
+		display: block;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+	}
+
+	ul {
 		list-style: none;
 		margin: 0;
 		padding: 0;
 	}
 
-	/* Quiet divider between entries; the last one carries none. */
-	.txt-index__item {
-		padding-bottom: var(--space-5);
-		border-bottom: 1px solid var(--border-color);
-	}
-	.txt-index__item:last-child {
-		padding-bottom: 0;
-		border-bottom: 0;
+	/* ---- front page grid --------------------------------------------------- */
+
+	.front {
+		display: grid;
+		gap: var(--space-6);
 	}
 
-	/* The Anchor wraps a Heading; keep it block + inherit color so the title
-	   isn't tinted like a body link, and let the Heading own the type. */
-	.txt-index__link {
-		display: block;
-		color: var(--text-primary);
+	@media (min-width: 1024px) {
+		/* text | hero | rail — the reference's three-track front page. The hero
+		   takes the largest share; the two text columns are near-equal. */
+		.front {
+			grid-template-columns: minmax(0, 3fr) minmax(0, 6fr) minmax(0, 3fr);
+			gap: var(--grid-gap);
+			align-items: start;
+		}
+		/* Column rules. `align-items: start` leaves each track only as tall as its own
+		   content, so a border on the column would stop wherever that column happened
+		   to end — a rule that quits halfway down the page reads as a mistake. The
+		   grid itself carries them instead, painted as two full-height hairlines
+		   positioned on the gutters, so they run the depth of the row whatever the
+		   columns do. */
+		.front {
+			position: relative;
+		}
+		.front::before,
+		.front::after {
+			content: "";
+			position: absolute;
+			inset-block: 0;
+			inline-size: 1px;
+			background: var(--paper-line);
+		}
+		/* Exactly the quarter points, with no gap correction — and that is not an
+		   approximation. For tracks of 3u/6u/3u with equal gaps g, the first gutter's
+		   centre is 3u + g/2, and the container is 12u + 2g, so C/4 = 3u + g/2 to the
+		   pixel whatever g is. Subtracting g/2 (the first attempt) put both rules on
+		   the column edges instead, 12px adrift. */
+		.front::before {
+			inset-inline-start: 25%;
+		}
+		.front::after {
+			inset-inline-start: 75%;
+		}
 	}
-	.txt-index__link:hover {
-		color: var(--accent);
+	@media (min-width: 768px) and (max-width: 1023px) {
+		.front {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			gap: var(--grid-gap);
+			align-items: start;
+		}
+		.rail {
+			grid-column: 1 / -1;
+		}
 	}
 
-	.txt-index__date {
-		display: block;
-		margin-block: var(--space-1) var(--space-2);
+	/* ---- lead -------------------------------------------------------------- */
+
+	.lead__hed {
+		margin-block: var(--space-3) var(--space-3);
+		font-size: clamp(1.75rem, 2.6vw, 2.375rem);
+	}
+
+	.lead__deck {
+		margin: var(--space-3) 0 0;
+		font-family: var(--font-body);
+		font-size: var(--font-size-3);
+		line-height: 1.6;
+		color: var(--text-secondary);
+	}
+
+	/* 16/9, matching the collection's art (1200x674, x675, x728 — 1.65 to 1.78).
+	   A 4/3 box here cropped the sides clean off a screenshot, which for a picture
+	   of a terminal destroys the actual content. */
+	.lead__art {
+		border-radius: var(--border-radius-3);
+		overflow: hidden;
+		background: var(--paper-sunk);
+		aspect-ratio: 16 / 9;
+	}
+
+	/* The lead's own categories. This slot held a list of the other headlines,
+	   mirroring the reference's "Live Updates" — but with five stories the rail and
+	   the featured strip already show each of them exactly once, so that list was a
+	   second and third link to the same places. Tags are real metadata about the
+	   lead and duplicate nothing. */
+	.filed {
+		margin-block-start: var(--space-5);
+		padding-block-start: var(--space-4);
+		border-block-start: 1px solid var(--paper-line);
+	}
+	.filed__label {
+		margin: 0 0 var(--space-3);
+		font-family: var(--font-ui);
+		font-size: var(--font-size-1);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--text-tertiary);
+	}
+	.filed__list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+	.filed__tag {
+		padding: var(--space-2) var(--space-3);
+		border-radius: var(--border-radius-3);
+		background: var(--paper-sunk);
+		font-family: var(--font-ui);
+		font-size: var(--font-size-1);
+		line-height: 1;
+		color: var(--text-secondary);
+	}
+
+	/* ---- rail -------------------------------------------------------------- */
+
+	.rail {
+		display: grid;
+		gap: var(--space-3);
+		align-content: start;
+	}
+	.rail__heading,
+	.featured__heading {
+		margin: 0 0 var(--space-3);
+		padding-block-end: var(--space-2);
+		border-block-end: 1px solid var(--paper-line);
+		font-family: var(--font-ui);
+		font-weight: 600;
+		font-size: var(--font-size-1);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--text-tertiary);
+	}
+
+	.railcard__art {
+		border-radius: var(--border-radius-2);
+		overflow: hidden;
+		aspect-ratio: 16 / 9;
+		background: var(--paper-sunk);
+		margin-block-end: var(--space-3);
+	}
+	.railcard__hed {
+		font-size: var(--font-size-4);
+	}
+	.railcard .meta,
+	.railrow .meta {
+		margin-block-start: var(--space-2);
+	}
+
+	/* Compact rows in a sunk surface, as in the reference's Latest News list. */
+	.railrow {
+		padding: var(--space-4);
+		border-radius: var(--border-radius-2);
+		background: var(--paper-sunk);
+	}
+	.railrow__hed {
+		font-size: var(--font-size-3);
+	}
+
+	/* ---- featured rows ----------------------------------------------------- */
+
+	.featured {
+		margin-block-start: var(--space-8);
+		padding-block-start: var(--space-5);
+		border-block-start: 1px solid var(--paper-line);
+	}
+
+	.featured__list {
+		display: grid;
+		gap: var(--space-3);
+	}
+	@media (min-width: 768px) {
+		.featured__list {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: var(--grid-gap);
+		}
+	}
+
+	/* thumbnail + headline, the reference's most reusable pattern. */
+	.row {
+		display: grid;
+		grid-template-columns: 96px minmax(0, 1fr);
+		gap: var(--space-4);
+		align-items: center;
+		padding: var(--space-3);
+		border-radius: var(--border-radius-2);
+		transition: background 0.15s ease;
+	}
+	.row:hover {
+		background: var(--paper-sunk);
+	}
+	.row__thumb {
+		aspect-ratio: 1;
+		border-radius: var(--border-radius-1);
+		overflow: hidden;
+		background: var(--paper-sunk);
+	}
+	/* A story with no art still gets a square, filled with its dingbat, so the row
+	   grid never collapses into a ragged two-shape list. */
+	.row__thumb--empty {
+		display: grid;
+		place-items: center;
+		font-size: var(--font-size-6);
+		line-height: 1;
+	}
+	.row__hed {
+		margin-block: var(--space-1) var(--space-1);
+		font-size: var(--font-size-4);
+	}
+
+	/* ---- filtered card grid ------------------------------------------------ */
+
+	.cards {
+		display: grid;
+		gap: var(--grid-gap);
+	}
+	@media (min-width: 640px) {
+		.cards {
+			grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		}
+	}
+
+	.card {
+		display: flex;
+		flex-direction: column;
+		border-radius: var(--border-radius-3);
+		background: var(--paper-raised);
+		border: 1px solid var(--paper-line);
+		overflow: hidden;
+	}
+	.card__art {
+		aspect-ratio: 16 / 9;
+		background: var(--paper-sunk);
+	}
+	.card__body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		padding: var(--space-4);
+	}
+	.card__hed {
+		font-size: var(--font-size-4);
+	}
+	.card__deck {
+		margin: 0;
+		font-family: var(--font-body);
+		font-size: var(--font-size-1);
+		line-height: 1.55;
+		color: var(--text-secondary);
+	}
+
+	.np-empty {
+		margin: var(--space-8) 0;
+		font-family: var(--font-body);
+		color: var(--text-tertiary);
 	}
 </style>

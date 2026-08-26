@@ -784,3 +784,34 @@ test.describe("ruler — mobile scrubber orientation", () => {
 		expect(bg.color === "rgba(0, 0, 0, 0)" || bg.color === "transparent").toBe(true);
 	});
 });
+
+test.describe("reveal — the /txt front page", () => {
+	test("8. FRONT PAGE: /txt settles on a hard load", async ({ page }) => {
+		// The index gained reveal targets when it became a broadsheet (the secondary
+		// band and the briefs rail; the masthead and lead are deliberately ungated
+		// because the lead art is this page's LCP element).
+		//
+		// Tests 6 and 7 already round-trip through /txt, but only via ClientRouter —
+		// and on that path teardownReveal() marks every target "in" and disarms before
+		// the new page mounts, so they would pass even if the reveal were broken here.
+		// A HARD load is the path that actually exercises the coordinator on this page.
+		//
+		// The total > 0 assertion is the point: before the redesign /txt had zero
+		// targets, so `faded === 0` was vacuously true. Without this the suite would
+		// silently keep passing if the targets were ever dropped.
+		await page.goto("/txt");
+		await settleReveal(page);
+
+		const state = await readReveal(page);
+		expect(state.total, "the front page should have reveal targets").toBeGreaterThan(0);
+		expect(state.faded).toBe(0);
+
+		// `pending` is deliberately NOT asserted. Both bands sit below the fold and
+		// this test never scrolls, so their IntersectionObservers never fire and the
+		// coordinator never marks them "in" — they reach opacity 1 because the inline
+		// 3s backstop drops the armed class instead. That IS the terminality property
+		// this file exists to guard: measured here as pending 3, faded 0. Requiring
+		// pending 0 would assert the reveal ran, which on an unscrolled page is not
+		// something the mechanism promises.
+	});
+});

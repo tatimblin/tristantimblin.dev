@@ -1,0 +1,629 @@
+---
+// The chrome for /txt as a NEWS PRODUCT rather than a printed sheet: a slim top
+// bar (nav pills, centred wordmark, issue/date), a category rail built from the
+// collection's tags, and the warm paper the whole thing sits on. The stories
+// themselves arrive through <slot />, the same split TxtPostLayout uses.
+//
+// Replaces the earlier BroadsheetLayout. The Oxford rules, the 168px nameplate
+// and the drop cap belonged to a print pastiche; this is the screen equivalent,
+// so the nameplate shrinks to a wordmark and the page gains radii and surfaces.
+import Layout from "./Layout.astro";
+import "@whois/design-system/styles.css";
+
+interface Props {
+	title: string;
+	description?: string;
+	/** Small caps that lead the wordmark, e.g. "The". */
+	wordmarkLead?: string;
+	/** The publication's name, set in the hero face. */
+	wordmark: string;
+	volume?: number;
+	issue?: number;
+	dateline?: Date;
+	/** Every tag in the collection, for the category rail. */
+	tags?: string[];
+	/** Ticker segments. Each is a label plus its value; `live` marks the two the
+	 *  client script fills (date and time), which ship empty. */
+	ticker?: Array<{
+		label: string;
+		value?: string;
+		live?: "date" | "time";
+		/** Market direction, for the up/down tint. */
+		tone?: "up" | "down";
+	}>;
+	/** Publication city, printed beside the live clock. */
+	city?: string;
+	/** IANA zone the clock runs in. The paper's own time, not the reader's. */
+	timeZone?: string;
+}
+
+const {
+	title,
+	description,
+	wordmarkLead,
+	wordmark,
+	volume,
+	issue,
+	dateline,
+	tags = [],
+	ticker = [],
+	city = "San Francisco",
+	timeZone = "America/Los_Angeles",
+} = Astro.props;
+
+const ROMAN: Array<[number, string]> = [
+	[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
+	[100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
+	[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+];
+function toRoman(n: number): string {
+	if (!Number.isFinite(n) || n < 1) return "";
+	let rest = Math.floor(n);
+	let out = "";
+	for (const [value, numeral] of ROMAN) {
+		while (rest >= value) { out += numeral; rest -= value; }
+	}
+	return out;
+}
+
+// UTC: frontmatter dates are bare YYYY-MM-DD, parsed as UTC midnight. Formatting
+// them in the build machine's zone prints the day before anywhere west of UTC.
+const fmtLong = (d: Date) =>
+	new Date(d).toLocaleDateString("en-US", {
+		weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+	});
+const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
+
+// Real destinations only — the nav mirrors the reference's tab group, but every
+// pill has somewhere to go.
+const nav = [
+	{ label: "Home", href: "/" },
+	{ label: "Writing", href: "/txt", current: true },
+	{ label: "Gallery", href: "/gallery" },
+];
+
+const issueLine = [
+	volume ? `Vol. ${toRoman(volume)}` : null,
+	issue ? `No. ${issue}` : null,
+].filter(Boolean).join(" · ");
+---
+
+<Layout title={title} description={description}>
+	<div class="np">
+		<header class="np__bar">
+			<nav class="np__nav" aria-label="Primary">
+				{nav.map((l) => (
+					<a
+						class:list={["np__pill", l.current && "np__pill--current"]}
+						href={l.href}
+						aria-current={l.current ? "page" : undefined}
+					>
+						{l.label}
+					</a>
+				))}
+			</nav>
+
+			<a class="np__wordmark" href="/txt" aria-label={`${wordmarkLead ?? ""} ${wordmark}`.trim()}>
+				{wordmarkLead && <span class="np__wordmark-lead" aria-hidden="true">{wordmarkLead}</span>}
+				<span class="np__wordmark-name" aria-hidden="true">{wordmark}</span>
+			</a>
+
+			<div class="np__meta">
+				{dateline && (
+					<time class="np__date" datetime={iso(dateline)}>{fmtLong(dateline)}</time>
+				)}
+				{issueLine && <span class="np__issue">{issueLine}</span>}
+			</div>
+		</header>
+
+		{
+			ticker.length > 0 && (
+				/* Furniture, not navigation: nothing in here is a link, so the strip adds
+				   no second route to anything and stays out of the tab order. It is
+				   aria-hidden because a screen reader announcing a scrolling loop of
+				   market figures on entry is noise — the same data has no meaning read
+				   aloud out of order. */
+				<div class="ticker" data-tz={timeZone} aria-hidden="true">
+					<span class="ticker__flag">Wire</span>
+					<div class="ticker__window">
+						<div class="ticker__track" data-ticker-track>
+							{/* Rendered twice so the loop can translate exactly -50% and land
+							    back where it started with no visible seam. */}
+							{[0, 1].map((copy) => (
+								<div class="ticker__run">
+									{ticker.map((seg) => (
+										<span class="ticker__item">
+											<span class="ticker__mark">&#9670;</span>
+											<span class="ticker__label">{seg.label}</span>
+											<span
+												class:list={["ticker__value", seg.tone && `ticker__value--${seg.tone}`]}
+												data-live={seg.live}
+												data-copy={seg.live ? String(copy) : undefined}
+											>
+												{seg.value}
+											</span>
+										</span>
+									))}
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			)
+		}
+
+		{
+			tags.length > 0 && (
+				// Hidden until the script below unhides it. A control that cannot work
+				// should not be on screen: without JS these would look like buttons and
+				// do nothing, so a no-JS visitor simply gets the full front page.
+				<div class="np__rail" data-chip-rail hidden>
+					<button class="np__chip np__chip--current" data-tag="" aria-pressed="true">
+						All
+					</button>
+					{tags.map((tag) => (
+						<button class="np__chip" data-tag={tag} aria-pressed="false">
+							{tag.replace(/-/g, " ")}
+						</button>
+					))}
+				</div>
+			)
+		}
+
+		<slot />
+	</div>
+</Layout>
+
+<script>
+	// Category filter. The page ships BOTH views server-rendered: the curated front
+	// page ([data-view="front"]) and a plain grid of every story ([data-view="all"]),
+	// with the grid hidden. Selecting a tag swaps which view is live and hides the
+	// non-matching cards inside the grid.
+	//
+	// Swapping views rather than filtering the curated layout in place is what keeps
+	// this honest: a front page is an edit — a lead, a rail, a featured strip — and
+	// pulling three of five stories out of it leaves holes shaped like the stories
+	// that were removed. A filtered result is a list, so it is rendered as one.
+	//
+	// `hidden` (not opacity/visibility) so the inactive view leaves the accessibility
+	// tree entirely and each story exposes exactly one link at a time.
+	function wireFilter() {
+		const rail = document.querySelector<HTMLElement>("[data-chip-rail]");
+		if (!rail || rail.dataset.wired) return;
+		rail.dataset.wired = "true";
+		rail.hidden = false;
+
+		const front = document.querySelector<HTMLElement>('[data-view="front"]');
+		const all = document.querySelector<HTMLElement>('[data-view="all"]');
+		if (!front || !all) return;
+
+		const chips = Array.from(rail.querySelectorAll<HTMLButtonElement>("[data-tag]"));
+		const cards = Array.from(all.querySelectorAll<HTMLElement>("[data-tags]"));
+
+		rail.addEventListener("click", (event) => {
+			const chip = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-tag]");
+			if (!chip) return;
+
+			const tag = chip.dataset.tag ?? "";
+			for (const c of chips) {
+				const on = c === chip;
+				c.setAttribute("aria-pressed", String(on));
+				c.classList.toggle("np__chip--current", on);
+			}
+
+			front.hidden = tag !== "";
+			all.hidden = tag === "";
+			for (const card of cards) {
+				card.hidden = tag !== "" && !(card.dataset.tags ?? "").split(" ").includes(tag);
+			}
+		});
+	}
+
+	// The wire's live segments. Date and time ship EMPTY in the HTML on purpose: a
+	// value baked in at build would be wrong the moment it shipped, and stamping one
+	// would make every rebuild produce a different file. They run in the PAPER's
+	// timezone rather than the reader's — an edition is published from somewhere,
+	// and the reader's own wall clock is not news.
+	//
+	// querySelectorAll, not querySelector: the track renders twice for the seamless
+	// loop, so each live segment exists twice and both copies must agree.
+	let wireTimer: number | undefined;
+	function startWire() {
+		const track = document.querySelector<HTMLElement>("[data-ticker-track]");
+		if (!track) return;
+		const timeZone = track.closest<HTMLElement>(".ticker")?.dataset.tz || undefined;
+
+		const dateFmt = new Intl.DateTimeFormat("en-US", {
+			weekday: "short", month: "short", day: "numeric", year: "numeric", timeZone,
+		});
+		const timeFmt = new Intl.DateTimeFormat("en-US", {
+			hour: "numeric", minute: "2-digit", timeZone,
+		});
+
+		const tick = () => {
+			const now = new Date();
+			for (const el of track.querySelectorAll<HTMLElement>('[data-live="date"]')) {
+				el.textContent = dateFmt.format(now);
+			}
+			for (const el of track.querySelectorAll<HTMLElement>('[data-live="time"]')) {
+				el.textContent = timeFmt.format(now);
+			}
+		};
+
+		tick();
+		window.clearInterval(wireTimer);
+		// Align to the next minute, then run once a minute — a per-second interval
+		// would repaint 59 times for no visible change.
+		window.setTimeout(() => {
+			tick();
+			wireTimer = window.setInterval(tick, 60_000);
+		}, (60 - new Date().getSeconds()) * 1000);
+	}
+
+	function init() {
+		wireFilter();
+		startWire();
+	}
+
+	init();
+	document.addEventListener("astro:page-load", init);
+	document.addEventListener("astro:before-swap", () => window.clearInterval(wireTimer));
+</script>
+
+<style is:global>
+	/* PAPER — scoped to pages that render this layout.
+	 *
+	 * `is:global` because the page background lives on <body>, which no scoped
+	 * selector here can reach; the rule still only ships in the stylesheet of a page
+	 * that includes this component, so the homepage, gallery and design-system
+	 * catalogue keep the site's cool white. That scoping is deliberate: the homepage
+	 * hero samples --color-bg into a WebGL canvas each frame, so retuning the global
+	 * background would re-tint the halftone scene as a side effect.
+	 *
+	 * Warm, low-chroma cream in light; a warm near-black in dark, so the hue stays
+	 * consistent across the toggle rather than flipping to the site's cool blue. */
+	.maximeheckel-light {
+		--paper: oklch(97.4% 0.016 84);
+		--paper-raised: oklch(99.3% 0.008 84);
+		--paper-sunk: oklch(94.6% 0.022 84);
+		--paper-line: oklch(89% 0.020 84);
+	}
+	.maximeheckel-dark {
+		--paper: oklch(17.5% 0.008 84);
+		--paper-raised: oklch(22.5% 0.010 84);
+		--paper-sunk: oklch(14.5% 0.007 84);
+		--paper-line: oklch(31% 0.012 84);
+	}
+	/* Rebind the TOKENS, not just body's background. SiteFooter paints
+	   `background: var(--color-bg)` of its own, so setting the background alone left
+	   a cool-white band across the bottom of a cream page. Redefining the tokens on
+	   <body> means the footer, any DS component, and anything else reading them
+	   follows to paper without a per-component patch.
+	   :has() so this keys off the page's own content rather than needing a class
+	   plumbed onto <body> through Layout; where :has() is unsupported the rule drops
+	   and the page simply renders on the site's default white, which is still
+	   perfectly legible. */
+	body:has(.np) {
+		--color-bg: var(--paper);
+		--border-color: var(--paper-line);
+		--color-border: var(--paper-line);
+		background: var(--paper);
+	}
+</style>
+
+<style>
+	/* The [hidden] attribute is only `display: none` in the UA sheet, at the lowest
+	   specificity there is — so any class here that sets `display` silently defeats
+	   it. That is not theoretical: .np__rail is display:flex, which left the category
+	   chips on screen for a no-JS visitor, and .row/.card set display too, so
+	   filtered-out stories stayed visible AND stayed in the accessibility tree.
+	   Restate the rule at a specificity that wins. */
+	[hidden] {
+		display: none !important;
+	}
+
+	.np {
+		max-width: var(--container-max);
+		margin-inline: auto;
+		padding-inline: var(--container-pad);
+		padding-block: var(--space-4) var(--space-10);
+	}
+
+	/* Top bar: pills left, wordmark centred, issue/date right. Three explicit
+	   tracks rather than space-between, so the wordmark is centred on the PAGE and
+	   not merely between two groups of unequal width. */
+	.np__bar {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+		gap: var(--space-4);
+		padding-block: var(--space-3) var(--space-4);
+		/* Oxford rule: thick over thin, the pair a nameplate sits on. `double` gives
+		   two even hairlines; this is the asymmetric print version, so the weights
+		   are separate borders on a 5px box (2 + 2 + 1 under the global box-sizing). */
+		border-block-end: 1px solid var(--text-primary);
+		position: relative;
+	}
+	.np__bar::after {
+		content: "";
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: -4px;
+		block-size: 2px;
+		background: var(--text-primary);
+	}
+
+	.np__nav {
+		display: flex;
+		gap: var(--space-2);
+	}
+
+	.np__pill,
+	.np__chip {
+		font-family: var(--font-ui);
+		font-size: var(--font-size-1);
+		line-height: 1;
+		padding: var(--space-3) var(--space-4);
+		border: 1px solid transparent;
+		border-radius: var(--border-radius-3);
+		background: var(--paper-sunk);
+		color: var(--text-secondary);
+		text-decoration: none;
+		white-space: nowrap;
+		cursor: pointer;
+		transition: background 0.15s ease, color 0.15s ease;
+	}
+	.np__pill:hover,
+	.np__chip:hover {
+		color: var(--text-primary);
+		border-color: var(--paper-line);
+	}
+	.np__pill--current,
+	.np__chip--current {
+		background: var(--text-primary);
+		color: var(--paper);
+	}
+
+	/* Wordmark: small caps lead + the name in the hero face, the reference's
+	   "THE / DAILY / POST" lockup. Migra ships no italic cut, so the emphasis is
+	   carried by size and weight rather than a synthesised slant. */
+	.np__wordmark {
+		display: inline-flex;
+		align-items: baseline;
+		gap: var(--space-2);
+		text-decoration: none;
+		color: var(--text-primary);
+	}
+	.np__wordmark-lead {
+		font-family: var(--font-ui);
+		font-weight: 600;
+		font-size: var(--font-size-1);
+		text-transform: uppercase;
+		letter-spacing: 0.18em;
+		color: var(--text-tertiary);
+	}
+	.np__wordmark-name {
+		font-family: var(--font-hero);
+		font-weight: var(--font-hero-weight);
+		font-size: var(--font-size-7);
+		letter-spacing: -0.02em;
+		line-height: 1;
+	}
+
+	.np__meta {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: var(--space-1);
+		font-family: var(--font-ui);
+		font-size: var(--font-size-1);
+		line-height: 1.3;
+		color: var(--text-tertiary);
+		text-align: end;
+	}
+	.np__issue {
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+	}
+
+	/* ---- ticker ------------------------------------------------------------ */
+
+	.ticker {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-4);
+		margin-block-start: var(--space-5);
+		border-block: 1px solid var(--paper-line);
+		background: var(--paper-sunk);
+		overflow: hidden;
+	}
+
+	.ticker__flag {
+		flex: none;
+		display: grid;
+		place-items: center;
+		padding-inline: var(--space-4);
+		background: var(--text-primary);
+		color: var(--paper);
+		font-family: var(--font-ui);
+		font-weight: 600;
+		font-size: var(--font-size-1);
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+	}
+
+	.ticker__window {
+		overflow: hidden;
+		flex: 1;
+		padding-block: var(--space-3);
+	}
+	/* Same trailing fade as the category rail: a headline sheared off mid-word by a
+	   hard container edge reads as a clipping bug rather than as motion. */
+	@supports (mask-image: linear-gradient(black, black)) {
+		.ticker__window {
+			mask-image: linear-gradient(to right, #000 calc(100% - var(--space-7)), transparent 100%);
+		}
+	}
+
+	.ticker__track {
+		display: flex;
+		inline-size: max-content;
+	}
+	.ticker__run {
+		display: flex;
+		flex: none;
+	}
+
+	.ticker__item {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-3);
+		padding-inline-end: var(--space-6);
+		font-family: var(--font-body);
+		font-size: var(--font-size-1);
+		line-height: 1;
+		white-space: nowrap;
+		color: var(--text-secondary);
+	}
+	.ticker__mark {
+		color: var(--text-tertiary);
+		font-size: 0.7em;
+	}
+	/* Label in the UI face and small caps, value in the body face — the pair reads
+	   as an instrument panel rather than a sentence. */
+	.ticker__label {
+		font-family: var(--font-ui);
+		font-size: 0.85em;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--text-tertiary);
+	}
+	.ticker__value {
+		font-variant-numeric: tabular-nums;
+		color: var(--text-primary);
+	}
+	/* Until the script fills them, the live segments have no value and their label
+	   would sit next to nothing. Collapse the gap rather than showing a dangling
+	   colon-less label. */
+	.ticker__value:empty {
+		display: none;
+	}
+	/* Direction tint. The sign is already in the text ("+0.77%", "-0.39%"), so the
+	   colour reinforces rather than carries it — nothing here is legible only by
+	   hue. */
+	.ticker__value--up {
+		color: var(--success);
+	}
+	.ticker__value--down {
+		color: var(--danger);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.ticker__track {
+			/* -50% lands exactly on the start of the second copy, so the loop is
+			   seamless. Duration scales with nothing — it is a constant rate chosen to
+			   be readable, not a fixed lap time, so a longer issue simply takes longer
+			   to come round. */
+			animation: ticker-scroll 45s linear infinite;
+		}
+		/* Let a reader stop a headline they want to finish. */
+		.ticker:hover .ticker__track,
+		.ticker:focus-within .ticker__track {
+			animation-play-state: paused;
+		}
+	}
+
+	@keyframes ticker-scroll {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			transform: translateX(-50%);
+		}
+	}
+
+	/* No animation for a reader who asked for less motion — the strip becomes a
+	   plain scrollable row of the same headlines rather than disappearing. */
+	@media (prefers-reduced-motion: reduce) {
+		.ticker__window {
+			overflow-x: auto;
+		}
+		.ticker__run:last-child {
+			display: none;
+		}
+	}
+
+	/* Category rail. Scrolls horizontally rather than wrapping, so a growing tag
+	   list never pushes the front page down the screen. */
+	.np__rail {
+		display: flex;
+		gap: var(--space-2);
+		overflow-x: auto;
+		padding-block: var(--space-4);
+		margin-block-end: var(--space-5);
+		border-block-end: 1px solid var(--paper-line);
+		scrollbar-width: none;
+	}
+	.np__rail::-webkit-scrollbar {
+		display: none;
+	}
+	/* The rail scrolls but gave no sign of it — the last chip simply met the edge.
+	   Fading the trailing few pixels reads as "there is more this way" without
+	   adding a control. Masked rather than a gradient overlay so it works over the
+	   paper in either theme. */
+	@supports (mask-image: linear-gradient(black, black)) {
+		.np__rail {
+			mask-image: linear-gradient(to right, #000 calc(100% - var(--space-7)), transparent 100%);
+		}
+	}
+	.np__chip {
+		flex: none;
+	}
+
+	@media (max-width: 767px) {
+		/* The wordmark takes the full first row and centres; nav and meta share the
+		   second. A 1fr-auto-1fr bar at phone width squeezes the name to nothing. */
+		.np__bar {
+			grid-template-columns: auto auto;
+			row-gap: var(--space-3);
+		}
+		.np__wordmark {
+			grid-column: 1 / -1;
+			grid-row: 1;
+			justify-content: center;
+		}
+		.np__nav {
+			grid-row: 2;
+		}
+		.np__meta {
+			grid-row: 2;
+		}
+		.np__date {
+			display: none;
+		}
+		/* Three pills plus the issue line overrun a 358px content box, which broke
+		   "Vol. IV · No. 5" across two lines mid-label. Tighten the pills and refuse
+		   the wrap rather than letting the label shatter. */
+		.np__pill {
+			padding-inline: var(--space-3);
+		}
+		.np__issue {
+			white-space: nowrap;
+		}
+	}
+
+	@media (max-width: 767px) {
+		.ticker__flag {
+			padding-inline: var(--space-3);
+			letter-spacing: 0.08em;
+		}
+	}
+
+	/* Below ~480 even the tightened row cannot hold both. The issue line is the
+	   decorative half of the pair, so it goes and navigation stays. */
+	@media (max-width: 479px) {
+		.np__meta {
+			display: none;
+		}
+	}
+</style>
