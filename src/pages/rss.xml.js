@@ -7,7 +7,7 @@ export async function GET(context) {
 		.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 
 	return rss({
-		title: "txt — Tristan Timblin",
+		title: "The Ergonomist — Tristan Timblin",
 		description: "Writing by Tristan Timblin.",
 		site: context.site,
 		items: posts.map((post) => ({

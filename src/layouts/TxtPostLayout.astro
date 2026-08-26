@@ -31,8 +31,18 @@ interface Props {
 
 const { title, description, icon, tags = [], date, modified, image, canonical } = Astro.props;
 
+// UTC, not the build machine's zone. Frontmatter dates are bare YYYY-MM-DD, which
+// z.coerce.date() parses as UTC midnight — formatting those locally renders the day
+// BEFORE anywhere west of UTC, so a 2026-02-02 post printed "February 1, 2026" while
+// its own datetime attribute still said 2026-02-02. Pinning to UTC makes the visible
+// date and the machine-readable one agree, and keeps /txt and /txt/<slug> in step.
 const fmt = (d: Date) =>
-	new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+	new Date(d).toLocaleDateString("en-US", {
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+		timeZone: "UTC",
+	});
 const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
 ---
 
@@ -47,7 +57,7 @@ const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
 >
 	<main class="txt-post">
 		<nav class="txt-post__nav">
-			<Anchor href="/txt" arrow="left">txt</Anchor>
+			<Anchor href="/txt" arrow="left">The Ergonomist</Anchor>
 		</nav>
 
 		<article>

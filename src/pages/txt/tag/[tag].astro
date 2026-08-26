@@ -1,0 +1,134 @@
+---
+// A category's own front page: /txt/tag/<tag>.
+//
+// The point of this route existing at all is that a filtered category still gets
+// an EDIT. It renders the same <FrontPage /> as /txt, just handed a smaller pile
+// of stories — so "diy" gets a lead with its art, a rail and a featured strip,
+// not a grid of uniform cards. FrontPage ranks positionally and guards every
+// region on length, so a one-story category degrades to a lead alone with no
+// orphan headings.
+//
+// Being a real route rather than a client-side filter is what makes the category
+// chips ordinary links: they work with JS off, they are shareable, and the page
+// needs no second copy of every story in the DOM to switch between views.
+//
+// noindex: seventeen tag pages over five stories is a lot of thin archive for a
+// crawler to chew on, and none of it is content that does not already exist on
+// /txt or the posts themselves.
+import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+import NewsroomLayout from "../../../layouts/NewsroomLayout.astro";
+import FrontPage from "../../../components/txt/FrontPage.astro";
+import { getTickerData } from "../../../lib/ticker";
+
+export const getStaticPaths = (async () => {
+	const posts = (await getCollection("txt")).filter(
+		(post) => import.meta.env.PROD === false || !post.data.draft
+	);
+
+	const tags = new Set<string>();
+	for (const post of posts) for (const tag of post.data.tags) tags.add(tag);
+
+	return [...tags].map((tag) => ({
+		params: { tag },
+		props: {
+			tag,
+			// Sorted here rather than in the component: FrontPage ranks by position
+			// and does not reorder what it is given.
+			posts: posts
+				.filter((post) => post.data.tags.includes(tag))
+				.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()),
+		},
+	}));
+}) satisfies GetStaticPaths;
+
+interface Props {
+	tag: string;
+	posts: Awaited<ReturnType<typeof getCollection<"txt">>>;
+}
+
+const { tag, posts } = Astro.props;
+
+// The rail lists every category, not just this one, so a reader can move sideways
+// between them. Built from the whole collection for that reason.
+const everyPost = (await getCollection("txt")).filter(
+	(post) => import.meta.env.PROD === false || !post.data.draft
+);
+const tagCounts = new Map<string, number>();
+for (const post of everyPost) {
+	for (const t of post.data.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+}
+const allTags = [...tagCounts.entries()]
+	.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+	.map(([t]) => t);
+
+const label = tag.replace(/-/g, " ");
+
+// Volume and issue describe THIS edition — the stories on this page — so a
+// category page carries its own numbering rather than the whole collection's.
+const year = (post: (typeof posts)[number]) => new Date(post.data.date).getUTCFullYear();
+const volume = posts.length ? year(posts[0]) - year(posts[posts.length - 1]) + 1 : undefined;
+
+function toRomanLabel(n: number): string {
+	const table: Array<[number, string]> = [
+		[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
+		[100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
+		[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+	];
+	let rest = Math.floor(n);
+	let out = "";
+	for (const [value, numeral] of table) {
+		while (rest >= value) { out += numeral; rest -= value; }
+	}
+	return out;
+}
+
+const wire = getTickerData();
+const signed = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}`;
+
+const tickerSegments = [
+	{ label: "Date", live: "date" as const },
+	{ label: "Time", live: "time" as const },
+	{ label: "Location", value: `${wire.city}, ${wire.region}` },
+	wire.weather
+		? { label: "Weather", value: `${wire.weather.tempF}°F ${wire.weather.label}` }
+		: null,
+	...wire.quotes.map((q) => ({
+		label: q.symbol,
+		value:
+			q.changePct === null
+				? `$${q.price.toFixed(2)}`
+				: `$${q.price.toFixed(2)} ${signed(q.changePct)}%`,
+		tone:
+			q.changePct === null || q.changePct === 0
+				? undefined
+				: ((q.changePct > 0 ? "up" : "down") as "up" | "down"),
+	})),
+	{ label: "Section", value: label },
+	volume && posts.length
+		? { label: "Edition", value: `Vol. ${toRomanLabel(volume)} · No. ${posts.length}` }
+		: null,
+].filter(Boolean) as Array<{
+	label: string;
+	value?: string;
+	live?: "date" | "time";
+	tone?: "up" | "down";
+}>;
+---
+
+<NewsroomLayout
+	title={`${label} — The Ergonomist`}
+	description={`Writing filed under ${label}, by Tristan Timblin.`}
+	noindex
+	wordmarkLead="The"
+	wordmark="Ergonomist"
+	strapline={["Hyper Local", "Hyper Specific"]}
+	volume={volume}
+	issue={posts.length || undefined}
+	dateline={posts[0]?.data.date}
+	tags={allTags}
+	activeTag={tag}
+	ticker={tickerSegments}
+>
+	<FrontPage posts={posts} />
+</NewsroomLayout>
