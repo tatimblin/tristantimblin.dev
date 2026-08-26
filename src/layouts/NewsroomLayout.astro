@@ -35,6 +35,8 @@ interface Props {
 		/** Market direction, for the up/down tint. */
 		tone?: "up" | "down";
 	}>;
+	/** Slogan phrases for the boxed strapline under the nameplate. */
+	strapline?: string[];
 	/** Publication city, printed beside the live clock. */
 	city?: string;
 	/** IANA zone the clock runs in. The paper's own time, not the reader's. */
@@ -53,6 +55,7 @@ const {
 	dateline,
 	tags = [],
 	ticker = [],
+	strapline = [],
 	city = "San Francisco",
 	timeZone = "America/Los_Angeles",
 } = Astro.props;
@@ -120,10 +123,26 @@ const issueLine = [
 				))}
 			</nav>
 
-			<a class="np__wordmark" href="/txt" aria-label={`${wordmarkLead ?? ""} ${wordmark}`.trim()}>
-				{wordmarkLead && <span class="np__wordmark-lead" aria-hidden="true">{wordmarkLead}</span>}
-				<span class="np__wordmark-name" aria-hidden="true">{wordmark}</span>
-			</a>
+			<div class="np__lockup">
+				<a class="np__wordmark" href="/txt" aria-label={`${wordmarkLead ?? ""} ${wordmark}`.trim()}>
+					{wordmarkLead && <span class="np__wordmark-lead" aria-hidden="true">{wordmarkLead}</span>}
+					<span class="np__wordmark-name" aria-hidden="true">{wordmark}</span>
+				</a>
+
+				{strapline.length > 0 && (
+					/* The slogan box under the nameplate — a masthead ear. Real text
+					   rather than aria-hidden decoration: unlike the wire, this says
+					   something about the publication and is worth reading once. */
+					<p class="np__strapline">
+						{strapline.map((phrase, i) => (
+							<>
+								{i > 0 && <span class="np__strapline-sep" aria-hidden="true">&#9670;</span>}
+								<span>{phrase}</span>
+							</>
+						))}
+					</p>
+				)}
+			</div>
 
 			<div class="np__meta">
 				{dateline && (
@@ -355,6 +374,39 @@ const issueLine = [
 		color: var(--paper);
 	}
 
+	/* The nameplate group: wordmark with its slogan box beneath, centred as a unit
+	   in the bar's middle track. */
+	.np__lockup {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	/* The slogan box. Ruled on all four sides rather than underlined, because a box
+	   is what a masthead ear is — and the border is --text-primary, the masthead
+	   rank, so it reads as part of the nameplate rather than as another hairline. */
+	.np__strapline {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		margin: 0;
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--text-primary);
+		font-family: var(--font-ui);
+		font-weight: 600;
+		font-size: var(--font-size-1);
+		line-height: 1;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		color: var(--text-secondary);
+		white-space: nowrap;
+	}
+	.np__strapline-sep {
+		font-size: 0.6em;
+		color: var(--text-tertiary);
+	}
+
 	/* Wordmark: small caps lead + the name in the hero face, the reference's
 	   "THE / DAILY / POST" lockup. Migra ships no italic cut, so the emphasis is
 	   carried by size and weight rather than a synthesised slant. */
@@ -558,10 +610,9 @@ const issueLine = [
 			grid-template-columns: auto auto;
 			row-gap: var(--space-3);
 		}
-		.np__wordmark {
+		.np__lockup {
 			grid-column: 1 / -1;
 			grid-row: 1;
-			justify-content: center;
 		}
 		.np__nav {
 			grid-row: 2;
@@ -580,6 +631,23 @@ const issueLine = [
 		}
 		.np__issue {
 			white-space: nowrap;
+		}
+	}
+
+	/* The box is 322px on one line, and the content box is viewport minus 2x16px of
+	   gutter at this end — so it stops fitting below ~354px and clips (silently,
+	   since body is overflow-x: clip). Stack the phrases instead of shrinking the
+	   type; 380 rather than 354 so the switch happens with margin to spare rather
+	   than exactly at the failure. */
+	@media (max-width: 380px) {
+		.np__strapline {
+			flex-direction: column;
+			gap: var(--space-1);
+			white-space: normal;
+			text-align: center;
+		}
+		.np__strapline-sep {
+			display: none;
 		}
 	}
 

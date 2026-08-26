@@ -82,10 +82,6 @@ const tickerSegments = [
 	volume && posts.length
 		? { label: "Edition", value: `Vol. ${toRomanLabel(volume)} \u00B7 No. ${posts.length}` }
 		: null,
-	// Straplines. Label-only segments — the value span is empty so it collapses,
-	// and the phrase reads on its own between the diamonds.
-	{ label: "Hyper Local" },
-	{ label: "Hyper Specific" },
 ].filter(Boolean) as Array<{
 	label: string;
 	value?: string;
@@ -101,6 +97,7 @@ const tickerSegments = [
 	description="Writing by Tristan Timblin."
 	wordmarkLead="The"
 	wordmark="Ergonomist"
+	strapline={["Hyper Local", "Hyper Specific"]}
 	volume={volume}
 	issue={posts.length || undefined}
 	dateline={posts[0]?.data.date}

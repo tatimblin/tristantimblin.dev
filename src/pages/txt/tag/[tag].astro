@@ -108,8 +108,6 @@ const tickerSegments = [
 	volume && posts.length
 		? { label: "Edition", value: `Vol. ${toRomanLabel(volume)} · No. ${posts.length}` }
 		: null,
-	{ label: "Hyper Local" },
-	{ label: "Hyper Specific" },
 ].filter(Boolean) as Array<{
 	label: string;
 	value?: string;
@@ -124,6 +122,7 @@ const tickerSegments = [
 	noindex
 	wordmarkLead="The"
 	wordmark="Ergonomist"
+	strapline={["Hyper Local", "Hyper Specific"]}
 	volume={volume}
 	issue={posts.length || undefined}
 	dateline={posts[0]?.data.date}
