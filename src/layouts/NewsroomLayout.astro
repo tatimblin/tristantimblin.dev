@@ -1,8 +1,9 @@
 ---
 // The chrome for /txt as a NEWS PRODUCT rather than a printed sheet: a slim top
-// bar (nav pills, centred wordmark, issue/date), a category rail built from the
-// collection's tags, and the warm paper the whole thing sits on. The stories
-// themselves arrive through <slot />, the same split TxtPostLayout uses.
+// bar (slogan box, centred wordmark, issue/date), a wire strip whose flag drops
+// down the site's routes, a category rail built from the collection's tags, and
+// the warm paper the whole thing sits on. The stories themselves arrive through
+// <slot />, the same split TxtPostLayout uses.
 //
 // Replaces the earlier BroadsheetLayout. The Oxford rules, the 168px nameplate
 // and the drop cap belonged to a print pastiche; this is the screen equivalent,
@@ -35,7 +36,7 @@ interface Props {
 		/** Market direction, for the up/down tint. */
 		tone?: "up" | "down";
 	}>;
-	/** Slogan phrases for the boxed strapline under the nameplate. */
+	/** Slogan phrases for the boxed strapline in the bar's left track. */
 	strapline?: string[];
 	/** Publication city, printed beside the live clock. */
 	city?: string;
@@ -83,14 +84,14 @@ const fmtLong = (d: Date) =>
 	});
 const iso = (d: Date) => new Date(d).toISOString().split("T")[0];
 
-// Real destinations only — the nav mirrors the reference's tab group, but every
-// pill has somewhere to go.
+// Real destinations only — every entry has somewhere to go. These render inside
+// the wire flag's disclosure rather than as pills in the bar.
 //
-// The section pill is marked aria-current="true", not "page", and the distinction
+// The section link is marked aria-current="true", not "page", and the distinction
 // matters: the category chips below use "page" for the exact URL, and a document
 // with two elements both claiming to be the current PAGE tells a screen reader
 // nothing useful. "true" is the generic "this is the current item", which is what
-// a section tab actually is — and on /txt/tag/diy the Writing pill is a section
+// a section tab actually is — and on /txt/tag/diy the Writing entry is a section
 // ancestor, not the page you are on.
 const path = Astro.url.pathname.replace(/\/+$/, "") || "/";
 const nav = [
@@ -111,37 +112,29 @@ const issueLine = [
 <Layout title={title} description={description} noindex={noindex}>
 	<div class="np">
 		<header class="np__bar">
-			<nav class="np__nav" aria-label="Primary">
-				{nav.map((l) => (
-					<a
-						class:list={["np__pill", l.current && "np__pill--current"]}
-						href={l.href}
-						aria-current={l.current ? "true" : undefined}
-					>
-						{l.label}
-					</a>
-				))}
-			</nav>
+			{strapline.length > 0 && (
+				/* The slogan box — a masthead ear, now in the bar's LEFT track where the
+				   nav pills used to sit. Real text rather than aria-hidden decoration:
+				   unlike the wire, this says something about the publication and is
+				   worth reading once. The pills moved down into the wire's flag as a
+				   disclosure; three permanent route labels were competing with the
+				   nameplate for the top of every page, and the slogan is the thing a
+				   masthead is actually for. */
+				<p class="np__strapline">
+					{strapline.map((phrase, i) => (
+						<>
+							{i > 0 && <span class="np__strapline-sep" aria-hidden="true">&#9670;</span>}
+							<span>{phrase}</span>
+						</>
+					))}
+				</p>
+			)}
 
 			<div class="np__lockup">
 				<a class="np__wordmark" href="/txt" aria-label={`${wordmarkLead ?? ""} ${wordmark}`.trim()}>
 					{wordmarkLead && <span class="np__wordmark-lead" aria-hidden="true">{wordmarkLead}</span>}
 					<span class="np__wordmark-name" aria-hidden="true">{wordmark}</span>
 				</a>
-
-				{strapline.length > 0 && (
-					/* The slogan box under the nameplate — a masthead ear. Real text
-					   rather than aria-hidden decoration: unlike the wire, this says
-					   something about the publication and is worth reading once. */
-					<p class="np__strapline">
-						{strapline.map((phrase, i) => (
-							<>
-								{i > 0 && <span class="np__strapline-sep" aria-hidden="true">&#9670;</span>}
-								<span>{phrase}</span>
-							</>
-						))}
-					</p>
-				)}
 			</div>
 
 			<div class="np__meta">
@@ -152,41 +145,68 @@ const issueLine = [
 			</div>
 		</header>
 
-		{
-			ticker.length > 0 && (
-				/* Furniture, not navigation: nothing in here is a link, so the strip adds
-				   no second route to anything and stays out of the tab order. It is
-				   aria-hidden because a screen reader announcing a scrolling loop of
-				   market figures on entry is noise — the same data has no meaning read
-				   aloud out of order. */
-				<div class="ticker" data-tz={timeZone} aria-hidden="true">
-					<span class="ticker__flag">Wire</span>
-					<div class="ticker__window">
-						<div class="ticker__track" data-ticker-track>
-							{/* Rendered twice so the loop can translate exactly -50% and land
-							    back where it started with no visible seam. */}
-							{[0, 1].map((copy) => (
-								<div class="ticker__run">
-									{ticker.map((seg) => (
-										<span class="ticker__item">
-											<span class="ticker__mark">&#9670;</span>
-											<span class="ticker__label">{seg.label}</span>
-											<span
-												class:list={["ticker__value", seg.tone && `ticker__value--${seg.tone}`]}
-												data-live={seg.live}
-												data-copy={seg.live ? String(copy) : undefined}
-											>
-												{seg.value}
-											</span>
+		{/* The wire strip. It always renders now, with or without market data, because
+		    it carries the site's primary navigation in its flag — the strip is chrome,
+		    not a slot for a feed that may be empty.
+
+		    <details>, not a scripted menu: the routes stay reachable with scripting
+		    off, and the browser gives keyboard operation, Escape, and the expanded
+		    state for free. The script below only adds the two behaviours a native
+		    disclosure lacks — closing on an outside click, and on navigation. */}
+		<div class="ticker" data-tz={timeZone}>
+			<details class="wire" data-wire>
+				<summary class="ticker__flag wire__flag">
+					<span>Wire</span>
+					<svg class="wire__chevron" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
+						<path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"
+							stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</summary>
+				<nav class="wire__menu" aria-label="Primary">
+					{nav.map((l) => (
+						<a
+							class:list={["wire__link", l.current && "wire__link--current"]}
+							href={l.href}
+							aria-current={l.current ? "true" : undefined}
+						>
+							{l.label}
+						</a>
+					))}
+				</nav>
+			</details>
+
+			{ticker.length > 0 && (
+				/* Furniture, not navigation: nothing in the scrolling half is a link, so
+				   it adds no second route to anything and stays out of the tab order. It
+				   is aria-hidden because a screen reader announcing a loop of market
+				   figures on entry is noise — the same data has no meaning read aloud out
+				   of order. The hiding is scoped to the window rather than the whole
+				   strip, which now contains navigation that must stay announced. */
+				<div class="ticker__window" aria-hidden="true">
+					<div class="ticker__track" data-ticker-track>
+						{/* Rendered twice so the loop can translate exactly -50% and land
+						    back where it started with no visible seam. */}
+						{[0, 1].map((copy) => (
+							<div class="ticker__run">
+								{ticker.map((seg) => (
+									<span class="ticker__item">
+										<span class="ticker__mark">&#9670;</span>
+										<span class="ticker__label">{seg.label}</span>
+										<span
+											class:list={["ticker__value", seg.tone && `ticker__value--${seg.tone}`]}
+											data-live={seg.live}
+											data-copy={seg.live ? String(copy) : undefined}
+										>
+											{seg.value}
 										</span>
-									))}
-								</div>
-							))}
-						</div>
+									</span>
+								))}
+							</div>
+						))}
 					</div>
 				</div>
-			)
-		}
+			)}
+		</div>
 
 		{
 			tags.length > 0 && (
@@ -261,13 +281,34 @@ const issueLine = [
 		}, (60 - new Date().getSeconds()) * 1000);
 	}
 
+	// The two things <details> does not do on its own. Everything else about the
+	// menu — toggling, keyboard operation, Escape, the expanded state exposed to
+	// assistive tech — is the browser's, and none of it is reimplemented here.
+	//
+	// Delegated to document so it survives view transitions without rebinding, and
+	// so a menu added later needs no registration.
+	function closeWireNav(except?: EventTarget | null) {
+		for (const el of document.querySelectorAll<HTMLDetailsElement>("[data-wire][open]")) {
+			if (except && el.contains(except as Node)) continue;
+			el.open = false;
+		}
+	}
+
+	document.addEventListener("pointerdown", (e) => closeWireNav(e.target));
+	// Focus leaving the menu by keyboard should close it too, otherwise tabbing past
+	// the last link leaves an open panel hanging over the page.
+	document.addEventListener("focusin", (e) => closeWireNav(e.target));
+
 	function init() {
 		startWire();
 	}
 
 	init();
 	document.addEventListener("astro:page-load", init);
-	document.addEventListener("astro:before-swap", () => window.clearInterval(wireTimer));
+	document.addEventListener("astro:before-swap", () => {
+		window.clearInterval(wireTimer);
+		closeWireNav();
+	});
 </script>
 
 <style is:global>
@@ -343,12 +384,6 @@ const issueLine = [
 		background: var(--text-primary);
 	}
 
-	.np__nav {
-		display: flex;
-		gap: var(--space-2);
-	}
-
-	.np__pill,
 	.np__chip {
 		font-family: var(--font-ui);
 		font-size: var(--font-size-1);
@@ -363,12 +398,10 @@ const issueLine = [
 		cursor: pointer;
 		transition: background 0.15s ease, color 0.15s ease;
 	}
-	.np__pill:hover,
 	.np__chip:hover {
 		color: var(--text-primary);
 		border-color: var(--paper-line);
 	}
-	.np__pill--current,
 	.np__chip--current {
 		background: var(--text-primary);
 		color: var(--paper);
@@ -377,6 +410,7 @@ const issueLine = [
 	/* The nameplate group: wordmark with its slogan box beneath, centred as a unit
 	   in the bar's middle track. */
 	.np__lockup {
+		grid-column: 2;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -387,24 +421,38 @@ const issueLine = [
 	   is what a masthead ear is — and the border is --text-primary, the masthead
 	   rank, so it reads as part of the nameplate rather than as another hairline. */
 	.np__strapline {
+		grid-column: 1;
+		/* Hug the slogan rather than stretching the rule across the whole 1fr track —
+		   a grid item fills its column by default, and this one is a BOX. */
+		justify-self: start;
+		/* One phrase per line, at every width. Stacked, the box is ~170px rather than
+		   ~322px, which fits the bar's 1fr track everywhere: a 1fr track will not
+		   shrink below its content, so a one-line box that outgrew its share took the
+		   width out of the opposite track and slid the nameplate off centre. Two short
+		   stacked lines are also simply what a masthead ear looks like. */
 		display: flex;
+		flex-direction: column;
 		align-items: center;
-		gap: var(--space-3);
+		gap: var(--space-1);
 		margin: 0;
 		padding: var(--space-2) var(--space-3);
 		border: 1px solid var(--text-primary);
 		font-family: var(--font-ui);
 		font-weight: 600;
-		font-size: var(--font-size-1);
-		line-height: 1;
+		/* Under the scale's smallest step on purpose — this is a subordinate mark
+		   standing next to the nameplate, not body copy, and the wide tracking needs
+		   the size pulled back to stop it competing. */
+		font-size: calc(var(--font-size-1) * 0.8);
+		line-height: 1.25;
 		text-transform: uppercase;
 		letter-spacing: 0.14em;
 		color: var(--text-secondary);
-		white-space: nowrap;
+		text-align: center;
 	}
+	/* Stacked, the line break separates the phrases. The diamond is only needed when
+	   they share a line, which is the phone layout below. */
 	.np__strapline-sep {
-		font-size: 0.6em;
-		color: var(--text-tertiary);
+		display: none;
 	}
 
 	/* Wordmark: small caps lead + the name in the hero face, the reference's
@@ -434,6 +482,7 @@ const issueLine = [
 	}
 
 	.np__meta {
+		grid-column: 3;
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
@@ -458,13 +507,19 @@ const issueLine = [
 		margin-block-start: var(--space-5);
 		border-block: 1px solid var(--paper-line);
 		background: var(--paper-sunk);
-		overflow: hidden;
+		/* No overflow: hidden any more — the flag's menu opens downward out of the
+		   strip. The window does its own clipping, which is where it belonged. The
+		   z-index puts the open panel over the category rail, which is static and
+		   later in the document, so it would otherwise paint on top. */
+		position: relative;
+		z-index: 1;
 	}
 
 	.ticker__flag {
 		flex: none;
-		display: grid;
-		place-items: center;
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
 		padding-inline: var(--space-4);
 		background: var(--text-primary);
 		color: var(--paper);
@@ -473,6 +528,83 @@ const issueLine = [
 		font-size: var(--font-size-1);
 		text-transform: uppercase;
 		letter-spacing: 0.14em;
+	}
+
+	/* ---- wire nav ---------------------------------------------------------- */
+
+	.wire {
+		flex: none;
+		/* The menu anchors to the flag, not the strip, so it opens under the word it
+		   belongs to rather than at the far left of the page. */
+		position: relative;
+	}
+
+	.wire__flag {
+		block-size: 100%;
+		cursor: pointer;
+		user-select: none;
+		/* Both are needed to kill the disclosure triangle: the standard property, and
+		   the pseudo-element WebKit still paints without it. */
+		list-style: none;
+	}
+	.wire__flag::-webkit-details-marker {
+		display: none;
+	}
+	.wire__flag:focus-visible {
+		outline: 2px solid var(--text-primary);
+		outline-offset: 2px;
+	}
+
+	.wire__chevron {
+		flex: none;
+		inline-size: 0.6em;
+		transition: transform 0.15s ease;
+	}
+	.wire[open] .wire__chevron {
+		transform: rotate(180deg);
+	}
+
+	/* min-inline-size rather than a fixed width: the panel is at least as wide as the
+	   flag, so it reads as the same block opening rather than a chip floating under
+	   it, but a longer label is free to push it wider. */
+	.wire__menu {
+		position: absolute;
+		inset-block-start: 100%;
+		inset-inline-start: 0;
+		z-index: 20;
+		display: flex;
+		flex-direction: column;
+		min-inline-size: 100%;
+		padding: var(--space-2);
+		border: 1px solid var(--text-primary);
+		background: var(--paper-raised);
+		box-shadow: 0 8px 24px oklch(0% 0 0 / 0.16);
+	}
+
+	.wire__link {
+		padding: var(--space-3) var(--space-4);
+		border-radius: var(--border-radius-2);
+		font-family: var(--font-ui);
+		font-size: var(--font-size-1);
+		line-height: 1;
+		white-space: nowrap;
+		text-decoration: none;
+		color: var(--text-secondary);
+		transition: background 0.15s ease, color 0.15s ease;
+	}
+	.wire__link:hover {
+		background: var(--paper-sunk);
+		color: var(--text-primary);
+	}
+	.wire__link--current {
+		background: var(--text-primary);
+		color: var(--paper);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.wire__chevron {
+			transition: none;
+		}
 	}
 
 	.ticker__window {
@@ -607,47 +739,32 @@ const issueLine = [
 		/* The wordmark takes the full first row and centres; nav and meta share the
 		   second. A 1fr-auto-1fr bar at phone width squeezes the name to nothing. */
 		.np__bar {
-			grid-template-columns: auto auto;
+			/* 1fr auto, not auto auto: the meta column is content-width and the free
+			   space goes to the slogan's row-mate, which pins the issue line to the
+			   right edge instead of leaving it stranded mid-row. */
+			grid-template-columns: 1fr auto;
 			row-gap: var(--space-3);
 		}
 		.np__lockup {
 			grid-column: 1 / -1;
 			grid-row: 1;
 		}
-		.np__nav {
+		.np__strapline {
+			grid-column: 1;
 			grid-row: 2;
 		}
 		.np__meta {
+			grid-column: 2;
 			grid-row: 2;
 		}
 		.np__date {
 			display: none;
 		}
-		/* Three pills plus the issue line overrun a 358px content box, which broke
-		   "Vol. IV · No. 5" across two lines mid-label. Tighten the pills and refuse
-		   the wrap rather than letting the label shatter. */
-		.np__pill {
-			padding-inline: var(--space-3);
-		}
+		/* The issue line broke across two lines mid-label ("Vol. IV · No. 5") when the
+		   row got tight. Refuse the wrap rather than letting the label shatter; below
+		   479 the line goes entirely. */
 		.np__issue {
 			white-space: nowrap;
-		}
-	}
-
-	/* The box is 322px on one line, and the content box is viewport minus 2x16px of
-	   gutter at this end — so it stops fitting below ~354px and clips (silently,
-	   since body is overflow-x: clip). Stack the phrases instead of shrinking the
-	   type; 380 rather than 354 so the switch happens with margin to spare rather
-	   than exactly at the failure. */
-	@media (max-width: 380px) {
-		.np__strapline {
-			flex-direction: column;
-			gap: var(--space-1);
-			white-space: normal;
-			text-align: center;
-		}
-		.np__strapline-sep {
-			display: none;
 		}
 	}
 
@@ -655,6 +772,27 @@ const issueLine = [
 		.ticker__flag {
 			padding-inline: var(--space-3);
 			letter-spacing: 0.08em;
+		}
+	}
+
+	/* One line for phones. Here the slogan has a whole row to itself rather than a
+	   third of the bar, so the wide version fits — and a two-line box beside a
+	   one-line issue label made the row lopsided.
+	   Floored at 360 rather than run down to 0: the one-line box measures 268px
+	   inside a 273px bar at 320, which fits but only just, and it is set nowrap in a
+	   page that clips overflow-x — so a fallback font with wider metrics would clip
+	   it silently. Below 360 the base stacked box (~170px) takes over, which has
+	   room to spare. Every phone worth the name is 360 or wider. */
+	@media (min-width: 360px) and (max-width: 767px) {
+		.np__strapline {
+			flex-direction: row;
+			gap: var(--space-3);
+			white-space: nowrap;
+		}
+		.np__strapline-sep {
+			display: inline;
+			font-size: 0.6em;
+			color: var(--text-tertiary);
 		}
 	}
 
