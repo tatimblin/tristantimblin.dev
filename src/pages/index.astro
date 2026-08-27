@@ -102,21 +102,25 @@ import "../widgets/widgets.css";
 	     the moment the first video frame decodes. Runs once, starts at that first
 	     frame, and is skipped entirely under prefers-reduced-motion.
 	     No hold (intro-delay="0"): the develop-in starts immediately on the first
-	     frame — kept subtle by the eased ramp and the scene's low opacity. -->
+	     frame — kept subtle by the eased ramp and the grid's sparse, cut-off field. -->
 	<dotted-grid
 		slot="scene"
 		class="hero__video"
 		src="/videos/fabric.web.mp4"
 		src-webm="/videos/fabric.web.webm"
 		max-dpr="1"
-		cell-size="9"
-		dot-scale="1"
-		levels="10"
-		gamma="1"
-		contrast="1.1"
+		cell-size="11"
+		dot-scale="0.4"
+		levels="14"
+		gamma="0.6"
+		contrast="1"
 		color="#fff"
 		intro-delay="0"
 		intro="3200"
+		cutoff="0.1"
+		feather="0.4"
+		denoise="1"
+		crosshatch="0"
 	/>
 
 	<!-- SCENE (mobile only): the video carousel promoted into the hero as the
@@ -197,7 +201,7 @@ import "../widgets/widgets.css";
 			     fading ancestor is the containing-block hazard called out in
 			     src/lib/reveal.ts). -->
 			<GridItem class="home__copy" data-reveal>
-				<wobble-text scale="2.8" speed="0.3">
+				<wobble-text scale="3.2" speed="0.3">
 					<p>
 						I am a craftsman, I create things to be used. Even if they often are
 						not, it is for the love of the process. My creativite nature comes
@@ -260,10 +264,18 @@ import "../widgets/widgets.css";
 		position: absolute;
 		inset: 0;
 		display: block;
-		/* Dial the halftone back so it reads as a faint texture under the type rather
-		   than a strong field competing with it. Keeps the dot structure; just quieter
-		   against the page in both themes. */
-		opacity: 0.55;
+		/* FULL STRENGTH, deliberately — no opacity here. This was opacity: 0.55, to
+		   keep the halftone a faint texture under the type rather than a field
+		   competing with it, and it did buy that. But opacity is a blunt way to pay
+		   for it: it dims the whole layer, so the dots — which the shader paints at
+		   #fff — capped out at 55% white and the fold's crest could never actually
+		   read as white. Measured on one frame: peak luminance 145 of 255 at 0.55
+		   against 255 here, while the lit area barely moves (1.2% -> 1.8% of the
+		   band above the wordmark).
+		   The quiet is `cutoff`'s job now (on the element below): it removes the dim
+		   dots outright instead of greying every dot down, which is the same trade
+		   made at the right end of the ramp. Raise that, not this, if the field ever
+		   gets loud — dimming here would just take the highlights down with it. */
 	}
 
 	/* Desktop: fabric is the scene; the carousel lives only in the footer widget. */
@@ -386,9 +398,12 @@ import "../widgets/widgets.css";
 		width: 100%;
 		height: 100%;
 		aspect-ratio: auto;
-		/* Match the desktop fabric (.hero__video): dial the halftone back so it reads as
-		   a faint texture under the type. The overlay UI is a separate layer and keeps
-		   its own (already-faint) rest opacity. */
+		/* Deliberately NOT matched to the desktop fabric any more — that scene dropped
+		   its opacity so its highlights could reach full white, and buys its quiet from
+		   `cutoff` instead. This one carries no cutoff (the carousel sets the grid's
+		   attributes and has no reason to blank its clips' shadows), so it is still
+		   dialled back the blunt way. The overlay UI is a separate layer and keeps its
+		   own (already-faint) rest opacity. */
 		opacity: 0.55;
 		-webkit-mask-image: linear-gradient(
 			to bottom,
