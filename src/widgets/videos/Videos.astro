@@ -28,7 +28,21 @@ import "./videos.css";
 	{/* Clip changes get the threshold transition here too, so the carousel behaves the
 	    same wherever it appears. No `intro` though: this cell is mid-page behind a
 	    scroll-driven dock, so a develop-in entrance would play unseen. */}
-	<VideoCarousel rulerSide="right" xfade={1600} xfadeMode="threshold" xfadeLive />
+	<VideoCarousel
+		rulerSide="right"
+		xfade={1600}
+		xfadeMode="threshold"
+		xfadeLive
+		dotScale={0.8}
+		cellSize={6}
+		levels={12}
+		gamma={0.4}
+		contrast={1.1}
+		crosshatch={0}
+		cutoff={0.1}
+		denoise={1}
+		feather={0.4}
+	/>
 </Widget>
 
 <script>
