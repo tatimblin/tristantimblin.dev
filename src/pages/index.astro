@@ -95,8 +95,14 @@ import "../widgets/widgets.css";
 >
 	<!-- SCENE: fabric video as a dotted-grid halftone — a full-viewport background
 	     layer, faded at the top+bottom edges (see FullHeroLayout .fh__scene). -->
-	<!-- No color/background attrs: the grid falls back to --color-fg / --color-bg
-	     and re-samples them each frame, so it inverts with the active theme. -->
+	<!-- No color/background attrs, DELIBERATELY: the grid falls back to --color-fg /
+	     --color-bg, so it inverts with the active theme. This carried a hardcoded
+	     color="#fff" so the fold's crest could reach full white on the dark page —
+	     but --color-bg in the light theme is oklch(99.24%), so white dots landed on
+	     a white backdrop and the scene disappeared entirely. The highlight lift is
+	     what buys that crest anyway: it pushes the brightest cells toward the
+	     background's contrast pole (white on dark, black on light), which is the
+	     theme-safe version of the same intent. -->
 	<!-- `intro`: develop the halftone in on arrival, brightest dots first, so the
 	     scene resolves out of the page colour instead of snapping to full strength
 	     the moment the first video frame decodes. Runs once, starts at that first
@@ -114,7 +120,6 @@ import "../widgets/widgets.css";
 		levels="14"
 		gamma="0.6"
 		contrast="1"
-		color="#fff"
 		intro-delay="0"
 		intro="3200"
 		cutoff="0.1"
@@ -267,9 +272,10 @@ import "../widgets/widgets.css";
 		/* FULL STRENGTH, deliberately — no opacity here. This was opacity: 0.55, to
 		   keep the halftone a faint texture under the type rather than a field
 		   competing with it, and it did buy that. But opacity is a blunt way to pay
-		   for it: it dims the whole layer, so the dots — which the shader paints at
-		   #fff — capped out at 55% white and the fold's crest could never actually
-		   read as white. Measured on one frame: peak luminance 145 of 255 at 0.55
+		   for it: it dims the whole layer, so the dots — lifted toward the
+		   background's contrast pole — capped out at 55% white and the fold's crest
+		   could never actually read as white. Measured on one frame at the #fff the
+		   element then hardcoded: peak luminance 145 of 255 at 0.55
 		   against 255 here, while the lit area barely moves (1.2% -> 1.8% of the
 		   band above the wordmark).
 		   The quiet is `cutoff`'s job now (on the element below): it removes the dim

@@ -66,6 +66,14 @@ interface Props {
 	levels?: number;
 	gamma?: number;
 	contrast?: number;
+	/**
+	 * Dot colour. Omitted by default so the element falls back to --color-fg and the
+	 * grid inverts with the active theme. This defaulted to "#fff", which silently
+	 * assumed a dark page: --color-bg in the light theme is oklch(99.24%), so white
+	 * dots sat on a white backdrop and the halftone vanished. Pass a fixed colour
+	 * only for a scene that is genuinely theme-independent — and pick one with
+	 * contrast against BOTH backdrops (the hero's mobile carousel uses a mid grey).
+	 */
 	color?: string;
 	/**
 	 * The sparse-field levers, forwarded to the element: `cutoff` blanks cells at or
@@ -111,7 +119,7 @@ const {
 	levels = 15,
 	gamma = 0.5,
 	contrast = 1.2,
-	color = "#fff",
+	color,
 	cutoff,
 	feather,
 	denoise,
