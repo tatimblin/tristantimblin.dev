@@ -1,0 +1,132 @@
+---
+// The playable version of the post's argument: a real VS Code workbench,
+// running the real fleet extension, booted inside the article.
+//
+// The element (packages/vscode-fleet-demo) owns the whole lifecycle — poster →
+// prefetch-on-approach → launch → iframe → ready — plus the <768px gate. This
+// file supplies only the two things a package cannot know: the light-DOM markup
+// it enhances, and how the frame sits in a 68ch reading column.
+//
+// element.css already dresses the poster, button, caption, progress bar and
+// error note. The scoped rules below deliberately do NOT restate any of that;
+// they bridge the element's token names onto the site's, and handle layout.
+import "@whois/vscode-fleet-demo/element.css";
+---
+
+<fleet-demo class="fleet-demo">
+	{/* [data-poster] is the OVERLAY, not the image: element.css lays it out as a
+	    centered flex column stacked over the (later) iframe, with the screenshot
+	    absolutely filling it and the button/caption riding on top. */}
+	<div data-poster>
+		<img
+			src="/blog-images/fleet-demo-poster.webp"
+			alt="VS Code running a fleet-management extension: vehicle explorer, door controls, and a CAN terminal"
+			width="1400"
+			height="875"
+			loading="lazy"
+			decoding="async"
+		/>
+		<button type="button" data-launch>Launch the demo</button>
+		<p data-caption>
+			Real VS Code, real extension, mock vehicles. Best on desktop — needs a pointer and some
+			width.
+		</p>
+	</div>
+</fleet-demo>
+
+<script>
+	import "@whois/vscode-fleet-demo";
+</script>
+
+<style>
+	/* The type selector rides along with the class on purpose: TxtPostLayout's
+	   prose rhythm reaches in as `.txt-prose :global(> * + *)`, which lands at
+	   the same specificity a bare scoped `.fleet-demo` would. The extra element
+	   name settles the tie rather than leaving it to injection order. */
+	fleet-demo.fleet-demo {
+		/* Token bridge. element.css asks for --color-accent/--color-border/
+		   --color-muted (generic names, with literal fallbacks, so the package
+		   stands alone); this site's DS publishes --accent/--border-color/
+		   --text-tertiary. Aliasing here beats overriding element.css rule by
+		   rule — one hop, and the element keeps owning its own appearance. */
+		--color-accent: var(--accent, #5686f5);
+		--color-border: var(--border-color, rgba(128, 128, 128, 0.35));
+		/* --color-muted (the caption) is deliberately NOT bridged onto
+		   --text-tertiary. That token flips with the site theme, but what the
+		   caption sits on does not: the poster is a Dark Modern screenshot in
+		   both themes, so in light mode the "correct" tertiary would be dark
+		   grey on a near-black image. The caption gets a fixed light value. */
+		--color-muted: rgba(235, 238, 245, 0.86);
+
+		/* BREAKOUT. The post column is 68ch; a workbench needs far more than that,
+		   so the frame escapes its container and re-centers on the VIEWPORT.
+
+		   Width first: as wide as the viewport allows minus a gutter on each side,
+		   capped at the poster's intrinsic 1400px so it never upscales.
+
+		   Then the offset. A margin-inline percentage resolves against the
+		   CONTAINING BLOCK, so `50% - W/2` moves the left edge from the column's
+		   centre out to where a W-wide box centred on that same centre begins —
+		   and because .txt-post is itself `margin-inline: auto`, the column's
+		   centre IS the viewport's centre. One expression, no ultrawide special
+		   case: the familiar `width: 100vw; margin-inline: calc(50% - 50vw)`
+		   trick pins the left edge to x=0 and stops re-centring the moment a
+		   max-width caps the box, which is exactly what breaks it past 1400px. */
+		--fleet-demo-gutter: var(--container-pad, clamp(1rem, 4vw, 2rem));
+		--fleet-demo-width: min(100vw - 2 * var(--fleet-demo-gutter), 1400px);
+		width: var(--fleet-demo-width);
+		margin-inline: calc(50% - var(--fleet-demo-width) / 2);
+
+		/* The gutter lives in the width rather than in padding because the
+		   element's own children (poster, iframe) are `position: absolute;
+		   inset: 0` — padding on the host would simply be painted through. */
+
+		/* A touch more air than the prose rhythm (.txt-prose > * + *): this is a
+		   figure, not another paragraph. */
+		margin-block: var(--space-7, 40px);
+	}
+
+	/* TxtPostLayout dresses every prose image — `width: 100%; height: auto;
+	   margin-block: var(--space-6); border-radius: var(--radius)` — which is
+	   right for a photo sitting in the column and wrong for a poster the element
+	   has already positioned `absolute; inset: 0` inside its own framed box.
+	   That rule outranks element.css, and the block margins in particular would
+	   pull the screenshot 32px off the top and bottom of the frame, opening dark
+	   bands. Restated here, where the scope attribute wins the tie back. */
+	.fleet-demo [data-poster] img {
+		height: 100%;
+		margin-block: 0;
+		border-radius: 0;
+	}
+
+	/* Give the launch button the weight of a primary action against a dark
+	   screenshot — element.css supplies the accent fill; the shadow is what
+	   lifts it off a busy editor background. */
+	.fleet-demo [data-launch] {
+		font-family: var(--font-ui, inherit);
+		font-size: var(--font-size-3, 16px);
+		font-weight: var(--font-weight-500, 500);
+		box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+	}
+
+	/* The caption is a static block, so it would paint UNDERNEATH the absolutely
+	   positioned poster image when the <768px gate reveals it. Positioning it
+	   puts it back in the same painting layer as the button above it. */
+	.fleet-demo [data-caption] {
+		position: relative;
+		font-family: var(--font-ui, inherit);
+		max-width: 34ch;
+		line-height: 1.45;
+		text-wrap: balance;
+	}
+
+	/* On a phone the frame is only ~214px tall and the caption is the ONLY thing
+	   the reader can act on, yet it lands on top of a dense screenshot in muted
+	   grey. Dimming the poster itself is the one-property way to buy that
+	   contrast: a scrim overlay would have to be threaded between the absolutely
+	   positioned image and the text above it, which means inventing a stacking
+	   order element.css deliberately leaves flat. */
+	.fleet-demo[data-state="unsupported"] [data-poster] img {
+		filter: brightness(0.4) saturate(0.75);
+	}
+</style>
