@@ -1,4 +1,5 @@
 import type { Vehicle } from "../model/types";
+import { canSignalSnapshot } from "./can";
 
 /**
  * Serializers for the virtual file system's file contents.
@@ -90,7 +91,37 @@ export function serializeVehicleState(vehicle: Vehicle): string {
 					install_perc: Math.round(vehicle.softwareUpdate.installPerc)
 				},
 				timestamp: vehicle.lastUpdated
-			}
+			},
+			// Stored trouble codes, summarised. Present ONLY on a vehicle that
+			// has codes, for the same reason `dtcs.json` is (see below).
+			//
+			// Two departures from the Owner API meet here, both deliberate. The
+			// real `vehicle_data` carries no diagnostics block at all — a fleet
+			// API that does (Smartcar's `/diagnostics/dtcs`, which this demo's
+			// rejection reasons already borrow from) is the closer model. And
+			// the diagnostics provider needs the codes to appear as *text in
+			// this file*: it anchors each squiggle by searching for the code
+			// string, so a summary that omitted them would leave the Problems
+			// panel with nowhere in `state.json` to point.
+			...(vehicle.dtcs.length > 0
+				? {
+						diagnostics: {
+							count: vehicle.dtcs.length,
+							codes: vehicle.dtcs.map((dtc) => dtc.code)
+						}
+					}
+				: {}),
+			// The live CAN signal values, by DBC signal name — the same names
+			// `fleet.dbc` defines and the CAN terminal annotates. This is the
+			// anchor that makes "go to definition" work from `state.json`: the
+			// Tesla-style keys above (`speed_kph`, `df`, `pf`) are API field
+			// names, not bus signals, so without this block there would be no
+			// signal name in the document to jump from.
+			//
+			// The values are encoded and decoded through the real frame helpers
+			// rather than read off the model, so they carry each signal's own
+			// quantisation — see `canSignalSnapshot`.
+			can_signals: canSignalSnapshot(vehicle)
 		},
 		null,
 		"\t"

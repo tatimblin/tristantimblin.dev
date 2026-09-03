@@ -4,6 +4,7 @@ import { ControlsEditorProvider } from "./providers/controlsEditorProvider";
 import type { CanStreamManager } from "./providers/canTerminal";
 import { executeVehicleCommand } from "./vehicleCommands";
 import { runOtaFlow } from "./otaFlow";
+import { showVehicleQuickPick } from "./quickpick";
 
 /**
  * Every command the manifest declares, registered in one place.
@@ -11,17 +12,10 @@ import { runOtaFlow } from "./otaFlow";
  * The rule that keeps this file honest: `contributes.commands` in package.json
  * and the registrations here must stay in lockstep. A declared-but-unregistered
  * command still shows in the palette and fails with "command not found" when
- * invoked — the most embarrassing possible failure for a demo — so commands
- * whose real implementation lands in the next unit are registered *here and
- * now* with a courteous placeholder toast instead of being left dangling.
+ * invoked — the most embarrassing possible failure for a demo — so every
+ * command in `contributes.commands` is registered here, and every registration
+ * here is declared there.
  */
-
-/** Placeholder for features that ship in the next unit. */
-function comingSoon(feature: string): void {
-	void vscode.window.showInformationMessage(
-		`Fleet: ${feature} arrives in the next update — this build wires the explorer and controls.`
-	);
-}
 
 export function registerCommands(
 	context: vscode.ExtensionContext,
@@ -75,7 +69,9 @@ export function registerCommands(
 			void runOtaFlow(simulator);
 		}),
 
-		vscode.commands.registerCommand("fleet.switchVehicle", () => comingSoon("vehicle switching"))
+		vscode.commands.registerCommand("fleet.switchVehicle", () => {
+			showVehicleQuickPick(simulator, canStreams);
+		})
 	);
 }
 

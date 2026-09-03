@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import type { FleetSimulator } from "../sim/clock";
 import type { Vehicle } from "../model/types";
+import { FLEET_DBC } from "../sim/dbcText";
 
 /**
  * The `fleet:` file system — the simulator's state, dressed as files.
@@ -8,6 +9,7 @@ import type { Vehicle } from "../model/types";
  * Layout:
  *
  *   fleet:/
+ *     fleet.dbc            the CAN database (readonly, static)
  *     <VIN>/
  *       state.json         full vehicle state (readonly)
  *       dtcs.json          stored trouble codes (readonly; only on vehicles
@@ -31,10 +33,27 @@ import type { Vehicle } from "../model/types";
 /** UTF-8 encoder, shared: readFile is called on every editor refresh. */
 const encoder = new TextEncoder();
 
+/** The DBC's bytes, encoded once — the text is a module constant. */
+const dbcBytes = encoder.encode(FLEET_DBC);
+
 /** Marker filename the custom editor's selector binds to (see package.json). */
 const CONTROLS_FILE = "controls.vehicle";
 const STATE_FILE = "state.json";
 const DTCS_FILE = "dtcs.json";
+
+/**
+ * The one file that lives at the ROOT rather than inside a vehicle directory:
+ * the CAN database every vehicle's bus is described by. It belongs at the root
+ * because it is fleet-wide — six copies of an identical DBC, one per VIN,
+ * would imply the vehicles speak different dialects.
+ *
+ * Its bytes are computed once and its mtime is a constant, because the content
+ * genuinely never changes. That is the one case where a fixed mtime is safe:
+ * the monotonic-mtime rule in clock.ts exists so an editor re-reads changed
+ * content, and content that cannot change has nothing to re-read.
+ */
+const DBC_FILE = "fleet.dbc";
+const DBC_MTIME = 0;
 
 export class FleetFsProvider implements vscode.FileSystemProvider {
 	private readonly changeEmitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -89,8 +108,19 @@ export class FleetFsProvider implements vscode.FileSystemProvider {
 	stat(uri: vscode.Uri): vscode.FileStat {
 		const { vin, file } = this.parse(uri);
 
-		// fleet:/ — the root directory.
 		if (vin === undefined) {
+			// fleet:/fleet.dbc — the only file at the root.
+			if (file === DBC_FILE) {
+				return {
+					type: vscode.FileType.File,
+					ctime: 0,
+					mtime: DBC_MTIME,
+					size: dbcBytes.byteLength,
+					permissions: vscode.FilePermission.Readonly
+				};
+			}
+
+			// fleet:/ — the root directory.
 			return {
 				type: vscode.FileType.Directory,
 				ctime: 0,
@@ -125,7 +155,14 @@ export class FleetFsProvider implements vscode.FileSystemProvider {
 		const { vin, file } = this.parse(uri);
 
 		if (vin === undefined) {
-			return this.simulator.getVehicles().map((v) => [v.vin, vscode.FileType.Directory]);
+			if (file === DBC_FILE) {
+				throw vscode.FileSystemError.FileNotADirectory(uri);
+			}
+			const entries: [string, vscode.FileType][] = this.simulator
+				.getVehicles()
+				.map((v) => [v.vin, vscode.FileType.Directory]);
+			entries.push([DBC_FILE, vscode.FileType.File]);
+			return entries;
 		}
 
 		if (file !== undefined) {
@@ -146,7 +183,11 @@ export class FleetFsProvider implements vscode.FileSystemProvider {
 
 	readFile(uri: vscode.Uri): Uint8Array {
 		const { vin, file } = this.parse(uri);
-		if (vin === undefined || file === undefined) {
+		if (vin === undefined) {
+			if (file === DBC_FILE) return dbcBytes;
+			throw vscode.FileSystemError.FileIsADirectory(uri);
+		}
+		if (file === undefined) {
 			throw vscode.FileSystemError.FileIsADirectory(uri);
 		}
 		const vehicle = this.requireVehicle(uri, vin);
@@ -185,11 +226,22 @@ export class FleetFsProvider implements vscode.FileSystemProvider {
 
 	// ── Internals ──────────────────────────────────────────────────────────────
 
-	/** Split fleet:/<VIN>/<file> into its segments (either may be absent). */
+	/**
+	 * Split fleet:/<VIN>/<file> into its segments (either may be absent).
+	 *
+	 * `fleet:/fleet.dbc` is the one shape that breaks the pattern: a single
+	 * segment that names a FILE rather than a vehicle directory. It comes back
+	 * as `{ file }` with no `vin`, so every caller's existing
+	 * `vin === undefined` branch — the one that used to mean "the root" — is
+	 * the single place that has to tell the two apart.
+	 */
 	private parse(uri: vscode.Uri): { vin?: string; file?: string } {
 		const segments = uri.path.split("/").filter((s) => s.length > 0);
 		if (segments.length > 2) {
 			throw vscode.FileSystemError.FileNotFound(uri);
+		}
+		if (segments.length === 1 && segments[0] === DBC_FILE) {
+			return { file: DBC_FILE };
 		}
 		return { vin: segments[0], file: segments[1] };
 	}

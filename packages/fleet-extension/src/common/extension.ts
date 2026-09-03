@@ -4,6 +4,10 @@ import { FleetFsProvider } from "./providers/fleetFsProvider";
 import { FleetTreeProvider } from "./providers/fleetTreeProvider";
 import { ControlsEditorProvider } from "./providers/controlsEditorProvider";
 import { CanStreamManager } from "./providers/canTerminal";
+import { FleetDecorationProvider } from "./providers/decorationProvider";
+import { DtcDiagnostics } from "./providers/dtcDiagnostics";
+import { registerDbcNavigation } from "./providers/dbcNavigation";
+import { FleetStatusBar } from "./statusBar";
 import { registerCommands } from "./commands";
 
 /**
@@ -51,6 +55,23 @@ export function activateCommon(context: vscode.ExtensionContext): void {
 		vscode.window.createTreeView("fleetExplorer", { treeDataProvider: treeProvider })
 	);
 
+	// Badges on the tree rows and on any open fleet: tab. Registered after the
+	// tree so the first decoration request arrives against rows that exist.
+	const decorationProvider = new FleetDecorationProvider(simulator);
+	context.subscriptions.push(
+		decorationProvider,
+		vscode.window.registerFileDecorationProvider(decorationProvider)
+	);
+
+	// Trouble codes into the Problems panel. Populated in its constructor for
+	// every vehicle, so the panel is already right before anything is opened.
+	context.subscriptions.push(new DtcDiagnostics(simulator));
+
+	// F12 / hover on a CAN signal name in state.json → its SG_ line in
+	// fleet:/fleet.dbc. Stateless and simulator-independent: it reads the DBC
+	// text, which the FS provider serves from the same module constant.
+	context.subscriptions.push(registerDbcNavigation());
+
 	context.subscriptions.push(ControlsEditorProvider.register(simulator));
 
 	// The CAN terminal manager owns at most one live pseudoterminal; it is a
@@ -60,6 +81,11 @@ export function activateCommon(context: vscode.ExtensionContext): void {
 	context.subscriptions.push(canStreams);
 
 	registerCommands(context, simulator, canStreams);
+
+	// The one surface that survives a fully collapsed workbench. Created after
+	// the commands, because its click target is `fleet.switchVehicle` and a
+	// status bar whose command does not exist yet is a click that errors.
+	context.subscriptions.push(new FleetStatusBar(simulator));
 
 	// Surface the simulator's sparse ambient events (charge completions, idle
 	// blips) as toasts — the fleet talking while nobody watches it is what

@@ -96,12 +96,20 @@ export class FleetTreeProvider implements vscode.TreeDataProvider<Vehicle>, vsco
 }
 
 /** "Atlas — Model 3 Long Range" → "Atlas". */
-function callsign(vehicle: Vehicle): string {
+export function callsign(vehicle: Vehicle): string {
 	return vehicle.displayName.split(" — ")[0] ?? vehicle.displayName;
 }
 
-/** The live status column. Priority: asleep > faulted > telemetry. */
-function describeVehicle(vehicle: Vehicle): string {
+/**
+ * The live status column. Priority: asleep > faulted > telemetry.
+ *
+ * Exported because the quick-pick switcher and the status-bar tooltip show
+ * the same status next to the same vehicle. Two formatters would drift by a
+ * separator or a rounding rule, and a user comparing the tree row against the
+ * switcher entry for the vehicle they are about to open would see the demo
+ * disagree with itself in the one moment they are looking hardest.
+ */
+export function describeVehicle(vehicle: Vehicle): string {
 	if (!vehicle.online) return "asleep";
 	if (vehicle.dtcs.length > 0) {
 		return `⚠ ${vehicle.dtcs.length} DTC${vehicle.dtcs.length === 1 ? "" : "s"}`;

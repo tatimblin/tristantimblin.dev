@@ -76,6 +76,27 @@ function frame(timestamp: number, id: number, data: number[], label?: string): C
 /** VAL_ table from the DBC: gear as `DI_gear` encodes it (0 = SNA). */
 const GEAR_VALUES: Record<Vehicle["gear"], number> = { P: 1, R: 2, N: 3, D: 4 };
 
+/**
+ * Powertrain values derived from road speed, exported because TWO consumers
+ * need the same numbers: the bus traffic generator below, and the
+ * `can_signals` block `serialize.ts` writes into `state.json`. Computing them
+ * twice is exactly the drift the single-clock rule exists to prevent — a
+ * reader who compares the torque in `state.json` against the torque decoded
+ * from a paused `DI_torque1` frame must find the same value.
+ *
+ * A single-speed EV's motor turns ~9 rev per metre of travel at these gear
+ * ratios; close enough for a torque frame that only needs to look coupled to
+ * the speed frame next to it.
+ */
+export function motorRpmFor(vehicle: Vehicle): number {
+	return vehicle.speedKph * 78;
+}
+
+/** Motor torque in Nm: only a vehicle in D is actually pulling. */
+export function motorTorqueNmFor(vehicle: Vehicle): number {
+	return vehicle.gear === "D" ? 40 + vehicle.speedKph * 0.6 : 0;
+}
+
 /** VAL_ table for `GTW_carState` door fields: 0 = SNA, 1 = OPEN, 2 = CLOSED. */
 const DOOR_OPEN = 1;
 const DOOR_CLOSED = 2;
@@ -202,11 +223,8 @@ export function generateBusTraffic(
 	const frames: CanFrame[] = [];
 	const span = Math.max(1, toMs - fromMs);
 
-	// A single-speed EV's motor turns ~9 rev per metre of travel at these gear
-	// ratios; close enough for a torque frame that only needs to look coupled
-	// to the speed frame next to it.
-	const motorRpm = vehicle.speedKph * 78;
-	const torqueNm = vehicle.gear === "D" ? 40 + vehicle.speedKph * 0.6 : 0;
+	const motorRpm = motorRpmFor(vehicle);
+	const torqueNm = motorTorqueNmFor(vehicle);
 
 	for (let i = 0; i < count; i++) {
 		const timestamp = fromMs + Math.floor((i / count) * span);
@@ -294,4 +312,72 @@ export function decodeFrameAnnotation(canFrame: CanFrame): string | undefined {
 		default:
 			return undefined;
 	}
+}
+
+/**
+ * VAL_ table labels exactly as `fleet.dbc` writes them. The `can_signals`
+ * block in `state.json` reports enumerated signals by label rather than raw
+ * number, so a reader can match `"DI_gear": "DI_GEAR_D"` against the VAL_
+ * line in the DBC without decoding anything by hand.
+ */
+const GEAR_VAL_LABELS = ["DI_GEAR_SNA", "DI_GEAR_P", "DI_GEAR_R", "DI_GEAR_N", "DI_GEAR_D"] as const;
+const DOOR_VAL_LABELS = ["SNA", "OPEN", "CLOSED", "SNA"] as const;
+
+/** Trim float noise to the precision the signal's own factor can express. */
+const quantise = (value: number, decimals: number): number => Number(value.toFixed(decimals));
+
+/**
+ * The vehicle's live signal values, keyed by DBC signal name.
+ *
+ * This is deliberately computed by ENCODING each frame from the current
+ * vehicle state and DECODING it straight back through the same helpers the
+ * CAN terminal uses — not by reading the model's fields directly. Two reasons,
+ * both load-bearing:
+ *
+ *   1. The values reported are the values that are actually on the wire,
+ *      quantised by each signal's factor. `state.json` saying 103.0 km/h while
+ *      every DI_speed frame decodes to 102.96 would be a lie told at one
+ *      decimal place — precisely the kind a reader who decodes a paused frame
+ *      by hand would catch.
+ *   2. It cannot drift. If an encoder's bit layout changes, this block changes
+ *      with it, because it goes through that encoder.
+ *
+ * Wheel speeds are reported without the per-frame jitter `generateBusTraffic`
+ * adds: the jitter models four sensors disagreeing at the millisecond scale,
+ * and a state snapshot that flickers in its third decimal every tick is noise,
+ * not information.
+ */
+export function canSignalSnapshot(vehicle: Vehicle): Record<string, number | string> {
+	const t = vehicle.lastUpdated;
+
+	const speedFrame = encodeDiSpeed(t, vehicle.speedKph);
+	const torqueFrame = encodeDiTorque1(t, motorTorqueNmFor(vehicle), motorRpmFor(vehicle));
+	const wheelFrame = encodeWheelSpeeds(t, [
+		vehicle.speedKph,
+		vehicle.speedKph,
+		vehicle.speedKph,
+		vehicle.speedKph
+	]);
+	const gearFrame = encodeDiSystemStatus(t, vehicle.gear);
+	const doorFrame = encodeGtwCarState(t, vehicle);
+	const socFrame = encodeBmsSocUi(t, vehicle.charge.soc);
+
+	const doorLabel = (startBit: number): string =>
+		DOOR_VAL_LABELS[getBitsLE(doorFrame.data, startBit, 2)] ?? "SNA";
+
+	return {
+		DI_vehicleSpeed: quantise(getBitsLE(speedFrame.data, 12, 12) * 0.08 - 40, 2),
+		DI_torqueMotor: quantise(fromSignedRaw(getBitsLE(torqueFrame.data, 0, 13), 13) * 0.25, 2),
+		DI_motorRPM: fromSignedRaw(getBitsLE(torqueFrame.data, 16, 16), 16),
+		DI_gear: GEAR_VAL_LABELS[getBitsLE(gearFrame.data, 21, 3)] ?? "DI_GEAR_SNA",
+		ESP_wheelSpeedFrL: quantise(getBitsLE(wheelFrame.data, 0, 13) * 0.04, 2),
+		ESP_wheelSpeedFrR: quantise(getBitsLE(wheelFrame.data, 13, 13) * 0.04, 2),
+		ESP_wheelSpeedReL: quantise(getBitsLE(wheelFrame.data, 26, 13) * 0.04, 2),
+		ESP_wheelSpeedReR: quantise(getBitsLE(wheelFrame.data, 39, 13) * 0.04, 2),
+		DOOR_STATE_FL: doorLabel(12),
+		DOOR_STATE_FR: doorLabel(14),
+		DOOR_STATE_RL: doorLabel(22),
+		DOOR_STATE_RR: doorLabel(29),
+		BMS_socUI: quantise(getBitsLE(socFrame.data, 10, 10) * 0.1, 1)
+	};
 }

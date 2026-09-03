@@ -15,7 +15,7 @@
 	"capabilities": {
 		"virtualWorkspaces": true
 	},
-	"activationEvents": ["onFileSystem:fleet"],
+	"activationEvents": ["onFileSystem:fleet", "onWalkthrough:fleet.gettingStarted"],
 	"contributes": {
 		"viewsContainers": {
 			"activitybar": [
@@ -97,6 +97,51 @@
 				}
 			]
 		},
+		"walkthroughs": [
+			{
+				"id": "fleet.gettingStarted",
+				"title": "Fleet Dashboard",
+				"description": "Drive a simulated six-vehicle fleet without leaving the editor.",
+				"steps": [
+					{
+						"id": "fleet.pickVehicle",
+						"title": "Pick a vehicle",
+						"description": "Open the switcher and choose one of the six.\n[Switch Vehicle](command:fleet.switchVehicle)",
+						"media": {
+							"markdown": "media/walkthrough/step-1.md"
+						},
+						"completionEvents": ["onCommand:fleet.switchVehicle"]
+					},
+					{
+						"id": "fleet.unlockDoor",
+						"title": "Unlock a door",
+						"description": "Send a real command and watch it get rejected.\n[Unlock All Doors](command:fleet.unlockAllDoors)",
+						"media": {
+							"markdown": "media/walkthrough/step-2.md"
+						},
+						"completionEvents": ["onCommand:fleet.unlockAllDoors"]
+					},
+					{
+						"id": "fleet.watchBus",
+						"title": "Watch the bus",
+						"description": "Stream decoded CAN frames into the panel.\n[Open CAN Stream](command:fleet.openCanStream)",
+						"media": {
+							"markdown": "media/walkthrough/step-3.md"
+						},
+						"completionEvents": ["onCommand:fleet.openCanStream"]
+					},
+					{
+						"id": "fleet.shipFirmware",
+						"title": "Ship a firmware update",
+						"description": "Run an OTA campaign, preconditions and all.\n[Install Firmware Update](command:fleet.installFirmwareUpdate)",
+						"media": {
+							"markdown": "media/walkthrough/step-4.md"
+						},
+						"completionEvents": ["onCommand:fleet.installFirmwareUpdate"]
+					}
+				]
+			}
+		],
 		"configuration": {
 			"title": "Fleet",
 			"properties": {

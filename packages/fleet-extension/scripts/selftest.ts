@@ -17,7 +17,22 @@ import { seedFleet } from "../src/common/model/fleet";
 import type { VehiclePersonality } from "../src/common/model/types";
 import { FleetSimulator } from "../src/common/sim/clock";
 import type { AmbientEvent } from "../src/common/sim/clock";
-import { decodeFrameAnnotation, encodeDiSpeed, getBitsLE } from "../src/common/sim/can";
+import {
+	canSignalSnapshot,
+	decodeFrameAnnotation,
+	encodeBmsSocUi,
+	encodeDiSpeed,
+	encodeDiSystemStatus,
+	encodeDiTorque1,
+	encodeGtwCarState,
+	encodeWheelSpeeds,
+	getBitsLE,
+	motorRpmFor,
+	motorTorqueNmFor
+} from "../src/common/sim/can";
+import type { CanFrame } from "../src/common/model/types";
+import { FLEET_DBC, parseDbcSignals } from "../src/common/sim/dbcText";
+import { DECORATION_BADGES, decorationFor, dtcSeverity } from "../src/common/model/status";
 import {
 	commandLatencyMs,
 	evaluateOtaPreconditions,
@@ -615,6 +630,292 @@ check(
 );
 
 sim2.dispose();
+
+// ────────────────────────────────────────────────────────────────────────────
+// The DBC asset. `fleet:/fleet.dbc` is what "go to definition" jumps to and
+// what hover cards quote, so its factors are not decoration: if they disagree
+// with the encoders, the demo tells a reader one thing and puts another on the
+// wire. Every check below decodes a frame produced by the REAL encoder using
+// parameters parsed out of the REAL DBC text, so agreement is proved in the
+// only direction that matters.
+// ────────────────────────────────────────────────────────────────────────────
+
+console.log("");
+console.log("dbc: the file agrees with the encoders");
+
+const dbc = parseDbcSignals();
+
+check("FLEET_DBC has a VERSION header", FLEET_DBC.startsWith("VERSION "));
+check("FLEET_DBC declares its nodes in a BU_ list", /^BU_: .*\bDI\b.*\bBMS\b/m.test(FLEET_DBC));
+
+/** Decode a signal out of a frame using ONLY what the DBC text says. */
+function decodeByDbc(canFrame: CanFrame, name: string): number {
+	const signal = dbc.get(name)!;
+	const raw = getBitsLE(canFrame.data, signal.startBit, signal.length);
+	const value = signal.signed && raw >= 2 ** (signal.length - 1) ? raw - 2 ** signal.length : raw;
+	return value * signal.factor + signal.offset;
+}
+
+// Every signal the CAN terminal annotates must be defined in the DBC — and
+// nothing else, so the file cannot grow signals the simulator never emits.
+const ENCODED_SIGNALS = [
+	"DI_vehicleSpeed",
+	"DI_torqueMotor",
+	"DI_motorRPM",
+	"DI_gear",
+	"ESP_wheelSpeedFrL",
+	"ESP_wheelSpeedFrR",
+	"ESP_wheelSpeedReL",
+	"ESP_wheelSpeedReR",
+	"DOOR_STATE_FL",
+	"DOOR_STATE_FR",
+	"DOOR_STATE_RL",
+	"DOOR_STATE_RR",
+	"BMS_socUI"
+];
+const missingSignals = ENCODED_SIGNALS.filter((name) => !dbc.has(name));
+check("DBC defines every signal the simulator encodes", missingSignals.length === 0, missingSignals.join(", ") || "none missing");
+const extraSignals = [...dbc.keys()].filter((name) => !ENCODED_SIGNALS.includes(name));
+check("DBC defines nothing the simulator does not encode", extraSignals.length === 0, extraSignals.join(", ") || "none extra");
+
+// Arbitration ids: the BO_ the signal sits under must be the id the encoder
+// actually stamps on the frame.
+const ID_CASES: Array<[string, CanFrame]> = [
+	["DI_vehicleSpeed", encodeDiSpeed(T0, 0)],
+	["DI_torqueMotor", encodeDiTorque1(T0, 0, 0)],
+	["DI_motorRPM", encodeDiTorque1(T0, 0, 0)],
+	["DI_gear", encodeDiSystemStatus(T0, "P")],
+	["ESP_wheelSpeedFrL", encodeWheelSpeeds(T0, [0, 0, 0, 0])],
+	["BMS_socUI", encodeBmsSocUi(T0, 0)],
+	["DOOR_STATE_FL", encodeGtwCarState(T0, seedFleet(T0)[0]!)]
+];
+const idMismatches = ID_CASES.filter(([name, canFrame]) => dbc.get(name)!.messageId !== canFrame.id);
+check(
+	"every BO_ id matches the id its encoder stamps",
+	idMismatches.length === 0,
+	idMismatches.map(([name, f]) => `${name}: dbc ${dbc.get(name)!.messageId} vs frame ${f.id}`).join("; ") || "7 signals checked"
+);
+
+// Byte order: every signal in this file is Intel (@1), because the simulator
+// packs every frame through one pair of little-endian helpers. A future
+// Motorola signal here would decode as garbage in the terminal.
+check("every signal is Intel byte order (@1)", [...dbc.values()].every((s) => s.byteOrder === 1));
+check(
+	"only the torque and RPM signals are signed",
+	[...dbc.values()].filter((s) => s.signed).map((s) => s.name).sort().join(",") === "DI_motorRPM,DI_torqueMotor",
+	[...dbc.values()].filter((s) => s.signed).map((s) => s.name).join(",") || "none"
+);
+
+// Physical round-trips. Every input value below sits exactly on its signal's
+// quantisation lattice, so these are exact-equality checks, not tolerances:
+// 100 km/h is (100+40)/0.08 = 1750 raw; 125 Nm is 500 raw; 10 km/h is 250 raw
+// at 0.04; 62.5% is 625 raw at 0.1.
+check(
+	"DI_vehicleSpeed decodes at the DBC's (0.08, −40)",
+	decodeByDbc(encodeDiSpeed(T0, 100), "DI_vehicleSpeed") === 100,
+	`${decodeByDbc(encodeDiSpeed(T0, 100), "DI_vehicleSpeed")}`
+);
+const torqueFrame = encodeDiTorque1(T0, 125, 8000);
+check("DI_torqueMotor decodes at the DBC's 0.25 Nm/bit", decodeByDbc(torqueFrame, "DI_torqueMotor") === 125);
+check("DI_motorRPM decodes at the DBC's 1 rpm/bit", decodeByDbc(torqueFrame, "DI_motorRPM") === 8000);
+check(
+	"DI_torqueMotor is signed at 13 bits (regen decodes negative)",
+	decodeByDbc(encodeDiTorque1(T0, -80, -2000), "DI_torqueMotor") === -80 &&
+		decodeByDbc(encodeDiTorque1(T0, -80, -2000), "DI_motorRPM") === -2000
+);
+
+const wheelFrame = encodeWheelSpeeds(T0, [10, 20, 30, 40]);
+check(
+	"all four ESP_wheelSpeed signals decode at 0.04 km/h/bit from their own start bits",
+	decodeByDbc(wheelFrame, "ESP_wheelSpeedFrL") === 10 &&
+		decodeByDbc(wheelFrame, "ESP_wheelSpeedFrR") === 20 &&
+		decodeByDbc(wheelFrame, "ESP_wheelSpeedReL") === 30 &&
+		decodeByDbc(wheelFrame, "ESP_wheelSpeedReR") === 40,
+	[
+		decodeByDbc(wheelFrame, "ESP_wheelSpeedFrL"),
+		decodeByDbc(wheelFrame, "ESP_wheelSpeedFrR"),
+		decodeByDbc(wheelFrame, "ESP_wheelSpeedReL"),
+		decodeByDbc(wheelFrame, "ESP_wheelSpeedReR")
+	].join(", ")
+);
+check("BMS_socUI decodes at 0.1 %/bit", decodeByDbc(encodeBmsSocUi(T0, 62.5), "BMS_socUI") === 62.5);
+check("DI_gear decodes to the VAL_ table's D = 4", decodeByDbc(encodeDiSystemStatus(T0, "D"), "DI_gear") === 4);
+check(
+	"the VAL_ table names every gear the model has",
+	["DI_GEAR_P", "DI_GEAR_R", "DI_GEAR_N", "DI_GEAR_D"].every((label) => FLEET_DBC.includes(`"${label}"`))
+);
+
+// The door fields are at irregular offsets in the real GTW_carState layout
+// (RR at 29, not 30). Open exactly one door and check the DBC's start bits
+// find it there and nowhere else — an off-by-one in either file fails this.
+const ajar = seedFleet(T0)[0]!;
+ajar.doors.RR.open = true;
+const doorFrame = encodeGtwCarState(T0, ajar);
+check(
+	"DOOR_STATE_* start bits (12/14/22/29) isolate the open door",
+	decodeByDbc(doorFrame, "DOOR_STATE_RR") === 1 &&
+		decodeByDbc(doorFrame, "DOOR_STATE_FL") === 2 &&
+		decodeByDbc(doorFrame, "DOOR_STATE_FR") === 2 &&
+		decodeByDbc(doorFrame, "DOOR_STATE_RL") === 2,
+	[
+		decodeByDbc(doorFrame, "DOOR_STATE_FL"),
+		decodeByDbc(doorFrame, "DOOR_STATE_FR"),
+		decodeByDbc(doorFrame, "DOOR_STATE_RL"),
+		decodeByDbc(doorFrame, "DOOR_STATE_RR")
+	].join(", ")
+);
+check("DOOR_STATE_RR is documented as sitting at bit 29", dbc.get("DOOR_STATE_RR")!.startBit === 29);
+check(
+	"the convention-based BMS message carries a CM_ disclaimer",
+	/^CM_ BO_ 658 "Not from the public Model 3 DBC/m.test(FLEET_DBC)
+);
+
+// Positions: the definition provider jumps to (line, column) computed here.
+const speedSignal = dbc.get("DI_vehicleSpeed")!;
+check(
+	"parsed positions land on the signal name in the file",
+	FLEET_DBC.split("\n")[speedSignal.line]!.slice(speedSignal.column, speedSignal.column + speedSignal.name.length) ===
+		speedSignal.name,
+	`line ${speedSignal.line}, col ${speedSignal.column}`
+);
+
+console.log("");
+console.log("serialize: can_signals block");
+
+const signalSim = new FleetSimulator(T0);
+const signalAtlas = signalSim.getVehicles().find((v) => v.personality === "driving")!;
+const signalDune = signalSim.getVehicles().find((v) => v.personality === "faulted")!;
+const signalState = JSON.parse(signalSim.serializeState(signalAtlas.vin)) as Record<string, any>;
+
+check(
+	"state.json carries a can_signals block keyed by DBC signal name",
+	ENCODED_SIGNALS.every((name) => signalState.can_signals?.[name] !== undefined),
+	Object.keys(signalState.can_signals ?? {}).length + " keys"
+);
+check(
+	"can_signals matches the snapshot the encoders produce",
+	JSON.stringify(signalState.can_signals) === JSON.stringify(canSignalSnapshot(signalAtlas))
+);
+// The load-bearing property: the number in state.json is the number on the
+// wire, quantised by the signal's own factor — not the model's raw float.
+check(
+	"can_signals.DI_vehicleSpeed equals the DBC decode of a live DI_speed frame",
+	signalState.can_signals.DI_vehicleSpeed ===
+		Number(decodeByDbc(encodeDiSpeed(T0, signalAtlas.speedKph), "DI_vehicleSpeed").toFixed(2)),
+	`${signalState.can_signals.DI_vehicleSpeed} vs model ${signalAtlas.speedKph}`
+);
+check(
+	"can_signals reports the derived powertrain values, not zeros",
+	signalState.can_signals.DI_motorRPM === Math.round(motorRpmFor(signalAtlas)) &&
+		Math.abs(signalState.can_signals.DI_torqueMotor - motorTorqueNmFor(signalAtlas)) <= 0.125,
+	`${signalState.can_signals.DI_torqueMotor} Nm, ${signalState.can_signals.DI_motorRPM} rpm`
+);
+check(
+	"enumerated signals report VAL_ labels",
+	signalState.can_signals.DI_gear === "DI_GEAR_D" && signalState.can_signals.DOOR_STATE_FL === "CLOSED",
+	`${signalState.can_signals.DI_gear} / ${signalState.can_signals.DOOR_STATE_FL}`
+);
+
+console.log("");
+console.log("serialize: diagnostics anchors");
+
+const duneState = signalSim.serializeState(signalDune.vin);
+const duneDtcs = signalSim.serializeDtcs(signalDune.vin);
+const duneStateDoc = JSON.parse(duneState) as Record<string, any>;
+
+check("a faulted vehicle's state.json carries a diagnostics block", duneStateDoc.diagnostics?.count === 5);
+check("a healthy vehicle's state.json omits it entirely", signalState.diagnostics === undefined);
+// This IS the diagnostics provider's search, run here: every code must be
+// findable as a quoted string in BOTH files, or a Problems entry would have
+// nowhere real to point.
+const unanchored = signalDune.dtcs.filter(
+	(dtc) => !duneState.includes(`"${dtc.code}"`) || !duneDtcs.includes(`"${dtc.code}"`)
+);
+check(
+	"every DTC is findable as a quoted string in state.json and dtcs.json",
+	unanchored.length === 0,
+	unanchored.map((d) => d.code).join(", ") || "5 codes anchored in both files"
+);
+check(
+	"each code appears exactly once per file (no ambiguous anchor)",
+	signalDune.dtcs.every(
+		(dtc) =>
+			duneState.split(`"${dtc.code}"`).length === 2 && duneDtcs.split(`"${dtc.code}"`).length === 2
+	)
+);
+
+signalSim.dispose();
+
+console.log("");
+console.log("decorations: badge rule and priority");
+
+/**
+ * VS Code counts badge length in grapheme clusters and DROPS the decoration
+ * (throwing inside the extension host, where nobody sees it) when a badge is
+ * longer than two. Segmenter where available, code points otherwise — the two
+ * agree for every badge this module can emit, and disagreeing would itself be
+ * worth knowing.
+ */
+const graphemeCount = (value: string): number =>
+	typeof Intl !== "undefined" && "Segmenter" in Intl
+		? [...new Intl.Segmenter().segment(value)].length
+		: [...value].length;
+
+const oversizedBadges = DECORATION_BADGES.filter((badge) => graphemeCount(badge) > 2);
+check(
+	"every badge is at most 2 grapheme clusters",
+	oversizedBadges.length === 0,
+	DECORATION_BADGES.map((b) => `${b}=${graphemeCount(b)}`).join(" ")
+);
+
+const decoFleet = seedFleet(T0);
+const decoAtlas = decoFleet.find((v) => v.personality === "driving")!;
+const decoBeacon = decoFleet.find((v) => v.personality === "charging")!;
+const decoCinder = decoFleet.find((v) => v.personality === "asleep")!;
+const decoDune = decoFleet.find((v) => v.personality === "faulted")!;
+
+check("faulted → \"!\" with a DTC count tooltip", decorationFor(decoDune)?.badge === "!" && decorationFor(decoDune)?.tooltip === "5 DTCs", decorationFor(decoDune)?.tooltip);
+check("charging → \"⚡\" with the live power", decorationFor(decoBeacon)?.badge === "⚡" && decorationFor(decoBeacon)!.tooltip.includes("kW"), decorationFor(decoBeacon)?.tooltip);
+check("asleep → \"zz\"", decorationFor(decoCinder)?.badge === "zz");
+check("an unremarkable vehicle gets no badge at all", decorationFor(decoAtlas) === undefined);
+
+// Priority: Dune is BOTH faulted and at 7% SoC. One badge fits, and it must
+// be the fault — the ordering in status.ts is the entire design.
+check("faulted outranks low SoC on the same vehicle", decoDune.charge.soc < 20 && decorationFor(decoDune)!.badge === "!", `${decoDune.charge.soc}% SoC`);
+const lowOnly = decoFleet.find((v) => v.id === "fathom")!;
+lowOnly.charge.soc = 11;
+check("low SoC alone → \"%\" with the rounded charge", decorationFor(lowOnly)?.badge === "%" && decorationFor(lowOnly)?.tooltip === "Charge 11%", decorationFor(lowOnly)?.tooltip);
+const chargingAndLow = decoFleet.find((v) => v.id === "ember")!;
+chargingAndLow.charge.soc = 9;
+chargingAndLow.charge.charging = true;
+chargingAndLow.charge.powerKw = 122;
+check("charging outranks low SoC (it is already being fixed)", decorationFor(chargingAndLow)?.badge === "⚡", decorationFor(chargingAndLow)?.tooltip);
+
+// Every colour is referenced by id so the provider can wrap it in a
+// ThemeColor; a typo'd id renders as the default foreground and nothing
+// complains, so pin the four.
+check(
+	"each rule names its ThemeColor id",
+	decorationFor(decoDune)?.colorId === "list.errorForeground" &&
+		decorationFor(decoBeacon)?.colorId === "charts.blue" &&
+		decorationFor(lowOnly)?.colorId === "list.warningForeground" &&
+		decorationFor(decoCinder)?.colorId === "list.deemphasizedForeground"
+);
+
+console.log("");
+console.log("diagnostics: DTC severity tiers");
+
+check("P0A80 (replace the pack) is an Error", dtcSeverity("P0A80") === "error");
+check("P0562 (12V low) is a Warning", dtcSeverity("P0562") === "warning");
+check("U0100 (ECM off the bus) is a Warning", dtcSeverity("U0100") === "warning");
+check("P0A7D and P0A7E are Information", dtcSeverity("P0A7D") === "information" && dtcSeverity("P0A7E") === "information");
+check("an unrecognised code degrades to Information, not a crash", dtcSeverity("P1234") === "information");
+check(
+	"every seeded DTC maps to a known tier",
+	decoDune.dtcs.every((dtc) => ["error", "warning", "information"].includes(dtcSeverity(dtc.code))),
+	decoDune.dtcs.map((d) => `${d.code}=${dtcSeverity(d.code)}`).join(" ")
+);
+
 console.log("");
 if (failures > 0) {
 	console.log(`${failures} check(s) failed`);
