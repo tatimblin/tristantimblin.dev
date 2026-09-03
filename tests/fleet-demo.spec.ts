@@ -17,7 +17,8 @@ import { fileURLToPath } from "node:url";
  * booting — .monaco-workbench, tree rows, xterm output, a notification toast.
  *
  * Three further failure modes get their own tests, because each is invisible in
- * the same way:
+ * the same way — plus a fourth that is the opposite problem: a demo that looks
+ * broken while working exactly as written (see the phone test).
  *
  *  1. EAGER LOADING. The whole point of the poster is that a 15 MB bundle does
  *     not download for readers who never press the button. If the element ever
@@ -117,6 +118,39 @@ test("the demo stays out of the page until summoned", async ({ page }) => {
 		asked.filter((path) => path !== "/fleet-demo/index.html"),
 		"priming pulled bundle assets, not just the page"
 	).toEqual([]);
+});
+
+test("a phone gets a live button, not a disabled one", async ({ page }) => {
+	// The embed used to gate itself at 768px: below that the poster stayed and the
+	// launch button rendered DISABLED while still reading "Launch the demo". From
+	// the reader's side that is indistinguishable from broken software — tap,
+	// nothing. The gate is gone, and this is the test that keeps it gone.
+	//
+	// Deliberately NOT a full narrow boot: the workbench costs ~15 MB and 30-90s
+	// in CI, and the four tests above already prove it really boots. What is
+	// specific to this viewport is the ENTRY — an enabled control that moves the
+	// state machine off the poster — so that is all this asserts.
+	await page.setViewportSize({ width: 393, height: 659 });
+	await page.goto(POST);
+
+	const demo = page.locator("fleet-demo");
+	await demo.scrollIntoViewIfNeeded();
+
+	const launch = demo.locator("[data-launch]");
+	await expect(launch).toBeEnabled();
+	await expect(demo).not.toHaveAttribute("data-state", "unsupported");
+
+	// The narrow box has to be a shape a workbench can live in, not the desktop
+	// 16/10 letterbox, which is ~245px tall here — less than the panel alone
+	// claims. Asserting taller-than-wide is the cheap proxy for that.
+	const box = await demo.boundingBox();
+	expect(box, "the embed did not lay out").toBeTruthy();
+	expect(box!.height, `the embed is ${box!.width}x${box!.height} on a phone`).toBeGreaterThan(
+		box!.width
+	);
+
+	await launch.click();
+	await expect(demo).toHaveAttribute("data-state", "launching");
 });
 
 test("launch boots a real workbench, not an iframe-shaped shell", async ({ page }) => {

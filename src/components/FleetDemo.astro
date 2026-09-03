@@ -3,7 +3,7 @@
 // running the real fleet extension, booted inside the article.
 //
 // The element (packages/vscode-fleet-demo) owns the whole lifecycle — poster →
-// prefetch-on-approach → launch → iframe → ready — plus the <768px gate. This
+// prefetch-on-approach → launch → iframe → ready. It launches at any width. This
 // file supplies only the two things a package cannot know: the light-DOM markup
 // it enhances, and how the frame sits in a 68ch reading column.
 //
@@ -27,10 +27,7 @@ import "@whois/vscode-fleet-demo/element.css";
 			decoding="async"
 		/>
 		<button type="button" data-launch>Launch the demo</button>
-		<p data-caption>
-			Real VS Code, real extension, mock vehicles. Best on desktop — needs a pointer and some
-			width.
-		</p>
+		<p data-caption>Real VS Code, real extension, mock vehicles. Roomier on a desktop.</p>
 	</div>
 </fleet-demo>
 
@@ -110,8 +107,8 @@ import "@whois/vscode-fleet-demo/element.css";
 	}
 
 	/* The caption is a static block, so it would paint UNDERNEATH the absolutely
-	   positioned poster image when the <768px gate reveals it. Positioning it
-	   puts it back in the same painting layer as the button above it. */
+	   positioned poster image on the narrow viewports that reveal it. Positioning
+	   it puts it back in the same painting layer as the button above it. */
 	.fleet-demo [data-caption] {
 		position: relative;
 		font-family: var(--font-ui, inherit);
@@ -120,13 +117,16 @@ import "@whois/vscode-fleet-demo/element.css";
 		text-wrap: balance;
 	}
 
-	/* On a phone the frame is only ~214px tall and the caption is the ONLY thing
-	   the reader can act on, yet it lands on top of a dense screenshot in muted
-	   grey. Dimming the poster itself is the one-property way to buy that
+	/* On a phone the poster carries a button AND a caption over a screenshot that
+	   is itself a dense screenful of editor at ~360px wide, and the caption is
+	   muted grey. Dimming the poster is the one-property way to buy that
 	   contrast: a scrim overlay would have to be threaded between the absolutely
 	   positioned image and the text above it, which means inventing a stacking
-	   order element.css deliberately leaves flat. */
-	.fleet-demo[data-state="unsupported"] [data-poster] img {
-		filter: brightness(0.4) saturate(0.75);
+	   order element.css deliberately leaves flat. Keyed to the same breakpoint as
+	   element.css's caption reveal — desktop keeps the poster at full strength. */
+	@media (max-width: 767px) {
+		.fleet-demo [data-poster] img {
+			filter: brightness(0.4) saturate(0.75);
+		}
 	}
 </style>

@@ -83,17 +83,16 @@ fleet-demo[data-state="ready"] [data-launch] {
 
 /* --- small-viewport caption ------------------------------------------------ */
 
-/* Hidden unless the viewport gate trips; the consumer authors the wording. */
+/* Shown only on narrow viewports (see the sizing block at the foot of this
+   file). On a desktop the button is the whole story; on a phone it is worth
+   saying, before the tap, that the workbench is about to be tight. The
+   consumer authors the wording. */
 fleet-demo [data-caption] {
 	display: none;
 	color: var(--color-muted, rgba(160, 160, 160, 0.9));
 	font-size: 0.85em;
 	text-align: center;
 	padding-inline: var(--space-4, 16px);
-}
-
-fleet-demo[data-state="unsupported"] [data-caption] {
-	display: block;
 }
 
 /* --- iframe ---------------------------------------------------------------- */
@@ -221,6 +220,44 @@ fleet-demo .fleet-demo-error [data-retry] {
 	border-radius: var(--border-radius-0, 4px);
 	background: transparent;
 	color: inherit;
+}
+
+/* --- narrow viewports ------------------------------------------------------- */
+
+/* Phones boot the real workbench now (element.ts dropped the 768px gate), so
+   they need a shape a workbench can actually live in. The desktop 16/10 box is
+   a ~245px-tall letterbox at 390px wide — once the reset strip, the tab bar,
+   the 260px panel and the status bar have taken their fixed heights there is
+   nothing left over to be an editor at all.
+
+   3/4 measured better than the alternatives at 393x659 (an iPhone 15): the
+   frame comes out 361x481, the workbench 359x451, and the parts then divide as
+   sidebar 170x399 / editor 300x139 / panel 300x260 / status bar 22 — every one
+   of them present, and ~25% of the screen still showing the article around it,
+   so the embed reads as a figure in a post rather than a takeover. A taller
+   ratio buys the editor another ~45px and costs that context; not worth it,
+   because height is not what is actually tight here. WIDTH is: VS Code's grid
+   holds the editor to a 300px minimum, so with the sidebar open the editor and
+   panel start at x=218 and their right ~160px is clipped by the workbench.
+   No aspect ratio can fix that — only closing the sidebar can, which is one
+   tap on the activity bar and is the escape a phone reader has. The demo is
+   cramped there, knowingly.
+
+   `aspect-ratio` rather than a flat height so the box still scales with the
+   column. `max-height` then keeps the same rule honest on a landscape phone,
+   where 3/4 of a 760px-wide column would be a metre-tall frame the reader has
+   to scroll past. Height wins over the ratio there and the box just gets wider
+   — which is the right answer for that viewport anyway. */
+@media (max-width: 767px) {
+	fleet-demo {
+		aspect-ratio: 3 / 4;
+		max-height: 80vh; /* fallback where svh is not understood */
+		max-height: 80svh;
+	}
+
+	fleet-demo [data-caption] {
+		display: block;
+	}
 }
 
 /* --- reduced motion --------------------------------------------------------- */

@@ -1,8 +1,7 @@
 const IFRAME_SRC = "/fleet-demo/index.html";
 const READY_TIMEOUT_MS = 60_000;
-const MIN_VIEWPORT = "(min-width: 768px)";
 
-type DemoState = "poster" | "priming" | "launching" | "ready" | "error" | "unsupported";
+type DemoState = "poster" | "priming" | "launching" | "ready" | "error";
 
 /**
  * <fleet-demo> — click-to-run VS Code embed.
@@ -22,10 +21,16 @@ type DemoState = "poster" | "priming" | "launching" | "ready" | "error" | "unsup
  * State machine (reflected as `data-state` for CSS):
  *   poster → priming → launching → ready
  *                          ↘ error (timeout or iframe-reported) → retry → launching
- *   unsupported (viewport < 768px) at any pre-launch point, re-evaluated live.
  *
- * The workbench needs real horizontal room; below 768px the poster stays,
- * the launch button is disabled, and the caption explains why.
+ * There is deliberately NO viewport gate. This used to refuse below 768px: the
+ * poster stayed and the launch button rendered disabled — but still labelled
+ * "Launch the demo". A disabled control whose label has not changed reads as
+ * breakage, not as a limit; a reader on an iPhone tapped it, nothing happened,
+ * and the honest conclusion from outside is that the software is broken. So the
+ * gate is gone. The workbench IS genuinely hard to use at phone width — the
+ * tree, editor and panel all fight over ~350px — and shipping that is the
+ * informed trade: a cramped-but-real workbench a curious reader can poke at
+ * beats a dead button that tells them no.
  */
 export class FleetDemoElement extends HTMLElement {
 	private launchButton: HTMLButtonElement | null = null;
@@ -36,7 +41,6 @@ export class FleetDemoElement extends HTMLElement {
 	private chrome: HTMLElement | null = null;
 	private prefetchLink: HTMLLinkElement | null = null;
 	private observer: IntersectionObserver | null = null;
-	private viewportQuery: MediaQueryList | null = null;
 	private abortController: AbortController | null = null;
 	private readyTimeout: ReturnType<typeof setTimeout> | null = null;
 	private listeners: Array<() => void> = [];
@@ -59,11 +63,6 @@ export class FleetDemoElement extends HTMLElement {
 			signal: abortController.signal
 		});
 
-		this.viewportQuery = window.matchMedia(MIN_VIEWPORT);
-		const onViewportChange = () => this.applyViewportGate();
-		this.viewportQuery.addEventListener("change", onViewportChange);
-		this.listeners.push(() => this.viewportQuery?.removeEventListener("change", onViewportChange));
-
 		if (this.launchButton) {
 			const onLaunch = () => this.launch();
 			this.launchButton.addEventListener("click", onLaunch);
@@ -79,8 +78,6 @@ export class FleetDemoElement extends HTMLElement {
 			{ rootMargin: "200px" }
 		);
 		this.observer.observe(this);
-
-		this.applyViewportGate();
 	}
 
 	disconnectedCallback() {
@@ -115,18 +112,6 @@ export class FleetDemoElement extends HTMLElement {
 		this.setAttribute("data-state", state);
 	}
 
-	/** Viewport gate: too narrow → unsupported (unless already running). */
-	private applyViewportGate() {
-		if (this.launched) return;
-		if (this.viewportQuery?.matches) {
-			if (this.state === "unsupported") this.setState("poster");
-			this.launchButton?.removeAttribute("disabled");
-		} else {
-			this.setState("unsupported");
-			this.launchButton?.setAttribute("disabled", "");
-		}
-	}
-
 	/** Near-viewport warmup: prefetch the iframe document, once. */
 	private prime() {
 		this.observer?.disconnect();
@@ -141,7 +126,7 @@ export class FleetDemoElement extends HTMLElement {
 	}
 
 	private launch() {
-		if (this.launched || !this.viewportQuery?.matches) return;
+		if (this.launched) return;
 		this.launched = true;
 		this.errorNote?.remove();
 		this.errorNote = null;

@@ -13,8 +13,11 @@ Two deliverables live here:
 2. **The `<fleet-demo>` custom element** (`src/element.ts` + `src/element.css`)
    — the site-side poster/launch wrapper the blog post uses. Poster → prefetch
    when scrolled near → iframe on click → progress bar → reveal when the
-   vehicle tree has rendered. Below 768px the poster stays and the button is
-   disabled (the workbench needs horizontal room).
+   vehicle tree has rendered. It launches at **any** viewport width: below
+   768px the frame goes portrait (`aspect-ratio: 3 / 4`, capped at `80svh`) and
+   the caption warns that it will be tight. A workbench on a phone is genuinely
+   cramped — but a disabled button labelled "Launch the demo" reads as broken
+   software, which is worse.
 
 ## Build-step deviation from the `@whois/*` convention
 
