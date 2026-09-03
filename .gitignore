@@ -1,6 +1,9 @@
 # build output
 dist/
 
+# built VS Code workbench page (bun run build:fleet-demo)
+public/fleet-demo/
+
 # generated types
 .astro/
 
