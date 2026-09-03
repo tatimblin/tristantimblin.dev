@@ -1,0 +1,168 @@
+/* <fleet-demo> — site-side styling for the poster/launch lifecycle.
+ *
+ * This renders in the blog page (NOT inside the workbench iframe), so it
+ * speaks the site's design-system tokens — always with literal fallbacks, per
+ * the packages/* convention, so the element degrades gracefully anywhere the
+ * token cascade is absent. */
+
+fleet-demo {
+	position: relative;
+	display: block;
+	overflow: hidden;
+	aspect-ratio: 16 / 10;
+	border-radius: var(--border-radius-2, 12px);
+	border: 1px solid var(--color-border, rgba(128, 128, 128, 0.35));
+	background: #1f1f1f; /* Dark Modern editor chrome, so the reveal doesn't flash */
+}
+
+/* --- poster ---------------------------------------------------------------- */
+
+fleet-demo [data-poster] {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-4, 16px);
+	transition-property: opacity, visibility;
+	transition-duration: 0.35s;
+	transition-timing-function: ease;
+}
+
+fleet-demo [data-poster] img {
+	max-width: 100%;
+	height: 100%;
+	object-fit: cover;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+}
+
+/* Once the workbench is live, the poster fades out from over the iframe. */
+fleet-demo[data-state="ready"] [data-poster] {
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+}
+
+/* --- launch button --------------------------------------------------------- */
+
+fleet-demo [data-launch] {
+	position: relative;
+	cursor: pointer;
+	font: inherit;
+	padding: var(--space-3, 12px) var(--space-5, 24px);
+	border: none;
+	border-radius: var(--border-radius-1, 8px);
+	background: var(--color-accent, #5686f5);
+	color: #ffffff;
+	transition-property: transform, opacity;
+	transition-duration: 0.15s;
+	transition-timing-function: ease;
+}
+
+fleet-demo [data-launch]:hover:not([disabled]) {
+	transform: scale(1.03);
+}
+
+fleet-demo [data-launch][disabled] {
+	cursor: default;
+	opacity: 0.6;
+}
+
+fleet-demo[data-state="launching"] [data-launch],
+fleet-demo[data-state="ready"] [data-launch] {
+	visibility: hidden;
+}
+
+/* --- small-viewport caption ------------------------------------------------ */
+
+/* Hidden unless the viewport gate trips; the consumer authors the wording. */
+fleet-demo [data-caption] {
+	display: none;
+	color: var(--color-muted, rgba(160, 160, 160, 0.9));
+	font-size: 0.85em;
+	text-align: center;
+	padding-inline: var(--space-4, 16px);
+}
+
+fleet-demo[data-state="unsupported"] [data-caption] {
+	display: block;
+}
+
+/* --- iframe ---------------------------------------------------------------- */
+
+fleet-demo iframe[data-fleet-demo-frame] {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+	display: block;
+}
+
+/* The workbench boots underneath the poster; it is only interactable once
+   ready (the poster overlay swallows pointer events until it fades). */
+
+/* --- boot progress --------------------------------------------------------- */
+
+fleet-demo .fleet-demo-progress {
+	position: absolute;
+	left: 50%;
+	bottom: var(--space-6, 32px);
+	transform: translateX(-50%);
+	width: min(280px, 60%);
+	height: 4px;
+	border-radius: 2px;
+	background: rgba(255, 255, 255, 0.18);
+	overflow: hidden;
+	z-index: 1;
+}
+
+fleet-demo .fleet-demo-progress-fill {
+	height: 100%;
+	width: 0%;
+	background: var(--color-accent, #5686f5);
+	transition-property: width;
+	transition-duration: 0.3s;
+	transition-timing-function: ease-out;
+}
+
+/* --- error ------------------------------------------------------------------ */
+
+fleet-demo .fleet-demo-error {
+	position: absolute;
+	left: 50%;
+	bottom: var(--space-6, 32px);
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: var(--space-3, 12px);
+	padding: var(--space-2, 8px) var(--space-4, 16px);
+	border-radius: var(--border-radius-1, 8px);
+	background: rgba(0, 0, 0, 0.75);
+	color: #ffffff;
+	font-size: 0.9em;
+	z-index: 1;
+}
+
+fleet-demo .fleet-demo-error [data-retry] {
+	cursor: pointer;
+	font: inherit;
+	padding: var(--space-1, 4px) var(--space-3, 12px);
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	border-radius: var(--border-radius-0, 4px);
+	background: transparent;
+	color: inherit;
+}
+
+/* --- reduced motion --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+	fleet-demo [data-poster],
+	fleet-demo [data-launch],
+	fleet-demo .fleet-demo-progress-fill {
+		transition-duration: 0s;
+	}
+}
