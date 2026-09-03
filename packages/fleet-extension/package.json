@@ -54,6 +54,11 @@
 		],
 		"commands": [
 			{
+				"command": "fleet.openControls",
+				"title": "Open Vehicle Controls",
+				"category": "Fleet"
+			},
+			{
 				"command": "fleet.unlockAllDoors",
 				"title": "Unlock All Doors",
 				"category": "Fleet"
@@ -84,6 +89,14 @@
 				"category": "Fleet"
 			}
 		],
+		"menus": {
+			"commandPalette": [
+				{
+					"command": "fleet.openControls",
+					"when": "false"
+				}
+			]
+		},
 		"configuration": {
 			"title": "Fleet",
 			"properties": {

@@ -15,6 +15,8 @@
 import { computeCheckDigit, generateVin, isValidVin } from "../src/common/model/vin";
 import { seedFleet } from "../src/common/model/fleet";
 import type { VehiclePersonality } from "../src/common/model/types";
+import { FleetSimulator } from "../src/common/sim/clock";
+import { getBitsLE } from "../src/common/sim/can";
 
 let failures = 0;
 
@@ -212,6 +214,164 @@ a[0]!.speedKph = 999;
 check("seedFleet returns fresh objects", b[0]!.speedKph !== 999);
 check("seedFleet is VIN-stable across calls", a.map((v) => v.vin).join() === b.map((v) => v.vin).join());
 
+
+// ────────────────────────────────────────────────────────────────────────────
+// Simulator. Constructed directly and driven with explicit `tick(now)` calls —
+// virtual time, no interval, no sleeping — which is only possible because
+// src/common/sim/ has no `vscode` import. If these lines ever fail to *load*,
+// that property broke.
+// ────────────────────────────────────────────────────────────────────────────
+
+console.log("");
+console.log("sim: physics");
+
+const T0 = 1_756_857_600_000;
+const sim = new FleetSimulator(T0);
+const atlas = sim.getVehicles().find((v) => v.personality === "driving")!;
+const beacon = sim.getVehicles().find((v) => v.personality === "charging")!;
+const cinder = sim.getVehicles().find((v) => v.personality === "asleep")!;
+const dune = sim.getVehicles().find((v) => v.personality === "faulted")!;
+
+const seedLat = atlas.position.lat;
+const seedLon = atlas.position.lon;
+const seedOdometer = atlas.odometerKm;
+const cinderBefore = JSON.stringify(cinder);
+const duneBefore = JSON.stringify(dune);
+
+const changedVins = new Set<string>();
+sim.onVehicleChanged((vin) => changedVins.add(vin));
+
+// 120 ticks × 250 ms = 30 s of virtual driving/charging.
+let socMonotonic = true;
+let speedInBounds = true;
+let lastSoc = beacon.charge.soc;
+let now = T0;
+for (let i = 0; i < 120; i++) {
+	now = T0 + (i + 1) * 250;
+	sim.tick(now);
+	if (beacon.charge.soc < lastSoc) socMonotonic = false;
+	lastSoc = beacon.charge.soc;
+	if (atlas.speedKph < 90 || atlas.speedKph > 115) speedInBounds = false;
+}
+
+check("atlas speed stays within 90–115 km/h across 120 ticks", speedInBounds, `${atlas.speedKph.toFixed(1)} km/h now`);
+check(
+	"atlas GPS advanced",
+	atlas.position.lat !== seedLat || atlas.position.lon !== seedLon,
+	`${seedLat},${seedLon} → ${atlas.position.lat.toFixed(5)},${atlas.position.lon.toFixed(5)}`
+);
+check("atlas odometer advanced", atlas.odometerKm > seedOdometer, `+${(atlas.odometerKm - seedOdometer).toFixed(3)} km`);
+check("beacon SoC rose monotonically", socMonotonic && beacon.charge.soc > 54, `54% → ${beacon.charge.soc.toFixed(1)}%`);
+check("beacon charge power tapers but stays positive", beacon.charge.powerKw > 0 && beacon.charge.powerKw < 147, `${beacon.charge.powerKw} kW`);
+check("asleep vehicle untouched by the clock", JSON.stringify(cinder) === cinderBefore);
+check("faulted vehicle untouched by the clock", JSON.stringify(dune) === duneBefore);
+check(
+	"onVehicleChanged fired for the movers, not the sleepers",
+	changedVins.has(atlas.vin) && changedVins.has(beacon.vin) && !changedVins.has(cinder.vin) && !changedVins.has(dune.vin),
+	[...changedVins].map((vin) => vin.slice(-6)).join(", ")
+);
+
+console.log("");
+console.log("sim: serialization");
+
+const stateJson = sim.serializeState(atlas.vin);
+let state: Record<string, any> | null = null;
+try {
+	state = JSON.parse(stateJson);
+} catch {
+	state = null;
+}
+check("serializeState produces parseable JSON", state !== null, `${stateJson.length} bytes`);
+check(
+	"state has charge_state / climate_state / drive_state / vehicle_state",
+	!!state && ["charge_state", "climate_state", "drive_state", "vehicle_state"].every((key) => typeof state![key] === "object")
+);
+check(
+	"vehicle_state carries df/dr/pf/pr and ft/rt",
+	!!state && ["df", "dr", "pf", "pr", "ft", "rt"].every((key) => typeof state!.vehicle_state[key] === "number")
+);
+check(
+	"vehicle_state carries locked, odometer and software_update{status,version}",
+	!!state &&
+		typeof state.vehicle_state.locked === "boolean" &&
+		typeof state.vehicle_state.odometer_km === "number" &&
+		typeof state.vehicle_state.software_update?.status === "string" &&
+		typeof state.vehicle_state.software_update?.version === "string"
+);
+
+const dtcsJson = sim.serializeDtcs(dune.vin);
+let dtcsDoc: Record<string, any> | null = null;
+try {
+	dtcsDoc = JSON.parse(dtcsJson);
+} catch {
+	dtcsDoc = null;
+}
+check("serializeDtcs produces parseable JSON with 5 codes", !!dtcsDoc && dtcsDoc.count === 5 && dtcsDoc.codes.length === 5);
+
+console.log("");
+console.log("sim: CAN ring buffer");
+
+// 120 ticks at ~300 frames each is ~36,000 frames offered; the cap is 4,096.
+check("ring buffer respects its cap under overfill", sim.bufferedFrameCount <= 4096, `${sim.bufferedFrameCount} buffered`);
+check("ring buffer actually filled to its cap", sim.bufferedFrameCount === 4096, `${sim.bufferedFrameCount}`);
+
+const oldest = sim.drainFrames(1)[0]!;
+// Drop-oldest: the earliest surviving frame must postdate the early ticks
+// whose frames were pushed out. 4,096 frames at ~1,200/s is ~3.4 s of tail
+// out of 30 s simulated.
+check("overfill dropped the oldest frames", oldest.timestamp > T0 + 20_000, `oldest at T0+${oldest.timestamp - T0} ms`);
+
+const drained = sim.drainFrames(500);
+check("drainFrames honours max", drained.length === 500, `${drained.length}`);
+check("drainFrames removes what it returns", sim.bufferedFrameCount === 4096 - 1 - 500, `${sim.bufferedFrameCount} left`);
+check("frames are well-formed (dlc matches data, 11-bit ids)", drained.every((f) => f.dlc === f.data.length && f.dlc <= 8 && f.id >= 0 && f.id <= 0x7ff));
+
+// DI_speed round-trip: the last DI_speed frame in the buffer was encoded from
+// atlas's post-physics speed on the final tick, which nothing has changed
+// since. Decode 12|12@1+ with the real DBC scaling: kph = raw × 0.08 − 40.
+const rest = sim.drainFrames(10_000);
+const lastSpeedFrame = [...rest].reverse().find((f) => f.label === "DI_speed");
+check("buffer contains DI_speed frames (id 599)", !!lastSpeedFrame && lastSpeedFrame.id === 599);
+if (lastSpeedFrame) {
+	const decodedKph = getBitsLE(lastSpeedFrame.data, 12, 12) * 0.08 - 40;
+	check(
+		"DI_speed round-trips through factor 0.08 / offset −40",
+		Math.abs(decodedKph - atlas.speedKph) <= 0.04 + 1e-9,
+		`decoded ${decodedKph.toFixed(2)} vs actual ${atlas.speedKph.toFixed(2)} km/h`
+	);
+}
+check("drained dry", sim.bufferedFrameCount === 0);
+
+console.log("");
+console.log("sim: mtime monotonicity and mutations");
+
+const m1 = sim.mtimeOf(atlas.vin);
+check("setDoorLock mutates the door", sim.setDoorLock(atlas.vin, "FL", false) && atlas.doors.FL.locked === false);
+check("vehicle-level locked reflects the doors", atlas.locked === false);
+const m2 = sim.mtimeOf(atlas.vin);
+sim.tick(now + 250);
+const m3 = sim.mtimeOf(atlas.vin);
+check("mtime strictly increases across mutations", m1 < m2 && m2 < m3, `${m1} < ${m2} < ${m3}`);
+check("setDoorLock rejects unknown VINs", sim.setDoorLock("NOSUCHVIN000000000", "FL", true) === false);
+
+console.log("");
+console.log("sim: reset");
+
+const preResetMtime = sim.mtimeOf(atlas.vin);
+sim.reset();
+const fresh = seedFleet();
+const atlasAfter = sim.getVehicle(atlas.vin)!;
+const beaconAfter = sim.getVehicle(beacon.vin)!;
+check("reset restores the seeded speed", atlasAfter.speedKph === fresh[0]!.speedKph, `${atlasAfter.speedKph} km/h`);
+check("reset restores the seeded SoC", beaconAfter.charge.soc === fresh[1]!.charge.soc, `${beaconAfter.charge.soc}%`);
+check("reset re-locks the unlocked door", atlasAfter.doors.FL.locked === true && atlasAfter.locked === true);
+check("reset keeps VINs (and therefore VFS paths) stable", sim.getVehicles().map((v) => v.vin).join() === fresh.map((v) => v.vin).join());
+check("reset clears the frame buffer", sim.bufferedFrameCount === 0);
+// The one thing reset must NOT reset: a rewound mtime would pin stale bytes
+// in any open editor (see clock.ts).
+check("mtime keeps advancing across reset", sim.mtimeOf(atlas.vin) > preResetMtime, `${preResetMtime} → ${sim.mtimeOf(atlas.vin)}`);
+
+sim.dispose();
 console.log("");
 if (failures > 0) {
 	console.log(`${failures} check(s) failed`);
