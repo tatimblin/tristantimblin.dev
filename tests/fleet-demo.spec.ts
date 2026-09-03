@@ -70,19 +70,28 @@ async function boot(page: Page): Promise<FrameLocator> {
 /**
  * Run a Fleet command the way a reader would.
  *
- * Two details that are easy to get wrong and fail confusingly. The frame needs
- * focus before F1 reaches the workbench rather than the host page — hence the
- * click. And F1 opens the picker with ">" ALREADY in the box: typing the query
- * with fill() would replace that prefix and silently drop the picker into
- * file-search mode, where "Fleet: Lock All Doors" matches nothing and Enter is a
- * no-op. Append instead.
+ * Three details that are easy to get wrong and fail confusingly. The frame
+ * needs focus before F1 reaches the workbench rather than the host page —
+ * hence the click, aimed at the STATUS BAR and not the editor body: the
+ * staged scene makes the controls editor (a webview iframe) the active
+ * editor, and a click into the editor body lands on an iframe that swallows
+ * pointer events forever — Playwright retries until the test times out. The
+ * status bar is plain workbench DOM that belongs to no editor. Opening the
+ * picker retries as a unit, because that same webview finishes loading
+ * asynchronously after boot and steals focus when it does — which silently
+ * DISMISSES a picker opened a beat earlier; a second F1 after the steal
+ * sticks. And F1 opens the picker with ">" ALREADY in the box: typing the
+ * query with fill() would replace that prefix and silently drop the picker
+ * into file-search mode, where "Fleet: Lock All Doors" matches nothing and
+ * Enter is a no-op. Append instead.
  */
 async function runCommand(page: Page, frame: FrameLocator, title: string) {
-	await frame.locator(".part.editor").click();
-	await page.keyboard.press("F1");
-
 	const input = frame.locator(".quick-input-box input");
-	await expect(input).toBeVisible({ timeout: 15_000 });
+	await expect(async () => {
+		await frame.locator(".part.statusbar").click();
+		await page.keyboard.press("F1");
+		await expect(input).toBeVisible({ timeout: 2_000 });
+	}).toPass({ timeout: 30_000 });
 	await expect(input).toHaveValue(">");
 	await input.pressSequentially(title, { delay: 15 });
 
@@ -126,10 +135,9 @@ test("a phone gets a live button, not a disabled one", async ({ page }) => {
 	// the reader's side that is indistinguishable from broken software — tap,
 	// nothing. The gate is gone, and this is the test that keeps it gone.
 	//
-	// Deliberately NOT a full narrow boot: the workbench costs ~15 MB and 30-90s
-	// in CI, and the four tests above already prove it really boots. What is
-	// specific to this viewport is the ENTRY — an enabled control that moves the
-	// state machine off the poster — so that is all this asserts.
+	// Deliberately NOT a full narrow boot — that lives in "a phone boots with
+	// the sidebar out of the way" below. What is specific to THIS test is the
+	// ENTRY: an enabled control that moves the state machine off the poster.
 	await page.setViewportSize({ width: 393, height: 659 });
 	await page.goto(POST);
 
@@ -153,6 +161,36 @@ test("a phone gets a live button, not a disabled one", async ({ page }) => {
 	await expect(demo).toHaveAttribute("data-state", "launching");
 });
 
+test("a phone boots with the sidebar out of the way", async ({ page }) => {
+	test.slow();
+	// VS Code holds a ~300px minimum editor width, so at this width an open
+	// sidebar shoves the editor and panel past the right edge of an iframe
+	// that cannot scroll horizontally: the workbench "works", but the terminal
+	// — the thing the poster advertises — renders where the reader cannot see
+	// or reach it. workbench.ts collapses the sidebar after the tree has
+	// rendered (narrow viewports only); this is the test that keeps that
+	// collapse honest, because from outside the iframe a clipped workbench
+	// and a usable one are both just a dark rectangle.
+	await page.setViewportSize({ width: 393, height: 659 });
+	const frame = await boot(page);
+
+	await expect(frame.locator(".part.sidebar")).toBeHidden();
+
+	// And the width the collapse freed up actually reached the terminal: its
+	// rendered rows must sit entirely inside the visible viewport, not merely
+	// exist. boundingBox() reports page coordinates even through the iframe,
+	// so "right edge <= viewport width" is exactly the reader's experience.
+	const rows = frame.locator(".part.panel .xterm-rows").first();
+	await expect(rows).toBeVisible({ timeout: 30_000 });
+	await expect(rows).toContainText("can0", { timeout: 15_000 });
+	const box = await rows.boundingBox();
+	expect(box, "the terminal did not lay out").toBeTruthy();
+	expect(
+		box!.x + box!.width,
+		`the terminal spans ${box!.x}..${box!.x + box!.width} in a 393px viewport`
+	).toBeLessThanOrEqual(393);
+});
+
 test("launch boots a real workbench, not an iframe-shaped shell", async ({ page }) => {
 	test.slow();
 	const frame = await boot(page);
@@ -162,6 +200,16 @@ test("launch boots a real workbench, not an iframe-shaped shell", async ({ page 
 	await expect(frame.locator(".monaco-workbench")).toHaveCount(1);
 	await expect(frame.locator(".part.editor")).toBeVisible();
 	await expect(frame.locator(".part.sidebar")).toBeVisible();
+
+	// And the staged scene, not the README: boot opens the moving vehicle's
+	// controls editor, whose tab is titled "Vehicle · …<VIN tail>". Matching
+	// the prefix rather than a VIN keeps this alive across a re-seeded fleet.
+	// This is the assertion that would have caught the original complaint —
+	// the workbench booted fine and landed the reader somewhere the poster
+	// never pictured.
+	await expect(frame.locator(".tabs-container .tab").filter({ hasText: "Vehicle ·" })).toBeVisible({
+		timeout: 15_000,
+	});
 });
 
 test("the tree renders the whole seeded fleet", async ({ page }) => {
@@ -186,11 +234,19 @@ test("the tree renders the whole seeded fleet", async ({ page }) => {
 	await expect(rows.first()).toContainText("Stage");
 });
 
-test("the can terminal actually streams", async ({ page }) => {
+test("the can terminal streams on arrival, unprompted", async ({ page }) => {
 	test.slow();
 	const frame = await boot(page);
-	await runCommand(page, frame, "Fleet: Open CAN Stream");
 
+	// NO palette interaction, deliberately. The stream used to exist only
+	// behind "Fleet: Open CAN Stream", and a real reader — with the poster
+	// advertising a streaming terminal — landed on an empty panel and reported
+	// "I don't see any signals running in the terminal". workbench.ts now
+	// stages the stream before ready, so the assertion is the stronger one:
+	// frames are ALREADY flowing when the iframe is first revealed. (This also
+	// removes the palette round-trip this test used to flake on; the palette
+	// keeps its own dedicated test below.)
+	//
 	// .xterm-rows is the DOM renderer's output, which exists only because
 	// gpuAcceleration is off; with the default canvas renderer there would be no
 	// text here to read at all.

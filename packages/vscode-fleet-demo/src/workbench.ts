@@ -60,6 +60,16 @@ type FleetApi = Awaited<ReturnType<typeof activateFleetExtension>>;
 let fleetApi: FleetApi | null = null;
 
 /**
+ * Below this, the workbench cannot afford an open sidebar: VS Code enforces a
+ * ~300px minimum editor width, so at phone width the sidebar pushes the
+ * editor and panel past the right edge of an iframe that does not scroll
+ * horizontally — the CAN terminal renders, but where the reader cannot see
+ * or reach it. 768 matches the breakpoint the old viewport gate drew the
+ * same "too narrow for all three parts" line at.
+ */
+const NARROW_VIEWPORT_PX = 768;
+
+/**
  * The layout the demo always opens in: Fleet view container showing, bottom
  * panel visible with real height.
  *
@@ -90,19 +100,118 @@ async function applyDemoLayout(api: FleetApi) {
 }
 
 /**
+ * The VIN of the vehicle the demo should open on: the one that is actually
+ * moving, because a controls editor showing live speed and gear — and a CAN
+ * stream carrying its frames — is the scene the poster advertises. Resolved
+ * from the extension's own `fleet:` file system at runtime rather than
+ * hardcoded, so the seed can renumber, reorder or re-trim its vehicles
+ * without silently pointing the opening scene at a parked car (or at a VIN
+ * that no longer exists). "Moving" is read from the same serialized
+ * `state.json` a reader opens, not from a private simulator handle the demo
+ * layer has no business holding.
+ *
+ * Returns `undefined` on any failure: both staged commands have their own
+ * sane no-arg defaults (first vehicle / current bus target, which the
+ * extension points at the driving vehicle), so a failed lookup degrades to
+ * "almost certainly the same scene" instead of degrading to no scene.
+ */
+async function findDrivingVin(api: FleetApi): Promise<string | undefined> {
+	try {
+		const entries = await api.workspace.fs.readDirectory(api.Uri.parse("fleet:/"));
+		const vins = entries
+			.filter(([, kind]) => kind === api.FileType.Directory)
+			.map(([name]) => name);
+		const decoder = new TextDecoder();
+		for (const vin of vins) {
+			const bytes = await api.workspace.fs.readFile(api.Uri.parse(`fleet:/${vin}/state.json`));
+			const state = JSON.parse(decoder.decode(bytes)) as {
+				drive_state?: { speed_kph?: number };
+			};
+			if ((state.drive_state?.speed_kph ?? 0) > 0) return vin;
+		}
+		// No mover (a reshuffled seed could park everything): first vehicle,
+		// so the scene still stages instead of quietly not opening anything.
+		return vins[0];
+	} catch (error) {
+		console.warn("[fleet-demo] could not resolve the driving vehicle", error);
+		return undefined;
+	}
+}
+
+/**
+ * Stage the scene the poster advertises: the moving vehicle's controls editor
+ * in the editor area, its CAN stream running in the panel.
+ *
+ * This lives HERE, in the demo harness, and not in the extension's
+ * activate(): an extension that force-opens a terminal and an editor the
+ * moment it activates is obnoxious for anyone running it for real under F5
+ * or from a .vsix. The embed is the one context where "boot into the demo's
+ * best moment" is correct — a real reader landed on an empty workbench and
+ * reported "I don't see any signals running in the terminal", because the
+ * stream only existed behind a palette command they had no reason to know.
+ *
+ * Ordering, both halves deliberate:
+ *   - callers run this AFTER the fleet tree has rendered rows (activation
+ *     proof) and AFTER applyDemoLayout has un-collapsed the panel to 260px —
+ *     `Pseudoterminal.open()` defers until the terminal is attached and
+ *     sized, so a stream started into a collapsed panel would sit dark;
+ *   - controls first, stream second, so the terminal's `show()` is the last
+ *     focus move and the panel arrives live rather than buried.
+ */
+async function stageDemoScene(api: FleetApi) {
+	// Narrow viewports only: collapse the sidebar so the editor and terminal
+	// get the full frame width (see NARROW_VIEWPORT_PX for the failure this
+	// prevents). One tap on the Fleet icon in the activity bar brings the
+	// tree back. Desktop keeps the sidebar open — the vehicle tree is the
+	// first thing the poster promises.
+	if (window.innerWidth < NARROW_VIEWPORT_PX) {
+		const layoutService = await getService(IWorkbenchLayoutService);
+		layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
+	}
+
+	const vin = await findDrivingVin(api);
+	await api.commands.executeCommand("fleet.openControls", vin);
+	await api.commands.executeCommand("fleet.openCanStream", vin);
+}
+
+/**
+ * Best-effort confirmation that the staged CAN pty really attached and wrote
+ * its first output. "The command ran" is not "frames are flowing": the pty
+ * only starts when VS Code attaches and sizes the terminal, and a break in
+ * that deferral would leave a panel that LOOKS like a terminal and streams
+ * nothing — exactly the complaint this staging exists to fix. The header
+ * ("interface can0 …") renders via the DOM renderer (gpuAcceleration is
+ * off), so its text is cheap to poll for. Bounded and non-fatal on purpose:
+ * a silent stream is logged, never thrown — the workbench must still reach
+ * ready without it.
+ */
+async function waitForCanStreamOutput(container: HTMLElement, timeoutMs: number) {
+	const deadline = Date.now() + timeoutMs;
+	while (Date.now() < deadline) {
+		const rows = container.querySelector(".part.panel .xterm-rows");
+		if (rows?.textContent?.includes("can0")) return;
+		await new Promise((resolve) => setTimeout(resolve, 100));
+	}
+	console.warn("[fleet-demo] the CAN stream produced no output in time");
+}
+
+/**
  * Handle `fleet-demo:reset` from the host page's chrome (see element.ts).
  *
  * Two halves, because the reader can wreck two different things: the
  * extension's own state (re-seeded by its real `fleet.reset` command, the same
  * one the palette and the view's welcome link run) and the workbench layout
- * (restored above). Reopening the landing editor covers the third: "I closed
+ * (restored above). Restaging the opening scene covers the third: "I closed
  * every tab" leaves a workbench with nothing in it, which no amount of
- * re-seeding fixes.
+ * re-seeding fixes — and reset staging the SAME scene boot stages keeps one
+ * definition of "the demo" instead of a reset that lands somewhere boot
+ * never produced (the old behaviour reopened the README here, an editor the
+ * boot path no longer leads with).
  */
 async function resetDemo(api: FleetApi) {
 	await api.commands.executeCommand("fleet.reset");
 	await applyDemoLayout(api);
-	await api.commands.executeCommand("vscode.open", api.Uri.file("/workspace/README.md"));
+	await stageDemoScene(api);
 }
 
 // Origin-pinned on this end too: the only window that may drive the workbench
@@ -190,6 +299,12 @@ async function boot() {
 			workspace: { folderUri: monaco.Uri.file("/workspace") }
 		},
 		developmentOptions: { logLevel: LogLevel.Error },
+		// The README stays the FIRST editor even though stageDemoScene() opens
+		// the controls editor on top of it after activation: it is the landing
+		// fallback. Staging is defensive and allowed to fail, and a boot whose
+		// staging failed with no default editor would land on an empty editor
+		// group — a README that explains the demo is a far better worst case,
+		// and it costs nothing as a background tab in the normal case.
 		defaultLayout: {
 			editors: [{ uri: monaco.Uri.file("/workspace/README.md") }],
 			force: true
@@ -243,21 +358,47 @@ async function boot() {
 	progress(80);
 
 	await applyDemoLayout(api);
-	progress(90);
+	progress(85);
 
 	// Playwright / debugging probe.
 	(window as unknown as Record<string, unknown>).__fleetDemo = { api };
 
 	// "Ready" means the vehicle tree actually rendered rows, not merely that
 	// activate() returned — the parent swaps its poster for the iframe on this
-	// signal and must never reveal an empty sidebar.
+	// signal and must never reveal an empty sidebar. It also gates the staging
+	// below: rendered rows prove the extension really activated (so the fleet:
+	// fs and the staged commands exist), and on narrow viewports the sidebar
+	// must not be hidden before the rows it is polled for have appeared.
+	await waitForFleetTree(container);
+	progress(90);
+
+	// Stage the poster's scene — controls editor open, CAN stream running.
+	// Defensive on purpose: staging is a nicety, not a precondition. A boot
+	// that reaches this line has a fully working workbench, and a reader with
+	// a working-but-unstaged workbench is strictly better off than one whose
+	// demo errored out because a garnish failed — so log and continue.
+	try {
+		await stageDemoScene(api);
+		await waitForCanStreamOutput(container, 10_000);
+	} catch (error) {
+		console.error("[fleet-demo] staging the opening scene failed", error);
+	}
+	progress(97);
+
+	post({ type: "fleet-demo:ready" });
+}
+
+/**
+ * Poll until the fleet tree has really rendered rows, or throw after 30s —
+ * the boot-failure path turns that throw into `fleet-demo:error`, because a
+ * workbench whose extension host silently died looks identical to a working
+ * one from outside the iframe.
+ */
+async function waitForFleetTree(container: HTMLElement) {
 	const deadline = Date.now() + 30_000;
 	while (Date.now() < deadline) {
 		const rows = container.querySelectorAll(".part.sidebar .monaco-list-row");
-		if (rows.length > 0) {
-			post({ type: "fleet-demo:ready" });
-			return;
-		}
+		if (rows.length > 0) return;
 		await new Promise((resolve) => setTimeout(resolve, 100));
 	}
 	throw new Error("fleet tree never rendered");
