@@ -65,6 +65,15 @@ const REFERENCE_VIN = "1M8GDM9AXKP042788";
 check("1M8GDM9AXKP042788 check digit is X", computeCheckDigit(REFERENCE_VIN) === "X", computeCheckDigit(REFERENCE_VIN));
 check("1M8GDM9AXKP042788 validates", isValidVin(REFERENCE_VIN));
 
+// A hand-verified Fisker Ocean VIN: WMI VCF, VDS 1ZBU2, year P = 2023, plant
+// G = Graz. Its weighted sum is 366 and 366 mod 11 = 3, which is the digit in
+// position 9. This is the shape the seeded fleet claims to be, checked against
+// a VIN nobody in this repo generated — so a generator that drifted into
+// producing self-consistent nonsense would still fail here.
+const OCEAN_VIN = "VCF1ZBU23PG001985";
+check("VCF1ZBU23PG001985 check digit is 3", computeCheckDigit(OCEAN_VIN) === "3", computeCheckDigit(OCEAN_VIN));
+check("VCF1ZBU23PG001985 validates", isValidVin(OCEAN_VIN));
+
 // All-ones: every character transliterates to 1, so the sum is just the sum of
 // the weights (89), and 89 mod 11 = 1 — which happens to be the character
 // already sitting in position 9. A degenerate but load-bearing case: it is the
@@ -141,7 +150,10 @@ console.log("vin: generator");
 // that its own validator accepts. This is the property that actually matters:
 // the generator and the validator are two independent readings of the same
 // spec, and they have to agree.
-const WMIS = ["5YJ", "7SA", "7FC", "7PD", "50E"];
+// VCF is the fleet's own WMI; the rest are other real manufacturers' codes,
+// kept only because they exercise different digit/letter mixes through the
+// transliteration table than a single all-letter WMI would.
+const WMIS = ["VCF", "1FA", "JN1", "WBA", "5UX"];
 const YEARS = [2022, 2023, 2024, 2025, 2026];
 let generated = 0;
 let invalid = 0;
@@ -160,8 +172,8 @@ check("every generated VIN is valid", invalid === 0, `${generated - invalid}/${g
 // give the same VIN forever, not just within one process.
 check(
 	"generation is deterministic",
-	generateVin({ wmi: "5YJ", year: 2024, serial: 118342 }) ===
-		generateVin({ wmi: "5YJ", year: 2024, serial: 118342 })
+	generateVin({ wmi: "VCF", year: 2023, serial: 2314 }) ===
+		generateVin({ wmi: "VCF", year: 2023, serial: 2314 })
 );
 
 const YEAR_CODE_CASES: Array<[number, string]> = [
@@ -172,7 +184,7 @@ const YEAR_CODE_CASES: Array<[number, string]> = [
 	[2026, "T"]
 ];
 for (const [year, code] of YEAR_CODE_CASES) {
-	const vin = generateVin({ wmi: "5YJ", year, serial: 1 });
+	const vin = generateVin({ wmi: "VCF", year, serial: 1 });
 	check(`year ${year} encodes as "${code}"`, vin[9] === code, vin);
 }
 
@@ -185,6 +197,34 @@ check("seeds 6 vehicles", fleet.length === 6, `${fleet.length}`);
 check("every VIN is valid", fleet.every((v) => isValidVin(v.vin)));
 check("vehicle ids are unique", new Set(fleet.map((v) => v.id)).size === fleet.length);
 check("VINs are unique", new Set(fleet.map((v) => v.vin)).size === fleet.length);
+
+// The whole fleet is Fisker Oceans on purpose (see fleet.ts) — assert the
+// identity rather than trusting six hand-written literals to stay in step.
+check("every VIN carries Fisker's WMI", fleet.every((v) => v.vin.startsWith("VCF")));
+check("every VIN is built in Graz", fleet.every((v) => v.vin[10] === "G"));
+check("every vehicle is a Fisker", fleet.every((v) => v.make === "Fisker"));
+check(
+	"every model is an Ocean trim",
+	fleet.every((v) => /^Ocean (One|Extreme|Ultra|Sport)$/.test(v.model)),
+	fleet.map((v) => v.model).join(", ")
+);
+check(
+	"model years are the two Fisker actually built",
+	fleet.every((v) => v.year === 2023 || v.year === 2024),
+	fleet.map((v) => v.year).join(", ")
+);
+// Position 10 is the year code, so the VIN and the `year` field cannot drift
+// apart without one of them being wrong in a decoder.
+check(
+	"VIN year codes agree with the year field",
+	fleet.every((v) => v.vin[9] === (v.year === 2023 ? "P" : "R")),
+	fleet.map((v) => `${v.year}=${v.vin[9]}`).join(", ")
+);
+check(
+	"every vehicle runs a Fisker OS build",
+	fleet.every((v) => /^Fisker OS \d+\.\d+$/.test(v.firmwareVersion)),
+	fleet.map((v) => v.firmwareVersion).join(", ")
+);
 
 const counts = fleet.reduce<Record<string, number>>((acc, v) => {
 	acc[v.personality] = (acc[v.personality] ?? 0) + 1;

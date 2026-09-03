@@ -5,7 +5,7 @@
  *
  * A VIN is 17 characters:
  *
- *   pos  1– 3  WMI          world manufacturer identifier ("5YJ" = Tesla)
+ *   pos  1– 3  WMI          world manufacturer identifier ("VCF" = Fisker)
  *   pos  4– 8  VDS          vehicle descriptor (model, body, restraint system)
  *   pos     9  check digit  computed from the other 16 characters
  *   pos    10  model year   a letter/digit from a 30-year cycle
@@ -143,13 +143,14 @@ export function isValidVin(vin: string): boolean {
 }
 
 export interface GenerateVinOptions {
-	/** World manufacturer identifier, 3 legal VIN characters, e.g. "5YJ". */
+	/** World manufacturer identifier, 3 legal VIN characters, e.g. "VCF". */
 	wmi: string;
 	/** Model year, 2010–2030 (the span covered by `YEAR_CODES`). */
 	year: number;
 	/** Sequential build number, 0–999999; rendered as positions 12–17. */
 	serial: number;
-	/** Assembly plant code (position 11). Defaults to "F" (Fremont). */
+	/** Assembly plant code (position 11). Defaults to "G" (Graz, Austria —
+	 * Magna Steyr, where the seeded fleet's Oceans were built). */
 	plant?: string;
 }
 
@@ -184,7 +185,7 @@ export function generateVin(opts: GenerateVinOptions): string {
 		throw new Error(`Serial must be an integer 0–999999, got ${opts.serial}`);
 	}
 
-	const plant = (opts.plant ?? "F").toUpperCase();
+	const plant = (opts.plant ?? "G").toUpperCase();
 	if (plant.length !== 1 || !VIN_ALPHABET.includes(plant)) {
 		throw new Error(`Plant code must be 1 legal VIN character, got "${opts.plant}"`);
 	}

@@ -42,8 +42,8 @@ export function activateCommon(context: vscode.ExtensionContext): void {
 		fsProvider,
 		vscode.workspace.registerFileSystemProvider("fleet", fsProvider, {
 			// VINs are uppercase by construction, but case-sensitivity is still
-			// declared: a case-folding lookup would make fleet:/5yj… and
-			// fleet:/5YJ… the same editor tab with two different URIs.
+			// declared: a case-folding lookup would make fleet:/vcf… and
+			// fleet:/VCF… the same editor tab with two different URIs.
 			isCaseSensitive: true,
 			isReadonly: true
 		})

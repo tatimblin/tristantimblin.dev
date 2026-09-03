@@ -148,7 +148,7 @@ export interface Vehicle {
 	id: string;
 	/** 17-character VIN — see `vin.ts`; always passes `isValidVin`. */
 	vin: string;
-	/** Human name shown in the tree, e.g. "Rivian R1T — Basecamp". */
+	/** Human name shown in the tree, e.g. "Atlas — Ocean Extreme". */
 	displayName: string;
 	make: string;
 	model: string;

@@ -46,7 +46,7 @@ const DRAIN_INTERVAL_MS = 33;
  * candump's ID filters without a prompt breaking the stream. */
 type FilterMode = "all" | "annotated";
 
-/** "Atlas — Model 3 Long Range" → "Atlas". */
+/** "Atlas — Ocean Extreme" → "Atlas". */
 function callsign(vehicle: Vehicle): string {
 	return vehicle.displayName.split(" — ")[0] ?? vehicle.displayName;
 }

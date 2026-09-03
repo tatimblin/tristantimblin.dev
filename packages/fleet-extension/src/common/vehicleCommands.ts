@@ -49,7 +49,7 @@ export type CommandResult =
 
 // ── Pure policy ──────────────────────────────────────────────────────────────
 
-/** "Atlas — Model 3 Long Range" → "Atlas". */
+/** "Atlas — Ocean Extreme" → "Atlas". */
 function callsign(vehicle: Vehicle): string {
 	return vehicle.displayName.split(" — ")[0] ?? vehicle.displayName;
 }
@@ -198,9 +198,11 @@ export async function executeVehicleCommand(
 
 // ── OTA preconditions ────────────────────────────────────────────────────────
 
-/** The campaign version every eligible vehicle updates to. YYYY.WW.N, the
- * Tesla-style scheme the seeded `car_version` strings already use. */
-export const OTA_TARGET_VERSION = "2026.32.4";
+/** The campaign version every eligible vehicle updates to. Fisker shipped its
+ * vehicle software as plain "Fisker OS <major>.<minor>" (1.10, 2.0, 2.1), which
+ * is the scheme the seeded `car_version` strings use — so the campaign is the
+ * next one along rather than a date-coded build number. */
+export const OTA_TARGET_VERSION = "Fisker OS 2.3";
 
 /** Flash order for the "Flashing ECUs" stage — gateway first (it routes the
  * others' diag sessions), safety-critical domains next, infotainment last. */

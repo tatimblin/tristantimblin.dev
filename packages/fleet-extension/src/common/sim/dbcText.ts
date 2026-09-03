@@ -16,6 +16,12 @@
  *
  * Honesty notes, because this file makes claims about real hardware:
  *
+ *   - The seeded fleet is Fisker Oceans, but this DBC is not a Fisker one:
+ *     Fisker never published a CAN matrix and none was reverse-engineered, so
+ *     the bus layer borrows the *structure* of the public Tesla Model 3 DBC
+ *     rather than inventing message ids nobody can check. The signal names
+ *     below (`DI_*`, `GTW_*`, `ESP_*`) are therefore Tesla's, deliberately —
+ *     a made-up Fisker-flavoured DBC would be less honest, not more.
  *   - Message ids, signal names, factors, offsets and VAL_ tables come from
  *     the community-reverse-engineered Tesla Model 3 DBC (opendbc) where such
  *     a signal exists, and the lines are written in that file's shape.

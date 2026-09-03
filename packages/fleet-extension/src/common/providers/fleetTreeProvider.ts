@@ -95,7 +95,7 @@ export class FleetTreeProvider implements vscode.TreeDataProvider<Vehicle>, vsco
 	}
 }
 
-/** "Atlas — Model 3 Long Range" → "Atlas". */
+/** "Atlas — Ocean Extreme" → "Atlas". */
 export function callsign(vehicle: Vehicle): string {
 	return vehicle.displayName.split(" — ")[0] ?? vehicle.displayName;
 }

@@ -38,8 +38,8 @@ export function showVehicleQuickPick(simulator: FleetSimulator, canStreams: CanS
 	picker.title = "Switch vehicle";
 	picker.placeholder = "Name, VIN, or model";
 	// The description carries the live telemetry and the detail carries the
-	// full VIN and model, so filtering must reach both: typing "R1T", "5YJ" or
-	// "charging" should all narrow the list, and by default the picker matches
+	// full VIN and model, so filtering must reach both: typing "Ultra", "VCF"
+	// or "charging" should all narrow the list, and by default the picker matches
 	// the label alone.
 	picker.matchOnDescription = true;
 	picker.matchOnDetail = true;

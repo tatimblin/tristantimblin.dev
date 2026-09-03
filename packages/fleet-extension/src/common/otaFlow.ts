@@ -19,7 +19,7 @@ import { wakeVehicle } from "./commandUi";
  * file owns everything with a token, a toast, or a clock in it.
  */
 
-/** "Atlas — Model 3 Long Range" → "Atlas". */
+/** "Atlas — Ocean Extreme" → "Atlas". */
 function callsign(vehicle: Vehicle): string {
 	return vehicle.displayName.split(" — ")[0] ?? vehicle.displayName;
 }
@@ -27,7 +27,7 @@ function callsign(vehicle: Vehicle): string {
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(() => resolve(), ms));
 
 /** Firmware image size for the download stage's byte-count messages. ~2 GiB
- * is what a full Tesla-style image actually weighs; the number is flavour,
+ * is what a full vehicle-wide image actually weighs; the number is flavour,
  * but wrong flavour (a 40 MiB "full image") reads as fake instantly. */
 const IMAGE_MIB = 2148;
 

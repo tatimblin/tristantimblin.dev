@@ -16,7 +16,7 @@ import { executeVehicleCommand } from "./vehicleCommands";
  */
 
 /** How long the wake theatre runs before the simulator actually wakes it. A
- * real Rivian takes 20–60 s to come up; 3 s is the demo-scaled equivalent —
+ * real vehicle takes 20–60 s to come up; 3 s is the demo-scaled equivalent —
  * long enough to read the notification, short enough not to lose the room. */
 const WAKE_DURATION_MS = 3000;
 

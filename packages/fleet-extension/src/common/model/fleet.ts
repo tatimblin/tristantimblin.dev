@@ -11,6 +11,12 @@ import type {
 /**
  * The seeded demo fleet.
  *
+ * Every vehicle is a Fisker Ocean, because the post this demo is embedded in
+ * is about the author's time at Fisker — a fleet of somebody else's cars would
+ * be the first thing a reader who was there noticed. WMI `VCF` is Fisker's,
+ * plant code `G` is Graz, Austria (Magna Steyr built every Ocean), and the
+ * trims (One, Extreme, Ultra, Sport) are the four that actually shipped.
+ *
  * Six vehicles, one per interesting state, chosen so that every feature the
  * extension contributes has something to point at the moment it is opened:
  * a moving vehicle for the CAN stream, a charging one for the gauges, an
@@ -94,11 +100,11 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 		// in the controls editor plots them and a point in the ocean reads as a bug.
 		{
 			id: "atlas",
-			vin: generateVin({ wmi: "5YJ", year: 2024, serial: 118342, plant: "F" }),
-			displayName: "Atlas — Model 3 Long Range",
-			make: "Tesla",
-			model: "Model 3 Long Range",
-			year: 2024,
+			vin: generateVin({ wmi: "VCF", year: 2023, serial: 2314, plant: "G" }),
+			displayName: "Atlas — Ocean Extreme",
+			make: "Fisker",
+			model: "Ocean Extreme",
+			year: 2023,
 			personality: "driving",
 			online: true,
 			locked: true,
@@ -109,9 +115,13 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			odometerKm: 41_286,
 			cabinTempC: 21,
 			climateOn: true,
+			// Hyper Range pack (~106 kWh), rated ~579 km / 360 mi: 62% of that is
+			// ~359 km. Range is kept as a straight fraction of the trim's rating
+			// throughout the seed, because a reader who divides one by the other
+			// is exactly the reader this demo is written for.
 			charge: {
 				soc: 62,
-				rangeKm: 372,
+				rangeKm: 359,
 				pluggedIn: false,
 				charging: false,
 				powerKw: 0,
@@ -119,22 +129,23 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			},
 			position: { lat: 37.4419, lon: -122.143, heading: 328 },
 			dtcs: [],
-			firmwareVersion: "2024.44.25.2",
+			firmwareVersion: "Fisker OS 2.1",
 			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now
 		},
 
 		// ── Charging ─────────────────────────────────────────────────────────────
-		// Mid-range SoC and mid-taper power: a pack at 54% is past the flat 250 kW
-		// plateau but not yet into the slow tail, so the gauge visibly moves during
+		// Mid-range SoC and mid-taper power: the Ocean's 400 V pack peaks near
+		// 120 kW on a DC charger and is already tapering by 54%, so 112 kW is off
+		// the peak but nowhere near the slow tail — the gauge visibly moves during
 		// a demo instead of sitting still.
 		{
 			id: "beacon",
-			vin: generateVin({ wmi: "7SA", year: 2025, serial: 204915, plant: "A" }),
-			displayName: "Beacon — Model Y Performance",
-			make: "Tesla",
-			model: "Model Y Performance",
-			year: 2025,
+			vin: generateVin({ wmi: "VCF", year: 2023, serial: 487, plant: "G" }),
+			displayName: "Beacon — Ocean One",
+			make: "Fisker",
+			model: "Ocean One",
+			year: 2023,
 			personality: "charging",
 			online: true,
 			locked: true,
@@ -145,18 +156,20 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			odometerKm: 12_904,
 			cabinTempC: 19,
 			climateOn: false,
+			// Ocean One is the launch edition of the Extreme, so the same Hyper
+			// Range rating applies: 54% of ~579 km is ~313 km.
 			charge: {
 				soc: 54,
-				rangeKm: 268,
+				rangeKm: 313,
 				pluggedIn: true,
 				charging: true,
-				powerKw: 147,
+				powerKw: 112,
 				batteryTempC: 38
 			},
-			// Supercharger site off I-5 in Kettleman City, CA.
+			// DC fast-charge site off I-5 in Kettleman City, CA.
 			position: { lat: 35.9891, lon: -119.9601, heading: 0 },
 			dtcs: [],
-			firmwareVersion: "2025.8.4",
+			firmwareVersion: "Fisker OS 2.1",
 			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now
 		},
@@ -168,10 +181,10 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 		// up is the classic mock-data tell.
 		{
 			id: "cinder",
-			vin: generateVin({ wmi: "7PD", year: 2024, serial: 8871, plant: "N" }),
-			displayName: "Cinder — R1S Adventure",
-			make: "Rivian",
-			model: "R1S Adventure",
+			vin: generateVin({ wmi: "VCF", year: 2024, serial: 4102, plant: "G" }),
+			displayName: "Cinder — Ocean Ultra",
+			make: "Fisker",
+			model: "Ocean Ultra",
 			year: 2024,
 			personality: "asleep",
 			online: false,
@@ -183,9 +196,11 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			odometerKm: 28_431,
 			cabinTempC: 8,
 			climateOn: false,
+			// Ultra shares the Hyper Range pack but rates lower than the Extreme
+			// (~563 km / 350 mi) on its 20" wheels: 71% of that is ~399 km.
 			charge: {
 				soc: 71,
-				rangeKm: 349,
+				rangeKm: 399,
 				pluggedIn: false,
 				charging: false,
 				powerKw: 0,
@@ -194,7 +209,7 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			// A residential street in Bend, OR.
 			position: { lat: 44.0582, lon: -121.3153, heading: 92 },
 			dtcs: [],
-			firmwareVersion: "2024.38.1",
+			firmwareVersion: "Fisker OS 2.0",
 			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now - 6 * 60 * MINUTE_MS
 		},
@@ -204,10 +219,10 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 		// actually find a vehicle in after the failure chain in FAULTED_DTC_SPECS.
 		{
 			id: "dune",
-			vin: generateVin({ wmi: "50E", year: 2023, serial: 3067, plant: "C" }),
-			displayName: "Dune — Air Grand Touring",
-			make: "Lucid",
-			model: "Air Grand Touring",
+			vin: generateVin({ wmi: "VCF", year: 2023, serial: 1196, plant: "G" }),
+			displayName: "Dune — Ocean Sport",
+			make: "Fisker",
+			model: "Ocean Sport",
 			year: 2023,
 			personality: "faulted",
 			online: true,
@@ -223,9 +238,12 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			odometerKm: 96_772,
 			cabinTempC: 27,
 			climateOn: false,
+			// Sport is the only trim on the smaller Touring Range pack (~75 kWh,
+			// ~372 km / 231 mi), so 7% is ~26 km — and the degraded pack in the
+			// DTC chain below is why it is the one that broke.
 			charge: {
 				soc: 7,
-				rangeKm: 31,
+				rangeKm: 26,
 				pluggedIn: false,
 				charging: false,
 				powerKw: 0,
@@ -239,7 +257,9 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 				status: spec.status,
 				timestamp: now - spec.minutesAgo * MINUTE_MS
 			})),
-			firmwareVersion: "2.4.7",
+			// A release behind the rest of the fleet: it has been sitting in a
+			// service yard, unreachable, since before Fisker OS 2.0 went out.
+			firmwareVersion: "Fisker OS 1.10",
 			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now
 		},
@@ -249,11 +269,11 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 		// majority of boring rows and the interesting ones stand out.
 		{
 			id: "ember",
-			vin: generateVin({ wmi: "7FC", year: 2025, serial: 15530, plant: "N" }),
-			displayName: "Ember — R1T Quad-Motor",
-			make: "Rivian",
-			model: "R1T Quad-Motor",
-			year: 2025,
+			vin: generateVin({ wmi: "VCF", year: 2024, serial: 6755, plant: "G" }),
+			displayName: "Ember — Ocean Extreme",
+			make: "Fisker",
+			model: "Ocean Extreme",
+			year: 2024,
 			personality: "idle",
 			online: true,
 			locked: true,
@@ -264,9 +284,10 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			odometerKm: 7_215,
 			cabinTempC: 16,
 			climateOn: false,
+			// 88% of the Extreme's ~579 km rating.
 			charge: {
 				soc: 88,
-				rangeKm: 421,
+				rangeKm: 509,
 				pluggedIn: true,
 				// Plugged in but full enough that the charger has stopped — this is
 				// why `pluggedIn` and `charging` are separate flags on ChargeState.
@@ -277,17 +298,17 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			// Depot lot in Normal, IL.
 			position: { lat: 40.5142, lon: -88.9906, heading: 270 },
 			dtcs: [],
-			firmwareVersion: "2025.6.0",
+			firmwareVersion: "Fisker OS 2.1",
 			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now
 		},
 		{
 			id: "fathom",
-			vin: generateVin({ wmi: "5YJ", year: 2022, serial: 77104, plant: "F" }),
-			displayName: "Fathom — Model 3 Standard Range",
-			make: "Tesla",
-			model: "Model 3 Standard Range Plus",
-			year: 2022,
+			vin: generateVin({ wmi: "VCF", year: 2023, serial: 3048, plant: "G" }),
+			displayName: "Fathom — Ocean Ultra",
+			make: "Fisker",
+			model: "Ocean Ultra",
+			year: 2023,
 			personality: "idle",
 			online: true,
 			locked: true,
@@ -298,9 +319,10 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			odometerKm: 63_940,
 			cabinTempC: 14,
 			climateOn: false,
+			// 45% of the Ultra's ~563 km rating.
 			charge: {
 				soc: 45,
-				rangeKm: 187,
+				rangeKm: 253,
 				pluggedIn: false,
 				charging: false,
 				powerKw: 0,
@@ -309,7 +331,7 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			// Street parking in Seattle, WA.
 			position: { lat: 47.6205, lon: -122.3493, heading: 5 },
 			dtcs: [],
-			firmwareVersion: "2023.44.30.4",
+			firmwareVersion: "Fisker OS 2.0",
 			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now
 		}
