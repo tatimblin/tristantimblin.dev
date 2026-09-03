@@ -1,0 +1,116 @@
+{
+	"name": "fleet-extension",
+	"displayName": "Fleet",
+	"description": "Mocked EV fleet-management demo: a virtual file system, a vehicle explorer, and a live CAN stream.",
+	"publisher": "whois",
+	"version": "0.0.1",
+	"private": true,
+	"license": "MIT",
+	"engines": {
+		"vscode": "^1.100.0"
+	},
+	"categories": ["Other"],
+	"main": "./dist/node/extension.js",
+	"browser": "./dist/web/extension.js",
+	"capabilities": {
+		"virtualWorkspaces": true
+	},
+	"activationEvents": ["onFileSystem:fleet"],
+	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "fleet",
+					"title": "Fleet",
+					"icon": "media/fleet.svg"
+				}
+			]
+		},
+		"views": {
+			"fleet": [
+				{
+					"id": "fleetExplorer",
+					"name": "Vehicles"
+				}
+			]
+		},
+		"viewsWelcome": [
+			{
+				"view": "fleetExplorer",
+				"contents": "No vehicles online.\n[Reset Demo](command:fleet.reset)"
+			}
+		],
+		"customEditors": [
+			{
+				"viewType": "fleet.controlsEditor",
+				"displayName": "Vehicle Controls",
+				"selector": [
+					{
+						"filenamePattern": "fleet:/**/controls.vehicle"
+					}
+				],
+				"priority": "default"
+			}
+		],
+		"commands": [
+			{
+				"command": "fleet.unlockAllDoors",
+				"title": "Unlock All Doors",
+				"category": "Fleet"
+			},
+			{
+				"command": "fleet.lockAllDoors",
+				"title": "Lock All Doors",
+				"category": "Fleet"
+			},
+			{
+				"command": "fleet.installFirmwareUpdate",
+				"title": "Install Firmware Update",
+				"category": "Fleet"
+			},
+			{
+				"command": "fleet.openCanStream",
+				"title": "Open CAN Stream",
+				"category": "Fleet"
+			},
+			{
+				"command": "fleet.switchVehicle",
+				"title": "Switch Vehicle…",
+				"category": "Fleet"
+			},
+			{
+				"command": "fleet.reset",
+				"title": "Reset Demo",
+				"category": "Fleet"
+			}
+		],
+		"configuration": {
+			"title": "Fleet",
+			"properties": {
+				"fleet.units": {
+					"type": "string",
+					"enum": ["metric", "imperial"],
+					"default": "metric",
+					"description": "Unit system used for speed, range, and temperature readouts."
+				},
+				"fleet.canDisplayRate": {
+					"type": "number",
+					"default": 10,
+					"description": "Displayed CAN lines per second."
+				}
+			}
+		}
+	},
+	"scripts": {
+		"build": "bun esbuild.mjs --production",
+		"build:web": "bun esbuild.mjs --production --web-only",
+		"watch": "bun esbuild.mjs --watch",
+		"check-types": "tsc --noEmit",
+		"selftest": "bun scripts/selftest.ts"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.100.0",
+		"esbuild": "^0.28.2",
+		"typescript": "^6.0.3"
+	}
+}
