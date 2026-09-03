@@ -3,6 +3,7 @@ import { FleetSimulator } from "./sim/clock";
 import { FleetFsProvider } from "./providers/fleetFsProvider";
 import { FleetTreeProvider } from "./providers/fleetTreeProvider";
 import { ControlsEditorProvider } from "./providers/controlsEditorProvider";
+import { CanStreamManager } from "./providers/canTerminal";
 import { registerCommands } from "./commands";
 
 /**
@@ -52,7 +53,13 @@ export function activateCommon(context: vscode.ExtensionContext): void {
 
 	context.subscriptions.push(ControlsEditorProvider.register(simulator));
 
-	registerCommands(context, simulator);
+	// The CAN terminal manager owns at most one live pseudoterminal; it is a
+	// subscription so window teardown disposes the terminal (and with it the
+	// pty's 30 Hz drain interval) rather than leaking it.
+	const canStreams = new CanStreamManager(simulator);
+	context.subscriptions.push(canStreams);
+
+	registerCommands(context, simulator, canStreams);
 
 	// Surface the simulator's sparse ambient events (charge completions, idle
 	// blips) as toasts — the fleet talking while nobody watches it is what

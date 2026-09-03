@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
 import type { FleetSimulator } from "./sim/clock";
 import { ControlsEditorProvider } from "./providers/controlsEditorProvider";
+import type { CanStreamManager } from "./providers/canTerminal";
+import { executeVehicleCommand } from "./vehicleCommands";
+import { runOtaFlow } from "./otaFlow";
 
 /**
  * Every command the manifest declares, registered in one place.
@@ -20,7 +23,11 @@ function comingSoon(feature: string): void {
 	);
 }
 
-export function registerCommands(context: vscode.ExtensionContext, simulator: FleetSimulator): void {
+export function registerCommands(
+	context: vscode.ExtensionContext,
+	simulator: FleetSimulator,
+	canStreams: CanStreamManager
+): void {
 	context.subscriptions.push(
 		/**
 		 * Internal navigation command — the tree rows and future deep links call
@@ -41,17 +48,11 @@ export function registerCommands(context: vscode.ExtensionContext, simulator: Fl
 		}),
 
 		vscode.commands.registerCommand("fleet.unlockAllDoors", () => {
-			const affected = mutateOnlineVehicles(simulator, false);
-			void vscode.window.showInformationMessage(
-				`Fleet: unlocked ${affected} vehicle${affected === 1 ? "" : "s"} (asleep vehicles unreachable).`
-			);
+			void mutateWholeFleet(simulator, false);
 		}),
 
 		vscode.commands.registerCommand("fleet.lockAllDoors", () => {
-			const affected = mutateOnlineVehicles(simulator, true);
-			void vscode.window.showInformationMessage(
-				`Fleet: locked ${affected} vehicle${affected === 1 ? "" : "s"} (asleep vehicles unreachable).`
-			);
+			void mutateWholeFleet(simulator, true);
 		}),
 
 		vscode.commands.registerCommand("fleet.reset", () => {
@@ -59,23 +60,54 @@ export function registerCommands(context: vscode.ExtensionContext, simulator: Fl
 			void vscode.window.showInformationMessage("Fleet: demo reset — six vehicles re-seeded.");
 		}),
 
-		vscode.commands.registerCommand("fleet.openCanStream", () => comingSoon("the CAN stream")),
-		vscode.commands.registerCommand("fleet.switchVehicle", () => comingSoon("vehicle switching")),
-		vscode.commands.registerCommand("fleet.installFirmwareUpdate", () => comingSoon("firmware updates"))
+		/**
+		 * Optionally takes a VIN (a future tree context menu / the switcher
+		 * will pass one); bare palette invocations stream the current bus
+		 * target, which defaults to the driving vehicle. The type guard
+		 * matters: the palette invokes commands with undefined, but other
+		 * surfaces can pass anything.
+		 */
+		vscode.commands.registerCommand("fleet.openCanStream", (vin?: unknown) => {
+			canStreams.open(typeof vin === "string" ? vin : undefined);
+		}),
+
+		vscode.commands.registerCommand("fleet.installFirmwareUpdate", () => {
+			void runOtaFlow(simulator);
+		}),
+
+		vscode.commands.registerCommand("fleet.switchVehicle", () => comingSoon("vehicle switching"))
 	);
 }
 
 /**
- * Lock/unlock every ONLINE vehicle; returns how many were touched. The asleep
- * vehicle is skipped — a command reaching a car that is not on the network
- * would break the fiction the personalities exist to maintain.
+ * Lock/unlock the whole fleet through the async command layer, one command
+ * per vehicle, all in flight together. The layer's state-derived rejections
+ * do the interesting work here: a fleet-wide lock legitimately fails for the
+ * moving vehicle (IN_MOTION), the sleeping one (ASLEEP) and the one with a
+ * door ajar (DOOR_OPEN), so the summary toast reads like a real dispatch
+ * report — one toast, not six, because six simultaneous toasts train the
+ * user to dismiss without reading.
  */
-function mutateOnlineVehicles(simulator: FleetSimulator, locked: boolean): number {
-	let affected = 0;
-	for (const vehicle of simulator.getVehicles()) {
-		if (!vehicle.online) continue;
-		simulator.setVehicleLocked(vehicle.vin, locked);
-		affected++;
+async function mutateWholeFleet(simulator: FleetSimulator, locked: boolean): Promise<void> {
+	const verb = locked ? "locked" : "unlocked";
+	const outcomes = await Promise.all(
+		simulator.getVehicles().map(async (vehicle) => ({
+			name: vehicle.displayName.split(" — ")[0] ?? vehicle.displayName,
+			result: await executeVehicleCommand(simulator, vehicle.vin, { kind: "setVehicleLocked", locked })
+		}))
+	);
+
+	const succeeded = outcomes.filter((o) => o.result.ok).length;
+	const rejected = outcomes
+		.filter((o) => !o.result.ok)
+		.map((o) => `${o.name} (${o.result.ok ? "" : o.result.reason})`);
+
+	const summary =
+		`Fleet: ${verb} ${succeeded} of ${outcomes.length} vehicles` +
+		(rejected.length > 0 ? ` · rejected: ${rejected.join(", ")}` : ".");
+	if (rejected.length > 0) {
+		void vscode.window.showWarningMessage(summary);
+	} else {
+		void vscode.window.showInformationMessage(summary);
 	}
-	return affected;
 }

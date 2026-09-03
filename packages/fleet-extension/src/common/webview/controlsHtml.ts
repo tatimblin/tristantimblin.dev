@@ -103,6 +103,10 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 			background: var(--vscode-button-secondaryBackground);
 		}
 		button.secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
+		/* In-flight command: the async layer's ~600–900 ms round trip needs a
+		   visible pending state or the button reads as broken until the
+		   result lands. Opacity rather than a spinner: theme-agnostic. */
+		button:disabled { opacity: 0.45; cursor: default; }
 		.charge-track {
 			height: 10px;
 			border-radius: 5px;
@@ -170,10 +174,11 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 	</div>
 
 	<!--
-		NEXT UNIT: windows (per-corner sliders), alarm (honk/flash), OTA
-		firmware panel (fleet.installFirmwareUpdate progress), and the map
-		preview of drive_state. This section is reserved so the layout does not
-		reflow when they land.
+		NEXT UNIT: windows (per-corner sliders), alarm (honk/flash), the OTA
+		firmware panel (fleet.installFirmwareUpdate already runs via the
+		palette; this pane will surface its progress), and the map preview of
+		drive_state. This section is reserved so the layout does not reflow
+		when they land.
 	-->
 	<div class="section" id="futureControls"></div>
 
@@ -182,6 +187,11 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 			const vscode = acquireVsCodeApi();
 			const DOORS = ["FL", "FR", "RL", "RR"];
 			const GEARS = ["P", "R", "N", "D"];
+
+			// Doors with a command in flight. Session-local on purpose (NOT in
+			// vscode.setState): a pending flag that survived a webview reload
+			// would have no commandResult coming to ever clear it.
+			const pendingDoors = {};
 
 			// Build the static skeletons once; renders only update text/classes.
 			const doorsEl = document.getElementById("doors");
@@ -203,8 +213,15 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 				lockLabel.className = "status";
 				const button = document.createElement("button");
 				button.addEventListener("click", () => {
+					if (pendingDoors[id]) return;
 					const state = vscode.getState();
 					const locked = state && state.doors ? state.doors[id].locked : false;
+					// Busy until the host's commandResult for this door comes back;
+					// the ~1 s round trip is the async command layer's simulated
+					// latency, and an un-disabled button invites double-sends.
+					pendingDoors[id] = true;
+					button.disabled = true;
+					button.textContent = "…";
 					vscode.postMessage({ type: "setDoorLock", door: id, locked: !locked });
 				});
 				bottom.append(lockLabel, button);
@@ -239,9 +256,16 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 					els.status.textContent = door.open ? "ajar" : "closed";
 					els.status.classList.toggle("ajar", door.open);
 					els.lockLabel.textContent = door.locked ? "locked" : "unlocked";
-					els.button.textContent = door.locked ? "Unlock" : "Lock";
+					if (pendingDoors[id]) {
+						// A state push can land mid-command (the simulator ticks 4×/s);
+						// the tile stays busy until its own commandResult clears it.
+						els.button.textContent = "…";
+						els.button.disabled = true;
+					} else {
+						els.button.textContent = door.locked ? "Unlock" : "Lock";
+						els.button.disabled = !state.online;
+					}
 					els.button.classList.toggle("secondary", door.locked);
-					els.button.disabled = !state.online;
 				}
 
 				const fill = document.getElementById("chargeFill");
@@ -262,6 +286,15 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 				const message = event.data;
 				if (message && message.type === "state") {
 					render(message.state);
+				}
+				if (message && message.type === "commandResult") {
+					// Success or rejection, the busy state ends here. The rejection
+					// reason is deliberately NOT rendered in-panel — the host
+					// already toasted it, and re-render from cache snaps the button
+					// back to the (unchanged, on rejection) truth.
+					delete pendingDoors[message.door];
+					const cachedState = vscode.getState();
+					if (cachedState) render(cachedState);
 				}
 			});
 

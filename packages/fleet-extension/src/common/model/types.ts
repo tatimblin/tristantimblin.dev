@@ -68,6 +68,24 @@ export interface ChargeState {
 }
 
 /**
+ * Over-the-air firmware update state, mirroring the Owner API's
+ * `vehicle_state.software_update` block. Idle is `status: ""` with a blank
+ * version — the real API reports `" "` (a single space) when no campaign is
+ * pending, and serialize.ts reproduces that quirk at the JSON edge; the model
+ * keeps a plain empty string so code can test truthiness without knowing it.
+ */
+export interface SoftwareUpdateState {
+	/** "" = no update in flight; otherwise the phase the installer is in. */
+	status: "" | "downloading" | "installing";
+	/** Target version of the in-flight campaign; "" when idle. */
+	version: string;
+	/** Download progress, 0–100. */
+	downloadPerc: number;
+	/** Install (flash) progress, 0–100. */
+	installPerc: number;
+}
+
+/**
  * The behaviour profile the simulator applies on each tick. This is the demo's
  * central knob: it is what makes six rows in a tree view feel like a fleet
  * rather than six copies of the same JSON. The simulator switches on it, and
@@ -155,6 +173,8 @@ export interface Vehicle {
 	dtcs: Dtc[];
 	/** Installed firmware version, bumped by `fleet.installFirmwareUpdate`. */
 	firmwareVersion: string;
+	/** In-flight OTA campaign, if any — see `SoftwareUpdateState`. */
+	softwareUpdate: SoftwareUpdateState;
 	/** Epoch milliseconds of the last simulator tick that touched this vehicle. */
 	lastUpdated: number;
 }

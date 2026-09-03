@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import type { FleetSimulator } from "../sim/clock";
 import type { DoorId, Vehicle } from "../model/types";
 import { buildControlsHtml } from "../webview/controlsHtml";
+import { runVehicleCommand } from "../commandUi";
 
 /**
  * The "Vehicle Controls" custom editor (viewType `fleet.controlsEditor`),
@@ -24,6 +25,15 @@ import { buildControlsHtml } from "../webview/controlsHtml";
  *   webview → host:  { type: "ready" }
  *                    { type: "setDoorLock", door: DoorId, locked: boolean }
  *   host → webview:  { type: "state", state: ControlsState }
+ *                    { type: "commandResult", door: DoorId, ok: boolean,
+ *                      reason?: string }
+ *
+ * `commandResult` exists because mutations now ride the async command layer
+ * (vehicleCommands.ts) with its ~600–900 ms simulated round trip: the tile
+ * shows a busy state from click until this message lands, and on success the
+ * actual new lock state arrives separately via the ordinary `state` push.
+ * Rejection toasts are the HOST's job (commandUi.ts) — the webview only
+ * clears its busy state, so the reason renders once, natively, not twice.
  *
  * Push gating: state pushes are skipped while the panel is hidden. With
  * `retainContextWhenHidden` the hidden webview still exists and would happily
@@ -95,6 +105,10 @@ export class ControlsEditorProvider implements vscode.CustomReadonlyEditorProvid
 
 		const subscriptions: vscode.Disposable[] = [];
 
+		// Commands take a simulated ~600–900 ms round trip; the user can close
+		// the tab mid-flight, and postMessage on a disposed webview throws.
+		let panelDisposed = false;
+
 		subscriptions.push(
 			panel.webview.onDidReceiveMessage((message: { type?: string; door?: string; locked?: boolean }) => {
 				if (message?.type === "ready") {
@@ -107,11 +121,24 @@ export class ControlsEditorProvider implements vscode.CustomReadonlyEditorProvid
 					// we wrote the sender.
 					const door = VALID_DOORS.find((d) => d === message.door);
 					if (door && typeof message.locked === "boolean") {
-						// Direct, synchronous mutation. The async command layer (with
-						// its simulated round-trip latency) is the next unit; the
-						// state push back to the webview rides the simulator's
-						// onVehicleChanged event below either way.
-						this.simulator.setDoorLock(vin, door, message.locked);
+						// Through the async command layer: simulated round-trip
+						// latency, state-derived rejections, toasts on the host
+						// side. The webview only learns ok/reason (to clear its
+						// busy tile); the actual new lock state rides the ordinary
+						// onVehicleChanged → state push below.
+						void runVehicleCommand(this.simulator, vin, {
+							kind: "setDoorLock",
+							door,
+							locked: message.locked
+						}).then((result) => {
+							if (panelDisposed) return;
+							void panel.webview.postMessage({
+								type: "commandResult",
+								door,
+								ok: result.ok,
+								reason: result.ok ? undefined : result.reason
+							});
+						});
 					}
 				}
 			})
@@ -134,6 +161,7 @@ export class ControlsEditorProvider implements vscode.CustomReadonlyEditorProvid
 		);
 
 		panel.onDidDispose(() => {
+			panelDisposed = true;
 			for (const subscription of subscriptions) subscription.dispose();
 		});
 	}

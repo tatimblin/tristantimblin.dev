@@ -3,6 +3,7 @@ import type {
 	DoorId,
 	DoorState,
 	Dtc,
+	SoftwareUpdateState,
 	Vehicle,
 	WindowState
 } from "./types";
@@ -39,6 +40,13 @@ function closedWindows(): Record<DoorId, WindowState> {
 	return Object.fromEntries(
 		DOOR_IDS.map((id) => [id, { position: 0 }])
 	) as Record<DoorId, WindowState>;
+}
+
+/** No OTA campaign in flight — every vehicle seeds this way; the OTA flow
+ * mutates it live through the simulator so open `state.json` tabs can watch
+ * `software_update` advance. A fresh object per call, same as the fleet. */
+function idleSoftwareUpdate(): SoftwareUpdateState {
+	return { status: "", version: "", downloadPerc: 0, installPerc: 0 };
 }
 
 /**
@@ -112,6 +120,7 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			position: { lat: 37.4419, lon: -122.143, heading: 328 },
 			dtcs: [],
 			firmwareVersion: "2024.44.25.2",
+			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now
 		},
 
@@ -148,6 +157,7 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			position: { lat: 35.9891, lon: -119.9601, heading: 0 },
 			dtcs: [],
 			firmwareVersion: "2025.8.4",
+			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now
 		},
 
@@ -185,6 +195,7 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			position: { lat: 44.0582, lon: -121.3153, heading: 92 },
 			dtcs: [],
 			firmwareVersion: "2024.38.1",
+			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now - 6 * 60 * MINUTE_MS
 		},
 
@@ -229,6 +240,7 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 				timestamp: now - spec.minutesAgo * MINUTE_MS
 			})),
 			firmwareVersion: "2.4.7",
+			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now
 		},
 
@@ -266,6 +278,7 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			position: { lat: 40.5142, lon: -88.9906, heading: 270 },
 			dtcs: [],
 			firmwareVersion: "2025.6.0",
+			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now
 		},
 		{
@@ -297,6 +310,7 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			position: { lat: 47.6205, lon: -122.3493, heading: 5 },
 			dtcs: [],
 			firmwareVersion: "2023.44.30.4",
+			softwareUpdate: idleSoftwareUpdate(),
 			lastUpdated: now
 		}
 	];

@@ -16,7 +16,17 @@ import { computeCheckDigit, generateVin, isValidVin } from "../src/common/model/
 import { seedFleet } from "../src/common/model/fleet";
 import type { VehiclePersonality } from "../src/common/model/types";
 import { FleetSimulator } from "../src/common/sim/clock";
-import { getBitsLE } from "../src/common/sim/can";
+import type { AmbientEvent } from "../src/common/sim/clock";
+import { decodeFrameAnnotation, encodeDiSpeed, getBitsLE } from "../src/common/sim/can";
+import {
+	commandLatencyMs,
+	evaluateOtaPreconditions,
+	evaluateVehicleCommand,
+	executeVehicleCommand,
+	OTA_ECUS,
+	OTA_STAGE_INCREMENTS,
+	OTA_TARGET_VERSION
+} from "../src/common/vehicleCommands";
 
 let failures = 0;
 
@@ -372,6 +382,239 @@ check("reset clears the frame buffer", sim.bufferedFrameCount === 0);
 check("mtime keeps advancing across reset", sim.mtimeOf(atlas.vin) > preResetMtime, `${preResetMtime} → ${sim.mtimeOf(atlas.vin)}`);
 
 sim.dispose();
+
+// ────────────────────────────────────────────────────────────────────────────
+// The async command layer, wake/sleep, OTA transitions and bus targeting.
+// Same rule as the simulator sections above: everything here loads and runs
+// without vscode, driven with injected sleep/random so every path — including
+// the "async" ones — completes in microseconds and deterministically. If the
+// import at the top of this file ever fails to load, vehicleCommands.ts grew
+// a vscode dependency and the whole layer stopped being testable.
+// ────────────────────────────────────────────────────────────────────────────
+
+console.log("");
+console.log("commands: latency");
+
+// The latency function, not a stopwatch: executeVehicleCommand awaits exactly
+// what this returns, so proving the function's bounds over a spread of seeds
+// proves the layer's bounds without ever sleeping for real.
+{
+	let inBounds = true;
+	let low = Infinity;
+	let high = -Infinity;
+	for (let i = 0; i < 500; i++) {
+		const ms = commandLatencyMs(`VIN${i}:setDoorLock:${i * 7}`);
+		if (ms < 600 || ms >= 900) inBounds = false;
+		low = Math.min(low, ms);
+		high = Math.max(high, ms);
+	}
+	check("commandLatencyMs stays within 600–900 ms across 500 seeds", inBounds, `spread ${low}–${high} ms`);
+	check("commandLatencyMs actually varies", high - low > 100, `spread ${high - low} ms`);
+	check(
+		"commandLatencyMs is deterministic per seed",
+		commandLatencyMs("seed:a:1") === commandLatencyMs("seed:a:1")
+	);
+}
+
+console.log("");
+console.log("commands: state-derived rejections");
+
+const sim2 = new FleetSimulator(T0);
+const atlas2 = sim2.getVehicles().find((v) => v.personality === "driving")!;
+const beacon2 = sim2.getVehicles().find((v) => v.personality === "charging")!;
+const cinder2 = sim2.getVehicles().find((v) => v.personality === "asleep")!;
+const dune2 = sim2.getVehicles().find((v) => v.personality === "faulted")!;
+const ember2 = sim2.getVehicles().find((v) => v.id === "ember")!;
+
+// Test seams: capture the delay instead of waiting it out, and pin the
+// spurious-UNREACHABLE dice so rejections stay state-derived here.
+const requestedDelays: number[] = [];
+const instant = (ms: number): Promise<void> => {
+	requestedDelays.push(ms);
+	return Promise.resolve();
+};
+const neverSpurious = () => 0.99;
+const alwaysSpurious = () => 0.0;
+const opts = { sleep: instant, random: neverSpurious };
+
+const asleepResult = await executeVehicleCommand(sim2, cinder2.vin, { kind: "setVehicleLocked", locked: true }, opts);
+check("ASLEEP: any command against Cinder", !asleepResult.ok && asleepResult.reason === "ASLEEP", JSON.stringify(asleepResult));
+
+const motionResult = await executeVehicleCommand(sim2, atlas2.vin, { kind: "setVehicleLocked", locked: true }, opts);
+check(
+	"IN_MOTION: locking Atlas while it drives",
+	!motionResult.ok && motionResult.reason === "IN_MOTION" && motionResult.detail.includes("km/h"),
+	JSON.stringify(motionResult)
+);
+
+const doorOpenResult = await executeVehicleCommand(sim2, dune2.vin, { kind: "setVehicleLocked", locked: true }, opts);
+check(
+	"DOOR_OPEN: locking Dune with its FL door ajar",
+	!doorOpenResult.ok && doorOpenResult.reason === "DOOR_OPEN" && doorOpenResult.detail.includes("FL"),
+	JSON.stringify(doorOpenResult)
+);
+check("DOOR_OPEN rejection left Dune unlocked", dune2.locked === false);
+
+const chargingResult = await executeVehicleCommand(sim2, beacon2.vin, { kind: "unlatchChargePort" }, opts);
+check(
+	"CHARGING_IN_PROGRESS: unlatching Beacon mid-session",
+	!chargingResult.ok && chargingResult.reason === "CHARGING_IN_PROGRESS",
+	JSON.stringify(chargingResult)
+);
+check("rejection left Beacon plugged in", beacon2.charge.pluggedIn === true);
+
+// Unlocking a door with the vehicle parked is the clean success path — and
+// success must actually mutate, or the layer is latency theatre.
+const successResult = await executeVehicleCommand(
+	sim2,
+	ember2.vin,
+	{ kind: "setDoorLock", door: "FL", locked: false },
+	opts
+);
+check("success path resolves ok", successResult.ok === true, JSON.stringify(successResult));
+check("success path mutated the door", ember2.doors.FL.locked === false && ember2.locked === false);
+
+const spuriousResult = await executeVehicleCommand(
+	sim2,
+	ember2.vin,
+	{ kind: "setDoorLock", door: "FL", locked: true },
+	{ sleep: instant, random: alwaysSpurious }
+);
+check(
+	"spurious UNREACHABLE fires on an otherwise-valid command",
+	!spuriousResult.ok && spuriousResult.reason === "UNREACHABLE",
+	JSON.stringify(spuriousResult)
+);
+check("spurious failure did NOT mutate", ember2.doors.FL.locked === false);
+
+const unknownResult = await executeVehicleCommand(sim2, "NOSUCHVIN000000000", { kind: "unlatchChargePort" }, opts);
+check("unknown VIN resolves UNREACHABLE", !unknownResult.ok && unknownResult.reason === "UNREACHABLE");
+
+check(
+	"every command waited a 600–900 ms latency",
+	requestedDelays.length >= 6 && requestedDelays.every((ms) => ms >= 600 && ms < 900),
+	`${requestedDelays.length} commands, ${Math.min(...requestedDelays)}–${Math.max(...requestedDelays)} ms`
+);
+
+// The policy alone, as a pure function — the property that makes rejections
+// reproducible from visible state instead of dice.
+check(
+	"evaluateVehicleCommand is pure over the same state",
+	JSON.stringify(evaluateVehicleCommand(atlas2, { kind: "setVehicleLocked", locked: true })) ===
+		JSON.stringify(evaluateVehicleCommand(atlas2, { kind: "setVehicleLocked", locked: true }))
+);
+
+console.log("");
+console.log("commands: wake and sleep");
+
+check("wake transitions Cinder asleep → online idler", sim2.wake(cinder2.vin) === true && cinder2.online && cinder2.personality === "idle");
+check("wake on an awake vehicle is a no-op", sim2.wake(cinder2.vin) === false);
+const awakeResult = await executeVehicleCommand(sim2, cinder2.vin, { kind: "setVehicleLocked", locked: true }, opts);
+check("commands succeed against the woken vehicle", awakeResult.ok === true);
+check("sleep is wake's inverse", sim2.sleep(cinder2.vin) === true && !cinder2.online && cinder2.personality === "asleep");
+check("sleep refuses a moving vehicle", sim2.sleep(atlas2.vin) === false);
+
+console.log("");
+console.log("ota: precondition evaluation across all personalities");
+
+const atlasOta = evaluateOtaPreconditions(atlas2);
+check(
+	"driving (Atlas): NOT_IN_PARK with the UDS shifter detail",
+	atlasOta?.reason === "NOT_IN_PARK" && atlasOta.detail === "conditionsNotCorrect (0x22): shifterLeverNotInPark (0x90)",
+	atlasOta?.detail ?? "null"
+);
+const duneOta = evaluateOtaPreconditions(dune2);
+check("faulted at 7% SoC (Dune): LOW_BATTERY", duneOta?.reason === "LOW_BATTERY", duneOta?.detail ?? "null");
+check("asleep (Cinder): ASLEEP", evaluateOtaPreconditions(cinder2)?.reason === "ASLEEP");
+check("charging in P (Beacon) is eligible", evaluateOtaPreconditions(beacon2) === null);
+check("idle (Ember) is eligible", evaluateOtaPreconditions(ember2) === null);
+check(
+	"progress increments sum to exactly 100",
+	OTA_STAGE_INCREMENTS.download + OTA_STAGE_INCREMENTS.verify + OTA_STAGE_INCREMENTS.flash + OTA_STAGE_INCREMENTS.reboot === 100
+);
+check("six named ECUs to flash", OTA_ECUS.length === 6, OTA_ECUS.join(", "));
+
+console.log("");
+console.log("ota: simulator transitions");
+
+const ambientEvents: AmbientEvent[] = [];
+sim2.onAmbientEvent((event) => ambientEvents.push(event));
+const versionBefore = ember2.firmwareVersion;
+
+check("beginOtaUpdate marks downloading", sim2.beginOtaUpdate(ember2.vin, OTA_TARGET_VERSION) === true && ember2.softwareUpdate.status === "downloading");
+check("a second begin while in flight is refused", sim2.beginOtaUpdate(ember2.vin, OTA_TARGET_VERSION) === false);
+sim2.setOtaProgress(ember2.vin, { downloadPerc: 62 });
+check("download progress lands in the model", ember2.softwareUpdate.downloadPerc === 62);
+const otaStateJson = JSON.parse(sim2.serializeState(ember2.vin)) as Record<string, any>;
+check(
+	"state.json mirrors the in-flight update",
+	otaStateJson.vehicle_state.software_update.status === "downloading" &&
+		otaStateJson.vehicle_state.software_update.download_perc === 62 &&
+		otaStateJson.vehicle_state.software_update.version === OTA_TARGET_VERSION
+);
+sim2.setOtaProgress(ember2.vin, { status: "installing", installPerc: 40 });
+check("progress flips downloading → installing", ember2.softwareUpdate.status === "installing" && ember2.softwareUpdate.installPerc === 40);
+check(
+	"completeOta bumps the version and resets the update block",
+	sim2.completeOta(ember2.vin) === true &&
+		ember2.firmwareVersion === OTA_TARGET_VERSION &&
+		ember2.softwareUpdate.status === "" &&
+		ember2.softwareUpdate.downloadPerc === 0,
+	`${versionBefore} → ${ember2.firmwareVersion}`
+);
+check(
+	"completeOta emitted the ota-complete ambient event",
+	ambientEvents.some((e) => e.kind === "ota-complete" && e.vin === ember2.vin && e.message.includes(OTA_TARGET_VERSION)),
+	ambientEvents.map((e) => e.kind).join(", ") || "none"
+);
+
+const fathom2 = sim2.getVehicles().find((v) => v.id === "fathom")!;
+const fathomVersion = fathom2.firmwareVersion;
+sim2.beginOtaUpdate(fathom2.vin, OTA_TARGET_VERSION);
+sim2.setOtaProgress(fathom2.vin, { downloadPerc: 30 });
+check(
+	"cancelOta restores idle without touching the installed version",
+	sim2.cancelOta(fathom2.vin) === true && fathom2.firmwareVersion === fathomVersion && fathom2.softwareUpdate.status === "",
+	fathom2.firmwareVersion
+);
+check("begin against an asleep vehicle is refused", sim2.beginOtaUpdate(cinder2.vin, OTA_TARGET_VERSION) === false);
+
+console.log("");
+console.log("sim: bus targeting");
+
+sim2.drainFrames(10_000);
+check("setBusTarget rejects unknown VINs", sim2.setBusTarget("NOSUCHVIN000000000") === false);
+check("setBusTarget accepts a fleet VIN and flushes the ring", sim2.setBusTarget(cinder2.vin) === true && sim2.bufferedFrameCount === 0);
+let now2 = T0 + 60_000;
+for (let i = 0; i < 8; i++) {
+	now2 += 250;
+	sim2.tick(now2);
+}
+check("an asleep bus target yields silence", sim2.bufferedFrameCount === 0, `${sim2.bufferedFrameCount} frames`);
+sim2.setBusTarget(atlas2.vin);
+check("bus target resolves to the retargeted VIN", sim2.getBusTargetVin() === atlas2.vin);
+for (let i = 0; i < 8; i++) {
+	now2 += 250;
+	sim2.tick(now2);
+}
+check("retargeting to an online vehicle resumes traffic", sim2.bufferedFrameCount > 0, `${sim2.bufferedFrameCount} frames`);
+
+console.log("");
+console.log("can: annotation decoding");
+
+// Exact round trip at a lattice point of the 0.08 factor: (100+40)/0.08 is a
+// whole raw value, so encode→decode must reproduce 100.0 with no tolerance.
+check(
+	"DI_speed annotation decodes the encoded speed",
+	decodeFrameAnnotation(encodeDiSpeed(T0, 100)) === "DI_speed  100.0 km/h",
+	decodeFrameAnnotation(encodeDiSpeed(T0, 100))
+);
+check(
+	"filler frames get no annotation",
+	decodeFrameAnnotation({ timestamp: T0, id: 0x123, dlc: 8, data: [1, 2, 3, 4, 5, 6, 7, 8] }) === undefined
+);
+
+sim2.dispose();
 console.log("");
 if (failures > 0) {
 	console.log(`${failures} check(s) failed`);

@@ -30,7 +30,7 @@ import type { Disposable, Listener } from "./emitter";
 
 /** Something noteworthy but non-critical happened; the UI may toast it. */
 export interface AmbientEvent {
-	kind: "charge-complete" | "blip";
+	kind: "charge-complete" | "blip" | "ota-complete";
 	vin: string;
 	message: string;
 }
@@ -69,6 +69,13 @@ export class FleetSimulator {
 
 	/** Drop-oldest ring buffer of simulated bus traffic; see `drainFrames`. */
 	private frames: CanFrame[] = [];
+
+	/**
+	 * VIN whose bus the frame buffer simulates; null = the seeded driving
+	 * vehicle (the default that made sense before `fleet.openCanStream` could
+	 * ask for anyone else). See `setBusTarget`.
+	 */
+	private busTargetVin: string | null = null;
 
 	private lastTickMs: number;
 	private intervalHandle: unknown = null;
@@ -171,6 +178,133 @@ export class FleetSimulator {
 	}
 
 	/**
+	 * Wake an asleep vehicle: it comes back online as an idler. This is the
+	 * *end* of the wake flow — the ~3 s "Waking…" theatre lives in the UI
+	 * layer (commandUi.ts), because the simulator must stay synchronous and
+	 * clock-driven; a sim that sleeps inside its own mutation would stall the
+	 * tick for every other vehicle.
+	 */
+	wake(vin: string): boolean {
+		const vehicle = this.getVehicle(vin);
+		if (!vehicle || vehicle.online) return false;
+		vehicle.online = true;
+		vehicle.personality = "idle";
+		this.touch(vehicle);
+		return true;
+	}
+
+	/**
+	 * Put an awake, parked vehicle back to sleep. Nothing calls this yet — it
+	 * exists as `wake`'s inverse so the pair can be property-tested together
+	 * and so a future idle-timeout feature has a real API to reach for.
+	 */
+	sleep(vin: string): boolean {
+		const vehicle = this.getVehicle(vin);
+		if (!vehicle || !vehicle.online || vehicle.speedKph > 0) return false;
+		vehicle.online = false;
+		vehicle.personality = "asleep";
+		this.touch(vehicle);
+		return true;
+	}
+
+	/**
+	 * Release the charge-port latch (unplug). The command layer guards this
+	 * with CHARGING_IN_PROGRESS — a latch that releases mid-session is how
+	 * connectors get arc damage — so by the time this runs, `charging` is
+	 * already false and the only mutation left is the cable coming off.
+	 */
+	unlatchChargePort(vin: string): boolean {
+		const vehicle = this.getVehicle(vin);
+		if (!vehicle || !vehicle.charge.pluggedIn) return false;
+		vehicle.charge.pluggedIn = false;
+		vehicle.charge.charging = false;
+		vehicle.charge.powerKw = 0;
+		this.touch(vehicle);
+		return true;
+	}
+
+	// ── OTA transitions ────────────────────────────────────────────────────────
+	//
+	// Four small synchronous mutations rather than one long-running method: the
+	// withProgress choreography (stage timing, cancellation tokens, byte-count
+	// messages) lives in otaFlow.ts where vscode is allowed. The simulator only
+	// records which phase the installer is in, so `state.json` — and anything
+	// else reading the model — reflects the update as it happens.
+
+	/** Start a campaign: status → downloading, target version recorded. */
+	beginOtaUpdate(vin: string, targetVersion: string): boolean {
+		const vehicle = this.getVehicle(vin);
+		if (!vehicle || !vehicle.online || vehicle.softwareUpdate.status !== "") return false;
+		vehicle.softwareUpdate = { status: "downloading", version: targetVersion, downloadPerc: 0, installPerc: 0 };
+		this.touch(vehicle);
+		return true;
+	}
+
+	/** Advance the in-flight campaign; also flips downloading → installing. */
+	setOtaProgress(
+		vin: string,
+		progress: { status?: "downloading" | "installing"; downloadPerc?: number; installPerc?: number }
+	): boolean {
+		const vehicle = this.getVehicle(vin);
+		if (!vehicle || vehicle.softwareUpdate.status === "") return false;
+		if (progress.status !== undefined) vehicle.softwareUpdate.status = progress.status;
+		if (progress.downloadPerc !== undefined) {
+			vehicle.softwareUpdate.downloadPerc = Math.max(0, Math.min(100, progress.downloadPerc));
+		}
+		if (progress.installPerc !== undefined) {
+			vehicle.softwareUpdate.installPerc = Math.max(0, Math.min(100, progress.installPerc));
+		}
+		this.touch(vehicle);
+		return true;
+	}
+
+	/** Land the campaign: version bumped, update block back to idle, toast. */
+	completeOta(vin: string): boolean {
+		const vehicle = this.getVehicle(vin);
+		if (!vehicle || vehicle.softwareUpdate.status === "") return false;
+		const version = vehicle.softwareUpdate.version;
+		vehicle.firmwareVersion = version;
+		vehicle.softwareUpdate = { status: "", version: "", downloadPerc: 0, installPerc: 0 };
+		this.touch(vehicle);
+		this.ambientEmitter.fire({
+			kind: "ota-complete",
+			vin,
+			message: `${vehicle.displayName.split(" — ")[0]} updated to ${version}`
+		});
+		return true;
+	}
+
+	/** Abandon the campaign: the installed version is untouched by design. */
+	cancelOta(vin: string): boolean {
+		const vehicle = this.getVehicle(vin);
+		if (!vehicle || vehicle.softwareUpdate.status === "") return false;
+		vehicle.softwareUpdate = { status: "", version: "", downloadPerc: 0, installPerc: 0 };
+		this.touch(vehicle);
+		return true;
+	}
+
+	// ── Bus targeting ──────────────────────────────────────────────────────────
+
+	/**
+	 * Point the simulated bus at a different vehicle. The buffer is flushed on
+	 * retarget: frames already queued were encoded from the *previous*
+	 * vehicle's state, and a terminal that opens on Beacon showing three
+	 * seconds of Atlas's speed frames is a lie with a decoder-shaped audience.
+	 */
+	setBusTarget(vin: string): boolean {
+		if (!this.getVehicle(vin)) return false;
+		if (this.busTargetVin === vin) return true;
+		this.busTargetVin = vin;
+		this.frames = [];
+		return true;
+	}
+
+	/** VIN the frame buffer currently simulates (after default resolution). */
+	getBusTargetVin(): string | undefined {
+		return this.resolveBusVehicle()?.vin;
+	}
+
+	/**
 	 * Re-seed the fleet. Version counters deliberately survive: they only ever
 	 * go up, because a reset that rewound them would rewind mtimes with them,
 	 * and any editor holding a pre-reset `state.json` would compare mtimes,
@@ -180,6 +314,7 @@ export class FleetSimulator {
 	reset(): void {
 		this.vehicles = seedFleet();
 		this.frames = [];
+		this.busTargetVin = null;
 		this.drivePhase = 0;
 		for (const vehicle of this.vehicles) {
 			this.bumpVersion(vehicle.vin);
@@ -345,13 +480,21 @@ export class FleetSimulator {
 	// ── Internals ──────────────────────────────────────────────────────────────
 
 	/**
-	 * The buffer simulates the bus of ONE vehicle — the seeded driving one,
-	 * whose traffic is the only interesting stream. `fleet.switchVehicle`
-	 * (next unit) will retarget this; a sleeping target would yield silence,
-	 * which is also correct.
+	 * The buffer simulates the bus of ONE vehicle — by default the seeded
+	 * driving one, whose traffic is the most interesting stream; `setBusTarget`
+	 * retargets it. An offline (asleep) target yields silence, which is also
+	 * correct: no network, no frames.
 	 */
+	private resolveBusVehicle(): Vehicle | undefined {
+		return (
+			(this.busTargetVin !== null ? this.getVehicle(this.busTargetVin) : undefined) ??
+			this.vehicles.find((v) => v.personality === "driving") ??
+			this.vehicles[0]
+		);
+	}
+
 	private generateFrames(dtMs: number, now: number): void {
-		const bus = this.vehicles.find((v) => v.personality === "driving") ?? this.vehicles[0];
+		const bus = this.resolveBusVehicle();
 		if (!bus || !bus.online) return;
 
 		const count = Math.min(600, Math.round((BUS_FRAMES_PER_SECOND * dtMs) / 1000));

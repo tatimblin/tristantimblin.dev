@@ -79,11 +79,15 @@ export function serializeVehicleState(vehicle: Vehicle): string {
 				locked: vehicle.locked,
 				odometer_km: Number(vehicle.odometerKm.toFixed(1)),
 				car_version: vehicle.firmwareVersion,
+				// Live OTA state: the firmware-update flow drives these through the
+				// simulator, so an open state.json tab watches download_perc and
+				// install_perc climb in real time. The idle version is `" "` (one
+				// space), reproducing the real API's quirk — see SoftwareUpdateState.
 				software_update: {
-					status: "",
-					version: " ",
-					download_perc: 0,
-					install_perc: 0
+					status: vehicle.softwareUpdate.status,
+					version: vehicle.softwareUpdate.version || " ",
+					download_perc: Math.round(vehicle.softwareUpdate.downloadPerc),
+					install_perc: Math.round(vehicle.softwareUpdate.installPerc)
 				},
 				timestamp: vehicle.lastUpdated
 			}

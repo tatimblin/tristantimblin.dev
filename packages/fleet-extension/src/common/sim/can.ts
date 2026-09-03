@@ -241,3 +241,57 @@ export function generateBusTraffic(
 	}
 	return frames;
 }
+
+/** Undo `toSignedRaw`: interpret an unsigned raw field as two's complement. */
+function fromSignedRaw(raw: number, bits: number): number {
+	return raw >= 1 << (bits - 1) ? raw - (1 << bits) : raw;
+}
+
+/** VAL_ table inverse for `DI_gear`; index 0 is SNA (signal not available). */
+const GEAR_NAMES = ["SNA", "P", "R", "N", "D"] as const;
+
+/**
+ * Decode a signal-bearing frame into the annotation the CAN terminal appends
+ * after the hex bytes — e.g. `DI_speed  106.3 km/h`. Returns undefined for
+ * filler frames (no label), which is what visually separates signal from
+ * noise in the stream.
+ *
+ * This is the OTHER HALF of the encoders above and must live next to them:
+ * the module comment warns that most frames here are packed little-endian
+ * even where the public DBC says Motorola order, so any decoder that reaches
+ * for a real DBC file instead of these helpers decodes garbage. Keeping
+ * encode and decode in one file makes that drift a one-screen code review.
+ */
+export function decodeFrameAnnotation(canFrame: CanFrame): string | undefined {
+	switch (canFrame.label) {
+		case "DI_speed": {
+			const kph = getBitsLE(canFrame.data, 12, 12) * 0.08 - 40;
+			return `DI_speed  ${kph.toFixed(1)} km/h`;
+		}
+		case "DI_torque1": {
+			const torque = fromSignedRaw(getBitsLE(canFrame.data, 0, 13), 13) * 0.25;
+			const rpm = fromSignedRaw(getBitsLE(canFrame.data, 16, 16), 16);
+			return `DI_torque1  ${torque.toFixed(0)} Nm  ${rpm} rpm`;
+		}
+		case "ESP_wheelSpeeds": {
+			const wheels = [0, 1, 2, 3].map((i) => (getBitsLE(canFrame.data, i * 13, 13) * 0.04).toFixed(1));
+			return `ESP_wheelSpeeds  FL ${wheels[0]}  FR ${wheels[1]}  RL ${wheels[2]}  RR ${wheels[3]}`;
+		}
+		case "DI_systemStatus": {
+			const gear = GEAR_NAMES[getBitsLE(canFrame.data, 21, 3)] ?? "SNA";
+			return `DI_gear  ${gear}`;
+		}
+		case "GTW_carState": {
+			// 2-bit door fields at the DBC's irregular offsets (RR at 29).
+			const doors: Array<[string, number]> = [["FL", 12], ["FR", 14], ["RL", 22], ["RR", 29]];
+			const open = doors.filter(([, bit]) => getBitsLE(canFrame.data, bit, 2) === DOOR_OPEN).map(([name]) => name);
+			return `GTW_carState  doors ${open.length === 0 ? "closed" : `ajar: ${open.join(" ")}`}`;
+		}
+		case "BMS_socUI": {
+			const soc = getBitsLE(canFrame.data, 10, 10) * 0.1;
+			return `BMS_socUI  ${soc.toFixed(1)} %`;
+		}
+		default:
+			return undefined;
+	}
+}
