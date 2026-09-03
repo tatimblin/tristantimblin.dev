@@ -43,7 +43,14 @@ import { activateFleetExtension } from "./extension-host";
 // ---------------------------------------------------------------------------
 function post(message: { type: string; pct?: number; message?: string }) {
 	if (window.parent !== window) {
-		window.parent.postMessage(message, "*");
+		// Origin-pinned rather than "*", so BOTH directions of this channel are
+		// checked on both ends. `fleet-demo:error` carries the boot error's
+		// own message — internal, stack-adjacent text — and a wildcard target
+		// hands it to whatever document happens to be the parent, including
+		// one that navigated cross-origin after embedding us. The embed is
+		// same-origin by construction (element.ts mounts it at a site path),
+		// so pinning costs nothing here.
+		window.parent.postMessage(message, window.location.origin);
 	}
 }
 const progress = (pct: number) => post({ type: "fleet-demo:progress", pct });

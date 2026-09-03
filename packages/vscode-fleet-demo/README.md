@@ -35,6 +35,13 @@ The root `build` script runs this before `astro build`. Only `element.ts` /
 `element.css` follow the normal raw-source convention (they render in the blog
 page, not in the workbench).
 
+The root also has `build:site` — `astro build` alone, no monaco — for when you
+are editing copy or one of the other pages and do not want to pay this build.
+It is an escape hatch, not the default: `public/fleet-demo/` is gitignored, so
+on a clean checkout `build:site` produces a post whose embed 404s, with nothing
+in the output to say so (the failure `playwright.config.ts` builds the demo to
+avoid). Anything you actually ship goes through `build`.
+
 ### Why `build` is `bunx --bun vite build` and not plain `vite build`
 
 Do not "simplify" this back to `vite build`. Netlify's deploy-preview image

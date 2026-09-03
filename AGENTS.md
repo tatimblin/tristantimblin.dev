@@ -34,7 +34,10 @@ source-export rule above, in both of its packages, because it has to:
 **Build chain:** `build:fleet-demo` = fleet-extension `build:web` →
 vscode-fleet-demo `build`. The root `build` runs it before `astro build`, and
 so does Playwright's `webServer` — a bare `astro build` ships the post with no
-embed in it.
+embed in it. `build:site` is that bare `astro build`, kept as an escape hatch
+for copy edits and the other 29 pages (seconds, vs. minutes for the monaco
+build on a cold cache) — but `public/fleet-demo/` is gitignored, so on a clean
+checkout it silently ships the post with a dead embed. Ship with `build`.
 
 **Three dev loops:**
 

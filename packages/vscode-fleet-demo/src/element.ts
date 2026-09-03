@@ -43,8 +43,21 @@ export class FleetDemoElement extends HTMLElement {
 	private launched = false;
 
 	connectedCallback() {
-		this.abortController = new AbortController();
+		const abortController = new AbortController();
+		this.abortController = abortController;
 		this.launchButton = this.querySelector<HTMLButtonElement>("[data-launch]");
+
+		// Bound ONCE per connection, not per launch(). The error path offers a
+		// retry that calls launch() again, so a per-launch registration would
+		// stack a second listener on top of the first — and the first would
+		// still pass its own guards, because that guard reads `this.iframe` at
+		// event time and by then it points at the NEW frame. Every boot
+		// message would be handled once per attempt (N retries → N+1 calls to
+		// onReady()). That same lazy read is what lets one long-lived listener
+		// serve whichever iframe launch() has most recently mounted.
+		window.addEventListener("message", (event: MessageEvent) => this.onFrameMessage(event), {
+			signal: abortController.signal
+		});
 
 		this.viewportQuery = window.matchMedia(MIN_VIEWPORT);
 		const onViewportChange = () => this.applyViewportGate();
@@ -146,32 +159,30 @@ export class FleetDemoElement extends HTMLElement {
 
 		this.mountProgressBar();
 
-		window.addEventListener(
-			"message",
-			(event: MessageEvent) => {
-				// Source AND origin: the frame is same-origin by construction
-				// (IFRAME_SRC is a site path), so anything arriving from
-				// elsewhere is not the workbench and must not drive this
-				// element's state machine.
-				if (event.origin !== window.location.origin) return;
-				if (this.iframe == null || event.source !== this.iframe.contentWindow) return;
-				const data = event.data as { type?: string; pct?: number; message?: string } | null;
-				switch (data?.type) {
-					case "fleet-demo:progress":
-						this.setProgress(typeof data.pct === "number" ? data.pct : null);
-						break;
-					case "fleet-demo:ready":
-						this.onReady();
-						break;
-					case "fleet-demo:error":
-						this.onError();
-						break;
-				}
-			},
-			{ signal: this.abortController?.signal }
-		);
-
 		this.readyTimeout = setTimeout(() => this.onError(), READY_TIMEOUT_MS);
+	}
+
+	/** Boot messages from the workbench iframe (bound in connectedCallback). */
+	private onFrameMessage(event: MessageEvent) {
+		// Source AND origin: the frame is same-origin by construction
+		// (IFRAME_SRC is a site path), so anything arriving from elsewhere is
+		// not the workbench and must not drive this element's state machine.
+		// The source check also drops messages from a frame a previous,
+		// failed launch left behind.
+		if (event.origin !== window.location.origin) return;
+		if (this.iframe == null || event.source !== this.iframe.contentWindow) return;
+		const data = event.data as { type?: string; pct?: number; message?: string } | null;
+		switch (data?.type) {
+			case "fleet-demo:progress":
+				this.setProgress(typeof data.pct === "number" ? data.pct : null);
+				break;
+			case "fleet-demo:ready":
+				this.onReady();
+				break;
+			case "fleet-demo:error":
+				this.onError();
+				break;
+		}
 	}
 
 	private mountProgressBar() {
