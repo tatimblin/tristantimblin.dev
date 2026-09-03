@@ -48,6 +48,66 @@ function post(message: { type: string; pct?: number; message?: string }) {
 }
 const progress = (pct: number) => post({ type: "fleet-demo:progress", pct });
 
+/** The live extension API, kept from activation so the reset path can use it. */
+type FleetApi = Awaited<ReturnType<typeof activateFleetExtension>>;
+let fleetApi: FleetApi | null = null;
+
+/**
+ * The layout the demo always opens in: Fleet view container showing, bottom
+ * panel visible with real height.
+ *
+ * Shared by boot and reset on purpose — a reset that restored a layout the
+ * boot never produced would be a second, drifting definition of "the demo".
+ * (Fresh profiles start with the panel collapsed, so this is not a no-op even
+ * on first boot: the CAN stream terminal needs somewhere visible to land.)
+ */
+async function applyDemoLayout(api: FleetApi) {
+	const layoutService = await getService(IWorkbenchLayoutService);
+
+	// setSize, not resizePart: resizePart takes a DELTA, so running it on every
+	// reset would walk the panel taller and taller until it ate the editor.
+	// Width is read back rather than invented — the panel spans the editor area
+	// and nothing here means to change that.
+	layoutService.setPartHidden(false, Parts.PANEL_PART);
+	const panel = layoutService.getSize(Parts.PANEL_PART);
+	layoutService.setSize(Parts.PANEL_PART, { width: panel.width, height: 260 });
+
+	// Land the reader in the Fleet view container so the vehicle tree is the
+	// first thing they see; this also un-hides the sidebar if they closed it.
+	// (The manifest's walkthrough is NOT opened here: monaco-vscode-api 36.2.7
+	// stubs the walkthroughs extension point — its handler is a no-op, so
+	// extension-contributed walkthroughs can never register in the embed. The
+	// contribution still works in real VS Code and vscode-test-web; the README
+	// stands in as the demo's opening editor.)
+	await api.commands.executeCommand("workbench.view.extension.fleet");
+}
+
+/**
+ * Handle `fleet-demo:reset` from the host page's chrome (see element.ts).
+ *
+ * Two halves, because the reader can wreck two different things: the
+ * extension's own state (re-seeded by its real `fleet.reset` command, the same
+ * one the palette and the view's welcome link run) and the workbench layout
+ * (restored above). Reopening the landing editor covers the third: "I closed
+ * every tab" leaves a workbench with nothing in it, which no amount of
+ * re-seeding fixes.
+ */
+async function resetDemo(api: FleetApi) {
+	await api.commands.executeCommand("fleet.reset");
+	await applyDemoLayout(api);
+	await api.commands.executeCommand("vscode.open", api.Uri.file("/workspace/README.md"));
+}
+
+// Origin-pinned on this end too: the only window that may drive the workbench
+// is the parent that embedded it, from this same origin.
+window.addEventListener("message", (event: MessageEvent) => {
+	if (event.origin !== window.location.origin) return;
+	if (window.parent === window || event.source !== window.parent) return;
+	if ((event.data as { type?: string } | null)?.type !== "fleet-demo:reset") return;
+	if (fleetApi == null) return;
+	resetDemo(fleetApi).catch((error) => console.error("[fleet-demo] reset failed", error));
+});
+
 async function boot() {
 	progress(5);
 
@@ -168,23 +228,14 @@ async function boot() {
 	progress(60);
 	document.getElementById("boot-indicator")?.remove();
 
-	// Fresh profiles start with the bottom panel collapsed; give it real
-	// height so the CAN stream terminal has somewhere visible to land.
-	const layoutService = await getService(IWorkbenchLayoutService);
-	layoutService.setPartHidden(false, Parts.PANEL_PART);
-	layoutService.resizePart(Parts.PANEL_PART, 0, 260);
-
 	// --- the fleet extension --------------------------------------------------
 	const api = await activateFleetExtension();
+	// Module-level, so the reset handler runs against the real activation API
+	// rather than reaching through the debugging probe below.
+	fleetApi = api;
 	progress(80);
 
-	// Land the reader in the Fleet view container so the vehicle tree is the
-	// first thing they see. (The manifest's walkthrough is NOT opened here:
-	// monaco-vscode-api 36.2.7 stubs the walkthroughs extension point — its
-	// handler is a no-op, so extension-contributed walkthroughs can never
-	// register in the embed. The contribution still works in real VS Code and
-	// vscode-test-web; the README stands in as the demo's opening editor.)
-	await api.commands.executeCommand("workbench.view.extension.fleet");
+	await applyDemoLayout(api);
 	progress(90);
 
 	// Playwright / debugging probe.

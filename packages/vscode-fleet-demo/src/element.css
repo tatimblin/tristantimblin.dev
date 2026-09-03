@@ -6,6 +6,11 @@
  * token cascade is absent. */
 
 fleet-demo {
+	/* Height of the reset strip above the frame (see "embed chrome" below).
+	   A local knob rather than a DS token: it is the size of one specific
+	   piece of chrome, not a spacing step. */
+	--fleet-demo-chrome-height: 28px;
+
 	position: relative;
 	display: block;
 	overflow: hidden;
@@ -105,6 +110,67 @@ fleet-demo iframe[data-fleet-demo-frame] {
 /* The workbench boots underneath the poster; it is only interactable once
    ready (the poster overlay swallows pointer events until it fades). */
 
+/* --- embed chrome (reset) --------------------------------------------------- */
+
+/* The strip only exists once the element mounts it, i.e. from `ready` on, so
+   the poster and the boot never see it. Then the frame gives up its top edge
+   to it. Ceding height beats floating a chip over a corner — every corner of a
+   booted workbench is a live control surface (status bar, editor actions, view
+   title), and the status bar in particular would make a floating chip read as
+   part of VS Code's own UI.
+
+   The height is stated, not left to `auto` against the base rule's `inset: 0`.
+   An iframe is a REPLACED element: `height: auto` resolves to its intrinsic
+   150px and `bottom` is then dropped as over-constrained, which collapses the
+   workbench to a sliver — a wrong that looks, from the outside, exactly like a
+   demo that booted. */
+fleet-demo[data-state="ready"] iframe[data-fleet-demo-frame] {
+	top: var(--fleet-demo-chrome-height, 28px);
+	height: calc(100% - var(--fleet-demo-chrome-height, 28px));
+}
+
+fleet-demo .fleet-demo-chrome {
+	position: absolute;
+	top: 0;
+	right: 0;
+	left: 0;
+	height: var(--fleet-demo-chrome-height, 28px);
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	padding-inline: var(--space-2, 8px);
+	/* Fixed dark values, not theme tokens: this strip is welded to the top of a
+	   Dark Modern workbench in both site themes, exactly like [data-caption]'s
+	   colour (see the consumer's note on --color-muted). */
+	background: #1f1f1f;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	z-index: 1;
+}
+
+/* Quiet until wanted: the demo is the content, this is the fire escape. */
+fleet-demo .fleet-demo-reset {
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.72em;
+	line-height: 1;
+	letter-spacing: 0.02em;
+	padding: var(--space-1, 4px) var(--space-2, 8px);
+	border: 1px solid transparent;
+	border-radius: var(--border-radius-0, 4px);
+	background: transparent;
+	color: rgba(235, 238, 245, 0.55);
+	transition-property: color, background-color, border-color;
+	transition-duration: 0.15s;
+	transition-timing-function: ease;
+}
+
+fleet-demo .fleet-demo-reset:hover,
+fleet-demo .fleet-demo-reset:focus-visible {
+	color: rgba(235, 238, 245, 0.95);
+	background-color: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
 /* --- boot progress --------------------------------------------------------- */
 
 fleet-demo .fleet-demo-progress {
@@ -162,6 +228,7 @@ fleet-demo .fleet-demo-error [data-retry] {
 @media (prefers-reduced-motion: reduce) {
 	fleet-demo [data-poster],
 	fleet-demo [data-launch],
+	fleet-demo .fleet-demo-reset,
 	fleet-demo .fleet-demo-progress-fill {
 		transition-duration: 0s;
 	}

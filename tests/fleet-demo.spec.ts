@@ -182,6 +182,39 @@ test("a palette command round-trips into visible state", async ({ page }) => {
 	await expect(toast).toContainText(/Fleet: locked \d+ of \d+ vehicles/, { timeout: 15_000 });
 });
 
+test("the reset chip puts a taken-apart workbench back together", async ({ page }) => {
+	test.slow();
+	const frame = await boot(page);
+
+	// Wreck the layout the way a reader can in one keystroke. Driven through the
+	// workbench's own command rather than the palette because this test is about
+	// the reset path, not about the palette (which has its own test above) — and
+	// because a palette detour would add two more async hops to flake on.
+	const workbench = page.frames().find((candidate) => candidate.url().includes("/fleet-demo/"));
+	expect(workbench, "the workbench frame went missing").toBeTruthy();
+	await workbench!.evaluate(async () => {
+		const probe = (
+			window as unknown as {
+				__fleetDemo?: { api: { commands: { executeCommand(id: string): PromiseLike<unknown> } } };
+			}
+		).__fleetDemo;
+		await probe?.api.commands.executeCommand("workbench.action.togglePanel");
+	});
+	await expect(frame.locator(".part.panel")).toBeHidden();
+
+	// The chip lives in the HOST page, not the iframe — that is the whole point
+	// of it: it cannot be closed, hidden or scrolled away by the workbench.
+	await page.locator("fleet-demo [data-reset]").click();
+
+	// Both halves of the reset: the extension re-seeded (its own toast, the same
+	// one "Fleet: Reset Demo" produces) and the layout restored.
+	await expect(frame.locator(".notification-toast")).toContainText(/demo reset/i, {
+		timeout: 15_000,
+	});
+	await expect(frame.locator(".part.panel")).toBeVisible();
+	await expect(frame.locator('[role="treeitem"]')).toHaveCount(6);
+});
+
 test("the built embed has not quietly doubled in size", async () => {
 	// Needs no browser and no server: it reads what build:fleet-demo just wrote.
 	//

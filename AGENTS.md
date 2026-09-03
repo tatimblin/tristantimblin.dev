@@ -11,8 +11,47 @@ Guidance for AI agents working in this repo.
   - `@whois/design-system` — the design system (tokens + Astro/CSS components).
   - Web Components (custom elements): `dotted-grid`, `video-carousel`,
     `gallery-carousel`, `sticky-heading`, `stories-heading`, `wobble-text`.
+  - Two exceptions with real build steps: `fleet-extension` and
+    `vscode-fleet-demo` — see below.
 - Run the dev server with **`bunx astro dev`** (Node). Do **not** use
   `bunx --bun astro dev` — it crashes the HMR WebSocket.
+
+## The fleet demo — two packages that do have a build step
+
+The VS Code embed in `/txt/no-honey-we-have-a-dashboard-at-home` breaks the
+source-export rule above, in both of its packages, because it has to:
+
+- **`packages/fleet-extension`** — a real VS Code extension (not `@whois/*`,
+  not a site dependency). An extension host `require()`s one pre-bundled file,
+  so esbuild emits `dist/node/` + `dist/web/`; the site consumes the *built
+  output*, never the source.
+- **`packages/vscode-fleet-demo`** — the embed. Only `src/element.ts` /
+  `element.css` (the `<fleet-demo>` poster/launch wrapper) follow the normal
+  convention. The workbench page needs its own `vite build` — monaco-vscode-api's
+  pipeline must not mix with Astro's — emitting to `public/fleet-demo/`
+  (gitignored).
+
+**Build chain:** `build:fleet-demo` = fleet-extension `build:web` →
+vscode-fleet-demo `build`. The root `build` runs it before `astro build`, and
+so does Playwright's `webServer` — a bare `astro build` ships the post with no
+embed in it.
+
+**Three dev loops:**
+
+- *Extension:* `build` (or leave `watch` running), then F5 in
+  `packages/fleet-extension`; or `vscode-test-web` against `dist/web`.
+- *Embed:* the extension's `build:web` first (the demo imports its built bundle
+  `?raw`), then `bun run --cwd packages/vscode-fleet-demo dev`.
+- *In the post:* `bun run build:fleet-demo`, then `bunx astro dev`.
+
+**Two traps, both silent:** every `@codingame/*` dep is pinned to exactly
+**36.2.7** — a `^` on any one of them loads two copies of the core and the
+workbench never boots. And **never** add `views-service-override` alongside
+`workbench-service-override` — the grid corrupts, the editor collapses to 0px,
+nothing errors.
+
+Detail for both lives in [`packages/fleet-extension/README.md`](packages/fleet-extension/README.md)
+and [`packages/vscode-fleet-demo/README.md`](packages/vscode-fleet-demo/README.md).
 
 ## Design system — read before writing UI CSS
 

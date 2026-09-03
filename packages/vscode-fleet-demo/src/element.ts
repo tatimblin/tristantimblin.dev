@@ -15,6 +15,10 @@ type DemoState = "poster" | "priming" | "launching" | "ready" | "error" | "unsup
  * reveals the workbench once the extension's vehicle tree has really
  * rendered. Without JavaScript the poster is just a poster — nothing breaks.
  *
+ * Once ready it also renders a thin chrome strip above the frame carrying a
+ * "Reset demo" control — the reader's way back out of a tangled workbench
+ * without knowing the command palette exists.
+ *
  * State machine (reflected as `data-state` for CSS):
  *   poster → priming → launching → ready
  *                          ↘ error (timeout or iframe-reported) → retry → launching
@@ -29,6 +33,7 @@ export class FleetDemoElement extends HTMLElement {
 	private progressBar: HTMLElement | null = null;
 	private progressFill: HTMLElement | null = null;
 	private errorNote: HTMLElement | null = null;
+	private chrome: HTMLElement | null = null;
 	private prefetchLink: HTMLLinkElement | null = null;
 	private observer: IntersectionObserver | null = null;
 	private viewportQuery: MediaQueryList | null = null;
@@ -81,6 +86,8 @@ export class FleetDemoElement extends HTMLElement {
 		this.progressFill = null;
 		this.errorNote?.remove();
 		this.errorNote = null;
+		this.chrome?.remove();
+		this.chrome = null;
 		this.prefetchLink?.remove();
 		this.prefetchLink = null;
 		this.launched = false;
@@ -142,6 +149,11 @@ export class FleetDemoElement extends HTMLElement {
 		window.addEventListener(
 			"message",
 			(event: MessageEvent) => {
+				// Source AND origin: the frame is same-origin by construction
+				// (IFRAME_SRC is a site path), so anything arriving from
+				// elsewhere is not the workbench and must not drive this
+				// element's state machine.
+				if (event.origin !== window.location.origin) return;
 				if (this.iframe == null || event.source !== this.iframe.contentWindow) return;
 				const data = event.data as { type?: string; pct?: number; message?: string } | null;
 				switch (data?.type) {
@@ -191,7 +203,60 @@ export class FleetDemoElement extends HTMLElement {
 		this.progressBar?.remove();
 		this.progressBar = null;
 		this.progressFill = null;
+		this.mountChrome();
 		this.setState("ready");
+	}
+
+	/**
+	 * The reset affordance, rendered by the ELEMENT rather than inside the
+	 * workbench.
+	 *
+	 * A reader can close every editor, hide the sidebar and flood the panel in
+	 * about four clicks, and the way back — "Fleet: Reset Demo" — is behind a
+	 * command palette they have no reason to know about. So the escape hatch
+	 * lives in the host page, where it cannot itself be closed or hidden.
+	 *
+	 * It gets its own strip ABOVE the frame instead of floating over a corner
+	 * of it. Every corner of a booted workbench is already a control surface:
+	 * the status bar at the bottom (which a floating chip would read as part
+	 * of), the editor group's action bar at the top right, the view title at
+	 * the top left. A strip covers nothing and steals ~28px of a 16:10 box.
+	 */
+	private mountChrome() {
+		if (this.chrome != null) return;
+		const chrome = document.createElement("div");
+		chrome.className = "fleet-demo-chrome";
+
+		const reset = document.createElement("button");
+		reset.type = "button";
+		reset.className = "fleet-demo-reset";
+		reset.textContent = "Reset demo";
+		reset.setAttribute("data-reset", "");
+		reset.title = "Re-seed the fleet and restore the demo layout";
+		reset.addEventListener("click", () => this.requestReset(), {
+			signal: this.abortController?.signal
+		});
+
+		chrome.appendChild(reset);
+		this.appendChild(chrome);
+		this.chrome = chrome;
+	}
+
+	/**
+	 * Ask the workbench to reset itself, rather than reloading the iframe.
+	 *
+	 * A reload looks simpler and is worse: the workbench runs on the default
+	 * BrowserStorageService (IndexedDB-backed — no `databaseFactories` are
+	 * passed in workbench.ts), so part visibility and sizes SURVIVE a reload.
+	 * A reader who hid the sidebar would reload straight back into the state
+	 * they were trying to escape. The message path is also seconds faster: no
+	 * re-parse of the 11 MB chunk, no second extension-host spin-up, and no
+	 * second boot handshake for this element's state machine to sit through.
+	 *
+	 * Origin-pinned rather than "*": nothing about this message is public.
+	 */
+	private requestReset() {
+		this.iframe?.contentWindow?.postMessage({ type: "fleet-demo:reset" }, window.location.origin);
 	}
 
 	private onError() {
@@ -203,6 +268,8 @@ export class FleetDemoElement extends HTMLElement {
 		this.progressBar?.remove();
 		this.progressBar = null;
 		this.progressFill = null;
+		this.chrome?.remove();
+		this.chrome = null;
 		this.setState("error");
 		this.launchButton?.removeAttribute("disabled");
 
