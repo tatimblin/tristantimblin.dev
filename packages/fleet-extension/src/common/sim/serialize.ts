@@ -1,3 +1,4 @@
+import { vinTail } from "../model/vin";
 import type { Vehicle } from "../model/types";
 import { canSignalSnapshot } from "./can";
 
@@ -37,7 +38,13 @@ export function serializeVehicleState(vehicle: Vehicle): string {
 	return JSON.stringify(
 		{
 			vin: vehicle.vin,
-			display_name: vehicle.displayName,
+			// The Owner API's `display_name` is the *owner's* pet name for the car,
+			// and an unnamed vehicle reports its identifier there instead. This
+			// fleet has no names, so the field carries the same short form every
+			// surface in the extension shows — kept rather than dropped because
+			// the shape of this JSON is the point: a reader comparing it against
+			// a real response should find the key where they expect it.
+			display_name: vinTail(vehicle.vin),
 			state: vehicle.online ? "online" : "asleep",
 			charge_state: {
 				battery_level: Math.round(vehicle.charge.soc),

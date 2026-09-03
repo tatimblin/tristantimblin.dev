@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import type { FleetSimulator } from "../sim/clock";
-import type { CanFrame, Vehicle } from "../model/types";
+import type { CanFrame } from "../model/types";
 import { decodeFrameAnnotation } from "../sim/can";
+import { vinTail } from "../model/vin";
 
 /**
  * The CAN stream terminal: `fleet.openCanStream` opens a `Pseudoterminal`
@@ -45,11 +46,6 @@ const DRAIN_INTERVAL_MS = 33;
  * so only decodable signal frames scroll — the closest useful analogue to
  * candump's ID filters without a prompt breaking the stream. */
 type FilterMode = "all" | "annotated";
-
-/** "Atlas — Ocean Extreme" → "Atlas". */
-function callsign(vehicle: Vehicle): string {
-	return vehicle.displayName.split(" — ")[0] ?? vehicle.displayName;
-}
 
 class CanStreamPty implements vscode.Pseudoterminal {
 	private readonly writeEmitter = new vscode.EventEmitter<string>();
@@ -284,9 +280,11 @@ export class CanStreamManager implements vscode.Disposable {
 		this.current?.terminal.dispose();
 		this.simulator.setBusTarget(vehicle.vin);
 
-		const pty = new CanStreamPty(this.simulator, callsign(vehicle));
+		const pty = new CanStreamPty(this.simulator, vinTail(vehicle.vin));
 		const terminal = vscode.window.createTerminal({
-			name: `CAN · ${callsign(vehicle)}`,
+			// Tab titles are the tightest surface in the window, so the VIN tail
+			// rather than all 17 characters.
+			name: `CAN · ${vinTail(vehicle.vin)}`,
 			pty,
 			iconPath: new vscode.ThemeIcon("pulse"),
 			location: vscode.TerminalLocation.Panel,

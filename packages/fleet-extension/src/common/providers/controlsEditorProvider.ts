@@ -3,6 +3,7 @@ import type { FleetSimulator } from "../sim/clock";
 import type { DoorId, Vehicle } from "../model/types";
 import { buildControlsHtml } from "../webview/controlsHtml";
 import { runVehicleCommand } from "../commandUi";
+import { vinTail } from "../model/vin";
 
 /**
  * The "Vehicle Controls" custom editor (viewType `fleet.controlsEditor`),
@@ -49,7 +50,8 @@ import { runVehicleCommand } from "../commandUi";
 
 /** The JSON-safe projection of a Vehicle that the webview renders. */
 interface ControlsState {
-	name: string;
+	/** Heading text — `2023 Fisker Ocean Extreme`. */
+	title: string;
 	vin: string;
 	personality: string;
 	online: boolean;
@@ -93,9 +95,11 @@ export class ControlsEditorProvider implements vscode.CustomReadonlyEditorProvid
 
 	resolveCustomEditor(document: vscode.CustomDocument, panel: vscode.WebviewPanel): void {
 		const vin = vinFromUri(document.uri);
-		const vehicle = this.simulator.getVehicle(vin);
 
-		panel.title = `Vehicle · ${vehicle ? callsign(vehicle) : vin}`;
+		// Titled from the URI rather than from a lookup: the tab must be named
+		// before anything is known to exist at that path, and a vehicle the
+		// simulator has never heard of still gets an honest tab.
+		panel.title = `Vehicle · ${vinTail(vin)}`;
 		panel.webview.options = { enableScripts: true };
 		panel.webview.html = buildControlsHtml({
 			nonce: makeNonce(),
@@ -177,13 +181,12 @@ function vinFromUri(uri: vscode.Uri): string {
 	return uri.path.split("/").filter((s) => s.length > 0)[0] ?? "";
 }
 
-function callsign(vehicle: Vehicle): string {
-	return vehicle.displayName.split(" — ")[0] ?? vehicle.displayName;
-}
-
 function projectState(vehicle: Vehicle): ControlsState {
 	return {
-		name: callsign(vehicle),
+		// The trim, not a name: the webview's header pairs it with the VIN
+		// underneath, which is the vehicle's actual identity. Nothing in this
+		// fleet has a name.
+		title: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
 		vin: vehicle.vin,
 		personality: vehicle.personality,
 		online: vehicle.online,

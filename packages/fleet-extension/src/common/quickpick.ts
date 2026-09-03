@@ -1,8 +1,9 @@
 import * as vscode from "vscode";
 import type { FleetSimulator } from "./sim/clock";
-import type { Vehicle } from "./model/types";
+import type { FleetCohort, Vehicle } from "./model/types";
 import type { CanStreamManager } from "./providers/canTerminal";
-import { callsign, describeVehicle, iconFor } from "./providers/fleetTreeProvider";
+import { describeVehicle, iconFor } from "./model/status";
+import { vinTail } from "./model/vin";
 
 /**
  * `fleet.switchVehicle` — the palette-driven way into a vehicle, for people
@@ -12,8 +13,8 @@ import { callsign, describeVehicle, iconFor } from "./providers/fleetTreeProvide
  * because two of the things that make this feel like a real switcher are
  * simply not expressible in the convenience API:
  *
- *   - separators, so "Online" and "Asleep" are headings rather than a
- *     `[asleep]` prefix repeated down the list;
+ *   - separators, so the cohorts are headings rather than a prefix repeated
+ *     down the list;
  *   - per-item buttons, so a row can offer a *second* action — open the CAN
  *     stream for that vehicle — without leaving the picker or occupying a
  *     whole extra row.
@@ -36,11 +37,11 @@ const CAN_BUTTON: vscode.QuickInputButton = {
 export function showVehicleQuickPick(simulator: FleetSimulator, canStreams: CanStreamManager): void {
 	const picker = vscode.window.createQuickPick<VehicleItem>();
 	picker.title = "Switch vehicle";
-	picker.placeholder = "Name, VIN, or model";
+	picker.placeholder = "VIN or model";
 	// The description carries the live telemetry and the detail carries the
 	// full VIN and model, so filtering must reach both: typing "Ultra", "VCF"
 	// or "charging" should all narrow the list, and by default the picker matches
-	// the label alone.
+	// the label alone — which here is only the VIN's last six characters.
 	picker.matchOnDescription = true;
 	picker.matchOnDetail = true;
 	picker.items = buildItems(simulator.getVehicles(), [CAN_BUTTON]);
@@ -89,33 +90,42 @@ export async function pickVehicleVin(
 }
 
 /**
- * Group the fleet under "Online" / "Asleep" separators.
+ * Group the fleet under COHORT separators — the same three headings, in the
+ * same order, as the tree's directories.
  *
- * A separator with nothing under it renders as a stray heading, so each group
- * is emitted only when it has members — which matters here because waking the
- * last sleeper genuinely empties one of the two groups.
+ * This used to group by "Online" / "Asleep", which had two problems the
+ * cohorts fix. It was a second grouping vocabulary for the same six vehicles,
+ * so the picker and the sidebar taught the user different mental models of
+ * one fleet; and it was grouping by a LIVE field, so waking a vehicle made
+ * its row jump headings mid-demo — and emptied a group, which is why the old
+ * version needed the "skip a group with no members" rule at all. Cohort is a
+ * static property, so the list's shape is now fixed and every group always
+ * has members.
+ *
+ * Nothing is lost: online/asleep still reads off each row, twice, from the
+ * `$(circle-slash)` glyph and the "asleep" description.
  */
 function buildItems(vehicles: readonly Vehicle[], buttons: vscode.QuickInputButton[]): VehicleItem[] {
 	const items: VehicleItem[] = [];
-	const groups: Array<[string, Vehicle[]]> = [
-		["Online", vehicles.filter((v) => v.online)],
-		["Asleep", vehicles.filter((v) => !v.online)]
-	];
+	const cohorts: readonly FleetCohort[] = ["Stage", "North America", "EMEA"];
 
-	for (const [label, members] of groups) {
+	for (const cohort of cohorts) {
+		const members = vehicles.filter((v) => v.cohort === cohort);
 		if (members.length === 0) continue;
-		items.push({ label, kind: vscode.QuickPickItemKind.Separator });
+		items.push({ label: cohort, kind: vscode.QuickPickItemKind.Separator });
 		for (const vehicle of members) {
 			items.push({
 				// The codicon renders inline in the label. Per-STATE rather than
 				// a generic vehicle glyph — `$(car)` is not in @vscode/codicons
-				// at all and renders as an empty box — and it comes from the
-				// tree's mapping, so a row reads the same in both places.
-				label: `$(${iconFor(vehicle)}) ${callsign(vehicle)}`,
+				// at all and renders as an empty box. The tree's rows are
+				// deliberately neutral; this is the surface where comparing six
+				// vehicles at once is the whole task, so the glyph earns its place.
+				label: `$(${iconFor(vehicle)}) ${vinTail(vehicle.vin)}`,
 				description: describeVehicle(vehicle),
-				// Full VIN here rather than in the label: 17 characters would
-				// push the callsign off the left of a narrow picker, and the
-				// detail line is also what `matchOnDetail` searches.
+				// Full VIN here rather than in the label: 17 characters crowd out
+				// the description on a narrow picker, and the detail line is also
+				// what `matchOnDetail` searches — so typing any part of a VIN,
+				// not just its tail, still finds the vehicle.
 				detail: `${vehicle.vin} · ${vehicle.year} ${vehicle.make} ${vehicle.model}`,
 				buttons,
 				vin: vehicle.vin

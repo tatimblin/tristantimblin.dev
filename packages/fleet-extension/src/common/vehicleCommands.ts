@@ -1,5 +1,6 @@
 import type { DoorId, Vehicle } from "./model/types";
 import type { FleetSimulator } from "./sim/clock";
+import { vinTail } from "./model/vin";
 
 /**
  * The async command layer: every vehicle mutation the UI can request flows
@@ -50,9 +51,7 @@ export type CommandResult =
 // ── Pure policy ──────────────────────────────────────────────────────────────
 
 /** "Atlas — Ocean Extreme" → "Atlas". */
-function callsign(vehicle: Vehicle): string {
-	return vehicle.displayName.split(" — ")[0] ?? vehicle.displayName;
-}
+
 
 /**
  * Decide whether `command` is currently allowed against `vehicle`. Pure over
@@ -66,7 +65,7 @@ export function evaluateVehicleCommand(vehicle: Vehicle, command: VehicleCommand
 		return {
 			ok: false,
 			reason: "ASLEEP",
-			detail: `${callsign(vehicle)} is asleep`
+			detail: `${vinTail(vehicle.vin)} is asleep`
 		};
 	}
 
@@ -79,7 +78,7 @@ export function evaluateVehicleCommand(vehicle: Vehicle, command: VehicleCommand
 		return {
 			ok: false,
 			reason: "IN_MOTION",
-			detail: `${callsign(vehicle)} is moving (${Math.round(vehicle.speedKph)} km/h)`
+			detail: `${vinTail(vehicle.vin)} is moving (${Math.round(vehicle.speedKph)} km/h)`
 		};
 	}
 
@@ -91,7 +90,7 @@ export function evaluateVehicleCommand(vehicle: Vehicle, command: VehicleCommand
 			return {
 				ok: false,
 				reason: "DOOR_OPEN",
-				detail: `${callsign(vehicle)}'s ${ajar[0]} door is ajar`
+				detail: `${vinTail(vehicle.vin)}'s ${ajar[0]} door is ajar`
 			};
 		}
 	}
@@ -102,7 +101,7 @@ export function evaluateVehicleCommand(vehicle: Vehicle, command: VehicleCommand
 		return {
 			ok: false,
 			reason: "CHARGING_IN_PROGRESS",
-			detail: `${callsign(vehicle)} is charging at ${Math.round(vehicle.charge.powerKw)} kW`
+			detail: `${vinTail(vehicle.vin)} is charging at ${Math.round(vehicle.charge.powerKw)} kW`
 		};
 	}
 
@@ -178,7 +177,7 @@ export async function executeVehicleCommand(
 		return {
 			ok: false,
 			reason: "UNREACHABLE",
-			detail: `${callsign(vehicle)} did not acknowledge — try again`
+			detail: `${vinTail(vehicle.vin)} did not acknowledge — try again`
 		};
 	}
 

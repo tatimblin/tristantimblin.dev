@@ -1,5 +1,6 @@
 import { seedFleet } from "../model/fleet";
 import type { CanFrame, DoorId, Vehicle } from "../model/types";
+import { vinTail } from "../model/vin";
 import { generateBusTraffic } from "./can";
 import { serializeDtcs, serializeVehicleState } from "./serialize";
 import { Emitter } from "./emitter";
@@ -269,7 +270,7 @@ export class FleetSimulator {
 		this.ambientEmitter.fire({
 			kind: "ota-complete",
 			vin,
-			message: `${vehicle.displayName.split(" — ")[0]} updated to ${version}`
+			message: `${vinTail(vin)} updated to ${version}`
 		});
 		return true;
 	}
@@ -444,7 +445,7 @@ export class FleetSimulator {
 			this.ambientEmitter.fire({
 				kind: "charge-complete",
 				vin: vehicle.vin,
-				message: `${vehicle.displayName.split(" — ")[0]} finished charging at ${limit}%`
+				message: `${vinTail(vehicle.vin)} finished charging at ${limit}%`
 			});
 		}
 
@@ -467,7 +468,7 @@ export class FleetSimulator {
 			this.ambientEmitter.fire({
 				kind: "blip",
 				vin: vehicle.vin,
-				message: `${vehicle.displayName.split(" — ")[0]}: climate ${vehicle.climateOn ? "on (cabin overheat protection)" : "off"}`
+				message: `${vinTail(vehicle.vin)}: climate ${vehicle.climateOn ? "on (cabin overheat protection)" : "off"}`
 			});
 		} else {
 			const window = vehicle.windows.FL;

@@ -134,13 +134,22 @@ test("the tree renders the whole seeded fleet", async ({ page }) => {
 	test.slow();
 	const frame = await boot(page);
 
-	// Six vehicles, seeded in packages/fleet-extension (model/fleet.ts). A tree
-	// that rendered its container but no rows is the shape of an extension host
-	// that never activated — and it looks like an empty sidebar, which looks like
-	// a design choice.
+	// Nine rows, not six: the tree is two-level, so three cohort directories
+	// (Stage / North America / EMEA, each seeded Expanded) sit above the six
+	// vehicles they hold, and VS Code gives a group row role="treeitem" too. A
+	// tree that rendered its container but no rows is the shape of an extension
+	// host that never activated — and it looks like an empty sidebar, which
+	// looks like a design choice.
 	const rows = frame.locator('[role="treeitem"]');
-	await expect(rows).toHaveCount(6);
-	await expect(rows.first()).toContainText("Atlas");
+	await expect(rows).toHaveCount(9);
+
+	// Vehicle rows are labelled with the full VIN, and every seeded vehicle is a
+	// Fisker, so every one of them carries the WMI "VCF". Matching on that
+	// fragment rather than on a row's position survives a reshuffle of the seed
+	// — and it is the assertion that would have caught the sidebar rendering
+	// callsigns again.
+	await expect(rows.filter({ hasText: "VCF" })).toHaveCount(6);
+	await expect(rows.first()).toContainText("Stage");
 });
 
 test("the can terminal actually streams", async ({ page }) => {
@@ -212,7 +221,8 @@ test("the reset chip puts a taken-apart workbench back together", async ({ page 
 		timeout: 15_000,
 	});
 	await expect(frame.locator(".part.panel")).toBeVisible();
-	await expect(frame.locator('[role="treeitem"]')).toHaveCount(6);
+	// Nine again: three cohort directories plus the six re-seeded vehicles.
+	await expect(frame.locator('[role="treeitem"]')).toHaveCount(9);
 });
 
 test("the built embed has not quietly doubled in size", async () => {

@@ -2,7 +2,8 @@ import type { Vehicle } from "./types";
 
 /**
  * Derived *presentation status* for a vehicle: the badge a file decoration
- * paints, and the severity a trouble code deserves in the Problems panel.
+ * paints, the severity a trouble code deserves in the Problems panel, and the
+ * one-line telemetry summary the switcher and the status bar tooltip show.
  *
  * Both live here, in `model/`, rather than beside the providers that consume
  * them, for the same reason everything else in this directory does: no
@@ -100,4 +101,48 @@ export function dtcSeverity(code: string): DtcSeverity {
 	if (code === "P0A80") return "error";
 	if (code === "P0562" || code === "U0100") return "warning";
 	return "information";
+}
+
+/**
+ * The live status line for a vehicle: SoC, plus whatever it is doing.
+ * Priority: asleep > faulted > telemetry.
+ *
+ * This is the RICH description, and it is deliberately no longer on the tree
+ * rows — see the note at the top of fleetTreeProvider.ts. It belongs to the
+ * surfaces a user opens while asking "which vehicle do I want": the switcher
+ * and the status bar tooltip. Both share this one formatter, because two
+ * copies would drift by a separator or a rounding rule and a user comparing
+ * the corner of the window against the picker would catch the demo
+ * disagreeing with itself in the one moment they are looking hardest.
+ */
+export function describeVehicle(vehicle: Vehicle): string {
+	if (!vehicle.online) return "asleep";
+	if (vehicle.dtcs.length > 0) {
+		return `⚠ ${vehicle.dtcs.length} DTC${vehicle.dtcs.length === 1 ? "" : "s"}`;
+	}
+
+	const soc = `${Math.round(vehicle.charge.soc)}%`;
+	if (vehicle.speedKph > 0) {
+		return `${soc} · ${vehicle.gear} · ${Math.round(vehicle.speedKph)} km/h`;
+	}
+	if (vehicle.charge.charging) {
+		return `${soc} · ⚡ ${Math.round(vehicle.charge.powerKw)} kW`;
+	}
+	return `${soc} · ${vehicle.gear}`;
+}
+
+/**
+ * Codicon id per personality, so a switcher row's state is scannable before
+ * reading a word. `$(id)` syntax renders it inline in a QuickPick label.
+ *
+ * Also not on the tree any more: the sidebar gives every vehicle the same
+ * neutral circle. This exists for the picker, where the user is comparing six
+ * vehicles side by side and the glyph is doing real work.
+ */
+export function iconFor(vehicle: Vehicle): string {
+	if (!vehicle.online) return "circle-slash";
+	if (vehicle.dtcs.length > 0) return "warning";
+	if (vehicle.charge.charging) return "zap";
+	if (vehicle.speedKph > 0) return "arrow-right";
+	return "circle-large-outline";
 }

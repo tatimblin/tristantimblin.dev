@@ -2,12 +2,13 @@ import * as vscode from "vscode";
 import type { FleetSimulator } from "./sim/clock";
 import type { CommandResult, VehicleCommand } from "./vehicleCommands";
 import { executeVehicleCommand } from "./vehicleCommands";
+import { vinTail } from "./model/vin";
 
 /**
  * The vscode-flavoured rim around the pure command layer: run a command, and
  * if it is rejected, say so the way VS Code says things — a warning toast
- * with the Smartcar reason up front (`Command rejected: IN_MOTION — Atlas is
- * moving (106 km/h)`), plus the one rejection that carries an action:
+ * with the Smartcar reason up front (`Command rejected: IN_MOTION — …002314
+ * is moving (106 km/h)`), plus the one rejection that carries an action:
  * ASLEEP offers a "Wake Vehicle" button.
  *
  * This file exists so vehicleCommands.ts does not have to import `vscode`
@@ -70,7 +71,7 @@ export async function offerWake(simulator: FleetSimulator, vin: string, detail: 
 export async function wakeVehicle(simulator: FleetSimulator, vin: string): Promise<void> {
 	const vehicle = simulator.getVehicle(vin);
 	if (!vehicle) return;
-	const name = vehicle.displayName.split(" — ")[0] ?? vehicle.displayName;
+	const name = vinTail(vehicle.vin);
 
 	if (vehicle.online) return;
 

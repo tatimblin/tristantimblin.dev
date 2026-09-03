@@ -24,6 +24,14 @@ import type {
  * list, and two quiet ones so the tree does not look like every row is an
  * emergency.
  *
+ * The six are split two-and-two-and-two across the three cohorts the tree
+ * groups by, and the split is not alphabetical: Stage holds the faulted Sport
+ * and one idler, because staging is where broken things and things nobody is
+ * driving end up; North America holds the mover and the other idler; EMEA
+ * holds the one on a charger and the one asleep, both parked on real European
+ * coordinates. Two per cohort so no group renders as a lone row under a
+ * heading, which reads as a bug rather than as a fleet.
+ *
  * `seedFleet()` returns a *fresh* array of fresh objects on every call. This is
  * load-bearing: `fleet.reset` re-seeds by calling it again, and if it returned
  * a shared module-level constant the simulator's in-place mutations from the
@@ -99,9 +107,8 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 		// San Francisco). Real coordinates on a real road, because the map preview
 		// in the controls editor plots them and a point in the ocean reads as a bug.
 		{
-			id: "atlas",
 			vin: generateVin({ wmi: "VCF", year: 2023, serial: 2314, plant: "G" }),
-			displayName: "Atlas — Ocean Extreme",
+			cohort: "North America",
 			make: "Fisker",
 			model: "Ocean Extreme",
 			year: 2023,
@@ -140,9 +147,8 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 		// the peak but nowhere near the slow tail — the gauge visibly moves during
 		// a demo instead of sitting still.
 		{
-			id: "beacon",
 			vin: generateVin({ wmi: "VCF", year: 2023, serial: 487, plant: "G" }),
-			displayName: "Beacon — Ocean One",
+			cohort: "EMEA",
 			make: "Fisker",
 			model: "Ocean One",
 			year: 2023,
@@ -166,8 +172,10 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 				powerKw: 112,
 				batteryTempC: 38
 			},
-			// DC fast-charge site off I-5 in Kettleman City, CA.
-			position: { lat: 35.9891, lon: -119.9601, heading: 0 },
+			// The DC charging bank outside the Magna Steyr plant in Graz, Austria —
+			// where every Ocean was actually built, and where an EMEA vehicle would
+			// plausibly be sitting on a charger.
+			position: { lat: 47.0707, lon: 15.4395, heading: 0 },
 			dtcs: [],
 			firmwareVersion: "Fisker OS 2.1",
 			softwareUpdate: idleSoftwareUpdate(),
@@ -180,9 +188,8 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 		// simulator must leave it alone — a sleeping vehicle whose odometer creeps
 		// up is the classic mock-data tell.
 		{
-			id: "cinder",
 			vin: generateVin({ wmi: "VCF", year: 2024, serial: 4102, plant: "G" }),
-			displayName: "Cinder — Ocean Ultra",
+			cohort: "EMEA",
 			make: "Fisker",
 			model: "Ocean Ultra",
 			year: 2024,
@@ -206,8 +213,9 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 				powerKw: 0,
 				batteryTempC: 9
 			},
-			// A residential street in Bend, OR.
-			position: { lat: 44.0582, lon: -121.3153, heading: 92 },
+			// A residential street in Schwabing, Munich — asleep at the kerb, which
+			// is where a European customer car spends most of its life.
+			position: { lat: 48.1543, lon: 11.582, heading: 92 },
 			dtcs: [],
 			firmwareVersion: "Fisker OS 2.0",
 			softwareUpdate: idleSoftwareUpdate(),
@@ -218,9 +226,8 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 		// Low SoC, hot pack, doors unlocked and one ajar: the state you would
 		// actually find a vehicle in after the failure chain in FAULTED_DTC_SPECS.
 		{
-			id: "dune",
 			vin: generateVin({ wmi: "VCF", year: 2023, serial: 1196, plant: "G" }),
-			displayName: "Dune — Ocean Sport",
+			cohort: "Stage",
 			make: "Fisker",
 			model: "Ocean Sport",
 			year: 2023,
@@ -268,9 +275,8 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 		// Parked, awake, nothing happening. Two of them, so the tree view has a
 		// majority of boring rows and the interesting ones stand out.
 		{
-			id: "ember",
 			vin: generateVin({ wmi: "VCF", year: 2024, serial: 6755, plant: "G" }),
-			displayName: "Ember — Ocean Extreme",
+			cohort: "North America",
 			make: "Fisker",
 			model: "Ocean Extreme",
 			year: 2024,
@@ -303,9 +309,8 @@ export function seedFleet(now: number = Date.now()): Vehicle[] {
 			lastUpdated: now
 		},
 		{
-			id: "fathom",
 			vin: generateVin({ wmi: "VCF", year: 2023, serial: 3048, plant: "G" }),
-			displayName: "Fathom — Ocean Ultra",
+			cohort: "Stage",
 			make: "Fisker",
 			model: "Ocean Ultra",
 			year: 2023,

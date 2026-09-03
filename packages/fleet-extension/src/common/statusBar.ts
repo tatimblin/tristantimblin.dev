@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import type { FleetSimulator } from "./sim/clock";
-import { callsign, describeVehicle } from "./providers/fleetTreeProvider";
+import { describeVehicle } from "./model/status";
+import { vinTail } from "./model/vin";
 
 /**
  * The always-visible fleet summary: `⚡ 5/6 online`, bottom-left, clickable
@@ -67,7 +68,9 @@ export class FleetStatusBar implements vscode.Disposable {
 		const tooltip = new vscode.MarkdownString();
 		tooltip.appendMarkdown("**Fleet**\n\n");
 		for (const vehicle of vehicles) {
-			tooltip.appendMarkdown(`${callsign(vehicle)} — ${describeVehicle(vehicle)}\n\n`);
+			// VIN tail, not the full 17 — a tooltip is a compact surface, and six
+			// stacked VINs read as a wall of noise nobody scans.
+			tooltip.appendMarkdown(`${vinTail(vehicle.vin)} — ${describeVehicle(vehicle)}\n\n`);
 		}
 		tooltip.appendMarkdown("_Click to switch vehicle._");
 		this.item.tooltip = tooltip;

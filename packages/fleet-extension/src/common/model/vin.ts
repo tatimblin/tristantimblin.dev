@@ -55,6 +55,28 @@ const WEIGHTS = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2] as const;
 
 export const VIN_LENGTH = 17;
 
+/** How many trailing VIN characters the short form shows. */
+const TAIL_LENGTH = 6;
+
+/**
+ * The short form of a VIN: `…002314`.
+ *
+ * Every compact surface in the extension refers to a vehicle this way — the
+ * editor tab, the terminal name, toasts, the switcher's label, the status bar
+ * tooltip — because the tree already carries the full 17 characters and a
+ * sidebar of them is unreadable. Six is not arbitrary: positions 12–17 are the
+ * sequential build number, so the tail is the part that actually differs
+ * between two cars off the same line, and it is what a technician reads aloud.
+ *
+ * It lives HERE, in the host-free model, rather than beside the tree that
+ * shows it, because the simulator writes it into ambient event messages and
+ * `src/common/sim/` must not import `vscode`. One formatter, or the ellipsis
+ * and the digit count drift apart between two surfaces showing the same car.
+ */
+export function vinTail(vin: string): string {
+	return `…${vin.slice(-TAIL_LENGTH)}`;
+}
+
 /**
  * Model year codes for position 10. The cycle is 30 long and skips I, O, Q, U,
  * Z and 0, so it is not derivable from the year by arithmetic either. Only the

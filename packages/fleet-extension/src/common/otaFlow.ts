@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 import type { FleetSimulator } from "./sim/clock";
-import type { Vehicle } from "./model/types";
 import { evaluateOtaPreconditions, OTA_ECUS, OTA_STAGE_INCREMENTS, OTA_TARGET_VERSION } from "./vehicleCommands";
 import { wakeVehicle } from "./commandUi";
+import { vinTail } from "./model/vin";
 
 /**
  * `fleet.installFirmwareUpdate`: pick a vehicle, check the updater's
@@ -19,11 +19,6 @@ import { wakeVehicle } from "./commandUi";
  * file owns everything with a token, a toast, or a clock in it.
  */
 
-/** "Atlas — Ocean Extreme" → "Atlas". */
-function callsign(vehicle: Vehicle): string {
-	return vehicle.displayName.split(" — ")[0] ?? vehicle.displayName;
-}
-
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(() => resolve(), ms));
 
 /** Firmware image size for the download stage's byte-count messages. ~2 GiB
@@ -35,13 +30,13 @@ const IMAGE_MIB = 2148;
 const DOWNLOAD_STEPS = 9;
 
 export async function runOtaFlow(simulator: FleetSimulator): Promise<void> {
-	// Minimal-but-real target picker: name + currently installed version, so
-	// the pick itself shows why the update matters. The full vehicle switcher
+	// Minimal-but-real target picker: VIN tail + currently installed version,
+	// so the pick itself shows why the update matters. The full vehicle switcher
 	// QuickPick (status icons, live telemetry) is the next unit's; this one
 	// stays deliberately lean so the two do not half-duplicate each other.
 	const picked = await vscode.window.showQuickPick(
 		simulator.getVehicles().map((vehicle) => ({
-			label: callsign(vehicle),
+			label: vinTail(vehicle.vin),
 			description: vehicle.firmwareVersion,
 			detail: vehicle.online ? undefined : "asleep",
 			vin: vehicle.vin
@@ -75,11 +70,11 @@ export async function runOtaFlow(simulator: FleetSimulator): Promise<void> {
 	}
 
 	try {
-		await installUpdate(simulator, vehicle.vin, callsign(vehicle));
+		await installUpdate(simulator, vehicle.vin, vinTail(vehicle.vin));
 	} catch (error) {
 		if (error instanceof vscode.CancellationError) {
 			void vscode.window.showInformationMessage(
-				`Fleet: update cancelled — ${callsign(vehicle)} unchanged.`
+				`Fleet: update cancelled — ${vinTail(vehicle.vin)} unchanged.`
 			);
 			return;
 		}

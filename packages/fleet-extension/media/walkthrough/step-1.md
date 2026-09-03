@@ -1,6 +1,6 @@
-Six vehicles, one clock. The switcher groups them by whether they are awake,
-and each row shows the same telemetry the tree does — state of charge, gear,
-speed — because both read the same simulator.
+Six vehicles, one clock. The switcher groups them into the same three cohorts
+the sidebar does — Stage, North America, EMEA — and each row carries the live
+telemetry the sidebar deliberately leaves out: state of charge, gear, speed.
 
-Filter by callsign, VIN or model. The pulse button on a row opens that
-vehicle's CAN stream instead of its controls.
+Filter by VIN or model. The pulse button on a row opens that vehicle's CAN
+stream instead of its controls.

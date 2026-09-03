@@ -89,7 +89,9 @@ export interface SoftwareUpdateState {
  * The behaviour profile the simulator applies on each tick. This is the demo's
  * central knob: it is what makes six rows in a tree view feel like a fleet
  * rather than six copies of the same JSON. The simulator switches on it, and
- * the tree view derives its row icon from it.
+ * the switcher derives its per-row glyph and telemetry line from it. (The
+ * tree deliberately does NOT: its rows carry one neutral icon, and the state
+ * reaches them through file decorations instead.)
  */
 export type VehiclePersonality = "driving" | "charging" | "asleep" | "faulted" | "idle";
 
@@ -139,17 +141,33 @@ export interface GeoPosition {
 }
 
 /**
- * A single vehicle — the unit of everything in the demo. The VFS maps one
- * directory per vehicle keyed by `id`, so `id` is a short slug safe to put in a
- * URI path segment, while `vin` is the real 17-character identifier.
+ * The operating cohorts the fleet is divided into — the top level of the
+ * Vehicles tree, and the grouping the vehicle switcher repeats.
+ *
+ * Deliberately the vocabulary a real fleet console uses: one *environment*
+ * ("Stage", where the broken and the not-yet-released live) and two
+ * *regions*. Mixing the two kinds in one axis looks wrong on paper and is
+ * exactly what operators do, because a vehicle leaves its region the moment
+ * it is pulled for testing.
+ *
+ * A union of literals rather than a lookup table because the strings ARE the
+ * headings — there is no separate display name to keep in step, which is the
+ * whole point of this file (see the note at the top on JSON-safe types).
+ */
+export type FleetCohort = "Stage" | "North America" | "EMEA";
+
+/**
+ * A single vehicle — the unit of everything in the demo. `vin` is the only
+ * identifier: the VFS maps one directory per vehicle at `fleet:/<VIN>`, the
+ * tree labels rows with it, and every compact surface shows its last six
+ * characters. There is deliberately no name field — a fleet operator does not
+ * name six hundred cars, and a demo that does is a demo about six pets.
  */
 export interface Vehicle {
-	/** URI-safe slug used as the VFS directory name, e.g. "mustang". */
-	id: string;
 	/** 17-character VIN — see `vin.ts`; always passes `isValidVin`. */
 	vin: string;
-	/** Human name shown in the tree, e.g. "Atlas — Ocean Extreme". */
-	displayName: string;
+	/** Which cohort's directory this vehicle sits under in the tree. */
+	cohort: FleetCohort;
 	make: string;
 	model: string;
 	year: number;

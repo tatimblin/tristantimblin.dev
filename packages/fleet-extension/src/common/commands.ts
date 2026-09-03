@@ -5,6 +5,7 @@ import type { CanStreamManager } from "./providers/canTerminal";
 import { executeVehicleCommand } from "./vehicleCommands";
 import { runOtaFlow } from "./otaFlow";
 import { pickVehicleVin, showVehicleQuickPick } from "./quickpick";
+import { vinTail } from "./model/vin";
 
 /**
  * Every command the manifest declares, registered in one place.
@@ -109,7 +110,7 @@ function vinFrom(target: unknown): string | undefined {
  */
 async function openVehicleState(simulator: FleetSimulator, vin?: string): Promise<void> {
 	const target =
-		vin ?? (await pickVehicleVin(simulator, { title: "Open vehicle state", placeholder: "Name, VIN, or model" }));
+		vin ?? (await pickVehicleVin(simulator, { title: "Open vehicle state", placeholder: "VIN or model" }));
 	if (!target) return;
 	await vscode.window.showTextDocument(vscode.Uri.parse(`fleet:/${target}/state.json`));
 }
@@ -127,7 +128,7 @@ async function mutateWholeFleet(simulator: FleetSimulator, locked: boolean): Pro
 	const verb = locked ? "locked" : "unlocked";
 	const outcomes = await Promise.all(
 		simulator.getVehicles().map(async (vehicle) => ({
-			name: vehicle.displayName.split(" — ")[0] ?? vehicle.displayName,
+			name: vinTail(vehicle.vin),
 			result: await executeVehicleCommand(simulator, vehicle.vin, { kind: "setVehicleLocked", locked })
 		}))
 	);

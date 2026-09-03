@@ -150,7 +150,7 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 </head>
 <body>
 	<div class="header">
-		<h1 id="name">—</h1>
+		<h1 id="title">—</h1>
 		<span class="badge" id="personality">—</span>
 		<span class="vin" id="vin"></span>
 	</div>
@@ -251,7 +251,7 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 				// current-state source without a DOM read.
 				vscode.setState(state);
 
-				document.getElementById("name").textContent = state.name;
+				document.getElementById("title").textContent = state.title;
 				document.getElementById("vin").textContent = state.vin;
 				document.getElementById("personality").textContent = state.personality;
 
