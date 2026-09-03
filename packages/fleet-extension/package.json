@@ -84,6 +84,11 @@
 				"category": "Fleet"
 			},
 			{
+				"command": "fleet.openState",
+				"title": "Open Vehicle State (JSON)",
+				"category": "Fleet"
+			},
+			{
 				"command": "fleet.reset",
 				"title": "Reset Demo",
 				"category": "Fleet"
@@ -94,6 +99,13 @@
 				{
 					"command": "fleet.openControls",
 					"when": "false"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "fleet.openState",
+					"when": "view == fleetExplorer && viewItem == vehicle",
+					"group": "navigation"
 				}
 			]
 		},

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import type { DbcSignal } from "../sim/dbcText";
 import { parseDbcSignals } from "../sim/dbcText";
+import { describeSignalMarkdown } from "../model/dbcHover";
 
 /**
  * Language features over the `fleet:` scheme: **F12 on a CAN signal name in
@@ -84,30 +85,11 @@ function signalAt(
 }
 
 /**
- * The hover card: a two-column table of everything the `SG_` line says.
- *
- * Every cell is read from the parsed signal, including the byte-order and
- * sign notation, which is reassembled into DBC syntax (`12|12@1+`) rather
- * than translated into prose. A reader hovering a signal in this demo is
- * someone who reads DBC files; showing them "12 bits, little-endian,
- * unsigned" would be translating out of the language they came in speaking.
+ * The hover card. The markdown itself is built by a pure helper in
+ * `model/dbcHover.ts` — including the table-cell escaping that keeps a layout
+ * string like `12|12@1+` from being read as three columns — so the selftest
+ * can assert the formatting without an extension host.
  */
 function describeSignal(signal: DbcSignal): vscode.MarkdownString {
-	const layout = `${signal.startBit}|${signal.length}@${signal.byteOrder}${signal.signed ? "-" : "+"}`;
-	const unit = signal.unit === "" ? "—" : signal.unit;
-
-	const markdown = new vscode.MarkdownString();
-	markdown.appendMarkdown(`**\`${signal.name}\`**\n\n`);
-	markdown.appendMarkdown("| | |\n|---|---|\n");
-	markdown.appendMarkdown(`| message | \`${signal.messageName}\` (${toHexId(signal.messageId)}) |\n`);
-	markdown.appendMarkdown(`| layout | \`${layout}\` |\n`);
-	markdown.appendMarkdown(`| factor / offset | \`${signal.factor}\` / \`${signal.offset}\` |\n`);
-	markdown.appendMarkdown(`| range | \`${signal.min}\` … \`${signal.max}\` |\n`);
-	markdown.appendMarkdown(`| unit | ${unit} |\n`);
-	return markdown;
-}
-
-/** "599" → "0x257 · 599" — DBC files are decimal, candump output is hex. */
-function toHexId(id: number): string {
-	return `0x${id.toString(16).toUpperCase().padStart(3, "0")} · ${id}`;
+	return new vscode.MarkdownString(describeSignalMarkdown(signal));
 }

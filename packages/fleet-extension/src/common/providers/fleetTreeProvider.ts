@@ -125,8 +125,15 @@ export function describeVehicle(vehicle: Vehicle): string {
 	return `${soc} · ${vehicle.gear}`;
 }
 
-/** Codicon per personality, so states are scannable before reading a word. */
-function iconFor(vehicle: Vehicle): string {
+/**
+ * Codicon id per personality, so states are scannable before reading a word.
+ *
+ * Exported for the same reason `describeVehicle` is: the quick-pick switcher
+ * puts the same glyph in front of the same vehicle via `$(id)` syntax in its
+ * label, and a second copy of this ladder would let the tree and the switcher
+ * disagree about what a vehicle is doing.
+ */
+export function iconFor(vehicle: Vehicle): string {
 	if (!vehicle.online) return "circle-slash";
 	if (vehicle.dtcs.length > 0) return "warning";
 	if (vehicle.charge.charging) return "zap";

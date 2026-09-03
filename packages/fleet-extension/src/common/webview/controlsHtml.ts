@@ -82,6 +82,11 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 			flex-direction: column;
 			gap: 6px;
 		}
+		/* Asleep: dimmed, NOT disabled. The tile stays clickable so the click
+		   reaches the command layer, gets the ASLEEP rejection, and the host
+		   can offer "Wake Vehicle" — a greyed-out button would make that whole
+		   path unreachable from this panel. */
+		.door.asleep { opacity: 0.55; }
 		.door .row { display: flex; justify-content: space-between; align-items: center; }
 		.door .corner { font-weight: 600; }
 		.door .status { color: var(--vscode-descriptionForeground); font-size: 0.85em; }
@@ -227,7 +232,7 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 				bottom.append(lockLabel, button);
 				tile.append(top, bottom);
 				doorsEl.append(tile);
-				doorEls[id] = { status, lockLabel, button };
+				doorEls[id] = { tile, status, lockLabel, button };
 			}
 
 			const gearRow = document.getElementById("gearRow");
@@ -263,8 +268,14 @@ export function buildControlsHtml(options: ControlsHtmlOptions): string {
 						els.button.disabled = true;
 					} else {
 						els.button.textContent = door.locked ? "Unlock" : "Lock";
-						els.button.disabled = !state.online;
+						// Only a command in flight disables a button. An asleep
+						// vehicle is a REJECTION, not a missing affordance: the
+						// press is what surfaces "Command rejected: ASLEEP" and
+						// the Wake Vehicle offer, and after a successful wake the
+						// panel snaps live off the host's next state push.
+						els.button.disabled = false;
 					}
+					els.tile.classList.toggle("asleep", !state.online);
 					els.button.classList.toggle("secondary", door.locked);
 				}
 

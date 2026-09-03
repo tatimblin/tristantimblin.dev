@@ -34,6 +34,11 @@ import { runVehicleCommand } from "../commandUi";
  * actual new lock state arrives separately via the ordinary `state` push.
  * Rejection toasts are the HOST's job (commandUi.ts) — the webview only
  * clears its busy state, so the reason renders once, natively, not twice.
+ * That is also why the panel's door tiles stay clickable for an asleep
+ * vehicle (dimmed, not disabled): the ASLEEP rejection is what carries the
+ * "Wake Vehicle" offer, and a disabled tile would make the wake flow
+ * unreachable from here. The woken vehicle arrives on the ordinary
+ * onVehicleChanged push; the rejected command is NOT auto-retried.
  *
  * Push gating: state pushes are skipped while the panel is hidden. With
  * `retainContextWhenHidden` the hidden webview still exists and would happily

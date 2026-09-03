@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import type { FleetSimulator } from "./sim/clock";
 import type { Vehicle } from "./model/types";
 import type { CanStreamManager } from "./providers/canTerminal";
-import { callsign, describeVehicle } from "./providers/fleetTreeProvider";
+import { callsign, describeVehicle, iconFor } from "./providers/fleetTreeProvider";
 
 /**
  * `fleet.switchVehicle` — the palette-driven way into a vehicle, for people
@@ -43,7 +43,7 @@ export function showVehicleQuickPick(simulator: FleetSimulator, canStreams: CanS
 	// the label alone.
 	picker.matchOnDescription = true;
 	picker.matchOnDetail = true;
-	picker.items = buildItems(simulator.getVehicles());
+	picker.items = buildItems(simulator.getVehicles(), [CAN_BUTTON]);
 
 	// Snapshot taken once, deliberately NOT refreshed on the simulator's tick:
 	// reassigning `items` while a picker is open resets the active row and the
@@ -70,13 +70,32 @@ export function showVehicleQuickPick(simulator: FleetSimulator, canStreams: CanS
 }
 
 /**
+ * `fleet.openState`'s picker: the same listing, minus the per-row button (a
+ * button with no `onDidTriggerItemButton` handler would render and do
+ * nothing), resolved to a VIN. Shared with the switcher so both surfaces name
+ * and group the fleet identically.
+ */
+export async function pickVehicleVin(
+	simulator: FleetSimulator,
+	options: { title: string; placeholder: string }
+): Promise<string | undefined> {
+	const choice = await vscode.window.showQuickPick(buildItems(simulator.getVehicles(), []), {
+		title: options.title,
+		placeHolder: options.placeholder,
+		matchOnDescription: true,
+		matchOnDetail: true
+	});
+	return choice?.vin;
+}
+
+/**
  * Group the fleet under "Online" / "Asleep" separators.
  *
  * A separator with nothing under it renders as a stray heading, so each group
  * is emitted only when it has members — which matters here because waking the
  * last sleeper genuinely empties one of the two groups.
  */
-function buildItems(vehicles: readonly Vehicle[]): VehicleItem[] {
+function buildItems(vehicles: readonly Vehicle[], buttons: vscode.QuickInputButton[]): VehicleItem[] {
 	const items: VehicleItem[] = [];
 	const groups: Array<[string, Vehicle[]]> = [
 		["Online", vehicles.filter((v) => v.online)],
@@ -88,15 +107,17 @@ function buildItems(vehicles: readonly Vehicle[]): VehicleItem[] {
 		items.push({ label, kind: vscode.QuickPickItemKind.Separator });
 		for (const vehicle of members) {
 			items.push({
-				// The codicon renders inline in the label; `$(car)` is the one
-				// glyph in the icon set that says "vehicle" without ambiguity.
-				label: `$(car) ${callsign(vehicle)}`,
+				// The codicon renders inline in the label. Per-STATE rather than
+				// a generic vehicle glyph — `$(car)` is not in @vscode/codicons
+				// at all and renders as an empty box — and it comes from the
+				// tree's mapping, so a row reads the same in both places.
+				label: `$(${iconFor(vehicle)}) ${callsign(vehicle)}`,
 				description: describeVehicle(vehicle),
 				// Full VIN here rather than in the label: 17 characters would
 				// push the callsign off the left of a narrow picker, and the
 				// detail line is also what `matchOnDetail` searches.
 				detail: `${vehicle.vin} · ${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-				buttons: [CAN_BUTTON],
+				buttons,
 				vin: vehicle.vin
 			});
 		}

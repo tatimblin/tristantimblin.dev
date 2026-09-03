@@ -4,7 +4,7 @@ import { ControlsEditorProvider } from "./providers/controlsEditorProvider";
 import type { CanStreamManager } from "./providers/canTerminal";
 import { executeVehicleCommand } from "./vehicleCommands";
 import { runOtaFlow } from "./otaFlow";
-import { showVehicleQuickPick } from "./quickpick";
+import { pickVehicleVin, showVehicleQuickPick } from "./quickpick";
 
 /**
  * Every command the manifest declares, registered in one place.
@@ -71,8 +71,47 @@ export function registerCommands(
 
 		vscode.commands.registerCommand("fleet.switchVehicle", () => {
 			showVehicleQuickPick(simulator, canStreams);
+		}),
+
+		/**
+		 * The fleet: file system's front door. Without this, a reader only ever
+		 * reaches a `state.json` sideways — through a Problems entry on the
+		 * faulted vehicle, or F12 out of a DBC signal name — which buries the
+		 * demo's whole point (these files do not exist on disk) behind a
+		 * scavenger hunt.
+		 *
+		 * Two invocation shapes, because the command is on both the palette and
+		 * the tree's context menu: `view/item/context` hands the handler the
+		 * tree ELEMENT (a Vehicle) as its first argument, while the palette
+		 * passes nothing and has to ask.
+		 */
+		vscode.commands.registerCommand("fleet.openState", (target?: unknown) => {
+			void openVehicleState(simulator, vinFrom(target));
 		})
 	);
+}
+
+/** The VIN a command invocation names, across both surfaces: a bare VIN
+ * string, a tree element (any object carrying one), or nothing at all. */
+function vinFrom(target: unknown): string | undefined {
+	if (typeof target === "string") return target;
+	if (target && typeof target === "object" && typeof (target as { vin?: unknown }).vin === "string") {
+		return (target as { vin: string }).vin;
+	}
+	return undefined;
+}
+
+/**
+ * Open a vehicle's `state.json`, asking which vehicle when the caller did not
+ * say. Plain `showTextDocument`, not a custom editor: the point of the file
+ * system provider is that the ordinary JSON editor — folding, colouring, the
+ * outline — works on a document that only exists in memory.
+ */
+async function openVehicleState(simulator: FleetSimulator, vin?: string): Promise<void> {
+	const target =
+		vin ?? (await pickVehicleVin(simulator, { title: "Open vehicle state", placeholder: "Name, VIN, or model" }));
+	if (!target) return;
+	await vscode.window.showTextDocument(vscode.Uri.parse(`fleet:/${target}/state.json`));
 }
 
 /**

@@ -33,6 +33,7 @@ import {
 import type { CanFrame } from "../src/common/model/types";
 import { FLEET_DBC, parseDbcSignals } from "../src/common/sim/dbcText";
 import { DECORATION_BADGES, decorationFor, dtcSeverity } from "../src/common/model/status";
+import { describeSignalMarkdown, escapeTableCell } from "../src/common/model/dbcHover";
 import {
 	commandLatencyMs,
 	evaluateOtaPreconditions,
@@ -914,6 +915,53 @@ check(
 	"every seeded DTC maps to a known tier",
 	decoDune.dtcs.every((dtc) => ["error", "warning", "information"].includes(dtcSeverity(dtc.code))),
 	decoDune.dtcs.map((d) => `${d.code}=${dtcSeverity(d.code)}`).join(" ")
+);
+
+console.log("");
+console.log("hover: the DBC signal table survives its own pipes");
+
+// A DBC layout string is `startBit|length@byteOrder±`, and markdown splits
+// table rows on `|` before it parses code spans — so an unescaped layout cell
+// renders as "`12" and silently shifts every column after it. This is the
+// regression that shipped once.
+check("escapeTableCell backslash-escapes every pipe", escapeTableCell("12|12@1+") === "12\\|12@1+", escapeTableCell("12|12@1+"));
+check("escapeTableCell leaves pipe-free values alone", escapeTableCell("km/h") === "km/h");
+check("escapeTableCell accepts numbers", escapeTableCell(0.05) === "0.05");
+
+const hoverSignals = parseDbcSignals();
+const hoverSignal = hoverSignals.get("DI_vehicleSpeed") ?? [...hoverSignals.values()][0]!;
+const hoverMarkdown = describeSignalMarkdown(hoverSignal);
+const hoverLayout = `${hoverSignal.startBit}|${hoverSignal.length}@${hoverSignal.byteOrder}${hoverSignal.signed ? "-" : "+"}`;
+
+check(
+	"the layout cell carries the whole DBC layout string, escaped",
+	hoverMarkdown.includes(`| layout | \`${escapeTableCell(hoverLayout)}\` |`),
+	hoverLayout
+);
+
+// The structural assertion behind the cosmetic one: every table row must have
+// exactly two cells once the escaped pipes are removed from consideration.
+const hoverRows = hoverMarkdown
+	.split("\n")
+	.filter((line) => line.startsWith("|") && !line.startsWith("|---"));
+const misshapenRows = hoverRows.filter((line) => line.replace(/\\\|/g, "").split("|").length !== 4);
+check(
+	"every hover row is exactly two columns wide",
+	misshapenRows.length === 0,
+	misshapenRows.join(" / ") || `${hoverRows.length} rows checked`
+);
+
+// Escaping is applied at every interpolation, not just the layout cell: a
+// signal whose unit or name grew a pipe must not be able to break the table
+// either.
+const hostileSignal = { ...hoverSignal, name: "A|B", unit: "N|m" };
+const hostileRows = describeSignalMarkdown(hostileSignal)
+	.split("\n")
+	.filter((line) => line.startsWith("|") && !line.startsWith("|---"));
+check(
+	"a pipe in any cell value stays inside its cell",
+	hostileRows.every((line) => line.replace(/\\\|/g, "").split("|").length === 4),
+	hostileRows.join(" / ")
 );
 
 console.log("");
