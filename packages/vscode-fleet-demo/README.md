@@ -35,6 +35,21 @@ The root `build` script runs this before `astro build`. Only `element.ts` /
 `element.css` follow the normal raw-source convention (they render in the blog
 page, not in the workbench).
 
+### Why `build` is `bunx --bun vite build` and not plain `vite build`
+
+Do not "simplify" this back to `vite build`. Netlify's deploy-preview image
+pins `NODE_VERSION` to node 16, and this package's Vite requires node 20.19+ —
+plain `vite build` resolves through node's shebang and dies with
+`ReferenceError: CustomEvent is not defined` before it prints anything useful.
+Nothing else in the repo noticed, because every other build step already runs
+under Bun (`bunx --bun astro build`); this package was simply the first thing
+here to touch system node at all. Running Vite under Bun's runtime makes the
+build independent of whatever node the CI image happens to ship.
+
+`dev` deliberately stays plain `vite` — the `--bun` runtime is for the
+non-interactive build only, mirroring AGENTS.md's warning that `--bun` breaks
+the Astro dev server's HMR socket.
+
 ## Pinned versions — do not loosen
 
 All `@codingame/*` packages are pinned to **exactly `36.2.7`** (upstream
