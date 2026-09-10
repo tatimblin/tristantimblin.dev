@@ -1,32 +1,32 @@
 {
-	"updated": "2026-09-09T09:20:44.361Z",
+	"updated": "2026-09-10T09:19:47.335Z",
 	"location": {
 		"city": "San Francisco",
 		"region": "California",
 		"timeZone": "America/Los_Angeles"
 	},
 	"weather": {
-		"tempF": 67,
-		"code": 2,
-		"label": "Partly cloudy",
-		"observed": "2026-09-09T02:15"
+		"tempF": 74,
+		"code": 0,
+		"label": "Clear",
+		"observed": "2026-09-10T02:15"
 	},
 	"quotes": [
 		{
 			"symbol": "AMZN",
 			"name": "Amazon.com, Inc. Common Stock",
-			"price": 256.67,
-			"change": -0.3,
-			"changePct": -0.12,
-			"session": "Sep 9, 2026 5:20 AM ET"
+			"price": 252.8,
+			"change": 0.4,
+			"changePct": 0.16,
+			"session": "Sep 10, 2026 5:19 AM ET"
 		},
 		{
 			"symbol": "YEXT",
 			"name": "Yext, Inc. Common Stock",
-			"price": 6.38,
-			"change": -0.13,
-			"changePct": -2,
-			"session": "Sep 9, 2026"
+			"price": 6.09,
+			"change": -0.29,
+			"changePct": -4.55,
+			"session": "Sep 10, 2026"
 		}
 	]
 }
