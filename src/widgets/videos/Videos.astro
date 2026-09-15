@@ -11,19 +11,25 @@ import VideoCarousel from "../../components/VideoCarousel.astro";
 import "./videos.css";
 ---
 
-<!-- data-reveal-order 3: last in the staggered widget row. The cell is authored
-     first but `grid-auto-flow: dense` packs it into the final column, so revealing
-     in DOM order would run right-to-left. NB the reveal writes `translate` while
-     the dock lift below writes `transform` — two independent properties, so they
-     compose instead of overwriting each other. -->
+<!-- Its OWN reveal group, deliberately not the row's "widgets" one. A group waits
+     for every member to be in view before it fades any of them in, and this card
+     paints ~90vh above its slot (the dock lift) while its row-mates sit at their
+     real grid position — so grouping it with them held it invisible until the ROW
+     arrived, by which point it had already climbed most of the way up the page and
+     the parallax played out unseen. On its own — and with `data-reveal-eager`, which
+     trips the observer just BEFORE it reaches the viewport — it is already opaque
+     when it crosses the fold, which is where its entrance is choreographed to start.
+     NB the reveal writes `translate` while the dock lift below writes `transform`
+     — two independent properties, so they compose instead of overwriting each
+     other. -->
 <Widget
 	size="1x2"
 	class="wx-videos"
 	depth={0}
 	variant="tertiary"
 	data-reveal
-	data-reveal-group="widgets"
-	data-reveal-order="3"
+	data-reveal-group="videos"
+	data-reveal-eager
 >
 	{/* Clip changes get the threshold transition here too, so the carousel behaves the
 	    same wherever it appears. No `intro` though: this cell is mid-page behind a
@@ -46,32 +52,40 @@ import "./videos.css";
 </Widget>
 
 <script>
-	// Two-phase scroll dock via a transform (--vc-dock-lift) on the widget. Its true
-	// layout home is the 1×2 grid cell at the foot of the page — the transform only
-	// shifts where it PAINTS, so the grid keeps the cell reserved and the other
-	// widgets flow around it throughout.
+	// Scroll dock via a transform (--vc-dock-lift) on the widget. Its true layout
+	// home is the 1×2 grid cell at the foot of the page — the transform only shifts
+	// where it PAINTS, so the grid keeps the cell reserved and the other widgets
+	// flow around it throughout.
 	//
-	//   1. RELATIVE — the card is raised a CONSTANT `travel` above its slot, so it
-	//      scrolls 1:1 with the page (behaves like an ordinary in-flow element,
-	//      just offset up). It enters naturally from the bottom of the viewport;
-	//      because the offset is constant its document position is fixed → it can't
-	//      fling up the page or climb. This lasts until the card is COMPLETELY in
-	//      view (its raised bottom edge reaches the viewport bottom).
-	//   2. PARALLAX — from there, the constant lift eases to 0 over `settle` px of
-	//      scroll, so the card slows/holds while the grid rises to meet it and it
-	//      settles into its real cell. Past that it's a locked, ordinary grid cell.
+	// The parallax spans the card's ENTIRE visible life: it starts the instant the
+	// raised card's top edge crosses the fold and eases to 0 at the dock line, so
+	// the card is drifting the whole way down the page rather than riding along
+	// 1:1 for most of the scroll and only parallaxing at the end. (It used to hold
+	// a constant lift until the card was COMPLETELY in view — with a cell this tall
+	// that moment lands low on the page, which is why the effect only read as a
+	// short hop right before docking.)
 	//
 	// Each frame:
 	//   naturalTop = rect.top − currentLift          // slot's paint pos, transform-free
-	//   fullInView = vh − H + travel                 // naturalTop when raised card is all on screen
+	//   enterLine  = vh + travel                     // naturalTop when the RAISED top is at the fold
 	//   dockLine   = DOCK_VH · vh                     // naturalTop at which lift hits 0
-	//   q          = clamp01((fullInView − naturalTop) / (fullInView − dockLine))
-	//   lift       = −travel · (1 − ease(q))         // −travel (phase 1) → 0 (phase 2 end)
+	//   q          = clamp01((enterLine − naturalTop) / (enterLine − dockLine))
+	//   lift       = −travel · (1 − ease(q))         // −travel at the fold → 0 at the dock
 	// naturalTop is measured transform-invariantly (minus the lift we applied) so it
 	// never feeds back; the whole thing self-calibrates across resize/layout shifts.
-	// ease = smoothstep so the hand-off from 1:1 scrolling into the parallax has no
-	// velocity jump. Docking completes at the fixed dockLine (independent of travel)
-	// so it always fully settles as the grid frames, no matter how high it enters.
+	// ease = smoothstep, whose slope is 0 at both ends and peaks at 1.5 in the
+	// middle. The card therefore rises into view at roughly page speed, PINS hardest
+	// once it is properly on screen, and eases back to 1:1 as it settles — no
+	// velocity jump at either end. (easeOutQuad, whose slope peaks at entry, was
+	// worse here despite parallaxing "sooner": the card is 2/3 of a viewport tall,
+	// so lagging hardest at entry left it creeping as a sliver along the bottom edge
+	// for hundreds of px of scroll, and the drift went unseen for the same reason
+	// a constant phase-1 lift did.)
+	// The pin depth is 1 − 1.5·travel/span (0.16 at the tuned travel: the card holds
+	// near-still while the page runs past it). It stays positive — the card always
+	// moves up the screen, never stalls or reverses — while travel < 1.4vh.
+	// Docking completes at the fixed dockLine (independent of travel) so it always
+	// fully settles as the grid frames, no matter how high it enters.
 	//
 	// `travel` (the raise / parallax distance) is set in CSS via --vc-travel on the
 	// widget (default 55vh); larger = enters higher + more parallax. DOCK_VH is how
@@ -140,17 +154,17 @@ import "./videos.css";
 			const vh = window.innerHeight;
 			const rect = this.el.getBoundingClientRect();
 			const naturalTop = rect.top - this.lift; // strip the applied transform
-			const height = rect.height;
 			const travel = cssPx(this.el, "--vc-travel", TRAVEL_FALLBACK * vh);
 
-			// Phase 1 (relative): constant −travel lift until the raised card is fully
-			// in view, i.e. its raised bottom (naturalTop − travel + height) ≤ vh.
-			const fullInView = vh - height + travel;
-			// Phase 2 (parallax): ease the lift to 0 as the cell travels from there up
-			// to the fixed dock line — so it always fully settles regardless of travel.
+			// Start of the parallax: the raised card's top edge sits on the fold, i.e.
+			// naturalTop − travel = vh. Independent of the cell's height, so a taller
+			// carousel doesn't push the effect further down the page.
+			const enterLine = vh + travel;
+			// End: the lift reaches 0 at the fixed dock line, so it always fully
+			// settles as the grid frames, regardless of travel.
 			const dockLine = DOCK_VH * vh;
-			const span = Math.max(1, fullInView - dockLine);
-			const q = clamp01((fullInView - naturalTop) / span);
+			const span = Math.max(1, enterLine - dockLine);
+			const q = clamp01((enterLine - naturalTop) / span);
 			this.setLift(-travel * (1 - smoothstep(q)));
 		}
 

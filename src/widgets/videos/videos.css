@@ -36,16 +36,19 @@
 
 	/* TRAVEL: how far the carousel is raised above its real cell during the
 	   entrance (and thus the parallax distance it closes as it docks). Read by the
-	   parallax script (Videos.astro). During phase 1 the card scrolls 1:1 with the
-	   page at this constant offset (behaves like an in-flow element); once fully in
-	   view it parallaxes this distance to 0, settling into the grid. Larger =
-	   enters higher + more parallax. Tune here, not in JS.
-	   A 38vh lift so the carousel enters from below the fold as the hero scrolls
-	   away and then parallaxes a longer distance as it docks (more travel = more
-	   parallax). Kept in vh so it resolves on this element — the previous
+	   parallax script (Videos.astro). The card enters with this full lift as its top
+	   edge crosses the fold, then parallaxes the distance to 0 over the whole way
+	   down to the dock line. Larger = enters higher + more parallax; keep it under
+	   ~1.4vh or the easing outpaces the scroll and the card stalls. Tune here,
+	   not in JS.
+	   A 90vh lift: the carousel enters at the fold as the hero scrolls away and
+	   closes that whole distance as it docks. At this depth the pin depth
+	   (1 − 1.5·travel/span) is ~0.16 — measured at 1440×900, the card's top drifts
+	   632px→515px across 600px of scroll, so it holds near-still against the
+	   passing text. Kept in vh so it resolves on this element — the previous
 	   calc(var(--sh-pin-height) + …) referenced a property scoped to
 	   <stories-heading>, so it never resolved here and fell back to the JS 55vh. */
-	--vc-travel: 38vh;
+	--vc-travel: 90vh;
 
 	/* Parallax hook: lifted UP the page when scrolled to top, eased to 0 as the
 	   grid docks into view (value written by the <script> in Videos.astro).

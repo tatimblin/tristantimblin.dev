@@ -68,6 +68,14 @@ const DEADLINE_MS = 600;
 const IN_VIEW_MARGIN = "0px 0px -10% 0px";
 const IN_VIEW_THRESHOLD = 0.2;
 
+/** `data-reveal-eager`: fire BEFORE the element reaches the viewport instead of
+ *  once a fifth of it is in. For an element whose own entrance is scroll-driven —
+ *  the videos carousel parallaxes ~90vh as it docks — the default trigger hides
+ *  the first stretch of that motion, so the choreography plays out behind an
+ *  opacity of 0 and the visitor only ever sees its tail. */
+const EAGER_MARGIN = "0px 0px 20% 0px";
+const EAGER_THRESHOLD = 0;
+
 const ARMED_CLASS = "reveal-armed";
 
 /** Mirrors the inline head script's guard, so a re-run can't double-arm. */
@@ -248,7 +256,9 @@ class RevealCoordinator {
 						resolve();
 					}
 				},
-				{ rootMargin: IN_VIEW_MARGIN, threshold: IN_VIEW_THRESHOLD }
+				el.dataset.revealEager !== undefined
+					? { rootMargin: EAGER_MARGIN, threshold: EAGER_THRESHOLD }
+					: { rootMargin: IN_VIEW_MARGIN, threshold: IN_VIEW_THRESHOLD }
 			);
 			io.observe(el);
 			this.observers.push(io);
