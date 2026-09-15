@@ -2,6 +2,12 @@
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
+import Heading from "@whois/design-system/Heading";
+import Anchor from "@whois/design-system/Anchor";
+import Text from "@whois/design-system/Text";
+// Tokens are global (Layout imports them); component CSS is not — one import per
+// page that renders DS components.
+import "@whois/design-system/styles.css";
 
 export const getStaticPaths = (async () => {
 	const items = await getCollection("gallery");
@@ -30,7 +36,13 @@ const cardImage = type === "video" ? poster : media;
 >
 	<main class="detail-page">
 		<nav class="detail-nav">
-			<a href="/gallery">&larr; Gallery</a>
+			<!-- The same back-link affordance TxtPostLayout uses, and now literally the
+			     same component: Anchor's arrow="left" variant draws the arrow as a
+			     masked icon in currentColor that slides on hover, which is what the
+			     hand-rolled &larr; glyph was standing in for. Going through the
+			     component also means this link is colored by the DS hyperlink/accent
+			     pair rather than by a page rule. -->
+			<Anchor href="/gallery" arrow="left">Gallery</Anchor>
 		</nav>
 
 		<!-- data-reveal on the FIGURE, not the media: the child carries a
@@ -60,8 +72,16 @@ const cardImage = type === "video" ? poster : media;
 				)
 			}
 			<figcaption class="detail-caption">
-				<h1>{title}</h1>
-				<time datetime={date.toISOString().split("T")[0]}>{formattedDate}</time>
+				{/* size 3 → --font-size-6 (24px), the step this caption title already
+				    carried. Plain <H1> would have resolved to 32px and grown the
+				    caption a step for no reason other than the component's default. */}
+				<Heading as="h1" size={3}>{title}</Heading>
+				{/* The date is a meta mark, not prose, so it is a Text rather than a
+				    Body: size 3 (16px) and variant tertiary are exactly what the rule
+				    this replaces spelled as --font-size-base and --color-muted. */}
+				<Text as="time" size={3} variant="tertiary" datetime={date.toISOString().split("T")[0]}>
+					{formattedDate}
+				</Text>
 			</figcaption>
 		</figure>
 	</main>
@@ -75,18 +95,10 @@ const cardImage = type === "video" ? poster : media;
 		padding-block: var(--space-6);
 	}
 
+	/* Only the gap under the nav — the link inside is an Anchor and brings its own
+	   color, hover and underline behaviour. */
 	.detail-nav {
 		margin-bottom: var(--space-5);
-	}
-
-	.detail-nav a {
-		color: var(--color-muted);
-		text-decoration: none;
-		font-size: var(--font-size-base);
-	}
-
-	.detail-nav a:hover {
-		color: var(--color-fg);
 	}
 
 	.detail-media {
@@ -99,21 +111,18 @@ const cardImage = type === "video" ? poster : media;
 		width: 100%;
 		max-height: 80vh;
 		object-fit: contain;
-		border-radius: var(--radius);
+		border-radius: var(--border-radius-2);
 	}
 
 	.detail-caption {
 		margin-top: var(--space-5);
 	}
 
+	/* Only the gap under the title; <H1> owns its type. TWO simple selectors
+	   (0,1,1) rather than one (0,1,0) on purpose: Astro scopes with :where(), so a
+	   lone class here would tie with .ds-text's `margin: 0` and be decided by
+	   stylesheet order. Nesting it under the caption wins outright, no !important. */
 	.detail-caption h1 {
-		font-size: var(--font-size-xl);
-		font-weight: 600;
 		margin-bottom: var(--space-2);
-	}
-
-	.detail-caption time {
-		color: var(--color-muted);
-		font-size: var(--font-size-base);
 	}
 </style>

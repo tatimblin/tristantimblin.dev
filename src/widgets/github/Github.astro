@@ -6,6 +6,8 @@
 // ./github.ts); only the flip is client-side.
 import Widget from "@whois/design-system/Widget";
 import Icon from "@whois/design-system/Icon";
+import Anchor from "@whois/design-system/Anchor";
+import List from "@whois/design-system/List";
 import { getGithubStats } from "./github";
 import "./github.css";
 
@@ -56,7 +58,15 @@ const cornerOf = (date: string): string | undefined =>
 	data-reveal-group="widgets"
 	data-reveal-order="2"
 >
-	<a
+	<!-- <Anchor>, no variants. The header is a link, so it takes the DS link
+	     component; but every decoration Anchor offers (external icon, favicon, arrow,
+	     hover underline) would ADD a mark to a 1×1 tile that already spends its
+	     header row on an icon and a username, so none are switched on. The variantless
+	     base is what was wanted: the link reset plus the DS's colour transition.
+	     github.css keeps ownership of the colour/size/weight — its .home__widgets
+	     descendant selectors are (0,2,0) against .ds-anchor's (0,1,0), so the tile's
+	     own type wins on intent rather than on stylesheet order. -->
+	<Anchor
 		class="wx-gh-head"
 		href={gh.profileUrl}
 		target="_blank"
@@ -65,8 +75,14 @@ const cornerOf = (date: string): string | undefined =>
 	>
 		<Icon name="github" size={4} />
 		<span class="wx-gh-user">{gh.username}</span>
-	</a>
+	</Anchor>
 
+	<!-- RAW <button>, not the DS <Button>: this is the card INTERIOR, not a control
+	     drawn on top of it. It is a real <button> only so the flip is keyboard- and
+	     focus-reachable; every piece of native button chrome is stripped in github.css
+	     so the surface reads as the tile itself. DS Button exists to PUT chrome on —
+	     a fill, a height, a radius, a hover — which is the whole of what this element
+	     must not have. (The same reasoning lives beside the styles at .wx-gh-body.) -->
 	<button
 		class="wx-gh-body"
 		type="button"
@@ -104,7 +120,21 @@ const cornerOf = (date: string): string | undefined =>
 					))
 				}
 			</div>
-			<ul class="wx-gh-lang-list">
+			<!-- <List> for the container — it is exactly the markerless reset this
+			     list was hand-rolling (list-style/margin/padding), so that block is
+			     gone from github.css and the DS owns it.
+			     The rows stay RAW <li>, NOT <ListItem> — a documented exception. ListItem
+			     is not a markerless <li>: it renders an arrow-icon <div> and wraps its
+			     children in a second <div>. Both fight this layout. The arrow is a bullet
+			     this list already has a better one of (the colour dot, which carries the
+			     language's own colour and ties the row to its segment in the bar above).
+			     The wrapper is the harder problem: .wx-gh-lang is a flex ROW of three
+			     siblings — dot, name, and a percentage pushed right by `margin-left:auto`
+			     — and collapsing them into one child div makes the auto margin push
+			     against nothing, so the percentages stop aligning. ListItem also carries
+			     prose metrics — `line-height: 1.9` and a --space-3 bottom margin — where
+			     this tile runs at 1.2 with a --space-1 gap to fit five rows in a 1×1. -->
+			<List class="wx-gh-lang-list">
 				{
 					langs.map((l) => (
 						<li class="wx-gh-lang">
@@ -114,7 +144,7 @@ const cornerOf = (date: string): string | undefined =>
 						</li>
 					))
 				}
-			</ul>
+			</List>
 		</div>
 	</button>
 </Widget>

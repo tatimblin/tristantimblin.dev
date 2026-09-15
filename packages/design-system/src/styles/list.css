@@ -27,27 +27,46 @@
 }
 
 /* List.Item — exact port of the DS styled('li', {...}). */
+/* The 1.45rem/2 this file used for all four of its gaps was 11.6px — a half-step
+   of a rem value that appears nowhere else on the site, sitting between --space-3
+   (12) and --space-4 (16). So DS lists and site prose ran on two rhythms that
+   could never line up. --space-3 is the same gap to within half a pixel and is on
+   the grid everything else uses. */
 .ds-list-item {
 	list-style: none;
 	display: flex;
-	margin-bottom: calc(1.45rem / 2);
+	margin-bottom: var(--space-3);
 	line-height: 1.9;
 	letter-spacing: 0.3px;
 }
+/* The arrow marker, aligned to the LINE BOX rather than nudged onto the baseline.
+   This used to be `transform: translateY(4px)` — a hand-measured shove that was
+   correct for exactly one font-size and one line-height and silently wrong for
+   every other. Sizing the marker box to one line and centring the glyph in it
+   puts the arrow's vertical centre on the line's centre — which is the middle of
+   the uppercase X, where the eye expects an icon beside text to sit — and keeps
+   it there at any size, because both sides of the comparison are now derived
+   from the same line-height instead of one being a constant.
+   The em value is the fallback for engines without the `lh` unit; it equals the
+   1.9 line-height this rule's own list items carry, so they agree. */
 .ds-list-item div[data-list-item] {
 	padding-right: 8px;
-	transform: translateY(4px);
+	display: flex;
+	align-items: center;
+	flex: none;
+	height: 1.9em;
+	height: 1lh;
 }
 .ds-list-item > ol {
 	margin-left: 1.45rem;
-	margin-bottom: calc(1.45rem / 2);
-	margin-top: calc(1.45rem / 2);
+	margin-bottom: var(--space-3);
+	margin-top: var(--space-3);
 }
 .ds-list-item > ul {
 	margin-left: 1.45rem;
-	margin-bottom: calc(1.45rem / 2);
-	margin-top: calc(1.45rem / 2);
+	margin-bottom: var(--space-3);
+	margin-top: var(--space-3);
 }
 .ds-list-item > p {
-	margin-bottom: calc(1.45rem / 2);
+	margin-bottom: var(--space-3);
 }

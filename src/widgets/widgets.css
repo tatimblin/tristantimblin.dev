@@ -25,7 +25,25 @@
 	flex: 1;
 }
 .home__widgets .wx-stat-num {
-	font-family: var(--font-numeric, var(--font-mono));
+	/* FIGURES — the .ds-numeric role (design-system/src/styles/numeric.css), spelled
+	   out here rather than added as a class in markup, because .wx-stat is a shared
+	   widget primitive: any widget that reaches for the stat block gets the right
+	   figures without having to remember a second class on every <span>.
+	   NO `var(--font-numeric, var(--font-mono))` FALLBACK. --font-numeric was moved
+	   off the mono stack deliberately — widget figures are not code, and they had
+	   only ever been set in a terminal face by default rather than by intent (see
+	   tokens.overrides.css). The token is always defined, so that fallback could
+	   never fire except as a regression: it silently restored the exact behaviour
+	   that was removed.
+	   TABULAR, because this block STACKS its figures. A face's default figures are
+	   proportional — a "1" is drawn narrower than a "0" — so 1034 over 1543 over 158
+	   do not line up down the column, and a value that ticks over jitters in place as
+	   its digits change width. Tabular figures all share one advance width, so the
+	   column aligns and a live number updates without moving. Verified: Neue Montreal
+	   ships `tnum`. Family and figure-style travel together; half the pair is not the
+	   role. */
+	font-family: var(--font-numeric);
+	font-variant-numeric: tabular-nums;
 	font-size: var(--widget-font-xl); /* fluid; ≡ --font-size-7 (32px) at the desktop cell */
 	/* Resolves to Neue Montreal's real Semibold cut. It did not always: the face
 	   shipped as a single Light, and global.css refuses faux-bolding, so this

@@ -11,8 +11,17 @@
 	   same pair one specificity step lower, for headings outside the component. */
 	font-family: var(--font-heading);
 	font-weight: var(--font-heading-weight, var(--font-weight-600));
-	line-height: 1.5;
-	letter-spacing: -0.3px;
+	/* Display leading, NOT body leading. A heading is one or two lines that have to
+	   read as a single object; at the 1.5 this used to carry, a two-line heading
+	   read as two unrelated lines drifting apart. The token is the one place to
+	   retune it — see the LEADING note in tokens.overrides.css. */
+	line-height: var(--line-height-heading, 1.15);
+	/* Was a flat -0.3px. An ABSOLUTE tracking value is right at exactly one size:
+	   it matched global.css's bare-h1 -0.02em at about 15px and drifted apart at
+	   every other step, so an <h1> and an <H1> on the same page were tracked
+	   differently. The token is in em, so it scales with the type the way display
+	   tracking is supposed to. */
+	letter-spacing: var(--tracking-heading, -0.02em);
 }
 
 /* DS size-1 headings (H4, and any <Heading size={1}>) are the site's SUB-HEADING

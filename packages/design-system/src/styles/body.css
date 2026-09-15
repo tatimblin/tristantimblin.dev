@@ -1,0 +1,41 @@
+/* Body — the READING role, and the counterpart to heading.css.
+ *
+ * The DS shipped a Text scale but no body: every long-form paragraph picked a
+ * step off that scale by hand, which is how post prose ended up at size 4 (18px)
+ * — the sub-heading step — and read a size too large for a paragraph. This names
+ * the setting once so "body text" is a role you ask for rather than a size you
+ * remember.
+ *
+ * The whole setting comes from the --font-body-* tokens (tokens.overrides.css),
+ * so a retune is one edit there and never a per-call-site override. Fallbacks are
+ * spelled out so the class still lands somewhere sane if it is ever used without
+ * the site's token layer.
+ *
+ * DOUBLED SELECTOR, on the same reasoning as .ds-heading: Body renders through
+ * Text, whose `spaced` variant (on by default) sets its own line-height and
+ * letter-spacing, and whose size variant sets font-size. One class each way is a
+ * tie decided by import order; two guarantees the role wins wherever the
+ * stylesheets land. */
+.ds-body.ds-body {
+	/* Family and weight travel together, as with every role on this site — a face
+	   asked for without its weight lands on whichever cut the browser guesses is
+	   nearest. PP Mondwest has exactly one, so this is currently a formality that
+	   pays off the day the body face gains a second. */
+	font-family: var(--font-body);
+	font-weight: var(--font-body-weight, 400);
+	font-size: var(--font-body-size, var(--font-size-3, 16px));
+	line-height: var(--font-body-line-height, 1.7);
+	letter-spacing: var(--font-body-letter-spacing, 0.3px);
+
+	/* Ligatures and kerning, asked for rather than assumed. Both are nominally on
+	   by default, but they are also the first things a `font-feature-settings` or a
+	   `font-variant-ligatures: none` further up the cascade switches off, and the
+	   reading role is the one place on the site where losing them is most visible —
+	   "fi" and "fl" clash in running text long before they clash in a heading.
+	   Verified present: PP Mondwest ships `liga` and `kern`.
+	   COMMON ligatures only. Migra and Neue Montreal also carry `dlig`, and
+	   discretionary is exactly what it sounds like — a decorative set that draws
+	   attention to itself, which is the opposite of what body text wants. */
+	font-variant-ligatures: common-ligatures;
+	font-kerning: normal;
+}

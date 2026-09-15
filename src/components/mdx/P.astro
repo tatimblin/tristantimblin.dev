@@ -1,9 +1,11 @@
 ---
-// MDX `p` → DS Text. Reading-body preset: 18px (size 4), secondary color; the
-// Text `spaced` default (line-height 1.75) suits long-form prose. Attributes
-// from MDX pass through.
-import Text from "@whois/design-system/Text";
+// MDX `p` → DS Body. The whole setting (face, size, line-height, letter-spacing,
+// reading colour) comes from the body role, so there is nothing to choose here —
+// which is the point: this used to be a hand-picked `size={4}`, the sub-heading
+// step, and posts read a size too large as a result. Attributes from MDX pass
+// through.
+import Body from "@whois/design-system/Body";
 const props = Astro.props;
 ---
 
-<Text {...props} as="p" size={4} variant="secondary"><slot /></Text>
+<Body {...props} as="p"><slot /></Body>

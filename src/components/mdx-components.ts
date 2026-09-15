@@ -10,6 +10,14 @@
 //   - `code`: MDX maps it globally, so mapping to InlineCode would also wrap
 //     fenced-block `<pre><code>`. Inline + block code are handled in CSS.
 //   - `pre`, `hr`, `del`: no clean 1:1 DS component.
+//   - `blockquote`: the nearest DS component is Callout, which is an ATTENTION
+//     box — border, surface, an icon — and a pulled quote is the opposite gesture:
+//     it recedes into the page and lets the quoted voice carry it. TxtPostLayout
+//     styles it as a quiet editorial left-rule instead, matching the homepage
+//     passage treatment. The <p> INSIDE it is mapped, so the quote is still set in
+//     the Body role; only the frame is hand-authored.
+//     (Previously absent from both the map and this list, which read as an
+//     oversight rather than a decision.)
 //
 // `img` IS mapped (to ./mdx/Img.astro) — not for a DS component, but because
 // markdown cannot express width/height, lazy loading, or a reveal hook, and the

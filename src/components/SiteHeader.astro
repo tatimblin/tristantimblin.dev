@@ -9,7 +9,7 @@
 // pages have their own headers and no dark scene to overlay.
 //
 // Nav is data-driven so adding links is a one-line edit.
-const links = [{ label: "Writing", href: "/txt" }];
+const links = [{ label: "Ergonomist", href: "/txt" }];
 ---
 
 <header class="site-header">
@@ -44,11 +44,25 @@ const links = [{ label: "Writing", href: "/txt" }];
 		/* Let pointers fall through the empty bar to the scene; the brand + links
 		   re-enable interaction on themselves (same pattern as the lockup). */
 		pointer-events: none;
+		/* UI FACE, set once on the bar so the brand and the nav links keep reading in
+		   the same voice — which was the point of the earlier change that put them
+		   both on the body face. The matching is right; the face was not. A 14px bar
+		   holding a wordmark and one nav link is INTERFACE, not prose: it labels the
+		   page rather than saying anything, which is precisely the role --font-ui is
+		   defined for ("the small, functional type that LABELS things rather than
+		   says them" — tokens.overrides.css). The body face, PP Mondwest, has a voice
+		   built for a paragraph; at chrome size that voice competes with the hero it
+		   is overlaying. Neue Montreal recedes, so the bar reads as bar. */
+		font-family: var(--font-ui);
 	}
 
 	.site-header__brand {
 		pointer-events: auto;
-		font-family: var(--font-mono, monospace);
+		/* Face comes from .site-header — brand and nav are one object.
+		   The -0.01em is a hand-typed value with no token behind it: the DS ships
+		   --tracking-caps / --tracking-caps-display for UPPERCASE only, and there is
+		   no role for the small negative tracking a lowercase wordmark wants at 14px.
+		   Left as a literal rather than misfiled under a caps token. */
 		font-size: var(--font-size-1, 0.875rem);
 		font-weight: var(--font-weight-500, 500);
 		letter-spacing: -0.01em;

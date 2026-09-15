@@ -59,6 +59,16 @@ const bike = getBikeStats();
 	<div class="wx-bw-head">
 		<img class="wx-bw-logo" src="/images/baywheels-logo.svg" alt="baywheels" />
 	</div>
+	<!-- The figures and labels stay raw <span>s, NOT DS <Text> — and nothing is lost
+	     by that. Their type is already a DS decision: .wx-stat-num / .wx-stat-label in
+	     widgets.css carry the face, the fluid size and the weight for the shared stat
+	     primitive, so every widget that uses the block gets the same setting without
+	     restating it in markup. Wrapping them in <Text> would mean passing size and
+	     weight that .home__widgets's (0,2,0) selectors immediately override, plus
+	     `spaced={false}` to turn OFF the DS default that would otherwise add 0.3px of
+	     tracking to a 32px figure and 1.75 leading to the label under it. That is more
+	     markup to arrive at the same pixels, with two of the three props there only to
+	     undo the component. -->
 	<div class="wx-bw-stats">
 		<div class="wx-stat">
 			<span class="wx-stat-num">{bike.rides}</span>

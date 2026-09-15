@@ -34,6 +34,84 @@
 		monospace;
 	--font-body: "PP Mondwest", "PP Mondwest Fallback", ui-sans-serif, system-ui,
 		sans-serif;
+	/* The BODY role's companions, named the same way --font-hero-weight names
+	 * Migra's cut. --font-body says which FACE reading text is set in; these say
+	 * how it is SET, so "body text" is one decision in one place instead of a size
+	 * and a line-height retyped at every call site. Consumed by .ds-body
+	 * (styles/body.css) — reach for the component, not these, at a call site.
+	 *
+	 * SIZE. 16px, down from the 18px posts used to run at. Mondwest carries a
+	 * size-adjust of 118.2% (fonts.css normalises it onto Migra's x-height), so it
+	 * paints about a fifth larger than its nominal size: 18px was landing near 21px
+	 * of apparent text, which is a sub-heading's weight on the page, not a
+	 * paragraph's. At 16px it reads as body and the 18px step goes back to being
+	 * what it always was — the smallest heading (the homepage lede still uses it).
+	 *
+	 * WEIGHT. 400, and there is nothing lighter to move to: PP Mondwest ships a
+	 * single cut and global.css refuses font-synthesis, so asking for 300 renders
+	 * the 400 file unchanged. The token exists so the face and its weight travel
+	 * as a pair like every other role here, and so a face with more cuts can be
+	 * dialled in from this one line. */
+	/* The step BELOW the generated scale, which stops at --font-size-1 (14px).
+	 * Real small print — a photo credit, a pull-quote attribution, a ruler's year
+	 * marks, a caption bar — sits under that floor, so every one of those had to
+	 * be a literal: 0.6em, 0.7rem, 0.72rem, 0.75rem, 0.78rem, 0.8rem all appear on
+	 * the site for the same job. The missing step also caused a live bug —
+	 * .home__cite reached for a `--font-size-2` that has never existed, and since
+	 * it had no fallback the declaration was simply dropped and the attribution
+	 * rendered at its parent's size. A name for the step people keep needing. */
+	--font-size-0: 12px;
+
+	--font-body-size: var(--font-size-3);
+	--font-body-weight: var(--font-weight-400);
+	--font-body-line-height: 1.7;
+	/* Mondwest's counters are tight at reading size; the 0.3px the DS's `spaced`
+	 * Text variant adds is doing real work, so the role keeps it rather than
+	 * depending on that variant staying on. */
+	--font-body-letter-spacing: 0.3px;
+	/* LEADING ----------------------------------------------------------------
+	 * Headings and body want DIFFERENT leading, and the difference is the whole
+	 * point. Body text needs room between lines so the eye can find the next one;
+	 * a heading is one or two lines that must read as a single object, and giving
+	 * it body leading makes the lines drift apart instead of holding together.
+	 * ~1.15 for headings against 1.7 for body is that contrast made explicit.
+	 * (.ds-heading ran at 1.5 — body leading on display type — which is what made
+	 * every two-line heading look like two separate lines.) */
+	--line-height-heading: 1.15;
+	--line-height-body: var(--font-body-line-height);
+	/* The third leading, for the UI face at label sizes — a strapline box, a meta
+	 * row, a two-line widget header. Heading leading is too tight for something
+	 * that wraps and body leading is far too loose for a label, so these sites had
+	 * nothing to reach for and were hand-typing 1.2 / 1.25 / 1.3 / 1.35 / 1.45. */
+	--line-height-ui: 1.3;
+
+	/* Display type needs TIGHTER tracking than text type: the space between
+	 * letters grows with the type, so spacing that is right at 16px is visibly
+	 * loose at 44px. One token, in em so it tracks the size it is set at.
+	 *
+	 * This also settles a real disagreement. global.css tracked a bare <h1> at
+	 * -0.02em while .ds-heading tracked the component at -0.3px — an ABSOLUTE
+	 * value, which means the two matched at roughly 15px and diverged everywhere
+	 * else. At --font-size-7 (32px) that was -0.64px against -0.30px: a bare <h1>
+	 * and an <H1> were visibly differently tracked on the same page. */
+	--tracking-heading: -0.02em;
+
+	/* TRACKING ---------------------------------------------------------------
+	 * Uppercase is set in letterforms that were drawn to sit next to LOWERCASE.
+	 * Run together they jam, which is most of why all-caps reads as hard to read —
+	 * so uppercase always gets tracking, never none. Two steps, because the site
+	 * genuinely has two jobs here and had been hand-typing five different values
+	 * for them (0.04 / 0.08 / 0.1 / 0.14 / 0.18em):
+	 *   --tracking-caps          small uppercase labels — kickers, section marks,
+	 *                            widget headers, meta rows. The workhorse.
+	 *   --tracking-caps-display  the masthead's own marks, where the tracking is
+	 *                            doing compositional work and wants to be wide
+	 *                            enough to read as deliberate.
+	 * Anything uppercase should reach for one of these rather than inventing a
+	 * sixth value. */
+	--tracking-caps: 0.1em;
+	--tracking-caps-display: 0.16em;
+
 	/* UI text: the small, functional type that LABELS things rather than says them —
 	 * widget headers, stat figures and labels, the carousel ruler's year marks. The
 	 * other four faces all have a strong voice, which is right for a wordmark or a

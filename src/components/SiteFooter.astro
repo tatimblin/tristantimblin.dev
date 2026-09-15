@@ -5,12 +5,29 @@
 // the user's explicit choice in localStorage and re-tints the whole page,
 // including the animating <dotted-grid> visuals (they sample --color-fg /
 // --color-bg fresh each frame).
+import Text from "@whois/design-system/Text";
+
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-	<p class="site-footer__note">© {year} Tristan Timblin</p>
+	<!-- <Text size={1} variant="tertiary">, not a bare <p>: the size step and the
+	     tertiary ink are both DS decisions, so they come from the component rather
+	     than being retyped as a font-size and a colour in the scoped block below.
+	     What stays local is only what the DS has no opinion about — the face. -->
+	<Text as="p" size={1} variant="tertiary" class="site-footer__note">© {year} Tristan Timblin</Text>
 	<div class="site-footer__controls">
+		<!-- RAW <button>, NOT the DS <Button> — a deliberate, documented exception.
+		     Button is a FILLED control: `border: 0`, a solid per-variant background,
+		     a fixed 34px height and --border-radius-1, and a hover that answers by
+		     changing that fill. These toggles are the opposite treatment — a hairline
+		     outline around transparent, sized by its own padding, answering a hover by
+		     tinting its border and its text. Adopting Button would mean overriding
+		     border, border-radius, background, height, padding AND the whole hover
+		     state, which is keeping the class name and throwing away the component;
+		     the alternative is shipping two filled pills into an understated footer.
+		     Taking the component here would change the design, and the design is the
+		     thing being kept. Tokens are adopted instead — see .site-footer__toggle. -->
 		<button
 			type="button"
 			class="site-footer__toggle"
@@ -45,9 +62,13 @@ const year = new Date().getFullYear();
 		color: var(--color-fg);
 	}
 
+	/* UI FACE. A copyright line is chrome — it labels the page rather than saying
+	   anything — which is the role --font-ui is defined for (tokens.overrides.css),
+	   and the same reasoning that moves the header bar and the toggles below off the
+	   body face. Size and colour are gone from here on purpose: <Text size={1}
+	   variant="tertiary"> now carries them. */
 	.site-footer__note {
-		font-size: var(--font-size-1, 0.875rem);
-		color: var(--text-tertiary, var(--color-muted));
+		font-family: var(--font-ui);
 	}
 
 	.site-footer__controls {
@@ -56,17 +77,30 @@ const year = new Date().getFullYear();
 		gap: var(--space-2, 0.5rem);
 	}
 
+	/* The raw-button exception is argued at the tag (see the comment in the markup).
+	   Everything the DS DOES have an opinion about is taken from it here: the gap,
+	   the padding and the radius were hand-typed lengths that happened to land near
+	   scale steps, so they are now the steps themselves. The radius is a pure rename:
+	   --border-radius-2 is 12px, and so is the `var(--radius, 12px)` it replaces —
+	   --radius being a site-local alias in global.css that holds the same 12 the DS
+	   already names. Same pixels, one fewer spelling of the same decision. */
 	.site-footer__toggle {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5ch;
-		padding: 0.4rem 0.85rem;
+		gap: var(--space-1);
+		padding: var(--space-2) var(--space-3);
+		/* `font: inherit` first to clear the UA's button font wholesale (family, size,
+		   weight, line-height), THEN the face — otherwise the shorthand would reset
+		   whichever of those the longhand set. It had been landing these on the body
+		   face; a control labelled "Sound" is interface, so it belongs on --font-ui
+		   alongside the note above and the header bar. */
 		font: inherit;
+		font-family: var(--font-ui);
 		font-size: var(--font-size-1, 0.875rem);
 		color: var(--color-fg);
 		background: transparent;
 		border: 1px solid var(--border-color, var(--color-border));
-		border-radius: var(--radius, 12px);
+		border-radius: var(--border-radius-2);
 		cursor: pointer;
 		transition: border-color 0.15s ease, color 0.15s ease;
 	}

@@ -1,0 +1,39 @@
+/* Caps — the uppercase label role.
+ *
+ * Uppercase is worth using: it separates one part of a page from another and
+ * emphasises without reaching for bold or italic. What makes it hard to read is
+ * not the capitals, it is capitals set with the spacing they were drawn for.
+ * Every letterform in a text face is fitted to sit beside LOWERCASE; run the
+ * capitals together at those fittings and they jam. Tracking is the fix, and it
+ * is not optional — uppercase without it is the actual mistake.
+ *
+ * The site already knew this (every `text-transform: uppercase` on it carries a
+ * letter-spacing), but it knew it five separate times, at 0.04 / 0.08 / 0.1 /
+ * 0.14 / 0.18em, for what is really two jobs. This is those two jobs:
+ *
+ *   .ds-caps            small uppercase labels — kickers, section marks, widget
+ *                       headers, meta rows.
+ *   .ds-caps--display   the masthead's own marks, where the tracking is doing
+ *                       compositional work and wants to read as deliberate.
+ *
+ * Doubled selector for the same reason as .ds-heading / .ds-body: this renders
+ * through Text, whose `spaced` variant sets a letter-spacing of its own, and one
+ * class each way is a tie decided by import order.
+ *
+ * Deliberately NOT here: font-size and font-family. A caps label appears in the
+ * UI face at --font-size-1 most of the time but not always (the homepage's
+ * scrubber label is --font-subheading), and the role that matters — the thing
+ * that is wrong when it is missing — is the tracking. */
+.ds-caps.ds-caps {
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps, 0.1em);
+	/* Tracking adds space AFTER each letter, including the last one, which leaves
+	   a phantom indent at the end of the run. Visible whenever a caps label is
+	   centred, right-aligned, or sits inside a border/background. */
+	margin-inline-end: calc(-1 * var(--tracking-caps, 0.1em));
+}
+
+.ds-caps--display.ds-caps--display {
+	letter-spacing: var(--tracking-caps-display, 0.16em);
+	margin-inline-end: calc(-1 * var(--tracking-caps-display, 0.16em));
+}

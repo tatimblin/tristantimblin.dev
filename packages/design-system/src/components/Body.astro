@@ -1,0 +1,32 @@
+---
+// Body — the reading role. Heading's counterpart: where Heading is the voice that
+// announces, this is the voice that says something at length.
+//
+// Renders through Text (so every Text prop — variant, truncate, family, as —
+// still works) and adds .ds-body, which carries the whole setting from the
+// --font-body-* tokens. Deliberately takes NO `size` prop: the point of the role
+// is that reading text is one decision, not a step picked off the scale at each
+// call site. Something that needs a different size is not body text — it is a
+// heading, a label, or a Text.
+import { cx } from "../lib/cx";
+import Text from "./Text.astro";
+
+interface Props {
+	as?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "p", // body text is a paragraph unless told otherwise
+	// The reading colour. Primary is the page's loudest ink and belongs to
+	// headings; long-form set in it fights them. Overridable per call site.
+	variant = "secondary",
+	class: className,
+	...rest
+} = Astro.props;
+---
+
+<Text {...rest} as={as} variant={variant} class={cx("ds-body", className)}>
+	<slot />
+</Text>

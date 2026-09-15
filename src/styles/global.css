@@ -51,13 +51,30 @@ body {
   font: var(--font-size-base) / var(--line-height-base) var(--font-sans);
   color: var(--color-fg);
   background: var(--color-bg);
+  /* Grayscale AA rather than the OS default. On a dark page subpixel rendering
+     fattens every stem — worst on Mondwest, whose strokes are already square and
+     heavy — so this is the one lever that genuinely thins the type on a face that
+     ships a single cut. The -moz- half covers Firefox on macOS; neither does
+     anything on Windows or Linux, where grayscale AA is already the default. */
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   /* PP Mondwest ships a single cut, and the DS asks for 500/560 in cards,
      buttons and widget stats. Faux-bolding a bitmap face smears its pixel grid
      into mush, so refuse the synthesis: those components already carry their
      emphasis in colour and size. Real weight comes from Migra (two cuts) or from
      --font-subheading, which IS a bold. */
   font-synthesis-weight: none;
+  /* And refuse FAKE SMALL CAPS for the same reason. Verified against the files in
+     public/fonts: not one of the four faces ships an `smcp` feature, so any
+     font-variant-caps request here would be synthesised — capitals merely scaled
+     down, which land far too light against the surrounding text and read worse
+     than plain uppercase would. If small caps are ever wanted, they need a face
+     that actually draws them; until then this makes the request fail visibly
+     rather than silently render something wrong.
+     NB font-synthesis-STYLE is deliberately left ON: no face ships an italic
+     either, and the post blockquotes genuinely use one (TxtPostLayout). A faux
+     oblique is an acceptable stand-in; faux small caps are not. */
+  font-synthesis-small-caps: none;
   overflow-x: clip;
 }
 
@@ -83,18 +100,23 @@ h5,
 h6 {
   font-family: var(--font-heading);
   font-weight: var(--font-heading-weight);
+  /* Display leading and display tracking on ALL six, not just the two that used
+     to name them below. h3-h6 were inheriting the body's 1.6 from <body>, so the
+     smaller a heading got the more its lines drifted — exactly backwards, since a
+     small heading is the one most likely to wrap. And the tracking was set here
+     at -0.02em/-0.01em while .ds-heading set -0.3px, so a bare <h1> and an <H1>
+     did not match. Both now come from the same tokens .ds-heading uses, so the
+     element and the component render identically. */
+  line-height: var(--line-height-heading, var(--line-height-tight));
+  letter-spacing: var(--tracking-heading, -0.02em);
 }
 
 h1 {
   font-size: var(--font-size-3xl);
-  line-height: var(--line-height-tight);
-  letter-spacing: -0.02em;
 }
 
 h2 {
   font-size: var(--font-size-2xl);
-  line-height: var(--line-height-tight);
-  letter-spacing: -0.01em;
 }
 
 img {

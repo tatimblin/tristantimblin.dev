@@ -10,6 +10,7 @@ import Grid from "@whois/design-system/Grid";
 import GridItem from "@whois/design-system/GridItem";
 import Text from "@whois/design-system/Text";
 import Heading from "@whois/design-system/Heading";
+import Body from "@whois/design-system/Body";
 import H1 from "@whois/design-system/H1";
 import H2 from "@whois/design-system/H2";
 import H3 from "@whois/design-system/H3";
@@ -328,6 +329,73 @@ const faces = [
 					<Text truncate size={4}>truncate this very long line that overflows its container</Text>
 				</div>
 			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Leading, tracking, and what the faces can actually do</h2>
+			<p class="ds-demo__note">
+				Three leadings, because there are three jobs. <code>--line-height-heading</code>
+				(1.15) holds a heading's lines together as one object; body leading on display
+				type makes a two-line heading read as two unrelated lines.
+				<code>--line-height-body</code> (1.7) gives running text room to find the next
+				line. <code>--line-height-ui</code> (1.3) sits between them for label type, which
+				wants to be tighter than prose without being display-tight.
+				<code>--tracking-heading</code> is negative and in <code>em</code>, because the
+				space between letters grows with the type — display sizes need it pulled back.
+			</p>
+			<p class="ds-demo__note">
+				Uppercase always gets tracking: every letterform in a text face is fitted to sit
+				beside lowercase, so capitals run together jam. That is most of why all-caps
+				reads as hard. <code>--tracking-caps</code> (0.1em) is the workhorse;
+				<code>--tracking-caps-display</code> (0.16em) is for masthead marks where the
+				tracking is doing compositional work. The site had been making that decision
+				five times at 0.04 / 0.08 / 0.1 / 0.14 / 0.18em.
+			</p>
+			<p class="ds-demo__note">
+				<strong>What the four faces support</strong>, read out of the files in
+				<code>/fonts</code> rather than assumed — this is why some typographic advice
+				does not apply here. None of them is a <em>variable</em> font, so weights cannot
+				be nudged per theme; the cuts are Migra 500/700, Neue Montreal 400/600, and a
+				single cut each for FS Mondwest and PP Mondwest. None ships <code>smcp</code>, so
+				small caps would be faked — resized capitals, far too light — which is why
+				<code>font-synthesis-small-caps</code> is off in global.css. Old-style figures
+				(<code>onum</code>) exist only on Migra, the heading face; the body face has no
+				figure features at all, so old-style figures in prose are not available without a
+				new face. Neue Montreal does ship <code>tnum</code>, which is what the numeric
+				role below uses. All three text faces ship <code>liga</code> and
+				<code>kern</code>.
+			</p>
+			<Flex direction="column" gap={2} alignItems="start">
+				<Text class="ds-caps" family="mono" size={1}>ds-caps · section mark</Text>
+				<Text class="ds-caps ds-caps--display" family="mono" size={1}>ds-caps--display · masthead mark</Text>
+				<span class="ds-numeric" style="font-size: var(--font-size-6);">ds-numeric&nbsp;·&nbsp;1034 / 1543 / 0158</span>
+				<span style="font-size: var(--font-size-0); color: var(--text-tertiary);">--font-size-0 · the caption step, below the scale's 14px floor</span>
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Body — the reading role</h2>
+			<p class="ds-demo__note">
+				Takes no size: the whole setting (face, size, line-height, letter-spacing,
+				reading colour) comes from the <code>--font-body-*</code> tokens, so reading
+				text is one decision rather than a step picked off the Text scale. Compare
+				the size-4 line below — that step is the smallest HEADING, and prose set in
+				it reads a size too large.
+			</p>
+			<div style="max-width: 62ch; display: grid; gap: var(--space-4);">
+				<Body>
+					I am a craftsman, I create things to be used. Even if they often are not,
+					it is for the love of the process. My creativite nature comes through in
+					an empathetic design, where with a deep understanding of another I can
+					build them worlds.
+				</Body>
+				<Body variant="tertiary">
+					Body, variant tertiary — the same setting in the quieter ink.
+				</Body>
+				<Text size={4} variant="secondary">
+					Text size 4 for contrast — this is the sub-heading step, not body.
+				</Text>
+			</div>
 		</section>
 
 		<section class="ds-demo__section">
@@ -876,8 +944,14 @@ const faces = [
 			border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
 		}
 	}
+	/* The catalogue's own headings take the HEADING role, like every other heading
+	   on the site. They used to set --font-display, which aliases --font-body — so
+	   a page whose job is to show the type system off was setting its 26 section
+	   headings in the body face, with no weight token, and demonstrating the exact
+	   mistake it documents. Family and weight together, from the role. */
 	.ds-demo__title {
-		font-family: var(--font-display);
+		font-family: var(--font-heading);
+		font-weight: var(--font-heading-weight);
 		font-size: var(--font-size-8);
 		margin-bottom: var(--space-8);
 	}
@@ -886,7 +960,8 @@ const faces = [
 		border-top: 1px solid var(--border-color);
 	}
 	.ds-demo__h {
-		font-family: var(--font-display);
+		font-family: var(--font-heading);
+		font-weight: var(--font-heading-weight);
 		font-size: var(--font-size-5);
 		color: var(--text-secondary);
 		margin-bottom: var(--space-4);
@@ -896,7 +971,7 @@ const faces = [
 		max-width: 68ch;
 		margin-block: calc(-1 * var(--space-3)) var(--space-5);
 		font-size: var(--font-size-1);
-		line-height: 1.6;
+		line-height: var(--line-height-ui);
 		color: var(--text-tertiary);
 	}
 

@@ -3,6 +3,25 @@
 	/* base: no width/height/color rules — driven entirely by size + variant. */
 }
 
+/* An icon sitting NEXT TO A TEXT LABEL is a different problem from an icon on its
+   own, and the `size` scale below solves only the second one. Beside text, the
+   thing to match is the label's LINE BOX, not the label's baseline: size the icon
+   to one line and centre it there, and its vertical centre lands on the middle of
+   the uppercase X — which is where the eye reads an icon and its label as one
+   object. Aligning to the baseline instead (or nudging with a translateY, which
+   is how it tends to get "fixed") is correct at exactly one font-size.
+
+   Put this on the icon and `align-items: center` on the row that holds it. It
+   overrides the size-N width/height on purpose — the label decides the size.
+   The em value is a fallback for engines without the `lh` unit; it assumes the
+   1.5 leading small UI labels carry here. */
+.ds-icon--inline {
+	width: auto;
+	height: 1.5em;
+	height: 1lh;
+	flex: none;
+}
+
 /* variant → stroke/fill token pairs (verbatim from Icon.styles.tsx) */
 .ds-icon--variant-default {
 	stroke: currentColor;

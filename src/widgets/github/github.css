@@ -185,10 +185,10 @@
 .home__widgets .wx-gh-bar-seg {
 	height: 100%;
 }
+/* The markerless reset this used to hand-roll (list-style/margin/padding) now comes
+   from the DS <List>, which is that reset — see the tag in Github.astro, where the
+   raw <li> rows are argued. Only the stacking this tile actually invents is left. */
 .home__widgets .wx-gh-lang-list {
-	list-style: none;
-	margin: 0;
-	padding: 0;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-1);
@@ -215,5 +215,14 @@
 .home__widgets .wx-gh-lang-pct {
 	margin-left: auto;
 	color: var(--text-tertiary);
-	font-family: var(--font-numeric, var(--font-mono));
+	/* FIGURES — the same role as .wx-stat-num (widgets.css); see numeric.css for the
+	   full reasoning. Two things: --font-numeric with NO --font-mono fallback (the
+	   token was moved off the mono stack on purpose — these are data, not code — and
+	   the fallback quietly put it back), and TABULAR figures, because the percentages
+	   stack one per row down a flush-right edge. Proportional digits are drawn on
+	   different widths, so 42.1% / 11.8% / 4.3% would sit ragged against each other
+	   even though `margin-left: auto` aligns their boxes; tabular puts every digit on
+	   one advance width so the column actually lines up. Neue Montreal ships `tnum`. */
+	font-family: var(--font-numeric);
+	font-variant-numeric: tabular-nums;
 }

@@ -34,6 +34,17 @@
 .ds-text--family-code {
 	font-family: var(--font-mono-code);
 }
+/* The figures family. Was MISSING: TxtPostLayout has been asking for
+   family="numeric" on the post meta line, which emitted .ds-text--family-numeric
+   and matched no rule at all, so the date silently rendered in whatever face it
+   inherited. Same failure mode --font-mono-code was in before it was defined.
+   Carries tabular figures with the face, for the reason numeric.css gives: a
+   family alone does not decide how its numbers behave, and a date or a count is
+   exactly the figure that should not shift width as it changes. */
+.ds-text--family-numeric {
+	font-family: var(--font-numeric);
+	font-variant-numeric: tabular-nums;
+}
 
 /* size → --font-size-* (note: size 2 maps to --font-size-1 in the DS source) */
 .ds-text--size-1 {

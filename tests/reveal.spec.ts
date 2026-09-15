@@ -195,7 +195,7 @@ test.describe("reveal — safety", () => {
 		// happen. The navigation is what this test cares about, not the hit-testing.
 		await page.evaluate(() => {
 			const link = Array.from(document.querySelectorAll<HTMLAnchorElement>("a")).find(
-				(a) => a.textContent?.trim() === "Writing"
+				(a) => a.textContent?.trim() === "Ergonomist"
 			);
 			link?.click();
 		});
@@ -273,7 +273,7 @@ test.describe("reveal — safety", () => {
 		await page.evaluate(() => {
 			const link = Array.from(
 				document.querySelectorAll<HTMLAnchorElement>("a")
-			).find((a) => a.textContent?.trim() === "Writing");
+			).find((a) => a.textContent?.trim() === "Ergonomist");
 			link?.click();
 		});
 		await page.waitForURL("**/txt");

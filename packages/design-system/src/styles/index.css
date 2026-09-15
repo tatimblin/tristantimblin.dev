@@ -6,6 +6,9 @@
 @import "./widget-grid.css";
 @import "./text.css";
 @import "./heading.css";
+@import "./body.css";
+@import "./caps.css";
+@import "./numeric.css";
 @import "./label.css";
 @import "./button.css";
 @import "./icon-button.css";

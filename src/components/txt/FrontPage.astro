@@ -17,9 +17,24 @@
 // Type is plain h2/h3/p on scoped classes rather than DS Heading/Text.
 // heading.css authors `.ds-heading.ds-heading` (0,2,0) so it wins "regardless of
 // stylesheet import order", while Astro scopes component CSS with :where(),
-// leaving a scoped headline rule at (0,1,0) — the DS's line-height: 1.5 would beat
-// every headline here. Text is out for the same reason (spaced=true carries
+// leaving a scoped headline rule at (0,1,0) — the DS's line-height (now
+// var(--line-height-heading), 1.15; it was 1.5 when this note was written) would
+// beat every headline here. Text is out for the same reason (spaced=true carries
 // line-height 1.75). Gate rule 3, page art direction.
+//
+// Opting out of the COMPONENTS is not opting out of the design system: the way
+// this file adopts it is through the token layer, so sizes, weights, leading and
+// tracking below are all DS custom properties and retune from one place.
+//
+// The <ul>/<li> here are a second, separate exception, and a STRUCTURAL one
+// rather than a specificity one. DS List/ListItem are the prose list: ListItem
+// injects an arrow-marker <svg> into every item and wraps the children in a div,
+// and .ds-list-item ships `display: flex`, `line-height: 1.9` and a bottom margin
+// on the <li> itself. Both lists here are layout containers — a flex row of tag
+// pills, and a two-column grid of thumbnail rows — whose <li>s are grid/flex
+// children carrying their own box. Converting them would paste an arrow onto
+// every tag and every featured row and hand the layout to rules written for
+// running text. Deliberate; not an oversight for the next audit to re-flag.
 import type { CollectionEntry } from "astro:content";
 import { leadImage } from "../../lib/leadImage";
 import { intrinsicSize } from "../../lib/intrinsicSize";
@@ -193,13 +208,19 @@ const href = (post: Post) => `/txt/${post.id}`;
 	.meta {
 		margin: 0;
 		font-size: var(--font-size-1);
-		line-height: 1.3;
+		/* The label leading: tighter than reading text, looser than display. This was
+		   a literal until the token layer grew the step it was asking for. */
+		line-height: var(--line-height-ui);
 		color: var(--text-tertiary);
 	}
 	.kicker {
 		font-family: var(--font-subheading);
 		text-transform: uppercase;
-		letter-spacing: 0.08em;
+		/* Uppercase always gets tracking — capitals are fitted to sit beside
+		   lowercase and jam when run together. The site makes that call once, in
+		   the TRACKING note in tokens.overrides.css, rather than per label; this
+		   was 0.08em, one of the five hand-typed values that token replaced. */
+		letter-spacing: var(--tracking-caps);
 	}
 	.meta {
 		font-family: var(--font-ui);
@@ -224,7 +245,13 @@ const href = (post: Post) => `/txt/${post.id}`;
 		margin: 0;
 		font-family: var(--font-heading);
 		font-weight: var(--font-heading-weight);
-		line-height: 1.1;
+		/* Display leading from the token, not a hand-typed 1.1. This rule covers
+		   every headline on the page — 44px lead down to an 18px featured row — so
+		   it is the site's heading-leading decision, and that decision lives in the
+		   LEADING note in tokens.overrides.css. The old 1.1 was not defended
+		   anywhere; the art direction here is the negative tracking below, which
+		   stays. */
+		line-height: var(--line-height-heading);
 		letter-spacing: -0.02em;
 		color: var(--text-primary);
 		text-wrap: balance;
@@ -333,14 +360,30 @@ const href = (post: Post) => `/txt/${post.id}`;
 
 	.lead__hed {
 		margin-block: var(--space-3) var(--space-3);
-		font-size: clamp(1.75rem, 2.6vw, 2.375rem);
+		/* Fluid, but between SCALE STEPS. The ends used to be 1.75rem/2.375rem —
+		   28px and 38px, neither of which is a step, so the page's largest headline
+		   was the one piece of type on the site not on the scale. Anchored to
+		   --font-size-7 (32px) and --font-size-8 (44px); the 2.6vw middle is
+		   untouched, so from ~1231px up to ~1692px nothing moves at all and only
+		   the clamped ends change. */
+		font-size: clamp(var(--font-size-7), 2.6vw, var(--font-size-8));
 	}
 
+	/* This is reading prose, so it is the BODY role — the same setting posts run
+	   at, expressed in the role's tokens rather than in the component. <Body>
+	   cannot win here for the reason in the header comment (.ds-body.ds-body is
+	   (0,2,0) against this rule's scoped (0,1,0)), so the rule reads the tokens
+	   directly and tracks the role automatically. It previously hand-rolled the
+	   face and size, set 1.6 where the role says 1.7, and dropped the 0.3px of
+	   tracking Mondwest's tight counters need at reading size — leaving the deck
+	   visibly off the body setting used everywhere else. */
 	.lead__deck {
 		margin: var(--space-3) 0 0;
 		font-family: var(--font-body);
-		font-size: var(--font-size-3);
-		line-height: 1.6;
+		font-weight: var(--font-body-weight);
+		font-size: var(--font-body-size);
+		line-height: var(--font-body-line-height);
+		letter-spacing: var(--font-body-letter-spacing);
 		color: var(--text-secondary);
 	}
 
@@ -369,7 +412,8 @@ const href = (post: Post) => `/txt/${post.id}`;
 		font-family: var(--font-ui);
 		font-size: var(--font-size-1);
 		text-transform: uppercase;
-		letter-spacing: 0.1em;
+		/* Same small-caps label role as .kicker, so the same token. */
+		letter-spacing: var(--tracking-caps);
 		color: var(--text-tertiary);
 	}
 	.filed__list {
@@ -399,11 +443,18 @@ const href = (post: Post) => `/txt/${post.id}`;
 		margin: 0 0 var(--space-3);
 		padding-block-end: var(--space-2);
 		border-block-end: 1px solid var(--paper-line);
+		/* These are <h2>s pulled off the heading face onto the UI face, so the
+		   family+weight pairing has to be restated: Neue Montreal ships Regular and
+		   Semibold only and font-synthesis-weight is off globally, so a family
+		   without an explicit weight lands on whichever cut the browser guesses.
+		   --font-weight-600 resolves to 560, which selects Semibold under CSS font
+		   matching exactly as the literal 600 here did. */
 		font-family: var(--font-ui);
-		font-weight: 600;
+		font-weight: var(--font-weight-600);
 		font-size: var(--font-size-1);
 		text-transform: uppercase;
-		letter-spacing: 0.1em;
+		/* Section marks are the same small-caps label role as .kicker. */
+		letter-spacing: var(--tracking-caps);
 		color: var(--text-tertiary);
 	}
 

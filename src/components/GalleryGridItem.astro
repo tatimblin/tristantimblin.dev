@@ -1,5 +1,6 @@
 ---
 import { intrinsicSize } from "../lib/intrinsicSize";
+import Text from "@whois/design-system/Text";
 
 interface Props {
 	slug: string;
@@ -27,6 +28,14 @@ const size = type === "video" ? intrinsicSize(poster ?? "") : intrinsicSize(medi
      mid-fade. Revealing the wrapper leaves the named box untouched. The
      coordinator finds the media by descending, so readiness still gates on the
      real decode. -->
+<!-- A RAW <a>, deliberately, where the rest of this route now uses DS Anchor: this
+     is a whole-card link wrapping media, not a link in running text. Anchor exists
+     to give link TEXT the hyperlink color and a hover/arrow affordance, and it
+     asserts `color: var(--color, var(--hyperlink))` — which this card must not
+     have, because the card's own caption sets its ink and everything else inside
+     is an image. Worse, that assertion lands at the same specificity (0,1,0) as
+     the scoped `color: inherit` below, so which one won would come down to
+     stylesheet order. The component would be fighting the pattern, not serving it. -->
 <a href={`/gallery/${slug}`} class="gallery-grid-item" data-reveal>
 	{
 		type === "video" ? (
@@ -52,15 +61,18 @@ const size = type === "video" ? intrinsicSize(poster ?? "") : intrinsicSize(medi
 			/>
 		)
 	}
-	<span class="gallery-grid-item__title">{title}</span>
+	<Text size={3} variant="tertiary" class="gallery-grid-item__title">{title}</Text>
 </a>
 
 <style>
 	.gallery-grid-item {
 		display: block;
 		break-inside: avoid;
-		margin-bottom: var(--grid-gap, 1.5rem);
-		border-radius: var(--radius);
+		/* 24px, the value the legacy --grid-gap knob (with its hardcoded 1.5rem
+		   fallback) already resolved to. Spelled as the DS step so this margin and
+		   the grid's column-gap in gallery/index.astro are one decision. */
+		margin-bottom: var(--space-5);
+		border-radius: var(--border-radius-2);
 		overflow: hidden;
 		text-decoration: none;
 		color: inherit;
@@ -74,10 +86,13 @@ const size = type === "video" ? intrinsicSize(poster ?? "") : intrinsicSize(medi
 		height: auto;
 	}
 
-	.gallery-grid-item__title {
+	/* The caption's BOX only — its type and color come from the Text (size 3 is the
+	   16px the legacy --font-size-base alias meant; variant tertiary is where
+	   --color-muted bridges to). Scoped under the card so the selector is (0,2,0):
+	   Astro scopes with :where(), so a lone class would tie with .ds-text's
+	   `padding: 0` and be decided by stylesheet order. */
+	.gallery-grid-item .gallery-grid-item__title {
 		display: block;
 		padding: var(--space-2) var(--space-3);
-		font-size: var(--font-size-base);
-		color: var(--color-muted);
 	}
 </style>
