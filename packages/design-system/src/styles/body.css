@@ -19,8 +19,9 @@
 .ds-body.ds-body {
 	/* Family and weight travel together, as with every role on this site — a face
 	   asked for without its weight lands on whichever cut the browser guesses is
-	   nearest. PP Mondwest has exactly one, so this is currently a formality that
-	   pays off the day the body face gains a second. */
+	   nearest. PP Mondwest now ships three (200/300/400), so this pairing is load-
+	   bearing rather than the formality it was when the face had one cut: drop the
+	   weight here and reading text silently renders in the Regular. */
 	font-family: var(--font-body);
 	font-weight: var(--font-body-weight, 400);
 	font-size: var(--font-body-size, var(--font-size-3, 16px));

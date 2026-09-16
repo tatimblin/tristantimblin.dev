@@ -1,4 +1,6 @@
 /* FONT LOADING — the site's five faces, self-hosted, plus metric-matched fallbacks.
+ * (Five FACES, eight files: Migra, PP Mondwest and Neue Montreal each ship more than
+ * one cut under a single family name, so the browser matches by weight.)
  *
  * The files are built by tools/fonts/build.sh (latin subsets of the vendor
  * originals) and served from /fonts with a one-year immutable cache (public/_headers).
@@ -37,8 +39,10 @@
  *   FS Mondwest  upm 2048  asc 0.7256  desc 0.2954  gap 0       xHeight 0.2822
  *   PP Mondwest  upm 4096  asc 0.7598  desc 0.2400  gap 0.0200  xHeight 0.4400
  *   Neue Montrl  upm 1000  asc 0.9580  desc 0.2420  gap 0       xHeight 0.5100
- * (All four Neue Montreal cuts share those metrics — Semibold's x-height differs by
- * 0.001 em — so one size-adjust and one fallback cover the whole family.)
+ * (All three PP Mondwest cuts share those metrics EXACTLY — the thinned weights hold
+ * upm, cap height, x-height and every advance width fixed — and all four Neue Montreal
+ * cuts share theirs, Semibold's x-height differing by 0.001 em. So in both families one
+ * size-adjust and one fallback cover the whole family.)
  * Fallback x-heights: Georgia 0.4814, Arial 0.5186.
  * Re-run the same arithmetic if a face is ever swapped — or delete the fallback
  * faces and drop them from the stacks; the plain system fallback still works, it
@@ -77,8 +81,46 @@
 	src: url("/fonts/fs-mondwest-bold.woff2") format("woff2");
 }
 
-/* PP Mondwest — body. One cut only; see the font-synthesis-weight note in
-   global.css for why nothing asks it for a bold. */
+/* PP Mondwest — body. THREE cuts under one family, on the same reasoning as Migra
+   and Neue Montreal above: the browser matches by font-weight and never synthesises.
+   Light (300) is what reading text is set in (--font-body-weight); Thin (200) is
+   built and served but holds no role yet; Regular (400) is the original, and is what
+   anything asking for 400-or-heavier still lands on.
+
+   LIGHTER, NOT SMALLER — why the body face moved off its Regular. Mondwest is a
+   bitmap design: a stem is a whole number of pixels on a 50-per-em grid, so Regular's
+   2 px stems are genuinely heavy at reading size, and the usual fix (drop the size)
+   was already spent — body sits at 16px and going below it costs legibility, not
+   weight. Light's 1.5 px stems take about 14% of the ink out at the SAME size, which
+   is the adjustment that was actually wanted. Thin (1 px, 72% of the ink) goes a step
+   further than running text should: at 16px a 1 px stem is close to a hairline and
+   the first thing to disappear on a low-DPR screen, which is why it is available
+   rather than assigned.
+
+   ONE size-adjust FOR ALL THREE, and it is the same 118.2% the Regular always
+   carried. That is not an assumption — the cuts were thinned in bitmap space with cap
+   height, x-height, upm and every advance width held fixed (verified: identical
+   across all three), so the optical normalisation onto Migra's x-height is unchanged
+   by the weight. The single "PP Mondwest Fallback" below covers the family for the
+   same reason. */
+@font-face {
+	font-family: "PP Mondwest";
+	font-style: normal;
+	font-weight: 200;
+	font-display: swap;
+	size-adjust: 118.2%;
+	src: url("/fonts/ppmondwest-thin.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "PP Mondwest";
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	size-adjust: 118.2%;
+	src: url("/fonts/ppmondwest-light.woff2") format("woff2");
+}
+
 @font-face {
 	font-family: "PP Mondwest";
 	font-style: normal;
@@ -135,7 +177,11 @@
 
 /* PP Mondwest → Arial. Arial is the metric proxy for the system-ui stack that
    follows it; -apple-system / Segoe / Roboto are all close to it. Body copy is
-   the bulk of every page, so this is the fallback that matters most. */
+   the bulk of every page, so this is the fallback that matters most.
+   No font-weight here, so this one face covers all THREE cuts — correct, since they
+   share their metrics exactly. A fallback is a box, not a colour: it is holding the
+   line length and line box steady across the swap, and the thinned weights set to
+   the same line length as the Regular by construction. */
 @font-face {
 	font-family: "PP Mondwest Fallback";
 	src: local("Arial");

@@ -47,11 +47,26 @@
 	 * paragraph's. At 16px it reads as body and the 18px step goes back to being
 	 * what it always was — the smallest heading (the homepage lede still uses it).
 	 *
-	 * WEIGHT. 400, and there is nothing lighter to move to: PP Mondwest ships a
-	 * single cut and global.css refuses font-synthesis, so asking for 300 renders
-	 * the 400 file unchanged. The token exists so the face and its weight travel
-	 * as a pair like every other role here, and so a face with more cuts can be
-	 * dialled in from this one line. */
+	 * WEIGHT. 300 (Light). This token used to read 400 with a note that there was
+	 * nothing lighter to move to — PP Mondwest shipped a single cut, and since
+	 * global.css refuses font-synthesis, asking for 300 rendered the 400 file
+	 * unchanged. There are now three cuts (fonts.css), so the request is real and
+	 * this is the one line that was always meant to do it.
+	 *
+	 * Lighter matters more in a bitmap face than the number suggests. Weight here
+	 * is stem width in whole grid pixels, so Regular's 2 px stems are heavy at
+	 * reading size — and the usual remedy, dropping the size, is already spent at
+	 * 16px (see SIZE above). Light's 1.5 px stems remove about 14% of the ink at
+	 * the SAME size, which is the correction the body role actually wanted.
+	 *
+	 * NOT 200. The Thin cut is built and served, but its 1 px stems are a hairline
+	 * at 16px and the first thing a low-DPR screen drops. It is available for a
+	 * display-scale use that wants it; running text is not that use.
+	 *
+	 * Nothing above 300 changes. The cuts are metrically identical, so this is a
+	 * change of colour, not of line length — no page reflows. And the DS
+	 * components that ask for 500/560 still land on the 400 file exactly as
+	 * before, since 400 remains the heaviest cut the family ships. */
 	/* The step BELOW the generated scale, which stops at --font-size-1 (14px).
 	 * Real small print — a photo credit, a pull-quote attribution, a ruler's year
 	 * marks, a caption bar — sits under that floor, so every one of those had to
@@ -62,8 +77,20 @@
 	 * rendered at its parent's size. A name for the step people keep needing. */
 	--font-size-0: 12px;
 
+	/* The steps BELOW the generated weight scale, which starts at 400. Same reason
+	 * as --font-size-0 above: tokens.generated.css is re-emitted from the upstream
+	 * @maximeheckel/design-system package, so it cannot be extended there without
+	 * the next regeneration dropping the addition. That scale was written for a
+	 * variable UI sans and never needed a sub-400 step; the body face now ships two
+	 * (fonts.css), and a weight asked for as a bare number is exactly the kind of
+	 * literal the rest of this file exists to name. 200/300 are the real
+	 * usWeightClass values of the Thin and Light cuts, so a request lands on a file
+	 * rather than being resolved to the nearest one. */
+	--font-weight-200: 200;
+	--font-weight-300: 300;
+
 	--font-body-size: var(--font-size-3);
-	--font-body-weight: var(--font-weight-400);
+	--font-body-weight: var(--font-weight-300);
 	--font-body-line-height: 1.7;
 	/* Mondwest's counters are tight at reading size; the 0.3px the DS's `spaced`
 	 * Text variant adds is doing real work, so the role keeps it rather than

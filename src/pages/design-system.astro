@@ -189,9 +189,9 @@ const faces = [
 	},
 	{
 		token: "--font-body",
-		name: "PP Mondwest",
+		name: "PP Mondwest Light",
 		use: "everything else; --font-sans and the DS --font-display alias it",
-		css: "font-family: var(--font-body);",
+		css: "font-family: var(--font-body); font-weight: var(--font-body-weight);",
 	},
 ];
 ---
@@ -355,8 +355,8 @@ const faces = [
 				<strong>What the four faces support</strong>, read out of the files in
 				<code>/fonts</code> rather than assumed — this is why some typographic advice
 				does not apply here. None of them is a <em>variable</em> font, so weights cannot
-				be nudged per theme; the cuts are Migra 500/700, Neue Montreal 400/600, and a
-				single cut each for FS Mondwest and PP Mondwest. None ships <code>smcp</code>, so
+				be nudged per theme; the cuts are Migra 500/700, Neue Montreal 400/600, PP Mondwest
+				200/300/400, and a single cut for FS Mondwest. None ships <code>smcp</code>, so
 				small caps would be faked — resized capitals, far too light — which is why
 				<code>font-synthesis-small-caps</code> is off in global.css. Old-style figures
 				(<code>onum</code>) exist only on Migra, the heading face; the body face has no
@@ -364,6 +364,13 @@ const faces = [
 				new face. Neue Montreal does ship <code>tnum</code>, which is what the numeric
 				role below uses. All three text faces ship <code>liga</code> and
 				<code>kern</code>.
+				PP Mondwest’s 200 and 300 are not vendor cuts: they are thinned from its
+				Regular in bitmap space — 2 px stems taken to 1.5 px and 1 px on the face’s own
+				50-per-em grid — with cap height, x-height and every advance width held fixed.
+				So they are drop-in: the same text sets to the same line length in all three, and
+				one <code>size-adjust</code> and one metric fallback cover the family. Reading
+				text is the 300; the 200 is served but holds no role, being close to a hairline
+				at 16px.
 			</p>
 			<Flex direction="column" gap={2} alignItems="start">
 				<Text class="ds-caps" family="mono" size={1}>ds-caps · section mark</Text>

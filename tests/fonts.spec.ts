@@ -30,7 +30,7 @@ const ROLES: Array<[string, string, string, number]> = [
 	["wordmark (hero)", ".sh__wordmark-text", "Migra", 500],
 	["heading (other stories)", ".sh__outline", "Migra", 700],
 	["hero lede", ".hero-intro__lede p", "FS Mondwest", 400],
-	["body copy", ".home__copy p", "PP Mondwest", 400],
+	["body copy", ".home__copy p", "PP Mondwest", 300],
 	["widget UI", ".home__widgets .ds-widget", "Neue Montreal", 400],
 	["widget figure", ".wx-stat-num", "Neue Montreal", 600],
 	["ruler year mark", ".vc__tick-year", "Neue Montreal", 400],
@@ -41,6 +41,8 @@ const FILES = [
 	"migra-bold.woff2",
 	"fs-mondwest-bold.woff2",
 	"ppmondwest-regular.woff2",
+	"ppmondwest-thin.woff2",
+	"ppmondwest-light.woff2",
 	"neue-montreal-regular.woff2",
 	"neue-montreal-semibold.woff2",
 ];
@@ -90,6 +92,60 @@ test("each built woff2 is served", async ({ request }) => {
 		const body = await res.body();
 		expect(body.byteLength, `/fonts/${file} is suspiciously small`).toBeGreaterThan(1000);
 	}
+});
+
+test("body copy gets the REAL Light cut, not the Regular standing in for it", async ({
+	page,
+}) => {
+	// The failure this exists for is invisible. --font-body-weight is 300 and
+	// font-synthesis-weight is none, so if ppmondwest-light.woff2 fails to build,
+	// ship or parse, the 300 request resolves to the 400 file and body copy renders a
+	// shade heavier — with the computed font-weight still reporting 300 and every
+	// other assertion in this file still passing.
+	//
+	// AND document.fonts.check() DOES NOT CATCH IT. That is a sharper version of the
+	// trap in this file's header: check() asks "can 300 be rendered?", and with the
+	// Light missing the answer is still yes, because CSS font matching falls back to
+	// the Regular within the same family. Verified by deleting the woff2 and
+	// re-running — check('300 16px "PP Mondwest"') stayed true.
+	//
+	// Nor can this be measured off the page. The cuts were thinned with every advance
+	// width held fixed precisely so they are interchangeable in layout, so the Light
+	// and the Regular set to identical boxes; there is no width or height to compare.
+	// What separates them is which FILE a face loaded from, so the assertion goes to
+	// the FontFace objects themselves: find the declared 300 face and require that it
+	// reached status "loaded" rather than "error" or "unloaded".
+	//
+	// The 200 is checked the same way. It has no role yet, which is exactly why
+	// nothing else would notice it going missing.
+	await page.goto("/");
+	await page.waitForFunction(() => document.fonts.status === "loaded", undefined, {
+		timeout: 15_000,
+	});
+	const state = await page.evaluate(async () => {
+		const el = document.querySelector<HTMLElement>(".home__copy p");
+		const cuts: Record<string, string> = {};
+		for (const f of Array.from(document.fonts as unknown as Set<FontFace>)) {
+			if (f.family.replace(/^["']|["']$/g, "") !== "PP Mondwest") continue;
+			// A face is only fetched when something on the page uses it, so ask for the
+			// ones no element happens to exercise (the 200) before reading status.
+			if (f.status === "unloaded") await f.load().catch(() => {});
+			cuts[f.weight] = f.status;
+		}
+		return { weight: el ? getComputedStyle(el).fontWeight : null, cuts };
+	});
+	expect(state.weight, "body copy is not asking for the Light cut").toBe("300");
+	// Each cut is declared exactly once, so a missing key means the @font-face rule
+	// itself went away — a different bug from the file failing to load, and worth
+	// telling apart in the failure message.
+	expect(Object.keys(state.cuts).sort(), "the three PP Mondwest cuts are not all declared").toEqual([
+		"200",
+		"300",
+		"400",
+	]);
+	expect(state.cuts["300"], 'the Light cut did not load — body copy is rendering in another cut').toBe("loaded");
+	expect(state.cuts["200"], "the Thin cut did not load").toBe("loaded");
+	expect(state.cuts["400"], "the Regular cut did not load").toBe("loaded");
 });
 
 test("the widget figure gets a REAL semibold, not a synthesised one", async ({
