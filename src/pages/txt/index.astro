@@ -17,6 +17,7 @@ import { getCollection } from "astro:content";
 import NewsroomLayout from "../../layouts/NewsroomLayout.astro";
 import FrontPage from "../../components/txt/FrontPage.astro";
 import { getTickerData } from "../../lib/ticker";
+import { railTags } from "../../lib/tags";
 
 const posts = (await getCollection("txt"))
 	.filter((post) => import.meta.env.PROD === false || !post.data.draft)
@@ -46,14 +47,10 @@ function toRomanLabel(n: number): string {
 	return out;
 }
 
-// Every tag in the collection, most-used first, for the category rail.
-const tagCounts = new Map<string, number>();
-for (const post of posts) {
-	for (const tag of post.data.tags) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
-}
-const allTags = [...tagCounts.entries()]
-	.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-	.map(([tag]) => tag);
+// The tags worth offering as sections, most-used first, for the category rail.
+// Not every tag in the collection: one carried by a single story is a label, not a
+// section, and the rail is a list of places to go. See src/lib/tags.ts.
+const railed = railTags(posts);
 
 // Weather + quotes, fetched daily by .github/workflows/ticker.yml and read here
 // at build time. A source that failed is absent rather than zeroed, so the
@@ -101,7 +98,7 @@ const tickerSegments = [
 	volume={volume}
 	issue={posts.length || undefined}
 	dateline={posts[0]?.data.date}
-	tags={allTags}
+	tags={railed}
 	ticker={tickerSegments}
 >
 	{

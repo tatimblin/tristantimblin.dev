@@ -15,11 +15,20 @@
 // noindex: seventeen tag pages over five stories is a lot of thin archive for a
 // crawler to chew on, and none of it is content that does not already exist on
 // /txt or the posts themselves.
+//
+// EVERY tag still gets a page, including the one-story ones the rail no longer
+// surfaces (src/lib/tags.ts). The rail rule is about what the publication OFFERS
+// as a section; it is not a reason to start 404ing URLs that already work and are
+// already linked from elsewhere. It would also delete the one case this route was
+// most carefully built for — FrontPage guards every region on length precisely so
+// a single-story category degrades to a lead alone, which is tested — and turn a
+// deliberate design into dead code. Unsurfaced, not unavailable.
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import NewsroomLayout from "../../../layouts/NewsroomLayout.astro";
 import FrontPage from "../../../components/txt/FrontPage.astro";
 import { getTickerData } from "../../../lib/ticker";
+import { railTags } from "../../../lib/tags";
 
 export const getStaticPaths = (async () => {
 	const posts = (await getCollection("txt")).filter(
@@ -49,18 +58,17 @@ interface Props {
 
 const { tag, posts } = Astro.props;
 
-// The rail lists every category, not just this one, so a reader can move sideways
-// between them. Built from the whole collection for that reason.
+// The rail lists every qualifying category, not just this one, so a reader can
+// move sideways between them. Built from the whole collection for that reason.
+//
+// `keep` carries THIS tag through even when it falls below the threshold. A page
+// reached from a story's metadata rather than from the rail is still a real page,
+// and its reader needs to see where they are; without this the rail would mark
+// nothing current. It does not surface the tag anywhere else.
 const everyPost = (await getCollection("txt")).filter(
 	(post) => import.meta.env.PROD === false || !post.data.draft
 );
-const tagCounts = new Map<string, number>();
-for (const post of everyPost) {
-	for (const t of post.data.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
-}
-const allTags = [...tagCounts.entries()]
-	.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-	.map(([t]) => t);
+const railed = railTags(everyPost, { keep: tag });
 
 const label = tag.replace(/-/g, " ");
 
@@ -126,7 +134,7 @@ const tickerSegments = [
 	volume={volume}
 	issue={posts.length || undefined}
 	dateline={posts[0]?.data.date}
-	tags={allTags}
+	tags={railed}
 	activeTag={tag}
 	ticker={tickerSegments}
 >
