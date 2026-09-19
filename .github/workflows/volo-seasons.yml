@@ -1,0 +1,63 @@
+name: Volo Seasons Collection
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6 AM UTC (offset from ticker's 5 AM). Games are
+                         # Tuesday evenings Pacific ≈ Wednesday 03:00 UTC, so this
+                         # picks up a result the same night it is recorded.
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write  # Required to commit and push the refreshed JSON
+
+jobs:
+  collect-seasons:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Trades VOLO_REFRESH_TOKEN for a short-lived access token, then pulls every
+      # season's schedule and scores from Volo's Hasura API and writes
+      # src/widgets/volo/volo.json. The script exits non-zero if no season has a
+      # single recorded result (stale-auth guard, since scores are PLAYER-only),
+      # so a broken credential never commits an empty widget.
+      - name: Fetch Volo seasons
+        run: bun tools/volo/fetch.mjs
+        env:
+          VOLO_REFRESH_TOKEN: ${{ secrets.VOLO_REFRESH_TOKEN }}
+          VOLO_ROTATED_TOKEN_FILE: ${{ runner.temp }}/volo-rotated
+
+      # Volo rotates the refresh token on every use (verified), so the secret must
+      # be replaced or tomorrow's run authenticates with a dead credential. The
+      # fetch script only writes this file when the returned token differs from
+      # the one sent. `if: always()` because the rotation happens before the data
+      # query — a token that rotated must be persisted even if the query then
+      # failed, or the rotation is lost and the account is stranded.
+      - name: Persist rotated refresh token
+        if: always() && hashFiles(format('{0}/volo-rotated', runner.temp)) != ''
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh secret set VOLO_REFRESH_TOKEN --body "$(cat "$RUNNER_TEMP/volo-rotated")"
+          rm -f "$RUNNER_TEMP/volo-rotated"
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- src/widgets/volo/volo.json; then
+            echo "No change to volo.json — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/widgets/volo/volo.json
+          git commit -m "Update Volo seasons - $(date +'%Y-%m-%d')"
+          git push

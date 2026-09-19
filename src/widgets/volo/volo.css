@@ -1,0 +1,637 @@
+/* Volo widget styles.
+ *
+ * Plain CSS (not an Astro scoped <style>) so these globally-reaching selectors
+ * survive verbatim, matching the other widgets. The .wx-volo/.wx-vl-* prefix
+ * keeps them contained; the .home__widgets prefix matches the page's widget-grid
+ * containment. Reuses DS tokens throughout — the only literal values are the
+ * team colour (which comes from Volo, per team, and is inline on the element)
+ * and hairlines too fine for the space scale. */
+
+.home__widgets .wx-volo {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	padding: var(--widget-pad);
+	overflow: hidden;
+
+	/* The nav overlays the header's top-right corner, so the header has to reserve
+	   exactly its width or the season label runs underneath it. Measured rather
+	   than guessed: two buttons of an icon plus their padding, and the gap
+	   between them. Both the nav and the reservation read this one value. */
+	--vl-arrow: var(--widget-font-md);
+	--vl-nav-w: calc(2 * (var(--vl-arrow) + 2 * var(--space-1)) + var(--space-1));
+
+	/* One game row. Fluid off the cell like the type it holds, so the list keeps
+	   its proportions as the tile grows. The ceiling is set by the worst case:
+	   nine games plus the header plus the career field have to fit the square. */
+	--vl-row: clamp(24px, calc(var(--widget-cell) * 0.121), 36px);
+	/* Every divider, and the bracket labels that sit on them, share one light
+	   rule colour. The structural layer stays quiet so the only colour in the
+	   list is the green/red margin segment. */
+	--vl-rule: color-mix(in srgb, var(--border-color) 60%, transparent);
+	/* The score column's width, which is also the margin scale: the zero point
+	   sits at its centre and a full-cap margin reaches its edge. */
+	--vl-range: clamp(64px, calc(var(--widget-cell) * 0.34), 110px);
+}
+
+/* SEASON NAV ---------------------------------------------------------------
+   Top-right, overlaying the panel stack so the panels get the full square to
+   divide. The panels' own header reserves room for it with padding-inline-end. */
+.home__widgets .wx-vl-nav {
+	position: absolute;
+	z-index: 2;
+	inset-block-start: var(--widget-pad);
+	inset-inline-end: var(--widget-pad);
+	display: flex;
+	gap: var(--space-1);
+}
+
+/* RAW <button> stripped of chrome — see the note beside it in Volo.astro. Only
+   the hit area, the focus ring and the colour transition are kept. */
+.home__widgets .wx-vl-arrow {
+	appearance: none;
+	margin: 0;
+	padding: var(--space-1);
+	border: 0;
+	background: none;
+	color: var(--text-tertiary);
+	font: inherit;
+	line-height: 0;
+	cursor: pointer;
+	border-radius: var(--border-radius-0);
+	transition: color var(--duration-swap) var(--ease-reveal);
+}
+.home__widgets .wx-vl-arrow:hover:not(:disabled) {
+	color: var(--text-primary);
+}
+.home__widgets .wx-vl-arrow:disabled {
+	/* Still legible, clearly inert — the end of the history is information. */
+	opacity: 0.3;
+	cursor: default;
+}
+.home__widgets .wx-vl-arrow:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: var(--space-1);
+}
+/* The DS icon set has one arrow and it points right; prev is it, turned round. */
+.home__widgets .wx-vl-arrow--prev svg {
+	transform: rotate(180deg);
+}
+.home__widgets .wx-vl-arrow svg {
+	display: block;
+	width: var(--vl-arrow);
+	height: var(--vl-arrow);
+}
+
+/* PANEL STACK --------------------------------------------------------------
+   Every season is rendered; one is shown. Stacked absolutely and cross-faded on
+   opacity + visibility, the same mechanism as Github.astro's .wx-gh-face —
+   visibility (not display) so the transition has something to animate and the
+   hidden panels stay out of the tab order. */
+/* GRID STACKING, not absolute positioning. Overlaying the panels with
+   `position: absolute; inset: 0` took them out of flow, so the container could
+   not size to them: it was `flex: 1` and a nine-game season simply overflowed
+   its box and collided with the career field below. As a single-cell grid the
+   container measures the TALLEST panel, which also means the career field sits
+   at one fixed height instead of jumping as the arrows move between a six- and
+   a nine-game season. */
+.home__widgets .wx-vl-panels {
+	display: grid;
+}
+.home__widgets .wx-vl-panel {
+	grid-area: 1 / 1;
+	display: flex;
+	flex-direction: column;
+	gap: var(--widget-gap);
+	opacity: 0;
+	visibility: hidden;
+	transition:
+		opacity var(--duration-swap) var(--ease-reveal),
+		visibility var(--duration-swap) var(--ease-reveal);
+}
+.home__widgets .wx-vl-panel.is-active {
+	opacity: 1;
+	visibility: visible;
+}
+@media (prefers-reduced-motion: reduce) {
+	.home__widgets .wx-vl-panel {
+		transition: none;
+	}
+}
+
+/* HEADER — team, season, league line, record. ------------------------------ */
+.home__widgets .wx-vl-head {
+	display: grid;
+	/* The season label sits to the LEFT of the nav, on the team's row. */
+	grid-template-columns: 1fr auto;
+	align-items: baseline;
+	column-gap: var(--space-2);
+	/* Room for the two arrows overlaying the top-right corner. */
+	padding-inline-end: calc(var(--vl-nav-w) + var(--space-3));
+}
+.home__widgets .wx-vl-head p {
+	margin: 0;
+}
+.home__widgets .wx-vl-team {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	font-size: var(--widget-font-lg);
+	font-weight: var(--font-weight-600);
+	line-height: var(--line-height-ui);
+	color: var(--text-primary);
+}
+.home__widgets .wx-vl-team-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+/* The team's own Volo colour, standing in for the league-badge slot a real
+   sports card would fill. Inline background from the data; a ring keeps a white
+   or near-background team readable in both themes. */
+.home__widgets .wx-vl-dot {
+	flex: none;
+	inline-size: 0.6em;
+	block-size: 0.6em;
+	border-radius: 50%;
+	background: var(--text-tertiary);
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--text-primary) 20%, transparent);
+}
+.home__widgets .wx-vl-season {
+	font-size: var(--widget-font-sm);
+	font-weight: var(--font-weight-600);
+	letter-spacing: var(--tracking-caps);
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+.home__widgets .wx-vl-sub,
+.home__widgets .wx-vl-record {
+	grid-column: 1 / -1;
+	font-size: var(--widget-font-sm);
+	line-height: var(--line-height-ui);
+	color: var(--text-tertiary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.home__widgets .wx-vl-record {
+	/* The one line a reader looks for first — the placing and the record — so it
+	   steps up out of the tertiary greys the rest of the subhead sits in. */
+	color: var(--text-secondary);
+	font-variant-numeric: tabular-nums;
+}
+
+/* GAME ROWS ----------------------------------------------------------------
+   The rows run one step up the fluid scale from a 1×1 widget's small print
+   (--widget-font-sm, not -xs). The scale is keyed to a single CELL so a 2×2
+   never grows its type — which is right, and is also why the step has to be
+   chosen here: this tile's content IS its rows, not a caption under a figure.
+
+   ONE GRID FOR ALL THE ROWS, not a grid per row. Each <li> being its own grid
+   was tried first and the columns did not line up: `auto` tracks size to their
+   own row's content, so "SEP 1" made a narrower date cell than "AUG 25" and the
+   opponents started at four different x positions down the tile. The rows are
+   `display: contents` so their four cells become items of THIS grid and the
+   tracks are shared.
+
+   Rows are ONE FIXED HEIGHT and the list does not stretch to fill. Seasons run
+   6–9 games; letting rows divide the available space made a 6-game season's
+   rows half again as tall as a 9-game season's, so the rhythm changed under the
+   reader every time the arrows moved. The slack at the bottom is not waste —
+   it is where the career field sits. */
+.home__widgets .wx-vl-games {
+	display: grid;
+	/* date | opponent | result | score. The bracket round has no column of its
+	   own — it rides the divider at the left edge instead, which costs the
+	   opponent names nothing and they run to 44 characters. */
+	grid-template-columns: auto minmax(0, 1fr) auto auto;
+	grid-auto-rows: var(--vl-row);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	/* Containing block for the bracket labels, which are positioned against the
+	   whole grid rather than any one cell so they can centre across the row. */
+	position: relative;
+}
+.home__widgets .wx-vl-game {
+	display: contents;
+}
+.home__widgets .wx-vl-game > *:not(.wx-vl-round) {
+	display: flex;
+	align-items: center;
+	/* Stretch so the rule is drawn at the ROW's top edge rather than the text's,
+	   and so the four cells' rules meet as one line. */
+	align-self: stretch;
+	font-size: var(--widget-font-sm);
+	line-height: var(--line-height-ui);
+	border-block-start: 1px solid var(--vl-rule);
+}
+/* Separation as padding, not column-gap: a gap would break the rule into
+   segments with notches between them. */
+.home__widgets .wx-vl-game > *:not(.wx-vl-round) + *:not(.wx-vl-round) {
+	padding-inline-start: var(--space-3);
+}
+/* …except the score, which carries its gap on the RESULT letter's trailing
+   edge instead. The margin segment's zero is 50% of this cell, and a leading
+   pad would put that 50% half a gap to the left of the figures it belongs to —
+   the score would sit visibly off its own origin. */
+.home__widgets .wx-vl-game > .wx-vl-score,
+.home__widgets .wx-vl-game > .wx-vl-time {
+	padding-inline-start: 0;
+}
+.home__widgets .wx-vl-game > .wx-vl-pill {
+	padding-inline-end: var(--space-3);
+}
+.home__widgets .wx-vl-game:first-child > *:not(.wx-vl-round) {
+	border-block-start: none;
+}
+
+/* MARGIN UNDERLINE --------------------------------------------------------
+   How decisive the result was, drawn on the row divider beneath the score.
+
+   ZERO-ANCHORED. Every bar starts from the same x — the centre of the score
+   column, marked by a tick — and runs right in green for a win, left in red for
+   a loss. That fixed origin is what makes the column comparable down the tile:
+   an earlier pass hung each bar off the right edge, so length was readable but
+   two rows' bars shared no baseline and a narrow win and a narrow loss looked
+   identical. With a zero point the reader sees the sign before the length.
+
+   Normalised against a FIXED per-sport cap (see marginCap() in volo.ts), never
+   against the season's own maximum: a per-season scale would silently restretch
+   every time the arrows moved and make a 5-run season look like a 27-run one. */
+.home__widgets .wx-vl-bar {
+	position: absolute;
+	/* −1px so it lands on the divider rather than above it. */
+	inset-block-end: -1px;
+	block-size: 2px;
+	inline-size: calc(50% * var(--m));
+	min-inline-size: 2px; /* a one-run game is still a result, not nothing */
+	background: var(--text-tertiary);
+}
+.home__widgets .wx-vl-game[data-result="W"] .wx-vl-bar {
+	inset-inline-start: 50%;
+	background: var(--success);
+}
+.home__widgets .wx-vl-game[data-result="L"] .wx-vl-bar {
+	inset-inline-end: 50%;
+	background: var(--danger);
+}
+/* A tie has no direction: it is the zero point, so it sits astride it. */
+.home__widgets .wx-vl-game[data-result="T"] .wx-vl-bar {
+	inset-inline-start: calc(50% - 2px);
+	inline-size: 4px;
+}
+
+/* The zero itself — a 0–0 game. Drawn on every played row so the origin is
+   visible as a column down the tile rather than inferred from where the bars
+   happen to begin. */
+.home__widgets .wx-vl-score::after {
+	content: "";
+	position: absolute;
+	inset-block-end: -3px;
+	inset-inline-start: calc(50% - 0.5px);
+	inline-size: 1px;
+	block-size: 6px;
+	background: var(--text-tertiary);
+}
+
+.home__widgets .wx-vl-date {
+	font-variant-numeric: tabular-nums;
+	/* No --tracking-caps here any more: that exists to open up an uppercase
+	   abbreviation, and these are figures now. On digits it just reads loose. */
+	color: var(--text-tertiary);
+}
+.home__widgets .wx-vl-opp {
+	min-inline-size: 0;
+	color: var(--text-primary);
+}
+/* The name has to be able to shrink for its own ellipsis to fire. */
+.home__widgets .wx-vl-opp-name {
+	min-inline-size: 0;
+}
+.home__widgets .wx-vl-opp-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+/* The opponent's standing, set small after the name. `flex: none` so it is the
+   NAME that ellipsises when the row is tight, never this — a truncated number
+   would be worse than no number. */
+.home__widgets .wx-vl-rank {
+	flex: none;
+	margin-inline-start: var(--space-2);
+	font-size: calc(var(--widget-font-xs) * 0.9);
+	font-variant-numeric: tabular-nums;
+	color: color-mix(in srgb, var(--text-tertiary) 70%, transparent);
+}
+/* Games not yet played read back, so a season in progress shows its results
+   first and its fixtures as the quieter remainder. */
+.home__widgets .wx-vl-game[data-result="upcoming"] .wx-vl-opp {
+	color: var(--text-tertiary);
+}
+
+/* The bracket round, centred across the row and set ON the divider above it —
+   a Final rendered identically to a week-3 fixture was the single biggest thing
+   the old list threw away.
+
+   Positioned against the GRID, not a cell: it has to centre on the full row
+   width, and no single cell's midpoint is that. Placing it as a real grid item
+   spanning 1/-1 does not work either — auto-placement refuses to put the row's
+   own cells into an area an explicitly-placed item already occupies, so the row
+   would be pushed down. Taking it out of flow avoids that, and the vertical
+   position is exact arithmetic rather than a guess: every row is --vl-row tall
+   with no row gap, so the divider above row i sits at --vl-row × i.
+
+   Given the card's own background so it knocks a gap in the rule, the way a
+   label on a rule should. */
+.home__widgets .wx-vl-round {
+	position: absolute;
+	inset-block-start: calc(var(--vl-row) * var(--vl-i, 0));
+	inset-inline-start: 50%;
+	transform: translate(-50%, -50%);
+	padding-inline: var(--space-2);
+	background: var(--card-background);
+	/* Below the fluid scale's smallest step on purpose: this is a margin note on
+	   a rule, not a row of content, and at --widget-font-xs it competed with the
+	   dates. */
+	font-size: calc(var(--widget-font-xs) * 0.82);
+	font-weight: var(--font-weight-600);
+	letter-spacing: var(--tracking-caps);
+	line-height: 1;
+	/* NOT --vl-rule. That colour is a 60%-alpha hairline: correct for a 1px line
+	   and completely unreadable as type — set that way the labels vanished
+	   entirely. This is the quietest step that is still legible as text. */
+	color: color-mix(in srgb, var(--text-tertiary) 62%, transparent);
+	white-space: nowrap;
+}
+
+/* The result, as a letter. It duplicates the margin segment's sign on purpose:
+   the segment answers "by how much" at a glance but its direction has to be
+   read against the zero, and a W or an L answers "did we win" without the
+   reader measuring anything. */
+.home__widgets .wx-vl-pill {
+	font-weight: var(--font-weight-600);
+	letter-spacing: var(--tracking-caps);
+	color: var(--text-tertiary);
+}
+.home__widgets .wx-vl-game[data-result="W"] .wx-vl-pill {
+	color: var(--success);
+}
+.home__widgets .wx-vl-game[data-result="L"] .wx-vl-pill {
+	color: var(--danger);
+}
+
+.home__widgets .wx-vl-score,
+.home__widgets .wx-vl-time {
+	/* FIGURES — the .ds-numeric role, matching .wx-stat-num in ../widgets.css.
+	   TABULAR because these figures stack down a column: proportional figures
+	   draw a "1" narrower than a "0", so 22–5 over 21–14 over 15–14 would not
+	   line up at their dashes. */
+	position: relative; /* anchors .wx-vl-bar */
+	font-family: var(--font-numeric);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	white-space: nowrap;
+	/* CENTRED, not right-aligned: the margin segment's zero sits at this cell's
+	   midpoint, so centring the figures puts the score directly above its own
+	   origin. Right-aligned they hung off to one side of it. */
+	justify-content: center;
+	/* Doubles as the margin scale — see .wx-vl-bar. Also holds the score column
+	   steady across rows and seasons so the figures form a line down the tile. */
+	min-inline-size: var(--vl-range);
+}
+.home__widgets .wx-vl-time {
+	color: var(--text-tertiary);
+	min-inline-size: 0;
+}
+.home__widgets .wx-vl-dash {
+	/* The en dash of a score span carries more side-bearing than the figures
+	   want at this size. */
+	padding-inline: 0.1em;
+	color: var(--text-tertiary);
+}
+.home__widgets .wx-vl-score--ff {
+	letter-spacing: var(--tracking-caps);
+	color: var(--text-tertiary);
+}
+/* A walkover credited a real score: the figures stand, the row says why. */
+.home__widgets .wx-vl-score[data-forfeit="true"] {
+	text-decoration: underline dotted;
+	text-underline-offset: 0.2em;
+}
+
+.home__widgets .wx-vl-empty {
+	margin: auto;
+	font-size: var(--widget-font-sm);
+	color: var(--text-tertiary);
+}
+
+/* The playoff rule is a visual grouping; this is the same fact in words, for a
+   screen reader (and what the date cell's title says on hover). */
+.home__widgets .wx-vl-vh {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* RANK BY SEASON ----------------------------------------------------------
+   A step chart of where the team finished, season by season, pinned to the
+   bottom of the tile and deliberately STATIC — the arrows move the schedule
+   above it, never this. It is the constant the seasons are read against.
+
+   The y axis is the FINAL placement after the playoffs, normalised by league
+   size — so the top of the chart means winning the thing, not topping the
+   table. The two differ sharply here: the table was topped four times and only
+   one became a title. Leagues also run 6 to 14 teams, so 2nd of 14 is a better
+   season than 1st of 6 and a raw-rank axis would draw it upside down. See
+   finalPlacement() and rankSeries() in volo.ts.
+
+   `margin-block-start: auto` is what pins it — the game list above takes its
+   natural height, and every pixel of slack lands here. */
+.home__widgets .wx-vl-career {
+	/* `auto` is what pins it: the stack above takes its natural height and every
+	   pixel of slack lands here. The inline reset is not decorative — this is a
+	   <figure>, and the UA sheet's `margin: 1em 40px` indents it otherwise. */
+	margin: auto 0 0;
+	padding-block-start: var(--widget-gap);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+.home__widgets .wx-vl-career-cap {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	/* Wraps rather than truncates. Three items — title, legend, stats — do not
+	   fit a 309px tile, and of the three the legend is the one that cannot be
+	   dropped: without it the two lines are unlabelled. The tile releases its
+	   square below 900px, so a second line costs height it has. */
+	flex-wrap: wrap;
+	gap: var(--space-1) var(--space-2);
+	font-size: var(--widget-font-xs);
+	line-height: var(--line-height-ui);
+	color: var(--text-tertiary);
+}
+.home__widgets .wx-vl-career-label {
+	font-weight: var(--font-weight-600);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+}
+/* Legend. The swatch is a ::before rather than an SVG so it inherits the line
+   colours from the same tokens the plot uses. */
+.home__widgets .wx-vl-legend {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	margin-inline-end: auto;
+	font-size: calc(var(--widget-font-xs) * 0.82);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	color: color-mix(in srgb, var(--text-tertiary) 70%, transparent);
+	white-space: nowrap;
+}
+.home__widgets .wx-vl-key {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+.home__widgets .wx-vl-key::before {
+	content: "";
+	inline-size: 10px;
+	block-size: 0;
+	border-block-start: 2px solid var(--vl-line, var(--text-primary));
+}
+.home__widgets .wx-vl-key--seed::before {
+	border-block-start: 1px dashed color-mix(in srgb, var(--text-tertiary) 70%, transparent);
+}
+
+.home__widgets .wx-vl-career-stats {
+	font-variant-numeric: tabular-nums;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.home__widgets .wx-vl-chart {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	column-gap: var(--space-2);
+	row-gap: var(--space-1);
+}
+/* 1st at the top, last at the bottom — the two ends of the axis, and nothing
+   in between, because there is no meaningful midpoint across leagues of
+   different sizes. */
+.home__widgets .wx-vl-axis {
+	grid-area: 1 / 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	font-size: calc(var(--widget-font-xs) * 0.82);
+	font-weight: var(--font-weight-600);
+	letter-spacing: var(--tracking-caps);
+	line-height: 1;
+	text-transform: uppercase;
+	color: color-mix(in srgb, var(--text-tertiary) 62%, transparent);
+}
+
+.home__widgets .wx-vl-plot {
+	grid-area: 1 / 2;
+	inline-size: 100%;
+	block-size: clamp(42px, calc(var(--widget-cell) * 0.23), 80px);
+	overflow: visible;
+}
+.home__widgets .wx-vl-plot path {
+	fill: none;
+	/* The plot box is stretched to the tile's width, so without this the strokes
+	   stretch with it and the horizontals go fat while the verticals stay thin. */
+	vector-effect: non-scaling-stroke;
+}
+.home__widgets .wx-vl-line {
+	stroke: var(--vl-line, var(--text-primary));
+	stroke-width: 1.5;
+	stroke-linejoin: round;
+}
+/* Where each season went INTO the playoffs. Set back from the finish line —
+   thinner and dashed — because it is the reference, and the gap between the two
+   is the thing worth seeing: a season that entered 4th and finished 2nd, or
+   topped the table and lost the Final.
+
+   The career-average line that used to live here is gone: with two series on
+   the axis, "the average" no longer has one meaning, and three lines in a 50px
+   plot is a thicket. */
+.home__widgets .wx-vl-seed {
+	stroke: color-mix(in srgb, var(--text-tertiary) 70%, transparent);
+	stroke-width: 1;
+	stroke-dasharray: 3 2;
+}
+
+.home__widgets .wx-vl-years {
+	grid-area: 2 / 2;
+	display: grid;
+	grid-template-columns: repeat(var(--vl-cols, 6), 1fr);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: calc(var(--widget-font-xs) * 0.82);
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+	color: color-mix(in srgb, var(--text-tertiary) 62%, transparent);
+}
+/* One equal column per year, matching the plot's time axis, so each label sits
+   over the slot its seasons occupy. */
+.home__widgets .wx-vl-year {
+	justify-self: center;
+}
+
+/* The one title. A star beside the team name on the season that won it. */
+.home__widgets .wx-vl-title {
+	color: var(--warning);
+	font-size: 0.8em;
+	line-height: 1;
+}
+
+/* ≤900px ------------------------------------------------------------------
+   Two things go wrong at this breakpoint, and both come from the same place.
+
+   The grid drops to two columns, so a 2×2 is full-bleed — and the DS fluid
+   scale is keyed to ONE CELL, which is now half this tile's width. Every value
+   it feeds lands on its clamp floor: rows collapse to 24px while the type stays
+   at 14px, and the list turns into a wall. The scale is right to key off the
+   cell (it stops a 2×2 growing its type on desktop), so the fix is local —
+   rescale the row off the width this tile ACTUALLY occupies, which is two cells
+   plus the gap between them.
+
+   The square goes too. A nine-game season plus the header plus the chart does
+   not fit ~343px, and releasing the aspect ratio beats dropping games or going
+   below the scale's floor. The videos tile sets the precedent for a widget
+   opting out of the DS aspect ratio. */
+@media (max-width: 900px) {
+	.home__widgets .wx-volo {
+		aspect-ratio: auto;
+		--vl-tile: calc(var(--widget-cell) * 2 + var(--space-5));
+		--vl-row: clamp(30px, calc(var(--vl-tile) * 0.095), 38px);
+	}
+	/* The bracket labels sit ON the dividers, so a tight row squeezes them from
+	   both sides — they need the same air the rows just got. */
+	.home__widgets .wx-vl-round {
+		padding-inline: var(--space-3);
+	}
+	/* On desktop the chart is separated from the list by whatever slack the
+	   season leaves; here the list runs right into it, so the gap has to be
+	   explicit. */
+	.home__widgets .wx-vl-career {
+		padding-block-start: var(--space-5);
+	}
+	/* Same rescale as the rows: keyed to one cell this lands on its floor. */
+	.home__widgets .wx-vl-plot {
+		block-size: clamp(52px, calc(var(--vl-tile) * 0.17), 80px);
+	}
+}
+

@@ -13,6 +13,7 @@ import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import BikeStats from "../widgets/bike-stats/BikeStats.astro";
 import Github from "../widgets/github/Github.astro";
 import Videos from "../widgets/videos/Videos.astro";
+import Volo from "../widgets/volo/Volo.astro";
 import "@whois/stories-heading/styles.css";
 import "@whois/dotted-grid/styles.css";
 import "@whois/video-carousel/styles.css";
@@ -308,6 +309,11 @@ import "../widgets/widgets.css";
 
 			<!-- 1×1 in column 3 alongside the 1×2 video cell. -->
 			<Github />
+
+			<!-- 2×2, and the first item that fits columns 1–2 of row 2 once the
+			     three 1×1s have filled row 1 — so it lands bottom-left with no
+			     explicit placement, purely from size + DOM order. -->
+			<Volo />
 		</WidgetGrid>
 	</div>
 </FullHeroLayout>
