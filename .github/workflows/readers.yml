@@ -1,0 +1,55 @@
+name: Readers Stats Collection
+
+on:
+  schedule:
+    - cron: '0 7 * * *'  # Daily at 7 AM UTC (offset from volo's 6 AM). Cloudflare
+                         # aggregates RUM within the hour, and the script re-reads a
+                         # 45-day window anyway, so the exact slot does not matter —
+                         # only that it does not collide with the other collectors.
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write  # Required to commit and push the refreshed JSON
+
+jobs:
+  collect-readers:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Reads Cloudflare Web Analytics (RUM) pageloads for tristantimblin.dev and
+      # MERGES the fresh window into src/widgets/readers/readers.json rather than
+      # overwriting it — Cloudflare retains RUM for ~90 days, so the committed file
+      # is what gives the widget a history longer than that. The script exits
+      # non-zero if the window comes back empty (stale-auth guard), so a broken
+      # token never commits a widget with its history truncated.
+      #
+      # CLOUDFLARE_ANALYTICS_TOKEN is NOT the deploy workflow's CLOUDFLARE_API_TOKEN:
+      # this one needs `Account → Account Analytics: Read`, and RUM is account-scoped,
+      # so it needs no zone permission at all.
+      - name: Fetch reader stats
+        run: bun tools/readers/fetch.mjs
+        env:
+          CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- src/widgets/readers/readers.json; then
+            echo "No change to readers.json — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/widgets/readers/readers.json
+          git commit -m "Update reader stats - $(date +'%Y-%m-%d')"
+          git push

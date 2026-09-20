@@ -200,3 +200,36 @@
 	 * long group feel abandoned. */
 	--reveal-stagger: 90ms;
 }
+
+/* A repair, not a retune. -----------------------------------------------
+ *
+ * tokens.generated.css emits `--success-emphasis:;` under .maximeheckel-dark —
+ * an EMPTY value, not a colour. Every other emphasis pair on that theme is a
+ * relative-colour expression (`oklch(from var(--danger) l c h / 10%)`); the
+ * success one is simply missing, and only the @supports fallback further down
+ * that file defines it. So in any browser that DOES support relative colour
+ * syntax — which is all of them now, which is why the fallback never fires —
+ * `--success-emphasis` resolves to nothing, `background: var(--pill-background)`
+ * becomes invalid at computed-value time, and .ds-pill--variant-success loses
+ * its fill entirely. The site defaults to the dark theme (Layout.astro sets the
+ * class on <html>), so that is the state a Pill ships in.
+ *
+ * Fixed here rather than in the generated file, which gen-tokens.mjs would
+ * clobber. This restores the pattern the other three variants already follow,
+ * and it repairs the success pill in the /design-system catalogue as well as
+ * the readers widget's.
+ *
+ * GUARDED BY THE SAME @supports THE GENERATED FILE TESTS, inverted. That file
+ * does define this token — but only inside `@supports not (color: rgb(from
+ * white r g b))`, as a literal, for browsers without relative colour syntax.
+ * An unconditional override here sits after that block at equal specificity,
+ * so it would win there too, and its own `oklch(from …)` is exactly what such
+ * a browser cannot resolve: the fallback would be shadowed by a value that
+ * does not work, and the pill would break again in the one place someone
+ * thought to catch it. Scoping this to browsers that DO support the syntax
+ * leaves that fallback reachable. */
+@supports (color: rgb(from white r g b)) {
+	.maximeheckel-dark {
+		--success-emphasis: oklch(from var(--green-900) l c h / 10%);
+	}
+}
