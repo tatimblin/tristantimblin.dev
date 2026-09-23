@@ -585,7 +585,9 @@
 	background: color-mix(in srgb, var(--text-primary) 6%, transparent);
 }
 /* The season on show. Tinted with the line's own colour so the band reads as
-   belonging to the chart rather than as a stray grey box. */
+   belonging to the chart rather than as a stray grey box. NOT gated on
+   :not(:disabled) — below 900px the bands are disabled as controls, but which
+   season is being shown is still worth saying. */
 .home__widgets .wx-vl-hit.is-active {
 	background: color-mix(in srgb, var(--vl-line, var(--text-primary)) 12%, transparent);
 }

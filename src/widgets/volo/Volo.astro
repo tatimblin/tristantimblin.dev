@@ -295,9 +295,10 @@ const lineColor = seasons[current]?.team.color ?? null;
 
 						    RENDERED DISABLED. The chart is readable without JavaScript and
 						    the active band is server-rendered, but nothing here WORKS until
-						    bind() runs — and a disabled button takes no hover styling and
-						    no pointer cursor, so no affordance is offered that cannot yet
-						    be honoured. bind() enables them. */}
+						    bind() runs — and a disabled button takes no hover styling, no
+						    pointer cursor and no tab stop, so no affordance is offered that
+						    cannot be honoured. bind() enables them, and only above 900px:
+						    see syncBands() for why they stay off on a phone. */}
 						<div class="wx-vl-hits">
 							{rank.points.map((point, i) => (
 								<button
@@ -401,13 +402,25 @@ const lineColor = seasons[current]?.team.color ?? null;
 			if (target !== undefined) select(Number(target));
 		};
 
+		// The bands are a DESKTOP affordance. Below 900px the grid drops to two
+		// columns and a year with four seasons divides its slot four ways, which
+		// leaves the narrowest band about 11px — well under any touch target. So
+		// they stay disabled at that size: no tap target that cannot be hit
+		// reliably, no tab stop that does nothing useful, and no pointer cursor
+		// promising something. The arrows are the control there. The breakpoint
+		// matches the one in volo.css; keep them in step.
+		const wide = window.matchMedia("(min-width: 901px)");
+		const syncBands = () => {
+			for (const hit of hits) hit.disabled = !wide.matches;
+		};
+
 		prev.addEventListener("click", onPrev);
 		next.addEventListener("click", onNext);
 		widget.addEventListener("keydown", onKey);
-		for (const hit of hits) {
-			hit.disabled = false; // see the note beside them in the markup
-			hit.addEventListener("click", onJump);
-		}
+		for (const hit of hits) hit.addEventListener("click", onJump);
+		// Re-evaluated on resize and rotation, not just at load.
+		wide.addEventListener("change", syncBands);
+		syncBands();
 
 		// The arrows only work once this ran, so this is where they earn their place.
 		nav.hidden = false;
@@ -417,6 +430,7 @@ const lineColor = seasons[current]?.team.color ?? null;
 			prev.removeEventListener("click", onPrev);
 			next.removeEventListener("click", onNext);
 			widget.removeEventListener("keydown", onKey);
+			wide.removeEventListener("change", syncBands);
 			for (const hit of hits) {
 				hit.removeEventListener("click", onJump);
 				hit.disabled = true;
