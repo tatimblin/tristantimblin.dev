@@ -22,6 +22,11 @@
  * Read-only: the schema exposes mutations that RSVP, register and pay, and this
  * script fires none of them.
  *
+ * NOR ANY LOCATION. The output carries no venue, city, league name or deep
+ * link. This file is public and is shipped to every visitor, and it already
+ * lists kick-off times — adding a place to that would publish a recurring
+ * answer to where its owner physically is on a given evening. See toSeason().
+ *
  * AN EMPTY SCORE IS NOT A TIE. A game with no game_scores rows has no recorded
  * result — not yet played, not yet scored, or postponed. Those are written with
  * null scores and render as upcoming fixtures. Reporting them as 0–0 would be
@@ -192,7 +197,6 @@ query Seasons($userId: uuid!) {
 			deep_link
 			seasonBySeason { name order }
 			sportBySport { name }
-			venueByVenue { shorthand_name city }
 			standings {
 				team
 				wins
@@ -349,17 +353,23 @@ function toSeason(registrant) {
 	return {
 		id: league._id,
 		sport: league.sportBySport?.name ?? "",
-		league: league.display_name || league.name || "",
-		// "Summer 2026" — Volo's own label, rather than one inferred from the
-		// start date. `order` sorts correctly across years.
+		// NO VENUE, CITY, LEAGUE NAME OR DEEP LINK — deliberately.
+		//
+		// This file is committed to a public repository and inlined into the page
+		// every visitor downloads. Together with the kick-off times it already
+		// carries, any of those four would publish a standing answer to "where is
+		// this person, every Tuesday at eight": the venue names the field, the
+		// league's display name carries the weekday AND the neighbourhood, and
+		// the deep link resolves to a page with the whole schedule on it.
+		//
+		// The sport stays. It says what the season is without saying where.
 		seasonLabel: league.seasonBySeason?.name ?? null,
 		seasonOrder: league.seasonBySeason?.order ?? null,
-		venue: league.venueByVenue?.shorthand_name ?? "",
-		city: league.venueByVenue?.city ?? "",
 		startDate: league.start_date,
+		// Coarse by nature (a whole US region) and load-bearing: kick-off times
+		// are UTC and format to the wrong DAY without it.
 		timezone: league.timezone || "America/Los_Angeles",
 		status: league.status ?? "",
-		deepLink: league.deep_link ?? null,
 		team: { name: team.name?.trim() || "", color: team.color_hex ?? null },
 		record: {
 			wins: standing?.wins ?? 0,

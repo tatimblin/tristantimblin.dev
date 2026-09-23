@@ -42,13 +42,12 @@ export interface VoloRecord {
 export interface VoloSeason {
 	id: string;
 	sport: string;
-	league: string;
-	venue: string;
-	city: string;
+	// No venue, city, league name or deep link — see tools/volo/fetch.mjs. The
+	// data file is public and ships to every visitor alongside kick-off times,
+	// so it carries no place.
 	startDate: string; // ISO instant, UTC
 	timezone: string; // IANA name; the VENUE's zone, not the build machine's
 	status: string;
-	deepLink: string | null;
 	seasonLabel: string | null; // Volo's own "Summer 2026"
 	team: { name: string; color: string | null };
 	record: VoloRecord;
@@ -110,9 +109,6 @@ function toSeason(raw: Record<string, unknown>): VoloSeason | null {
 	return {
 		id: str(raw.id),
 		sport: str(raw.sport),
-		league: str(raw.league),
-		venue: str(raw.venue),
-		city: str(raw.city),
 		startDate: str(raw.startDate),
 		seasonLabel: typeof raw.seasonLabel === "string" ? raw.seasonLabel : null,
 		// Volo runs leagues in several cities and this one's history spans two, so
@@ -120,7 +116,6 @@ function toSeason(raw: Record<string, unknown>): VoloSeason | null {
 		// PREVIOUS evening in Pacific, and formatting it naively shows the wrong day.
 		timezone: str(raw.timezone, "America/Los_Angeles"),
 		status: str(raw.status),
-		deepLink: typeof raw.deepLink === "string" ? raw.deepLink : null,
 		team: {
 			name: str(team.name),
 			color: typeof team.color === "string" ? team.color : null,

@@ -5,15 +5,11 @@
 		{
 			"id": "4c50bffb-2890-4dfb-a838-714fff55a9fa",
 			"sport": "Volleyball",
-			"league": "Volleyball (6v6 Coed) - Wednesday - National Landing Beach Volleyball (Arlington) - July 2021",
 			"seasonLabel": "Summer 2021",
 			"seasonOrder": 2800,
-			"venue": "Crystal City - Beach Courts",
-			"city": "Arlington",
 			"startDate": "2021-07-21T16:00:00+00:00",
 			"timezone": "America/New_York",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/RfBAUN91Y6bENuef8",
 			"team": {
 				"name": "Yext",
 				"color": "#f0e788"
@@ -156,15 +152,11 @@
 		{
 			"id": "59895e2d-afcf-4313-bd13-69f5bc7aa10c",
 			"sport": "Volleyball",
-			"league": "Tuesday - Beach Volleyball - Arlington",
 			"seasonLabel": "Spring 2022",
 			"seasonOrder": 3200,
-			"venue": "Crystal City - Beach Courts",
-			"city": "Arlington",
 			"startDate": "2022-05-10T16:00:00+00:00",
 			"timezone": "America/New_York",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/7zaW62xXXzR7QNdY7",
 			"team": {
 				"name": "Yext",
 				"color": "#14370d"
@@ -322,15 +314,11 @@
 		{
 			"id": "70af8758-d7fe-4fa6-a788-86bce12fbb30",
 			"sport": "Softball",
-			"league": "Tuesday - Softball - Potrero Hill",
 			"seasonLabel": "Fall 2023",
 			"seasonOrder": 3900,
-			"venue": "Jackson Playground",
-			"city": "San Francisco",
 			"startDate": "2023-10-10T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/TcLsmRwVfapkM1TK7",
 			"team": {
 				"name": "The Grass Stains",
 				"color": "#14370d"
@@ -488,15 +476,11 @@
 		{
 			"id": "5928d86e-114d-4043-95f4-b36197bd3f00",
 			"sport": "Softball",
-			"league": "Tuesday - Softball - Potrero Hill",
 			"seasonLabel": "Spring 2024",
 			"seasonOrder": 4200,
-			"venue": "Jackson Playground",
-			"city": "San Francisco",
 			"startDate": "2024-04-09T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/o5dXTUY2GcdL7JjA8",
 			"team": {
 				"name": "The Grass Stains 🏆",
 				"color": "#108b5d"
@@ -639,15 +623,11 @@
 		{
 			"id": "513a28af-3438-4783-8fce-500da2eb5a13",
 			"sport": "Softball",
-			"league": "Tuesday - Competitive Softball - Potrero Hill",
 			"seasonLabel": "Summer 2024",
 			"seasonOrder": 4300,
-			"venue": "Jackson Playground",
-			"city": "San Francisco",
 			"startDate": "2024-06-18T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/eHo2VDEr4coDcdUv7",
 			"team": {
 				"name": "The Grass Stains",
 				"color": "#86b660"
@@ -790,15 +770,11 @@
 		{
 			"id": "712cc392-ad98-4430-8e8c-8622a7750e1b",
 			"sport": "Volleyball",
-			"league": "Wednesday - Beach Volleyball - Mission Bay",
 			"seasonLabel": "Summer 2024",
 			"seasonOrder": 4300,
-			"venue": "Mission Bay Park",
-			"city": "San Francisco",
 			"startDate": "2024-07-24T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/8oh5RKCfR2FfbL5x7",
 			"team": {
 				"name": "Fernfield Timberwolves",
 				"color": "#108b5d"
@@ -911,15 +887,11 @@
 		{
 			"id": "27a56509-7295-428d-ab05-45cae03fd2cb",
 			"sport": "Softball",
-			"league": "Tuesday - Softball - Potrero Hill",
 			"seasonLabel": "Spring 2025",
 			"seasonOrder": 4700,
-			"venue": "Jackson Playground",
-			"city": "San Francisco",
 			"startDate": "2025-04-22T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/7GXzmKW4cMv9c4BQA",
 			"team": {
 				"name": "who cares?",
 				"color": "#e97299"
@@ -1062,15 +1034,11 @@
 		{
 			"id": "e0ddff37-c58e-4893-880b-6f16f3f73548",
 			"sport": "Softball",
-			"league": "Tuesday - Softball - Potrero Hill",
 			"seasonLabel": "Summer 2025",
 			"seasonOrder": 4800,
-			"venue": "Jackson Playground",
-			"city": "San Francisco",
 			"startDate": "2025-06-17T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/koN4Df4wQxTYsn2b7",
 			"team": {
 				"name": "who cares?",
 				"color": "#dd0584"
@@ -1198,15 +1166,11 @@
 		{
 			"id": "92992ffd-345f-44b4-befa-d296b9536653",
 			"sport": "Softball",
-			"league": "Tuesday - Coed Softball - Potrero Hill",
 			"seasonLabel": "Summer 2025",
 			"seasonOrder": 4800,
-			"venue": "Jackson Playground",
-			"city": "San Francisco",
 			"startDate": "2025-08-26T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/P86hoBC5kVagfc696",
 			"team": {
 				"name": "who cAre",
 				"color": "#e97299"
@@ -1349,15 +1313,11 @@
 		{
 			"id": "49f9ba26-8306-449b-96aa-5191c5d37ddb",
 			"sport": "Softball",
-			"league": "Tuesday - Coed Softball - Potrero Hill",
 			"seasonLabel": "Fall 2025",
 			"seasonOrder": 4900,
-			"venue": "Jackson Playground",
-			"city": "San Francisco",
 			"startDate": "2025-10-14T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/FSrAL8QiDz2EdyUQ7",
 			"team": {
 				"name": "who cares?",
 				"color": "#e97299"
@@ -1500,15 +1460,11 @@
 		{
 			"id": "bbfb978d-d2c2-4646-acb6-416d2383fb99",
 			"sport": "Softball",
-			"league": "Tuesday - Softball - Potrero Hill",
 			"seasonLabel": "Spring 2026",
 			"seasonOrder": 5200,
-			"venue": "Jackson Playground",
-			"city": "San Francisco",
 			"startDate": "2026-04-21T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "completed",
-			"deepLink": "https://links.volosports.com/12c96aab10988d1ca5c8",
 			"team": {
 				"name": "who cares",
 				"color": "#dd0584"
@@ -1651,15 +1607,11 @@
 		{
 			"id": "35de0726-f567-4c1a-8653-d95b48d64e97",
 			"sport": "Softball",
-			"league": "Tuesday - Softball - Potrero Hill",
 			"seasonLabel": "Summer 2026",
 			"seasonOrder": 5300,
-			"venue": "Jackson Playground",
-			"city": "San Francisco",
 			"startDate": "2026-06-16T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "active",
-			"deepLink": "https://links.volosports.com/05ce4ea21a6336bdc211",
 			"team": {
 				"name": "who cares",
 				"color": "#dc582a"
@@ -1787,15 +1739,11 @@
 		{
 			"id": "019fb9e1-69c7-4671-a5e4-03aeddffbd97",
 			"sport": "Softball",
-			"league": "Tuesday - Intermediate Softball - Potrero Hill",
 			"seasonLabel": "Summer 2026",
 			"seasonOrder": 5300,
-			"venue": "Jackson Playground",
-			"city": "San Francisco",
 			"startDate": "2026-08-18T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
 			"status": "active",
-			"deepLink": "https://links.volosports.com/7efbf647b84f52085230",
 			"team": {
 				"name": "who cares",
 				"color": "#219099"

@@ -141,7 +141,7 @@ const lineColor = seasons[current]?.team.color ?? null;
 							class:list={["wx-vl-panel", i === current && "is-active"]}
 							data-volo-panel={i}
 							aria-hidden={String(i !== current)}
-							aria-label={`${formatSeasonLabel(season)} — ${season.league}`}
+							aria-label={`${formatSeasonLabel(season)} — ${season.sport}`}
 						>
 							<header class="wx-vl-head">
 								<p class="wx-vl-team">
@@ -157,8 +157,12 @@ const lineColor = seasons[current]?.team.color ?? null;
 									)}
 								</p>
 								<p class="wx-vl-season">{formatSeasonLabel(season)}</p>
-								<p class="wx-vl-sub">{season.sport} · {season.venue}</p>
-								<p class="wx-vl-record">{formatRecord(season)}</p>
+								{/* Sport and record on one line. This used to be two, with
+								    the sport paired to the VENUE and the record beneath — but a
+								    place next to a fixture list says where its owner is on a
+								    given evening, so the place is gone and the line below moved
+								    up into it. */}
+								<p class="wx-vl-record">{season.sport} · {formatRecord(season)}</p>
 							</header>
 
 							<ol class="wx-vl-games">

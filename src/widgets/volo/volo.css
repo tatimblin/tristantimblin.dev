@@ -165,7 +165,6 @@
 	color: var(--text-tertiary);
 	white-space: nowrap;
 }
-.home__widgets .wx-vl-sub,
 .home__widgets .wx-vl-record {
 	grid-column: 1 / -1;
 	font-size: var(--widget-font-sm);
@@ -176,8 +175,9 @@
 	white-space: nowrap;
 }
 .home__widgets .wx-vl-record {
-	/* The one line a reader looks for first — the placing and the record — so it
-	   steps up out of the tertiary greys the rest of the subhead sits in. */
+	/* The one line a reader looks for first — sport, placing and record — so it
+	   steps up out of the tertiary grey the rest of the subhead sits in. It
+	   absorbed the sport when the venue line was removed. */
 	color: var(--text-secondary);
 	font-variant-numeric: tabular-nums;
 }
