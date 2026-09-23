@@ -265,6 +265,7 @@ const lineColor = seasons[current]?.team.color ?? null;
 							<span>Last</span>
 						</div>
 
+						<div class="wx-vl-plotwrap">
 						<svg
 							class="wx-vl-plot"
 							viewBox={`0 0 ${PLOT.w} ${PLOT.h}`}
@@ -287,6 +288,36 @@ const lineColor = seasons[current]?.team.color ?? null;
 							<path class="wx-vl-seed" d={seedPath} />
 							<path class="wx-vl-line" d={finishPath} />
 						</svg>
+
+						{/* One hit area per season, laid over the plot at exactly the span
+						    that season's steps occupy — same x maths, expressed as a
+						    percentage so it tracks the SVG however wide it stretches.
+
+						    RENDERED DISABLED. The chart is readable without JavaScript and
+						    the active band is server-rendered, but nothing here WORKS until
+						    bind() runs — and a disabled button takes no hover styling and
+						    no pointer cursor, so no affordance is offered that cannot yet
+						    be honoured. bind() enables them. */}
+						<div class="wx-vl-hits">
+							{rank.points.map((point, i) => (
+								<button
+									type="button"
+									class:list={["wx-vl-hit", i === current && "is-active"]}
+									data-volo-jump={i}
+									disabled
+									aria-current={i === current ? "true" : undefined}
+									style={`left:${(spans[i].x0 / PLOT.w) * 100}%;width:${((spans[i].x1 - spans[i].x0) / PLOT.w) * 100}%`}
+								>
+									<span class="wx-vl-vh">
+										{point.label}:{" "}
+										{point.rank
+											? `finished ${ordinal(point.rank)} of ${point.teams}`
+											: "still playing"}
+									</span>
+								</button>
+							))}
+						</div>
+						</div>
 
 						<ol class="wx-vl-years" style={`--vl-cols:${years.length}`}>
 							{years.map((year) => (
@@ -314,6 +345,9 @@ const lineColor = seasons[current]?.team.color ?? null;
 		const panels = Array.from(
 			stack.querySelectorAll<HTMLElement>("[data-volo-panel]"),
 		);
+		const hits = Array.from(
+			widget.querySelectorAll<HTMLButtonElement>("[data-volo-jump]"),
+		);
 		const prev = nav.querySelector<HTMLButtonElement>("[data-volo-prev]");
 		const next = nav.querySelector<HTMLButtonElement>("[data-volo-next]");
 		if (panels.length === 0 || !prev || !next) return () => {};
@@ -328,6 +362,11 @@ const lineColor = seasons[current]?.team.color ?? null;
 			panels.forEach((panel, i) => {
 				panel.classList.toggle("is-active", i === index);
 				panel.setAttribute("aria-hidden", String(i !== index));
+			});
+			hits.forEach((hit, i) => {
+				hit.classList.toggle("is-active", i === index);
+				if (i === index) hit.setAttribute("aria-current", "true");
+				else hit.removeAttribute("aria-current");
 			});
 			sync();
 		};
@@ -357,9 +396,18 @@ const lineColor = seasons[current]?.team.color ?? null;
 			select(step);
 		};
 
+		const onJump = (event: Event) => {
+			const target = (event.currentTarget as HTMLElement).dataset.voloJump;
+			if (target !== undefined) select(Number(target));
+		};
+
 		prev.addEventListener("click", onPrev);
 		next.addEventListener("click", onNext);
 		widget.addEventListener("keydown", onKey);
+		for (const hit of hits) {
+			hit.disabled = false; // see the note beside them in the markup
+			hit.addEventListener("click", onJump);
+		}
 
 		// The arrows only work once this ran, so this is where they earn their place.
 		nav.hidden = false;
@@ -369,6 +417,10 @@ const lineColor = seasons[current]?.team.color ?? null;
 			prev.removeEventListener("click", onPrev);
 			next.removeEventListener("click", onNext);
 			widget.removeEventListener("keydown", onKey);
+			for (const hit of hits) {
+				hit.removeEventListener("click", onJump);
+				hit.disabled = true;
+			}
 		};
 	}
 
