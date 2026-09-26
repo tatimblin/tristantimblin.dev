@@ -116,9 +116,14 @@ const { title, description, image, preloadMedia } = Astro.props;
 		   (The "tristan" wordmark is now a full-width SVG that fills the gutters at
 		   any size, so it no longer has a fixed type step here.) */
 		--heading-size: 2rem;
-		/* Full-width within the gutters: every hero region (scene, wordmark,
-		   heading, content rows) insets to --container-pad and spans edge-to-edge. */
-		--hero-inset: var(--container-pad);
+		/* Contained: every inset region (header, wordmark, heading, content rows)
+		   sits in the same box as .container — --container-pad gutters, capped at
+		   --container-max and centred. Above the cap the inset grows to absorb the
+		   extra width. The scene stays full-bleed behind it. */
+		--hero-inset: max(
+			var(--container-pad),
+			(100vw - var(--container-max)) / 2 + var(--container-pad)
+		);
 		/* SCENE-OWNED BOTTOM UI. A scene whose own interactive/legible UI hugs its
 		   BOTTOM edge (e.g. the carousel's date scrubber + caption) declares how much
 		   of that edge it occupies; the heading group then rests ABOVE it rather than

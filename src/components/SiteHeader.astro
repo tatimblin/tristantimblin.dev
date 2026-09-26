@@ -38,7 +38,9 @@ const links = [{ label: "Ergonomist", href: "/txt" }];
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-4, 1rem);
-		padding-inline: var(--container-pad, clamp(1rem, 4vw, 2rem));
+		/* --hero-inset when inside FullHeroLayout, so the bar shares the contained
+		   page box; the plain gutter everywhere else. */
+		padding-inline: var(--hero-inset, var(--container-pad, clamp(1rem, 4vw, 2rem)));
 		padding-block: var(--space-4, 1rem);
 		background: transparent;
 		/* Let pointers fall through the empty bar to the scene; the brand + links

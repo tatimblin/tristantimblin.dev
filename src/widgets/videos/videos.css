@@ -11,10 +11,21 @@
    grid so it inherits down to .vc__main; the grid reserves this much space to its
    right (plus the ruler↔card gap) so the ruler overhangs into the page gutter
    rather than stealing a content column. Keep in sync with
-   packages/video-carousel/src/styles.css → --vc-ruler-w. */
+   packages/video-carousel/src/styles.css → --vc-ruler-w.
+   The page is contained (FullHeroLayout caps --hero-inset at --container-max), so
+   on wide screens the margin outside the container already holds the ruler: only
+   the part it can't absorb is reserved, and once the margin is wide enough the
+   grid — and the card's right edge — runs to the container edge like every other
+   row. */
 .home__widgets .ds-widget-grid {
 	--vc-ruler-gutter: calc(4.5rem + 32px + 0.5rem);
-	padding-inline-end: calc(var(--vc-ruler-gutter) + var(--space-4));
+	--vc-outer-margin: calc(
+		var(--hero-inset, var(--container-pad)) - var(--container-pad)
+	);
+	padding-inline-end: max(
+		0px,
+		var(--vc-ruler-gutter) + var(--space-4) - var(--vc-outer-margin)
+	);
 }
 
 /* The video cell: pinned to the rightmost column, spanning the top two rows.
