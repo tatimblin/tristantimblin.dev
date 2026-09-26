@@ -70,6 +70,16 @@
 	z-index: 1;
 }
 
+/* Light theme: set the dots in the secondary ink rather than the primary. At full
+   --text-primary the halftone read as hard black specks on the white page; the
+   secondary step keeps the image legible but lets it sit back as a picture rather
+   than as type-weight ink. <dotted-grid> resolves --color-fg from its own computed
+   style and re-reads it on every theme change, so scoping the alias here is enough.
+   Dark keeps the primary ink: light dots on black already glow at the right weight. */
+.maximeheckel-light .home__widgets .wx-videos dotted-grid {
+	--color-fg: var(--text-secondary);
+}
+
 /* Top-align the carousel within the (possibly taller) 2-row cell. */
 .home__widgets .wx-videos video-carousel {
 	justify-content: flex-start;

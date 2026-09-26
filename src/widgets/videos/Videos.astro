@@ -34,6 +34,12 @@ import "./videos.css";
 	{/* Clip changes get the threshold transition here too, so the carousel behaves the
 	    same wherever it appears. No `intro` though: this cell is mid-page behind a
 	    scroll-driven dock, so a develop-in entrance would play unseen. */}
+	{/* Tone values are tuned once per theme: prepare-carousel.sh matches every
+	    clip's luma distribution to Redwoods, so one set per theme fits all clips.
+	    Dark keeps the clip's floor empty with sparse glowing dots. Light needs more
+	    ink for the same image (dark specks on white read fainter than light dots
+	    glowing on black), but not so much that the floor fills in and the tile
+	    reads as mostly black. */}
 	<VideoCarousel
 		rulerSide="right"
 		xfade={1600}
@@ -42,10 +48,11 @@ import "./videos.css";
 		dotScale={0.8}
 		cellSize={6}
 		levels={12}
-		gamma={0.4}
+		gamma={0.6}
 		contrast={1.1}
 		crosshatch={0}
-		cutoff={0.1}
+		cutoff={0.2}
+		light={{ gamma: 0.5, cutoff: 0.15, dotScale: 1 }}
 		denoise={1}
 		feather={0.4}
 	/>

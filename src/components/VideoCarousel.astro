@@ -89,6 +89,22 @@ interface Props {
 	denoise?: number;
 	crosshatch?: number;
 	/**
+	 * Tone overrides for the LIGHT theme, forwarded as the element's `light-*`
+	 * attributes (used while the backdrop is light). The same values don't read the
+	 * same in both themes: a small light dot on dark glows and reads larger than it
+	 * is, while the same dot in dark ink on a light page reads as a speck — so light
+	 * usually wants more ink (lower gamma/cutoff, a bigger dotScale). Omit to use
+	 * one set of values for both.
+	 */
+	light?: {
+		gamma?: number;
+		contrast?: number;
+		cutoff?: number;
+		feather?: number;
+		dotScale?: number;
+		levels?: number;
+	};
+	/**
 	 * Cap on the halftone's render DPR. The shader's cost is per-pixel and the two
 	 * consumers differ by an order of magnitude in canvas area, so a full-bleed
 	 * consumer should pass 1 while the footer card keeps the element's default of 2.
@@ -124,6 +140,7 @@ const {
 	feather,
 	denoise,
 	crosshatch,
+	light = {},
 	clips = [
 		{
 			src: "/videos/website-carousel/web/fisker-top-down.web.mp4",
@@ -386,6 +403,12 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				feather={feather}
 				denoise={denoise}
 				crosshatch={crosshatch}
+				light-gamma={light.gamma}
+				light-contrast={light.contrast}
+				light-cutoff={light.cutoff}
+				light-feather={light.feather}
+				light-dot-scale={light.dotScale}
+				light-levels={light.levels}
 				intro={intro}
 				intro-delay={introDelay}
 				xfade={xfade}
