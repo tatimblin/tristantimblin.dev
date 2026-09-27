@@ -37,6 +37,32 @@
 	--ssp-track: oklch(1 0 0 / 0.25);
 }
 
+/* LIGHT THEME. `tint` is dark-only by construction: the component clamps the
+   album colour to a 0.30–0.42 → 0.16 lightness gradient with fixed #f5f5f5 text,
+   and nothing in it reads the page theme — so on the light page the card was a
+   dark block among light ones. Re-tint from outside instead: a page rule on a
+   ::part() outranks the component's own shadow styles. Same album hue and the
+   same top-to-bottom build as the dark version, mirrored — deepest at the top,
+   palest behind the text at the bottom — in the pale register the Bay Wheels
+   card uses. The chroma cap keeps a saturated cover from going candy.
+   --ssp-cover-color is set on the host by the component's own cover sampling;
+   the fallback (no sample, e.g. a tainted canvas) is a DS grey, whose hue is all
+   that survives the lightness override. */
+.maximeheckel-light .home__widgets .wx-nowplaying-widget spotify-player {
+	--ssp-accent: color-mix(in oklab, var(--text-primary) 85%, transparent);
+	--ssp-track: color-mix(in oklab, var(--text-primary) 15%, transparent);
+}
+
+.maximeheckel-light .home__widgets .wx-nowplaying-widget spotify-player::part(root) {
+	--_np-c: var(--ssp-cover-color, var(--gray-1000));
+	background: linear-gradient(
+		to bottom,
+		oklch(from var(--_np-c) 0.86 min(c * 0.6, 0.06) h),
+		oklch(from var(--_np-c) 0.95 min(c * 0.4, 0.03) h)
+	);
+	color: var(--text-primary);
+}
+
 /* Inner spacing so the gradient is full-bleed but art/text stay inset. Anchored
    to its own 12px base (not --widget-pad, whose 16px floor would shrink the art),
    scaling with the card via the shared --widget-cell primitive. */
