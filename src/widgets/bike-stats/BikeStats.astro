@@ -1,86 +1,71 @@
 ---
-// Bike Stats (Baywheels) — a self-contained widget showing ride totals in a
-// design-system Widget card, over an aurora background + animated bike
-// watermark. Data, styling, and the reveal animation all live in this module;
-// the page just drops <BikeStats /> into its <WidgetGrid>.
+// Bike Stats (Bay Wheels) — a 1×1 card in the instrument UI, built from the
+// design system's pieces (packages/design-system/CONVENTIONS.md → Instrument
+// UI). The header names the service and dates the reading; the body is the
+// running ride total drawn as a hairline graph (the latest bar lit), the total
+// as the big figure, and miles / hours as the stat pairs under it. Everything
+// is read at build time from bike-stats.csv (see ./bike-stats.ts), which the
+// baywheels-stats GitHub Action appends to daily — nothing runs client-side.
 import Widget from "@whois/design-system/Widget";
+import CardBody from "@whois/design-system/CardBody";
+import Mono from "@whois/design-system/Mono";
+import Figure from "@whois/design-system/Figure";
+import Stat from "@whois/design-system/Stat";
+import BarGraph from "@whois/design-system/BarGraph";
 import { getBikeStats } from "./bike-stats";
 import "./bike-stats.css";
 
-// Read at build time (frontmatter runs in Node) from bike-stats.csv, which the
-// baywheels-stats GitHub Action appends to daily.
 const bike = getBikeStats();
+
+const fmt = (n: number) => n.toLocaleString("en-US");
+
+// "Sep 14" — the day of the latest snapshot, parsed as UTC so the build
+// machine's zone can't shift it a day.
+const monthDay = (date: string) =>
+	new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
+		month: "short",
+		day: "numeric",
+		timeZone: "UTC",
+	});
+const monthYear = (date: string) =>
+	new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
+		month: "long",
+		year: "numeric",
+		timeZone: "UTC",
+	});
 ---
-
-<script>
-	// Slide the baywheels bike watermark in from the right the first time the
-	// widget scrolls into view. One-shot: unobserve after the first reveal.
-	//
-	// WIRED ON astro:page-load, NOT AT MODULE SCOPE — and the difference is a bug,
-	// not a style choice. Astro bundles this into a module that executes exactly
-	// ONCE, but the Layout uses ClientRouter, which REPLACES the DOM on every
-	// navigation. A module-scope observer therefore ends up watching a detached
-	// element while the fresh .wx-baywheels never receives .is-in — and the resting
-	// state in bike-stats.css is `opacity: 0`, so the bike stays invisible until a
-	// hard reload. (Reduced-motion users never saw it: that block forces it shown.)
-	//
-	// The data- marker keeps a re-wire of the SAME node a no-op, so the first load
-	// (where ClientRouter also fires astro:page-load) doesn't double-observe. Same
-	// shape as the hero-floor relay in src/pages/index.astro.
-	function wireBikeReveal() {
-		const bw = document.querySelector<HTMLElement>(".wx-baywheels");
-		if (!bw || bw.dataset.bikeRevealWired) return;
-		bw.dataset.bikeRevealWired = "true";
-		const io = new IntersectionObserver(
-			(entries, observer) => {
-				for (const entry of entries) {
-					if (entry.isIntersecting) {
-						bw.classList.add("is-in");
-						observer.unobserve(entry.target);
-					}
-				}
-			},
-			{ threshold: 0.35 },
-		);
-		io.observe(bw);
-	}
-
-	wireBikeReveal();
-	document.addEventListener("astro:page-load", wireBikeReveal);
-</script>
 
 <Widget
 	size="1x1"
+	title="bay wheels"
 	class="wx-baywheels"
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="1"
 >
-	<div class="wx-bw-head">
-		<img class="wx-bw-logo" src="/images/baywheels-logo.svg" alt="baywheels" />
-	</div>
-	<!-- The figures and labels stay raw <span>s, NOT DS <Text> — and nothing is lost
-	     by that. Their type is already a DS decision: .wx-stat-num / .wx-stat-label in
-	     widgets.css carry the face, the fluid size and the weight for the shared stat
-	     primitive, so every widget that uses the block gets the same setting without
-	     restating it in markup. Wrapping them in <Text> would mean passing size and
-	     weight that .home__widgets's (0,2,0) selectors immediately override, plus
-	     `spaced={false}` to turn OFF the DS default that would otherwise add 0.3px of
-	     tracking to a 32px figure and 1.75 leading to the label under it. That is more
-	     markup to arrive at the same pixels, with two of the three props there only to
-	     undo the component. -->
-	<div class="wx-bw-stats">
-		<div class="wx-stat">
-			<span class="wx-stat-num">{bike.rides}</span>
-			<span class="wx-stat-label">rides</span>
+	<Mono
+		slot="meta"
+		as="time"
+		variant="text"
+		datetime={bike.date}
+		title={bike.relativeDate}
+	>
+		{monthDay(bike.date)}
+	</Mono>
+
+	<CardBody class="wx-bw-body">
+		<!-- The running total since the first snapshot, bottom-anchored to zero so
+		     the heights are the real proportions; the latest bar is the one lit. -->
+		<BarGraph
+			class="wx-bw-graph"
+			values={bike.history}
+			lit="last"
+			aria-label={`Total rides, ${monthYear(bike.since)} to ${monthYear(bike.date)}: ${fmt(bike.history[0] ?? 0)} to ${fmt(bike.rides)}`}
+		/>
+		<Figure unit="rides">{fmt(bike.rides)}</Figure>
+		<div class="wx-bw-stats">
+			<Stat size="sm" value={fmt(bike.miles)} label="miles" />
+			<Stat size="sm" value={fmt(bike.hours)} label="hours" />
 		</div>
-		<div class="wx-stat">
-			<span class="wx-stat-num">{bike.miles}</span>
-			<span class="wx-stat-label">miles</span>
-		</div>
-		<div class="wx-stat">
-			<span class="wx-stat-num">{bike.hours}</span>
-			<span class="wx-stat-label">hours</span>
-		</div>
-	</div>
+	</CardBody>
 </Widget>
