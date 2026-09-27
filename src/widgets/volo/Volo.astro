@@ -5,10 +5,10 @@
 // The header is the season — sport and month, in caps — with the team, its
 // standing in a pill (the team's own Volo colour as the pill's dot) and small
 // round buttons stepping through the seasons on the right. Below it, ONE
-// season: every fixture as a mono table on hairlines — result letter in ink (win) or dim ink (loss), score over
-// a zero-anchored margin tick, the bracket round set on the rule it opens. The
-// accent lands once in the list: the next game, or a finished season's last
-// result.
+// season: every fixture as a mono table on hairlines — result letter in ink
+// (win) or dim ink (loss), score over a zero-anchored margin tick, the bracket
+// round set on the rule it opens. The accent lands once in the list: the next
+// game, or a finished season's last result.
 //
 // The bottom is ALL the seasons — a hairline step chart of where each ENDED,
 // after the playoffs, that does NOT move when the arrows do; the season in
@@ -286,7 +286,7 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 										{/* Always rendered, even when empty: the rows are
 										    `display: contents` over one shared grid, so a row that
 										    skipped a cell would shift every column after it. */}
-										<Mono class="wx-vl-pill">{game.result}</Mono>
+										<Mono class="wx-vl-result">{game.result}</Mono>
 										{game.result ? (
 											game.forfeit && !game.for && !game.against ? (
 												/* A forfeit recorded as 0–0 is not a 0–0 game. */

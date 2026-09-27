@@ -26,11 +26,11 @@
  * that is wrong when it is missing — is the tracking. */
 .ds-caps.ds-caps {
 	text-transform: uppercase;
-	letter-spacing: var(--tracking-caps, 0.1em);
+	letter-spacing: var(--tracking-caps, 0.14em);
 	/* Tracking adds space AFTER each letter, including the last one, which leaves
 	   a phantom indent at the end of the run. Visible whenever a caps label is
 	   centred, right-aligned, or sits inside a border/background. */
-	margin-inline-end: calc(-1 * var(--tracking-caps, 0.1em));
+	margin-inline-end: calc(-1 * var(--tracking-caps, 0.14em));
 }
 
 .ds-caps--display.ds-caps--display {

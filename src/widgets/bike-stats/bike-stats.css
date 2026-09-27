@@ -17,7 +17,8 @@
 }
 
 /* The Lyft e-bike, drawn in ink. /images/lyft-ebike-ink.png is an alpha mask
-   derived from the product render (/images/lyft-ebike-sideview.png): tonal
+   derived from the product render (tools/bike-stats/lyft-ebike-sideview.png, kept
+   out of public/ because only the mask ships): tonal
    darkness plus traced edges, cropped to the bike, floor shadow removed. As a
    mask it has no colour of its own; the box's fill gives it one, so it is the
    ink token in either theme (dark on bone, light on the dark card) with no

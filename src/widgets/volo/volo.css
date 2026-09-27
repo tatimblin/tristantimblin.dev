@@ -189,7 +189,7 @@
 .home__widgets .wx-vl-game > .wx-vl-time {
 	padding-inline-start: 0;
 }
-.home__widgets .wx-vl-game > .wx-vl-pill {
+.home__widgets .wx-vl-game > .wx-vl-result {
 	padding-inline-end: var(--space-3);
 }
 
@@ -221,13 +221,13 @@
 
 /* The result letter. A win is the ink, a loss the dim ink, a tie between: the
    instrument's strengths, not a traffic light. */
-.home__widgets .wx-vl-pill {
+.home__widgets .wx-vl-result {
 	color: var(--text-tertiary);
 }
-.home__widgets .wx-vl-game[data-result="W"] .wx-vl-pill {
+.home__widgets .wx-vl-game[data-result="W"] .wx-vl-result {
 	color: var(--text-primary);
 }
-.home__widgets .wx-vl-game[data-result="T"] .wx-vl-pill {
+.home__widgets .wx-vl-game[data-result="T"] .wx-vl-result {
 	color: var(--text-secondary);
 }
 
@@ -261,7 +261,7 @@
 /* THE ACCENT, ONCE in the list: the next game's time, or — in a season with
    nothing left to play — its last result. */
 .home__widgets .wx-vl-game[data-lit="true"] .wx-vl-time,
-.home__widgets .wx-vl-game[data-lit="true"][data-result] .wx-vl-pill {
+.home__widgets .wx-vl-game[data-lit="true"][data-result] .wx-vl-result {
 	color: var(--accent);
 }
 .home__widgets .wx-vl-game[data-lit="true"][data-result="upcoming"] .wx-vl-opp {

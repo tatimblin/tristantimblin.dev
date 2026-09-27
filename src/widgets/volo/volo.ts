@@ -15,7 +15,6 @@ export type GameResult = "W" | "L" | "T";
 export interface VoloGame {
 	startTime: string; // ISO instant, UTC
 	opponent: string;
-	opponentColor: string | null;
 	opponentRank: number | null; // where they FINISHED the league
 	opponentSeed: number | null; // their playoff seed, if they qualified
 	playoff: boolean;
@@ -80,7 +79,6 @@ function toGame(raw: Record<string, unknown>): VoloGame {
 	return {
 		startTime: str(raw.startTime),
 		opponent: str(raw.opponent, "TBD"),
-		opponentColor: typeof raw.opponentColor === "string" ? raw.opponentColor : null,
 		opponentRank: int(raw.opponentRank),
 		opponentSeed: int(raw.opponentSeed),
 		playoff: Boolean(raw.playoff),
@@ -267,7 +265,7 @@ export function marginRatio(game: VoloGame, sport: string): number {
 	return Math.min(1, Math.abs(game.for - game.against) / marginCap(sport));
 }
 
-/** "Semifinals" → "SEMI FINALS". Drawn in place of the margin bar. */
+/** "Semifinals" → "SEMI FINALS". Set on the divider above the game it opens. */
 export function formatRound(round: string | null): string | null {
 	if (!round) return null;
 	return round.replace(/([a-z])([A-Z])/g, "$1 $2").toUpperCase()
@@ -348,8 +346,6 @@ export interface RankPoint {
 
 export interface RankSeries {
 	points: RankPoint[];
-	mean: number; // mean placing
-	averageFinish: number; // mean RAW final rank
 	titles: number;
 	/** Every game ever played, which is the caption's headline. */
 	record: { wins: number; losses: number; ties: number };
@@ -366,9 +362,6 @@ export interface RankSeries {
  * of 6, and a chart of raw ranks would draw it as worse. `placing` is the share
  * of the league finished ahead of — 1 for a title, 0 for last — which is the
  * only quantity that means the same thing in every season.
- *
- * The headline stays as the mean RAW rank, because "2.6 average finish" is a
- * thing a person can picture and "0.77 mean placing" is not.
  */
 export function rankSeries(seasons: VoloSeason[]): RankSeries {
 	const scale = (position: number | null, teams: number) =>
@@ -398,18 +391,10 @@ export function rankSeries(seasons: VoloSeason[]): RankSeries {
 		};
 	});
 
-	const placed = points.filter((p) => p.placing !== null);
-	const ranked = points.filter((p) => p.rank !== null);
 	const games = seasons.flatMap((season) => season.games);
 
 	return {
 		points,
-		mean: placed.length
-			? placed.reduce((sum, p) => sum + (p.placing as number), 0) / placed.length
-			: 0,
-		averageFinish: ranked.length
-			? ranked.reduce((sum, p) => sum + (p.rank as number), 0) / ranked.length
-			: 0,
 		titles: seasons.filter((s) => s.champion).length,
 		record: {
 			wins: games.filter((g) => g.result === "W").length,

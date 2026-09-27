@@ -5,8 +5,10 @@
  * look for this site (colors, spacing, type) WITHOUT editing the generated
  * artifact — which would be clobbered the next time gen-tokens.mjs runs.
  *
- * Empty by default: the site currently adopts the DS look as-is. Add overrides
- * under :root (global) or .maximeheckel-light / .maximeheckel-dark (per theme).
+ * Overrides go under :root (global) or .maximeheckel-light / .maximeheckel-dark
+ * (per theme). What is here: the site's type roles and motion vocabulary, and
+ * the INSTRUMENT UI block — the accent, washes, ranks and hairlines the cards
+ * are drawn in.
  */
 
 :root {

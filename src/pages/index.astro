@@ -8,7 +8,6 @@ import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
 import Body from "@whois/design-system/Body";
 import Text from "@whois/design-system/Text";
-import "@whois/design-system/styles.css";
 import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import BikeStats from "../widgets/bike-stats/BikeStats.astro";
 import Github from "../widgets/github/Github.astro";
@@ -289,7 +288,7 @@ import "@whois/wobble-text/styles.css";
 
 	<!-- WIDGETS: an Apple-widgets-style grid at the foot of the page. Mixed
 	     sizes in non-packed DOM order so grid-auto-flow: dense re-packs holes;
-	     every cell is a DS Card. Placeholder/skeleton content for now.
+	     every cell is a DS Widget in the instrument UI (src/widgets/*).
 
 	     The cells carry data-reveal so the row eases in as one staggered group when
 	     scrolled to (see src/lib/reveal.ts). Order follows the VISUAL left-to-right
@@ -714,16 +713,6 @@ import "@whois/wobble-text/styles.css";
 	.home__widgets {
 		margin-block-start: var(--space-10);
 		padding-block-end: var(--space-10);
-	}
-
-	/* Mobile (≤900px): the video carousel is promoted into the hero scene (see
-	   .hero-carousel), so hide the footer copy here. Authored in THIS scope (not
-	   videos.css) so it out-specifies the DS's .ds-widget flex rule — a plain
-	   .wx-videos selector in videos.css loses to this scoped .home__widgets rule. */
-	@media (max-width: 900px) {
-		.home__widgets :global(.wx-videos) {
-			display: none;
-		}
 	}
 
 </style>

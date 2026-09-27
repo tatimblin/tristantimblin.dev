@@ -288,7 +288,6 @@ function toGame(game, teamId, rankByTeam, seedByTeam) {
 	return {
 		startTime: game.start_time,
 		opponent: opponent?.name?.trim() || "TBD",
-		opponentColor: opponent?.color_hex ?? null,
 		// Where the opponent FINISHED, which is not where they stood on the night
 		// — the widget labels it as a final placing rather than a live one.
 		opponentRank: (opponent && rankByTeam.get(opponent._id)) ?? null,

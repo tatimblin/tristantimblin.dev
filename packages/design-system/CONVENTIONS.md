@@ -50,7 +50,9 @@ import "@whois/design-system/styles.css";
 > **Gotcha:** tokens (`--space-*`, colors, …) are already global via
 > `Layout.astro`, but **component styles are not**. Any page that renders DS
 > components must `import "@whois/design-system/styles.css"` or they'll be
-> unstyled. (The homepage does not import it yet; the catalogue page does.)
+> unstyled — once per page, and a layout's import counts (`FullHeroLayout`
+> imports it, so the homepage doesn't repeat it; the catalogue page imports it
+> itself).
 
 **2. The prop model** — every component follows the same shape:
 

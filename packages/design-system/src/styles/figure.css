@@ -1,8 +1,8 @@
 /* Figure — the big numeral of the instrument UI: `120` on the metronome,
  * `1,457` over CONTRIBUTIONS. One number in the numeric face at REGULAR
- * weight — the thin numeral is the look; the stat block's old Semibold is the
- * one thing this must not be — with a caps mono unit set small beside it on
- * the baseline. The unit wraps under the number when a tile is too narrow for
+ * weight — the thin numeral is the look; a semibold figure is the one thing
+ * this must not be — with a caps mono unit set small beside it on the
+ * baseline. The unit wraps under the number when a tile is too narrow for
  * both; a figure that breaks mid-number is worse than a unit on its own line. */
 .ds-figure {
 	display: flex;
