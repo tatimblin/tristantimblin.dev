@@ -304,8 +304,7 @@
  * steps rather than typed as a new value, so it moves with the scales.
  * --emphasis (the accent at a tint, behind pills and callouts) is re-derived
  * because the generated one is spelled from --blue-900 directly, not from
- * --accent, and would otherwise stay blue. The inputs' focus colour follows for
- * the same reason.
+ * --accent, and would otherwise stay blue.
  *
  * --lit is what a step, a tile, a key looks like when it is ON: the accent on a
  * dark screen, but the INK on a light one, where full orange squares on bone
@@ -323,8 +322,6 @@
 	 * theme too) measures 4.7–4.9:1. Anything that puts type on --accent reaches
 	 * for this, never --white. */
 	--on-accent: oklch(21% 0.012 var(--gray-hue, 80));
-	--input-active: var(--accent);
-	--input-focus: var(--accent);
 }
 .maximeheckel-light {
 	--emphasis: oklch(from var(--accent) l c h / 8%);

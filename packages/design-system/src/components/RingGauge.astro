@@ -2,7 +2,7 @@
 // RingGauge — a thin ring gauge with an accent arc (styles/ring-gauge.css).
 //
 //   <RingGauge value={0.9} />
-//   <RingGauge value={0.35} segments={12} size="var(--space-12)">
+//   <RingGauge value={0.35} segments={12} diameter="var(--space-12)">
 //     <Mono variant="value">35%</Mono>
 //   </RingGauge>
 //
@@ -17,8 +17,9 @@ interface Props {
 	value: number;
 	/** Number of track segments; 0 (default) is a continuous track. */
 	segments?: number;
-	/** CSS length: the ring's outer size (default --space-10). */
-	size?: string;
+	/** CSS length: the ring's outer diameter (default --space-10). Not `size`,
+	 * which across the DS is a step on a named scale, never a length. */
+	diameter?: string;
 	/** Stroke width in px (default 1.5). */
 	stroke?: number;
 	label?: string;
@@ -31,7 +32,7 @@ const {
 	as = "span",
 	value = 0,
 	segments = 0,
-	size,
+	diameter,
 	stroke,
 	label,
 	class: className,
@@ -49,7 +50,7 @@ const trackDash =
 	segments > 0 ? `${100 / segments - GAP} ${GAP}` : undefined;
 
 const vars = [
-	size && `--ring-size:${size}`,
+	diameter && `--ring-size:${diameter}`,
 	stroke != null && `--ring-stroke:${stroke}`,
 	style,
 ]

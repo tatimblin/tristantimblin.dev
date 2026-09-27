@@ -694,15 +694,17 @@ const faces = [
 			<h2 class="ds-demo__h">RingGauge</h2>
 			<p class="ds-demo__note">
 				A hairline ring with one accent arc for <code>value</code> (0–1);
-				<code>segments</code> breaks the track into dashes. Children sit in the centre.
+				<code>segments</code> breaks the track into dashes; <code>diameter</code> is a
+				length (not <code>size</code>, which is a scale step everywhere else). Children
+				sit in the centre.
 			</p>
 			<Flex gap={6} wrap="wrap" alignItems="center">
 				<RingGauge value={0.9} />
 				<RingGauge value={0.35} segments={12} />
-				<RingGauge value={0.62} size="var(--space-12)" segments={24}>
+				<RingGauge value={0.62} diameter="var(--space-12)" segments={24}>
 					<Mono variant="value" size={1}>62%</Mono>
 				</RingGauge>
-				<RingGauge value={0.25} size="var(--space-13)" stroke={1}>
+				<RingGauge value={0.25} diameter="var(--space-13)" stroke={1}>
 					<Figure size="md" unit="bpm">120</Figure>
 				</RingGauge>
 			</Flex>
@@ -805,7 +807,7 @@ const faces = [
 							<Stat size="sm" value="10%" label="Reserve" />
 						</Flex>
 						<Flex gap={4} alignItems="center" style="margin-block-start: auto;">
-							<RingGauge value={0.9} segments={16} size="var(--space-11)" />
+							<RingGauge value={0.9} segments={16} diameter="var(--space-11)" />
 							<Legend items={[{ label: "A1", value: "10%" }, { label: "A2", value: "20%" }, { label: "A3", value: "70%" }]} />
 						</Flex>
 					</CardBody>

@@ -177,7 +177,15 @@ without it the stack holds its tallest face's height.
 </Widget>
 ```
 
-**Voices.**
+**Voices.** Two prop names recur and mean the same thing everywhere:
+`size` is a step on a named scale — the numeric steps on `Mono` are `Text`'s
+own scale (`size={1}` on either is `--font-size-1`; `Mono` adds `0`, the label
+step below it), and the `sm|md|lg|xl` steps on `Figure`/`Stat`/`IconButton`
+are those components' own — and never a length (a ring's `diameter` is a
+length, so it is not called `size`). `tone` is SEMANTIC — which ink, from the
+theme (`primary|secondary|tertiary|accent`) — where `color` is DATA: a
+specific colour a datum carries (a legend dot, a ruler segment, a team's own
+colour), passed as a CSS colour.
 - `Mono` — `variant="caps" | "text" | "value"` (caps label / dim sentence case /
   ink figure), `size={0|1|3}`, `tone="primary|secondary|tertiary|accent"`,
   polymorphic `as` (as an `a` it gets the link reset).
@@ -189,9 +197,10 @@ without it the stack holds its tallest face's height.
   | warning | danger`; `as="button"|"a"` makes it a pill button; an `Icon` in
   the default slot sits before the text.
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
-  = pill button. `IconButton` — same variants, `size="xs|small|large|xl"` (xs
-  is the pill's height, for a card header's meta slot), `rounded` = round
-  button.
+  = pill button. `IconButton` — same variants, `size="xs|small|large|xl"`,
+  `rounded` = round button. Upstream has only `small|large`; `xs` (the pill's
+  height, for a card header's meta slot) and `xl` (the one big control a
+  screen has) are this site's steps, an exception to the parity rule.
 
 **Hairline graphics.**
 - `Hairline` — `fade` (default true), `orientation="horizontal|vertical"`.
@@ -200,8 +209,8 @@ without it the stack holds its tallest face's height.
 - `BarGraph` — `values`, `max`, `lit={i|"last"|"max"}` (an index, where Tile's
   `lit` is a boolean), `height`, `label` (its accessible name; without one it
   is `aria-hidden`, as RingGauge is).
-- `RingGauge` — `value={0..1}`, `segments`, `size`, `stroke`, `label`;
-  children sit in the centre.
+- `RingGauge` — `value={0..1}`, `segments`, `diameter` (a length), `stroke`,
+  `label`; children sit in the centre.
 - `Legend` — `items=[{label, value?, color?}]` or `LegendItem` children (`label`,
   `value` prop or slot, `color`); dots take `--tone-N` by position.
 - `TileGrid` — `cols`, `rows`, `fit="width|height"`, `cells=[{level?, lit?,
