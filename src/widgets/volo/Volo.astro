@@ -1,20 +1,30 @@
 ---
-// Volo widget — a 2×2 tile in two registers.
+// Volo widget — a 2×2 card in the instrument UI, built from the design
+// system's pieces (packages/design-system/CONVENTIONS.md → Instrument UI).
 //
-// The top is ONE season: every fixture, with a margin bar showing how decisive
-// each result was, and the bracket round named in place of that bar once the
-// playoffs start. Back/next arrows step through thirteen seasons.
+// The header is the team, in caps, with its standing in a pill (the team's own
+// Volo colour as the pill's dot). Below it, ONE season: a month row with small
+// round buttons stepping through the seasons, then every fixture as a mono
+// table on hairlines — result letter in ink (win) or dim ink (loss), score over
+// a zero-anchored margin tick, the bracket round set on the rule it opens. The
+// accent lands once in the list: the next game, or a finished season's last
+// result.
 //
-// The bottom is ALL of them — a step chart of where each season ENDED, after
-// the playoffs, that does NOT move when the arrows do. It is there because the
-// interesting unit of this data is the career, not the season: one season is a
-// number, thirteen is a shape.
+// The bottom is ALL the seasons — a hairline step chart of where each ENDED,
+// after the playoffs, that does NOT move when the arrows do; the season in
+// progress is the accent, with a playhead dot. One season is a number,
+// thirteen is a shape.
 //
 // Data is read at build time from volo.json (see ./volo.ts), which the
 // volo-seasons Action regenerates daily. Every season is rendered server-side
 // as its own stacked panel and cross-faded by class — the same face-swap
 // mechanism Github.astro uses, and the reason the arrows fetch nothing.
 import Widget from "@whois/design-system/Widget";
+import CardBody from "@whois/design-system/CardBody";
+import Mono from "@whois/design-system/Mono";
+import Pill from "@whois/design-system/Pill";
+import IconButton from "@whois/design-system/IconButton";
+import Hairline from "@whois/design-system/Hairline";
 import Icon from "@whois/design-system/Icon";
 import {
 	currentSeasonIndex,
@@ -91,78 +101,120 @@ const stepPath = (key: "placing" | "seedPlacing") => {
 const finishPath = stepPath("placing");
 const seedPath = stepPath("seedPlacing");
 
-// "Us" gets the current season's colour, the way a team chart takes the team's.
-const lineColor = seasons[current]?.team.color ?? null;
+// The accent's one job in the chart: NOW. The season in progress (the one the
+// tile opens on) is drawn in the accent — its step, and a dot at its end like
+// the metronome's playhead — and every other season is ink. It sits at
+// whichever value that season has: its finish once it is decided, its seed
+// while it is still being played.
+const nowPoint = rank.points[current];
+const nowValue = nowPoint ? (nowPoint.placing ?? nowPoint.seedPlacing) : null;
+const nowSpan = nowPoint ? spans[nowPoint.index] : null;
+const now =
+	nowPoint && nowSpan && nowValue !== null
+		? {
+				path: `M${nowSpan.x0},${plotY(nowValue)}L${nowSpan.x1},${plotY(nowValue)}`,
+				left: (nowSpan.x1 / PLOT.w) * 100,
+				top: (plotY(nowValue) / PLOT.h) * 100,
+				dashed: nowPoint.placing === null,
+			}
+		: null;
+
+// The one row in a season's list that takes the accent: the next game if there
+// is one (what a reader looks this tile up for), else the last result.
+const accentRow = (season: (typeof seasons)[number]) => {
+	const next = season.games.findIndex((game) => !game.result);
+	return next >= 0 ? next : season.games.length - 1;
+};
+
+const opening = seasons[current];
 ---
 
 <Widget
 	size="2x2"
 	class="wx-volo"
+	title={opening?.team.name ?? "volo"}
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="3"
 >
+	{/* The standing, in the header's meta slot: the team's own Volo colour as
+	    the pill's glyph (brand art — the one colour that is not the family's),
+	    then placing and record. The header sits outside the panel stack, so the
+	    script swaps the title and this pill's text when the season changes; the
+	    server renders the season the tile opens on. */}
+	{opening && (
+		<Pill slot="meta" class="wx-vl-standing" data-volo-standing>
+			<span
+				class="wx-vl-dot"
+				data-volo-dot
+				style={opening.team.color ? `background:${opening.team.color}` : undefined}
+			/>
+			<span class="wx-vl-star" data-volo-star hidden={!opening.champion} title="Won the league">★</span>
+			<span data-volo-record>{formatRecord(opening)}</span>
+		</Pill>
+	)}
+
+	<CardBody class="wx-vl-body">
 	{
 		seasons.length === 0 ? (
 			/* The data file is generated, and the fetch script refuses to write an
 			   empty one — but a widget that renders nothing beats a build that dies
 			   if that ever changes. */
-			<p class="wx-vl-empty">No seasons yet.</p>
+			<Mono variant="text" class="wx-vl-empty">No seasons yet.</Mono>
 		) : (
 			<>
-				{/* SEASON NAV. Rendered `hidden` and unhidden by the script below, so a
-				    reader without JS gets one clean season rather than two dead arrows.
-				    RAW <button>s, not the DS <Button>: these are chrome drawn ON the
-				    tile, and DS Button's job is to add a fill, a height and a radius —
-				    which is the whole of what these must not have. Same reasoning as
-				    Github.astro's .wx-gh-body. */}
+				{/* SEASON NAV — the metronome's small round buttons. Rendered
+				    `hidden` and unhidden by the script below, so a reader without JS
+				    gets one clean season rather than two dead arrows. */}
 				<nav class="wx-vl-nav" aria-label="Season" hidden>
-					<button
+					<IconButton
 						class="wx-vl-arrow wx-vl-arrow--prev"
+						size="small"
+						rounded
 						type="button"
 						data-volo-prev
 						aria-label="Previous season"
 					>
 						<Icon name="arrow" size={3} />
-					</button>
-					<button
+					</IconButton>
+					<IconButton
 						class="wx-vl-arrow"
+						size="small"
+						rounded
 						type="button"
 						data-volo-next
 						aria-label="Next season"
 					>
 						<Icon name="arrow" size={3} />
-					</button>
+					</IconButton>
 				</nav>
 
 				<div class="wx-vl-panels" data-volo-panels>
-					{seasons.map((season, i) => (
+					{seasons.map((season, i) => {
+						const lit = accentRow(season);
+						return (
 						<section
 							class:list={["wx-vl-panel", i === current && "is-active"]}
 							data-volo-panel={i}
+							data-team={season.team.name}
+							data-color={season.team.color ?? ""}
+							data-record={formatRecord(season)}
+							data-champion={season.champion ? "true" : undefined}
 							aria-hidden={String(i !== current)}
 							aria-label={`${formatSeasonLabel(season)} — ${season.sport}`}
 						>
+							{/* The month row: the season's start and its sport, left of
+							    the round buttons that page through them. The team and
+							    record live in the card header; they are repeated here
+							    for a screen reader, which reads the panel, not the
+							    header the script rewrites. */}
 							<header class="wx-vl-head">
-								<p class="wx-vl-team">
-									<span
-										class="wx-vl-dot"
-										style={season.team.color ? `background:${season.team.color}` : undefined}
-									/>
-									<span class="wx-vl-team-name">{season.team.name}</span>
-									{season.champion && (
-										<span class="wx-vl-title" title="Won the league">
-											<span class="wx-vl-vh">League champions. </span>★
-										</span>
-									)}
-								</p>
-								<p class="wx-vl-season">{formatSeasonLabel(season)}</p>
-								{/* Sport and record on one line. This used to be two, with
-								    the sport paired to the VENUE and the record beneath — but a
-								    place next to a fixture list says where its owner is on a
-								    given evening, so the place is gone and the line below moved
-								    up into it. */}
-								<p class="wx-vl-record">{season.sport} · {formatRecord(season)}</p>
+								<Mono class="wx-vl-season">{formatSeasonLabel(season)}</Mono>
+								<Mono variant="text" class="wx-vl-sport">{season.sport}</Mono>
+								<span class="wx-vl-vh">
+									{season.team.name}, {formatRecord(season)}
+									{season.champion ? ". League champions." : "."}
+								</span>
 							</header>
 
 							<ol class="wx-vl-games">
@@ -171,27 +223,26 @@ const lineColor = seasons[current]?.team.color ?? null;
 										class="wx-vl-game"
 										data-result={game.result ?? "upcoming"}
 										data-playoff={game.playoff ? "true" : undefined}
+										data-lit={gameIndex === lit ? "true" : undefined}
 									>
 										{/* First, so it reads before the fixture it heads. It is
 										    positioned out of flow against the grid (see volo.css),
 										    so DOM order costs it nothing — and --vl-i is the row it
 										    sits above. */}
 										{game.playoff && (
-											<span
+											<Mono
 												class="wx-vl-round"
 												style={`--vl-i:${gameIndex}`}
 											>
 												{formatRound(game.round) ?? "PLAYOFF"}
-											</span>
+											</Mono>
 										)}
-										<span class="wx-vl-date" title={game.playoff ? "Playoff game" : undefined}>
+										<Mono variant="value" class="wx-vl-date" title={game.playoff ? "Playoff game" : undefined}>
 											{formatGameDate(game.startTime, season.timezone)}
-										</span>
-										<span class="wx-vl-opp">
+										</Mono>
+										<Mono variant="value" class="wx-vl-opp">
 											{/* Inner span so the name has a block container to
-											    ellipsize against — text-overflow does not apply to
-											    the flex cell itself, and these run to 44 characters
-											    ("Nathan's Famous Hot Dongs (Taylor's Version)"). */}
+											    ellipsize against — these run to 44 characters. */}
 											<span class="wx-vl-opp-name">{game.opponent}</span>
 											{/* Their standing, set small after the name. A bracket
 											    game names their SEED; anything else names where they
@@ -211,58 +262,61 @@ const lineColor = seasons[current]?.team.color ?? null;
 													</span>
 												) : null;
 											})()}
-										</span>
+										</Mono>
 										{/* Always rendered, even when empty: the rows are
 										    `display: contents` over one shared grid, so a row that
 										    skipped a cell would shift every column after it. */}
-										<span class="wx-vl-pill">{game.result}</span>
+										<Mono class="wx-vl-pill">{game.result}</Mono>
 										{game.result ? (
 											game.forfeit && !game.for && !game.against ? (
 												/* A forfeit recorded as 0–0 is not a 0–0 game. */
-												<span class="wx-vl-score wx-vl-score--ff">FF</span>
+												<Mono class="wx-vl-score wx-vl-score--ff">FF</Mono>
 											) : (
-												<span
+												<Mono
+													variant="value"
 													class="wx-vl-score"
 													style={`--m:${marginRatio(game, season.sport).toFixed(3)}`}
 													data-forfeit={game.forfeit ? "true" : undefined}
 												>
 													{game.for}<span class="wx-vl-dash">–</span>{game.against}
-													{/* The margin, as a rule on the divider beneath. */}
+													{/* The margin, as a tick on the divider beneath. */}
 													<span class="wx-vl-bar" />
-												</span>
+												</Mono>
 											)
 										) : (
-											<span class="wx-vl-time">
+											<Mono variant="value" class="wx-vl-time">
 												{formatGameTime(game.startTime, season.timezone)}
-											</span>
+											</Mono>
 										)}
 									</li>
 								))}
 							</ol>
 						</section>
-					))}
+						);
+					})}
 				</div>
 
 				{/* RANK BY SEASON — fixed. It deliberately does not respond to the
 				    arrows: it is the constant the seasons are read against. */}
-				<figure class="wx-vl-career" style={lineColor ? `--vl-line:${lineColor}` : undefined}>
+				<figure class="wx-vl-career">
+					<Hairline as="span" />
 					<figcaption class="wx-vl-career-cap">
-						<span class="wx-vl-career-label">Rank by season</span>
+						<Mono class="wx-vl-career-label">Rank by season</Mono>
 						<span class="wx-vl-legend">
-							<span class="wx-vl-key wx-vl-key--seed">Seed</span>
-							<span class="wx-vl-key wx-vl-key--finish">Finish</span>
+							<Mono class="wx-vl-key wx-vl-key--seed">Seed</Mono>
+							<Mono class="wx-vl-key wx-vl-key--finish">Finish</Mono>
 						</span>
-						<span class="wx-vl-career-stats">
+						<Mono variant="value" class="wx-vl-career-stats">
 							{rank.record.wins}–{rank.record.losses}
 							{rank.record.ties > 0 && <>–{rank.record.ties}</>}
 							{" · "}{rank.titles} title{rank.titles === 1 ? "" : "s"}
-						</span>
+						</Mono>
 					</figcaption>
 
 					<div class="wx-vl-chart">
 						<div class="wx-vl-axis">
-							<span>1st</span>
-							<span>Last</span>
+							<Mono>1st</Mono>
+							<Mono>Last</Mono>
 						</div>
 
 						<div class="wx-vl-plotwrap">
@@ -285,20 +339,27 @@ const lineColor = seasons[current]?.team.color ?? null;
 									.join(". ")
 							}
 						>
+							{/* Hairline rules at the two ends of the axis — the chart's
+							    frame, drawn as the instrument's quietest line. */}
+							<path class="wx-vl-rule" d={`M0,${plotY(1)}H${PLOT.w}M0,${plotY(0)}H${PLOT.w}`} />
 							<path class="wx-vl-seed" d={seedPath} />
 							<path class="wx-vl-line" d={finishPath} />
+							{now && <path class:list={["wx-vl-now-line", now.dashed && "is-seed"]} d={now.path} />}
 						</svg>
+
+						{now && (
+							<span
+								class="wx-vl-now"
+								style={`left:${now.left.toFixed(2)}%;top:${now.top.toFixed(2)}%`}
+								aria-hidden="true"
+							/>
+						)}
 
 						{/* One hit area per season, laid over the plot at exactly the span
 						    that season's steps occupy — same x maths, expressed as a
 						    percentage so it tracks the SVG however wide it stretches.
-
-						    RENDERED DISABLED. The chart is readable without JavaScript and
-						    the active band is server-rendered, but nothing here WORKS until
-						    bind() runs — and a disabled button takes no hover styling, no
-						    pointer cursor and no tab stop, so no affordance is offered that
-						    cannot be honoured. bind() enables them, and only above 900px:
-						    see syncBands() for why they stay off on a phone. */}
+						    RENDERED DISABLED: bind() enables them, and only above 900px
+						    (see syncBands() for why they stay off on a phone). */}
 						<div class="wx-vl-hits">
 							{rank.points.map((point, i) => (
 								<button
@@ -322,7 +383,7 @@ const lineColor = seasons[current]?.team.color ?? null;
 
 						<ol class="wx-vl-years" style={`--vl-cols:${years.length}`}>
 							{years.map((year) => (
-								<li class="wx-vl-year">'{year.slice(2)}</li>
+								<li class="wx-vl-year"><Mono>'{year.slice(2)}</Mono></li>
 							))}
 						</ol>
 					</div>
@@ -330,6 +391,7 @@ const lineColor = seasons[current]?.team.color ?? null;
 			</>
 		)
 	}
+	</CardBody>
 </Widget>
 
 <script>
@@ -349,6 +411,12 @@ const lineColor = seasons[current]?.team.color ?? null;
 		const hits = Array.from(
 			widget.querySelectorAll<HTMLButtonElement>("[data-volo-jump]"),
 		);
+		// The card header sits outside the panel stack, so it is rewritten from
+		// the panel's data when the season changes (see the meta Pill).
+		const title = widget.querySelector<HTMLElement>(".ds-card-header__title");
+		const dot = widget.querySelector<HTMLElement>("[data-volo-dot]");
+		const star = widget.querySelector<HTMLElement>("[data-volo-star]");
+		const record = widget.querySelector<HTMLElement>("[data-volo-record]");
 		const prev = nav.querySelector<HTMLButtonElement>("[data-volo-prev]");
 		const next = nav.querySelector<HTMLButtonElement>("[data-volo-next]");
 		if (panels.length === 0 || !prev || !next) return () => {};
@@ -364,6 +432,11 @@ const lineColor = seasons[current]?.team.color ?? null;
 				panel.classList.toggle("is-active", i === index);
 				panel.setAttribute("aria-hidden", String(i !== index));
 			});
+			const { team, color, record: standing, champion } = panels[index].dataset;
+			if (title && team) title.textContent = team;
+			if (dot) dot.style.background = color ?? "";
+			if (star) star.hidden = champion !== "true";
+			if (record && standing) record.textContent = standing;
 			hits.forEach((hit, i) => {
 				hit.classList.toggle("is-active", i === index);
 				if (i === index) hit.setAttribute("aria-current", "true");
