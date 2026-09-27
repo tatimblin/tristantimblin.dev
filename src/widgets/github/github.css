@@ -6,22 +6,23 @@
  * containment. The card chrome, the header, the tiles, the figure, the ruler and
  * the legend are all design-system components — only the flip is here. */
 
-/* Body — the flip surface. A <CardBody as="button">: a real <button> for
-   keyboard/focus, stripped of its native chrome so it reads as the card
-   interior (the DS body padding and flex column still apply). */
-.home__widgets .wx-gh-body {
-	position: relative;
-	inline-size: 100%;
+/* The flip surface: a transparent <button> laid over the whole body (the DS
+   body is the containing block), above the faces, so a tap anywhere on the
+   card interior flips it and the faces stay ordinary flow content in the
+   accessibility tree. */
+.home__widgets .wx-gh-flip {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	appearance: none;
 	margin: 0;
+	padding: 0;
 	border: 0;
 	background: none;
-	color: inherit;
-	font: inherit;
-	text-align: left;
 	cursor: pointer;
 }
 /* Inside, since the card clips: an inset ring instead of an outset one. */
-.home__widgets .wx-gh-body:focus-visible {
+.home__widgets .wx-gh-flip:focus-visible {
 	outline: 2px solid var(--accent);
 	outline-offset: calc(-1 * var(--space-1));
 	border-radius: var(--border-radius-1);

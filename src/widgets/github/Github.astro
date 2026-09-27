@@ -3,8 +3,11 @@
 // system's pieces (packages/design-system/CONVENTIONS.md → Instrument UI). The
 // card header (`github` + the @handle, which links out to the profile) sits
 // over a toggle: tap the body to cross-fade the contribution grid out and the
-// language breakdown in (tap again to flip back). Data is read at build time
-// from github.json (see ./github.ts); only the flip is client-side.
+// language breakdown in (tap again to flip back). The toggle is a transparent
+// <button> laid over the body — not a <button> AROUND it, which would flatten
+// the grid, the ruler and the legend into one control's name — with a fixed
+// accessible name and aria-pressed carrying the state. Data is read at build
+// time from github.json (see ./github.ts); only the flip is client-side.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Mono from "@whois/design-system/Mono";
@@ -24,9 +27,13 @@ const gh = getGithubStats();
 const weeks = gh.weeks;
 
 // Each day sits at its weekday row (Sun=1 … Sat=7) so partial weeks (the current
-// one) stay aligned to the correct rows. Parse as UTC to match the API dates.
-const weekday = (date: string): number =>
-	(new Date(`${date}T00:00:00Z`).getUTCDay() ?? 0) + 1;
+// one) stay aligned to the correct rows. Parse as UTC to match the API dates. A
+// date the API mangled parses to NaN, which would land as `grid-row: NaN` and
+// auto-place the tile; Sunday is the honest default.
+const weekday = (date: string): number => {
+	const day = new Date(`${date}T00:00:00Z`).getUTCDay();
+	return (Number.isNaN(day) ? 0 : day) + 1;
+};
 
 const total = gh.totalContributions.toLocaleString("en-US");
 
@@ -52,8 +59,8 @@ const langs = [
 	data-reveal-group="widgets"
 	data-reveal-order="2"
 >
-	<!-- The handle, in the header's meta slot. Outside the toggle button, so
-	     tapping it never flips (and so there's no <a> inside a <button>). -->
+	<!-- The handle, in the header's meta slot: outside the body the toggle
+	     covers, so tapping it never flips. -->
 	<Mono
 		slot="meta"
 		as="a"
@@ -66,16 +73,7 @@ const langs = [
 		@{gh.username}
 	</Mono>
 
-	<!-- The card body IS the flip surface: a real <button> only so the flip is
-	     keyboard- and focus-reachable; every piece of native button chrome is
-	     stripped in github.css so it reads as the card interior. -->
-	<CardBody
-		as="button"
-		class="wx-gh-body"
-		type="button"
-		aria-pressed="false"
-		aria-label="Show language breakdown"
-	>
+	<CardBody class="wx-gh-body">
 		<!-- Face A: the contribution grid as tiles — ordinary days the ink at two
 		     strengths, the big days lit in the accent — over the yearly total. -->
 		<div class="wx-gh-face wx-gh-face--grid">
@@ -86,7 +84,6 @@ const langs = [
 							<Tile
 								level={day.level}
 								style={`grid-column:${wi + 1};grid-row:${weekday(day.date)}`}
-								title={`${day.count} contribution${day.count === 1 ? "" : "s"} on ${day.date}`}
 							/>
 						)),
 					)
@@ -109,6 +106,17 @@ const langs = [
 				}))}
 			/>
 		</div>
+
+		<!-- The flip surface: a transparent <button> over the whole body, last in
+		     the DOM so the faces read before the control that swaps them. One name
+		     for both states — it always offers the languages; aria-pressed says
+		     whether they are showing. -->
+		<button
+			class="wx-gh-flip"
+			type="button"
+			aria-pressed="false"
+			aria-label="Show language breakdown"
+		></button>
 	</CardBody>
 </Widget>
 
@@ -119,7 +127,7 @@ const langs = [
 	// same lifecycle idiom as videos/Videos.astro).
 	function bind() {
 		const widget = document.querySelector<HTMLElement>(".wx-github");
-		const button = widget?.querySelector<HTMLButtonElement>(".wx-gh-body");
+		const button = widget?.querySelector<HTMLButtonElement>(".wx-gh-flip");
 		if (!widget || !button) return () => {};
 
 		const gridFace = widget.querySelector(".wx-gh-face--grid");
@@ -128,10 +136,6 @@ const langs = [
 		const onClick = () => {
 			const flipped = widget.classList.toggle("is-flipped");
 			button.setAttribute("aria-pressed", String(flipped));
-			button.setAttribute(
-				"aria-label",
-				flipped ? "Show contribution graph" : "Show language breakdown",
-			);
 			gridFace?.setAttribute("aria-hidden", String(flipped));
 			langFace?.setAttribute("aria-hidden", String(!flipped));
 		};
