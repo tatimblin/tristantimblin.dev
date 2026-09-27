@@ -1,29 +1,34 @@
 ---
 // Widget — a standard cell in a <WidgetGrid>. Wraps a DS Card so every widget
-// gets the card chrome for free, and applies the span classes for its size.
-// Adding a widget is just: <Widget size="2x2" title="…">…content…</Widget>.
+// gets the flat card chrome for free, applies the span classes for its size,
+// and draws the header row: `title` in the caps mono voice on the left, and
+// whatever is passed in the `meta` slot (a Pill, a handle, a date) on the
+// right, over the fading hairline. Body content goes in a <CardBody>, which
+// fills the rest of the cell (styles/widget-grid.css):
+//
+//   <Widget size="1x1" title="github">
+//     <Mono slot="meta" as="a" variant="text" href="…">@handle</Mono>
+//     <CardBody>…</CardBody>
+//   </Widget>
+//
+// The header is built here rather than by Card's `title` because a named slot
+// can only be forwarded to Card unconditionally, and an empty meta wrapper
+// would still take its place in the row.
 import { cx } from "../lib/cx";
 import Card from "./Card.astro";
+import CardHeader from "./CardHeader.astro";
 
 type Size = "1x1" | "2x1" | "1x2" | "2x2";
 
 interface Props {
 	size?: Size;
 	title?: string;
-	depth?: 0 | 1 | 2 | 3;
 	variant?: "primary" | "secondary" | "tertiary";
 	class?: string;
 	[key: string]: unknown;
 }
 
-const {
-	size = "1x1",
-	title,
-	depth,
-	variant,
-	class: className,
-	...rest
-} = Astro.props;
+const { size = "1x1", title, variant, class: className, ...rest } = Astro.props;
 
 const [w, h] = size.split("x").map(Number);
 const cls = cx(
@@ -32,8 +37,22 @@ const cls = cx(
 	h === 2 && "ds-widget--h2",
 	className,
 );
+
+const hasMeta = Astro.slots.has("meta");
 ---
 
-<Card class={cls} title={title} depth={depth} variant={variant} {...rest}>
+<Card class={cls} variant={variant} {...rest}>
+	{
+		title || hasMeta ? (
+			<CardHeader>
+				{title ? <span class="ds-card-header__title">{title}</span> : null}
+				{hasMeta ? (
+					<span class="ds-card-header__meta">
+						<slot name="meta" />
+					</span>
+				) : null}
+			</CardHeader>
+		) : null
+	}
 	<slot />
 </Card>

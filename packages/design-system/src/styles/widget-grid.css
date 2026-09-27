@@ -50,11 +50,52 @@
 	--widget-icon: clamp(20px, calc(var(--widget-cell) * 0.067), 30px);
 }
 
-/* Base cell: 1×1, square. Size modifiers extend the span and aspect. */
+/* Base cell: 1×1, square. Size modifiers extend the span and aspect.
+   A column, so a header + body stack and the body takes the rest of the cell;
+   and set in the UI face, because a widget is chrome — labels, figures, small
+   print — not prose. The instrument voices (Mono, Figure, Stat) set their own
+   faces on top; anything else in a widget inherits this one. */
 .ds-widget {
 	grid-column: span 1;
 	grid-row: span 1;
 	aspect-ratio: 1 / 1;
+	display: flex;
+	flex-direction: column;
+	font-family: var(--font-ui);
+}
+
+/* The card chrome at the widget's fluid scale (card.css sets the token
+   defaults). Header and body pad with --widget-pad, so they grow with the
+   cell; the body fills the cell below the header and stacks its children with
+   the widget gap. min-block-size: 0 so a flex child that measures itself (a
+   tile grid, a chart) can shrink to the cell instead of forcing it taller. */
+.ds-widget > .ds-card-header {
+	padding: var(--widget-pad) var(--widget-pad) var(--space-3);
+	font-size: var(--widget-font-xs);
+}
+.ds-widget > .ds-card-body {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--widget-gap);
+	padding: var(--widget-pad);
+}
+.ds-widget > .ds-card-header + .ds-card-body {
+	padding-block-start: var(--space-3);
+}
+/* Phone tiles (~160px): the full caps tracking costs a word a line, so the
+   header tightens rather than wraps or clips (Mono does the same, mono.css);
+   and the header row closes up a step, since every pixel of a 160px cell
+   that the header takes is one the body's graphic loses. */
+@media (max-width: 900px) {
+	.ds-widget > .ds-card-header {
+		padding-block: var(--space-3) var(--space-2);
+		letter-spacing: var(--tracking-mono);
+	}
+	.ds-widget > .ds-card-header + .ds-card-body {
+		padding-block-start: var(--space-2);
+	}
 }
 
 .ds-widget--w2 {

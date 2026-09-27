@@ -1,70 +1,89 @@
-/* Card — exact port of the DS Card.styles.tsx (CardWrapper, CardHeader, CardBody). */
+/* Card — the flat card of the instrument UI (see tokens.overrides.css,
+ * INSTRUMENT UI). A deliberate departure from the DS port: upstream's Card is
+ * a shadowed, optionally glassy surface with a `depth` scale, and none of that
+ * survives here. A card is a surface a few percent off the page with a 1px
+ * hairline round it — the reference dashboard card — and nothing else says
+ * "card". The `depth` prop is still accepted so call sites don't break, but it
+ * carries no rule: there is one depth, and it is flat. */
 
-/* CardWrapper = styled(Box, {...}) */
+/* CardWrapper */
 .ds-card {
 	position: relative;
 	background: var(--card-bg, var(--card-background));
-	backdrop-filter: var(--card-blur, none);
 	border-radius: var(--border-radius-2);
-	box-shadow: var(--card-shadow);
+	border: 1px solid var(--hairline);
+	box-shadow: none;
 	overflow: hidden;
-	--border: 1px solid var(--border-color);
-	border: var(--border);
-}
-
-/* depth → Shadows[0..3] (tokens/shadows.ts) */
-.ds-card--depth-0 {
-	--card-shadow: none;
-}
-.ds-card--depth-1 {
-	--card-shadow: 0.5px 1px 1px hsl(var(--shadow-color) / 0.333);
-}
-.ds-card--depth-2 {
-	--card-shadow:
-		1px 2px 2px hsl(var(--shadow-color) / 0.333),
-		2px 4px 4px hsl(var(--shadow-color) / 0.333),
-		3px 6px 6px hsl(var(--shadow-color) / 0.333);
-}
-.ds-card--depth-3 {
-	--card-shadow:
-		1px 2px 2px hsl(var(--shadow-color) / 0.2),
-		2px 4px 4px hsl(var(--shadow-color) / 0.2),
-		4px 8px 8px hsl(var(--shadow-color) / 0.2),
-		8px 16px 16px hsl(var(--shadow-color) / 0.2),
-		16px 32px 32px hsl(var(--shadow-color) / 0.2);
 }
 
 /* variant */
 .ds-card--variant-primary {
 	--card-bg: var(--card-background);
 }
+/* "Secondary" was the glass material. On a flat surface the same job — a card
+   that sits on another surface without asserting its own — is an ink wash, which
+   follows whatever it lands on in both themes. */
 .ds-card--variant-secondary {
-	--card-bg: oklch(from var(--gray-900) l c h / var(--opacity, 0.3));
-	--border: var(--thickness, 1px) solid oklch(from var(--gray-1100) l c h / 15%);
+	--card-bg: var(--wash-1);
 }
 .ds-card--variant-tertiary {
 	--card-bg: transparent;
 }
 
-/* CardHeader = styled('div', {...}) */
+/* CardHeader — the header row: a tracked caps mono label left, an optional
+   pill or meta right, and a hairline under it that fades out at both ends.
+   The voice is set on the row itself so a plain `title` string arrives in it;
+   a Pill in the meta slot carries its own. Fixed line-height of 1 so the row
+   is exactly as tall as its label plus padding, whatever the theme's UI face. */
 .ds-card-header {
+	position: relative;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	border-top-left-radius: var(--border-radius-1);
-	border-top-right-radius: var(--border-radius-1);
-	padding: 12px 12px;
-	color: var(--text-tertiary);
-	font-weight: 500;
-	font-size: var(--font-size-1);
-	border-bottom: var(--border);
+	gap: var(--space-2);
+	padding: var(--space-3) var(--space-4);
+	font-family: var(--font-mono);
+	font-size: var(--font-size-0);
+	line-height: 1;
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: var(--text-secondary);
+}
+.ds-card-header::after {
+	content: "";
+	position: absolute;
+	inset-inline: 0;
+	inset-block-end: 0;
+	block-size: 1px;
+	background: var(--hairline-fade);
+}
+.ds-card-header__title {
+	/* Tracking adds space AFTER the last letter too; take it back so the label
+	   sits flush to the padding (the same fix .ds-caps carries). */
+	margin-inline-end: calc(-1 * var(--tracking-caps));
+}
+/* The right-hand side: a Pill, a handle, a date. Whatever it is, it must not
+   push the title off the row, so it shrinks and truncates first. */
+.ds-card-header__meta {
+	display: inline-flex;
+	align-items: center;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
-/* CardBody = styled('div', { variants: { dotMatrix } }) */
+/* CardBody */
 .ds-card-body {
-	overflow: hidden;
-	padding: 16px 16px;
 	position: relative;
+	padding: var(--space-4);
+	overflow: hidden;
+}
+/* A body straight after a header shares the header's rhythm: the header's own
+   bottom padding already stands the divider off the label, so the body starts
+   the same distance below it rather than a full pad away. */
+.ds-card-header + .ds-card-body {
+	padding-block-start: var(--space-3);
 }
 .ds-card-body--dot-matrix-true {
 	background-image: radial-gradient(

@@ -717,15 +717,9 @@ import "../widgets/widgets.css";
 		padding-block-end: var(--space-10);
 	}
 
-	/* Let each widget's slot content fill the card body below the header. */
-	.home__widgets :global(.ds-widget) {
-		display: flex;
-		flex-direction: column;
-	}
-
 	/* Mobile (≤900px): the video carousel is promoted into the hero scene (see
 	   .hero-carousel), so hide the footer copy here. Authored in THIS scope (not
-	   videos.css) so it out-specifies the .ds-widget flex rule above — a plain
+	   videos.css) so it out-specifies the DS's .ds-widget flex rule — a plain
 	   .wx-videos selector in videos.css loses to this scoped .home__widgets rule. */
 	@media (max-width: 900px) {
 		.home__widgets :global(.wx-videos) {

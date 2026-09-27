@@ -135,9 +135,17 @@
 	 *                            doing compositional work and wants to be wide
 	 *                            enough to read as deliberate.
 	 * Anything uppercase should reach for one of these rather than inventing a
-	 * sixth value. */
-	--tracking-caps: 0.1em;
+	 * sixth value.
+	 *   --tracking-mono          the small tracking for MONO set in sentence case
+	 *                            (a handle, a stat's label) and for caps on a phone
+	 *                            tile, where the full caps tracking costs a word a
+	 *                            line. A monospace already spaces its letters on a
+	 *                            fixed advance, so it needs far less than a text face.
+	 * --tracking-caps was 0.1em; the instrument voice (see INSTRUMENT UI below)
+	 * tracks its labels wider, and the two jobs are the same job. */
+	--tracking-caps: 0.14em;
 	--tracking-caps-display: 0.16em;
+	--tracking-mono: 0.05em;
 
 	/* UI text: the small, functional type that LABELS things rather than says them —
 	 * widget headers, stat figures and labels, the carousel ruler's year marks. The
@@ -199,6 +207,114 @@
 	 * multiplies by the member's index, so a large value makes late items in a
 	 * long group feel abandoned. */
 	--reveal-stagger: 90ms;
+}
+
+/* INSTRUMENT UI ------------------------------------------------------------
+ * The site's cards, widgets and controls are drawn after instrument UIs — a
+ * hardware metronome's screen, a dashboard card: flat surfaces a few percent
+ * apart, 1px hairlines, ONE accent used once per card for the lit thing, and
+ * everything else the ink at a few strengths. The tokens below are that
+ * vocabulary. The components that consume them (Mono, Figure, Stat, Pill,
+ * TickRuler, BarGraph, RingGauge, Legend, TileGrid, Hairline, and the card
+ * chrome) are documented in CONVENTIONS.md.
+ *
+ * Alpha washes rather than solid greys, throughout: a wash is the ink at a low
+ * opacity, so the same token reads correctly on the page, on a card, and on a
+ * card on a card, in both themes, without a per-surface variant. */
+:root {
+	/* The edge. One colour for card borders, dividers and outlined pills, so a
+	 * hairline is a hairline everywhere. --hairline-fade is the divider that
+	 * fades out at both ends — the reference dashboard's header rule — as a
+	 * gradient so any 1px box becomes one. */
+	--hairline: var(--border-color);
+	--hairline-fade: linear-gradient(
+		to right,
+		transparent,
+		var(--hairline) 12%,
+		var(--hairline) 88%,
+		transparent
+	);
+
+	/* Ink washes: the ink at three strengths. --wash-1 is the unlit tile and the
+	 * subtle pill fill; -2 and -3 are the two ordinary strengths a step grid or a
+	 * button uses before anything is "lit". */
+	--wash-1: color-mix(in oklab, var(--text-primary) 7%, transparent);
+	--wash-2: color-mix(in oklab, var(--text-primary) 16%, transparent);
+	--wash-3: color-mix(in oklab, var(--text-primary) 30%, transparent);
+
+	/* The rank ramp, for things ordered by importance that are not "lit": a
+	 * legend, a share ruler, a stack of bars. The accent first — it IS the one
+	 * accent the card gets — then the ink stepping down. Five steps; a sixth
+	 * thing is "other". */
+	--tone-1: var(--accent);
+	--tone-2: var(--text-primary);
+	--tone-3: var(--text-secondary);
+	--tone-4: var(--text-tertiary);
+	--tone-5: color-mix(in oklab, var(--text-primary) 22%, transparent);
+
+	/* The steps BELOW the generated scales, on the same reasoning as
+	 * --font-size-0 above. Tiles are ~10px squares at phone size, where the
+	 * smallest DS radius (4px) reads as a circle; and a pill is a pill because
+	 * its radius is larger than any height it will ever have. */
+	--border-radius-tile: 2px;
+	--border-radius-pill: 9999px;
+
+	/* The pitch of a tick ruler's hairlines. */
+	--tick-pitch: var(--space-1);
+}
+
+/* THE ACCENT. Orange-red, and one per card. The DS red alone is crimson and
+ * goes pink when tinted; the orange alone is amber. Mixed from the two solid
+ * steps rather than typed as a new value, so it moves with the scales.
+ * --emphasis (the accent at a tint, behind pills and callouts) is re-derived
+ * because the generated one is spelled from --blue-900 directly, not from
+ * --accent, and would otherwise stay blue. The inputs' focus colour follows for
+ * the same reason.
+ *
+ * --lit is what a step, a tile, a key looks like when it is ON: the accent on a
+ * dark screen, but the INK on a light one, where full orange squares on bone
+ * read as decoration rather than state. (The reference metronome does exactly
+ * this between its two themes.) Anything that lights should reach for --lit;
+ * anything that must be the accent in both themes (a playhead, a CTA) reaches
+ * for --accent. */
+.maximeheckel-light,
+.maximeheckel-dark {
+	--accent: color-mix(in oklch, var(--red-900) 60%, var(--orange-900));
+	--input-active: var(--accent);
+	--input-focus: var(--accent);
+}
+.maximeheckel-light {
+	--emphasis: oklch(from var(--accent) l c h / 8%);
+	--lit: var(--text-primary);
+
+	/* WARM GREYS. The generated light scale hangs every grey off --base-hue
+	 * (266, a blue-violet), so the light theme was blue-white: paper under
+	 * fluorescent light. The instrument references are stone and bone, and the
+	 * grey scale is the whole light theme — page, card, hairline, all three inks
+	 * resolve to a --gray-* step — so retuning it here retunes the theme in one
+	 * place. Lightness steps are the generated ones; the hue moves to 80
+	 * (stone), and chroma rises a touch through the mid-tones, which is where
+	 * bone gets its colour (a bone #e4ddd0 sits near oklch(89% 0.02 80)).
+	 * Not --base-hue: the blue scale hangs off that too, and hyperlinks and code
+	 * tokens should stay blue. */
+	--gray-hue: 80;
+	--gray-000: oklch(99.5% 0.003 var(--gray-hue));
+	--gray-100: oklch(98.6% 0.009 var(--gray-hue));
+	--gray-200: oklch(97% 0.011 var(--gray-hue));
+	--gray-300: oklch(95.3% 0.012 var(--gray-hue));
+	--gray-400: oklch(92.2% 0.014 var(--gray-hue));
+	--gray-500: oklch(89.6% 0.016 var(--gray-hue));
+	--gray-600: oklch(87.4% 0.017 var(--gray-hue));
+	--gray-700: oklch(84.3% 0.018 var(--gray-hue));
+	--gray-800: oklch(77.4% 0.021 var(--gray-hue));
+	--gray-900: oklch(62% 0.026 var(--gray-hue));
+	--gray-1000: oklch(50% 0.028 var(--gray-hue));
+	--gray-1100: oklch(40% 0.024 var(--gray-hue));
+	--gray-1200: oklch(21% 0.012 var(--gray-hue));
+}
+.maximeheckel-dark {
+	--emphasis: oklch(from var(--accent) l c h / 12%);
+	--lit: var(--accent);
 }
 
 /* A repair, not a retune. -----------------------------------------------
