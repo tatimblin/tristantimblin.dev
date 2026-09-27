@@ -39,10 +39,9 @@
 	   doesn't fight the row span. */
 	aspect-ratio: auto;
 
-	/* Neutralise the DS card chrome: the carousel's own .vc__stage is the visible
-	   tile, and the ruler must escape to the right. */
-	border: none;
-	background: none;
+	/* Keep the DS card's hairline frame (variant tertiary = no fill, so the
+	   halftone still sits on the page backdrop it was tuned against), but let the
+	   ruler escape past its right edge. */
 	overflow: visible;
 
 	/* TRAVEL: how far the carousel is raised above its real cell during the
@@ -85,18 +84,55 @@
 	justify-content: flex-start;
 }
 
-/* Widen the ruler+card row beyond the cell so the CARD fills the full cell width
-   (its right edge aligns with the grid's right column edge) and the ruler + its
-   gap overhang into the reserved gutter. stage is flex:1 → takes the 100%; the
-   fixed-width ruler takes the overflow. */
-.home__widgets .wx-videos .vc__main {
-	width: calc(100% + var(--vc-ruler-gutter) + var(--space-4));
+/* The body: the carousel fills it top-down, and must not clip the ruler, which
+   stands outside the card. */
+.home__widgets .wx-videos-body {
+	overflow: visible;
 }
 
-/* Let the stage fill the cell width (override the height-cap-derived max-width). */
+/* Widen the ruler+stage row beyond the body so the STAGE fills the body's width
+   and the ruler lands outside the card: past the body's end padding and the 1px
+   frame, then the same --space-4 the grid reserves (see --vc-ruler-gutter above),
+   so the ruler overhangs exactly into the reserved gutter. stage is flex:1 →
+   takes the 100%; the fixed-width ruler takes the overflow. */
+.home__widgets .wx-videos .vc__main {
+	--wx-vc-reach: calc(var(--widget-pad) + 1px + var(--space-4));
+	gap: var(--wx-vc-reach);
+	width: calc(100% + var(--wx-vc-reach) + var(--vc-ruler-gutter));
+}
+
+/* Fill the body top to bottom: the carousel and its ruler+stage row grow into
+   the 2-row cell, so the caption can sit at the card's foot rather than leave a
+   dead band under it. */
+.home__widgets .wx-videos video-carousel {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+.home__widgets .wx-videos .vc__main {
+	flex: 1 1 auto;
+}
+
+/* Let the stage fill the body width (override the height-cap-derived max-width),
+   and push the caption to its foot. */
 .home__widgets .wx-videos .vc__stage {
 	max-width: none;
 	width: 100%;
+}
+/* The caption as the card's footer row: the header's fading hairline mirrored
+   above it, run edge to edge across the card (out through the body padding),
+   with the header's own label-to-divider spacing on either side. */
+.home__widgets .wx-videos .vc__caption {
+	position: relative;
+	margin-block-start: auto;
+	padding-block-start: var(--widget-pad);
+}
+.home__widgets .wx-videos .vc__caption::before {
+	content: "";
+	position: absolute;
+	inset-block-start: calc(var(--widget-pad) - var(--space-3));
+	inset-inline: calc(-1 * var(--widget-pad));
+	block-size: 1px;
+	background: var(--hairline-fade);
 }
 
 /* MOBILE (≤900px, where the grid collapses to 2 cols) --------------------------
