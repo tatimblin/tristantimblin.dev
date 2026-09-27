@@ -711,10 +711,13 @@ test.describe("ruler — mobile scrubber orientation", () => {
 				[desc, loc]
 			);
 
+		// Start from a known one-line caption (a title, no place) rather than whatever
+		// the first clip says, so each step below is one run taller than the last.
+		await setCaption("JOINED FISKER", "");
+		await page.waitForTimeout(600);
 		const rows = [await measure()];
 		for (const [desc, loc] of [
-			// A one-line title plus a place: one run taller than the opening caption
-			// (the first clip has no place)...
+			// The same title plus a place...
 			["JOINED FISKER", "SAN FRANCISCO CALIFORNIA"],
 			// ...then a title that wraps on top of that.
 			[
