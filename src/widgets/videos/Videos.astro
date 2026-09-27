@@ -25,7 +25,7 @@ import "./videos.css";
 <Widget
 	size="1x2"
 	class="wx-videos"
-	variant="tertiary"
+	chrome={false}
 	data-reveal
 	data-reveal-group="videos"
 	data-reveal-eager
@@ -39,8 +39,8 @@ import "./videos.css";
 	    ink for the same image (dark specks on white read fainter than light dots
 	    glowing on black), but not so much that the floor fills in and the tile
 	    reads as mostly black. */}
-	{/* No card chrome (videos.css strips it): the halftone sits straight on the page,
-	    filling the cell, with its caption laid over the clip's corner as a TV caption. */}
+	{/* No card chrome: the halftone sits straight on the page, filling the cell,
+	    with its caption laid over the clip's corner as a TV caption. */}
 	<VideoCarousel
 		rulerSide="right"
 		captionOverlay

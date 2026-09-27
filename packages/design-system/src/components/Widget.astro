@@ -1,8 +1,10 @@
 ---
 // Widget — a standard cell in a <WidgetGrid>: a DS Card with the span classes
 // for its size, so every widget gets the flat card chrome and the header —
-// `title` left, the `meta` slot right — for free. Body content goes in a
-// <CardBody>, which fills the rest of the cell (styles/widget-grid.css):
+// `title` (prop or slot) left, the `meta` slot right — for free; Card's other
+// props (`variant`, `chrome`, `squeeze`, `headerClass`) pass straight through. Body content
+// goes in a <CardBody>, which fills the rest of the cell
+// (styles/widget-grid.css):
 //
 //   <Widget size="1x1" title="github">
 //     <Mono slot="meta" as="a" variant="text" href="…">@handle</Mono>
@@ -16,12 +18,11 @@ type Size = "1x1" | "2x1" | "1x2" | "2x2";
 interface Props {
 	size?: Size;
 	title?: string;
-	variant?: "primary" | "secondary" | "tertiary";
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { size = "1x1", title, variant, class: className, ...rest } = Astro.props;
+const { size = "1x1", title, class: className, ...rest } = Astro.props;
 
 const [w, h] = size.split("x").map(Number);
 const cls = cx(
@@ -32,10 +33,18 @@ const cls = cx(
 );
 
 // See Card.astro: forwarded only when filled.
+const hasTitle = Astro.slots.has("title");
 const hasMeta = Astro.slots.has("meta");
 ---
 
-<Card class={cls} variant={variant} title={title} {...rest}>
+<Card class={cls} title={title} {...rest}>
+	{
+		hasTitle ? (
+			<Fragment slot="title">
+				<slot name="title" />
+			</Fragment>
+		) : null
+	}
 	{
 		hasMeta ? (
 			<Fragment slot="meta">

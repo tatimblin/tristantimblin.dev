@@ -145,11 +145,20 @@ glass, caps mono labels), and the components below have no upstream at all.
 
 **Card chrome.** `<Widget size title>` is a `Card` with the span classes:
 both draw the header through `CardHeader` — `title` as a caps `Mono` on the
-left, the `meta` slot on the right, the fading hairline under — and `<CardBody>`
-fills the rest of the cell as a flex column with `--widget-gap`; put
-`slot="meta"` on a `Pill`/`Mono`. `depth` is accepted and ignored. Inside a
-`WidgetGrid`, every voice below scales with the cell (`--widget-font-*`);
-elsewhere it falls back to the type tokens.
+left (the prop, or a `title` slot for a title a script rewrites: put the hook
+on your own element), the `meta` slot on the right, the fading hairline under —
+and `<CardBody>` fills the rest of the cell as a flex column with
+`--widget-gap`; put `slot="meta"` on a `Pill`/`Mono`. `squeeze="title"` flips
+which side gives in a narrow row: the meta is left unclipped (for a control
+that overhangs it or a group that drops its own parts) and the title
+ellipsises; `headerClass` puts a class of yours on the header row (Volo makes
+it a query container) so nothing selects `.ds-card-header` from outside.
+`chrome={false}` drops the frame, fill and clip for content that sits
+straight on the page. A widget that must release its cell's aspect says
+`aspect-ratio: auto` in its own rule (the DS aspect rules carry no
+specificity). `depth` is accepted and ignored. Inside a `WidgetGrid`, every
+voice below scales with the cell (`--widget-font-*`); elsewhere it falls back
+to the type tokens.
 
 **Faces.** `<Faces>` stacks alternatives in one grid cell, one showing: the
 card that flips, the season the arrows page, the range a pill cycles. Every
@@ -180,8 +189,9 @@ without it the stack holds its tallest face's height.
   | warning | danger`; `as="button"|"a"` makes it a pill button; an `Icon` in
   the default slot sits before the text.
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
-  = pill button. `IconButton` — same variants, `size="small|large|xl"`,
-  `rounded` = round button.
+  = pill button. `IconButton` — same variants, `size="xs|small|large|xl"` (xs
+  is the pill's height, for a card header's meta slot), `rounded` = round
+  button.
 
 **Hairline graphics.**
 - `Hairline` — `fade` (default true), `orientation="horizontal|vertical"`.

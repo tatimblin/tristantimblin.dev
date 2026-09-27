@@ -95,7 +95,16 @@
 	--corner: var(--border-radius-pill);
 }
 
-/* size */
+/* size. xs is the pill's height (--space-5), so it sits in a card header's
+   meta slot without making the row taller than its neighbours'. */
+.ds-icon-button--size-xs {
+	inline-size: var(--space-5);
+	block-size: var(--space-5);
+}
+.ds-icon-button--size-xs svg {
+	width: 12px;
+	height: 12px;
+}
 .ds-icon-button--size-small {
 	inline-size: var(--space-6);
 	block-size: var(--space-6);

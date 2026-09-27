@@ -35,19 +35,15 @@
 }
 
 /* HEADER META -------------------------------------------------------------
-   Team name, standing pill, then the season buttons, right of the heading. The
-   DS meta wrapper clips its content so a long handle truncates; here that would
-   shave the round buttons (taller than the pill, see below) and their focus
-   rings, so this header manages its own squeeze instead: the header is a query
-   container: on a phone the team name goes, then the placing, so the season
-   heading stays readable. */
-.home__widgets .wx-volo > .ds-card-header {
+   Team name, standing pill, then the season buttons, right of the heading.
+   The header row (the widget's headerClass) is a query container: on a phone
+   the team name goes, then the placing, so the season heading stays readable;
+   the header's squeeze="title" leaves the meta unclipped for this and lets the
+   heading ellipsise as the last resort. The HEADER, not the card: cqi units
+   resolve against the nearest container, and the DS fluid scale inside the
+   body (--widget-cell, 100cqi) must keep resolving against the grid. */
+.home__widgets .wx-vl-head {
 	container: vl-head / inline-size;
-	/* A squeezed team name must not run on into the heading. */
-	column-gap: var(--space-4);
-}
-.home__widgets .wx-volo > .ds-card-header > .ds-card-header__meta {
-	overflow: visible;
 }
 .home__widgets .wx-vl-meta {
 	display: flex;
@@ -66,10 +62,6 @@
 .home__widgets .wx-vl-nav {
 	display: flex;
 	gap: var(--space-2);
-	/* The small round buttons are a step taller than the pill-height slot every
-	   card header reserves. Let them overhang it into the header's padding
-	   rather than push this header taller than its neighbours'. */
-	margin-block: calc((var(--space-5) - var(--space-6)) / 2);
 }
 /* The DS icon set has one arrow and it points right; prev is it, turned round. */
 .home__widgets .wx-vl-arrow--prev svg {
@@ -87,21 +79,11 @@
 		display: none;
 	}
 }
-/* Narrowest: tighter gaps, and the heading ellipsises as the last resort —
-   never the pill or the buttons. */
+/* Narrowest: a tighter gap in the meta group (the heading's own ellipsis is
+   the header's squeeze="title"). */
 @container vl-head (max-width: 430px) {
-	.home__widgets .wx-volo > .ds-card-header {
-		column-gap: var(--space-3);
-	}
 	.home__widgets .wx-vl-meta {
 		gap: var(--space-2);
-	}
-	.home__widgets .wx-volo > .ds-card-header > .ds-card-header__title {
-		display: block;
-		min-inline-size: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		line-height: var(--space-5);
 	}
 }
 
@@ -295,19 +277,6 @@
 
 .home__widgets .wx-vl-empty {
 	margin: auto;
-}
-
-/* Screen-reader-only text. */
-.home__widgets .wx-vl-vh {
-	position: absolute;
-	inline-size: 1px;
-	block-size: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip-path: inset(50%);
-	white-space: nowrap;
-	border: 0;
 }
 
 /* RANK BY SEASON -----------------------------------------------------------

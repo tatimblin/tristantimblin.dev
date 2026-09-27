@@ -1,7 +1,12 @@
 ---
 // Card — the flat card (styles/card.css). Renders via Box (polymorphic `as`).
-// With a `title` and/or something in the `meta` slot, a CardHeader carrying
-// them is rendered first and the body content follows as children.
+// With a `title` (prop or slot) and/or something in the `meta` slot, a
+// CardHeader carrying them is rendered first and the body content follows as
+// children; `squeeze` is CardHeader's, and `headerClass` puts a class of the
+// caller's on the header row (a container to query, say) so no one has to
+// select the DS's own. `chrome={false}` drops the frame, the fill and the clip
+// for content that sits straight on the page (a halftone filling its cell)
+// while keeping the card's radius and its place in a grid.
 //
 // `depth` is accepted but ignored: the DS's shadow scale has no place on a flat
 // surface (card.css explains), and dropping the prop would break every call
@@ -15,7 +20,10 @@ interface Props {
 	depth?: 0 | 1 | 2 | 3;
 	variant?: "primary" | "secondary" | "tertiary";
 	glass?: boolean;
+	chrome?: boolean;
 	title?: string;
+	squeeze?: "meta" | "title";
+	headerClass?: string;
 	class?: string;
 	[key: string]: unknown;
 }
@@ -25,7 +33,10 @@ const {
 	depth: _depth,
 	variant,
 	glass: _glass,
+	chrome = true,
 	title,
+	squeeze,
+	headerClass,
 	class: className,
 	...rest
 } = Astro.props;
@@ -33,18 +44,25 @@ const {
 const cls = cx(
 	"ds-card",
 	variant && `ds-card--variant-${variant}`,
+	!chrome && "ds-card--chrome-false",
 	className,
 );
 
-// Forwarded only when filled: a forwarded-but-empty slot would still count as
-// present in CardHeader and take its place in the row.
+// Slots are forwarded only when filled: a forwarded-but-empty slot would still
+// count as present in CardHeader and take its place in the row.
+const hasTitle = Astro.slots.has("title");
 const hasMeta = Astro.slots.has("meta");
 ---
 
 <Box as={as} class={cls} {...rest}>
 	{
-		title || hasMeta ? (
-			<CardHeader title={title}>
+		title || hasTitle || hasMeta ? (
+			<CardHeader title={title} squeeze={squeeze} class={headerClass}>
+				{hasTitle ? (
+					<Fragment slot="title">
+						<slot name="title" />
+					</Fragment>
+				) : null}
 				{hasMeta ? (
 					<Fragment slot="meta">
 						<slot name="meta" />

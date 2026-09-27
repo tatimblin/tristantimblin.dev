@@ -42,14 +42,11 @@
 	   than the column gap and the carousel's foot missed the cards' foot. Contained,
 	   the rows are the cards' and the carousel just stretches to fill them. */
 	contain: size;
-
-	/* No container: the halftone sits straight on the page, so strip the DS card
-	   chrome (frame, fill) and let the ruler escape to the right. The card's corner
-	   radius stays: the stage below rounds the halftone to it, so the dot field
-	   has the same footprint and corners as the cards beside it. */
-	border: none;
-	background: none;
-	overflow: visible;
+	/* No aspect-ratio: the DS gives a 1×2 widget `aspect-ratio: 1 / 2`, but a 1×2
+	   cell is two cells PLUS the row gap, so that box always fell one gap short of
+	   the row below. Stretched to its span instead (contained above, so it can't
+	   size the rows). */
+	aspect-ratio: auto;
 
 	/* TRAVEL: how far the carousel is raised above its real cell during the
 	   entrance (and thus the parallax distance it closes as it docks). Read by the
@@ -74,15 +71,6 @@
 	will-change: transform;
 	position: relative;
 	z-index: 1;
-}
-
-/* No aspect-ratio: the DS gives a 1×2 widget `aspect-ratio: 1 / 2`, but a 1×2
-   cell is two cells PLUS the row gap, so that box always fell one gap short of
-   the row below. Stretched to its span instead (contained above, so it can't
-   size the rows). The DS rule is (0,3,0); the doubled class outranks it without
-   depending on stylesheet order. */
-.home__widgets .wx-videos.wx-videos.ds-widget--h2 {
-	aspect-ratio: auto;
 }
 
 /* Light theme: set the dots halfway between the secondary and primary ink. At

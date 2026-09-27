@@ -29,6 +29,15 @@
 .ds-card--variant-tertiary {
 	--card-bg: transparent;
 }
+/* chrome={false}: no frame, no fill, no clip — content that sits straight on
+   the page and may run past the cell (a ruler protruding into the gutter).
+   The radius stays, so content that rounds itself to it still matches the
+   cards beside it. */
+.ds-card--chrome-false {
+	border: none;
+	background: none;
+	overflow: visible;
+}
 
 /* CardHeader — the header row: the title left, an optional pill or meta
    right, and a hairline under it that fades out at both ends. The row is
@@ -70,6 +79,25 @@
 	min-inline-size: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+/* squeeze="title": the meta is not clipped — it manages its own overflow (a
+   round button taller than the row, a group that drops its own parts as the
+   row narrows) — and the title is what gives, ellipsising as the last resort.
+   A block, since text-overflow needs one; its line box is the pill height the
+   row reserves. The wider gap keeps a squeezed meta off the heading. */
+.ds-card-header--squeeze-title {
+	column-gap: var(--space-4);
+}
+.ds-card-header--squeeze-title .ds-card-header__meta {
+	overflow: visible;
+	text-overflow: clip;
+}
+.ds-card-header--squeeze-title .ds-card-header__title {
+	display: block;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: var(--space-5);
 }
 
 /* CardBody */

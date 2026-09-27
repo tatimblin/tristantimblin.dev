@@ -7,25 +7,46 @@
 //   <CardHeader title="github"><Mono slot="meta" variant="text">@handle</Mono></CardHeader>
 //
 // The title is a Mono rather than a span the row styles, so the voice — face,
-// size, tracking, the phone tightening — is Mono's and declared once. The
-// default slot still takes hand-built children for a header that is neither.
+// size, tracking, the phone tightening — is Mono's and declared once. A
+// `title` SLOT renders inside that Mono instead of the prop, for a title a
+// script rewrites (put the hook on your own element). The default slot still
+// takes hand-built children for a header that is neither.
+//
+// `squeeze` says which side gives when the row is too narrow:
+//   meta   (default) the meta shrinks and clips first; the title holds.
+//   title  the meta manages its own overflow (a control that overhangs the
+//          row, a group that drops its own parts) and the title ellipsises.
 import { cx } from "../lib/cx";
 import Mono from "./Mono.astro";
 
 interface Props {
 	as?: string;
 	title?: string;
+	squeeze?: "meta" | "title";
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "div", title, class: className, ...rest } = Astro.props;
+const { as = "div", title, squeeze = "meta", class: className, ...rest } = Astro.props;
 const Tag = as as any;
+const hasTitle = Boolean(title) || Astro.slots.has("title");
 const hasMeta = Astro.slots.has("meta");
+const cls = cx(
+	"ds-card-header",
+	squeeze === "title" && "ds-card-header--squeeze-title",
+	className,
+);
 ---
 
-<Tag class={cx("ds-card-header", className)} {...rest}>
-	{title ? <Mono class="ds-card-header__title">{title}</Mono> : null}
+<Tag class={cls} {...rest}>
+	{
+		hasTitle ? (
+			<Mono class="ds-card-header__title">
+				{title}
+				<slot name="title" />
+			</Mono>
+		) : null
+	}
 	<slot />
 	{
 		hasMeta ? (

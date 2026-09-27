@@ -61,7 +61,6 @@
 .ds-widget {
 	grid-column: span 1;
 	grid-row: span 1;
-	aspect-ratio: 1 / 1;
 	display: flex;
 	flex-direction: column;
 	font-family: var(--font-ui);
@@ -105,14 +104,20 @@
 	grid-row: span 2;
 }
 
-/* Aspect per size so cells read as clean N×M blocks regardless of track width. */
-.ds-widget--w2.ds-widget--h2 {
+/* Aspect per size so cells read as clean N×M blocks regardless of track width.
+   In :where(), so they carry no specificity: a widget that must release its
+   aspect (a 1×2 stretched to its rows, a 2×2 that grows on a phone) says
+   `aspect-ratio: auto` in its own rule and wins, without doubling classes. */
+:where(.ds-widget) {
+	aspect-ratio: 1 / 1;
+}
+:where(.ds-widget--w2.ds-widget--h2) {
 	aspect-ratio: 1 / 1;
 } /* 2×2 square */
-.ds-widget--w2:not(.ds-widget--h2) {
+:where(.ds-widget--w2:not(.ds-widget--h2)) {
 	aspect-ratio: 2 / 1;
 } /* wide 2×1 */
-.ds-widget:not(.ds-widget--w2).ds-widget--h2 {
+:where(.ds-widget:not(.ds-widget--w2).ds-widget--h2) {
 	aspect-ratio: 1 / 2;
 } /* tall 1×2 */
 

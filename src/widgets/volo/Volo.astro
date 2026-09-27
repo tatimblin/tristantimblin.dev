@@ -28,6 +28,7 @@ import Pill from "@whois/design-system/Pill";
 import IconButton from "@whois/design-system/IconButton";
 import Hairline from "@whois/design-system/Hairline";
 import Icon from "@whois/design-system/Icon";
+import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import {
 	currentSeasonIndex,
 	formatGameDate,
@@ -147,19 +148,24 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 <Widget
 	size="2x2"
 	class="wx-volo"
-	title={opening ? seasonHeading(opening) : "volo"}
+	squeeze="title"
+	headerClass="wx-vl-head"
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="3"
 >
 	{/* The header is WHEN and WHAT: the sport and the season's month on the
-	    left, in the header's caps voice. The meta slot on the right is WHO and
-	    HOW IT WENT, then the controls: the team name (dim), the standing pill
-	    (the team's own Volo colour as its dot — brand art, the one colour that
-	    is not the family's), and the round buttons that page the seasons. The
-	    header sits outside the panel stack, so the script rewrites all of it
-	    from the panel's data when the season changes; the server renders the
-	    season the tile opens on. */}
+	    left, in the header's caps voice — in the title SLOT, on an element of
+	    this widget's own, because the script rewrites it. The meta slot on the
+	    right is WHO and HOW IT WENT, then the controls: the team name (dim), the
+	    standing pill (the team's own Volo colour as its dot — brand art, the one
+	    colour that is not the family's), and the round buttons that page the
+	    seasons. The header sits outside the panel stack, so the script rewrites
+	    all of it from the panel's data when the season changes; the server
+	    renders the season the tile opens on. squeeze="title": the meta manages
+	    its own width (the container queries in volo.css drop the team, then the
+	    placing) and the heading ellipsises as the last resort. */}
+	<span slot="title" data-volo-heading>{opening ? seasonHeading(opening) : "volo"}</span>
 	{opening && (
 		<span slot="meta" class="wx-vl-meta">
 			<Mono class="wx-vl-team" tone="tertiary" data-volo-team>{opening.team.name}</Mono>
@@ -177,14 +183,15 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 					<span data-volo-tally>{formatTally(opening)}</span>
 				</span>
 			</Pill>
-			{/* SEASON NAV — the metronome's small round buttons. Rendered
+			{/* SEASON NAV — the metronome's small round buttons, at the pill's
+			    height so the header stays as tall as its neighbours'. Rendered
 			    `hidden` and unhidden by the script below, so a reader without JS
 			    gets one clean season rather than two dead arrows. A span, not a
 			    <nav>: the meta slot is phrasing content. */}
 			<span class="wx-vl-nav" role="group" aria-label="Season" hidden>
 				<IconButton
 					class="wx-vl-arrow wx-vl-arrow--prev"
-					size="small"
+					size="xs"
 					rounded
 					type="button"
 					data-volo-prev
@@ -194,7 +201,7 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 				</IconButton>
 				<IconButton
 					class="wx-vl-arrow"
-					size="small"
+					size="xs"
 					rounded
 					type="button"
 					data-volo-next
@@ -238,10 +245,10 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 							{/* The season, team and record live in the card header, which
 							    the script rewrites; they are repeated here for a screen
 							    reader, which reads the panel, not that header. */}
-							<p class="wx-vl-vh">
+							<VisuallyHidden>
 								{seasonHeading(season)}: {season.team.name}, {formatRecord(season)}
 								{season.champion ? ". League champions." : "."}
-							</p>
+							</VisuallyHidden>
 
 							<ol class="wx-vl-games">
 								{season.games.map((game, gameIndex) => (
@@ -396,12 +403,12 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 									aria-current={i === current ? "true" : undefined}
 									style={`left:${(spans[i].x0 / PLOT.w) * 100}%;width:${((spans[i].x1 - spans[i].x0) / PLOT.w) * 100}%`}
 								>
-									<span class="wx-vl-vh">
+									<VisuallyHidden as="span">
 										{point.label}:{" "}
 										{point.rank
 											? `finished ${ordinal(point.rank)} of ${point.teams}`
 											: "still playing"}
-									</span>
+									</VisuallyHidden>
 								</button>
 							))}
 						</div>
@@ -439,8 +446,8 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 			widget.querySelectorAll<HTMLButtonElement>("[data-volo-jump]"),
 		);
 		// The card header sits outside the panel stack, so it is rewritten from
-		// the panel's data when the season changes (see the meta slot).
-		const title = widget.querySelector<HTMLElement>(".ds-card-header__title");
+		// the panel's data when the season changes (see the title and meta slots).
+		const title = widget.querySelector<HTMLElement>("[data-volo-heading]");
 		const teamName = widget.querySelector<HTMLElement>("[data-volo-team]");
 		const dot = widget.querySelector<HTMLElement>("[data-volo-dot]");
 		const star = widget.querySelector<HTMLElement>("[data-volo-star]");

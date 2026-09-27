@@ -563,7 +563,8 @@ const faces = [
 			<h2 class="ds-demo__h">IconButton — variants / sizes / rounded</h2>
 			<p class="ds-demo__note">
 				<code>rounded</code> is the round button of the instrument UI; <code>xl</code> is the
-				one big control a screen has (the metronome's pause), small the − / + beside it.
+				one big control a screen has (the metronome's pause), small the − / + beside it,
+				and <code>xs</code> the pill-height one that fits a card header's meta slot.
 			</p>
 			<Flex gap={3} wrap="wrap" alignItems="center">
 				<IconButton variant="primary" size="large" aria-label="a"><Icon name="check" /></IconButton>
@@ -574,6 +575,7 @@ const faces = [
 				<IconButton variant="secondary" size="small" rounded aria-label="minus"><Icon name="chevron" /></IconButton>
 				<IconButton variant="secondary" size="small" rounded aria-label="plus"><Icon name="chevron" /></IconButton>
 				<IconButton variant="secondary" size="large" rounded aria-label="play"><Icon name="play" /></IconButton>
+				<IconButton variant="secondary" size="xs" rounded aria-label="previous"><Icon name="arrow" size={3} /></IconButton>
 			</Flex>
 		</section>
 
@@ -583,10 +585,12 @@ const faces = [
 			<p class="ds-demo__note">
 				A surface a few percent off the page inside a 1px hairline; no shadow, so
 				<code>depth</code> is accepted and ignored. The header is <code>CardHeader</code>:
-				<code>title</code> in the caps mono voice over a hairline that fades at both ends,
-				with the <code>meta</code> slot on the right — Card and Widget both render it, and
-				so can a page by hand. Secondary is an ink wash (it was the glass); tertiary is
-				transparent.
+				<code>title</code> (a prop, or a slot for a title a script rewrites) in the caps
+				mono voice over a hairline that fades at both ends, with the <code>meta</code>
+				slot on the right — Card and Widget both render it, and so can a page by hand.
+				<code>squeeze="title"</code> leaves the meta unclipped and ellipsises the title
+				instead. Secondary is an ink wash (it was the glass); tertiary is transparent;
+				<code>chrome={"{false}"}</code> is no frame, fill or clip at all.
 			</p>
 			<Grid templateColumns="repeat(auto-fill, minmax(280px, 1fr))" gap={4}>
 				<Card title="infra #1">
@@ -607,6 +611,17 @@ const faces = [
 						<Pill slot="meta">low risk</Pill>
 					</CardHeader>
 					<CardBody><Text size={3}>The same header, placed by hand.</Text></CardBody>
+				</Card>
+				<Card squeeze="title" style="max-inline-size: 320px;">
+					<span slot="title">A long season heading that gives way first</span>
+					<Fragment slot="meta">
+						<Pill>5–0</Pill>
+						<IconButton size="xs" rounded aria-label="next" style="margin-inline-start: var(--space-2);"><Icon name="arrow" size={3} /></IconButton>
+					</Fragment>
+					<CardBody><Text size={3}>squeeze="title": the title ellipsises, the meta holds.</Text></CardBody>
+				</Card>
+				<Card chrome={false} title="no chrome">
+					<CardBody><Text size={3}>chrome={"{false}"}: straight on the page.</Text></CardBody>
 				</Card>
 			</Grid>
 		</section>

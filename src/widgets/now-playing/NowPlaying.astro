@@ -22,7 +22,7 @@ import "./now-playing.css";
 <Widget
 	size="1x1"
 	title="now playing"
-	class="wx-nowplaying-widget"
+	class="wx-nowplaying"
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="0"
@@ -46,7 +46,7 @@ import "./now-playing.css";
 	const STALE_MS = 2500;
 
 	function bind() {
-		const widget = document.querySelector<HTMLElement>(".wx-nowplaying-widget");
+		const widget = document.querySelector<HTMLElement>(".wx-nowplaying");
 		const player = widget?.querySelector("spotify-player");
 		const pill = widget?.querySelector<HTMLElement>(".wx-np-state");
 		const root = player?.shadowRoot;
@@ -90,14 +90,21 @@ import "./now-playing.css";
 	}
 
 	let teardown: (() => void) | null = null;
+	// The shadow root exists once the element is upgraded, so the bind waits on
+	// whenDefined() — which can resolve AFTER the page has been swapped away.
+	// `alive` is the page-load that is current; a bind for a stale one is dropped
+	// rather than left observing a detached tree.
+	let alive = false;
 	document.addEventListener("astro:page-load", () => {
-		// The shadow root exists once the element is upgraded.
+		alive = true;
 		void customElements.whenDefined("spotify-player").then(() => {
+			if (!alive) return;
 			teardown?.();
 			teardown = bind();
 		});
 	});
 	document.addEventListener("astro:before-swap", () => {
+		alive = false;
 		teardown?.();
 		teardown = null;
 	});

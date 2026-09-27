@@ -31,40 +31,34 @@ const monthDay = (date: string) =>
 
 <script>
 	// Slide the bike in from the right the first time the widget scrolls into
-	// view. One-shot: unobserve after the first reveal.
-	//
-	// WIRED ON astro:page-load, NOT AT MODULE SCOPE — and the difference is a bug,
-	// not a style choice. Astro bundles this into a module that executes exactly
-	// ONCE, but the Layout uses ClientRouter, which REPLACES the DOM on every
-	// navigation. A module-scope observer therefore ends up watching a detached
-	// element while the fresh .wx-baywheels never receives .is-in — and the resting
-	// state in bike-stats.css is `opacity: 0`, so the bike stays invisible until a
-	// hard reload. (Reduced-motion users never saw it: that block forces it shown.)
-	// tests/reveal.spec.ts test 7 guards this.
-	//
-	// The data- marker keeps a re-wire of the SAME node a no-op, so the first load
-	// (where ClientRouter also fires astro:page-load) doesn't double-observe. Same
-	// shape as the hero-floor relay in src/pages/index.astro.
-	function wireBikeReveal() {
+	// view; one-shot. Bound per page-load and torn down before a view-transition
+	// swap (the lifecycle idiom of the other widgets): ClientRouter replaces the
+	// DOM on every navigation, so an observer bound once at module scope would
+	// watch a detached node while the fresh card never got .is-in — and its
+	// resting state is opacity 0. tests/reveal.spec.ts test 7 guards this.
+	function bind() {
 		const bw = document.querySelector<HTMLElement>(".wx-baywheels");
-		if (!bw || bw.dataset.bikeRevealWired) return;
-		bw.dataset.bikeRevealWired = "true";
+		if (!bw) return () => {};
 		const io = new IntersectionObserver(
-			(entries, observer) => {
-				for (const entry of entries) {
-					if (entry.isIntersecting) {
-						bw.classList.add("is-in");
-						observer.unobserve(entry.target);
-					}
-				}
+			(entries) => {
+				if (!entries.some((entry) => entry.isIntersecting)) return;
+				bw.classList.add("is-in");
+				io.disconnect();
 			},
 			{ threshold: 0.35 },
 		);
 		io.observe(bw);
+		return () => io.disconnect();
 	}
 
-	wireBikeReveal();
-	document.addEventListener("astro:page-load", wireBikeReveal);
+	let teardown: (() => void) | null = null;
+	document.addEventListener("astro:page-load", () => {
+		teardown = bind();
+	});
+	document.addEventListener("astro:before-swap", () => {
+		teardown?.();
+		teardown = null;
+	});
 </script>
 
 <Widget

@@ -2,7 +2,8 @@
 // IconButton — the flat icon button (styles/icon-button.css); `rounded` for
 // the round buttons of the instrument UI.
 //   variant: primary | secondary | tertiary   (default: secondary)
-//   size:    small | large | xl                (default: large)
+//   size:    xs | small | large | xl           (default: large; xs is the
+//            pill-height button that fits a card header's meta slot)
 //   rounded: boolean
 // The single icon child is wrapped in .ds-icon-button__content, as the DS's
 // IconButton.tsx wraps it in a Flex.
@@ -11,7 +12,7 @@ import { cx } from "../lib/cx";
 interface Props {
 	as?: string;
 	variant?: "primary" | "secondary" | "tertiary";
-	size?: "small" | "large" | "xl";
+	size?: "xs" | "small" | "large" | "xl";
 	rounded?: boolean;
 	class?: string;
 	[key: string]: unknown;
