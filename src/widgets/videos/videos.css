@@ -36,8 +36,12 @@
 	grid-column: var(--widget-cols, 4) / span 1;
 	grid-row: 1 / span 2;
 	/* Explicit 2-row span sets the height; drop the ds-widget--h2 1/2 aspect so it
-	   doesn't fight the row span. */
-	aspect-ratio: auto;
+	   doesn't fight the row span. SIZE CONTAINMENT so it never sets the span either:
+	   without it the carousel's content (a 1:2 box off its column width) sized the
+	   two rows, stretching them past the square 1×1 cards — the row gap read wider
+	   than the column gap and the carousel's foot missed the cards' foot. Contained,
+	   the rows are the cards' and the carousel just stretches to fill them. */
+	contain: size;
 
 	/* No container: the halftone sits straight on the page, so strip the DS card
 	   chrome (frame, fill) and let the ruler escape to the right. The card's corner
@@ -72,14 +76,24 @@
 	z-index: 1;
 }
 
-/* Light theme: set the dots in the secondary ink rather than the primary. At full
-   --text-primary the halftone read as hard black specks on the white page; the
-   secondary step keeps the image legible but lets it sit back as a picture rather
-   than as type-weight ink. <dotted-grid> resolves --color-fg from its own computed
+/* No aspect-ratio: the DS gives a 1×2 widget `aspect-ratio: 1 / 2`, but a 1×2
+   cell is two cells PLUS the row gap, so that box always fell one gap short of
+   the row below. Stretched to its span instead (contained above, so it can't
+   size the rows). The DS rule is (0,3,0); the doubled class outranks it without
+   depending on stylesheet order. */
+.home__widgets .wx-videos.wx-videos.ds-widget--h2 {
+	aspect-ratio: auto;
+}
+
+/* Light theme: set the dots halfway between the secondary and primary ink. At
+   full --text-primary the halftone read as hard black specks on the white page;
+   the plain secondary step, once the carousel lost its frame and filled the 1×2
+   cell, read too faint to make out. Halfway keeps it a picture, not type-weight
+   ink, while holding the image together. <dotted-grid> resolves --color-fg from its own computed
    style and re-reads it on every theme change, so scoping the alias here is enough.
    Dark keeps the primary ink: light dots on black already glow at the right weight. */
 .maximeheckel-light .home__widgets .wx-videos dotted-grid {
-	--color-fg: var(--text-secondary);
+	--color-fg: color-mix(in oklab, var(--text-primary) 50%, var(--text-secondary));
 }
 
 /* FILL THE CELL. The clip IS the widget, so the dot grid takes the whole 1×2
