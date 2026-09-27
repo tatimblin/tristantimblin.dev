@@ -42,7 +42,8 @@
    DS meta wrapper clips its content so a long handle truncates; here that would
    shave the round buttons (taller than the pill, see below) and their focus
    rings, so this header manages its own squeeze instead: the header is a query
-   container and the team name goes first when it gets narrow. */
+   container: on a phone the team name goes, then the placing, so the season
+   heading stays readable. */
 .home__widgets .wx-volo > .ds-card-header {
 	container: vl-head / inline-size;
 	/* A squeezed team name must not run on into the heading. */
@@ -81,29 +82,25 @@
 	transform: rotate(180deg);
 }
 
-/* Narrower (a phone): the team name goes — the panel still names it to a
-   screen reader, and the dot in the pill is the team's colour. */
+/* Narrower (a phone): the team name goes — ellipsised to "WHO …" it said
+   nothing and squeezed the heading to "AUG …"; the pill's dot still carries the
+   team colour, and each season panel keeps the name for screen readers. The
+   pill keeps its dot and the tally and drops the placing (the rank chart at the
+   foot of the tile is where the placings are). */
 @container vl-head (max-width: 480px) {
-	.home__widgets .wx-vl-team {
-		display: none;
-	}
-}
-/* Narrowest: the pill keeps its dot and the tally, and drops the placing (the
-   rank chart at the foot of the tile is where the placings are). The meta is
-   now fixed and the heading is the last resort — it ellipsises, never the
-   buttons. */
-@container vl-head (max-width: 430px) {
+	.home__widgets .wx-vl-team,
 	.home__widgets .wx-vl-place {
 		display: none;
 	}
+}
+/* Narrowest: tighter gaps, and the heading ellipsises as the last resort —
+   never the pill or the buttons. */
+@container vl-head (max-width: 430px) {
 	.home__widgets .wx-volo > .ds-card-header {
 		column-gap: var(--space-3);
 	}
 	.home__widgets .wx-vl-meta {
 		gap: var(--space-2);
-	}
-	.home__widgets .wx-volo > .ds-card-header > .ds-card-header__meta {
-		flex: none;
 	}
 	.home__widgets .wx-volo > .ds-card-header > .ds-card-header__title {
 		display: block;
