@@ -3,25 +3,16 @@
  * Plain CSS (not an Astro scoped <style>) so these globally-reaching selectors
  * survive verbatim, matching the other widgets. The .wx-github/.wx-gh-* prefix
  * keeps them contained; the .home__widgets prefix matches the page's widget-grid
- * containment. The labels, figure, accent, tile wash, tone ramp and tick ruler are
- * the shared mono family in widgets.css — only this widget's layout is here. */
+ * containment. The card chrome, the header, the tiles, the figure, the ruler and
+ * the legend are all design-system components — only the flip is here. */
 
-.home__widgets .wx-github {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-3);
-	padding: var(--widget-pad);
-}
-
-/* Body — the flip surface. A real <button> for keyboard/focus; stripped of its
-   native chrome so it reads as the card interior. */
+/* Body — the flip surface. A <CardBody as="button">: a real <button> for
+   keyboard/focus, stripped of its native chrome so it reads as the card
+   interior (the DS body padding and flex column still apply). */
 .home__widgets .wx-gh-body {
-	flex: 1;
 	position: relative;
-	min-height: 0;
-	width: 100%;
+	inline-size: 100%;
 	margin: 0;
-	padding: 0;
 	border: 0;
 	background: none;
 	color: inherit;
@@ -29,19 +20,21 @@
 	text-align: left;
 	cursor: pointer;
 }
+/* Inside, since the card clips: an inset ring instead of an outset one. */
 .home__widgets .wx-gh-body:focus-visible {
 	outline: 2px solid var(--accent);
-	outline-offset: var(--space-1);
+	outline-offset: calc(-1 * var(--space-1));
 	border-radius: var(--border-radius-1);
 }
 
-/* Two stacked faces cross-faded by the .is-flipped class on the widget. */
+/* Two stacked faces cross-faded by the .is-flipped class on the widget. Each
+   fills the body's padding box, so the faces are positioned to its padding. */
 .home__widgets .wx-gh-face {
 	position: absolute;
-	inset: 0;
+	inset: var(--space-3) var(--widget-pad) var(--widget-pad);
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-3);
+	gap: var(--widget-gap);
 	transition:
 		opacity var(--duration-swap) var(--ease-reveal),
 		visibility var(--duration-swap) var(--ease-reveal);
@@ -64,104 +57,15 @@
 		transition: none;
 	}
 }
-
-/* Contribution grid — 7 weekday rows filling the height left over by the figure.
-   The box is a size container (container units resolve against an ANCESTOR, so
-   the grid can't measure itself) and its height sets the square; columns are that
-   square wide and packed to the END, so the newest week sits on the right edge
-   and older weeks clip off the left on narrower tiles. */
-.home__widgets .wx-gh-grid-box {
-	flex: 1;
-	min-height: 0;
-	container-type: size;
-	overflow: hidden;
-}
-.home__widgets .wx-gh-grid {
-	block-size: 100%;
-	display: grid;
-	--gh-gap: clamp(2px, calc(var(--widget-cell) * 0.01), 4px);
-	--gh-sq: calc((100cqb - var(--gh-gap) * 6) / 7);
-	grid-template-columns: repeat(var(--gh-cols, 8), var(--gh-sq));
-	grid-template-rows: repeat(7, var(--gh-sq));
-	gap: var(--gh-gap);
-	justify-content: end;
-	align-content: end;
+/* Mirrors the DS body's tighter top padding on phone tiles (widget-grid.css). */
+@media (max-width: 900px) {
+	.home__widgets .wx-gh-face {
+		inset-block-start: var(--space-2);
+	}
 }
 
-/* Tile cell — every day is a full flat tile, like the metronome's step grid.
-   Most days have SOME commits, so lighting every one turned the grid into a wall
-   of accent; the reference reads because most steps are off. So ordinary days
-   (levels 1–2) are the ink at two strengths, and only the big days (3–4) light
-   in the accent — the few hits you'd look for. */
-.home__widgets .wx-gh-cell {
-	border-radius: 2px;
-	background: var(--wx-tile);
-}
-.home__widgets .wx-gh-cell[data-level="1"] {
-	background: color-mix(in oklab, var(--text-primary) 16%, transparent);
-}
-.home__widgets .wx-gh-cell[data-level="2"] {
-	background: color-mix(in oklab, var(--text-primary) 30%, transparent);
-}
-.home__widgets .wx-gh-cell[data-level="3"] {
-	background: color-mix(in oklab, var(--wx-accent) 70%, var(--wx-tile));
-}
-.home__widgets .wx-gh-cell[data-level="4"] {
-	background: var(--wx-accent);
-}
-
-/* Language ruler — the tempo strip: one run of hairline ticks across the width,
-   split into stretches by share (flex-grow = percentage), each stretch's ticks in
-   its language's tone (set inline as `color`). A gap marks each boundary. */
+/* The language ruler takes a share of the face; the legend takes the rest. */
 .home__widgets .wx-gh-ruler {
 	flex: 0 1 30%;
 	min-block-size: var(--space-6);
-	display: flex;
-	gap: var(--space-1);
-	inline-size: 100%;
-}
-.home__widgets .wx-gh-ruler-seg {
-	flex-basis: 0;
-	min-inline-size: 1px;
-}
-
-.home__widgets .wx-gh-lang-list {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-2);
-}
-.home__widgets .wx-gh-lang {
-	display: flex;
-	align-items: center;
-	gap: var(--space-2);
-}
-.home__widgets .wx-gh-swatch {
-	flex: none;
-	inline-size: var(--space-2);
-	block-size: var(--space-2);
-	border-radius: 2px;
-}
-.home__widgets .wx-gh-lang-name {
-	flex: 1;
-	min-inline-size: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-.home__widgets .wx-gh-lang-pct {
-	font-family: var(--font-numeric);
-	font-variant-numeric: tabular-nums;
-	font-size: var(--widget-font-sm);
-	line-height: 1;
-}
-
-/* Phone tiles: five rows + the ruler don't fit ~130px of body at desktop
-   metrics, so the rows close up and the figures drop to the label size. */
-@media (max-width: 900px) {
-	.home__widgets .wx-gh-lang-list {
-		gap: var(--space-1);
-	}
-	.home__widgets .wx-gh-lang-pct {
-		font-size: var(--widget-font-xs);
-	}
 }

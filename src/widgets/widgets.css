@@ -1,21 +1,18 @@
-/* Shared widget primitives — generic building blocks reused across widgets
- * (currently the stat block). Widget-specific looks live in each widget's own
- * module (e.g. widgets/now-playing/now-playing.css).
+/* Shared widget primitives — what the widgets still share that is not yet a
+ * design-system component. The instrument UI's vocabulary (the card chrome,
+ * Mono, Figure, Stat, Pill, the hairline graphics) lives in
+ * packages/design-system now; reach for those first. Widget-specific looks
+ * live in each widget's own module (e.g. widgets/now-playing/now-playing.css).
  *
  * Plain CSS imported once by the page; the .home__widgets prefix scopes these to
  * the widget grid. Kept global (not an Astro scoped <style>) so widgets rendered
  * from their own components can rely on them. */
 
-/* UI TEXT. Every widget is chrome — labels, figures, small print — so the whole
-   grid is set in --font-ui rather than the body face. Applied once at the card
-   root so it reaches the DS-rendered parts too (headers, footers), which this file
-   does not otherwise style. A widget wanting the body voice for genuine prose can
-   still opt back in locally. */
-.home__widgets .ds-widget {
-	font-family: var(--font-ui);
-}
-
-/* Stat block — a big numeric value over a small label. */
+/* Stat block — the pre-DS stat pair, still used by bike-stats and readers. It
+   is the DS <Stat> (design-system/src/styles/stat.css) by another name, and is
+   restyled here into the same voice — the numeric face at Regular, a mono label
+   in the quiet ink — until those widgets move onto the component and this
+   block goes. */
 .home__widgets .wx-stat {
 	display: flex;
 	flex-direction: column;
@@ -25,131 +22,20 @@
 	flex: 1;
 }
 .home__widgets .wx-stat-num {
-	/* FIGURES — the .ds-numeric role (design-system/src/styles/numeric.css), spelled
-	   out here rather than added as a class in markup, because .wx-stat is a shared
-	   widget primitive: any widget that reaches for the stat block gets the right
-	   figures without having to remember a second class on every <span>.
-	   NO `var(--font-numeric, var(--font-mono))` FALLBACK. --font-numeric was moved
-	   off the mono stack deliberately — widget figures are not code, and they had
-	   only ever been set in a terminal face by default rather than by intent (see
-	   tokens.overrides.css). The token is always defined, so that fallback could
-	   never fire except as a regression: it silently restored the exact behaviour
-	   that was removed.
-	   TABULAR, because this block STACKS its figures. A face's default figures are
-	   proportional — a "1" is drawn narrower than a "0" — so 1034 over 1543 over 158
-	   do not line up down the column, and a value that ticks over jitters in place as
-	   its digits change width. Tabular figures all share one advance width, so the
-	   column aligns and a live number updates without moving. Verified: Neue Montreal
-	   ships `tnum`. Family and figure-style travel together; half the pair is not the
-	   role. */
+	/* The .ds-numeric role with the figure voice's weight: tabular so a stacked
+	   column aligns, Regular because the thin numeral is the look. */
 	font-family: var(--font-numeric);
 	font-variant-numeric: tabular-nums;
-	font-size: var(--widget-font-xl); /* fluid; ≡ --font-size-7 (32px) at the desktop cell */
-	/* Resolves to Neue Montreal's real Semibold cut. It did not always: the face
-	   shipped as a single Light, and global.css refuses faux-bolding, so this
-	   declaration rendered at the one weight available. It is a real weight now, which
-	   is what gives the figures their step above the labels beneath them. */
-	font-weight: var(--font-weight-600);
+	font-size: var(--widget-font-xl);
+	font-weight: var(--font-weight-400);
+	letter-spacing: var(--tracking-heading);
 	line-height: 1;
 	color: var(--text-primary);
 }
 .home__widgets .wx-stat-label {
-	font-size: var(--widget-font-sm); /* fluid; ≡ --font-size-1 (14px) at the desktop cell */
-	color: var(--text-tertiary);
-}
-
-/* ── MONO WIDGET FAMILY ──────────────────────────────────────────────────────
-   A second widget voice, after instrument UIs (a hardware metronome app, TE's
-   device screens): flat tiles on the card's own fill, ONE accent for "lit", small
-   letter-spaced uppercase labels in mono, one big figure in the site's numeric
-   face, and fine tick rulers. GitHub is the first widget on it; the pieces are
-   here so the others can follow. */
-.home__widgets .wx-mono {
-	color: var(--text-primary);
-
-	/* The one accent: "on / lit / now". Everything else is the ink at a few
-	   strengths. An orange-red — the DS red alone is crimson and goes pink when
-	   tinted — mixed from the DS red and orange solid steps, not a new value. */
-	--wx-accent: color-mix(in oklch, var(--red-900) 60%, var(--orange-900));
-	/* An unlit tile — a faint ink wash, so it follows the card in both themes. */
-	--wx-tile: color-mix(in oklab, var(--text-primary) 7%, transparent);
-	/* Tone ramp for ranked things that aren't "lit": accent first, then the ink
-	   stepping down. */
-	--wx-tone-1: var(--wx-accent);
-	--wx-tone-2: var(--text-primary);
-	--wx-tone-3: var(--text-secondary);
-	--wx-tone-4: var(--text-tertiary);
-	--wx-tone-5: color-mix(in oklab, var(--text-primary) 22%, transparent);
-}
-
-/* Small caps label — mono, uppercase, tracked out: the instrument panel voice.
-   Used for the label row and for units. */
-.home__widgets .wx-caps {
 	font-family: var(--font-mono);
 	font-size: var(--widget-font-xs);
+	letter-spacing: var(--tracking-mono);
 	line-height: 1;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	white-space: nowrap;
-	color: var(--text-secondary);
-}
-/* Phone tiles (the grid's 2-column breakpoint, ~160px cells): the full tracking
-   costs a word per line there, so tighten it rather than wrap or clip. */
-@media (max-width: 900px) {
-	.home__widgets .wx-caps {
-		letter-spacing: 0.06em;
-	}
-}
-
-/* Label row — label left, a small detail right (a handle, a date). */
-.home__widgets .wx-head {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: var(--space-2);
-}
-.home__widgets .wx-head-meta {
-	text-decoration: none;
-	/* A handle keeps its own case; only the tracking carries over. */
-	text-transform: none;
-	letter-spacing: 0.04em;
-}
-.home__widgets a.wx-head-meta:hover {
-	color: var(--text-primary);
-}
-
-/* Figure — one big number with its unit set small beside it, on the baseline.
-   The unit wraps under the number when the tile is too narrow for both. */
-.home__widgets .wx-figure {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	gap: var(--space-1) var(--space-3);
-	line-height: 1;
-}
-.home__widgets .wx-figure-num {
-	/* The .ds-numeric role (see .wx-stat-num above): the numeric face with
-	   tabular figures. At Regular rather than the stat block's Semibold — the
-	   big thin numeral is the instrument look. */
-	font-family: var(--font-numeric);
-	font-variant-numeric: tabular-nums;
-	font-weight: var(--font-weight-400);
-	letter-spacing: -0.02em;
-	/* --widget-font-xl, but allowed below its 32px floor on small (phone) tiles,
-	   down to --widget-font-lg, so a 4-digit figure doesn't eat half a 160px
-	   tile. Identical to xl from a ~250px cell up. */
-	font-size: max(
-		var(--widget-font-lg),
-		min(var(--widget-font-xl), calc(var(--widget-cell) * 0.13))
-	);
-}
-
-/* Tick ruler — hairlines on a fixed pitch in the current colour, like the
-   metronome's tempo strip. A background, so any box becomes a stretch of ruler. */
-.home__widgets .wx-ticks {
-	background: repeating-linear-gradient(
-		to right,
-		currentColor 0 1px,
-		transparent 1px var(--wx-tick-pitch, 4px)
-	);
+	color: var(--text-tertiary);
 }

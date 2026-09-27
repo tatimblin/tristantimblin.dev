@@ -1,12 +1,18 @@
 ---
-// GitHub widget — a 1×1 card in the mono widget family (widgets.css → MONO
-// WIDGET FAMILY). A label row (`github` + the @handle, which links out to the
-// profile) sits over a toggle: tap the card to cross-fade the contribution grid
-// out and the language breakdown in (tap again to flip back). Data is read at
-// build time from github.json (see ./github.ts); only the flip is client-side.
+// GitHub widget — a 1×1 card in the instrument UI, built from the design
+// system's pieces (packages/design-system/CONVENTIONS.md → Instrument UI). The
+// card header (`github` + the @handle, which links out to the profile) sits
+// over a toggle: tap the body to cross-fade the contribution grid out and the
+// language breakdown in (tap again to flip back). Data is read at build time
+// from github.json (see ./github.ts); only the flip is client-side.
 import Widget from "@whois/design-system/Widget";
-import Anchor from "@whois/design-system/Anchor";
-import List from "@whois/design-system/List";
+import CardBody from "@whois/design-system/CardBody";
+import Mono from "@whois/design-system/Mono";
+import Figure from "@whois/design-system/Figure";
+import TileGrid from "@whois/design-system/TileGrid";
+import Tile from "@whois/design-system/Tile";
+import TickRuler from "@whois/design-system/TickRuler";
+import Legend from "@whois/design-system/Legend";
 import { getGithubStats } from "./github";
 import "./github.css";
 
@@ -25,106 +31,85 @@ const weekday = (date: string): number =>
 const total = gh.totalContributions.toLocaleString("en-US");
 
 // Four named languages plus the rest summed as "other", so the list fits a 1×1
-// and still accounts for 100%. Each takes the family's tone ramp in rank order —
-// the accent for the top language, then the ink stepping down — so the ruler and
-// the swatches share one key. Whole percents: decimals cost width a phone lacks.
+// and still accounts for 100%. Ranked, so the ruler's segments and the legend's
+// dots take the family's tone ramp in the same order — the accent for the top
+// language, then the ink stepping down — and share one key without either
+// being told a colour. Whole percents: decimals cost width a phone lacks.
 const NAMED = 4;
 const named = gh.languages.slice(0, NAMED);
 const rest = gh.languages.slice(NAMED).reduce((sum, l) => sum + l.percent, 0);
 const langs = [
 	...named.map((l) => ({ name: l.name, percent: l.percent })),
 	...(rest > 0 ? [{ name: "other", percent: rest }] : []),
-].map((l, i) => ({ ...l, tone: `var(--wx-tone-${i + 1})` }));
+];
 ---
 
 <Widget
 	size="1x1"
-	class="wx-github wx-mono"
+	title="github"
+	class="wx-github"
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="2"
 >
-	<!-- Label row. Outside the toggle button, so tapping the handle never flips (and
-	     so there's no <a> inside a <button>). The handle is a variantless <Anchor>:
-	     the link reset + the DS colour transition, no added marks. -->
-	<div class="wx-head">
-		<span class="wx-head-label wx-caps">github</span>
-		<Anchor
-			class="wx-head-meta wx-caps"
-			href={gh.profileUrl}
-			target="_blank"
-			rel="noopener noreferrer"
-			aria-label={`@${gh.username} on GitHub`}
-		>
-			@{gh.username}
-		</Anchor>
-	</div>
+	<!-- The handle, in the header's meta slot. Outside the toggle button, so
+	     tapping it never flips (and so there's no <a> inside a <button>). -->
+	<Mono
+		slot="meta"
+		as="a"
+		variant="text"
+		href={gh.profileUrl}
+		target="_blank"
+		rel="noopener noreferrer"
+		aria-label={`@${gh.username} on GitHub`}
+	>
+		@{gh.username}
+	</Mono>
 
-	<!-- RAW <button>, not the DS <Button>: this is the card INTERIOR, not a control
-	     drawn on top of it. It is a real <button> only so the flip is keyboard- and
-	     focus-reachable; every piece of native button chrome is stripped in github.css
-	     so the surface reads as the tile itself. -->
-	<button
+	<!-- The card body IS the flip surface: a real <button> only so the flip is
+	     keyboard- and focus-reachable; every piece of native button chrome is
+	     stripped in github.css so it reads as the card interior. -->
+	<CardBody
+		as="button"
 		class="wx-gh-body"
 		type="button"
 		aria-pressed="false"
 		aria-label="Show language breakdown"
 	>
-		<!-- Face A: contribution grid as flat tiles — unlit tiles are a faint wash, a
-		     day with commits lights in the accent, stronger with the level — over
-		     the yearly total. -->
+		<!-- Face A: the contribution grid as tiles — ordinary days the ink at two
+		     strengths, the big days lit in the accent — over the yearly total. -->
 		<div class="wx-gh-face wx-gh-face--grid">
-			<div class="wx-gh-grid-box">
-				<div class="wx-gh-grid" style={`--gh-cols:${weeks.length}`}>
-					{
-						weeks.map((week, wi) =>
-							week.map((day) => (
-								<span
-									class="wx-gh-cell"
-									data-level={day.level}
-									style={`grid-column:${wi + 1};grid-row:${weekday(day.date)}`}
-									title={`${day.count} contribution${day.count === 1 ? "" : "s"} on ${day.date}`}
-								/>
-							)),
-						)
-					}
-				</div>
-			</div>
-			<div class="wx-figure">
-				<span class="wx-figure-num">{total}</span>
-				<span class="wx-caps">contributions</span>
-			</div>
+			<TileGrid cols={weeks.length} rows={7} fit="height">
+				{
+					weeks.map((week, wi) =>
+						week.map((day) => (
+							<Tile
+								level={day.level}
+								style={`grid-column:${wi + 1};grid-row:${weekday(day.date)}`}
+								title={`${day.count} contribution${day.count === 1 ? "" : "s"} on ${day.date}`}
+							/>
+						)),
+					)
+				}
+			</TileGrid>
+			<Figure unit="contributions">{total}</Figure>
 		</div>
 
-		<!-- Face B: language breakdown — a tick ruler split by share, each stretch
-		     of ticks in its language's tone, over the list. -->
+		<!-- Face B: language breakdown — a tick ruler split by share over the
+		     legend, both ranked (see `langs`). -->
 		<div class="wx-gh-face wx-gh-face--langs" aria-hidden="true">
-			<div class="wx-gh-ruler">
-				{
-					langs.map((l) => (
-						<span
-							class="wx-gh-ruler-seg wx-ticks"
-							style={`flex-grow:${l.percent};color:${l.tone}`}
-						/>
-					))
-				}
-			</div>
-			<!-- <List> for the markerless reset; the rows stay raw <li> because
-			     ListItem wraps its children in an arrow + a second <div>, which breaks
-			     this swatch · name · percent flex row. -->
-			<List class="wx-gh-lang-list">
-				{
-					langs.map((l) => (
-						<li class="wx-gh-lang">
-							<span class="wx-gh-swatch" style={`background:${l.tone}`} />
-							<span class="wx-gh-lang-name wx-caps">{l.name}</span>
-							<span class="wx-gh-lang-pct">{Math.round(l.percent)}%</span>
-						</li>
-					))
-				}
-			</List>
+			<TickRuler
+				class="wx-gh-ruler"
+				segments={langs.map((l) => ({ share: l.percent }))}
+			/>
+			<Legend
+				items={langs.map((l) => ({
+					label: l.name,
+					value: `${Math.round(l.percent)}%`,
+				}))}
+			/>
 		</div>
-	</button>
+	</CardBody>
 </Widget>
 
 <script>
