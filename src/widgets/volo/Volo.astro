@@ -2,10 +2,10 @@
 // Volo widget — a 2×2 card in the instrument UI, built from the design
 // system's pieces (packages/design-system/CONVENTIONS.md → Instrument UI).
 //
-// The header is the team, in caps, with its standing in a pill (the team's own
-// Volo colour as the pill's dot). Below it, ONE season: a month row with small
-// round buttons stepping through the seasons, then every fixture as a mono
-// table on hairlines — result letter in ink (win) or dim ink (loss), score over
+// The header is the season — sport and month, in caps — with the team, its
+// standing in a pill (the team's own Volo colour as the pill's dot) and small
+// round buttons stepping through the seasons on the right. Below it, ONE
+// season: every fixture as a mono table on hairlines — result letter in ink (win) or dim ink (loss), score over
 // a zero-anchored margin tick, the bracket round set on the rule it opens. The
 // accent lands once in the list: the next game, or a finished season's last
 // result.
@@ -30,9 +30,11 @@ import {
 	currentSeasonIndex,
 	formatGameDate,
 	formatGameTime,
+	formatPlacing,
 	formatRecord,
 	formatRound,
 	formatSeasonLabel,
+	formatTally,
 	getVoloSeasons,
 	marginRatio,
 	opponentStanding,
@@ -127,31 +129,79 @@ const accentRow = (season: (typeof seasons)[number]) => {
 };
 
 const opening = seasons[current];
+
+// The pill's placing, with the separator it carries into the tally after it:
+// "1st · ", or nothing for a season with no placing.
+const placeLabel = (season: (typeof seasons)[number]) => {
+	const place = formatPlacing(season);
+	return place ? `${place} · ` : "";
+};
+
+// "SOFTBALL • AUG 2026" — the header's caps voice uppercases it.
+const seasonHeading = (season: (typeof seasons)[number]) =>
+	`${season.sport} • ${formatSeasonLabel(season)}`;
 ---
 
 <Widget
 	size="2x2"
 	class="wx-volo"
-	title={opening?.team.name ?? "volo"}
+	title={opening ? seasonHeading(opening) : "volo"}
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="3"
 >
-	{/* The standing, in the header's meta slot: the team's own Volo colour as
-	    the pill's glyph (brand art — the one colour that is not the family's),
-	    then placing and record. The header sits outside the panel stack, so the
-	    script swaps the title and this pill's text when the season changes; the
-	    server renders the season the tile opens on. */}
+	{/* The header is WHEN and WHAT: the sport and the season's month on the
+	    left, in the header's caps voice. The meta slot on the right is WHO and
+	    HOW IT WENT, then the controls: the team name (dim), the standing pill
+	    (the team's own Volo colour as its dot — brand art, the one colour that
+	    is not the family's), and the round buttons that page the seasons. The
+	    header sits outside the panel stack, so the script rewrites all of it
+	    from the panel's data when the season changes; the server renders the
+	    season the tile opens on. */}
 	{opening && (
-		<Pill slot="meta" class="wx-vl-standing" data-volo-standing>
-			<span
-				class="wx-vl-dot"
-				data-volo-dot
-				style={opening.team.color ? `background:${opening.team.color}` : undefined}
-			/>
-			<span class="wx-vl-star" data-volo-star hidden={!opening.champion} title="Won the league">★</span>
-			<span data-volo-record>{formatRecord(opening)}</span>
-		</Pill>
+		<span slot="meta" class="wx-vl-meta">
+			<Mono class="wx-vl-team" tone="tertiary" data-volo-team>{opening.team.name}</Mono>
+			<Pill class="wx-vl-standing" data-volo-standing>
+				<span
+					class="wx-vl-dot"
+					data-volo-dot
+					style={opening.team.color ? `background:${opening.team.color}` : undefined}
+				/>
+				<span class="wx-vl-star" data-volo-star hidden={!opening.champion} title="Won the league">★</span>
+				{/* One flex item, so the spaces round the · are ordinary text. The
+				    placing is its own span so a narrow header can drop it. */}
+				<span>
+					<span class="wx-vl-place" data-volo-place>{placeLabel(opening)}</span>
+					<span data-volo-tally>{formatTally(opening)}</span>
+				</span>
+			</Pill>
+			{/* SEASON NAV — the metronome's small round buttons. Rendered
+			    `hidden` and unhidden by the script below, so a reader without JS
+			    gets one clean season rather than two dead arrows. A span, not a
+			    <nav>: the meta slot is phrasing content. */}
+			<span class="wx-vl-nav" role="group" aria-label="Season" hidden>
+				<IconButton
+					class="wx-vl-arrow wx-vl-arrow--prev"
+					size="small"
+					rounded
+					type="button"
+					data-volo-prev
+					aria-label="Previous season"
+				>
+					<Icon name="arrow" size={3} />
+				</IconButton>
+				<IconButton
+					class="wx-vl-arrow"
+					size="small"
+					rounded
+					type="button"
+					data-volo-next
+					aria-label="Next season"
+				>
+					<Icon name="arrow" size={3} />
+				</IconButton>
+			</span>
+		</span>
 	)}
 
 	<CardBody class="wx-vl-body">
@@ -163,32 +213,6 @@ const opening = seasons[current];
 			<Mono variant="text" class="wx-vl-empty">No seasons yet.</Mono>
 		) : (
 			<>
-				{/* SEASON NAV — the metronome's small round buttons. Rendered
-				    `hidden` and unhidden by the script below, so a reader without JS
-				    gets one clean season rather than two dead arrows. */}
-				<nav class="wx-vl-nav" aria-label="Season" hidden>
-					<IconButton
-						class="wx-vl-arrow wx-vl-arrow--prev"
-						size="small"
-						rounded
-						type="button"
-						data-volo-prev
-						aria-label="Previous season"
-					>
-						<Icon name="arrow" size={3} />
-					</IconButton>
-					<IconButton
-						class="wx-vl-arrow"
-						size="small"
-						rounded
-						type="button"
-						data-volo-next
-						aria-label="Next season"
-					>
-						<Icon name="arrow" size={3} />
-					</IconButton>
-				</nav>
-
 				<div class="wx-vl-panels" data-volo-panels>
 					{seasons.map((season, i) => {
 						const lit = accentRow(season);
@@ -196,26 +220,22 @@ const opening = seasons[current];
 						<section
 							class:list={["wx-vl-panel", i === current && "is-active"]}
 							data-volo-panel={i}
+							data-heading={seasonHeading(season)}
 							data-team={season.team.name}
 							data-color={season.team.color ?? ""}
-							data-record={formatRecord(season)}
+							data-place={placeLabel(season)}
+							data-tally={formatTally(season)}
 							data-champion={season.champion ? "true" : undefined}
 							aria-hidden={String(i !== current)}
 							aria-label={`${formatSeasonLabel(season)} — ${season.sport}`}
 						>
-							{/* The month row: the season's start and its sport, left of
-							    the round buttons that page through them. The team and
-							    record live in the card header; they are repeated here
-							    for a screen reader, which reads the panel, not the
-							    header the script rewrites. */}
-							<header class="wx-vl-head">
-								<Mono class="wx-vl-season">{formatSeasonLabel(season)}</Mono>
-								<Mono variant="text" class="wx-vl-sport">{season.sport}</Mono>
-								<span class="wx-vl-vh">
-									{season.team.name}, {formatRecord(season)}
-									{season.champion ? ". League champions." : "."}
-								</span>
-							</header>
+							{/* The season, team and record live in the card header, which
+							    the script rewrites; they are repeated here for a screen
+							    reader, which reads the panel, not that header. */}
+							<p class="wx-vl-vh">
+								{seasonHeading(season)}: {season.team.name}, {formatRecord(season)}
+								{season.champion ? ". League champions." : "."}
+							</p>
 
 							<ol class="wx-vl-games">
 								{season.games.map((game, gameIndex) => (
@@ -412,11 +432,13 @@ const opening = seasons[current];
 			widget.querySelectorAll<HTMLButtonElement>("[data-volo-jump]"),
 		);
 		// The card header sits outside the panel stack, so it is rewritten from
-		// the panel's data when the season changes (see the meta Pill).
+		// the panel's data when the season changes (see the meta slot).
 		const title = widget.querySelector<HTMLElement>(".ds-card-header__title");
+		const teamName = widget.querySelector<HTMLElement>("[data-volo-team]");
 		const dot = widget.querySelector<HTMLElement>("[data-volo-dot]");
 		const star = widget.querySelector<HTMLElement>("[data-volo-star]");
-		const record = widget.querySelector<HTMLElement>("[data-volo-record]");
+		const place = widget.querySelector<HTMLElement>("[data-volo-place]");
+		const tally = widget.querySelector<HTMLElement>("[data-volo-tally]");
 		const prev = nav.querySelector<HTMLButtonElement>("[data-volo-prev]");
 		const next = nav.querySelector<HTMLButtonElement>("[data-volo-next]");
 		if (panels.length === 0 || !prev || !next) return () => {};
@@ -432,11 +454,13 @@ const opening = seasons[current];
 				panel.classList.toggle("is-active", i === index);
 				panel.setAttribute("aria-hidden", String(i !== index));
 			});
-			const { team, color, record: standing, champion } = panels[index].dataset;
-			if (title && team) title.textContent = team;
+			const { heading, team, color, place: placing, tally: wl, champion } = panels[index].dataset;
+			if (title && heading) title.textContent = heading;
+			if (teamName && team) teamName.textContent = team;
 			if (dot) dot.style.background = color ?? "";
 			if (star) star.hidden = champion !== "true";
-			if (record && standing) record.textContent = standing;
+			if (place) place.textContent = placing ?? "";
+			if (tally && wl) tally.textContent = wl;
 			hits.forEach((hit, i) => {
 				hit.classList.toggle("is-active", i === index);
 				if (i === index) hit.setAttribute("aria-current", "true");

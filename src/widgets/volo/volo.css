@@ -37,21 +37,41 @@
 	display: none;
 }
 
-.home__widgets .wx-vl-body {
-	/* Anchors the nav, which overlays the month row of whichever panel shows. */
-	position: relative;
+/* HEADER META -------------------------------------------------------------
+   Team name, standing pill, then the season buttons, right of the heading. The
+   DS meta wrapper clips its content so a long handle truncates; here that would
+   shave the round buttons (taller than the pill, see below) and their focus
+   rings, so this header manages its own squeeze instead: the header is a query
+   container and the team name goes first when it gets narrow. */
+.home__widgets .wx-volo > .ds-card-header {
+	container: vl-head / inline-size;
+	/* A squeezed team name must not run on into the heading. */
+	column-gap: var(--space-4);
 }
-
-/* SEASON NAV ---------------------------------------------------------------
-   Top-right of the body, on the month row. The panels' month row reserves its
-   width with padding-inline-end. */
+.home__widgets .wx-volo > .ds-card-header > .ds-card-header__meta {
+	overflow: visible;
+}
+.home__widgets .wx-vl-meta {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	min-inline-size: 0;
+}
+/* The team is the give: a long name (22 characters, in one season) ellipsises
+   before the heading, the pill or the buttons move. */
+.home__widgets .wx-vl-team {
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
 .home__widgets .wx-vl-nav {
-	position: absolute;
-	z-index: 2;
-	inset-block-start: var(--space-3);
-	inset-inline-end: var(--widget-pad);
 	display: flex;
 	gap: var(--space-2);
+	/* The small round buttons are a step taller than the pill-height slot every
+	   card header reserves. Let them overhang it into the header's padding
+	   rather than push this header taller than its neighbours'. */
+	margin-block: calc((var(--space-5) - var(--space-6)) / 2);
 }
 .home__widgets .wx-vl-nav[hidden] {
 	display: none;
@@ -59,6 +79,39 @@
 /* The DS icon set has one arrow and it points right; prev is it, turned round. */
 .home__widgets .wx-vl-arrow--prev svg {
 	transform: rotate(180deg);
+}
+
+/* Narrower (a phone): the team name goes — the panel still names it to a
+   screen reader, and the dot in the pill is the team's colour. */
+@container vl-head (max-width: 480px) {
+	.home__widgets .wx-vl-team {
+		display: none;
+	}
+}
+/* Narrowest: the pill keeps its dot and the tally, and drops the placing (the
+   rank chart at the foot of the tile is where the placings are). The meta is
+   now fixed and the heading is the last resort — it ellipsises, never the
+   buttons. */
+@container vl-head (max-width: 430px) {
+	.home__widgets .wx-vl-place {
+		display: none;
+	}
+	.home__widgets .wx-volo > .ds-card-header {
+		column-gap: var(--space-3);
+	}
+	.home__widgets .wx-vl-meta {
+		gap: var(--space-2);
+	}
+	.home__widgets .wx-volo > .ds-card-header > .ds-card-header__meta {
+		flex: none;
+	}
+	.home__widgets .wx-volo > .ds-card-header > .ds-card-header__title {
+		display: block;
+		min-inline-size: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		line-height: var(--space-5);
+	}
 }
 
 /* PANEL STACK --------------------------------------------------------------
@@ -90,19 +143,6 @@
 	.home__widgets .wx-vl-panel {
 		transition: none;
 	}
-}
-
-/* MONTH ROW — the season's start and its sport, as tall as the round buttons
-   beside it so the two share a centre line. */
-.home__widgets .wx-vl-head {
-	display: flex;
-	align-items: center;
-	gap: var(--space-3);
-	min-block-size: var(--space-6);
-	padding-inline-end: calc(2 * var(--space-6) + var(--space-2) + var(--space-3));
-}
-.home__widgets .wx-vl-season {
-	color: var(--text-primary);
 }
 
 /* GAME ROWS ----------------------------------------------------------------
@@ -486,9 +526,6 @@
 		aspect-ratio: auto;
 		--vl-tile: calc(var(--widget-cell) * 2 + var(--space-5));
 		--vl-row: clamp(30px, calc(var(--vl-tile) * 0.095), 38px);
-	}
-	.home__widgets .wx-vl-nav {
-		inset-block-start: var(--space-2);
 	}
 	.home__widgets .wx-vl-round {
 		padding-inline: var(--space-3);

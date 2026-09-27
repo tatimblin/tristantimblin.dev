@@ -212,22 +212,37 @@ export function ordinal(n: number): string {
 }
 
 /**
- * "1st of 8 · 5–0", or "3rd of 8 · 3–3–1" when the season has a tie.
- *
- * The placing is where the season ENDED, after the playoffs — not the table
- * position it went into them with. Topping the table and losing the Final is a
- * 2nd-place season, and saying "1st of 8" there claims something that did not
- * happen. A season still running has no final placing, so it falls back to the
- * live table position.
+ * "1st · 5–0", or "3rd · 3–3–1" when the season has a tie — the
+ * placing (see formatPlacing()) and the tally (formatTally()), which the tile
+ * also sets apart so a narrow header can drop the placing and keep the tally.
  */
 export function formatRecord(season: VoloSeason): string {
+	const place = formatPlacing(season);
+	const wl = formatTally(season);
+	return place ? `${place} · ${wl}` : wl;
+}
+
+/** "5–0", or "3–3–1" when the season has a tie. */
+export function formatTally(season: VoloSeason): string {
 	const { record } = season;
 	const tally = [record.wins, record.losses, ...(record.ties ? [record.ties] : [])];
 	// EN DASHES. A record is a span between figures, not a hyphenated compound.
-	const wl = tally.join("–");
+	return tally.join("–");
+}
+
+/**
+ * "1st", or null when the season has no placing at all.
+ *
+ * The placing is where the season ENDED, after the playoffs — not the table
+ * position it went into them with. Topping the table and losing the Final is a
+ * 2nd-place season, and saying "1st" there claims something that did not
+ * happen. A season still running has no final placing, so it falls back to the
+ * live table position.
+ */
+export function formatPlacing(season: VoloSeason): string | null {
+	const { record } = season;
 	const placing = finalPlacement(season) ?? record.rank;
-	const place = placing && record.teams ? `${ordinal(placing)} of ${record.teams}` : null;
-	return place ? `${place} · ${wl}` : wl;
+	return placing && record.teams ? ordinal(placing) : null;
 }
 
 /* ── Derived views ──────────────────────────────────────────────────────────
