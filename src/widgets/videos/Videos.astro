@@ -7,8 +7,6 @@
 // lift is disabled. The generic carousel lives in ../../components; this module
 // owns only its grid placement + docking behaviour.
 import Widget from "@whois/design-system/Widget";
-import CardBody from "@whois/design-system/CardBody";
-import Mono from "@whois/design-system/Mono";
 import VideoCarousel from "../../components/VideoCarousel.astro";
 import "./videos.css";
 ---
@@ -24,26 +22,14 @@ import "./videos.css";
      NB the reveal writes `translate` while the dock lift below writes `transform`
      — two independent properties, so they compose instead of overwriting each
      other. -->
-<!-- The instrument card: a hairline frame with the family's header (`videos` +
-     a clip counter), the halftone clip and its caption inside, and the date ruler
-     standing just outside the frame's right edge. `tertiary` keeps the card
-     transparent, so the halftone's backdrop (--color-bg, which its per-theme tone
-     tuning was matched against) is still the page it sits on. -->
 <Widget
 	size="1x2"
-	title="videos"
 	class="wx-videos"
 	variant="tertiary"
 	data-reveal
 	data-reveal-group="videos"
 	data-reveal-eager
 >
-	<!-- Which clip of how many — written client-side from the carousel's select
-	     event (the header sits outside the <video-carousel> host, so its caption
-	     fields can't reach it); empty without JS, where there is no carousel to
-	     count. Hidden from AT: the ruler's aria-valuetext already says it. -->
-	<Mono slot="meta" variant="text" class="wx-videos-count" aria-hidden="true" />
-	<CardBody class="wx-videos-body">
 	{/* Clip changes get the threshold transition here too, so the carousel behaves the
 	    same wherever it appears. No `intro` though: this cell is mid-page behind a
 	    scroll-driven dock, so a develop-in entrance would play unseen. */}
@@ -53,8 +39,11 @@ import "./videos.css";
 	    ink for the same image (dark specks on white read fainter than light dots
 	    glowing on black), but not so much that the floor fills in and the tile
 	    reads as mostly black. */}
+	{/* No card chrome (videos.css strips it): the halftone sits straight on the page,
+	    filling the cell, with its caption laid over the clip's corner as a TV caption. */}
 	<VideoCarousel
 		rulerSide="right"
+		captionOverlay
 		xfade={1600}
 		xfadeMode="threshold"
 		xfadeLive
@@ -69,7 +58,6 @@ import "./videos.css";
 		denoise={1}
 		feather={0.4}
 	/>
-	</CardBody>
 </Widget>
 
 <script>
@@ -201,42 +189,14 @@ import "./videos.css";
 	// Bind on every page load (initial + after each ClientRouter view transition),
 	// and tear down before a swap so listeners don't accumulate across navigations.
 	let instance: DockLift | null = null;
-	let offCount: (() => void) | null = null;
-
-	// The header's clip counter ("03 / 28"), kept in step with the carousel.
-	const pad = (n: number) => String(n).padStart(2, "0");
-	function bindCount(el: HTMLElement) {
-		const out = el.querySelector<HTMLElement>(".wx-videos-count");
-		if (!out) return null;
-		const write = (index: number, count: number) => {
-			out.textContent = `${pad(index + 1)} / ${pad(count)}`;
-		};
-		const onSelect = (e: Event) => {
-			const { index, count } = (e as CustomEvent<{ index: number; count: number }>).detail;
-			write(index, count);
-		};
-		el.addEventListener("video-carousel:select", onSelect);
-		// The first selection can land before this binds (the element upgrades as
-		// soon as its module runs); read where it already is off the ruler slider.
-		const ruler = el.querySelector<HTMLElement>("[data-vc-ruler]");
-		const now = Number(ruler?.getAttribute("aria-valuenow"));
-		const max = Number(ruler?.getAttribute("aria-valuemax"));
-		if (ruler?.hasAttribute("aria-valuenow") && Number.isFinite(now) && Number.isFinite(max))
-			write(now, max + 1);
-		return () => el.removeEventListener("video-carousel:select", onSelect);
-	}
-
 	function init() {
 		const el = document.querySelector<HTMLElement>(SELECTOR);
 		if (!el || instance) return;
 		instance = new DockLift(el);
-		offCount = bindCount(el);
 	}
 	function teardown() {
 		instance?.destroy();
 		instance = null;
-		offCount?.();
-		offCount = null;
 	}
 	document.addEventListener("astro:page-load", init);
 	document.addEventListener("astro:before-swap", teardown);

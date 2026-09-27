@@ -39,9 +39,12 @@
 	   doesn't fight the row span. */
 	aspect-ratio: auto;
 
-	/* Keep the DS card's hairline frame (variant tertiary = no fill, so the
-	   halftone still sits on the page backdrop it was tuned against), but let the
-	   ruler escape past its right edge. */
+	/* No container: the halftone sits straight on the page, so strip the DS card
+	   chrome (frame, fill) and let the ruler escape to the right. The card's corner
+	   radius stays: the stage below rounds the halftone to it, so the dot field
+	   has the same footprint and corners as the cards beside it. */
+	border: none;
+	background: none;
 	overflow: visible;
 
 	/* TRAVEL: how far the carousel is raised above its real cell during the
@@ -79,60 +82,42 @@
 	--color-fg: var(--text-secondary);
 }
 
-/* Top-align the carousel within the (possibly taller) 2-row cell. */
-.home__widgets .wx-videos video-carousel {
-	justify-content: flex-start;
-}
-
-/* The body: the carousel fills it top-down, and must not clip the ruler, which
-   stands outside the card. */
-.home__widgets .wx-videos-body {
-	overflow: visible;
-}
-
-/* Widen the ruler+stage row beyond the body so the STAGE fills the body's width
-   and the ruler lands outside the card: past the body's end padding and the 1px
-   frame, then the same --space-4 the grid reserves (see --vc-ruler-gutter above),
-   so the ruler overhangs exactly into the reserved gutter. stage is flex:1 →
-   takes the 100%; the fixed-width ruler takes the overflow. */
-.home__widgets .wx-videos .vc__main {
-	--wx-vc-reach: calc(var(--widget-pad) + 1px + var(--space-4));
-	gap: var(--wx-vc-reach);
-	width: calc(100% + var(--wx-vc-reach) + var(--vc-ruler-gutter));
-}
-
-/* Fill the body top to bottom: the carousel and its ruler+stage row grow into
-   the 2-row cell, so the caption can sit at the card's foot rather than leave a
-   dead band under it. */
+/* FILL THE CELL. The clip IS the widget, so the dot grid takes the whole 1×2
+   cell rather than a 9:16 box at its top. The clips are 9:16 portrait (360×640);
+   the cell is two square rows plus a gap, ~1:2 — a little narrower. Sizing the grid
+   by width (as it was, aspect-ratio 960/1706) left a dead band under it — ~60px at
+   1440 wide, where the caption used to sit; sizing it by height would overhang the
+   column. So the grid takes the cell's box and <dotted-grid> cover-maps the clip
+   into it (its shader's coverUv: scale to fill, never stretch): true proportions,
+   the tallest edge exactly matched, and only the sides trimmed — ~11% of the clip's
+   width at 1440, split evenly, where there is nothing a portrait phone clip frames.
+   The ruler stretches with the stage, so it spans the cell's full height too. */
 .home__widgets .wx-videos video-carousel {
 	flex: 1 1 auto;
 	min-height: 0;
 }
+
+/* Widen the ruler+stage row beyond the cell so the STAGE fills the full cell width
+   (its right edge aligns with the grid's right column edge) and the ruler + its
+   gap overhang into the reserved gutter. stage is flex:1 → takes the 100%; the
+   fixed-width ruler takes the overflow. */
 .home__widgets .wx-videos .vc__main {
 	flex: 1 1 auto;
+	min-height: 0;
+	width: calc(100% + var(--vc-ruler-gutter) + var(--space-4));
 }
 
-/* Let the stage fill the body width (override the height-cap-derived max-width),
-   and push the caption to its foot. */
+/* The stage fills the cell (overriding the height-cap-derived max-width), and the
+   grid fills the stage: drop its 9:16 box and let the shader cover-map instead. */
 .home__widgets .wx-videos .vc__stage {
 	max-width: none;
 	width: 100%;
+	border-radius: var(--border-radius-2);
 }
-/* The caption as the card's footer row: the header's fading hairline mirrored
-   above it, run edge to edge across the card (out through the body padding),
-   with the header's own label-to-divider spacing on either side. */
-.home__widgets .wx-videos .vc__caption {
-	position: relative;
-	margin-block-start: auto;
-	padding-block-start: var(--widget-pad);
-}
-.home__widgets .wx-videos .vc__caption::before {
-	content: "";
-	position: absolute;
-	inset-block-start: calc(var(--widget-pad) - var(--space-3));
-	inset-inline: calc(-1 * var(--widget-pad));
-	block-size: 1px;
-	background: var(--hairline-fade);
+.home__widgets .wx-videos .vc__grid {
+	flex: 1 1 auto;
+	min-height: 0;
+	aspect-ratio: auto;
 }
 
 /* MOBILE (≤900px, where the grid collapses to 2 cols) --------------------------
