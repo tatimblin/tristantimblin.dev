@@ -2,16 +2,16 @@
 // Bike Stats (Bay Wheels) — a 1×1 card in the instrument UI, built from the
 // design system's pieces (packages/design-system/CONVENTIONS.md → Instrument
 // UI). The header names the service and dates the reading; the body is the
-// running ride total drawn as a hairline graph (the latest bar lit), the total
-// as the big figure, and miles / hours as the stat pairs under it. Everything
-// is read at build time from bike-stats.csv (see ./bike-stats.ts), which the
-// baywheels-stats GitHub Action appends to daily — nothing runs client-side.
+// miles ridden as the big figure with rides / hours as stat pairs down the left,
+// and the Lyft e-bike drawn in ink on the right, cropped off the card's edge
+// like the posters' cropped type. Everything is read at build time from
+// bike-stats.csv (see ./bike-stats.ts), which the baywheels-stats GitHub
+// Action appends to daily; the only client-side code is the bike's slide-in.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Mono from "@whois/design-system/Mono";
 import Figure from "@whois/design-system/Figure";
 import Stat from "@whois/design-system/Stat";
-import BarGraph from "@whois/design-system/BarGraph";
 import { getBikeStats } from "./bike-stats";
 import "./bike-stats.css";
 
@@ -27,13 +27,45 @@ const monthDay = (date: string) =>
 		day: "numeric",
 		timeZone: "UTC",
 	});
-const monthYear = (date: string) =>
-	new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
-		month: "long",
-		year: "numeric",
-		timeZone: "UTC",
-	});
 ---
+
+<script>
+	// Slide the bike in from the right the first time the widget scrolls into
+	// view. One-shot: unobserve after the first reveal.
+	//
+	// WIRED ON astro:page-load, NOT AT MODULE SCOPE — and the difference is a bug,
+	// not a style choice. Astro bundles this into a module that executes exactly
+	// ONCE, but the Layout uses ClientRouter, which REPLACES the DOM on every
+	// navigation. A module-scope observer therefore ends up watching a detached
+	// element while the fresh .wx-baywheels never receives .is-in — and the resting
+	// state in bike-stats.css is `opacity: 0`, so the bike stays invisible until a
+	// hard reload. (Reduced-motion users never saw it: that block forces it shown.)
+	// tests/reveal.spec.ts test 7 guards this.
+	//
+	// The data- marker keeps a re-wire of the SAME node a no-op, so the first load
+	// (where ClientRouter also fires astro:page-load) doesn't double-observe. Same
+	// shape as the hero-floor relay in src/pages/index.astro.
+	function wireBikeReveal() {
+		const bw = document.querySelector<HTMLElement>(".wx-baywheels");
+		if (!bw || bw.dataset.bikeRevealWired) return;
+		bw.dataset.bikeRevealWired = "true";
+		const io = new IntersectionObserver(
+			(entries, observer) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) {
+						bw.classList.add("is-in");
+						observer.unobserve(entry.target);
+					}
+				}
+			},
+			{ threshold: 0.35 },
+		);
+		io.observe(bw);
+	}
+
+	wireBikeReveal();
+	document.addEventListener("astro:page-load", wireBikeReveal);
+</script>
 
 <Widget
 	size="1x1"
@@ -54,18 +86,13 @@ const monthYear = (date: string) =>
 	</Mono>
 
 	<CardBody class="wx-bw-body">
-		<!-- The running total since the first snapshot, bottom-anchored to zero so
-		     the heights are the real proportions; the latest bar is the one lit. -->
-		<BarGraph
-			class="wx-bw-graph"
-			values={bike.history}
-			lit="last"
-			aria-label={`Total rides, ${monthYear(bike.since)} to ${monthYear(bike.date)}: ${fmt(bike.history[0] ?? 0)} to ${fmt(bike.rides)}`}
-		/>
-		<Figure unit="rides">{fmt(bike.rides)}</Figure>
+		<Figure unit="miles">{fmt(bike.miles)}</Figure>
 		<div class="wx-bw-stats">
-			<Stat size="sm" value={fmt(bike.miles)} label="miles" />
+			<Stat size="sm" value={fmt(bike.rides)} label="rides" />
 			<Stat size="sm" value={fmt(bike.hours)} label="hours" />
 		</div>
+		<!-- Decoration: the figures above carry the content. A masked box, not an
+		     <img>, so the drawing takes its colour from the ink token. -->
+		<div class="wx-bw-bike" aria-hidden="true"></div>
 	</CardBody>
 </Widget>

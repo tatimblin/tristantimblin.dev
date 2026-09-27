@@ -1,20 +1,58 @@
-/* Bay Wheels (bike stats) widget — layout only.
+/* Bay Wheels (bike stats) widget — layout, plus the bike drawing.
  *
  * Plain CSS (not an Astro scoped <style>), matching the other widgets; the
  * .home__widgets prefix matches the page's widget-grid containment. The card
- * chrome, header, graph, figure and stat pairs are design-system components;
- * all this file does is let the graph take the body's spare height and set the
- * two stat pairs side by side. */
+ * chrome, header, figure and stat pairs are design-system components; this
+ * file lays them down the left and draws the bike on the right. */
 
-/* The graph grows into whatever the figure and stats leave, so it reads at
-   any tile size (overrides BarGraph's fixed default height). */
-.home__widgets .wx-bw-graph {
-	flex: 1 1 auto;
-	block-size: auto;
-	min-block-size: var(--space-6);
+/* The figure at the top, the stat pairs at the bottom: a left column of
+   readings, with the bike filling the space to their right. */
+.home__widgets .wx-bw-body {
+	justify-content: space-between;
 }
-
 .home__widgets .wx-bw-stats {
 	display: flex;
-	gap: var(--space-6);
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+/* The Lyft e-bike, drawn in ink. /images/lyft-ebike-ink.png is an alpha mask
+   derived from the product render (/images/lyft-ebike-sideview.png): tonal
+   darkness plus traced edges, cropped to the bike, floor shadow removed. As a
+   mask it has no colour of its own; the box's fill gives it one, so it is the
+   ink token in either theme (dark on bone, light on the dark card) with no
+   blend-mode guesswork. It sits on the body's bottom padding line, level with
+   the last stat, and runs off the card's right edge: the front wheel, basket
+   and bars stay in view and the rear wheel is cropped, like the posters'
+   cropped type. It is absolutely positioned so it never takes layout space from
+   the readings; the left inset keeps it clear of the stat column. */
+.home__widgets .wx-bw-bike {
+	position: absolute;
+	inset-inline-start: 44%;
+	inset-block-end: var(--widget-pad);
+	block-size: 62%;
+	aspect-ratio: 1000 / 607;
+	background: var(--text-secondary);
+	mask: url("/images/lyft-ebike-ink.png") no-repeat left bottom / contain;
+	pointer-events: none;
+
+	/* Hidden and offset at rest. The script in BikeStats.astro adds .is-in to
+	   the card on first scroll-into-view, which rolls the bike in from the right
+	   and fades it up. */
+	opacity: 0;
+	transform: translateX(var(--space-8));
+	transition:
+		transform var(--duration-reveal) var(--ease-reveal),
+		opacity var(--duration-reveal) var(--ease-reveal);
+}
+.home__widgets .wx-baywheels.is-in .wx-bw-bike {
+	opacity: 1;
+	transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.home__widgets .wx-bw-bike {
+		transition: none;
+		transform: none;
+		opacity: 1;
+	}
 }

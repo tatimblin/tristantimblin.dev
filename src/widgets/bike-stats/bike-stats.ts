@@ -26,42 +26,6 @@ export interface BikeStats {
 	date: string;
 	relativeDate: string; // "Today" | "Yesterday" | "N days ago"
 	freshness: "green" | "yellow" | "red" | "gray";
-	/** Running ride total at HISTORY_SAMPLES evenly spaced moments from the
-	 *  first snapshot to the latest, oldest first — the widget's hairline graph. */
-	history: number[];
-	/** The first snapshot's date (YYYY-MM-DD): where `history` starts. */
-	since: string;
-}
-
-// Enough bars to read as a rising line, few enough that the graph's 1px bars
-// and their gaps still fit a ~160px phone tile.
-const HISTORY_SAMPLES = 24;
-
-// The CSV holds running TOTALS on the days the Action happened to run, with
-// gaps of up to a few months. So the graph plots the total itself, sampled on an
-// even clock and linearly interpolated between the snapshots either side: a gap
-// becomes a straight ramp, which claims nothing the data doesn't. Per-period
-// ride counts would have to invent how a gap's rides were spread.
-function sampleHistory(rows: Row[], samples: number): number[] {
-	const pts = rows
-		.map((r) => ({ t: new Date(r.date).getTime(), v: r.rides }))
-		.filter((p) => Number.isFinite(p.t))
-		.sort((a, b) => a.t - b.t);
-	if (pts.length === 0) return [];
-	const t0 = pts[0].t;
-	const t1 = pts[pts.length - 1].t;
-	if (pts.length === 1 || t1 === t0) return [pts[0].v];
-	const out: number[] = [];
-	let j = 0;
-	for (let i = 0; i < samples; i++) {
-		const t = t0 + ((t1 - t0) * i) / (samples - 1);
-		while (j < pts.length - 2 && pts[j + 1].t < t) j++;
-		const a = pts[j];
-		const b = pts[j + 1];
-		const f = Math.min(Math.max((t - a.t) / (b.t - a.t), 0), 1);
-		out.push(Math.round(a.v + (b.v - a.v) * f));
-	}
-	return out;
 }
 
 // Minimal CSV parse — the file is a flat numeric table with a header row, so a
@@ -125,9 +89,5 @@ export function getBikeStats(): BikeStats {
 		date: latest.date,
 		relativeDate: relativeDate(diff),
 		freshness: freshness(diff),
-		history: sampleHistory(rows, HISTORY_SAMPLES),
-		since: rows.reduce((min, r) =>
-			new Date(r.date) < new Date(min.date) ? r : min,
-		).date,
 	};
 }
