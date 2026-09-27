@@ -129,6 +129,7 @@ glass, caps mono labels), and the components below have no upstream at all.
 | Token | What it is for |
 | --- | --- |
 | `--accent` | the one accent (retuned from blue; mixed from `--red-900`/`--orange-900`). `--emphasis` is its tint. |
+| `--on-accent` | type ON the accent — the dark ink in both themes (white fails AA on it). The accent Pill, primary Button/IconButton and the carousel's caption title use it. |
 | `--lit` | a step/tile/key that is ON — the accent on dark, the **ink** on light. Use for binary on/off; use `--accent` for things that must be orange in both themes. |
 | `--wash-1/2/3` | the ink at 7 / 16 / 30 % — unlit tile & subtle pill fill; two stronger steps. |
 | `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
@@ -172,7 +173,9 @@ elsewhere it falls back to the type tokens.
 - `Hairline` — `fade` (default true), `orientation="horizontal|vertical"`.
 - `TickRuler` — `segments=[{share, color?}]` (colours default to `--tone-N` by
   order), `playhead={0..1}` (accent line + dot), `pitch`, `height`.
-- `BarGraph` — `values`, `max`, `lit={i|"last"|"max"}`, `height`.
+- `BarGraph` — `values`, `max`, `lit={i|"last"|"max"}` (an index, where Tile's
+  `lit` is a boolean), `height`, `label` (its accessible name; without one it
+  is `aria-hidden`, as RingGauge is).
 - `RingGauge` — `value={0..1}`, `segments`, `size`, `stroke`, `label`;
   children sit in the centre.
 - `Legend` — `items=[{label, value?, color?}]` or `LegendItem` children (`label`,

@@ -62,12 +62,12 @@
 .ds-icon-button--variant-primary {
 	--button-background: var(--accent);
 	--button-border: transparent;
-	--color: var(--white);
+	--color: var(--on-accent);
 }
 .ds-icon-button--variant-primary:hover:not(:disabled),
 .ds-icon-button--variant-primary:focus-visible {
 	--button-background: oklch(from var(--accent) calc(l + 0.05) c h);
-	--color: var(--white);
+	--color: var(--on-accent);
 }
 
 /* variant: secondary — an ink wash inside a hairline */

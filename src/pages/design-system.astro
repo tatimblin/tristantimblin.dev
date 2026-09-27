@@ -49,6 +49,7 @@ import Widget from "@whois/design-system/Widget";
 // Instrument tokens, for the swatch row: name → what it is for.
 const instrumentTokens = [
 	["--accent", "the one accent"],
+	["--on-accent", "type on the accent — the ink, both themes"],
 	["--lit", "a step that is on (accent dark / ink light)"],
 	["--emphasis", "the accent at a tint"],
 	["--wash-1", "unlit tile · subtle pill"],
@@ -429,7 +430,13 @@ const faces = [
 			<div class="ds-demo__swatches">
 				{instrumentTokens.map(([name, note]) => (
 					<div class="ds-demo__swatch-row">
-						<span class="ds-demo__swatch" style={`background: var(${name})`} />
+						{/* --on-accent is only ever seen ON the accent, so it is shown that way:
+						    a glyph in the token over the accent square, i.e. the pair. */}
+						{name === "--on-accent" ? (
+							<span class="ds-demo__swatch ds-demo__swatch--on" style="background: var(--accent); color: var(--on-accent)">Aa</span>
+						) : (
+							<span class="ds-demo__swatch" style={`background: var(${name})`} />
+						)}
 						<Mono variant="value">{name}</Mono>
 						<Mono variant="text">{note}</Mono>
 					</div>
@@ -646,12 +653,15 @@ const faces = [
 			<h2 class="ds-demo__h">BarGraph</h2>
 			<p class="ds-demo__note">
 				Vertical hairlines with data heights, scaled to <code>max</code> (default: the
-				largest value); <code>lit</code> draws one bar in the accent.
+				largest value); <code>lit</code> draws one bar in the accent — by INDEX (or
+				<code>"last"</code> / <code>"max"</code>), where Tile's <code>lit</code> is a
+				boolean. <code>label</code> names it as an image; without one it is
+				<code>aria-hidden</code>, like RingGauge.
 			</p>
 			<Flex gap={6} wrap="wrap" alignItems="end">
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} /></div>
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} lit="last" /></div>
-				<div style="inline-size: 240px;"><BarGraph values={graphValues} max={40} lit={7} height="var(--space-8)" /></div>
+				<div style="inline-size: 240px;"><BarGraph values={graphValues} max={40} lit={7} height="var(--space-8)" label="Sixteen readings, rising" /></div>
 			</Flex>
 		</section>
 
@@ -1274,6 +1284,13 @@ const faces = [
 		block-size: var(--space-6);
 		border-radius: var(--border-radius-0);
 		border: 1px solid var(--hairline);
+	}
+	.ds-demo__swatch--on {
+		display: inline-grid;
+		place-items: center;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-0);
+		line-height: 1;
 	}
 
 	.ds-demo__note {

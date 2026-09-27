@@ -140,11 +140,13 @@ const readings = (view: (typeof views)[number]) =>
 							</span>
 						</Mono>
 
+						{/* No label: hidden from the tree until bindGraph() upgrades it into
+						    the slider (BarGraph's default); the sentence below carries the
+						    peak for a reader without the script. */}
 						<BarGraph
 							class="wx-rd-bars"
 							values={view.points.map((p) => p.value)}
 							lit={view.peakIndex}
-							aria-hidden="true"
 							title={sampledNote || undefined}
 						/>
 

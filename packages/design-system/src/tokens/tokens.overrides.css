@@ -280,6 +280,13 @@
 .maximeheckel-light,
 .maximeheckel-dark {
 	--accent: color-mix(in oklch, var(--red-900) 60%, var(--orange-900));
+	/* Text ON the accent: the dark ink, in both themes. White on this orange-red
+	 * measures 3.8:1 light / 3.6:1 dark — under AA for the 12px caps mono that
+	 * sits on it (an accent pill, a primary button, the caption title); the
+	 * light theme's darkest grey (--gray-1200, restated so it holds on the dark
+	 * theme too) measures 4.7–4.9:1. Anything that puts type on --accent reaches
+	 * for this, never --white. */
+	--on-accent: oklch(21% 0.012 var(--gray-hue, 80));
 	--input-active: var(--accent);
 	--input-focus: var(--accent);
 }

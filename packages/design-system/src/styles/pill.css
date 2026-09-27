@@ -65,7 +65,7 @@
 }
 .ds-pill--variant-accent {
 	--pill-background: var(--accent);
-	--pill-color: var(--white);
+	--pill-color: var(--on-accent);
 }
 .ds-pill--variant-info {
 	--pill-background: var(--emphasis);

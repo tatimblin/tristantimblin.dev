@@ -87,7 +87,7 @@
 /* variant: primary */
 .ds-button--variant-primary {
 	--button-background: var(--accent);
-	--color: var(--white);
+	--color: var(--on-accent);
 }
 .ds-button--variant-primary:hover:not(:disabled),
 .ds-button--variant-primary:focus-visible {
