@@ -1,9 +1,16 @@
 ---
-// Now Playing — a self-contained widget rendering the live Spotify player
-// (@tristimb/spotify-stream-player) in a design-system Widget card. Styling,
-// the SSE endpoint, and the web-component registration all live in this module;
-// the page just drops <NowPlaying /> into its <WidgetGrid>.
+// Now Playing — a 1×1 card in the instrument UI (packages/design-system/
+// CONVENTIONS.md → Instrument UI) around the live Spotify player
+// (@tristimb/spotify-stream-player). The card chrome and header are design-
+// system components: `now playing` in the caps voice, and a state pill that
+// reads LIVE while the track is running and PAUSED when it isn't. The player
+// itself is a web component, so its insides take the DS voices through its
+// --ssp-* properties and ::part()s (now-playing.css): the cover as a flat
+// tile, the title in the figure voice, the artist in dim mono, and the
+// progress bar redrawn as a hairline tick ruler with the accent playhead.
 import Widget from "@whois/design-system/Widget";
+import CardBody from "@whois/design-system/CardBody";
+import Pill from "@whois/design-system/Pill";
 import { SPOTIFY_SSE_URL } from "./config";
 import "./now-playing.css";
 ---
@@ -14,10 +21,84 @@ import "./now-playing.css";
 
 <Widget
 	size="1x1"
+	title="now playing"
 	class="wx-nowplaying-widget"
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="0"
 >
-	<spotify-player src={SPOTIFY_SSE_URL} layout="cover" tint></spotify-player>
+	<!-- Hidden until the player has told us which state it is in (the script
+	     below); the placeholder text only reserves the pill's width. -->
+	<Pill slot="meta" class="wx-np-state">paused</Pill>
+	<CardBody>
+		<spotify-player src={SPOTIFY_SSE_URL} layout="cover"></spotify-player>
+	</CardBody>
 </Widget>
+
+<script>
+	// The state pill. The player doesn't publish whether it is playing, but it
+	// only advances its elapsed timestamp (part="elapsed") while a track runs,
+	// so a timestamp that changed within the last couple of seconds means LIVE
+	// and one that sat still that long means PAUSED.
+	// Its shadow root is open, so a MutationObserver can watch that text without
+	// forking the package. Bound per page-load and torn down before a
+	// view-transition swap, like the other widgets' scripts.
+	const STALE_MS = 2500;
+
+	function bind() {
+		const widget = document.querySelector<HTMLElement>(".wx-nowplaying-widget");
+		const player = widget?.querySelector("spotify-player");
+		const pill = widget?.querySelector<HTMLElement>(".wx-np-state");
+		const root = player?.shadowRoot;
+		if (!widget || !pill || !root) return () => {};
+
+		let last = "";
+		let timer: number | undefined;
+
+		const set = (live: boolean) => {
+			widget.classList.toggle("is-live", live);
+			widget.classList.add("is-known");
+			const text = live ? "live" : "paused";
+			if (pill.textContent !== text) pill.textContent = text;
+		};
+
+		const check = () => {
+			const elapsed = root.querySelector('[part~="elapsed"]');
+			const now = elapsed?.textContent?.trim() ?? "";
+			// No timestamp yet = the skeleton; say nothing until there's data.
+			if (!now || now === last) return;
+			// A tick after the first one we saw is playback; either way, if
+			// nothing moves for STALE_MS the track is paused (or ended).
+			if (last) set(true);
+			last = now;
+			window.clearTimeout(timer);
+			timer = window.setTimeout(() => set(false), STALE_MS);
+		};
+
+		const observer = new MutationObserver(check);
+		observer.observe(root, {
+			subtree: true,
+			childList: true,
+			characterData: true,
+		});
+		check();
+
+		return () => {
+			observer.disconnect();
+			window.clearTimeout(timer);
+		};
+	}
+
+	let teardown: (() => void) | null = null;
+	document.addEventListener("astro:page-load", () => {
+		// The shadow root exists once the element is upgraded.
+		void customElements.whenDefined("spotify-player").then(() => {
+			teardown?.();
+			teardown = bind();
+		});
+	});
+	document.addEventListener("astro:before-swap", () => {
+		teardown?.();
+		teardown = null;
+	});
+</script>

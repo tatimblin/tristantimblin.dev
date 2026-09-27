@@ -2,99 +2,157 @@
  *
  * Plain CSS (not an Astro scoped <style>) so the ::part() selectors that pierce
  * the <spotify-player> shadow DOM survive verbatim — Astro would otherwise add a
- * scope hash and break them. Selectors are global by nature (they reach into a
- * web component's shadow DOM); the .wx-nowplaying-* prefix keeps them contained.
- * The .home__widgets prefix matches the page's widget-grid containment. */
+ * scope hash and break them. The .wx-nowplaying-*/.wx-np-* prefix keeps them
+ * contained; the .home__widgets prefix matches the page's widget-grid
+ * containment.
+ *
+ * The card, header, body and pill are design-system components. The player's
+ * insides can't be — they live in its shadow DOM — so they take the DS voices
+ * through the component's public styling API (--ssp-* properties, ::part()s),
+ * all from DS tokens: a page rule on a ::part() outranks the component's own
+ * shadow styles. Flat, like the rest of the family: no album-colour tint, no
+ * shadow on the cover; the one accent is the playhead. */
 
-/* Clip the component's full-bleed album gradient to the card's rounded corners
-   (the tinted background bleeds to every edge). */
-.home__widgets .wx-nowplaying-widget {
-	overflow: hidden;
+/* The state pill says nothing until the script knows the state. */
+.home__widgets .wx-nowplaying-widget:not(.is-known) .wx-np-state {
+	visibility: hidden;
 }
 
-/* The <spotify-player> web component is styled entirely through its public API:
-   size it to fill the card body, then map DS tokens onto the component's --ssp-*
-   custom properties + tune a couple of ::part()s. Under `tint` the component
-   paints an album-derived gradient and owns its own (light) text color, so we
-   don't set one here. */
+/* The player fills the card body. */
 .home__widgets .wx-nowplaying-widget spotify-player {
 	display: block;
-	width: 100%;
-	flex: 1;
-	min-height: 0;
-	padding: 0; /* gradient is full-bleed; inner spacing lives on ::part(root) */
-	/* Fluid: the --ssp-* / --widget-* custom props inherit through the shadow
-	   boundary, so the component's text scales with the card (≡ current tokens at
-	   the desktop cell size). */
-	--ssp-gap: var(--space-2);
-	--ssp-title-size: var(--widget-font-md);
-	--ssp-subtitle-size: var(--widget-font-sm);
-	--ssp-timestamp-size: var(--widget-font-xs);
-	--ssp-progress-height: 6px;
-	--ssp-radius: var(--border-radius-2);
-	/* soft/tinted bar: pale translucent white over the album gradient */
-	--ssp-accent: oklch(1 0 0 / 0.9);
-	--ssp-track: oklch(1 0 0 / 0.25);
+	flex: 1 1 auto;
+	min-block-size: 0;
+	inline-size: 100%;
+	--ssp-gap: var(--widget-gap);
+	--ssp-radius: var(--border-radius-tile);
+	--ssp-marquee-gap: var(--space-6);
+	/* The progress bar is the component's <progress>, painted with --ssp-track
+	   (the whole bar) and --ssp-accent (the elapsed stretch) as backgrounds —
+	   so both can be ticks instead of fills. Same pitch and hairline as the DS
+	   TickRuler (tick-ruler.css): the track in the dim ink, the elapsed stretch
+	   in the full ink, ending in the accent playhead — a full-height line at
+	   its right edge, standing above the ticks, which stop short of the top. */
+	--ssp-progress-height: var(--space-5);
+	--ssp-track: repeating-linear-gradient(
+			to right,
+			var(--text-tertiary) 0 1px,
+			transparent 1px var(--tick-pitch)
+		)
+		left bottom / 100% 65% no-repeat;
+	--ssp-accent: linear-gradient(var(--accent), var(--accent)) right / 1px 100%
+			no-repeat,
+		repeating-linear-gradient(
+			to right,
+			var(--text-primary) 0 1px,
+			transparent 1px var(--tick-pitch)
+		)
+		left bottom / 100% 65% no-repeat;
 }
 
-/* LIGHT THEME. `tint` is dark-only by construction: the component clamps the
-   album colour to a 0.30–0.42 → 0.16 lightness gradient with fixed #f5f5f5 text,
-   and nothing in it reads the page theme — so on the light page the card was a
-   dark block among light ones. Re-tint from outside instead: a page rule on a
-   ::part() outranks the component's own shadow styles. Same album hue and the
-   same top-to-bottom build as the dark version, mirrored — deepest at the top,
-   palest behind the text at the bottom — in the pale register the Bay Wheels
-   card uses. The chroma cap keeps a saturated cover from going candy.
-   --ssp-cover-color is set on the host by the component's own cover sampling;
-   the fallback (no sample, e.g. a tainted canvas) is a DS grey, whose hue is all
-   that survives the lightness override. */
-.maximeheckel-light .home__widgets .wx-nowplaying-widget spotify-player {
-	--ssp-accent: color-mix(in oklab, var(--text-primary) 85%, transparent);
-	--ssp-track: color-mix(in oklab, var(--text-primary) 15%, transparent);
-}
-
-.maximeheckel-light .home__widgets .wx-nowplaying-widget spotify-player::part(root) {
-	--_np-c: var(--ssp-cover-color, var(--gray-1000));
-	background: linear-gradient(
-		to bottom,
-		oklch(from var(--_np-c) 0.86 min(c * 0.6, 0.06) h),
-		oklch(from var(--_np-c) 0.95 min(c * 0.4, 0.03) h)
-	);
-	color: var(--text-primary);
-}
-
-/* Inner spacing so the gradient is full-bleed but art/text stay inset. Anchored
-   to its own 12px base (not --widget-pad, whose 16px floor would shrink the art),
-   scaling with the card via the shared --widget-cell primitive. */
 .home__widgets .wx-nowplaying-widget spotify-player::part(root) {
-	padding: clamp(var(--space-3), calc(var(--widget-cell) * 0.040), var(--space-5));
+	padding: 0;
 }
 
-.home__widgets .wx-nowplaying-widget spotify-player::part(art) {
-	border-radius: var(--border-radius-0);
-	/* Reuse the card's own DS depth shadow (--card-shadow, set by
-	   .ds-card--depth-N). It inherits through the shadow boundary, so the art
-	   lifts with the same shadow the card uses. */
-	box-shadow: var(--card-shadow);
-}
-
-/* The album frame clips its contents (overflow:hidden in the component); allow
-   the art's box-shadow to escape it. The art already fits the frame, so nothing
-   else is actually clipped. */
+/* The cover: a flat square tile, left-aligned over the text like the rest of
+   the card's content, filling the height the text and ruler leave. */
 .home__widgets .wx-nowplaying-widget spotify-player::part(album) {
-	overflow: visible;
+	justify-content: flex-start;
+	border-radius: var(--border-radius-tile);
+}
+.home__widgets .wx-nowplaying-widget spotify-player::part(art) {
+	border-radius: var(--border-radius-tile);
+	background: var(--wash-1);
 }
 
+/* The album name is a third line a 1×1 can't afford. */
 .home__widgets .wx-nowplaying-widget spotify-player::part(album-text) {
 	display: none;
 }
 
-/* Keep the title and artist on a single line so a long name can't wrap to a
-   second row and steal height from the album art (which flexes to fill the
-   leftover space) — that reflow would resize the cover on every track change.
-   The component watches for this overflow and, when a line is too wide, scrolls
-   it in a continuous car-radio marquee instead of clipping it. */
+/* Title in the figure voice (the numeric face at regular weight, as Figure
+   and Stat set it), artist in the dim mono of Mono's text variant. Both stay
+   on a single line so a long name can't wrap and steal height from the cover
+   (which would resize it on every track change); the component watches for
+   the overflow and scrolls such a line as a car-radio marquee instead. */
 .home__widgets .wx-nowplaying-widget spotify-player::part(title),
 .home__widgets .wx-nowplaying-widget spotify-player::part(artist) {
 	white-space: nowrap;
+	line-height: var(--line-height-ui);
+}
+.home__widgets .wx-nowplaying-widget spotify-player::part(title) {
+	font-family: var(--font-numeric);
+	font-size: var(--widget-font-md);
+	font-weight: var(--font-weight-400);
+	letter-spacing: var(--tracking-heading);
+	color: var(--text-primary);
+}
+.home__widgets .wx-nowplaying-widget spotify-player::part(artist) {
+	font-family: var(--font-mono);
+	font-size: var(--widget-font-xs);
+	letter-spacing: var(--tracking-mono);
+	color: var(--text-tertiary);
+	opacity: 1;
+}
+
+/* Progress: the ruler across the full width, the two timestamps under its
+   ends in the mono value voice — an instrument's scale, not a media bar. */
+.home__widgets .wx-nowplaying-widget spotify-player::part(progress) {
+	display: grid;
+	grid-template-columns: auto auto;
+	justify-content: space-between;
+	gap: var(--space-2) 0;
+}
+.home__widgets .wx-nowplaying-widget spotify-player::part(progress-bar) {
+	grid-column: 1 / -1;
+	grid-row: 1;
+	inline-size: 100%;
+	border-radius: 0;
+}
+.home__widgets .wx-nowplaying-widget spotify-player::part(elapsed),
+.home__widgets .wx-nowplaying-widget spotify-player::part(remaining) {
+	grid-row: 2;
+	padding: 0;
+	font-family: var(--font-mono);
+	font-size: var(--widget-font-xs);
+	line-height: 1;
+	color: var(--text-tertiary);
+	opacity: 1;
+}
+.home__widgets .wx-nowplaying-widget spotify-player::part(elapsed) {
+	color: var(--text-primary);
+}
+/* The component rounds the elapsed stretch's leading end, which would shave
+   the first tick; the ruler is square. */
+/* (Separate rules: one engine's unknown pseudo-element would void a list.) */
+.home__widgets .wx-nowplaying-widget spotify-player::part(progress-bar)::-webkit-progress-bar {
+	border-radius: 0;
+}
+.home__widgets .wx-nowplaying-widget spotify-player::part(progress-bar)::-webkit-progress-value {
+	border-radius: 0;
+}
+.home__widgets .wx-nowplaying-widget spotify-player::part(progress-bar)::-moz-progress-bar {
+	border-radius: 0;
+}
+
+/* Phone tiles (~160px, the grid's 2-column mode): the header can't hold the
+   title and the pill, and the text and ruler leave the cover no height. So
+   the pill goes (the timestamps still say whether the track moves), and the
+   cover becomes a small tile beside the title and artist instead of over
+   them — the art stays, at the size of the two lines it sits next to. */
+@media (max-width: 900px) {
+	.home__widgets .wx-nowplaying-widget .wx-np-state {
+		display: none;
+	}
+	.home__widgets .wx-nowplaying-widget spotify-player::part(details) {
+		flex-direction: row;
+		align-items: flex-end;
+		gap: var(--space-2);
+	}
+	.home__widgets .wx-nowplaying-widget spotify-player::part(album) {
+		flex: none;
+		inline-size: var(--space-8);
+		block-size: var(--space-8);
+		margin-block-end: 0;
+	}
 }
