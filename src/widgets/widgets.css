@@ -57,3 +57,100 @@
 	font-size: var(--widget-font-sm); /* fluid; ≡ --font-size-1 (14px) at the desktop cell */
 	color: var(--text-tertiary);
 }
+
+/* ── MONO WIDGET FAMILY ──────────────────────────────────────────────────────
+   A second widget voice: terminal-flat. One ink on the card's own fill, a small
+   lowercase label row, one big figure with a tiny unit, dotted rules, and
+   intensity drawn as dither density rather than colour. GitHub is the first
+   widget on it; the pieces are here so the others can follow.
+
+   This family sets its FIGURES in --font-mono too, which deliberately departs from
+   the .wx-stat role above (figures in --font-numeric, "data, not code"). That
+   reasoning still holds for the stat block; here the monospace grid IS the look,
+   so the choice is scoped to .wx-mono and does not leak into the other widgets. */
+.home__widgets .wx-mono {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-primary);
+	/* The dither module: one pixel of the pattern language below, in CSS px. */
+	--wx-px: 2px;
+}
+
+/* Label row — lowercase label left, a small detail right (a handle, a date). */
+.home__widgets .wx-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-2);
+	font-size: var(--widget-font-xs);
+	line-height: 1;
+	text-transform: lowercase;
+}
+.home__widgets .wx-head-meta {
+	color: var(--text-secondary);
+	text-decoration: none;
+}
+.home__widgets a.wx-head-meta:hover {
+	color: var(--text-primary);
+	text-decoration: underline;
+}
+
+/* Figure — one big number with its unit set small beside it, on the baseline.
+   The unit wraps under the number when the tile is too narrow for both. */
+.home__widgets .wx-figure {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--space-1) var(--space-2);
+	line-height: 1;
+}
+.home__widgets .wx-figure-num {
+	/* --widget-font-xl, but allowed below its 32px floor on small (phone) tiles,
+	   down to --widget-font-lg: mono digits run wide, and at the floor a 4-digit
+	   figure eats half a 160px tile. Identical to xl from a ~250px cell up. */
+	font-size: max(
+		var(--widget-font-lg),
+		min(var(--widget-font-xl), calc(var(--widget-cell) * 0.13))
+	);
+	font-weight: var(--font-weight-400);
+	letter-spacing: -0.02em;
+}
+.home__widgets .wx-figure-unit {
+	font-size: var(--widget-font-xs);
+	white-space: nowrap;
+	color: var(--text-secondary);
+}
+
+/* Dotted rule / leader — square dots, one module wide, on the pattern grid. As a
+   background (not border-style: dotted, whose round dots and spacing the browser
+   picks) so it shares the dither's square pixel. */
+.home__widgets .wx-rule {
+	block-size: var(--wx-px);
+	background: linear-gradient(to right, currentColor var(--wx-px), transparent 0)
+		0 0 / calc(var(--wx-px) * 3) var(--wx-px) repeat-x;
+	opacity: 0.6;
+}
+
+/* Ink density — five steps from solid to sparse, as square-pixel dither in the
+   current colour. Each is a 1-module square in an N-module cell (a conic
+   gradient's single inked quadrant), except 3, a checkerboard. Put a step on
+   anything that should read as "how much": a bar segment, a swatch. */
+.home__widgets .wx-ink-4 {
+	background: currentColor;
+}
+.home__widgets .wx-ink-3 {
+	background: repeating-conic-gradient(currentColor 0 25%, transparent 0 50%)
+		0 0 / calc(var(--wx-px) * 2) calc(var(--wx-px) * 2);
+}
+.home__widgets .wx-ink-2 {
+	background: conic-gradient(at var(--wx-px) var(--wx-px), transparent 75%, currentColor 0)
+		0 0 / calc(var(--wx-px) * 2) calc(var(--wx-px) * 2);
+}
+.home__widgets .wx-ink-1 {
+	background: conic-gradient(at var(--wx-px) var(--wx-px), transparent 75%, currentColor 0)
+		0 0 / calc(var(--wx-px) * 3) calc(var(--wx-px) * 3);
+}
+.home__widgets .wx-ink-0 {
+	background: conic-gradient(at var(--wx-px) var(--wx-px), transparent 75%, currentColor 0)
+		0 0 / calc(var(--wx-px) * 4) calc(var(--wx-px) * 4);
+}
