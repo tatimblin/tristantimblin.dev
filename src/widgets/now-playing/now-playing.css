@@ -2,7 +2,7 @@
  *
  * Plain CSS (not an Astro scoped <style>) so the ::part() selectors that pierce
  * the <spotify-player> shadow DOM survive verbatim — Astro would otherwise add a
- * scope hash and break them. The .wx-nowplaying-*/.wx-np-* prefix keeps them
+ * scope hash and break them. The .wx-nowplaying-* and .wx-np-* prefixes keep them
  * contained; the .home__widgets prefix matches the page's widget-grid
  * containment.
  *
