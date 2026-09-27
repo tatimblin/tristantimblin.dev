@@ -32,8 +32,10 @@ const ROLES: Array<[string, string, string, number]> = [
 	["hero lede", ".hero-intro__lede p", "FS Mondwest", 400],
 	["body copy", ".home__copy p", "PP Mondwest", 300],
 	["widget UI", ".home__widgets .ds-widget", "Neue Montreal", 400],
-	["widget figure", ".wx-stat-num", "Neue Montreal", 600],
-	["ruler year mark", ".vc__tick-year", "Neue Montreal", 400],
+	["widget figure", ".ds-figure__num", "Neue Montreal", 400],
+	// Not here: the carousel ruler's year marks. They moved to the instrument UI's
+	// mono voice (--font-mono, the SYSTEM mono stack — no @font-face), and per the
+	// trap above a role on an undeclared family passes while proving nothing.
 ];
 
 const FILES = [
@@ -148,7 +150,7 @@ test("body copy gets the REAL Light cut, not the Regular standing in for it", as
 	expect(state.cuts["400"], "the Regular cut did not load").toBe("loaded");
 });
 
-test("the widget figure gets a REAL semibold, not a synthesised one", async ({
+test("the masthead ear gets a REAL semibold, not a synthesised one", async ({
 	page,
 }) => {
 	// Two things, and the second is why this test is not just the one above.
@@ -158,19 +160,38 @@ test("the widget figure gets a REAL semibold, not a synthesised one", async ({
 	// type across the site without any other test noticing.
 	//
 	// But that guard also means a weight request with no matching cut renders at
-	// whatever DID ship — silently, and looking merely "a bit light". The figures asked
-	// for 600 against a single Light cut for exactly that reason. So also assert the
-	// 600 cut is really loaded: together, the two say the emphasis is drawn, not faked,
-	// and not quietly absent.
-	await page.goto("/");
+	// whatever DID ship — silently, and looking merely "a bit light". So also assert
+	// the 600 cut is really loaded where it is asked for: together, the two say the
+	// emphasis is drawn, not faked, and not quietly absent.
+	//
+	// ON /txt, NOT THE HOMEPAGE. The widget figures used to be the Semibold's user;
+	// they are now set at the regular weight (the instrument UI's thin numeral), so
+	// nothing on the homepage requests 600 any more and the cut is never fetched
+	// there — check() would answer false for a face that is perfectly healthy. The
+	// newsroom masthead's strapline (NewsroomLayout.astro, .np__strapline) is the
+	// role that still wants the Semibold, so that is the page to ask on.
+	await page.goto("/txt");
 	await page.waitForFunction(() => document.fonts.status === "loaded", undefined, {
 		timeout: 15_000,
 	});
-	const state = await page.evaluate(() => ({
-		synthesis: getComputedStyle(document.body).fontSynthesisWeight,
-		semiboldLoaded: document.fonts.check('600 16px "Neue Montreal"'),
-		regularLoaded: document.fonts.check('400 16px "Neue Montreal"'),
-	}));
+	const state = await page.evaluate(() => {
+		const el = document.querySelector<HTMLElement>(".np__strapline");
+		return {
+			found: !!el,
+			family: el
+				? getComputedStyle(el).fontFamily.split(",")[0].trim().replace(/^["']|["']$/g, "")
+				: null,
+			weight: el ? Number(getComputedStyle(el).fontWeight) : null,
+			synthesis: getComputedStyle(document.body).fontSynthesisWeight,
+			semiboldLoaded: document.fonts.check('600 16px "Neue Montreal"'),
+			regularLoaded: document.fonts.check('400 16px "Neue Montreal"'),
+		};
+	});
+	expect(state.found, "the strapline has moved — has the masthead markup changed?").toBe(true);
+	expect(state.family).toBe("Neue Montreal");
+	// --font-weight-600 resolves to 560, which CSS font matching lands on the
+	// Semibold; anything under 500 would have fallen back to the Regular.
+	expect(state.weight).toBeGreaterThanOrEqual(500);
 	expect(state.synthesis).toBe("none");
 	expect(state.regularLoaded).toBe(true);
 	expect(state.semiboldLoaded).toBe(true);
