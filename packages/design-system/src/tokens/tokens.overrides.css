@@ -211,6 +211,23 @@
 	--reveal-stagger: 90ms;
 }
 
+/* Reduced motion, once. Every transition on the site that is not a package's
+ * own is timed by the three durations above, so zeroing them here is the one
+ * rule that honours the preference for all of them — a cross-fade, a settle,
+ * a swap all become a cut. Components need no block of their own; anything
+ * that must ALSO change its resting state under the preference (the bike's
+ * slide-in, which is hidden until it plays) still says so itself. The
+ * packages keep their own handling: they are consumed standalone, so they
+ * carry literal fallbacks and their own @media blocks, and this does not reach
+ * those. */
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--duration-reveal: 0s;
+		--duration-settle: 0s;
+		--duration-swap: 0s;
+	}
+}
+
 /* INSTRUMENT UI ------------------------------------------------------------
  * The site's cards, widgets and controls are drawn after instrument UIs — a
  * hardware metronome's screen, a dashboard card: flat surfaces a few percent
@@ -261,8 +278,25 @@
 	--border-radius-tile: 2px;
 	--border-radius-pill: 9999px;
 
-	/* The pitch of a tick ruler's hairlines. */
+	/* The pitch of a tick ruler's hairlines, and the ruler itself: hairlines on
+	 * that pitch in currentColor, as a gradient any box can take as its
+	 * background — TickRuler's segments, the player's progress bar. Colour it
+	 * with `color` on the box (currentColor resolves where the gradient is
+	 * PAINTED); a var() inside would not do, since a custom property
+	 * substitutes its var()s where it is declared, i.e. here. */
 	--tick-pitch: var(--space-1);
+	--ticks-image: repeating-linear-gradient(
+		to right,
+		currentColor 0 1px,
+		transparent 1px var(--tick-pitch)
+	);
+
+	/* The focus ring, for everything focusable that is not a native control:
+	 * a pill or a button, a graph that became a slider, a flip surface. One
+	 * width and colour, so focus looks the same on every card. Consumers set
+	 * their own offset only where the card's clip would cut an outset ring. */
+	--focus-ring: 2px solid var(--accent);
+	--focus-ring-offset: 2px;
 }
 
 /* THE ACCENT. Orange-red, and one per card. The DS red alone is crimson and

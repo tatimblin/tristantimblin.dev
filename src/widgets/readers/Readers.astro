@@ -31,15 +31,17 @@
 // assistive tech and a sentence per range carries the peak instead.
 //
 // THE PILL CYCLES the range: 30d → 1y → all. Every range is rendered
-// server-side as its own face and swapped by an attribute on the card, the
-// same mechanism Github.astro flips with — so the pill fetches nothing and the
-// tile still works with the script blocked (it shows the first range and an
-// inert pill).
+// server-side as its own face in a DS Faces stack and swapped by aria-hidden,
+// the same mechanism Github.astro flips with — so the pill fetches nothing and
+// the tile still works with the script blocked (it shows the first range and
+// an inert pill).
 //
 // Data is read at build time from readers.json (see ./readers.ts), which the
 // readers Action regenerates daily.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
+import Faces from "@whois/design-system/Faces";
+import Face from "@whois/design-system/Face";
 import Mono from "@whois/design-system/Mono";
 import Figure from "@whois/design-system/Figure";
 import BarGraph from "@whois/design-system/BarGraph";
@@ -87,7 +89,6 @@ const readings = (view: (typeof views)[number]) =>
 	size="1x1"
 	title="visitors"
 	class="wx-readers"
-	data-range={initial?.key}
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="4"
@@ -103,8 +104,9 @@ const readings = (view: (typeof views)[number]) =>
 				<Pill class="wx-rd-range wx-rd-range--static">{initial?.key}</Pill>
 				{cycles && (
 					<Pill as="button" class="wx-rd-range wx-rd-cycle" type="button" hidden>
-						{views.map((view) => (
-							<span data-face={view.key}>{view.key}</span>
+						{/* One label per range; the script shows the current one. */}
+						{views.map((view, i) => (
+							<span data-face={view.key} hidden={i !== 0}>{view.key}</span>
 						))}
 					</Pill>
 				)}
@@ -115,9 +117,11 @@ const readings = (view: (typeof views)[number]) =>
 	<CardBody class="wx-rd-body">
 		{
 			hasSeries ? (
-				views.map((view) => (
-					<div
+				<Faces fill>
+				{views.map((view, i) => (
+					<Face
 						class="wx-rd-face"
+						hidden={i !== 0}
 						data-face={view.key}
 						data-readings={readings(view)}
 						data-peak={view.peakIndex}
@@ -161,8 +165,9 @@ const readings = (view: (typeof views)[number]) =>
 							{formatSpan(view.peak?.from ?? "", view.peak?.date ?? "")}, with{" "}
 							{view.peak?.value}. {sampledNote}
 						</VisuallyHidden>
-					</div>
-				))
+					</Face>
+				))}
+				</Faces>
 			) : (
 				/* The data file is generated and the fetch script refuses to write
 				   an empty one — but no visitors yet is a state the tile can
@@ -176,8 +181,9 @@ const readings = (view: (typeof views)[number]) =>
 
 <script>
 	// Two behaviours, both over markup that is already in the DOM: the pill
-	// cycles the range (an attribute on the card), and each range's graph reads
-	// back the bar under the pointer / keyboard. No network, no persisted state.
+	// cycles the range (aria-hidden moves between the faces, and between the
+	// pill's labels), and each range's graph reads back the bar under the
+	// pointer / keyboard. No network, no persisted state.
 	// Bound per page-load and torn down before a view-transition swap so
 	// handlers don't accumulate (the lifecycle idiom from Github.astro).
 	interface Reading {
@@ -290,13 +296,19 @@ const readings = (view: (typeof views)[number]) =>
 		staticPill?.setAttribute("hidden", "");
 		button.hidden = false;
 
-		const keys = [...button.querySelectorAll<HTMLElement>("[data-face]")].map(
-			(el) => el.dataset.face ?? "",
-		);
+		const labels = [...button.querySelectorAll<HTMLElement>("[data-face]")];
+		const faces = [...widget.querySelectorAll<HTMLElement>(".wx-rd-face")];
+		const keys = labels.map((el) => el.dataset.face ?? "");
+		let at = Math.max(0, faces.findIndex((f) => f.getAttribute("aria-hidden") !== "true"));
 
-		const apply = (key: string) => {
-			widget.dataset.range = key;
-			const face = widget.querySelector<HTMLElement>(`.wx-rd-face[data-face="${key}"]`);
+		const apply = (index: number) => {
+			at = index;
+			const key = keys[at];
+			for (const face of faces) {
+				face.setAttribute("aria-hidden", String(face.dataset.face !== key));
+			}
+			for (const label of labels) label.hidden = label.dataset.face !== key;
+			const face = faces.find((f) => f.dataset.face === key);
 			// The pill's own text is the current range, so the accessible name has
 			// to say what pressing it DOES rather than repeating that text.
 			button.setAttribute(
@@ -305,12 +317,9 @@ const readings = (view: (typeof views)[number]) =>
 			);
 		};
 
-		const onClick = () => {
-			const at = keys.indexOf(widget.dataset.range ?? "");
-			apply(keys[(at + 1) % keys.length]);
-		};
+		const onClick = () => apply((at + 1) % keys.length);
 
-		apply(widget.dataset.range ?? keys[0]);
+		apply(at);
 		button.addEventListener("click", onClick);
 		return () => button.removeEventListener("click", onClick);
 	}

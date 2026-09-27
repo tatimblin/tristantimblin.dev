@@ -6,9 +6,9 @@
  * containment.
  *
  * The card chrome, the header, the standing pill, the round buttons, the mono
- * voices and the divider are design-system components (Volo.astro). What is
- * here is the tile's own layout — the panel stack, the shared table grid, the
- * margin tick, the step chart — and the few colour decisions that ARE the
+ * voices, the panel stack and the divider are design-system components
+ * (Volo.astro). What is here is the tile's own layout — the shared table grid,
+ * the margin tick, the step chart — and the few colour decisions that ARE the
  * design: ink for a win, the dim ink for a loss, the accent for exactly one row
  * and for the season in progress on the chart. The only literal colour is the
  * team's own, which comes from Volo per team and is inline on its dot. */
@@ -32,9 +32,6 @@
 	border-radius: var(--border-radius-pill);
 	background: var(--text-tertiary);
 	box-shadow: 0 0 0 1px var(--hairline);
-}
-.home__widgets .wx-vl-star[hidden] {
-	display: none;
 }
 
 /* HEADER META -------------------------------------------------------------
@@ -74,9 +71,6 @@
 	   rather than push this header taller than its neighbours'. */
 	margin-block: calc((var(--space-5) - var(--space-6)) / 2);
 }
-.home__widgets .wx-vl-nav[hidden] {
-	display: none;
-}
 /* The DS icon set has one arrow and it points right; prev is it, turned round. */
 .home__widgets .wx-vl-arrow--prev svg {
 	transform: rotate(180deg);
@@ -112,34 +106,10 @@
 }
 
 /* PANEL STACK --------------------------------------------------------------
-   Every season is rendered; one is shown. GRID STACKING, not absolute
-   positioning: as a single-cell grid the container measures the TALLEST panel,
-   so the career field sits at one fixed height instead of jumping as the arrows
-   move between a six- and a nine-game season. Cross-faded on opacity +
-   visibility (not display) so the transition has something to animate and the
-   hidden panels stay out of the tab order. */
-.home__widgets .wx-vl-panels {
-	display: grid;
-}
+   A DS Faces stack (Volo.astro says why it is not `fill`); a panel only
+   tightens the face's gap to the table's rhythm. */
 .home__widgets .wx-vl-panel {
-	grid-area: 1 / 1;
-	display: flex;
-	flex-direction: column;
 	gap: var(--space-2);
-	opacity: 0;
-	visibility: hidden;
-	transition:
-		opacity var(--duration-swap) var(--ease-reveal),
-		visibility var(--duration-swap) var(--ease-reveal);
-}
-.home__widgets .wx-vl-panel.is-active {
-	opacity: 1;
-	visibility: visible;
-}
-@media (prefers-reduced-motion: reduce) {
-	.home__widgets .wx-vl-panel {
-		transition: none;
-	}
 }
 
 /* GAME ROWS ----------------------------------------------------------------
@@ -485,13 +455,8 @@
 	background: var(--wash-1);
 }
 .home__widgets .wx-vl-hit:not(:disabled):focus-visible {
-	outline: 2px solid var(--accent);
-	outline-offset: -2px;
-}
-@media (prefers-reduced-motion: reduce) {
-	.home__widgets .wx-vl-hit {
-		transition: none;
-	}
+	outline: var(--focus-ring);
+	outline-offset: calc(-1 * var(--focus-ring-offset));
 }
 
 .home__widgets .wx-vl-years {

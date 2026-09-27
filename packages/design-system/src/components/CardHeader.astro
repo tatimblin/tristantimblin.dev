@@ -1,15 +1,37 @@
 ---
-// Card.Header — DS styled('div', {...}). No variants.
+// Card.Header — the header row (styles/card.css): `title` in the caps mono
+// voice on the left, whatever is in the `meta` slot (a Pill, a handle, a
+// date) on the right, over the fading hairline. Card and Widget both render
+// their headers through this, so there is one header and one voice.
+//
+//   <CardHeader title="github"><Mono slot="meta" variant="text">@handle</Mono></CardHeader>
+//
+// The title is a Mono rather than a span the row styles, so the voice — face,
+// size, tracking, the phone tightening — is Mono's and declared once. The
+// default slot still takes hand-built children for a header that is neither.
 import { cx } from "../lib/cx";
+import Mono from "./Mono.astro";
 
 interface Props {
 	as?: string;
+	title?: string;
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "div", class: className, ...rest } = Astro.props;
+const { as = "div", title, class: className, ...rest } = Astro.props;
 const Tag = as as any;
+const hasMeta = Astro.slots.has("meta");
 ---
 
-<Tag class={cx("ds-card-header", className)} {...rest}><slot /></Tag>
+<Tag class={cx("ds-card-header", className)} {...rest}>
+	{title ? <Mono class="ds-card-header__title">{title}</Mono> : null}
+	<slot />
+	{
+		hasMeta ? (
+			<span class="ds-card-header__meta">
+				<slot name="meta" />
+			</span>
+		) : null
+	}
+</Tag>

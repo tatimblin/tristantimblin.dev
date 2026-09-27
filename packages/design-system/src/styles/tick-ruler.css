@@ -26,11 +26,7 @@
 	flex: var(--share, 1) 1 0;
 	min-inline-size: 1px;
 	block-size: 100%;
-	background: repeating-linear-gradient(
-		to right,
-		currentColor 0 1px,
-		transparent 1px var(--tick-pitch)
-	);
+	background: var(--ticks-image);
 }
 
 .ds-ticks__playhead {

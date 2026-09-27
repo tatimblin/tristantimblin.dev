@@ -1,7 +1,7 @@
 ---
 // Card — the flat card (styles/card.css). Renders via Box (polymorphic `as`).
-// When a `title` prop is passed, a CardHeader carrying it in the caps mono voice
-// is rendered first and the body content follows as children.
+// With a `title` and/or something in the `meta` slot, a CardHeader carrying
+// them is rendered first and the body content follows as children.
 //
 // `depth` is accepted but ignored: the DS's shadow scale has no place on a flat
 // surface (card.css explains), and dropping the prop would break every call
@@ -35,13 +35,21 @@ const cls = cx(
 	variant && `ds-card--variant-${variant}`,
 	className,
 );
+
+// Forwarded only when filled: a forwarded-but-empty slot would still count as
+// present in CardHeader and take its place in the row.
+const hasMeta = Astro.slots.has("meta");
 ---
 
 <Box as={as} class={cls} {...rest}>
 	{
-		title ? (
-			<CardHeader>
-				<span class="ds-card-header__title">{title}</span>
+		title || hasMeta ? (
+			<CardHeader title={title}>
+				{hasMeta ? (
+					<Fragment slot="meta">
+						<slot name="meta" />
+					</Fragment>
+				) : null}
 			</CardHeader>
 		) : null
 	}

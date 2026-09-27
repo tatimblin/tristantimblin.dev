@@ -39,6 +39,14 @@
   box-sizing: border-box;
 }
 
+/* The `hidden` attribute means hidden. The UA sheet's `[hidden] { display:
+   none }` is beaten by any author `display` (a pill's inline-flex, a nav's
+   flex), so every component that could be hidden was carrying its own
+   `.x[hidden] { display: none }` patch. One rule, with the weight to win. */
+[hidden] {
+  display: none !important;
+}
+
 .maximeheckel-light {
   color-scheme: light;
 }

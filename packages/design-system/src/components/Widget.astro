@@ -1,22 +1,15 @@
 ---
-// Widget — a standard cell in a <WidgetGrid>. Wraps a DS Card so every widget
-// gets the flat card chrome for free, applies the span classes for its size,
-// and draws the header row: `title` in the caps mono voice on the left, and
-// whatever is passed in the `meta` slot (a Pill, a handle, a date) on the
-// right, over the fading hairline. Body content goes in a <CardBody>, which
-// fills the rest of the cell (styles/widget-grid.css):
+// Widget — a standard cell in a <WidgetGrid>: a DS Card with the span classes
+// for its size, so every widget gets the flat card chrome and the header —
+// `title` left, the `meta` slot right — for free. Body content goes in a
+// <CardBody>, which fills the rest of the cell (styles/widget-grid.css):
 //
 //   <Widget size="1x1" title="github">
 //     <Mono slot="meta" as="a" variant="text" href="…">@handle</Mono>
 //     <CardBody>…</CardBody>
 //   </Widget>
-//
-// The header is built here rather than by Card's `title` because a named slot
-// can only be forwarded to Card unconditionally, and an empty meta wrapper
-// would still take its place in the row.
 import { cx } from "../lib/cx";
 import Card from "./Card.astro";
-import CardHeader from "./CardHeader.astro";
 
 type Size = "1x1" | "2x1" | "1x2" | "2x2";
 
@@ -38,20 +31,16 @@ const cls = cx(
 	className,
 );
 
+// See Card.astro: forwarded only when filled.
 const hasMeta = Astro.slots.has("meta");
 ---
 
-<Card class={cls} variant={variant} {...rest}>
+<Card class={cls} variant={variant} title={title} {...rest}>
 	{
-		title || hasMeta ? (
-			<CardHeader>
-				{title ? <span class="ds-card-header__title">{title}</span> : null}
-				{hasMeta ? (
-					<span class="ds-card-header__meta">
-						<slot name="meta" />
-					</span>
-				) : null}
-			</CardHeader>
+		hasMeta ? (
+			<Fragment slot="meta">
+				<slot name="meta" />
+			</Fragment>
 		) : null
 	}
 	<slot />

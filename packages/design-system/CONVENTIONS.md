@@ -70,12 +70,13 @@ import "@whois/design-system/styles.css";
 — including columns/gutters/breakpoints for `Grid`. Open it instead of guessing a
 prop; this doc deliberately does not duplicate per-component API tables.
 
-**Components available (40):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (42):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Label`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Callout`, `Pill`, `Anchor`, `List`, `ListItem`,
 `InlineCode`, `Icon`, `VisuallyHidden`, `WidgetGrid`, `Widget` — and the
 instrument UI (next section): `Mono`, `Figure`, `Stat`, `Hairline`, `TickRuler`,
-`BarGraph`, `RingGauge`, `Legend`, `LegendItem`, `TileGrid`, `Tile`.
+`BarGraph`, `RingGauge`, `Legend`, `LegendItem`, `TileGrid`, `Tile`, `Faces`,
+`Face`.
 
 ## The decision gate
 
@@ -137,14 +138,25 @@ glass, caps mono labels), and the components below have no upstream at all.
 | `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
 | `--hairline`, `--hairline-fade` | the edge colour; the divider gradient that fades at both ends. |
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px), `--tracking-mono` (0.05em) | the steps below the generated scales. |
+| `--ticks-image` | the tick ruler as a gradient (hairlines on `--tick-pitch`, in currentColor) for any box that should read as a ruler — TickRuler's segments, the player's progress bar. |
+| `--focus-ring`, `--focus-ring-offset` | the focus ring for anything focusable that is not a native control: `outline: var(--focus-ring); outline-offset: var(--focus-ring-offset)`. |
+| `--duration-*` under `prefers-reduced-motion: reduce` | all 0s, so a transition timed by a token is a cut for that visitor and no component needs a reduced-motion block of its own. |
 | light-theme `--gray-*` | retuned warm (hue 80, stone/bone). Page, card, hairline and inks all follow. |
 
-**Card chrome.** `<Widget size title>` draws the header (title in caps mono,
-the `meta` slot on the right, fading hairline under) and `<CardBody>` fills the
-rest of the cell as a flex column with `--widget-gap`; put `slot="meta"` on a
-`Pill`/`Mono`. `Card` still takes `title`; `depth` is accepted and ignored.
-Inside a `WidgetGrid`, every voice below scales with the cell (`--widget-font-*`);
+**Card chrome.** `<Widget size title>` is a `Card` with the span classes:
+both draw the header through `CardHeader` — `title` as a caps `Mono` on the
+left, the `meta` slot on the right, the fading hairline under — and `<CardBody>`
+fills the rest of the cell as a flex column with `--widget-gap`; put
+`slot="meta"` on a `Pill`/`Mono`. `depth` is accepted and ignored. Inside a
+`WidgetGrid`, every voice below scales with the cell (`--widget-font-*`);
 elsewhere it falls back to the type tokens.
+
+**Faces.** `<Faces>` stacks alternatives in one grid cell, one showing: the
+card that flips, the season the arrows page, the range a pill cycles. Every
+`<Face>` is rendered; `hidden` ones are `aria-hidden`, which is the attribute
+the cross-fade keys on, so a script swaps faces by moving it (Github, Volo and
+Readers all do). `fill` takes the rest of a card body and clips each face to it;
+without it the stack holds its tallest face's height.
 
 ```astro
 <Widget size="1x1" title="github">

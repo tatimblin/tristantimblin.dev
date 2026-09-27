@@ -1,0 +1,35 @@
+/* Faces — a stack of alternatives, one showing. GRID STACKING, not absolute
+ * positioning: every face sits in the same cell, so the stack is a real box
+ * that measures its faces — the tallest one, or with `fill` the space it is
+ * given — and the faces need no insets that mirror the body's padding.
+ * Cross-faded on opacity + visibility rather than display, so the swap has
+ * something to animate and a hidden face is out of the tab order as well as
+ * (via aria-hidden) the accessibility tree. The duration is --duration-swap,
+ * which is 0s under prefers-reduced-motion (tokens.overrides.css), so the
+ * fade becomes a cut without a rule here. */
+.ds-faces {
+	display: grid;
+}
+/* Take the rest of a card body, and keep each face to it: without the
+   minmax the row is sized by the tallest face and can overflow the body. */
+.ds-faces--fill-true {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	grid-template-rows: minmax(0, 1fr);
+}
+
+.ds-face {
+	grid-area: 1 / 1;
+	min-inline-size: 0;
+	min-block-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--widget-gap, var(--space-3));
+	transition:
+		opacity var(--duration-swap) var(--ease-reveal),
+		visibility var(--duration-swap) var(--ease-reveal);
+}
+.ds-face[aria-hidden="true"] {
+	opacity: 0;
+	visibility: hidden;
+}

@@ -50,9 +50,11 @@
 	opacity: 1;
 	transform: none;
 }
+/* Reduced motion: simply present, not waiting on the scroll-into-view. (The
+   transition itself needs no rule here — --duration-reveal is 0s under the
+   preference, tokens.overrides.css.) */
 @media (prefers-reduced-motion: reduce) {
 	.home__widgets .wx-bw-bike {
-		transition: none;
 		transform: none;
 		opacity: 1;
 	}

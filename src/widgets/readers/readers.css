@@ -1,27 +1,15 @@
 /* Readers widget — see Readers.astro for what the tile plots and why.
  *
  * Plain CSS, scoped under .home__widgets like the other widget modules. The
- * card chrome, header, pill, readout, hairline graph and figure are all
- * design-system components; what is here is layout, the range swap and the
- * graph's pointer/focus affordances. */
-
-/* One range's face fills the body as its own flex column: readout, graph
-   (taking the slack), figure. */
-.home__widgets .wx-rd-face {
-	flex: 1 1 auto;
-	min-block-size: 0;
-	display: flex;
-	flex-direction: column;
-	gap: var(--widget-gap);
-}
+ * card chrome, header, pill, readout, hairline graph, figure and the range
+ * faces (a DS Faces stack, swapped on aria-hidden) are all design-system
+ * components; what is here is the graph's sizing and its pointer/focus
+ * affordances. */
 
 .home__widgets .wx-rd-readout {
 	display: block;
 	overflow: hidden;
 	text-overflow: ellipsis;
-}
-.home__widgets .wx-rd-read-tag[hidden] {
-	display: none;
 }
 
 /* The graph takes whatever height the readout and the figure leave it. */
@@ -37,31 +25,13 @@
 }
 /* The body padding leaves room for an outset ring. */
 .home__widgets .wx-rd-bars:focus-visible {
-	outline: 2px solid var(--accent);
-	outline-offset: 2px;
+	outline: var(--focus-ring);
+	outline-offset: var(--focus-ring-offset);
 	border-radius: var(--border-radius-1);
 }
 
 .home__widgets .wx-rd-empty {
 	margin-block: auto;
-}
-
-/* RANGE SWAP -------------------------------------------------------------
-   Every range is in the DOM; the card's data-range attribute picks one. CSS
-   cannot compare two attribute values, so these are one selector per range.
-   The parts are marked `data-face` rather than `data-range` so a selector
-   cannot match the card itself. display:none also keeps the inactive copies
-   out of the accessibility tree and the tab order. */
-.home__widgets .wx-readers[data-range="30d"] [data-face]:not([data-face="30d"]),
-.home__widgets .wx-readers[data-range="1y"] [data-face]:not([data-face="1y"]),
-.home__widgets .wx-readers[data-range="all"] [data-face]:not([data-face="all"]) {
-	display: none;
-}
-
-/* .ds-pill sets `display: inline-flex`, which beats the UA sheet's
-   `[hidden] { display: none }` — and both pills are in the markup at once. */
-.home__widgets .wx-rd-range[hidden] {
-	display: none;
 }
 
 /* Phone tiles (~160px): the readout loses its "peak" tag rather than its

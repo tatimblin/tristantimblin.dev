@@ -29,17 +29,20 @@
 	--ssp-marquee-gap: var(--space-6);
 	/* The progress bar is the component's <progress>, painted with --ssp-track
 	   (the whole bar) and --ssp-accent (the elapsed stretch) as backgrounds —
-	   so both can be ticks instead of fills. Same pitch and hairline as the DS
-	   TickRuler (tick-ruler.css): the track in the dim ink, the elapsed stretch
-	   in the full ink, ending in the accent playhead — a full-height line at
-	   its right edge, standing above the ticks, which stop short of the top. */
+	   so both can be ticks instead of fills: the track in the dim ink, the
+	   elapsed stretch in the full ink, ending in the accent playhead — a
+	   full-height line at its right edge, standing above the ticks, which stop
+	   short of the top.
+	   The track IS the DS tick ruler (--ticks-image, TickRuler's own hairlines
+	   on --tick-pitch), coloured by the bar's `color` (the part rule below).
+	   The elapsed stretch cannot take the same token: it paints on the bar's
+	   value pseudo-element, whose currentColor is the bar's and cannot be set
+	   apart from it (verified — `color` on ::-webkit-progress-value is
+	   ignored), and a custom property cannot be re-coloured after :root
+	   substitutes its var()s. So that one is spelled out with the ink named,
+	   on the same pitch as the token. */
 	--ssp-progress-height: var(--space-5);
-	--ssp-track: repeating-linear-gradient(
-			to right,
-			var(--text-tertiary) 0 1px,
-			transparent 1px var(--tick-pitch)
-		)
-		left bottom / 100% 65% no-repeat;
+	--ssp-track: var(--ticks-image) left bottom / 100% 65% no-repeat;
 	--ssp-accent: linear-gradient(var(--accent), var(--accent)) right / 1px 100%
 			no-repeat,
 		repeating-linear-gradient(
@@ -108,6 +111,8 @@
 	grid-row: 1;
 	inline-size: 100%;
 	border-radius: 0;
+	/* The track's ink (see --ssp-track above). */
+	color: var(--text-tertiary);
 }
 .home__widgets .wx-nowplaying-widget spotify-player::part(elapsed),
 .home__widgets .wx-nowplaying-widget spotify-player::part(remaining) {

@@ -30,11 +30,12 @@
 	--card-bg: transparent;
 }
 
-/* CardHeader — the header row: a tracked caps mono label left, an optional
-   pill or meta right, and a hairline under it that fades out at both ends.
-   The voice is set on the row itself so a plain `title` string arrives in it;
-   a Pill in the meta slot carries its own. Fixed line-height of 1 so the row
-   is exactly as tall as its label plus padding, whatever the theme's UI face. */
+/* CardHeader — the header row: the title left, an optional pill or meta
+   right, and a hairline under it that fades out at both ends. The row is
+   LAYOUT only: the title is a Mono (CardHeader.astro), which owns the caps
+   voice — face, size, tracking, the phone tightening — and a Pill or handle in
+   the meta slot carries its own. Fixed line-height of 1 so the row is exactly
+   as tall as its label plus padding, whatever the theme's UI face. */
 .ds-card-header {
 	position: relative;
 	display: flex;
@@ -42,11 +43,7 @@
 	align-items: center;
 	gap: var(--space-2);
 	padding: var(--space-3) var(--space-4);
-	font-family: var(--font-mono);
-	font-size: var(--font-size-0);
 	line-height: 1;
-	letter-spacing: var(--tracking-caps);
-	text-transform: uppercase;
 	white-space: nowrap;
 	color: var(--text-secondary);
 }
@@ -57,11 +54,6 @@
 	inset-block-end: 0;
 	block-size: 1px;
 	background: var(--hairline-fade);
-}
-.ds-card-header__title {
-	/* Tracking adds space AFTER the last letter too; take it back so the label
-	   sits flush to the padding (the same fix .ds-caps carries). */
-	margin-inline-end: calc(-1 * var(--tracking-caps));
 }
 /* Both slots reserve a Pill's height, so a header is the same height whether
    its meta is a pill, a handle or nothing — otherwise the hairlines under a row
@@ -75,8 +67,6 @@
 /* The right-hand side: a Pill, a handle, a date. Whatever it is, it must not
    push the title off the row, so it shrinks and truncates first. */
 .ds-card-header__meta {
-	display: inline-flex;
-	align-items: center;
 	min-inline-size: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;

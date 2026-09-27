@@ -1,0 +1,32 @@
+---
+// Faces — a stack of alternatives in one box, one showing (styles/faces.css):
+// the card that flips to its other side, the season the arrows page through,
+// the range a pill cycles. Every face is rendered; the hidden ones are
+// `aria-hidden` (a <Face hidden>), and the swap is a cross-fade that a script
+// drives by toggling that attribute.
+//
+//   <Faces fill>
+//     <Face>…the grid…</Face>
+//     <Face hidden>…the languages…</Face>
+//   </Faces>
+//
+// `fill` makes the stack take the rest of a card body and clips each face to
+// it; without it the stack is as tall as its tallest face and holds that
+// height whichever is showing (Volo's seasons, so the chart under them stays
+// put).
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	fill?: boolean;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "div", fill, class: className, ...rest } = Astro.props;
+const Tag = as as any;
+---
+
+<Tag class={cx("ds-faces", fill && "ds-faces--fill-true", className)} {...rest}>
+	<slot />
+</Tag>

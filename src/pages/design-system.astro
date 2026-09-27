@@ -45,6 +45,8 @@ import TileGrid from "@whois/design-system/TileGrid";
 import Tile from "@whois/design-system/Tile";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
 import Widget from "@whois/design-system/Widget";
+import Faces from "@whois/design-system/Faces";
+import Face from "@whois/design-system/Face";
 
 // Instrument tokens, for the swatch row: name → what it is for.
 const instrumentTokens = [
@@ -61,6 +63,7 @@ const instrumentTokens = [
 	["--tone-4", "rank 4"],
 	["--tone-5", "rank 5 / other"],
 	["--hairline", "edges and dividers"],
+	["--focus-ring", "the focus ring, at --focus-ring-offset"],
 	["--card-background", "card surface"],
 	["--background", "page"],
 ] as const;
@@ -434,6 +437,8 @@ const faces = [
 						    a glyph in the token over the accent square, i.e. the pair. */}
 						{name === "--on-accent" ? (
 							<span class="ds-demo__swatch ds-demo__swatch--on" style="background: var(--accent); color: var(--on-accent)">Aa</span>
+						) : name === "--focus-ring" ? (
+							<span class="ds-demo__swatch" style="outline: var(--focus-ring); outline-offset: var(--focus-ring-offset)" />
 						) : (
 							<span class="ds-demo__swatch" style={`background: var(${name})`} />
 						)}
@@ -577,9 +582,11 @@ const faces = [
 			<h2 class="ds-demo__h">Card — the flat card / variants</h2>
 			<p class="ds-demo__note">
 				A surface a few percent off the page inside a 1px hairline; no shadow, so
-				<code>depth</code> is accepted and ignored. The header is the caps mono label over
-				a hairline that fades at both ends. Secondary is an ink wash (it was the glass);
-				tertiary is transparent.
+				<code>depth</code> is accepted and ignored. The header is <code>CardHeader</code>:
+				<code>title</code> in the caps mono voice over a hairline that fades at both ends,
+				with the <code>meta</code> slot on the right — Card and Widget both render it, and
+				so can a page by hand. Secondary is an ink wash (it was the glass); tertiary is
+				transparent.
 			</p>
 			<Grid templateColumns="repeat(auto-fill, minmax(280px, 1fr))" gap={4}>
 				<Card title="infra #1">
@@ -591,12 +598,15 @@ const faces = [
 				<Card variant="secondary" title="Secondary (wash)">
 					<CardBody><Text size={3}>An ink wash, not a fill.</Text></CardBody>
 				</Card>
+				<Card variant="tertiary" title="with meta">
+					<Pill slot="meta">low risk</Pill>
+					<CardBody><Text size={3}>Tertiary variant; the meta slot on the Card.</Text></CardBody>
+				</Card>
 				<Card variant="tertiary">
-					<CardHeader>
-						<span class="ds-card-header__title">Manual header</span>
-						<span class="ds-card-header__meta"><Pill>low risk</Pill></span>
+					<CardHeader title="Manual header">
+						<Pill slot="meta">low risk</Pill>
 					</CardHeader>
-					<CardBody><Text size={3}>Tertiary variant.</Text></CardBody>
+					<CardBody><Text size={3}>The same header, placed by hand.</Text></CardBody>
 				</Card>
 			</Grid>
 		</section>
@@ -725,6 +735,33 @@ const faces = [
 					</TileGrid>
 				</div>
 			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Faces — a stack of alternatives, one showing</h2>
+			<p class="ds-demo__note">
+				Every face is rendered in the same grid cell; a <code>hidden</code> face is
+				<code>aria-hidden</code>, which is what the cross-fade keys on, so a script swaps
+				faces by moving that attribute. Without <code>fill</code> the stack holds its
+				tallest face's height whichever is showing (the seasons); with it the stack takes
+				the rest of a card body and each face is clipped to it (the flip, the ranges).
+				The fade is <code>--duration-swap</code>, a cut under reduced motion.
+			</p>
+			<Card title="faces" style="max-inline-size: 320px;">
+				<Pill slot="meta" as="button" type="button" data-faces-demo>flip</Pill>
+				<CardBody>
+					<Faces data-faces-demo-stack>
+						<Face>
+							<Figure size="md" unit="bpm">120</Figure>
+							<TickRuler playhead={0.42} />
+						</Face>
+						<Face hidden>
+							<TickRuler segments={[{ share: 46 }, { share: 29 }, { share: 25 }]} />
+							<Legend items={[{ label: "rust", value: "46%" }, { label: "typescript", value: "29%" }, { label: "other", value: "25%" }]} />
+						</Face>
+					</Faces>
+				</CardBody>
+			</Card>
 		</section>
 
 		<!-- WIDGET: the pieces together --------------------------------- -->
@@ -1081,7 +1118,21 @@ const faces = [
 		document.addEventListener("themechange", () => seed());
 	}
 
-	document.addEventListener("astro:page-load", initTokenControls);
+	// The Faces demo: the pill moves aria-hidden between the two faces.
+	function initFacesDemo() {
+		const button = document.querySelector<HTMLButtonElement>("[data-faces-demo]");
+		const faces = document.querySelectorAll<HTMLElement>("[data-faces-demo-stack] > .ds-face");
+		button?.addEventListener("click", () => {
+			for (const face of faces) {
+				face.setAttribute("aria-hidden", String(face.getAttribute("aria-hidden") !== "true"));
+			}
+		});
+	}
+
+	document.addEventListener("astro:page-load", () => {
+		initTokenControls();
+		initFacesDemo();
+	});
 </script>
 
 <style>

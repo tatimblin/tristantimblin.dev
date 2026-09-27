@@ -17,10 +17,12 @@
 //
 // Data is read at build time from volo.json (see ./volo.ts), which the
 // volo-seasons Action regenerates daily. Every season is rendered server-side
-// as its own stacked panel and cross-faded by class — the same face-swap
-// mechanism Github.astro uses, and the reason the arrows fetch nothing.
+// as its own panel in a DS Faces stack and cross-faded by aria-hidden — the
+// same face-swap Github.astro uses, and the reason the arrows fetch nothing.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
+import Faces from "@whois/design-system/Faces";
+import Face from "@whois/design-system/Face";
 import Mono from "@whois/design-system/Mono";
 import Pill from "@whois/design-system/Pill";
 import IconButton from "@whois/design-system/IconButton";
@@ -213,12 +215,17 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 			<Mono variant="text" class="wx-vl-empty">No seasons yet.</Mono>
 		) : (
 			<>
-				<div class="wx-vl-panels" data-volo-panels>
+				{/* Not `fill`: the stack holds the tallest season's height whichever
+				    is showing, so the career field below sits still as the arrows
+				    move between a six- and a nine-game season. */}
+				<Faces class="wx-vl-panels" data-volo-panels>
 					{seasons.map((season, i) => {
 						const lit = accentRow(season);
 						return (
-						<section
-							class:list={["wx-vl-panel", i === current && "is-active"]}
+						<Face
+							as="section"
+							class="wx-vl-panel"
+							hidden={i !== current}
 							data-volo-panel={i}
 							data-heading={seasonHeading(season)}
 							data-team={season.team.name}
@@ -226,7 +233,6 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 							data-place={placeLabel(season)}
 							data-tally={formatTally(season)}
 							data-champion={season.champion ? "true" : undefined}
-							aria-hidden={String(i !== current)}
 							aria-label={`${formatSeasonLabel(season)} — ${season.sport}`}
 						>
 							{/* The season, team and record live in the card header, which
@@ -311,10 +317,10 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 									</li>
 								))}
 							</ol>
-						</section>
+						</Face>
 						);
 					})}
-				</div>
+				</Faces>
 
 				{/* RANK BY SEASON — fixed. It deliberately does not respond to the
 				    arrows: it is the constant the seasons are read against. */}
@@ -415,10 +421,11 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 </Widget>
 
 <script>
-	// Step between season panels. Pure class toggle over markup that is already
-	// in the DOM — no network, no persisted state. Bound per page-load and torn
-	// down before a view-transition swap so handlers don't accumulate (the same
-	// lifecycle idiom as github/Github.astro and videos/Videos.astro).
+	// Step between season panels: aria-hidden moves from one face to the next
+	// (which is what Faces fades on), over markup that is already in the DOM —
+	// no network, no persisted state. Bound per page-load and torn down before
+	// a view-transition swap so handlers don't accumulate (the same lifecycle
+	// idiom as github/Github.astro and videos/Videos.astro).
 	function bind() {
 		const widget = document.querySelector<HTMLElement>(".wx-volo");
 		const nav = widget?.querySelector<HTMLElement>(".wx-vl-nav");
@@ -443,7 +450,7 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 		const next = nav.querySelector<HTMLButtonElement>("[data-volo-next]");
 		if (panels.length === 0 || !prev || !next) return () => {};
 
-		let index = panels.findIndex((p) => p.classList.contains("is-active"));
+		let index = panels.findIndex((p) => p.getAttribute("aria-hidden") !== "true");
 		if (index < 0) index = panels.length - 1;
 
 		const select = (to: number) => {
@@ -451,7 +458,6 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 			if (clamped === index) return;
 			index = clamped;
 			panels.forEach((panel, i) => {
-				panel.classList.toggle("is-active", i === index);
 				panel.setAttribute("aria-hidden", String(i !== index));
 			});
 			const { heading, team, color, place: placing, tally: wl, champion } = panels[index].dataset;

@@ -10,6 +10,8 @@
 // time from github.json (see ./github.ts); only the flip is client-side.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
+import Faces from "@whois/design-system/Faces";
+import Face from "@whois/design-system/Face";
 import Mono from "@whois/design-system/Mono";
 import Figure from "@whois/design-system/Figure";
 import TileGrid from "@whois/design-system/TileGrid";
@@ -74,9 +76,10 @@ const langs = [
 	</Mono>
 
 	<CardBody class="wx-gh-body">
+		<Faces fill>
 		<!-- Face A: the contribution grid as tiles — ordinary days the ink at two
 		     strengths, the big days lit in the accent — over the yearly total. -->
-		<div class="wx-gh-face wx-gh-face--grid">
+		<Face class="wx-gh-face--grid">
 			<TileGrid cols={weeks.length} rows={7} fit="height">
 				{
 					weeks.map((week, wi) =>
@@ -90,11 +93,11 @@ const langs = [
 				}
 			</TileGrid>
 			<Figure unit="contributions">{total}</Figure>
-		</div>
+		</Face>
 
 		<!-- Face B: language breakdown — a tick ruler split by share over the
 		     legend, both ranked (see `langs`). -->
-		<div class="wx-gh-face wx-gh-face--langs" aria-hidden="true">
+		<Face class="wx-gh-face--langs" hidden>
 			<TickRuler
 				class="wx-gh-ruler"
 				segments={langs.map((l) => ({ share: l.percent }))}
@@ -105,7 +108,8 @@ const langs = [
 					value: `${Math.round(l.percent)}%`,
 				}))}
 			/>
-		</div>
+		</Face>
+		</Faces>
 
 		<!-- The flip surface: a transparent <button> over the whole body, last in
 		     the DOM so the faces read before the control that swaps them. One name
@@ -121,10 +125,11 @@ const langs = [
 </Widget>
 
 <script>
-	// Flip the card between the contribution grid and the language breakdown.
-	// Pure class toggle — no network, no persisted state. Bound per page-load and
-	// torn down before a view-transition swap so handlers don't accumulate (the
-	// same lifecycle idiom as videos/Videos.astro).
+	// Flip the card between the contribution grid and the language breakdown:
+	// aria-hidden moves from one face to the other (which is what Faces fades
+	// on) — no network, no persisted state. Bound per page-load and torn down
+	// before a view-transition swap so handlers don't accumulate (the same
+	// lifecycle idiom as videos/Videos.astro).
 	function bind() {
 		const widget = document.querySelector<HTMLElement>(".wx-github");
 		const button = widget?.querySelector<HTMLButtonElement>(".wx-gh-flip");
@@ -133,8 +138,9 @@ const langs = [
 		const gridFace = widget.querySelector(".wx-gh-face--grid");
 		const langFace = widget.querySelector(".wx-gh-face--langs");
 
+		let flipped = false;
 		const onClick = () => {
-			const flipped = widget.classList.toggle("is-flipped");
+			flipped = !flipped;
 			button.setAttribute("aria-pressed", String(flipped));
 			gridFace?.setAttribute("aria-hidden", String(flipped));
 			langFace?.setAttribute("aria-hidden", String(!flipped));

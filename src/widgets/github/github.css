@@ -3,8 +3,9 @@
  * Plain CSS (not an Astro scoped <style>) so these globally-reaching selectors
  * survive verbatim, matching the other widgets. The .wx-github/.wx-gh-* prefix
  * keeps them contained; the .home__widgets prefix matches the page's widget-grid
- * containment. The card chrome, the header, the tiles, the figure, the ruler and
- * the legend are all design-system components — only the flip is here. */
+ * containment. The card chrome, the header, the two faces and their cross-fade,
+ * the tiles, the figure, the ruler and the legend are all design-system
+ * components — only the flip surface and the faces' own layout are here. */
 
 /* The flip surface: a transparent <button> laid over the whole body (the DS
    body is the containing block), above the faces, so a tap anywhere on the
@@ -23,48 +24,15 @@
 }
 /* Inside, since the card clips: an inset ring instead of an outset one. */
 .home__widgets .wx-gh-flip:focus-visible {
-	outline: 2px solid var(--accent);
+	outline: var(--focus-ring);
 	outline-offset: calc(-1 * var(--space-1));
 	border-radius: var(--border-radius-1);
 }
 
-/* Two stacked faces cross-faded by the .is-flipped class on the widget. Each
-   fills the body's padding box, so the faces are positioned to its padding. */
-.home__widgets .wx-gh-face {
-	position: absolute;
-	inset: var(--space-3) var(--widget-pad) var(--widget-pad);
-	display: flex;
-	flex-direction: column;
-	gap: var(--widget-gap);
-	transition:
-		opacity var(--duration-swap) var(--ease-reveal),
-		visibility var(--duration-swap) var(--ease-reveal);
-}
+/* The languages face: the ruler at the top, the legend at the foot. */
 .home__widgets .wx-gh-face--langs {
-	opacity: 0;
-	visibility: hidden;
 	justify-content: space-between;
 }
-.home__widgets .wx-github.is-flipped .wx-gh-face--grid {
-	opacity: 0;
-	visibility: hidden;
-}
-.home__widgets .wx-github.is-flipped .wx-gh-face--langs {
-	opacity: 1;
-	visibility: visible;
-}
-@media (prefers-reduced-motion: reduce) {
-	.home__widgets .wx-gh-face {
-		transition: none;
-	}
-}
-/* Mirrors the DS body's tighter top padding on phone tiles (widget-grid.css). */
-@media (max-width: 900px) {
-	.home__widgets .wx-gh-face {
-		inset-block-start: var(--space-2);
-	}
-}
-
 /* The language ruler takes a share of the face; the legend takes the rest. */
 .home__widgets .wx-gh-ruler {
 	flex: 0 1 30%;
