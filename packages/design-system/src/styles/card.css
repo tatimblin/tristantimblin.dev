@@ -63,6 +63,15 @@
 	   sits flush to the padding (the same fix .ds-caps carries). */
 	margin-inline-end: calc(-1 * var(--tracking-caps));
 }
+/* Both slots reserve a Pill's height, so a header is the same height whether
+   its meta is a pill, a handle or nothing — otherwise the hairlines under a row
+   of cards step up and down with what each header happens to hold. */
+.ds-card-header__title,
+.ds-card-header__meta {
+	display: inline-flex;
+	align-items: center;
+	min-block-size: var(--space-5);
+}
 /* The right-hand side: a Pill, a handle, a date. Whatever it is, it must not
    push the title off the row, so it shrinks and truncates first. */
 .ds-card-header__meta {

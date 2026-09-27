@@ -6,8 +6,10 @@
 .ds-bars {
 	display: flex;
 	align-items: flex-end;
+	/* Spacing comes from space-between alone, not a fixed gap: a gap per bar made
+	   30 bars need ~146px and overflow a ~128px phone tile. Bars are 1px, so
+	   they only touch past one bar per pixel of width. */
 	justify-content: space-between;
-	gap: var(--space-1);
 	inline-size: 100%;
 	block-size: var(--bars-height, var(--space-10));
 	color: var(--text-secondary);
