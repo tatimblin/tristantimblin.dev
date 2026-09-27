@@ -7,7 +7,6 @@
 import Widget from "@whois/design-system/Widget";
 import Anchor from "@whois/design-system/Anchor";
 import List from "@whois/design-system/List";
-import Segments from "../Segments.astro";
 import { getGithubStats } from "./github";
 import "./github.css";
 
@@ -23,22 +22,19 @@ const weeks = gh.weeks;
 const weekday = (date: string): number =>
 	(new Date(`${date}T00:00:00Z`).getUTCDay() ?? 0) + 1;
 
-// Raw digits, no thousands comma: on a segment readout the separator is a dot
-// on the baseline, which reads as a decimal point ("1.457").
-const total = String(gh.totalContributions);
+const total = gh.totalContributions.toLocaleString("en-US");
 
 // Four named languages plus the rest summed as "other", so the list fits a 1×1
-// and still accounts for 100%. The four take the family's key colours in rank
-// order (OP-1: blue, green, white, orange); "other" is a grey dither, not a fifth
-// colour — it's the remainder, not a thing. The bar uses the same fills, so the
-// swatches are the legend. Whole percents: decimals cost width a phone lacks.
+// and still accounts for 100%. Each takes the family's tone ramp in rank order —
+// the accent for the top language, then the ink stepping down — so the ruler and
+// the swatches share one key. Whole percents: decimals cost width a phone lacks.
 const NAMED = 4;
 const named = gh.languages.slice(0, NAMED);
 const rest = gh.languages.slice(NAMED).reduce((sum, l) => sum + l.percent, 0);
 const langs = [
 	...named.map((l) => ({ name: l.name, percent: l.percent })),
 	...(rest > 0 ? [{ name: "other", percent: rest }] : []),
-].map((l, i) => ({ ...l, fill: i < NAMED ? `wx-key-${i + 1} wx-ink-4` : "wx-gh-other wx-ink-2" }));
+].map((l, i) => ({ ...l, tone: `var(--wx-tone-${i + 1})` }));
 ---
 
 <Widget
@@ -52,9 +48,9 @@ const langs = [
 	     so there's no <a> inside a <button>). The handle is a variantless <Anchor>:
 	     the link reset + the DS colour transition, no added marks. -->
 	<div class="wx-head">
-		<span class="wx-head-label">github</span>
+		<span class="wx-head-label wx-caps">github</span>
 		<Anchor
-			class="wx-head-meta"
+			class="wx-head-meta wx-caps"
 			href={gh.profileUrl}
 			target="_blank"
 			rel="noopener noreferrer"
@@ -74,9 +70,9 @@ const langs = [
 		aria-pressed="false"
 		aria-label="Show language breakdown"
 	>
-		<!-- Face A: contribution grid as a halftone — one ink, the square grows with
-		     the day's level (0 is a single dot) — over the yearly total as a
-		     seven-segment readout, one unlit digit of headroom in front. -->
+		<!-- Face A: contribution grid as flat tiles — unlit tiles are a faint wash, a
+		     day with commits lights in the accent, stronger with the level — over
+		     the yearly total. -->
 		<div class="wx-gh-face wx-gh-face--grid">
 			<div class="wx-gh-grid-box">
 				<div class="wx-gh-grid" style={`--gh-cols:${weeks.length}`}>
@@ -95,30 +91,33 @@ const langs = [
 				</div>
 			</div>
 			<div class="wx-figure">
-				<Segments class="wx-figure-num" value={total} pad={1} />
-				<span class="wx-figure-unit">contributions / yr</span>
+				<span class="wx-figure-num">{total}</span>
+				<span class="wx-caps">contributions</span>
 			</div>
 		</div>
 
-		<!-- Face B: language breakdown — a key-coloured share bar over a leadered list. -->
+		<!-- Face B: language breakdown — a tick ruler split by share, each stretch
+		     of ticks in its language's tone, over the list. -->
 		<div class="wx-gh-face wx-gh-face--langs" aria-hidden="true">
-			<div class="wx-gh-bar">
+			<div class="wx-gh-ruler">
 				{
 					langs.map((l) => (
-						<span class={`wx-gh-bar-seg ${l.fill}`} style={`flex-grow:${l.percent}`} />
+						<span
+							class="wx-gh-ruler-seg wx-ticks"
+							style={`flex-grow:${l.percent};color:${l.tone}`}
+						/>
 					))
 				}
 			</div>
 			<!-- <List> for the markerless reset; the rows stay raw <li> because
 			     ListItem wraps its children in an arrow + a second <div>, which breaks
-			     this swatch · name · leader · percent flex row. -->
+			     this swatch · name · percent flex row. -->
 			<List class="wx-gh-lang-list">
 				{
 					langs.map((l) => (
 						<li class="wx-gh-lang">
-							<span class={`wx-gh-swatch ${l.fill}`} />
-							<span class="wx-gh-lang-name">{l.name}</span>
-							<span class="wx-gh-leader wx-rule" />
+							<span class="wx-gh-swatch" style={`background:${l.tone}`} />
+							<span class="wx-gh-lang-name wx-caps">{l.name}</span>
 							<span class="wx-gh-lang-pct">{Math.round(l.percent)}%</span>
 						</li>
 					))
