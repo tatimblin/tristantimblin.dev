@@ -5,8 +5,11 @@
 
 .ds-widget-grid {
 	display: grid;
-	/* Column count is the knob; cells stay square via aspect-ratio on children. */
-	grid-template-columns: repeat(var(--widget-cols, 4), 1fr);
+	/* Column count is the knob; cells stay square via aspect-ratio on children.
+	   minmax(0, 1fr), not bare 1fr: 1fr's minimum is its content, so a widget with
+	   a wide intrinsic size (the carousel's canvas + ruler) widened its own column
+	   and knocked every cell off the shared --widget-cell size. */
+	grid-template-columns: repeat(var(--widget-cols, 4), minmax(0, 1fr));
 	grid-auto-rows: auto;
 	gap: var(--space-5); /* 24px, matches the home grid column-gap */
 	grid-auto-flow: dense; /* reflow: fill holes when a later item fits */
@@ -121,7 +124,7 @@
    inline `--widget-cols:N` that the `cols` prop sets on the element. */
 @media (max-width: 900px) {
 	.ds-widget-grid {
-		grid-template-columns: repeat(2, 1fr);
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		--widget-cols-eff: 2; /* keep --widget-cell exact in the 2-col mode */
 	}
 }
