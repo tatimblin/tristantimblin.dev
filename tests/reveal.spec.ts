@@ -611,7 +611,9 @@ test.describe("ruler — mobile scrubber orientation", () => {
 				sceneBottom: document
 					.querySelector<HTMLElement>(".fh__scene")!
 					.getBoundingClientRect().bottom,
-				rulerOpacity: getComputedStyle(ruler).opacity,
+				// The rest dim lives on the TICKS (--vc-ruler-dim), not the ruler box, so
+				// the accent playhead on the ruler stays at full strength.
+				rulerOpacity: getComputedStyle(ruler).getPropertyValue("--vc-ruler-dim").trim(),
 				captionOpacity: getComputedStyle(caption).opacity,
 				yearTops: Array.from(
 					document.querySelectorAll<HTMLElement>(".hero-carousel .vc__tick-year")
@@ -643,7 +645,7 @@ test.describe("ruler — mobile scrubber orientation", () => {
 
 		// Both rest at the same lowered opacity, so they read as one band of video
 		// chrome rather than as page text.
-		expect(geo.captionOpacity).toBe(geo.rulerOpacity);
+		expect(Number(geo.captionOpacity)).toBe(Number(geo.rulerOpacity));
 		expect(Number(geo.rulerOpacity)).toBeLessThan(1);
 	});
 
@@ -711,7 +713,10 @@ test.describe("ruler — mobile scrubber orientation", () => {
 
 		const rows = [await measure()];
 		for (const [desc, loc] of [
-			["JOINED FISKER AND THEN SOME MORE WORDS HERE", "SAN FRANCISCO CALIFORNIA"],
+			// A one-line title plus a place: one run taller than the opening caption
+			// (the first clip has no place)...
+			["JOINED FISKER", "SAN FRANCISCO CALIFORNIA"],
+			// ...then a title that wraps on top of that.
 			[
 				"A MUCH LONGER DESCRIPTION THAT IS GUARANTEED TO WRAP ONTO SEVERAL LINES",
 				"SOMEWHERE VERY FAR AWAY INDEED",
