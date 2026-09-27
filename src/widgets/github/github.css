@@ -3,9 +3,9 @@
  * Plain CSS (not an Astro scoped <style>) so these globally-reaching selectors
  * survive verbatim, matching the other widgets. The .wx-github/.wx-gh-* prefix
  * keeps them contained; the .home__widgets prefix matches the page's widget-grid
- * containment. The type, label row, figure, dotted rule and dither steps are the
- * shared mono family in widgets.css — only this widget's layout is here. One
- * ink throughout: activity and language share are drawn as density, not colour. */
+ * containment. The type, label row, segment figure, dotted rule, dither steps and
+ * key colours are the shared mono family in widgets.css — only this widget's
+ * layout is here. Activity is density (one ink); languages are key colours. */
 
 .home__widgets .wx-github {
 	display: flex;
@@ -120,7 +120,7 @@
 }
 
 /* Language share bar — segments sized by flex-grow (their percentage), each in
-   its dither step, butted together so the steps read as one gradient of ink. A
+   its key colour, butted together into one strip. A
    chunky block under the label row (the lofi card's dot-matrix bar) rather than a
    hairline — but capped, since a solid lead segment any taller turns into a slab. */
 .home__widgets .wx-gh-bar {
@@ -152,6 +152,10 @@
 	align-self: center;
 	inline-size: calc(var(--wx-px) * 4);
 	block-size: calc(var(--wx-px) * 4);
+}
+/* "other" — the remainder, so it's drawn as grey dither rather than a colour. */
+.home__widgets .wx-gh-other {
+	color: var(--text-tertiary);
 }
 .home__widgets .wx-gh-lang-name {
 	overflow: hidden;

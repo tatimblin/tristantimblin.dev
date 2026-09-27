@@ -7,6 +7,7 @@
 import Widget from "@whois/design-system/Widget";
 import Anchor from "@whois/design-system/Anchor";
 import List from "@whois/design-system/List";
+import Segments from "../Segments.astro";
 import { getGithubStats } from "./github";
 import "./github.css";
 
@@ -22,19 +23,22 @@ const weeks = gh.weeks;
 const weekday = (date: string): number =>
 	(new Date(`${date}T00:00:00Z`).getUTCDay() ?? 0) + 1;
 
-const total = gh.totalContributions.toLocaleString("en-US");
+// Raw digits, no thousands comma: on a segment readout the separator is a dot
+// on the baseline, which reads as a decimal point ("1.457").
+const total = String(gh.totalContributions);
 
 // Four named languages plus the rest summed as "other", so the list fits a 1×1
-// and still accounts for 100%. Each row takes a dither step (solid → sparse) in
-// rank order; the bar uses the same steps, so the legend needs no colour key.
-// Shown as whole percents: the decimals cost the width a phone tile doesn't have.
+// and still accounts for 100%. The four take the family's key colours in rank
+// order (OP-1: blue, green, white, orange); "other" is a grey dither, not a fifth
+// colour — it's the remainder, not a thing. The bar uses the same fills, so the
+// swatches are the legend. Whole percents: decimals cost width a phone lacks.
 const NAMED = 4;
 const named = gh.languages.slice(0, NAMED);
 const rest = gh.languages.slice(NAMED).reduce((sum, l) => sum + l.percent, 0);
 const langs = [
 	...named.map((l) => ({ name: l.name, percent: l.percent })),
 	...(rest > 0 ? [{ name: "other", percent: rest }] : []),
-].map((l, i) => ({ ...l, ink: Math.max(0, 4 - i) }));
+].map((l, i) => ({ ...l, fill: i < NAMED ? `wx-key-${i + 1} wx-ink-4` : "wx-gh-other wx-ink-2" }));
 ---
 
 <Widget
@@ -71,7 +75,8 @@ const langs = [
 		aria-label="Show language breakdown"
 	>
 		<!-- Face A: contribution grid as a halftone — one ink, the square grows with
-		     the day's level (0 is a single dot). -->
+		     the day's level (0 is a single dot) — over the yearly total as a
+		     seven-segment readout, one unlit digit of headroom in front. -->
 		<div class="wx-gh-face wx-gh-face--grid">
 			<div class="wx-gh-grid-box">
 				<div class="wx-gh-grid" style={`--gh-cols:${weeks.length}`}>
@@ -90,17 +95,17 @@ const langs = [
 				</div>
 			</div>
 			<div class="wx-figure">
-				<span class="wx-figure-num">{total}</span>
+				<Segments class="wx-figure-num" value={total} pad={1} />
 				<span class="wx-figure-unit">contributions / yr</span>
 			</div>
 		</div>
 
-		<!-- Face B: language breakdown — a dithered share bar over a leadered list. -->
+		<!-- Face B: language breakdown — a key-coloured share bar over a leadered list. -->
 		<div class="wx-gh-face wx-gh-face--langs" aria-hidden="true">
 			<div class="wx-gh-bar">
 				{
 					langs.map((l) => (
-						<span class={`wx-gh-bar-seg wx-ink-${l.ink}`} style={`flex-grow:${l.percent}`} />
+						<span class={`wx-gh-bar-seg ${l.fill}`} style={`flex-grow:${l.percent}`} />
 					))
 				}
 			</div>
@@ -111,7 +116,7 @@ const langs = [
 				{
 					langs.map((l) => (
 						<li class="wx-gh-lang">
-							<span class={`wx-gh-swatch wx-ink-${l.ink}`} />
+							<span class={`wx-gh-swatch ${l.fill}`} />
 							<span class="wx-gh-lang-name">{l.name}</span>
 							<span class="wx-gh-leader wx-rule" />
 							<span class="wx-gh-lang-pct">{Math.round(l.percent)}%</span>
