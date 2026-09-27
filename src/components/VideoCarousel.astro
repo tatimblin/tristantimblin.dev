@@ -153,7 +153,7 @@ const {
 	clips = [
 		{
 			src: "/videos/website-carousel/web/fisker-top-down.web.mp4",
-			description: "Joined Fisker",
+			description: "San Francisco, CA",
 			location: "",
 			date: "April 2023",
 			alt: "Halftone clip — started at Fisker",
@@ -426,10 +426,10 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				xfade-live={xfadeLive ? "" : undefined}
 			></dotted-grid>
 			{/* The caption in the instrument voices: what the clip is as a caps mono
-			   label in the ink, its date and place in the dim sentence-case mono. The
-			   element rewrites the three [data-vc-*] fields on every selection.
-			   Two RUNS (.vc__cap-run), each inside its own line (.vc__cap-line): the
-			   title, then date + place. Both wrappers are `display: contents` by
+			   label, its place in the dim sentence-case mono (no date — the ruler
+			   already says when). The element rewrites the [data-vc-*] fields on every
+			   selection. Two RUNS (.vc__cap-run), each inside its own line
+			   (.vc__cap-line): the title, then the place. Both wrappers are `display: contents` by
 			   default, so the fields lay out exactly as if they were the caption's
 			   direct children; `caption-overlay` turns them on so each run can carry
 			   one highlight that follows its text across a wrap. */}
@@ -441,7 +441,6 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				</span>
 				<span class="vc__cap-line">
 					<span class="vc__cap-run vc__cap-run--meta">
-						<Mono class="vc__date" variant="text" data-vc-date>{first?.date}</Mono>
 						<Mono class="vc__loc" variant="text" data-vc-loc>{first?.location}</Mono>
 					</span>
 				</span>
