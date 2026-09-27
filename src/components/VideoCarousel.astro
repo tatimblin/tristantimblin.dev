@@ -7,6 +7,7 @@
 // The clip data is authored in the markup (on each ruler tick + the caption) so
 // it degrades gracefully; the <video-carousel> custom element upgrades it into
 // the interactive scrubber. See packages/video-carousel.
+import Mono from "@whois/design-system/Mono";
 interface Clip {
 	src: string;
 	description: string;
@@ -415,9 +416,14 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				xfade-mode={xfadeMode}
 				xfade-live={xfadeLive ? "" : undefined}
 			></dotted-grid>
+			{/* The caption in the instrument voices: what the clip is as a caps mono
+			   label in the ink, its date beside it and its place under it in the dim
+			   sentence-case mono. The element rewrites the three [data-vc-*] fields
+			   on every selection. */}
 			<figcaption class="vc__caption">
-				<span class="vc__desc" data-vc-desc>{first?.description}</span>
-				<span class="vc__loc" data-vc-loc>{first?.location}</span>
+				<Mono class="vc__desc" tone="primary" data-vc-desc>{first?.description}</Mono>
+				<Mono class="vc__date" variant="text" data-vc-date>{first?.date}</Mono>
+				<Mono class="vc__loc" variant="text" data-vc-loc>{first?.location}</Mono>
 			</figcaption>
 		</div>
 	</div>
