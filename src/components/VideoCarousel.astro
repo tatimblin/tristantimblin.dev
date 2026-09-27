@@ -113,6 +113,13 @@ interface Props {
 	 * stay an integer.
 	 */
 	maxDpr?: number;
+	/**
+	 * Lay the caption OVER the clip, bottom-left, as a TV caption: each run of text
+	 * sits on its own highlight that hugs it line by line (the element's
+	 * `caption-overlay` attribute; see styles.css). Off, the caption reads as type
+	 * under the clip — or wherever a consumer positions it (the mobile hero).
+	 */
+	captionOverlay?: boolean;
 }
 
 // Real footage prepared by tools/dotgrid/prepare-video.sh into
@@ -133,6 +140,7 @@ const {
 	cellSize = 7,
 	dotScale,
 	maxDpr,
+	captionOverlay = false,
 	levels = 15,
 	gamma = 0.5,
 	contrast = 1.2,
@@ -356,6 +364,7 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 	tick-src="/audio/tick_004.ogg"
 	ruler-side={rulerSide}
 	orientation={orientation}
+	caption-overlay={captionOverlay ? "" : undefined}
 >
 	{/* Ruler + video share a row so the ruler's height tracks the VIDEO box only
 	   (not the caption). On mobile this row collapses and the ruler drops below the
@@ -417,13 +426,25 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				xfade-live={xfadeLive ? "" : undefined}
 			></dotted-grid>
 			{/* The caption in the instrument voices: what the clip is as a caps mono
-			   label in the ink, its date beside it and its place under it in the dim
-			   sentence-case mono. The element rewrites the three [data-vc-*] fields
-			   on every selection. */}
+			   label in the ink, its date and place in the dim sentence-case mono. The
+			   element rewrites the three [data-vc-*] fields on every selection.
+			   Two RUNS (.vc__cap-run), each inside its own line (.vc__cap-line): the
+			   title, then date + place. Both wrappers are `display: contents` by
+			   default, so the fields lay out exactly as if they were the caption's
+			   direct children; `caption-overlay` turns them on so each run can carry
+			   one highlight that follows its text across a wrap. */}
 			<figcaption class="vc__caption">
-				<Mono class="vc__desc" tone="primary" data-vc-desc>{first?.description}</Mono>
-				<Mono class="vc__date" variant="text" data-vc-date>{first?.date}</Mono>
-				<Mono class="vc__loc" variant="text" data-vc-loc>{first?.location}</Mono>
+				<span class="vc__cap-line">
+					<span class="vc__cap-run vc__cap-run--title">
+						<Mono class="vc__desc" tone="primary" data-vc-desc>{first?.description}</Mono>
+					</span>
+				</span>
+				<span class="vc__cap-line">
+					<span class="vc__cap-run vc__cap-run--meta">
+						<Mono class="vc__date" variant="text" data-vc-date>{first?.date}</Mono>
+						<Mono class="vc__loc" variant="text" data-vc-loc>{first?.location}</Mono>
+					</span>
+				</span>
 			</figcaption>
 		</div>
 	</div>
