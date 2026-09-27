@@ -59,10 +59,11 @@
 }
 
 /* ── MONO WIDGET FAMILY ──────────────────────────────────────────────────────
-   A second widget voice: terminal-flat. One ink on the card's own fill, a small
-   lowercase label row, one big figure with a tiny unit, dotted rules, and
-   intensity drawn as dither density rather than colour. GitHub is the first
-   widget on it; the pieces are here so the others can follow.
+   A second widget voice, after Teenage Engineering's device screens: flat ink on
+   the card's own fill, a small lowercase label row, one big seven-segment figure
+   with a tiny unit, dotted rules, dither for "how much", and four KEY colours for
+   "which one". GitHub is the first widget on it; the pieces are here so the
+   others can follow.
 
    This family sets its FIGURES in --font-mono too, which deliberately departs from
    the .wx-stat role above (figures in --font-numeric, "data, not code"). That
@@ -74,6 +75,33 @@
 	color: var(--text-primary);
 	/* The dither module: one pixel of the pattern language below, in CSS px. */
 	--wx-px: 2px;
+
+	/* KEY COLOURS — the OP-1's four encoder colours (blue, green, white, orange),
+	   where each colour always means the same control. Here they mean "the 1st…4th
+	   thing in this widget" and nothing else: never status, never decoration.
+	   Aliases onto the DS scales' solid step (Radix-style 9), not new values; the
+	   "white" key is the ink itself, so it inverts with the theme like the rest. */
+	--wx-key-1: var(--blue-900);
+	--wx-key-2: var(--green-900);
+	--wx-key-3: var(--text-primary);
+	--wx-key-4: var(--orange-900);
+}
+/* Light theme: the green solid step is ~89% lightness — a highlighter on white.
+   Two steps darker is the same green at a weight that holds against the card. */
+.maximeheckel-light .home__widgets .wx-mono {
+	--wx-key-2: var(--green-1100);
+}
+.home__widgets .wx-key-1 {
+	color: var(--wx-key-1);
+}
+.home__widgets .wx-key-2 {
+	color: var(--wx-key-2);
+}
+.home__widgets .wx-key-3 {
+	color: var(--wx-key-3);
+}
+.home__widgets .wx-key-4 {
+	color: var(--wx-key-4);
 }
 
 /* Label row — lowercase label left, a small detail right (a handle, a date). */
@@ -106,7 +134,7 @@
 }
 .home__widgets .wx-figure-num {
 	/* --widget-font-xl, but allowed below its 32px floor on small (phone) tiles,
-	   down to --widget-font-lg: mono digits run wide, and at the floor a 4-digit
+	   down to --widget-font-lg: the readout runs wide, and at the floor a 4-digit
 	   figure eats half a 160px tile. Identical to xl from a ~250px cell up. */
 	font-size: max(
 		var(--widget-font-lg),
@@ -114,6 +142,22 @@
 	);
 	font-weight: var(--font-weight-400);
 	letter-spacing: -0.02em;
+}
+
+/* Seven-segment readout (Segments.astro). Sized in em so it takes the figure's
+   font-size as its cap height; unlit segments stay faintly on, like an LCD. */
+.home__widgets .wx-segments {
+	display: block;
+	block-size: 0.8em;
+	inline-size: auto;
+	overflow: visible;
+}
+.home__widgets .wx-seg {
+	fill: currentColor;
+	opacity: 0.1;
+}
+.home__widgets .wx-seg.is-lit {
+	opacity: 1;
 }
 .home__widgets .wx-figure-unit {
 	font-size: var(--widget-font-xs);

@@ -1,0 +1,78 @@
+---
+// Segments — a number drawn as a seven-segment readout (the mono widget family's
+// figure; see widgets.css → MONO WIDGET FAMILY). Every digit position draws all
+// seven segments as a faint "ghost" and lights only the ones its digit uses, so
+// the unlit 8s show behind the value the way a real LCD does. Plain SVG polygons:
+// no font to self-host, crisp at any size, and it inherits currentColor.
+//
+// `value` is rendered as given ("1,457" keeps its comma, drawn as a low dot);
+// `pad` adds leading unlit digits so the readout reads as a fixed-width display.
+interface Props {
+	value: string;
+	pad?: number;
+	class?: string;
+}
+
+const { value, pad = 0, class: className } = Astro.props;
+
+// Segment geometry in a 10×18 cell: corners at x 1/9, y 1/9/17, bars 2 thick,
+// with a small gap where bars meet so each segment reads as its own piece.
+const T = 2;
+const G = 0.6;
+const h = (x0: number, x1: number, y: number) =>
+	[[x0, y], [x0 + T / 2, y - T / 2], [x1 - T / 2, y - T / 2], [x1, y], [x1 - T / 2, y + T / 2], [x0 + T / 2, y + T / 2]];
+const v = (x: number, y0: number, y1: number) =>
+	[[x, y0], [x + T / 2, y0 + T / 2], [x + T / 2, y1 - T / 2], [x, y1], [x - T / 2, y1 - T / 2], [x - T / 2, y0 + T / 2]];
+const SEG: Record<string, number[][]> = {
+	a: h(1 + G, 9 - G, 1),
+	b: v(9, 1 + G, 9 - G),
+	c: v(9, 9 + G, 17 - G),
+	d: h(1 + G, 9 - G, 17),
+	e: v(1, 9 + G, 17 - G),
+	f: v(1, 1 + G, 9 - G),
+	g: h(1 + G, 9 - G, 9),
+};
+const DIGIT: Record<string, string> = {
+	"0": "abcdef", "1": "bc", "2": "abged", "3": "abgcd", "4": "fgbc",
+	"5": "afgcd", "6": "afgedc", "7": "abc", "8": "abcdefg", "9": "abcdfg",
+};
+const points = (p: number[][]) => p.map(([x, y]) => `${x},${y}`).join(" ");
+
+// Lay the glyphs out left to right: digits take a 10-wide cell plus spacing;
+// separators (, or .) take a narrow cell holding one square dot on the baseline.
+const DIGIT_W = 10;
+const SEP_W = 3;
+const SPACE = 2;
+const glyphs = [...Array(pad).fill(" "), ...value];
+let x = 0;
+const laid = glyphs.map((ch) => {
+	const at = x;
+	const sep = ch === "," || ch === ".";
+	x += (sep ? SEP_W : DIGIT_W) + SPACE;
+	return { ch, at, sep };
+});
+const width = x - SPACE;
+---
+
+<svg
+	class:list={["wx-segments", className]}
+	viewBox={`0 0 ${width} 18`}
+	role="img"
+	aria-label={value}
+>
+	{
+		laid.map(({ ch, at, sep }) =>
+			sep ? (
+				<rect class="wx-seg is-lit" x={at + 0.5} y={16} width={T} height={T} />
+			) : (
+				Object.entries(SEG).map(([name, p]) => (
+					<polygon
+						class:list={["wx-seg", { "is-lit": DIGIT[ch]?.includes(name) }]}
+						transform={`translate(${at} 0)`}
+						points={points(p)}
+					/>
+				))
+			),
+		)
+	}
+</svg>
