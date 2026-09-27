@@ -1,47 +1,56 @@
 ---
-// Readers widget — a 1×1 tile for how many real people visit this site.
+// Readers widget — a 1×1 tile for how many real people visit this site, in the
+// instrument UI (packages/design-system/CONVENTIONS.md → Instrument UI).
 //
-// The shape is the balance-card idiom: a label, a filled curve with its peak
-// called out, one big figure, and a pill naming the window. The figure is a
-// plain COUNT of visitors over that window — not a percentage. At figures
+// The shape: a caps header (VISITORS, and the range as a pill in its meta
+// slot), a mono readout, a graph of vertical hairlines — one per reading, the
+// busiest one lit in the accent — and the total as the big numeral. The figure
+// is a plain COUNT of visitors over the range — not a percentage. At figures
 // Cloudflare rounds to the nearest ten, a percentage turns one sampled event
 // into "50%", which is precision the data does not have; a count says exactly
 // as much as is known.
 //
 // WHAT IT PLOTS, and why it is not the obvious thing. The tile reads Cloudflare
 // Web Analytics (RUM), which only records pageloads that ran its JavaScript
-// beacon — so every point is a browser. The zone's own request counts were the
-// tempting source (they are dense, and they make a lovely curve) and they are
+// beacon — so every bar is browsers. The zone's own request counts were the
+// tempting source (they are dense, and they make a lovely graph) and they are
 // ~98% crawlers and vulnerability scanners: the top paths after `/` are
-// /wp-login.php, /.env and /.git/config. A chart drawn from those is a chart
+// /wp-login.php, /.env and /.git/config. A graph drawn from those is a graph
 // about bots.
 //
 // The cost of choosing the honest source is that it is thin: the figures are
 // sampled and arrive quantized to tens, and about half of all days are zero. So
-// every curve is a TRAILING SUM rather than a daily line — see buildView() in
+// every bar is a TRAILING SUM rather than a day — see buildView() in
 // ./readers.ts for the full argument, and for why the window widens with the
 // range.
 //
-// THE PILL CYCLES the range: 30 days → 1 year → all time. Every range is
-// rendered server-side as its own face and swapped by an attribute on the card,
-// which is the same mechanism Github.astro flips with and Volo.astro steps
-// seasons with — so the pill fetches nothing and the tile still works with the
-// script blocked (it shows the first range and an inert pill).
+// POINTING AT THE GRAPH reads it: the bar under the pointer takes the accent
+// from the peak and the readout above names its value and dates. With the
+// script running the graph is also a keyboard slider (arrows / Home / End)
+// whose value text says the same thing; without it, the graph is hidden from
+// assistive tech and a sentence per range carries the peak instead.
+//
+// THE PILL CYCLES the range: 30d → 1y → all. Every range is rendered
+// server-side as its own face and swapped by an attribute on the card, the
+// same mechanism Github.astro flips with — so the pill fetches nothing and the
+// tile still works with the script blocked (it shows the first range and an
+// inert pill).
 //
 // Data is read at build time from readers.json (see ./readers.ts), which the
 // readers Action regenerates daily.
 import Widget from "@whois/design-system/Widget";
+import CardBody from "@whois/design-system/CardBody";
+import Mono from "@whois/design-system/Mono";
+import Figure from "@whois/design-system/Figure";
+import BarGraph from "@whois/design-system/BarGraph";
 import Pill from "@whois/design-system/Pill";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import {
-	areaPath,
 	buildViews,
-	chipAnchor,
 	formatCount,
 	formatSpan,
 	getReaderStats,
 	isDrawable,
-	smoothPath,
 } from "./readers";
 import "./readers.css";
 
@@ -51,182 +60,227 @@ const stats = getReaderStats();
 // the ledger is too young to fill it or because it genuinely recorded nobody,
 // and the second is not hypothetical here: most days on this site are zero, so
 // a quiet month makes the 30-day face empty while the all-time face still has
-// hundreds of visitors in it. Judging the tile on ALL the ranges would blank a
-// populated widget; judging each one and offering only what exists keeps the
-// tile honest and the pill useful.
+// hundreds of visitors in it. Judging each range and offering only what exists
+// keeps the tile honest and the pill useful.
 const views = buildViews(stats.days).filter(isDrawable);
-const hasCurve = views.length > 0;
+const hasSeries = views.length > 0;
 // Optional: with nothing drawable there is no initial range, and the card is
-// still rendered (as the empty state) with data-range on it.
+// still rendered (as the empty state).
 const initial = views[0];
-// With one range there is nothing to cycle to, so the pill stays the label it
-// always was rather than becoming a button that does nothing.
+// With one range there is nothing to cycle to, so the pill stays a label
+// rather than becoming a button that does nothing.
 const cycles = views.length > 1;
 
 const sampledNote = stats.sampled
 	? "Cloudflare Web Analytics samples traffic, so these are estimates, rounded to the nearest ten."
 	: "";
+
+// What the script needs to read a bar back: its value and its dates, in bar
+// order. Compact keys — this is inlined once per range.
+const readings = (view: (typeof views)[number]) =>
+	JSON.stringify(
+		view.points.map((p) => ({ v: p.value, s: formatSpan(p.from, p.date) })),
+	);
 ---
 
 <Widget
 	size="1x1"
+	title="visitors"
 	class="wx-readers"
 	data-range={initial?.key}
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="4"
 >
-	<p class="wx-rd-label">Visitors</p>
-
 	{
-		hasCurve ? (
-			<>
-				{/* The fill gradient, defined ONCE for all three faces. It cannot live
-				    in the faces themselves: they carry the same markup, so the same
-				    gradient id would appear three times in one document, and two of the
-				    three are display:none anyway — a paint server inside a hidden
-				    subtree is not reliably resolvable by the ones that are visible. */}
-				<svg class="wx-rd-defs" width="0" height="0" aria-hidden="true" focusable="false">
-					<defs>
-						{/* The fill under the line. Default objectBoundingBox units, so it
-						    spans whatever vertical range the curve happens to occupy. */}
-						<linearGradient id="wx-rd-fade" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="0%" stop-color="var(--rd-line)" stop-opacity="0.22" />
-							<stop offset="100%" stop-color="var(--rd-line)" stop-opacity="0" />
-						</linearGradient>
-
-						{/* The line itself, dimming as it falls. One colour, varying only
-						    in strength, so the tile still has exactly one hue — a second
-						    hue along a data line would read as a second series.
-
-						    userSpaceOnUse, unlike the fill above: the stroke's brightness
-						    should mean HEIGHT IN THE PLOT, which is the one thing every
-						    range's chart shares. In bounding-box units each curve would be
-						    measured against its own extent, so a flat range would come out
-						    as bright at its peak as a dramatic one, and cycling the pill
-						    would change what the colour means. y1 tracks PAD_TOP in
-						    readers.ts — the highest a point is ever placed. */}
-						<linearGradient
-							id="wx-rd-stroke"
-							gradientUnits="userSpaceOnUse"
-							x1="0"
-							y1="16"
-							x2="0"
-							y2="100"
-						>
-							<stop offset="0%" stop-color="var(--rd-line)" stop-opacity="1" />
-							<stop offset="55%" stop-color="var(--rd-line)" stop-opacity="0.78" />
-							<stop offset="100%" stop-color="var(--rd-line)" stop-opacity="0.45" />
-						</linearGradient>
-					</defs>
-				</svg>
-
-				{/* The WHOLE figure below is aria-hidden, chip included, and the
-				    sentence at the foot carries it instead. A path has nothing a screen
-				    reader can usefully announce, and leaving the caption exposed made
-				    the peak announce twice — once as the bare "90 · Aug 19 - 25" of the
-				    chip, then again in the sentence that says what those numbers
-				    mean. */}
-				<div class="wx-rd-stack">
-					{views.map((view) => (
-						<figure class="wx-rd-chart" data-face={view.key} aria-hidden="true">
-							<svg class="wx-rd-plot" viewBox="0 0 100 100" preserveAspectRatio="none">
-								<path class="wx-rd-area" d={areaPath(view.points)} />
-								<path class="wx-rd-line" d={smoothPath(view.points)} />
-							</svg>
-
-							{/* Marker and chip are HTML over the SVG, not inside it:
-							    preserveAspectRatio="none" scales the two axes
-							    independently, which would stretch anything drawn in that
-							    coordinate space — text worst of all. Percentages map onto
-							    the same box exactly, because the viewBox is 100 units on
-							    both axes. */}
-							<span
-								class="wx-rd-dot"
-								style={`left:${view.peak?.x}%;top:${view.peak?.y}%`}
-								aria-hidden="true"
-							/>
-							<figcaption
-								class:list={["wx-rd-chip", `wx-rd-chip--${chipAnchor(view.peak)}`]}
-								style={`left:${view.peak?.x}%;top:${view.peak?.y}%`}
-								title={`The busiest ${view.window} days in this range. ${sampledNote}`}
-							>
-								<span class="wx-rd-chip-value">{view.peak?.value}</span>
-								{/* Dropped on a small cell (readers.css): the chip is ~90px
-								    of a 135px content box with the date in it, which is most
-								    of the curve it is annotating. */}
-								<span class="wx-rd-chip-date">
-									{" "}· {formatSpan(view.peak?.from ?? "", view.peak?.date ?? "")}
-								</span>
-							</figcaption>
-						</figure>
-					))}
-				</div>
-
-				<div class="wx-rd-foot">
-					{/* .wx-stat-num is the shared widget figure primitive (widgets.css) —
-					    the numeric face, tabular figures and display size, already solved.
-					    Used WITHOUT its .wx-stat wrapper, which brings a padding and flex
-					    this row does not want. */}
-					{views.map((view) => (
-						<span class="wx-stat-num" data-face={view.key} title={sampledNote}>
-							{formatCount(view.total)}
-						</span>
-					))}
-
-					{/* TWO PILLS, one of which is always hidden. Without the script the
-					    static one shows and nothing pretends to be interactive; the script
-					    swaps them, which is the idiom Volo.astro uses for its season
-					    arrows. A <button disabled> would have done it in one element, but
-					    "disabled" announces a control that is temporarily unavailable,
-					    which is not what a page without JavaScript has. */}
-					<Pill class="wx-rd-range wx-rd-range--static" variant="success">
-						{initial?.label}
+		hasSeries && (
+			<Fragment slot="meta">
+				{/* TWO PILLS, one of which is always hidden. Without the script the
+				    static one shows and nothing pretends to be interactive; the
+				    script swaps them. A <button disabled> would have done it in one
+				    element, but "disabled" announces a control that is temporarily
+				    unavailable, which is not what a page without JavaScript has. */}
+				<Pill class="wx-rd-range wx-rd-range--static">{initial?.key}</Pill>
+				{cycles && (
+					<Pill as="button" class="wx-rd-range wx-rd-cycle" type="button" hidden>
+						{views.map((view) => (
+							<span data-face={view.key}>{view.key}</span>
+						))}
 					</Pill>
-					{cycles && (
-						<Pill
-							as="button"
-							class="wx-rd-range wx-rd-cycle"
-							variant="success"
-							type="button"
-							hidden
-						>
-							{views.map((view) => (
-								<span data-face={view.key}>{view.label}</span>
-							))}
-						</Pill>
-					)}
-				</div>
-
-				{views.map((view) => (
-					<VisuallyHidden class="wx-rd-say" data-face={view.key}>
-						{formatCount(view.total)} visitors over {view.label.toLowerCase()}
-						{view.covered < view.span ? ` (${view.covered} days on record)` : ""}.
-						{" "}Busiest {view.window} days {formatSpan(view.peak?.from ?? "", view.peak?.date ?? "")}
-						, with {view.peak?.value}. {sampledNote}
-					</VisuallyHidden>
-				))}
-			</>
-		) : (
-			/* The data file is generated and the fetch script refuses to write an
-			   empty one — but no visitors yet is a state the tile can legitimately be
-			   in on a fresh site, and it should say so rather than draw a flat line
-			   through zero. */
-			<p class="wx-rd-empty">No visitors yet.</p>
+				)}
+			</Fragment>
 		)
 	}
+
+	<CardBody class="wx-rd-body">
+		{
+			hasSeries ? (
+				views.map((view) => (
+					<div
+						class="wx-rd-face"
+						data-face={view.key}
+						data-readings={readings(view)}
+						data-peak={view.peakIndex}
+						data-label={view.label}
+						data-window={view.window}
+					>
+						{/* The readout: the lit bar's value and dates. At rest that is
+						    the peak, so it says so; the script rewrites it as the
+						    pointer or the keyboard moves the lit bar. aria-hidden —
+						    the slider's value text (or, without the script, the
+						    sentence below) says it for assistive tech. */}
+						<Mono class="wx-rd-readout" tone="tertiary" aria-hidden="true">
+							<span class="wx-rd-read-tag">peak </span>
+							<Mono as="span" variant="value" class="wx-rd-read-value">
+								{view.peak?.value}
+							</Mono>
+							{" · "}
+							<span class="wx-rd-read-span">
+								{formatSpan(view.peak?.from ?? "", view.peak?.date ?? "")}
+							</span>
+						</Mono>
+
+						<BarGraph
+							class="wx-rd-bars"
+							values={view.points.map((p) => p.value)}
+							lit={view.peakIndex}
+							aria-hidden="true"
+							title={sampledNote || undefined}
+						/>
+
+						<Figure unit="total" title={sampledNote || undefined}>
+							{formatCount(view.total)}
+						</Figure>
+
+						<VisuallyHidden class="wx-rd-say">
+							{formatCount(view.total)} visitors over {view.label.toLowerCase()}
+							{view.covered < view.span ? ` (${view.covered} days on record)` : ""}.
+							{" "}Busiest {view.window} days{" "}
+							{formatSpan(view.peak?.from ?? "", view.peak?.date ?? "")}, with{" "}
+							{view.peak?.value}. {sampledNote}
+						</VisuallyHidden>
+					</div>
+				))
+			) : (
+				/* The data file is generated and the fetch script refuses to write
+				   an empty one — but no visitors yet is a state the tile can
+				   legitimately be in on a fresh site, and it should say so rather
+				   than draw a row of empty bars. */
+				<Mono variant="text" class="wx-rd-empty">No visitors yet.</Mono>
+			)
+		}
+	</CardBody>
 </Widget>
 
 <script>
-	// Cycle the tile through its ranges. Every range is already in the DOM, so
-	// this only moves an attribute — no network, no re-render, no persisted
-	// state. Bound per page-load and torn down before a view-transition swap so
+	// Two behaviours, both over markup that is already in the DOM: the pill
+	// cycles the range (an attribute on the card), and each range's graph reads
+	// back the bar under the pointer / keyboard. No network, no persisted state.
+	// Bound per page-load and torn down before a view-transition swap so
 	// handlers don't accumulate (the lifecycle idiom from Github.astro).
-	function bind() {
-		const widget = document.querySelector<HTMLElement>(".wx-readers");
-		const button = widget?.querySelector<HTMLButtonElement>(".wx-rd-cycle");
-		const staticPill = widget?.querySelector<HTMLElement>(".wx-rd-range--static");
-		if (!widget || !button) return () => {};
+	interface Reading {
+		v: number;
+		s: string;
+	}
+
+	function bindGraph(face: HTMLElement): () => void {
+		const graph = face.querySelector<HTMLElement>(".wx-rd-bars");
+		const bars = [...(graph?.querySelectorAll<HTMLElement>(".ds-bars__bar") ?? [])];
+		const tag = face.querySelector<HTMLElement>(".wx-rd-read-tag");
+		const value = face.querySelector<HTMLElement>(".wx-rd-read-value");
+		const span = face.querySelector<HTMLElement>(".wx-rd-read-span");
+		let readings: Reading[] = [];
+		try {
+			readings = JSON.parse(face.dataset.readings ?? "[]");
+		} catch {}
+		if (!graph || bars.length === 0 || readings.length !== bars.length) {
+			return () => {};
+		}
+
+		const peak = Number(face.dataset.peak);
+		const last = bars.length - 1;
+		let at = peak;
+		let settle = 0;
+
+		// Light bar i — and only bar i, so the card keeps its one accent — and
+		// say what it is, to the eye (the readout) and to assistive tech (the
+		// slider's value text).
+		const show = (i: number) => {
+			at = Math.min(Math.max(i, 0), last);
+			bars.forEach((bar, j) => bar.toggleAttribute("data-lit", j === at));
+			const r = readings[at];
+			if (tag) tag.hidden = at !== peak;
+			if (value) value.textContent = String(r.v);
+			if (span) span.textContent = r.s;
+			graph.setAttribute("aria-valuenow", String(at));
+			graph.setAttribute(
+				"aria-valuetext",
+				`${r.v} visitors, ${r.s}${at === peak ? ", the busiest" : ""}`,
+			);
+		};
+
+		// Upgrade the hidden picture into a slider over the readings.
+		graph.removeAttribute("aria-hidden");
+		graph.setAttribute("role", "slider");
+		graph.tabIndex = 0;
+		graph.setAttribute(
+			"aria-label",
+			`Visitors per ${face.dataset.window ?? "7"} days, ${(face.dataset.label ?? "").toLowerCase()}`,
+		);
+		graph.setAttribute("aria-valuemin", "0");
+		graph.setAttribute("aria-valuemax", String(last));
+		show(peak);
+
+		// Bars are spread edge to edge (space-between), so bar i sits at
+		// i / last of the width — the nearest one is a rounding away.
+		const fromPointer = (event: PointerEvent) => {
+			const rect = graph.getBoundingClientRect();
+			const x = (event.clientX - rect.left) / Math.max(1, rect.width);
+			window.clearTimeout(settle);
+			show(Math.round(x * last));
+		};
+		const onLeave = (event: PointerEvent) => {
+			if (document.activeElement === graph) return;
+			// A touch lifts as it leaves; hold its reading a moment so it can be
+			// read, then hand the accent back to the peak.
+			window.clearTimeout(settle);
+			if (event.pointerType === "mouse") show(peak);
+			else settle = window.setTimeout(() => show(peak), 2000);
+		};
+		const onKey = (event: KeyboardEvent) => {
+			const step: Record<string, number> = {
+				ArrowLeft: at - 1,
+				ArrowDown: at - 1,
+				ArrowRight: at + 1,
+				ArrowUp: at + 1,
+				Home: 0,
+				End: last,
+			};
+			if (!(event.key in step)) return;
+			event.preventDefault();
+			show(step[event.key]);
+		};
+		const onBlur = () => show(peak);
+
+		graph.addEventListener("pointermove", fromPointer);
+		graph.addEventListener("pointerdown", fromPointer);
+		graph.addEventListener("pointerleave", onLeave);
+		graph.addEventListener("keydown", onKey);
+		graph.addEventListener("blur", onBlur);
+		return () => {
+			window.clearTimeout(settle);
+			graph.removeEventListener("pointermove", fromPointer);
+			graph.removeEventListener("pointerdown", fromPointer);
+			graph.removeEventListener("pointerleave", onLeave);
+			graph.removeEventListener("keydown", onKey);
+			graph.removeEventListener("blur", onBlur);
+		};
+	}
+
+	function bindRange(widget: HTMLElement): () => void {
+		const button = widget.querySelector<HTMLButtonElement>(".wx-rd-cycle");
+		const staticPill = widget.querySelector<HTMLElement>(".wx-rd-range--static");
+		if (!button) return () => {};
 
 		// Hand over from the inert pill only now that the handler is about to be
 		// attached, so there is never a frame where a live-looking control does
@@ -240,12 +294,12 @@ const sampledNote = stats.sampled
 
 		const apply = (key: string) => {
 			widget.dataset.range = key;
-			const label = button.querySelector<HTMLElement>(`[data-face="${key}"]`);
-			// The pill's own text is the current range, so the accessible name has to
-			// say what pressing it DOES rather than repeating that text.
+			const face = widget.querySelector<HTMLElement>(`.wx-rd-face[data-face="${key}"]`);
+			// The pill's own text is the current range, so the accessible name has
+			// to say what pressing it DOES rather than repeating that text.
 			button.setAttribute(
 				"aria-label",
-				`Showing ${label?.textContent?.trim() ?? key}. Change range.`,
+				`Showing ${(face?.dataset.label ?? key).toLowerCase()}. Change range.`,
 			);
 		};
 
@@ -257,6 +311,16 @@ const sampledNote = stats.sampled
 		apply(widget.dataset.range ?? keys[0]);
 		button.addEventListener("click", onClick);
 		return () => button.removeEventListener("click", onClick);
+	}
+
+	function bind() {
+		const widget = document.querySelector<HTMLElement>(".wx-readers");
+		if (!widget) return () => {};
+		const teardowns = [
+			bindRange(widget),
+			...[...widget.querySelectorAll<HTMLElement>(".wx-rd-face")].map(bindGraph),
+		];
+		return () => teardowns.forEach((fn) => fn());
 	}
 
 	let teardown: (() => void) | null = null;

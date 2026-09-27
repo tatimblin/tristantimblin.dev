@@ -1,380 +1,73 @@
 /* Readers widget — see Readers.astro for what the tile plots and why.
  *
- * Plain CSS, imported by the component and scoped under .home__widgets like the
- * other widget modules. Sizes come from the widget-grid container-query tokens
- * (--widget-pad / --widget-gap / --widget-font-*) rather than from --space-* or
- * --font-size-* steps: those tokens are what make a tile scale with its CELL on
- * a large screen instead of staying fixed while the card grows around it
- * (packages/design-system/src/styles/widget-grid.css). The two lengths not
- * covered by a token — the marker and the chip's offset from it — are clamped
- * against --widget-cell by the same formula, which is how volo.css sizes its
- * plot. */
+ * Plain CSS, scoped under .home__widgets like the other widget modules. The
+ * card chrome, header, pill, readout, hairline graph and figure are all
+ * design-system components; what is here is layout, the range swap and the
+ * graph's pointer/focus affordances. */
 
-.home__widgets .wx-readers {
-	/* The card is already a flex column (set on .ds-widget by index.astro); this
-	   is the padding and rhythm inside it. */
-	padding: var(--widget-pad);
-	gap: var(--widget-gap);
-
-	/* The one colour the tile owns, named once. --success is the DS's
-	   theme-aware green — --green-1100 in light, --green-900 in dark — so the
-	   line stays legible on both surfaces where a fixed green would wash out on
-	   one of them. It is also exactly the colour Pill variant="success" uses, so
-	   the curve and the chip are the same green by construction rather than by
-	   two values that happen to match today. */
-	--rd-line: var(--success);
-}
-
-/* LABEL. Not the Widget `title` prop: that renders a DS CardHeader, which comes
-   with a bottom border and a fixed 12px padding — a rule across the tile that
-   this layout does not want. */
-.home__widgets .wx-rd-label {
-	margin: 0;
-	font-size: calc(var(--widget-font-sm) * var(--rd-scale, 1));
-	font-weight: var(--font-weight-600);
-	letter-spacing: var(--tracking-caps);
-	line-height: var(--line-height-ui);
-	text-transform: uppercase;
-	color: var(--text-tertiary);
-	/* One line, always. "VISITORS" is short enough today that this never fires,
-	   but the label is the one string here that is prose rather than a figure,
-	   and a two-line label eats the chart, which is the tile's subject. Cheap
-	   insurance against a longer word. */
-	white-space: nowrap;
-}
-
-/* CHART STACK. Takes all the slack between the label and the footer, and sits
-   INSIDE the card's padding rather than bleeding past it. The curve used to run
-   the full width; pulling it in, and widening the fade on .wx-rd-plot below,
-   is what makes it read as a drawing placed on the card instead of a panel
-   clipped by it. The two work together — the padding sets where the plot box
-   ends, the mask dissolves the line well before it gets there.
-
-   `min-block-size: 0` is what actually lets it shrink inside the flex column;
-   without it the SVG's intrinsic size wins and the footer is pushed out of a
-   card that clips.
-
-   One range's chart is visible at a time. They are stacked rather than
-   sequenced so that swapping ranges cannot change the tile's layout: all three
-   are the same box, and only their paint differs. */
-.home__widgets .wx-rd-stack {
-	position: relative;
-	flex: 1;
+/* One range's face fills the body as its own flex column: readout, graph
+   (taking the slack), figure. */
+.home__widgets .wx-rd-face {
+	flex: 1 1 auto;
 	min-block-size: 0;
-}
-.home__widgets .wx-rd-chart {
-	position: absolute;
-	inset: 0;
-	margin: 0;
-}
-/* The shared paint server. Zero-sized and out of flow, but never display:none
-   — a gradient in a hidden subtree is not reliably resolvable by the elements
-   referencing it. */
-.home__widgets .wx-rd-defs {
-	position: absolute;
-	inline-size: 0;
-	block-size: 0;
-}
-
-.home__widgets .wx-rd-plot {
-	display: block;
-	inline-size: 100%;
-	block-size: 100%;
-	/* SIDES FADE OUT rather than meeting the plot's edge. The curve is a window
-	   onto a series that continues past both ends, and a hard stop draws a
-	   beginning and an end the data does not have — the reference fades for the
-	   same reason. Masked rather than faked with an overlay gradient, so it
-	   works against whatever the card is sitting on and in either theme.
-
-	   12%, against the card padding the stack now sits inside, puts the first
-	   fully-drawn pixel about a sixth of the way into the tile. Not wider: the
-	   peak marker is placed at the data's x and can sit as far out as ~90%
-	   (that is what chipAnchor() in readers.ts is compensating for), and a fade
-	   that reaches it leaves the dot hanging over a line that has already
-	   dissolved. */
-	mask-image: linear-gradient(
-		to right,
-		transparent 0%,
-		#000 12%,
-		#000 88%,
-		transparent 100%
-	);
-}
-.home__widgets .wx-rd-area {
-	fill: url(#wx-rd-fade);
-	stroke: none;
-}
-.home__widgets .wx-rd-line {
-	fill: none;
-	/* Not a flat --rd-line: the stroke takes the same colour at varying strength
-	   down the plot, so troughs recede and peaks carry the weight (see the
-	   gradient's own note in Readers.astro). --rd-line is still what feeds it —
-	   the fallback keeps the line drawn if the paint server ever fails to
-	   resolve, which would otherwise leave the chart as fill alone. */
-	stroke: var(--rd-line);
-	stroke: url(#wx-rd-stroke);
-	stroke-width: 2;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-	/* The plot box is stretched to the tile's width, so without this the stroke
-	   stretches with it and the flat runs go fat while the steep ones stay thin.
-	   Same trap as the Volo chart (volo.css). */
-	vector-effect: non-scaling-stroke;
-}
-
-/* PEAK MARKER. A ring, drawn as a thick border with the card showing through
-   the middle — so it reads as a hole punched in the line rather than as a
-   filled blob sitting on top of it, and it stays correct in both themes without
-   naming a single literal colour. */
-.home__widgets .wx-rd-dot {
-	position: absolute;
-	inline-size: clamp(12px, calc(var(--widget-cell) * 0.045), 18px);
-	block-size: clamp(12px, calc(var(--widget-cell) * 0.045), 18px);
-	translate: -50% -50%;
-	border-radius: 50%;
-	border: 3px solid var(--text-primary);
-	background: var(--card-bg, var(--card-background));
-}
-
-/* VALUE CHIP. Hangs below the dot with a tail pointing up at it. Positioned
-   from the same coordinates as the dot, then pushed clear of it by its own
-   margin, so the two can never drift apart. */
-.home__widgets .wx-rd-chip {
-	/* Chip and tail read from ONE colour. They used to differ: the chip carried
-	   a backdrop-filter and the tail — a border triangle with no content box —
-	   could not, so the tail was a visibly flatter grey than the body it was
-	   supposed to be part of. Solid, and shared, is the fix; the blur was
-	   costing a compositor layer for an effect that was never quite right. */
-	--rd-chip-bg: color-mix(
-		in srgb,
-		var(--text-primary) 22%,
-		var(--card-bg, var(--card-background))
-	);
-	/* How far the tail sits from whichever chip edge is pinned to the peak.
-	   14px clears the corner radius plus the tail's own half-width, so the
-	   triangle always meets a straight run of the chip's edge — but it is only
-	   sensible while the chip is wide enough to have a straight run. With the
-	   date dropped on a small cell the chip is barely 20px, where 14px would
-	   park the tail against the far corner and hang the whole body off to one
-	   side. Capped at half the chip, which for a chip that narrow just means
-	   centred — the same answer the centre anchor would give.
-	   BOTH percentages below resolve against the chip's width: translate's
-	   against its border box, the tail's `left` against the padding box of its
-	   containing block, which is this chip. No border, so the two agree. */
-	--rd-tail-inset: min(14px, 50%);
-
-	position: absolute;
-	margin: 0;
-	margin-block-start: clamp(10px, calc(var(--widget-cell) * 0.038), 16px);
-	padding: 0.25em 0.6em;
-	border-radius: var(--border-radius-1);
-	background: var(--rd-chip-bg);
-	color: var(--text-primary);
-	font-size: calc(var(--widget-font-xs) * var(--rd-scale, 1));
-	font-variant-numeric: tabular-nums;
-	line-height: var(--line-height-ui);
-	white-space: nowrap;
-}
-/* The tail, centred on the peak's x by the same arithmetic that places the
-   chip — see the anchors below. */
-.home__widgets .wx-rd-chip::before {
-	content: "";
-	position: absolute;
-	inset-block-end: 100%;
-	left: var(--rd-tail);
-	translate: -50% 0;
-	border: 5px solid transparent;
-	border-block-end-color: var(--rd-chip-bg);
-}
-
-/* ANCHORS. Which of the chip's edges is pinned to the peak's x. Centred
-   normally; near a card edge the chip is pinned by that edge instead, because
-   .ds-card clips its overflow and a centred chip would be cut in half.
-
-   The offsets are LENGTHS, not percentages of the chip. They were percentages
-   — 12% and 88% — which is only correct for one chip width: with the date
-   hidden on a small cell the chip is ~40px, so 12% put the tail 5px in, and
-   half the 10px triangle hung off the chip's edge. A fixed inset is the same
-   distance whatever the chip says, so the tail meets its body identically in
-   every range and at every breakpoint. */
-.home__widgets .wx-rd-chip--center {
-	translate: -50% 0;
-	--rd-tail: 50%;
-}
-.home__widgets .wx-rd-chip--start {
-	translate: calc(var(--rd-tail-inset) * -1) 0;
-	--rd-tail: var(--rd-tail-inset);
-}
-.home__widgets .wx-rd-chip--end {
-	translate: calc(var(--rd-tail-inset) - 100%) 0;
-	--rd-tail: calc(100% - var(--rd-tail-inset));
-}
-
-/* FOOTER. The headline figure and the range pill on one baseline. */
-.home__widgets .wx-rd-foot {
 	display: flex;
-	align-items: flex-end;
-	justify-content: space-between;
+	flex-direction: column;
 	gap: var(--widget-gap);
 }
-.home__widgets .wx-rd-foot .wx-stat-num {
-	/* The figure changes width between ranges (130 → 320 → 1,204). Left-aligned
-	   in a growing box rather than centred, so the first digit stays put and the
-	   number grows rightward into the gap instead of sliding under the pill. */
-	margin-inline-end: auto;
+
+.home__widgets .wx-rd-readout {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
-/* The DS Pill is fixed at 28px tall and --font-size-1 (14px), which is the one
-   thing in this tile that does not scale with the cell. On a 167px phone cell
-   that is 17% of the tile's height and 40% of its width for two words.
-   Re-sized here rather than left alone, in the same spirit as Github.astro's
-   Anchor: the DS owns the pill's SHAPE and colour, the tile owns its size,
-   because only the tile knows how much room it has. The `!important` is not
-   emphasis — .ds-pill sets `padding` with `!important` itself, so nothing else
-   can reach it. */
-.home__widgets .wx-rd-foot .ds-pill {
-	flex: none;
-	block-size: auto;
-	min-inline-size: 0;
-	padding: 0.3em 0.7em !important;
-	font-size: calc(var(--widget-font-xs) * var(--rd-scale, 1));
-	line-height: var(--line-height-ui);
-}
-
-.home__widgets .wx-rd-foot .wx-stat-num {
-	font-size: calc(var(--widget-font-xl) * var(--rd-scale, 1));
-}
-
-.home__widgets .wx-rd-empty {
-	margin: auto 0;
-	font-size: var(--widget-font-sm);
-	color: var(--text-tertiary);
-}
-
-
-/* RANGE SWAP -------------------------------------------------------------
-   Every range is in the DOM; the card's data-range attribute picks one. CSS
-   cannot compare two attribute values, so these are one selector per range
-   rather than one generic rule — and the parts are marked `data-face` rather
-   than `data-range` so a selector cannot match the card itself.
-
-   Text parts CUT. Fading a figure through a width change (130 → 320 → 1,204)
-   reads as a glitch rather than a transition, and display:none also keeps the
-   inactive copies out of the accessibility tree, which is the whole reason
-   three of everything can sit in the markup at once. */
-.home__widgets
-	.wx-readers[data-range="30d"]
-	[data-face]:not([data-face="30d"]):not(.wx-rd-chart),
-.home__widgets
-	.wx-readers[data-range="1y"]
-	[data-face]:not([data-face="1y"]):not(.wx-rd-chart),
-.home__widgets
-	.wx-readers[data-range="all"]
-	[data-face]:not([data-face="all"]):not(.wx-rd-chart) {
+.home__widgets .wx-rd-read-tag[hidden] {
 	display: none;
 }
 
-/* The chart is the one part that cross-fades, because it is the one part that
-   can: the faces are absolutely positioned, so both states occupy the same box
-   and there is nothing for a fade to reflow. Held with opacity + visibility
-   rather than display, which cannot be transitioned — and visibility keeps the
-   faded-out face out of hit-testing and out of the a11y tree once it has
-   finished fading. */
-.home__widgets .wx-rd-chart {
-	opacity: 0;
-	visibility: hidden;
-	transition:
-		opacity var(--duration-swap) var(--ease-reveal),
-		visibility 0s linear var(--duration-swap);
+/* The graph takes whatever height the readout and the figure leave it. */
+.home__widgets .wx-rd-bars {
+	flex: 1 1 0;
+	min-block-size: 0;
+	block-size: auto;
+	/* Horizontal drags scrub the bars; vertical ones still scroll the page. */
+	touch-action: pan-y;
 }
-.home__widgets .wx-readers[data-range="30d"] .wx-rd-chart[data-face="30d"],
-.home__widgets .wx-readers[data-range="1y"] .wx-rd-chart[data-face="1y"],
-.home__widgets .wx-readers[data-range="all"] .wx-rd-chart[data-face="all"] {
-	opacity: 1;
-	visibility: visible;
-	/* Appearing is immediate; only the disappearing face delays its visibility. */
-	transition-delay: 0s, 0s;
+.home__widgets .wx-rd-bars[role="slider"] {
+	cursor: crosshair;
 }
-
-/* .ds-pill sets `display: inline-flex !important`, which BEATS the UA sheet's
-   `[hidden] { display: none }` — so a Pill with the hidden attribute stays on
-   screen. Both pills are in the markup at once, so without this the tile shows
-   two. */
-.home__widgets .wx-rd-range[hidden] {
-	display: none !important;
-}
-
-/* The pill, once the script has made it a button. Everything that says "this
-   is pressable" and nothing that changes how it looks at rest — the DS owns
-   the pill's appearance.
-
-   `font-family` and not the `font` shorthand. The shorthand resets every font
-   longhand it does not name, which took out .ds-pill's own font-weight: 500 —
-   so the button pill rendered lighter than the static one it replaces, and the
-   swap was visible to anyone with JavaScript. A <button> only needs the family
-   pulled off the UA stylesheet; the rest already comes from the DS. */
-.home__widgets .wx-rd-cycle {
-	cursor: pointer;
-	border: 0;
-	font-family: inherit;
-	font-size: calc(var(--widget-font-xs) * var(--rd-scale, 1));
-	-webkit-tap-highlight-color: transparent;
-}
-.home__widgets .wx-rd-cycle:hover {
-	filter: brightness(1.15);
-}
-.home__widgets .wx-rd-cycle:focus-visible {
-	outline: 2px solid var(--rd-line);
+/* The body padding leaves room for an outset ring. */
+.home__widgets .wx-rd-bars:focus-visible {
+	outline: 2px solid var(--accent);
 	outline-offset: 2px;
+	border-radius: var(--border-radius-1);
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.home__widgets .wx-rd-chart {
-		transition: none;
-	}
+.home__widgets .wx-rd-empty {
+	margin-block: auto;
 }
 
-/* SMALL CELLS ------------------------------------------------------------
-   This tile has four stacked parts, and the widget tokens' clamp FLOORS were
-   chosen for the ~290px desktop cell. Below that they stop scaling while the
-   cell keeps shrinking, so at ~150px the label, figure and pill between them
-   leave the chart about 30px — and the label overruns the card entirely.
-   One multiplier steps the whole tile's type down together, and the peak chip
-   drops its date, which is most of its width.
-
-   WHY THE CONDITION IS SHAPED LIKE THIS. The trigger is the CELL being small,
-   and nothing can query a cell directly: the query container is the whole grid
-   (widget-grid.css), and the cell is grid ÷ columns. The column count is not a
-   container property either — it is the 900px media breakpoint. So the two have
-   to be asked together, and the same grid width means different things on
-   either side of it. At a 900px viewport the grid is ~856px in TWO columns, a
-   428px cell, the largest this tile ever gets; at 920px it is the same ~856px
-   in FOUR, a 152px cell, the smallest. A container query alone would treat
-   those two identically and shrink the wrong one.
-
-   Thresholds are both "cell narrower than ~230px" solved for the grid width:
-   four columns → (G − 3 × 24px) ÷ 4, two → (G − 24px) ÷ 2.
-
-   `not all and (max-width: 900px)` rather than `min-width: 901px`, so the two
-   branches are exact complements. A viewport can land on 900.5px — browser
-   zoom and fractional display scaling both do it — and between 900 and 901
-   neither branch would have applied. */
-@media not all and (max-width: 900px) {
-	@container widget (max-width: 990px) {
-		.home__widgets .wx-readers {
-			--rd-scale: 0.75;
-		}
-		.home__widgets .wx-rd-chip-date {
-			display: none;
-		}
-	}
+/* RANGE SWAP -------------------------------------------------------------
+   Every range is in the DOM; the card's data-range attribute picks one. CSS
+   cannot compare two attribute values, so these are one selector per range.
+   The parts are marked `data-face` rather than `data-range` so a selector
+   cannot match the card itself. display:none also keeps the inactive copies
+   out of the accessibility tree and the tab order. */
+.home__widgets .wx-readers[data-range="30d"] [data-face]:not([data-face="30d"]),
+.home__widgets .wx-readers[data-range="1y"] [data-face]:not([data-face="1y"]),
+.home__widgets .wx-readers[data-range="all"] [data-face]:not([data-face="all"]) {
+	display: none;
 }
+
+/* .ds-pill sets `display: inline-flex`, which beats the UA sheet's
+   `[hidden] { display: none }` — and both pills are in the markup at once. */
+.home__widgets .wx-rd-range[hidden] {
+	display: none;
+}
+
+/* Phone tiles (~160px): the readout loses its "peak" tag rather than its
+   dates — the lit bar already says which one it is. */
 @media (max-width: 900px) {
-	@container widget (max-width: 484px) {
-		.home__widgets .wx-readers {
-			--rd-scale: 0.75;
-		}
-		.home__widgets .wx-rd-chip-date {
-			display: none;
-		}
+	.home__widgets .wx-rd-read-tag {
+		display: none;
 	}
 }

@@ -68,16 +68,16 @@ export function getReaderStats(): ReaderStats {
  */
 export const METRIC = "visits" as const;
 
-/** Points on every curve, whatever span it covers. */
+/** Bars on every graph, whatever span it covers. */
 export const POINTS = 30;
 
 /**
- * The smallest trailing window any curve smooths over.
+ * The smallest trailing window any graph smooths over.
  *
  * The raw daily series cannot be plotted: at this site's volume roughly half of
  * all days are zero and the non-zero ones are quantized to multiples of ten, so
  * a direct line is a row of spikes between gaps rather than a shape. Summing
- * over a trailing week is what turns it into a curve — and it is also the more
+ * over a trailing week is what turns it into a shape — and it is also the more
  * honest reading, since a single day's figure is one or two sampled events.
  */
 export const MIN_WINDOW = 7;
@@ -109,8 +109,6 @@ export interface SeriesPoint {
 	date: string; // the day the window ENDS on
 	from: string; // the day it STARTS on — carried, not derived, see buildView
 	value: number;
-	x: number; // 0–100, left to right
-	y: number; // 0–100, top to bottom (SVG convention)
 }
 
 export interface RangeView extends RangeSpec {
@@ -122,23 +120,12 @@ export interface RangeView extends RangeSpec {
 	covered: number;
 	points: SeriesPoint[];
 	peak: SeriesPoint | null;
+	/** Index of `peak` in `points`, or -1 — the bar the graph lights. */
+	peakIndex: number;
 }
 
-// The plot is drawn in an abstract 100-unit box and stretched to whatever width
-// the tile gives it (preserveAspectRatio="none"), so everything below is pure
-// arithmetic with no layout in it. Strokes opt out of that stretch — see the
-// vector-effect in readers.css — or they would smear horizontally.
-//
-// PAD_TOP keeps the peak clear of the tile's top edge. The marker and its value
-// chip are HTML positioned over the SVG in percentages (they cannot live INSIDE
-// it: preserveAspectRatio="none" scales the two axes differently, which would
-// stretch any text drawn in the same coordinate space), and the chip hangs below
-// its point, so the headroom is for the dot alone.
-const PAD_TOP = 16;
-const BASELINE = 100;
-
 /**
- * One range's curve: a trailing sum, sampled to POINTS evenly-spaced readings.
+ * One range's series: a trailing sum, sampled to POINTS evenly-spaced readings.
  *
  * The window scales with the span rather than staying at a week. Thirty points
  * across a year sit about twelve days apart, and a 7-day window at that spacing
@@ -193,95 +180,34 @@ export function buildView(days: ReaderDay[], spec: RangeSpec): RangeView {
 		return usable[at];
 	});
 
-	const max = Math.max(...sampled.map((point) => point.value), 0);
-	const spread = Math.max(1, sampled.length - 1);
-
-	const points: SeriesPoint[] = sampled.map((point, i) => ({
-		date: point.date,
-		from: point.from,
-		value: point.value,
-		x: (i / spread) * 100,
-		// A flat all-zero series sits on the baseline rather than dividing by zero.
-		y: max === 0 ? BASELINE : PAD_TOP + (1 - point.value / max) * (BASELINE - PAD_TOP),
+	const points: SeriesPoint[] = sampled.map(({ date, from, value }) => ({
+		date,
+		from,
+		value,
 	}));
+	const max = Math.max(...points.map((point) => point.value), 0);
 
-	// The LAST of the tied maxima, not the first: when the curve plateaus, the
-	// interesting end of the plateau is the recent one, and a marker on the left
-	// edge of a flat top reads as though the peak has already passed.
-	let peak: SeriesPoint | null = null;
-	for (const point of points) {
-		if (max > 0 && point.value === max) peak = point;
-	}
+	// The LAST of the tied maxima, not the first: when the series plateaus, the
+	// interesting end of the plateau is the recent one, and a lit bar on the left
+	// edge of a flat top reads as though the peak has already passed. (Which is
+	// why the widget passes this index to BarGraph rather than lit="max", which
+	// takes the first.)
+	let peakIndex = -1;
+	points.forEach((point, i) => {
+		if (max > 0 && point.value === max) peakIndex = i;
+	});
+	const peak = peakIndex >= 0 ? points[peakIndex] : null;
 
-	return { ...spec, total, window, covered, points, peak };
+	return { ...spec, total, window, covered, points, peak, peakIndex };
 }
 
 export function buildViews(days: ReaderDay[]): RangeView[] {
 	return RANGES.map((spec) => buildView(days, spec));
 }
 
-/** Whether a view has enough of a curve to draw. */
+/** Whether a view has enough of a series to draw. */
 export const isDrawable = (view: RangeView): boolean =>
 	view.points.length > 1 && view.peak !== null;
-
-/**
- * A smooth curve through every point (Catmull-Rom converted to cubic Béziers).
- *
- * Catmull-Rom is the spline that passes THROUGH its control points rather than
- * near them, which is what a data line has to do — a plain Bézier smoothing
- * would round off the peak and the marker would no longer sit on the curve it
- * annotates. Each segment's two control points are derived from the neighbours
- * on either side at the standard 1/6 tension.
- *
- * Control points are clamped to the box. Catmull-Rom overshoots on either side
- * of a sharp spike, and an unclamped overshoot sends the area fill below its own
- * baseline, which paints a bulge under the chart.
- */
-export function smoothPath(points: SeriesPoint[]): string {
-	if (points.length === 0) return "";
-	if (points.length === 1) return `M${round(points[0].x)},${round(points[0].y)}`;
-
-	const clamp = (value: number) => Math.min(BASELINE, Math.max(0, value));
-	let d = `M${round(points[0].x)},${round(points[0].y)}`;
-
-	for (let i = 0; i < points.length - 1; i++) {
-		const p0 = points[i - 1] ?? points[i];
-		const p1 = points[i];
-		const p2 = points[i + 1];
-		const p3 = points[i + 2] ?? p2;
-
-		const c1x = p1.x + (p2.x - p0.x) / 6;
-		const c1y = clamp(p1.y + (p2.y - p0.y) / 6);
-		const c2x = p2.x - (p3.x - p1.x) / 6;
-		const c2y = clamp(p2.y - (p3.y - p1.y) / 6);
-
-		d += `C${round(c1x)},${round(c1y)} ${round(c2x)},${round(c2y)} ${round(p2.x)},${round(p2.y)}`;
-	}
-
-	return d;
-}
-
-/** The same curve, closed down to the baseline so it can be filled. */
-export function areaPath(points: SeriesPoint[]): string {
-	if (points.length === 0) return "";
-	const line = smoothPath(points);
-	const first = points[0];
-	const last = points[points.length - 1];
-	return `${line}L${round(last.x)},${BASELINE}L${round(first.x)},${BASELINE}Z`;
-}
-
-const round = (value: number) => Math.round(value * 100) / 100;
-
-/**
- * Where the peak chip pins itself.
- *
- * Centred under its dot normally; near a card edge the chip is pinned by that
- * edge instead, because .ds-card clips its overflow and a centred chip would
- * simply be cut in half. The chip's width is not known at build time, so
- * changing which edge is pinned is the only reliable way to keep it inside.
- */
-export const chipAnchor = (peak: SeriesPoint | null): "start" | "center" | "end" =>
-	peak == null ? "center" : peak.x > 70 ? "end" : peak.x < 30 ? "start" : "center";
 
 /**
  * 1,204 from 1204.
@@ -307,15 +233,15 @@ const MONTHS = [
 ];
 
 /**
- * "Aug 13 - 19" from a window's first and last day.
+ * "Aug 13–19" from a window's first and last day.
  *
- * The month is named once. A window that crosses one reads "Aug 30 - 6", which
+ * The month is named once. A window that crosses one reads "Aug 30–6", which
  * is unambiguous at this length — nobody reads a seven-day span as running
- * backwards through the month — and it keeps the chip narrow, which is the
- * whole reason the peak marker can sit near an edge without being clipped.
+ * backwards through the month — and it keeps the readout short enough for
+ * one line of a phone tile.
  *
  * Past a fortnight that stops being true: the year range widens its window to
- * about a month once there is a year of ledger to draw, and "Aug 20 - 19" says
+ * about a month once there is a year of ledger to draw, and "Aug 20–19" says
  * nothing at all. So the long form names both months. That branch is
  * unreachable today — every range still smooths over a week — and it is here so
  * the label does not quietly start lying the month this file turns one.
@@ -325,15 +251,15 @@ export function formatSpan(from: string, to: string): string {
 	const [, toMonth, toDay] = to.split("-");
 	const fromName = MONTHS[Number(fromMonth) - 1];
 	const toName = MONTHS[Number(toMonth) - 1];
-	if (!fromName || !toName) return `${from} - ${to}`;
+	if (!fromName || !toName) return `${from}–${to}`;
 
 	const head = `${fromName} ${Number(fromDay)}`;
 	const sameMonth = fromMonth === toMonth;
 	const shortSpan = daysBetween(from, to) <= 14;
 
 	return sameMonth || shortSpan
-		? `${head} - ${Number(toDay)}`
-		: `${head} - ${toName} ${Number(toDay)}`;
+		? `${head}–${Number(toDay)}`
+		: `${head} – ${toName} ${Number(toDay)}`;
 }
 
 /** Whole days from one ISO date to another. Both are UTC, so no zone maths. */
