@@ -1,0 +1,63 @@
+---
+// BarGraph — vertical hairlines with data heights (styles/bar-graph.css).
+//
+//   <BarGraph values={[3, 5, 8, 13, 21]} />               scaled to the max
+//   <BarGraph values={hours} max={24} lit="last" />       one bar in the accent
+//   <BarGraph values={v} lit={2} height="var(--space-8)" />
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	values: number[];
+	/** The value that fills the height; defaults to the largest value. */
+	max?: number;
+	/** Index of the bar to draw in the accent, or "last" / "max". */
+	lit?: number | "last" | "max";
+	/** CSS length: the graph's height (default --space-10). */
+	height?: string;
+	class?: string;
+	style?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	values = [],
+	max,
+	lit,
+	height,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+const top = max ?? Math.max(0, ...values);
+const litIndex =
+	lit === "last"
+		? values.length - 1
+		: lit === "max"
+			? values.indexOf(Math.max(...values))
+			: typeof lit === "number"
+				? lit
+				: -1;
+
+const vars = [height && `--bars-height:${height}`, style].filter(Boolean).join(";");
+---
+
+<Tag
+	class={cx("ds-bars", className)}
+	style={vars || undefined}
+	role="img"
+	{...rest}
+>
+	{
+		values.map((v, i) => (
+			<span
+				class="ds-bars__bar"
+				style={`--v:${top > 0 ? Math.min(Math.max(v / top, 0), 1) : 0}`}
+				data-lit={i === litIndex ? "" : undefined}
+			/>
+		))
+	}
+</Tag>

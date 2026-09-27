@@ -1,0 +1,58 @@
+/* TickRuler — hairlines on a fixed pitch, like the metronome's tempo strip.
+ *
+ * One or more SEGMENTS side by side, each a stretch of ticks in its own colour
+ * with a gap marking the boundary, so the same ruler is a plain scale (one
+ * segment) or a share bar (several, flex-grown by share). The ticks are a
+ * background gradient in currentColor, so a segment is coloured by `color`
+ * and any box becomes a stretch of ruler.
+ *
+ * The PLAYHEAD is the one accent: a full-height line at a fraction of the
+ * width, with a dot on top. The ruler leaves headroom for the dot only when
+ * it has one, so a plain ruler is exactly its ticks. */
+.ds-ticks {
+	position: relative;
+	display: flex;
+	gap: var(--space-1);
+	inline-size: 100%;
+	block-size: var(--ticks-height, var(--space-6));
+	color: var(--text-tertiary);
+}
+.ds-ticks--playhead-true {
+	/* Headroom for the dot: half of it overhangs the line's top. */
+	padding-block-start: var(--space-2);
+}
+
+.ds-ticks__seg {
+	flex: var(--share, 1) 1 0;
+	min-inline-size: 1px;
+	block-size: 100%;
+	background: repeating-linear-gradient(
+		to right,
+		currentColor 0 1px,
+		transparent 1px var(--tick-pitch)
+	);
+}
+
+.ds-ticks__playhead {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: var(--at, 0%);
+	inline-size: 1px;
+	background: var(--accent);
+	/* Sits ON the tick under it, not beside it: the line is 1px wide and the
+	   fraction lands anywhere, so centre it on its own position. */
+	translate: -50% 0;
+}
+.ds-ticks__playhead::before {
+	content: "";
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline-start: 50%;
+	/* Small: a marker, not a control. Sized off the ruler's headroom so the
+	   two agree when either is retuned. */
+	inline-size: calc(var(--space-2) * 0.75);
+	block-size: calc(var(--space-2) * 0.75);
+	border-radius: 50%;
+	background: var(--accent);
+	translate: -50% -50%;
+}

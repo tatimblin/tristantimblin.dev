@@ -1,0 +1,62 @@
+/* Legend — dot · label · value rows, the reference dashboard's `● A1: 10%`.
+ *
+ * The dots take the rank ramp BY POSITION: the first row's dot is the accent,
+ * then the ink stepping down, with no colour asked for at the call site. That
+ * is the family's one rule about colour — the accent goes to the top-ranked
+ * thing — written where it can't be forgotten. A row can still set
+ * --legend-color inline (it out-ranks the nth-child rule) when its colour is
+ * data, not rank. Label and value are Mono (Legend.astro renders them as
+ * such); the value is pushed to the end so a column of them lines up. */
+.ds-legend {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+.ds-legend__item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-inline-size: 0;
+}
+.ds-legend__dot {
+	flex: none;
+	inline-size: var(--space-2);
+	block-size: var(--space-2);
+	border-radius: 50%;
+	background: var(--legend-color, var(--tone-2));
+}
+.ds-legend__item:nth-child(1) {
+	--legend-color: var(--tone-1);
+}
+.ds-legend__item:nth-child(2) {
+	--legend-color: var(--tone-2);
+}
+.ds-legend__item:nth-child(3) {
+	--legend-color: var(--tone-3);
+}
+.ds-legend__item:nth-child(4) {
+	--legend-color: var(--tone-4);
+}
+.ds-legend__item:nth-child(n + 5) {
+	--legend-color: var(--tone-5);
+}
+.ds-legend__label {
+	flex: 1;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.ds-legend__value {
+	margin-inline-start: auto;
+}
+
+/* Phone tiles: five rows over a chart don't fit ~130px of body at the desktop
+   rhythm, so the rows close up. */
+@media (max-width: 900px) {
+	.ds-widget .ds-legend {
+		gap: var(--space-1);
+	}
+}

@@ -1,0 +1,53 @@
+---
+// Stat — a value over a dim label (styles/stat.css).
+//
+//   <Stat value="90%" label="Allocated" size="sm" />
+//   <Stat value={1034} label="rides" inline />
+//   <Stat label="miles"><slot>…custom value markup…</slot></Stat>
+import { cx } from "../lib/cx";
+import Mono from "./Mono.astro";
+
+interface Props {
+	as?: string;
+	value?: string | number;
+	label?: string;
+	size?: "sm" | "md" | "lg";
+	inline?: boolean;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	value,
+	label,
+	size = "md",
+	inline,
+	class: className,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+const hasLabelSlot = Astro.slots.has("label");
+---
+
+<Tag
+	class={cx(
+		"ds-stat",
+		`ds-stat--size-${size}`,
+		inline && "ds-stat--inline-true",
+		className,
+	)}
+	{...rest}
+>
+	<span class="ds-stat__value">{value ?? <slot />}</span>
+	{
+		hasLabelSlot ? (
+			<Mono variant="text" class="ds-stat__label">
+				<slot name="label" />
+			</Mono>
+		) : label ? (
+			<Mono variant="text" class="ds-stat__label">{label}</Mono>
+		) : null
+	}
+</Tag>

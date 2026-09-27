@@ -1,0 +1,87 @@
+/* Mono — the STRUCTURE voice of the instrument UI.
+ *
+ * Everything on a card that labels rather than says — the header, a unit, a
+ * legend row, a pill, a stat's caption — is set small, in the mono face. Three
+ * variants, which are the three jobs that voice does:
+ *
+ *   caps    uppercase, tracked out: the panel label. The default.
+ *   text    sentence case, the quiet ink: a handle, a stat's label, a caption.
+ *   value   the ink, tabular: a figure read at label size (`90%` beside a
+ *           `10%`), so it lines up with the caps around it.
+ *
+ * Tabular figures on all three, since a mono label is as likely to hold a
+ * count as a word and a count that changes should not shift. Sizes come from
+ * the widget's fluid scale when inside a WidgetGrid and from the type tokens
+ * anywhere else — the var() fallback is the whole mechanism. */
+.ds-mono {
+	font-family: var(--font-mono);
+	font-size: var(--widget-font-xs, var(--font-size-0));
+	font-weight: var(--font-weight-400);
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+	color: var(--text-secondary);
+}
+
+/* variant. The caps variant composes .ds-caps (Mono.astro adds the class),
+   which owns the uppercase + tracking + trailing-space fix; nothing repeated
+   here but the wrap rule. */
+.ds-mono--variant-caps {
+	white-space: nowrap;
+}
+/* text and value keep their own case: a handle or a figure inside a caps
+   context (a card header) must not be shouted with it. */
+.ds-mono--variant-text {
+	text-transform: none;
+	letter-spacing: var(--tracking-mono);
+	line-height: var(--line-height-ui);
+	color: var(--text-tertiary);
+}
+.ds-mono--variant-value {
+	text-transform: none;
+	letter-spacing: 0;
+	color: var(--text-primary);
+}
+
+/* size. 0 is the label step (default); 1 the next one up, for a value or a
+   label that leads. */
+.ds-mono--size-1 {
+	font-size: var(--widget-font-sm, var(--font-size-1));
+}
+.ds-mono--size-3 {
+	font-size: var(--widget-font-md, var(--font-size-3));
+}
+
+/* tone — the colour, when the variant's default is not the one wanted. */
+.ds-mono--tone-primary {
+	color: var(--text-primary);
+}
+.ds-mono--tone-secondary {
+	color: var(--text-secondary);
+}
+.ds-mono--tone-tertiary {
+	color: var(--text-tertiary);
+}
+.ds-mono--tone-accent {
+	color: var(--accent);
+}
+
+/* As a link (as="a"): the link reset, and the ink on hover. A handle in a
+   header is a link that should not look like one until it is pointed at. */
+a.ds-mono {
+	text-decoration: none;
+	transition: color var(--duration-swap) var(--ease-reveal);
+}
+a.ds-mono:hover,
+a.ds-mono:focus-visible {
+	color: var(--text-primary);
+}
+
+/* Phone tiles (the grid's 2-column mode, ~160px cells): the full caps tracking
+   costs a word a line, so tighten it rather than wrap or clip. Three classes
+   deep to out-rank the doubled .ds-caps.ds-caps selector it is overriding. */
+@media (max-width: 900px) {
+	.ds-widget .ds-mono.ds-caps {
+		letter-spacing: var(--tracking-mono);
+		margin-inline-end: calc(-1 * var(--tracking-mono));
+	}
+}

@@ -1,0 +1,50 @@
+/* Figure — the big numeral of the instrument UI: `120` on the metronome,
+ * `1,457` over CONTRIBUTIONS. One number in the numeric face at REGULAR
+ * weight — the thin numeral is the look; the stat block's old Semibold is the
+ * one thing this must not be — with a caps mono unit set small beside it on
+ * the baseline. The unit wraps under the number when a tile is too narrow for
+ * both; a figure that breaks mid-number is worse than a unit on its own line. */
+.ds-figure {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--space-1) var(--space-3);
+	line-height: 1;
+	color: var(--text-primary);
+}
+.ds-figure__num {
+	/* The .ds-numeric role (numeric.css): the numeric face with tabular figures,
+	   so a live value updates without its digits shifting. Display tracking,
+	   because the space between letters grows with the type. */
+	font-family: var(--font-numeric);
+	font-variant-numeric: tabular-nums;
+	font-weight: var(--font-weight-400);
+	letter-spacing: var(--tracking-heading);
+}
+
+/* size. The token step is the default everywhere; inside a WidgetGrid each
+   follows the cell instead (below). */
+.ds-figure--size-md .ds-figure__num {
+	font-size: var(--font-size-6);
+}
+.ds-figure--size-lg .ds-figure__num {
+	font-size: var(--font-size-7);
+}
+.ds-figure--size-xl .ds-figure__num {
+	font-size: var(--font-size-8);
+}
+.ds-widget-grid .ds-figure--size-md .ds-figure__num {
+	font-size: var(--widget-font-lg);
+}
+.ds-widget-grid .ds-figure--size-lg .ds-figure__num {
+	/* --widget-font-xl, but allowed below its 32px floor on small (phone) tiles,
+	   down to --widget-font-lg, so a 4-digit figure doesn't eat half a 160px
+	   tile. Identical to xl from a ~250px cell up. */
+	font-size: max(
+		var(--widget-font-lg),
+		min(var(--widget-font-xl), calc(var(--widget-cell) * 0.13))
+	);
+}
+.ds-widget-grid .ds-figure--size-xl .ds-figure__num {
+	font-size: var(--widget-font-xl);
+}

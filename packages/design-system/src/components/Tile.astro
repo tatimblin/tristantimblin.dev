@@ -1,0 +1,25 @@
+---
+// Tile — one square of a TileGrid (styles/tile-grid.css). `level` 0–4 is the
+// graded state (contribution strength); `lit` is the binary one (a step that
+// is on) and takes the theme's --lit. Everything else passes through, so a
+// cell can be placed (`style="grid-column:…"`) or titled.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	level?: 0 | 1 | 2 | 3 | 4;
+	lit?: boolean;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "span", level, lit, class: className, ...rest } = Astro.props;
+const Tag = as as any;
+---
+
+<Tag
+	class={cx("ds-tile", className)}
+	data-level={level != null && level > 0 ? level : undefined}
+	data-lit={lit ? "" : undefined}
+	{...rest}
+/>

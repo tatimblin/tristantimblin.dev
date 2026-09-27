@@ -1,0 +1,86 @@
+---
+// RingGauge — a thin ring gauge with an accent arc (styles/ring-gauge.css).
+//
+//   <RingGauge value={0.9} />
+//   <RingGauge value={0.35} segments={12} size="var(--space-12)">
+//     <Mono variant="value">35%</Mono>
+//   </RingGauge>
+//
+// `segments` breaks the track into that many dashes with a hairline gap
+// between (the reference gauge's "grey stroke with gaps"); the arc is drawn
+// over them whole. Children render centred inside the ring.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	/** 0–1 fraction of the ring to fill with the accent arc. */
+	value: number;
+	/** Number of track segments; 0 (default) is a continuous track. */
+	segments?: number;
+	/** CSS length: the ring's outer size (default --space-10). */
+	size?: string;
+	/** Stroke width in px (default 1.5). */
+	stroke?: number;
+	label?: string;
+	class?: string;
+	style?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "span",
+	value = 0,
+	segments = 0,
+	size,
+	stroke,
+	label,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+const v = Math.min(Math.max(value, 0), 1) * 100;
+
+// Track dashes in pathLength units (percent of the circumference). The gap is
+// 2% — a hairline at the sizes this is drawn at; wider reads as a dotted line.
+const GAP = 2;
+const trackDash =
+	segments > 0 ? `${100 / segments - GAP} ${GAP}` : undefined;
+
+const vars = [
+	size && `--ring-size:${size}`,
+	stroke != null && `--ring-stroke:${stroke}`,
+	style,
+]
+	.filter(Boolean)
+	.join(";");
+---
+
+<Tag
+	class={cx("ds-ring", className)}
+	style={vars || undefined}
+	role="img"
+	aria-label={label ?? `${Math.round(v)}%`}
+	{...rest}
+>
+	<svg class="ds-ring__svg" viewBox="0 0 100 100" aria-hidden="true">
+		<circle
+			class="ds-ring__track"
+			cx="50"
+			cy="50"
+			r="49"
+			pathLength="100"
+			stroke-dasharray={trackDash}
+		/>
+		<circle
+			class="ds-ring__arc"
+			cx="50"
+			cy="50"
+			r="49"
+			pathLength="100"
+			stroke-dasharray={`${v} ${100 - v}`}
+		/>
+	</svg>
+	<span class="ds-ring__center"><slot /></span>
+</Tag>

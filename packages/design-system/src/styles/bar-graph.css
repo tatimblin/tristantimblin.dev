@@ -1,0 +1,24 @@
+/* BarGraph — a line graph made of vertical hairlines, the poster's rising
+ * graph: one 1px bar per value, heights by value, spread across the width.
+ * Bars are currentColor so the graph is coloured by `color`; the one marked
+ * `data-lit` (the peak, the latest) takes the accent. No axes, no ticks —
+ * the shape is the reading. */
+.ds-bars {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var(--space-1);
+	inline-size: 100%;
+	block-size: var(--bars-height, var(--space-10));
+	color: var(--text-secondary);
+}
+.ds-bars__bar {
+	flex: 0 0 1px;
+	inline-size: 1px;
+	/* Never nothing: a zero still marks its slot on the baseline. */
+	block-size: max(1px, calc(var(--v, 0) * 100%));
+	background: currentColor;
+}
+.ds-bars__bar[data-lit] {
+	background: var(--accent);
+}

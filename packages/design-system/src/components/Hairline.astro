@@ -1,0 +1,36 @@
+---
+// Hairline — a 1px rule, fading at both ends unless told not to
+// (styles/hairline.css). An <hr> by default, so it is a separator to a reader
+// as well as to the eye; pass as="span" when it is purely decorative.
+//
+//   <Hairline />                                 fading, horizontal
+//   <Hairline fade={false} />                    solid
+//   <Hairline orientation="vertical" />          a gutter
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	fade?: boolean;
+	orientation?: "horizontal" | "vertical";
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "hr",
+	fade = true,
+	orientation = "horizontal",
+	class: className,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+const cls = cx(
+	"ds-hairline",
+	!fade && "ds-hairline--fade-false",
+	orientation === "vertical" && "ds-hairline--orientation-vertical",
+	className,
+);
+---
+
+<Tag class={cls} {...(Tag !== "hr" ? { role: "separator" } : {})} {...rest} />

@@ -1,19 +1,17 @@
 ---
-// IconButton — exact port of DS StyledIconButton (styled('button', { … })).
-// Source: /tmp/mh-design-system/src/components/Button/{IconButton.tsx,Button.styles.tsx}
-//
-// A distinct styled export from Button, with its own variant API:
+// IconButton — the flat icon button (styles/icon-button.css); `rounded` for
+// the round buttons of the instrument UI.
 //   variant: primary | secondary | tertiary   (default: secondary)
-//   size:    small | large                     (default: large)
+//   size:    small | large | xl                (default: large)
 //   rounded: boolean
-// IconButton.tsx wraps the single icon child in a <Flex css={{ zIndex: 1 }} />;
-// we mirror that with the .ds-icon-button__content wrapper.
+// The single icon child is wrapped in .ds-icon-button__content, as the DS's
+// IconButton.tsx wraps it in a Flex.
 import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
 	variant?: "primary" | "secondary" | "tertiary";
-	size?: "small" | "large";
+	size?: "small" | "large" | "xl";
 	rounded?: boolean;
 	class?: string;
 	[key: string]: unknown;
@@ -21,7 +19,6 @@ interface Props {
 
 const {
 	as = "button",
-	// defaultVariants from Button.styles.tsx StyledIconButton.
 	variant = "secondary",
 	size = "large",
 	rounded,

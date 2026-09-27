@@ -1,0 +1,46 @@
+/* Stat — the stat pair of the reference dashboard: a value over a dim
+ * sentence-case label (`90%` / Allocated). The value has three sizes, which
+ * are the two voices of the brief plus the step between:
+ *
+ *   sm   mono at label size — the dashboard's `90%`, so it lines up with the
+ *        caps around it. Several of these sit in a row.
+ *   md   the numeric face, one step up — a count that leads a line (rides ·
+ *        miles · hours). The default.
+ *   lg   the Figure size — one number that IS the tile.
+ *
+ * The label is Mono's text variant (Stat.astro renders it as one), so it is
+ * not repeated here. `inline` puts the two on one baseline instead. */
+.ds-stat {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-inline-size: 0;
+}
+.ds-stat--inline-true {
+	flex-direction: row;
+	align-items: baseline;
+	gap: var(--space-2);
+}
+
+.ds-stat__value {
+	line-height: 1;
+	color: var(--text-primary);
+	font-variant-numeric: tabular-nums;
+}
+.ds-stat--size-sm .ds-stat__value {
+	font-family: var(--font-mono);
+	font-size: var(--widget-font-sm, var(--font-size-1));
+}
+.ds-stat--size-md .ds-stat__value,
+.ds-stat--size-lg .ds-stat__value {
+	/* The .ds-numeric role, at Regular: the figure voice (figure.css). */
+	font-family: var(--font-numeric);
+	font-weight: var(--font-weight-400);
+	letter-spacing: var(--tracking-heading);
+}
+.ds-stat--size-md .ds-stat__value {
+	font-size: var(--widget-font-lg, var(--font-size-5));
+}
+.ds-stat--size-lg .ds-stat__value {
+	font-size: var(--widget-font-xl, var(--font-size-7));
+}

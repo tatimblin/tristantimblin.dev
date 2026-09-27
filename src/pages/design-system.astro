@@ -31,6 +31,42 @@ import ListItem from "@whois/design-system/ListItem";
 import InlineCode from "@whois/design-system/InlineCode";
 import Icon from "@whois/design-system/Icon";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
+// The instrument UI: voices, card chrome, hairline graphics.
+import Mono from "@whois/design-system/Mono";
+import Figure from "@whois/design-system/Figure";
+import Stat from "@whois/design-system/Stat";
+import Hairline from "@whois/design-system/Hairline";
+import TickRuler from "@whois/design-system/TickRuler";
+import BarGraph from "@whois/design-system/BarGraph";
+import RingGauge from "@whois/design-system/RingGauge";
+import Legend from "@whois/design-system/Legend";
+import LegendItem from "@whois/design-system/LegendItem";
+import TileGrid from "@whois/design-system/TileGrid";
+import Tile from "@whois/design-system/Tile";
+import WidgetGrid from "@whois/design-system/WidgetGrid";
+import Widget from "@whois/design-system/Widget";
+
+// Instrument tokens, for the swatch row: name → what it is for.
+const instrumentTokens = [
+	["--accent", "the one accent"],
+	["--lit", "a step that is on (accent dark / ink light)"],
+	["--emphasis", "the accent at a tint"],
+	["--wash-1", "unlit tile · subtle pill"],
+	["--wash-2", "ink, 2nd strength"],
+	["--wash-3", "ink, 3rd strength · outline"],
+	["--tone-1", "rank 1"],
+	["--tone-2", "rank 2"],
+	["--tone-3", "rank 3"],
+	["--tone-4", "rank 4"],
+	["--tone-5", "rank 5 / other"],
+	["--hairline", "edges and dividers"],
+	["--card-background", "card surface"],
+	["--background", "page"],
+] as const;
+
+// A sixteen-step sequencer row, for the tile grid: which steps are on.
+const steps = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0].map(Boolean);
+const graphValues = [2, 3, 3, 4, 6, 5, 7, 9, 8, 11, 13, 12, 16, 18, 21, 25];
 
 const textSizes = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 const textVariants = [
@@ -380,6 +416,82 @@ const faces = [
 			</Flex>
 		</section>
 
+		<!-- INSTRUMENT UI: tokens + voices --------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Instrument UI — tokens</h2>
+			<p class="ds-demo__note">
+				The vocabulary the cards, widgets and controls are drawn in (tokens.overrides.css
+				→ INSTRUMENT UI): one orange-red accent used once per card; the ink at three
+				washes; a five-step rank ramp for things ordered by importance; one hairline
+				colour. <code>--lit</code> is what a step looks like when it is on — the accent on
+				the dark theme, the ink on the light one.
+			</p>
+			<div class="ds-demo__swatches">
+				{instrumentTokens.map(([name, note]) => (
+					<div class="ds-demo__swatch-row">
+						<span class="ds-demo__swatch" style={`background: var(${name})`} />
+						<Mono variant="value">{name}</Mono>
+						<Mono variant="text">{note}</Mono>
+					</div>
+				))}
+			</div>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Mono — the structure voice</h2>
+			<p class="ds-demo__note">
+				Small mono type that labels rather than says. <code>caps</code> is the panel
+				label (the default), <code>text</code> the quiet sentence case, <code>value</code>
+				a figure at label size. Sizes 0 / 1 / 3; tones override the variant's colour.
+				Inside a WidgetGrid the size follows the cell.
+			</p>
+			<Flex direction="column" gap={3} alignItems="start">
+				<Mono>caps · the panel label</Mono>
+				<Mono variant="text">text · sentence case, the quiet ink</Mono>
+				<Mono variant="value">value · 1,457 / 90% / 12:04</Mono>
+				<Mono size={1}>caps · size 1</Mono>
+				<Mono size={3}>caps · size 3</Mono>
+				<Mono tone="primary">tone primary</Mono>
+				<Mono tone="accent">tone accent</Mono>
+				<Mono as="a" variant="text" href="#">as a link · @handle</Mono>
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Figure · Stat</h2>
+			<p class="ds-demo__note">
+				<code>Figure</code>: the big regular-weight numeral with a caps unit on its
+				baseline (sizes md / lg / xl). <code>Stat</code>: a value over a dim label — sm is
+				mono at label size (the dashboard's stat pair), md the numeric face, lg the figure;
+				<code>inline</code> puts the two on one baseline.
+			</p>
+			<Flex gap={6} wrap="wrap" alignItems="end">
+				<Figure size="md" unit="rides">1,034</Figure>
+				<Figure unit="contributions">1,457</Figure>
+				<Figure size="xl" unit="bpm">120</Figure>
+			</Flex>
+			<Flex gap={6} wrap="wrap" alignItems="end" style="margin-top: var(--space-5);">
+				<Stat size="sm" value="90%" label="Allocated" />
+				<Stat size="sm" value="10%" label="Reserve" />
+				<Stat value="1,034" label="rides" />
+				<Stat size="lg" value="320" label="readers" />
+				<Stat value="48" label="hours" inline />
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Hairline</h2>
+			<Flex direction="column" gap={4} alignItems="stretch">
+				<Hairline />
+				<Hairline fade={false} />
+				<Flex gap={4} alignItems="stretch" style="block-size: var(--space-8);">
+					<Mono>left</Mono>
+					<Hairline orientation="vertical" />
+					<Mono>right</Mono>
+				</Flex>
+			</Flex>
+		</section>
+
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Body — the reading role</h2>
 			<p class="ds-demo__note">
@@ -418,41 +530,65 @@ const faces = [
 		<!-- BUTTONS -------------------------------------------------------- -->
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Button — variants</h2>
+			<p class="ds-demo__note">
+				Flat: primary is the accent (the one action a card asks for), secondary an ink
+				wash (the reference's <code>Deploy ▸</code>), tertiary nothing until pointed at.
+				<code>rounded</code> makes a pill button.
+			</p>
 			<Flex gap={3} wrap="wrap">
 				<Button variant="primary">Primary</Button>
 				<Button variant="secondary">Secondary</Button>
 				<Button variant="tertiary">Tertiary</Button>
 				<Button variant="primary" inverted>Primary inverted</Button>
-				<Button variant="primary" rounded>Rounded</Button>
+				<Button variant="primary" rounded>Next</Button>
+				<Button variant="secondary" rounded>Tap</Button>
+				<Button variant="secondary"><Icon name="chevron" slot="end-icon" />Deploy</Button>
 				<Button variant="primary" disabled>Disabled</Button>
 			</Flex>
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">IconButton — variants / sizes</h2>
+			<h2 class="ds-demo__h">IconButton — variants / sizes / rounded</h2>
+			<p class="ds-demo__note">
+				<code>rounded</code> is the round button of the instrument UI; <code>xl</code> is the
+				one big control a screen has (the metronome's pause), small the − / + beside it.
+			</p>
 			<Flex gap={3} wrap="wrap" alignItems="center">
-				<IconButton variant="primary" size="large" aria-label="a"><Icon name="check" slot="icon" /></IconButton>
-				<IconButton variant="secondary" size="large" aria-label="b"><Icon name="copy" slot="icon" /></IconButton>
-				<IconButton variant="tertiary" size="large" aria-label="c"><Icon name="command" slot="icon" /></IconButton>
-				<IconButton variant="secondary" size="small" aria-label="d"><Icon name="x" slot="icon" /></IconButton>
-				<IconButton variant="secondary" size="large" rounded aria-label="e"><Icon name="play" slot="icon" /></IconButton>
+				<IconButton variant="primary" size="large" aria-label="a"><Icon name="check" /></IconButton>
+				<IconButton variant="secondary" size="large" aria-label="b"><Icon name="copy" /></IconButton>
+				<IconButton variant="tertiary" size="large" aria-label="c"><Icon name="command" /></IconButton>
+				<IconButton variant="secondary" size="small" aria-label="d"><Icon name="chevron" /></IconButton>
+				<IconButton variant="primary" size="xl" rounded aria-label="pause"><Icon name="pause" /></IconButton>
+				<IconButton variant="secondary" size="small" rounded aria-label="minus"><Icon name="chevron" /></IconButton>
+				<IconButton variant="secondary" size="small" rounded aria-label="plus"><Icon name="chevron" /></IconButton>
+				<IconButton variant="secondary" size="large" rounded aria-label="play"><Icon name="play" /></IconButton>
 			</Flex>
 		</section>
 
 		<!-- CARD ----------------------------------------------------------- -->
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Card — depths / variants</h2>
-			<Grid templateColumns="repeat(auto-fill, minmax(200px, 1fr))" gap={4}>
-				{[0, 1, 2, 3].map((d) => (
-					<Card depth={d as 0 | 1 | 2 | 3} title={`Card depth ${d}`}>
-						<CardBody><Text size={3}>Body content.</Text></CardBody>
-					</Card>
-				))}
-				<Card variant="secondary" title="Secondary (glass)">
-					<CardBody><Text size={3}>Glass material.</Text></CardBody>
+			<h2 class="ds-demo__h">Card — the flat card / variants</h2>
+			<p class="ds-demo__note">
+				A surface a few percent off the page inside a 1px hairline; no shadow, so
+				<code>depth</code> is accepted and ignored. The header is the caps mono label over
+				a hairline that fades at both ends. Secondary is an ink wash (it was the glass);
+				tertiary is transparent.
+			</p>
+			<Grid templateColumns="repeat(auto-fill, minmax(280px, 1fr))" gap={4}>
+				<Card title="infra #1">
+					<CardBody><Text size={3}>Body content.</Text></CardBody>
+				</Card>
+				<Card depth={3} title="depth 3 — still flat">
+					<CardBody><Text size={3}>Body content.</Text></CardBody>
+				</Card>
+				<Card variant="secondary" title="Secondary (wash)">
+					<CardBody><Text size={3}>An ink wash, not a fill.</Text></CardBody>
 				</Card>
 				<Card variant="tertiary">
-					<CardHeader>Manual header</CardHeader>
+					<CardHeader>
+						<span class="ds-card-header__title">Manual header</span>
+						<span class="ds-card-header__meta"><Pill>low risk</Pill></span>
+					</CardHeader>
 					<CardBody><Text size={3}>Tertiary variant.</Text></CardBody>
 				</Card>
 			</Grid>
@@ -471,12 +607,159 @@ const faces = [
 
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Pill — variants</h2>
-			<Flex gap={2} wrap="wrap">
+			<p class="ds-demo__note">
+				Caps mono in a capsule. <code>subtle</code> (the default) is the header pill,
+				<code>outline</code> the poster badge, <code>accent</code> the one CTA; the four DS
+				tints remain. As a <code>button</code> or <code>a</code> it is a pill button.
+			</p>
+			<Flex gap={2} wrap="wrap" alignItems="center">
+				<Pill><Icon name="check" />low risk</Pill>
+				<Pill variant="outline">0/360°</Pill>
+				<Pill variant="accent">next</Pill>
+				<Pill as="button" type="button">tap</Pill>
+				<Pill as="button" type="button" variant="outline">skip</Pill>
+				<Pill as="a" href="#" variant="accent">next</Pill>
 				<Pill variant="info">info</Pill>
 				<Pill variant="success">success</Pill>
 				<Pill variant="warning">warning</Pill>
 				<Pill variant="danger">danger</Pill>
 			</Flex>
+		</section>
+
+		<!-- HAIRLINE GRAPHICS ---------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">TickRuler</h2>
+			<p class="ds-demo__note">
+				Hairlines on a pitch (<code>--tick-pitch</code>), in currentColor. A plain
+				stretch; with the accent playhead at a fraction; split into share segments,
+				which take the rank ramp in order unless given a colour.
+			</p>
+			<Flex direction="column" gap={5} alignItems="stretch">
+				<TickRuler />
+				<TickRuler playhead={0.38} />
+				<TickRuler segments={[{ share: 46 }, { share: 29 }, { share: 14 }, { share: 6 }, { share: 5 }]} />
+				<TickRuler pitch="8px" height="var(--space-4)" />
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">BarGraph</h2>
+			<p class="ds-demo__note">
+				Vertical hairlines with data heights, scaled to <code>max</code> (default: the
+				largest value); <code>lit</code> draws one bar in the accent.
+			</p>
+			<Flex gap={6} wrap="wrap" alignItems="end">
+				<div style="inline-size: 240px;"><BarGraph values={graphValues} /></div>
+				<div style="inline-size: 240px;"><BarGraph values={graphValues} lit="last" /></div>
+				<div style="inline-size: 240px;"><BarGraph values={graphValues} max={40} lit={7} height="var(--space-8)" /></div>
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">RingGauge</h2>
+			<p class="ds-demo__note">
+				A hairline ring with one accent arc for <code>value</code> (0–1);
+				<code>segments</code> breaks the track into dashes. Children sit in the centre.
+			</p>
+			<Flex gap={6} wrap="wrap" alignItems="center">
+				<RingGauge value={0.9} />
+				<RingGauge value={0.35} segments={12} />
+				<RingGauge value={0.62} size="var(--space-12)" segments={24}>
+					<Mono variant="value" size={1}>62%</Mono>
+				</RingGauge>
+				<RingGauge value={0.25} size="var(--space-13)" stroke={1}>
+					<Figure size="md" unit="bpm">120</Figure>
+				</RingGauge>
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Legend</h2>
+			<p class="ds-demo__note">
+				Dot · caps label · value. Dots take the rank ramp by position — the first is the
+				accent — unless a row sets <code>color</code>.
+			</p>
+			<Grid templateColumns="repeat(auto-fill, minmax(200px, 1fr))" gap={6}>
+				<Legend items={[
+					{ label: "rust", value: "46%" },
+					{ label: "typescript", value: "29%" },
+					{ label: "javascript", value: "14%" },
+					{ label: "css", value: "6%" },
+					{ label: "other", value: "6%" },
+				]} />
+				<Legend>
+					<LegendItem label="A1: 10%" />
+					<LegendItem label="A2: 20%" />
+					<LegendItem label="custom colour" value="3" color="var(--success)" />
+					<LegendItem label="value slot"><Fragment slot="value">12<Mono variant="text">/mo</Mono></Fragment></LegendItem>
+				</Legend>
+			</Grid>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">TileGrid</h2>
+			<p class="ds-demo__note">
+				Square tiles on a small gap. <code>lit</code> tiles take <code>--lit</code> (accent
+				dark, ink light); <code>level</code> 0–4 grades them — ordinary at two ink
+				strengths, the big ones in the accent. <code>fit="width"</code> (default) shares the
+				width; <code>fit="height"</code> fills a given height and packs to the end.
+			</p>
+			<Flex direction="column" gap={5} alignItems="stretch">
+				<TileGrid cols={16} cells={steps.map((on) => ({ lit: on }))} />
+				<TileGrid cols={16} cells={[0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 0, 1, 1, 2, 4].map((level) => ({ level: level as 0 | 1 | 2 | 3 | 4 }))} />
+				<div style="block-size: 96px; display: flex;">
+					<TileGrid cols={12} rows={7} fit="height">
+						{Array.from({ length: 84 }, (_, i) => (
+							<Tile level={((i * 7) % 5) as 0 | 1 | 2 | 3 | 4} />
+						))}
+					</TileGrid>
+				</div>
+			</Flex>
+		</section>
+
+		<!-- WIDGET: the pieces together --------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Widget — the pieces together</h2>
+			<p class="ds-demo__note">
+				<code>Widget</code> draws the header (<code>title</code> left, the <code>meta</code>
+				slot right, the fading hairline) and <code>CardBody</code> fills the rest of the
+				cell. Inside a WidgetGrid every voice scales with the cell. Two columns here,
+				so the cells are the homepage's ~300px, not phone tiles; a header pill needs a
+				short title beside it on a 1×1.
+			</p>
+			<WidgetGrid cols={2}>
+				<Widget size="1x1" title="tempo">
+					<Pill slot="meta" as="button" type="button">tap</Pill>
+					<CardBody>
+						<Figure size="xl" unit="bpm" style="margin-block-start: auto;">120</Figure>
+						<TickRuler playhead={0.42} />
+					</CardBody>
+				</Widget>
+				<Widget size="1x1" title="infra #1">
+					<Pill slot="meta"><Icon name="check" />low risk</Pill>
+					<CardBody>
+						<Flex gap={5}>
+							<Stat size="sm" value="90%" label="Allocated" />
+							<Stat size="sm" value="10%" label="Reserve" />
+						</Flex>
+						<Flex gap={4} alignItems="center" style="margin-block-start: auto;">
+							<RingGauge value={0.9} segments={16} size="var(--space-11)" />
+							<Legend items={[{ label: "A1", value: "10%" }, { label: "A2", value: "20%" }, { label: "A3", value: "70%" }]} />
+						</Flex>
+					</CardBody>
+				</Widget>
+				<Widget size="2x1" title="steps">
+					<Mono slot="meta" variant="text">4 / 4</Mono>
+					<CardBody>
+						<TileGrid cols={16} cells={steps.map((on) => ({ lit: on }))} />
+						<Flex gap={4} alignItems="center" justifyContent="center" style="margin-block-start: auto;">
+							<IconButton variant="secondary" size="small" rounded aria-label="slower"><Icon name="chevron" /></IconButton>
+							<IconButton variant="primary" size="xl" rounded aria-label="pause"><Icon name="pause" /></IconButton>
+							<IconButton variant="secondary" size="small" rounded aria-label="faster"><Icon name="chevron" /></IconButton>
+						</Flex>
+					</CardBody>
+				</Widget>
+			</WidgetGrid>
 		</section>
 
 		<!-- ANCHOR --------------------------------------------------------- -->
@@ -972,6 +1255,25 @@ const faces = [
 		font-size: var(--font-size-5);
 		color: var(--text-secondary);
 		margin-bottom: var(--space-4);
+	}
+
+	/* Instrument token swatches: a square of the token beside its name and job. */
+	.ds-demo__swatches {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+		gap: var(--space-3) var(--space-6);
+	}
+	.ds-demo__swatch-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+	}
+	.ds-demo__swatch {
+		flex: none;
+		inline-size: var(--space-6);
+		block-size: var(--space-6);
+		border-radius: var(--border-radius-0);
+		border: 1px solid var(--hairline);
 	}
 
 	.ds-demo__note {

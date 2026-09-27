@@ -1,0 +1,63 @@
+/* TileGrid — the step grid: square tiles on a small gap, unlit ones the ink
+ * at a wash, lit ones the accent (or, in the light theme, the ink — see --lit
+ * in tokens.overrides.css). A contribution graph, a sequencer, a calendar.
+ *
+ * Two ways to size the squares, because two situations arise:
+ *   fit="width"   (default) the columns share the width and the tiles are
+ *                 square by aspect ratio; the grid is as tall as it needs.
+ *   fit="height"  the grid is given a height (a widget body's leftover) and
+ *                 the ROWS set the square; columns are packed to the end, so
+ *                 the newest column sits at the right edge and older ones clip
+ *                 off the left. Container units resolve against an ANCESTOR,
+ *                 so the grid can't measure itself — TileGrid.astro wraps it
+ *                 in a size container for this mode.
+ *
+ * Levels: 0 is unlit, 1–2 the ink at two strengths (ordinary days), 3–4 the
+ * accent (the few hits you'd look for). `data-lit` is the binary case — a
+ * step that is on — and follows the theme. */
+.ds-tiles-box {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	container-type: size;
+	overflow: hidden;
+}
+.ds-tiles {
+	display: grid;
+	/* The gap scales with the cell when inside a widget; a hair under the
+	   smallest space step otherwise, since tiles are small. */
+	--tile-gap: clamp(2px, calc(var(--widget-cell, 300px) * 0.01), var(--space-1));
+	gap: var(--tile-gap);
+	grid-template-columns: repeat(var(--tiles-cols, 8), minmax(0, 1fr));
+}
+.ds-tiles--fit-height {
+	block-size: 100%;
+	--tile: calc((100cqb - var(--tile-gap) * (var(--tiles-rows, 7) - 1)) / var(--tiles-rows, 7));
+	grid-template-columns: repeat(var(--tiles-cols, 8), var(--tile));
+	grid-template-rows: repeat(var(--tiles-rows, 7), var(--tile));
+	justify-content: end;
+	align-content: end;
+}
+
+.ds-tile {
+	display: block;
+	border-radius: var(--border-radius-tile);
+	background: var(--wash-1);
+}
+.ds-tiles--fit-width .ds-tile {
+	aspect-ratio: 1;
+}
+.ds-tile[data-level="1"] {
+	background: var(--wash-2);
+}
+.ds-tile[data-level="2"] {
+	background: var(--wash-3);
+}
+.ds-tile[data-level="3"] {
+	background: color-mix(in oklab, var(--accent) 70%, var(--wash-1));
+}
+.ds-tile[data-level="4"] {
+	background: var(--accent);
+}
+.ds-tile[data-lit] {
+	background: var(--lit);
+}

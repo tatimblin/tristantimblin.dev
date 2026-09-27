@@ -1,0 +1,42 @@
+/* RingGauge — a thin ring: a dim track, optionally broken into segments, with
+ * one accent arc for the value, and room in the middle for a Figure or a Stat.
+ *
+ * The SVG is drawn on a 100-unit path (pathLength) so a dasharray in percent
+ * of the circumference is the value; both circles start at 12 o'clock via the
+ * rotation. Strokes are non-scaling so the ring is a hairline at any size —
+ * the one thing that must not thicken as the gauge grows. */
+.ds-ring {
+	position: relative;
+	display: inline-grid;
+	place-items: center;
+	inline-size: var(--ring-size, var(--space-10));
+	block-size: var(--ring-size, var(--space-10));
+	flex: none;
+}
+.ds-ring__svg {
+	position: absolute;
+	inset: 0;
+	inline-size: 100%;
+	block-size: 100%;
+	transform: rotate(-90deg);
+	overflow: visible;
+}
+.ds-ring__track,
+.ds-ring__arc {
+	fill: none;
+	stroke-width: var(--ring-stroke, 1.5);
+	vector-effect: non-scaling-stroke;
+}
+.ds-ring__track {
+	stroke: var(--wash-3);
+}
+.ds-ring__arc {
+	stroke: var(--accent);
+	stroke-linecap: butt;
+}
+.ds-ring__center {
+	position: relative;
+	display: grid;
+	place-items: center;
+	text-align: center;
+}

@@ -1,16 +1,28 @@
 ---
-// Pill — DS styled('span', { …, variants: { dark, variant } }).
-// Exact port of the variant API. Source has NO defaultVariants and `variant`
-// is a required prop, so we emit no default.
+// Pill — a capsule of caps mono (styles/pill.css). No variant = `subtle`.
+//
+//   <Pill>low risk</Pill>                         subtle ink wash
+//   <Pill variant="outline">0/360°</Pill>
+//   <Pill variant="accent" as="a" href="…">next</Pill>   the CTA
+//   <Pill as="button" type="button">tap</Pill>    a pill button
+//   <Pill variant="success">live</Pill>           the DS tints still exist
+//
+// An icon goes in the default slot ahead of the text; it is sized to the type.
 import { cx } from "../lib/cx";
 
-type Variant = "info" | "success" | "warning" | "danger";
+type Variant =
+	| "subtle"
+	| "outline"
+	| "accent"
+	| "info"
+	| "success"
+	| "warning"
+	| "danger";
 
 interface Props {
 	as?: string;
 	variant?: Variant;
-	// The DS `dark` variant exists but carries no rules (`true: {}`), so it
-	// produces no CSS and — per the mechanical class rule — no class.
+	// The DS `dark` variant exists but carries no rules, so no class.
 	dark?: boolean;
 	class?: string;
 	[key: string]: unknown;
@@ -18,19 +30,15 @@ interface Props {
 
 const {
 	as = "span",
-	variant,
-	dark,
+	variant = "subtle",
+	dark: _dark,
 	class: className,
 	...rest
 } = Astro.props;
 
 const Tag = as as any;
 
-const cls = cx(
-	"ds-pill",
-	variant && `ds-pill--variant-${variant}`,
-	className,
-);
+const cls = cx("ds-pill", `ds-pill--variant-${variant}`, className);
 ---
 
 <Tag class={cls} {...rest}><slot /></Tag>

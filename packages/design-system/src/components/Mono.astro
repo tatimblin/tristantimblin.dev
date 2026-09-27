@@ -1,0 +1,49 @@
+---
+// Mono — the structure voice: small mono type that labels rather than says
+// (styles/mono.css). Not a Text variant, because the voice is the whole
+// setting — face, size, case, tracking, colour — and Text's props would let a
+// call site take it half.
+//
+//   <Mono>github</Mono>                          caps label (default)
+//   <Mono variant="text">Allocated</Mono>        dim sentence case
+//   <Mono variant="value" size={1}>90%</Mono>    a figure at label size
+//   <Mono as="a" variant="text" href="…">@handle</Mono>
+import { cx } from "../lib/cx";
+
+type Variant = "caps" | "text" | "value";
+type Size = 0 | 1 | 3;
+type Tone = "primary" | "secondary" | "tertiary" | "accent";
+
+interface Props {
+	as?: string;
+	variant?: Variant;
+	size?: Size;
+	tone?: Tone;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "span",
+	variant = "caps",
+	size = 0,
+	tone,
+	class: className,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+
+const cls = cx(
+	"ds-mono",
+	`ds-mono--variant-${variant}`,
+	// The caps role (caps.css) owns uppercase + tracking; compose it rather
+	// than repeat it.
+	variant === "caps" && "ds-caps",
+	size !== 0 && `ds-mono--size-${size}`,
+	tone && `ds-mono--tone-${tone}`,
+	className,
+);
+---
+
+<Tag class={cls} {...rest}><slot /></Tag>

@@ -1,0 +1,84 @@
+---
+// TickRuler — hairline ticks on a pitch, optionally split into share segments
+// and/or marked with an accent playhead (styles/tick-ruler.css).
+//
+//   <TickRuler />                                          one plain stretch
+//   <TickRuler playhead={0.37} />                          with the accent marker
+//   <TickRuler segments={[{ share: 46 }, { share: 29, color: "var(--tone-2)" }]} />
+//   <TickRuler pitch="6px" height="var(--space-8)" />
+//
+// Segments without a `color` take the rank ramp in order (--tone-1..5), which
+// is what a share bar wants: the leader in the accent, the rest stepping down.
+import { cx } from "../lib/cx";
+
+interface Segment {
+	share: number;
+	color?: string;
+}
+
+interface Props {
+	as?: string;
+	segments?: Segment[];
+	/** 0–1 fraction of the width at which to draw the accent playhead. */
+	playhead?: number;
+	/** CSS length: distance between ticks (default --tick-pitch, 4px). */
+	pitch?: string;
+	/** CSS length: the ruler's height (default --space-6). */
+	height?: string;
+	class?: string;
+	style?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	segments,
+	playhead,
+	pitch,
+	height,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+const hasPlayhead = typeof playhead === "number";
+const segs: Segment[] = segments?.length ? segments : [{ share: 1 }];
+
+const vars = [
+	pitch && `--tick-pitch:${pitch}`,
+	height && `--ticks-height:${height}`,
+	style,
+]
+	.filter(Boolean)
+	.join(";");
+
+const segStyle = (s: Segment, i: number) =>
+	[`--share:${s.share}`, `color:${s.color ?? `var(--tone-${Math.min(i + 1, 5)})`}`]
+		.filter(Boolean)
+		.join(";");
+---
+
+<Tag
+	class={cx("ds-ticks", hasPlayhead && "ds-ticks--playhead-true", className)}
+	style={vars || undefined}
+	aria-hidden="true"
+	{...rest}
+>
+	{
+		segs.map((s, i) => (
+			<span
+				class="ds-ticks__seg"
+				style={segments?.length ? segStyle(s, i) : undefined}
+			/>
+		))
+	}
+	{
+		hasPlayhead ? (
+			<span
+				class="ds-ticks__playhead"
+				style={`--at:${Math.min(Math.max(playhead, 0), 1) * 100}%`}
+			/>
+		) : null
+	}
+</Tag>

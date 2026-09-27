@@ -9,6 +9,10 @@
 @import "./body.css";
 @import "./caps.css";
 @import "./numeric.css";
+/* The instrument voices (after caps.css, which mono.css composes). */
+@import "./mono.css";
+@import "./figure.css";
+@import "./stat.css";
 @import "./label.css";
 @import "./button.css";
 @import "./icon-button.css";
@@ -20,3 +24,10 @@
 @import "./inline-code.css";
 @import "./icon.css";
 @import "./visually-hidden.css";
+/* Hairline graphics. */
+@import "./hairline.css";
+@import "./tick-ruler.css";
+@import "./bar-graph.css";
+@import "./ring-gauge.css";
+@import "./legend.css";
+@import "./tile-grid.css";

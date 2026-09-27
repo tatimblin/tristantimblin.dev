@@ -68,10 +68,12 @@ import "@whois/design-system/styles.css";
 — including columns/gutters/breakpoints for `Grid`. Open it instead of guessing a
 prop; this doc deliberately does not duplicate per-component API tables.
 
-**Components available (26):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
-`Strong`, `Heading`, `H1`–`H4`, `Label`, `Button`, `IconButton`, `Card`,
+**Components available (40):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+`Strong`, `Heading`, `H1`–`H4`, `Body`, `Label`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Callout`, `Pill`, `Anchor`, `List`, `ListItem`,
-`InlineCode`, `Icon`, `VisuallyHidden`.
+`InlineCode`, `Icon`, `VisuallyHidden`, `WidgetGrid`, `Widget` — and the
+instrument UI (next section): `Mono`, `Figure`, `Stat`, `Hairline`, `TickRuler`,
+`BarGraph`, `RingGauge`, `Legend`, `LegendItem`, `TileGrid`, `Tile`.
 
 ## The decision gate
 
@@ -106,17 +108,96 @@ Work top-down. Stop at the first rule that matches.
 | `src/tokens/tokens.generated.css` | **Never hand-edit.** It's generated from the upstream package. Regenerate with `bun scripts/gen-tokens.mjs` after `bun update @maximeheckel/design-system`. |
 | `src/tokens/tokens.overrides.css` | The **only** place to retune DS token *values* for this site (it wins over generated). Empty by default. |
 | `src/tokens/bridge.css` | Edit to add a legacy-name alias (e.g. mapping a site/Web-Component `--color-*` name onto a DS token). |
-| `src/components/*.astro`, `src/styles/*.css` | Edit only to fix a fidelity bug or add a variant that exists upstream. Keep API parity with the DS. New component ⇒ add its `@import` to `src/styles/index.css` **and** a section to the catalogue page. |
+| `src/components/*.astro`, `src/styles/*.css` | For the ported DS components: edit to fix a fidelity bug or add a variant that exists upstream, keeping API parity. For the instrument UI (Card/Pill/Button chrome and the components below): edit freely — those are this site's, not a port. New component ⇒ add its `@import` to `src/styles/index.css` **and** a section to the catalogue page. |
+
+---
+
+## Instrument UI — the card and widget vocabulary
+
+The cards, widgets and controls are drawn after instrument UIs (a hardware
+metronome's screen, a dashboard card): **flat** surfaces a few percent apart,
+1px **hairlines**, **one accent** (orange-red) used once per card for the lit
+thing / the playhead / the primary action, and everything else the **ink at a
+few strengths**. Two voices of type: small tracked uppercase **mono** for
+structure, and a big regular-weight **numeral** for values. This is a
+deliberate departure from the fidelity-fork rule: `Card`, `CardHeader`, `Pill`,
+`Button` and `IconButton` keep the DS prop API but are restyled (no shadows, no
+glass, caps mono labels), and the components below have no upstream at all.
+
+**Tokens** (`tokens.overrides.css` → INSTRUMENT UI), all global:
+
+| Token | What it is for |
+| --- | --- |
+| `--accent` | the one accent (retuned from blue; mixed from `--red-900`/`--orange-900`). `--emphasis` is its tint. |
+| `--lit` | a step/tile/key that is ON — the accent on dark, the **ink** on light. Use for binary on/off; use `--accent` for things that must be orange in both themes. |
+| `--wash-1/2/3` | the ink at 7 / 16 / 30 % — unlit tile & subtle pill fill; two stronger steps. |
+| `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
+| `--hairline`, `--hairline-fade` | the edge colour; the divider gradient that fades at both ends. |
+| `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px), `--tracking-mono` (0.05em) | the steps below the generated scales. |
+| light-theme `--gray-*` | retuned warm (hue 80, stone/bone). Page, card, hairline and inks all follow. |
+
+**Card chrome.** `<Widget size title>` draws the header (title in caps mono,
+the `meta` slot on the right, fading hairline under) and `<CardBody>` fills the
+rest of the cell as a flex column with `--widget-gap`; put `slot="meta"` on a
+`Pill`/`Mono`. `Card` still takes `title`; `depth` is accepted and ignored.
+Inside a `WidgetGrid`, every voice below scales with the cell (`--widget-font-*`);
+elsewhere it falls back to the type tokens.
+
+```astro
+<Widget size="1x1" title="github">
+  <Mono slot="meta" as="a" variant="text" href="…">@handle</Mono>
+  <CardBody>
+    <TileGrid cols={weeks.length} rows={7} fit="height">…<Tile level={3} />…</TileGrid>
+    <Figure unit="contributions">1,457</Figure>
+  </CardBody>
+</Widget>
+```
+
+**Voices.**
+- `Mono` — `variant="caps" | "text" | "value"` (caps label / dim sentence case /
+  ink figure), `size={0|1|3}`, `tone="primary|secondary|tertiary|accent"`,
+  polymorphic `as` (as an `a` it gets the link reset).
+- `Figure` — big regular numeral + caps `unit` (prop or `slot="unit"`),
+  `size="md|lg|xl"`.
+- `Stat` — `value` + `label` (props or default/`label` slots), `size="sm|md|lg"`
+  (sm = mono at label size, the dashboard stat pair), `inline`.
+- `Pill` — `variant="subtle"` (default) `| "outline" | "accent" | info | success
+  | warning | danger`; `as="button"|"a"` makes it a pill button; an `Icon` in
+  the default slot sits before the text.
+- `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
+  = pill button. `IconButton` — same variants, `size="small|large|xl"`,
+  `rounded` = round button.
+
+**Hairline graphics.**
+- `Hairline` — `fade` (default true), `orientation="horizontal|vertical"`.
+- `TickRuler` — `segments=[{share, color?}]` (colours default to `--tone-N` by
+  order), `playhead={0..1}` (accent line + dot), `pitch`, `height`.
+- `BarGraph` — `values`, `max`, `lit={i|"last"|"max"}`, `height`.
+- `RingGauge` — `value={0..1}`, `segments`, `size`, `stroke`, `label`;
+  children sit in the centre.
+- `Legend` — `items=[{label, value?, color?}]` or `LegendItem` children (`label`,
+  `value` prop or slot, `color`); dots take `--tone-N` by position.
+- `TileGrid` — `cols`, `rows`, `fit="width|height"`, `cells=[{level?, lit?,
+  title?}]` or `Tile` children (`level={0..4}`, `lit`, any attribute — e.g.
+  `style="grid-column:…"` to place).
+
+The catalogue (`/design-system`) shows every one of these, and a "Widget — the
+pieces together" section with three sample widgets.
 
 ---
 
 ## Authoring (extending the package)
 
 Everything below is for **rule 4** — adding or extending a component. The package
-is a **faithful, no-React fork**: each PURE (presentational) React/Stitches
+began as a **faithful, no-React fork**: each PURE (presentational) React/Stitches
 component is ported 1:1 to an Astro component + a plain CSS file. Fidelity means
 **same prop/variant names, same defaults, same CSS declarations** (referencing
 the same token custom properties). Only the delivery mechanism changes.
+
+That rule now has a named exception: the **instrument UI** (previous section)
+restyles the card, pill and button chrome and adds components with no upstream.
+For those, the file layout, class naming and `.astro` shape below still apply
+verbatim — only the "same CSS declarations" clause does not.
 
 ### File layout per component
 
@@ -188,7 +269,9 @@ spacing `--space-0..15`, radii `--border-radius-0..3`, type `--font-size-1..8`
 `--text-primary/secondary/tertiary`, `--accent`, `--background`,
 `--card-background`, `--border-color`, `--danger`/`--warning`/`--success`
 (+ `-emphasis`), the `--gray/blue/green/red/orange/pink-*` scales, `--white`, and
-`--hyperlink`. Legacy site aliases live in `bridge.css` (`--color-fg`,
+`--hyperlink`; plus the instrument tokens (`--lit`, `--wash-*`, `--tone-*`,
+`--hairline`, `--hairline-fade`, `--border-radius-tile/-pill`, `--tick-pitch`,
+`--tracking-mono`). Legacy site aliases live in `bridge.css` (`--color-fg`,
 `--color-bg`, `--font-serif`, …). Breakpoints (from Stitches media):
 `xs 480 / sm 640 / md 768 / lg 1024 / xl 1280` → standard
 `@media (min-width: …)`.

@@ -1,0 +1,64 @@
+---
+// TileGrid — a grid of square tiles with lit/level states (styles/tile-grid.css).
+//
+//   <TileGrid cols={16} cells={steps.map((on) => ({ lit: on }))} />
+//   <TileGrid cols={weeks.length} rows={7} fit="height">
+//     {days.map((d) => <Tile level={d.level} style={`grid-column:${d.col};grid-row:${d.row}`} title="…" />)}
+//   </TileGrid>
+//
+// Pass `cells` for a plain sequence, or Tile children when a cell needs its
+// own placement or attributes. In fit="height" mode the grid is wrapped in a
+// size container and fills the height it is given (a widget body's remainder).
+import { cx } from "../lib/cx";
+import Tile from "./Tile.astro";
+
+interface Cell {
+	level?: 0 | 1 | 2 | 3 | 4;
+	lit?: boolean;
+	title?: string;
+}
+
+interface Props {
+	as?: string;
+	cols?: number;
+	rows?: number;
+	fit?: "width" | "height";
+	cells?: Cell[];
+	class?: string;
+	style?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	cols = 8,
+	rows,
+	fit = "width",
+	cells,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+const vars = [`--tiles-cols:${cols}`, rows && `--tiles-rows:${rows}`, style]
+	.filter(Boolean)
+	.join(";");
+const cls = cx("ds-tiles", `ds-tiles--fit-${fit}`, className);
+---
+
+{
+	fit === "height" ? (
+		<div class="ds-tiles-box">
+			<Tag class={cls} style={vars} {...rest}>
+				{cells?.map((c) => <Tile level={c.level} lit={c.lit} title={c.title} />)}
+				<slot />
+			</Tag>
+		</div>
+	) : (
+		<Tag class={cls} style={vars} {...rest}>
+			{cells?.map((c) => <Tile level={c.level} lit={c.lit} title={c.title} />)}
+			<slot />
+		</Tag>
+	)
+}
