@@ -3,69 +3,15 @@
  * Plain CSS (not an Astro scoped <style>) so these globally-reaching selectors
  * survive verbatim, matching the other widgets. The .wx-github/.wx-gh-* prefix
  * keeps them contained; the .home__widgets prefix matches the page's widget-grid
- * containment. Reuses DS tokens throughout; the only literal values are the
- * contribution-level green scale (like bike-stats' aurora) and hairline
- * cell/gaps too fine for the space scale. */
+ * containment. The type, label row, figure, dotted rule and dither steps are the
+ * shared mono family in widgets.css — only this widget's layout is here. One
+ * ink throughout: activity and language share are drawn as density, not colour. */
 
 .home__widgets .wx-github {
-	position: relative;
 	display: flex;
 	flex-direction: column;
+	gap: var(--space-3);
 	padding: var(--widget-pad);
-
-	/* Header sizing + the headroom reserved for it at the top. The icon scales with
-	   the tile (so it shrinks on small phone tiles); the headroom is the icon plus a
-	   token's gap. The bottom-anchored grid fills the width and takes the rest of the
-	   height, so the bottom and side padding stay even and the gap under the header is
-	   exactly that token. All derived from the DS cell size + tokens — no magic px.
-	   (--widget-cell is the tile's own inline size.) */
-	--gh-icon: clamp(12px, calc(var(--widget-cell) * 0.07), 28px);
-	--gh-headroom: calc(var(--gh-icon) + var(--space-2));
-
-	/* Contribution intensity scale. Level 0 is a theme-aware faint fill (fades
-	   with the card in both themes); 1–4 are GitHub's canonical greens. Defaults
-	   are the dark-theme greens; the light-theme block below swaps in GitHub's
-	   lighter scale so low-activity days don't read as near-black on a light card. */
-	--gh-l0: color-mix(in srgb, var(--text-primary) 8%, transparent);
-	--gh-l1: #0e4429;
-	--gh-l2: #006d32;
-	--gh-l3: #26a641;
-	--gh-l4: #39d353;
-}
-:where(.maximeheckel-light) .home__widgets .wx-github {
-	--gh-l1: #9be9a8;
-	--gh-l2: #40c463;
-	--gh-l3: #30a14e;
-	--gh-l4: #216e39;
-}
-
-/* Header — GitHub icon + username. A link to the profile, kept OUTSIDE the toggle
-   button (so tapping it never flips, and to avoid an invalid <a>-in-<button>).
-   Sits at the top-left, its top matching the even L/R/B padding; the grid takes the
-   rest of the height, leaving a token-sized gap beneath the text. Overlays the same
-   spot on the language view. */
-.home__widgets .wx-gh-head {
-	position: absolute;
-	z-index: 2;
-	inset-block-start: var(--widget-pad);
-	inset-inline-start: var(--widget-pad);
-	display: inline-flex;
-	align-items: center;
-	gap: var(--space-2);
-	color: var(--text-primary); /* drives the currentColor icon stroke */
-	text-decoration: none;
-	font-size: min(var(--widget-font-md), var(--gh-icon));
-	font-weight: var(--font-weight-600);
-	line-height: 1;
-	text-shadow: 0 1px 3px var(--color-bg);
-}
-.home__widgets .wx-gh-head .ds-icon {
-	block-size: var(--gh-icon);
-	inline-size: auto;
-	aspect-ratio: 1;
-}
-.home__widgets .wx-gh-head:hover .wx-gh-user {
-	text-decoration: underline;
 }
 
 /* Body — the flip surface. A real <button> for keyboard/focus; stripped of its
@@ -96,22 +42,15 @@
 	inset: 0;
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
-	gap: var(--space-2);
+	gap: var(--space-3);
 	transition:
 		opacity var(--duration-swap) var(--ease-reveal),
 		visibility var(--duration-swap) var(--ease-reveal);
 }
-/* Grid face: pin the (shorter) grid to the bottom so the free strip is at the top,
-   under the header. */
-.home__widgets .wx-gh-face--grid {
-	justify-content: flex-end;
-}
 .home__widgets .wx-gh-face--langs {
 	opacity: 0;
 	visibility: hidden;
-	/* Clear the header headroom so the bar/list sit below it (same as the grid). */
-	padding-top: var(--gh-headroom);
+	justify-content: space-between;
 }
 .home__widgets .wx-github.is-flipped .wx-gh-face--grid {
 	opacity: 0;
@@ -127,102 +66,105 @@
 	}
 }
 
-/* Contribution grid — 9 weeks × 7 weekday rows. Fills the tile WIDTH and derives
-   fills the width and takes all the height except the header headroom, bottom-
-   anchored — so the bottom and side padding stay even (= --widget-pad) and only a
-   token-sized gap sits under the header. Reserving the header's height (rather than
-   forcing a square) keeps the gap small; the cells end up all but square. */
-.home__widgets .wx-gh-grid {
-	display: grid;
-	grid-template-columns: repeat(var(--gh-cols, 8), 1fr);
-	grid-template-rows: repeat(7, 1fr);
-	/* Tight iOS-style spacing (a small fraction of the square), scaling gently with
-	   the tile off the shared --widget-cell. */
-	gap: clamp(2px, calc(var(--widget-cell) * 0.012), 6px);
-	width: 100%;
-	block-size: calc(100% - var(--gh-headroom));
-}
-.home__widgets .wx-gh-cell {
-	border-radius: 18%; /* subtle inner rounding, less than the grid's outer corners */
-	background: var(--gh-l0);
-}
-/* The grid's four structural corner cells round their OUTER corner more, so the
-   block reads as a rounded rectangle (echoing the card) while the inner squares
-   stay crisp — the iOS-widget look. */
-.home__widgets .wx-gh-cell[data-corner="tl"] {
-	border-top-left-radius: 45%;
-}
-.home__widgets .wx-gh-cell[data-corner="tr"] {
-	border-top-right-radius: 45%;
-}
-.home__widgets .wx-gh-cell[data-corner="bl"] {
-	border-bottom-left-radius: 45%;
-}
-.home__widgets .wx-gh-cell[data-corner="br"] {
-	border-bottom-right-radius: 45%;
-}
-.home__widgets .wx-gh-cell[data-level="1"] {
-	background: var(--gh-l1);
-}
-.home__widgets .wx-gh-cell[data-level="2"] {
-	background: var(--gh-l2);
-}
-.home__widgets .wx-gh-cell[data-level="3"] {
-	background: var(--gh-l3);
-}
-.home__widgets .wx-gh-cell[data-level="4"] {
-	background: var(--gh-l4);
-}
-
-/* Language breakdown — a stacked share bar over a compact legend. */
-.home__widgets .wx-gh-bar {
-	display: flex;
-	width: 100%;
-	height: var(--space-2);
-	border-radius: var(--border-radius-1);
+/* Contribution grid — 7 weekday rows filling the height left over by the figure.
+   The box is a size container (container units resolve against an ANCESTOR, so
+   the grid can't measure itself) and its height sets the square; columns are that
+   square wide and packed to the END, so the newest week sits on the right edge
+   and older weeks clip off the left on narrower tiles. */
+.home__widgets .wx-gh-grid-box {
+	flex: 1;
+	min-height: 0;
+	container-type: size;
 	overflow: hidden;
 }
-.home__widgets .wx-gh-bar-seg {
-	height: 100%;
+.home__widgets .wx-gh-grid {
+	block-size: 100%;
+	display: grid;
+	--gh-gap: clamp(2px, calc(var(--widget-cell) * 0.01), 4px);
+	--gh-sq: calc((100cqb - var(--gh-gap) * 6) / 7);
+	grid-template-columns: repeat(var(--gh-cols, 8), var(--gh-sq));
+	grid-template-rows: repeat(7, var(--gh-sq));
+	gap: var(--gh-gap);
+	justify-content: end;
+	align-content: end;
 }
-/* The markerless reset this used to hand-roll (list-style/margin/padding) now comes
-   from the DS <List>, which is that reset — see the tag in Github.astro, where the
-   raw <li> rows are argued. Only the stacking this tile actually invents is left. */
+
+/* Halftone cell — the ink square grows with the level; 0 is a single dot, so the
+   empty grid still reads as a grid (the reference's dot matrix). */
+.home__widgets .wx-gh-cell {
+	display: grid;
+	place-items: center;
+}
+.home__widgets .wx-gh-cell::before {
+	content: "";
+	inline-size: var(--gh-ink, 20%);
+	aspect-ratio: 1;
+	background: currentColor;
+	border-radius: 1px;
+}
+.home__widgets .wx-gh-cell[data-level="0"]::before {
+	border-radius: 50%;
+	opacity: 0.45;
+}
+.home__widgets .wx-gh-cell[data-level="1"] {
+	--gh-ink: 40%;
+}
+.home__widgets .wx-gh-cell[data-level="2"] {
+	--gh-ink: 60%;
+}
+.home__widgets .wx-gh-cell[data-level="3"] {
+	--gh-ink: 80%;
+}
+.home__widgets .wx-gh-cell[data-level="4"] {
+	--gh-ink: 100%;
+}
+
+/* Language share bar — segments sized by flex-grow (their percentage), each in
+   its dither step, butted together so the steps read as one gradient of ink. A
+   chunky block under the label row (the lofi card's dot-matrix bar) rather than a
+   hairline — but capped, since a solid lead segment any taller turns into a slab. */
+.home__widgets .wx-gh-bar {
+	flex: 0 1 30%;
+	min-block-size: calc(var(--wx-px) * 6);
+	display: flex;
+	inline-size: 100%;
+	margin-block-end: var(--space-1);
+}
+.home__widgets .wx-gh-bar-seg {
+	flex-basis: 0;
+}
+
 .home__widgets .wx-gh-lang-list {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-1);
+	gap: var(--space-2);
 }
 .home__widgets .wx-gh-lang {
 	display: flex;
-	align-items: center;
+	align-items: baseline;
 	gap: var(--space-2);
-	font-size: var(--widget-font-sm);
-	line-height: 1.2;
+	font-size: var(--widget-font-xs);
+	line-height: 1;
+	text-transform: lowercase;
 }
-.home__widgets .wx-gh-dot {
+.home__widgets .wx-gh-swatch {
 	flex: none;
-	width: var(--space-2);
-	height: var(--space-2);
-	border-radius: 50%;
+	align-self: center;
+	inline-size: calc(var(--wx-px) * 4);
+	block-size: calc(var(--wx-px) * 4);
 }
 .home__widgets .wx-gh-lang-name {
-	color: var(--text-secondary);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+/* Dotted leader — the shared .wx-rule, stretched between name and figure. It
+   gives way first (down to nothing) so a long name on a phone tile keeps its
+   letters rather than the dots. */
+.home__widgets .wx-gh-leader {
+	flex: 1;
+	min-inline-size: 0;
+}
 .home__widgets .wx-gh-lang-pct {
-	margin-left: auto;
-	color: var(--text-tertiary);
-	/* FIGURES — the same role as .wx-stat-num (widgets.css); see numeric.css for the
-	   full reasoning. Two things: --font-numeric with NO --font-mono fallback (the
-	   token was moved off the mono stack on purpose — these are data, not code — and
-	   the fallback quietly put it back), and TABULAR figures, because the percentages
-	   stack one per row down a flush-right edge. Proportional digits are drawn on
-	   different widths, so 42.1% / 11.8% / 4.3% would sit ragged against each other
-	   even though `margin-left: auto` aligns their boxes; tabular puts every digit on
-	   one advance width so the column actually lines up. Neue Montreal ships `tnum`. */
-	font-family: var(--font-numeric);
-	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
 }

@@ -1,11 +1,10 @@
 ---
-// GitHub widget — an iOS-widget-style 1×1 card. A persistent header (GitHub icon
-// + username) links out to the profile; the rest of the card is a toggle: tap it
-// to cross-fade the contribution grid out and the language breakdown in (tap
-// again to flip back). Data is read at build time from github.json (see
-// ./github.ts); only the flip is client-side.
+// GitHub widget — a 1×1 card in the mono widget family (widgets.css → MONO
+// WIDGET FAMILY). A label row (`github` + the @handle, which links out to the
+// profile) sits over a toggle: tap the card to cross-fade the contribution grid
+// out and the language breakdown in (tap again to flip back). Data is read at
+// build time from github.json (see ./github.ts); only the flip is client-side.
 import Widget from "@whois/design-system/Widget";
-import Icon from "@whois/design-system/Icon";
 import Anchor from "@whois/design-system/Anchor";
 import List from "@whois/design-system/List";
 import { getGithubStats } from "./github";
@@ -13,134 +12,109 @@ import "./github.css";
 
 const gh = getGithubStats();
 
-// Show 8 weeks × 7 weekday rows. Fills the tile width and sits at the bottom, with
-// a small headroom reserved at the top for the header (see --gh-headroom); bottom
-// and side padding stay even.
-const weeks = gh.weeks.slice(-8);
+// Every week in the data file. The grid sizes its squares off the height it's
+// given and anchors the newest week to the right edge, so whatever doesn't fit
+// clips off the left — narrow tiles show fewer weeks, not smaller squares.
+const weeks = gh.weeks;
 
 // Each day sits at its weekday row (Sun=1 … Sat=7) so partial weeks (the current
 // one) stay aligned to the correct rows. Parse as UTC to match the API dates.
 const weekday = (date: string): number =>
 	(new Date(`${date}T00:00:00Z`).getUTCDay() ?? 0) + 1;
 
-// Cap the language rows so the flip side stays legible in a 1×1.
-const langs = gh.languages.slice(0, 5);
+const total = gh.totalContributions.toLocaleString("en-US");
 
-// Tag the grid's four structural corners (first/last week × top/bottom row) so
-// their OUTER corner can be rounded more than the squares' subtle inner rounding
-// — the iOS-widget look. The current (last) week is partial, so its bottom corner
-// is its latest present day, not necessarily Saturday. Dates are unique, so each
-// corner tag lands on exactly one cell.
-const cornerDate = (week: typeof weeks[number] | undefined, edge: "top" | "bottom") => {
-	if (!week?.length) return null;
-	const sorted = [...week].sort((a, b) => weekday(a.date) - weekday(b.date));
-	return (edge === "top" ? sorted[0] : sorted[sorted.length - 1]).date;
-};
-const corner = {
-	tl: cornerDate(weeks[0], "top"),
-	bl: cornerDate(weeks[0], "bottom"),
-	tr: cornerDate(weeks[weeks.length - 1], "top"),
-	br: cornerDate(weeks[weeks.length - 1], "bottom"),
-};
-const cornerOf = (date: string): string | undefined =>
-	date === corner.tl ? "tl"
-	: date === corner.tr ? "tr"
-	: date === corner.bl ? "bl"
-	: date === corner.br ? "br"
-	: undefined;
+// Four named languages plus the rest summed as "other", so the list fits a 1×1
+// and still accounts for 100%. Each row takes a dither step (solid → sparse) in
+// rank order; the bar uses the same steps, so the legend needs no colour key.
+// Shown as whole percents: the decimals cost the width a phone tile doesn't have.
+const NAMED = 4;
+const named = gh.languages.slice(0, NAMED);
+const rest = gh.languages.slice(NAMED).reduce((sum, l) => sum + l.percent, 0);
+const langs = [
+	...named.map((l) => ({ name: l.name, percent: l.percent })),
+	...(rest > 0 ? [{ name: "other", percent: rest }] : []),
+].map((l, i) => ({ ...l, ink: Math.max(0, 4 - i) }));
 ---
 
 <Widget
 	size="1x1"
-	class="wx-github"
-	style={`--gh-cols:${weeks.length}`}
+	class="wx-github wx-mono"
 	data-reveal
 	data-reveal-group="widgets"
 	data-reveal-order="2"
 >
-	<!-- <Anchor>, no variants. The header is a link, so it takes the DS link
-	     component; but every decoration Anchor offers (external icon, favicon, arrow,
-	     hover underline) would ADD a mark to a 1×1 tile that already spends its
-	     header row on an icon and a username, so none are switched on. The variantless
-	     base is what was wanted: the link reset plus the DS's colour transition.
-	     github.css keeps ownership of the colour/size/weight — its .home__widgets
-	     descendant selectors are (0,2,0) against .ds-anchor's (0,1,0), so the tile's
-	     own type wins on intent rather than on stylesheet order. -->
-	<Anchor
-		class="wx-gh-head"
-		href={gh.profileUrl}
-		target="_blank"
-		rel="noopener noreferrer"
-		aria-label={`@${gh.username} on GitHub`}
-	>
-		<Icon name="github" size={4} />
-		<span class="wx-gh-user">{gh.username}</span>
-	</Anchor>
+	<!-- Label row. Outside the toggle button, so tapping the handle never flips (and
+	     so there's no <a> inside a <button>). The handle is a variantless <Anchor>:
+	     the link reset + the DS colour transition, no added marks. -->
+	<div class="wx-head">
+		<span class="wx-head-label">github</span>
+		<Anchor
+			class="wx-head-meta"
+			href={gh.profileUrl}
+			target="_blank"
+			rel="noopener noreferrer"
+			aria-label={`@${gh.username} on GitHub`}
+		>
+			@{gh.username}
+		</Anchor>
+	</div>
 
 	<!-- RAW <button>, not the DS <Button>: this is the card INTERIOR, not a control
 	     drawn on top of it. It is a real <button> only so the flip is keyboard- and
 	     focus-reachable; every piece of native button chrome is stripped in github.css
-	     so the surface reads as the tile itself. DS Button exists to PUT chrome on —
-	     a fill, a height, a radius, a hover — which is the whole of what this element
-	     must not have. (The same reasoning lives beside the styles at .wx-gh-body.) -->
+	     so the surface reads as the tile itself. -->
 	<button
 		class="wx-gh-body"
 		type="button"
 		aria-pressed="false"
 		aria-label="Show language breakdown"
 	>
-		<!-- Face A: contribution grid -->
+		<!-- Face A: contribution grid as a halftone — one ink, the square grows with
+		     the day's level (0 is a single dot). -->
 		<div class="wx-gh-face wx-gh-face--grid">
-			<div class="wx-gh-grid">
-				{
-					weeks.map((week, wi) =>
-						week.map((day) => (
-							<span
-								class="wx-gh-cell"
-								data-level={day.level}
-								data-corner={cornerOf(day.date)}
-								style={`grid-column:${wi + 1};grid-row:${weekday(day.date)}`}
-								title={`${day.count} contribution${day.count === 1 ? "" : "s"} on ${day.date}`}
-							/>
-						)),
-					)
-				}
+			<div class="wx-gh-grid-box">
+				<div class="wx-gh-grid" style={`--gh-cols:${weeks.length}`}>
+					{
+						weeks.map((week, wi) =>
+							week.map((day) => (
+								<span
+									class="wx-gh-cell"
+									data-level={day.level}
+									style={`grid-column:${wi + 1};grid-row:${weekday(day.date)}`}
+									title={`${day.count} contribution${day.count === 1 ? "" : "s"} on ${day.date}`}
+								/>
+							)),
+						)
+					}
+				</div>
+			</div>
+			<div class="wx-figure">
+				<span class="wx-figure-num">{total}</span>
+				<span class="wx-figure-unit">contributions / yr</span>
 			</div>
 		</div>
 
-		<!-- Face B: language breakdown -->
+		<!-- Face B: language breakdown — a dithered share bar over a leadered list. -->
 		<div class="wx-gh-face wx-gh-face--langs" aria-hidden="true">
 			<div class="wx-gh-bar">
 				{
 					langs.map((l) => (
-						<span
-							class="wx-gh-bar-seg"
-							style={`width:${l.percent}%;background:${l.color}`}
-						/>
+						<span class={`wx-gh-bar-seg wx-ink-${l.ink}`} style={`flex-grow:${l.percent}`} />
 					))
 				}
 			</div>
-			<!-- <List> for the container — it is exactly the markerless reset this
-			     list was hand-rolling (list-style/margin/padding), so that block is
-			     gone from github.css and the DS owns it.
-			     The rows stay RAW <li>, NOT <ListItem> — a documented exception. ListItem
-			     is not a markerless <li>: it renders an arrow-icon <div> and wraps its
-			     children in a second <div>. Both fight this layout. The arrow is a bullet
-			     this list already has a better one of (the colour dot, which carries the
-			     language's own colour and ties the row to its segment in the bar above).
-			     The wrapper is the harder problem: .wx-gh-lang is a flex ROW of three
-			     siblings — dot, name, and a percentage pushed right by `margin-left:auto`
-			     — and collapsing them into one child div makes the auto margin push
-			     against nothing, so the percentages stop aligning. ListItem also carries
-			     prose metrics — `line-height: 1.9` and a --space-3 bottom margin — where
-			     this tile runs at 1.2 with a --space-1 gap to fit five rows in a 1×1. -->
+			<!-- <List> for the markerless reset; the rows stay raw <li> because
+			     ListItem wraps its children in an arrow + a second <div>, which breaks
+			     this swatch · name · leader · percent flex row. -->
 			<List class="wx-gh-lang-list">
 				{
 					langs.map((l) => (
 						<li class="wx-gh-lang">
-							<span class="wx-gh-dot" style={`background:${l.color}`} />
+							<span class={`wx-gh-swatch wx-ink-${l.ink}`} />
 							<span class="wx-gh-lang-name">{l.name}</span>
-							<span class="wx-gh-lang-pct">{l.percent}%</span>
+							<span class="wx-gh-leader wx-rule" />
+							<span class="wx-gh-lang-pct">{Math.round(l.percent)}%</span>
 						</li>
 					))
 				}
