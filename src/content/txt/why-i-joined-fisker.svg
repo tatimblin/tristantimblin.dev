@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <!-- Your car knows you're getting sick: steering, braking and acceleration
+       fan out of the car as three traces and meet in a heartbeat. -->
+  <g>
+    <!-- The road, dim, under the wheels and off the left edge. -->
+    <path d="M -10 142 H 120" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
+    <!-- The car: a side-profile node cropped by the left edge, windows cut
+         through to the plate. -->
+    <path d="M -20 130 H 76 A 6 6 0 0 0 82 124 V 116 Q 82 110 74 110 H 62 L 50 92 H 4 L -8 110 H -20 Z M 6 97 H 26 V 106 H 1 Z M 31 97 H 48 L 54.5 106 H 31 Z" fill="var(--art-ink)" fill-rule="evenodd" />
+    <!-- Wheels: green, hubs cut through. -->
+    <path d="M 10 119 A 11 11 0 1 0 10 141 A 11 11 0 1 0 10 119 Z M 10 126 A 4 4 0 1 1 10 134 A 4 4 0 1 1 10 126 Z M 60 119 A 11 11 0 1 0 60 141 A 11 11 0 1 0 60 119 Z M 60 126 A 4 4 0 1 1 60 134 A 4 4 0 1 1 60 126 Z" fill="var(--art-green)" fill-rule="evenodd" />
+    <circle cx="88" cy="118" r="2.5" fill="var(--art-ink)" />
+    <!-- The pulse: out of the meeting point and off the right edge. -->
+    <path d="M 240 90 H 252 L 260 58 L 270 122 L 278 90 H 290 L 294 80 L 298 90 H 330" fill="none" stroke="var(--art-ink)" stroke-linejoin="round" class="art-line" vector-effect="non-scaling-stroke" />
+  </g>
+  <!-- Steering, braking, acceleration: three dashed traces, signal flowing. -->
+  <g data-motion="dash">
+    <path d="M 88 118 C 130 118 130 40 170 40 H 205 C 230 40 222 90 240 90 M 88 118 C 120 118 130 90 170 90 H 240 M 88 118 C 130 118 130 150 164 150 H 205 C 230 150 222 90 240 90" fill="none" stroke="var(--art-ink)" stroke-dasharray="4 4" class="art-line" vector-effect="non-scaling-stroke" />
+  </g>
+  <!-- The meeting point and the signal sit on top of the traces. -->
+  <g>
+    <circle cx="240" cy="90" r="5" fill="var(--art-coral)" />
+    <!-- Signal riding the traces. -->
+    <circle cx="170" cy="40" r="3" fill="var(--art-green)" />
+    <circle cx="196" cy="40" r="2" fill="var(--art-green)" />
+    <rect x="182" y="87" width="6" height="6" fill="var(--art-green)" />
+    <circle cx="212" cy="90" r="2" fill="var(--art-ink)" />
+    <circle cx="164" cy="150" r="2" fill="var(--art-ink)" />
+    <circle cx="190" cy="150" r="3" fill="var(--art-green)" />
+    <!-- A few loose dots in the dark space. -->
+    <circle cx="112" cy="36" r="1.5" fill="var(--art-ink)" />
+    <circle cx="300" cy="26" r="2.5" fill="var(--art-green)" />
+    <rect x="318" y="140" width="6" height="6" fill="var(--art-green)" />
+  </g>
+</svg>
