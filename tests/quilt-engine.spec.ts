@@ -125,7 +125,7 @@ const FISKER = 3;
 const DASHBOARD = 4;
 
 const GRID = { cols: 5, rows: 3 };
-const rest: QuiltState = { query: "", focused: false, hovered: null, active: 0 };
+const rest: QuiltState = { query: "", focused: false, hovered: null, active: 0, stepped: null };
 
 // --- Tokenising ---------------------------------------------------------------
 
@@ -505,6 +505,18 @@ test.describe("mode", () => {
 		expect(mode({ result: one, focused: false, hovered: null })).toBe("single");
 		expect(mode({ result: zero, focused: false, hovered: null })).toBe("none");
 	});
+
+	test("a step beats rest, loses to hover (a preview) and focus, and beats a search only on one of its matches", () => {
+		const two = search(posts, "home");
+		const zero = search(posts, "zebra");
+		expect(mode({ result: null, focused: false, hovered: null, stepped: DESK })).toBe("step");
+		// A hover is a preview over a step, so it wins while it lasts.
+		expect(mode({ result: null, focused: false, hovered: TAHOE, stepped: DESK })).toBe("hover");
+		expect(mode({ result: null, focused: true, hovered: null, stepped: DESK })).toBe("browse");
+		expect(mode({ result: two, focused: false, hovered: null, stepped: DESK })).toBe("step");
+		expect(mode({ result: two, focused: false, hovered: null, stepped: TAHOE })).toBe("results");
+		expect(mode({ result: zero, focused: false, hovered: null, stepped: DESK })).toBe("none");
+	});
 });
 
 // --- Resolution ----------------------------------------------------------------
@@ -598,6 +610,42 @@ test.describe("resolve", () => {
 		const r = resolve(posts, GRID, { ...rest, query: "desk", hovered: TAHOE });
 		expect(r.mode).toBe("single");
 		expect(r.focus).toBe(DESK);
+	});
+
+	test("step: scatters exactly like a hover on that post, and the post is the active (ringed) one", () => {
+		const r = resolve(posts, GRID, { ...rest, stepped: DESK });
+		const h = resolve(posts, GRID, { ...rest, hovered: DESK });
+		expect(r.mode).toBe("step");
+		expect(r.focus).toBe(DESK);
+		expect(r.active).toBe(DESK);
+		expect(r.seed).toBe("post:3");
+		expect(r.block).toEqual(h.block);
+		expect(r.cells).toEqual(h.cells);
+		// A hover elsewhere previews that post; the step is still in the state
+		// and is the focus again once the hover is gone.
+		const previewed = resolve(posts, GRID, { ...rest, stepped: DESK, hovered: TAHOE });
+		expect(previewed.mode).toBe("hover");
+		expect(previewed.focus).toBe(TAHOE);
+		expect(resolve(posts, GRID, { ...rest, stepped: DESK, hovered: null }).focus).toBe(DESK);
+	});
+
+	test("a step on a search match: its card, every match still lit, the block off it", () => {
+		const r = resolve(posts, GRID, { ...rest, query: "home", stepped: DESK });
+		expect(r.mode).toBe("step");
+		expect(r.focus).toBe(DESK);
+		expect(r.active).toBe(DESK);
+		expect(r.matched).toEqual([DASHBOARD, DESK]);
+		expect(r.seed).toBe("post:3");
+		const lit = r.cells.filter((c) => c.state === "lit").map((c) => c.post);
+		expect(lit.sort()).toEqual([DESK, DASHBOARD].sort());
+		expect(inBlock(r.block!, [3, 2], posts[DESK].col, posts[DESK].row)).toBe(false);
+	});
+
+	test("a step on a post outside the search is ignored: the list stands", () => {
+		const r = resolve(posts, GRID, { ...rest, query: "home", stepped: TAHOE });
+		expect(r.mode).toBe("results");
+		expect(r.focus).toBe(DASHBOARD);
+		expect(r.active).toBe(DASHBOARD);
 	});
 
 	test("with the focus on an undodgeable cell the block is null and the cells still resolve", () => {

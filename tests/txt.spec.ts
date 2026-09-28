@@ -3,9 +3,11 @@ import { test, expect, type Page } from "@playwright/test";
 /**
  * THE BLOG: /txt, ITS CATEGORY AND TAG PAGES, AND A POST.
  *
- * The index is the QUILT — a grid of art tiles, one link per post, newest
- * first in DOM order, with fillers that are aria-hidden and carry no link (the
- * interaction contract — hover, search, keys — is pinned in its own spec).
+ * The index is the INSTRUMENT — one screen whose board is the quilt, a grid
+ * of art tiles, one link per post, newest first in DOM order, with fillers
+ * that are aria-hidden and carry no link, under a row of category tabs and
+ * over the controls and the timeline (the interaction contract — hover,
+ * search, keys, the stepper, the ruler — is pinned in its own spec).
  * The category and tag pages are still the year-grouped list, categories are
  * a closed set with real routes, and the older /txt/tag/<tag> URLs still
  * resolve. The properties worth pinning:
@@ -89,6 +91,23 @@ test.describe("/txt", () => {
 		await page.locator('[data-cell="post"] a[href="/txt/mega-desk"]').click();
 		await expect(page).toHaveURL(/\/txt\/mega-desk\/?$/);
 		await expect(page.locator("h1")).toHaveText("The Mega Desk");
+		await context.close();
+	});
+
+	test("the instrument's tabs and timeline ticks are plain links with scripting off", async ({
+		browser,
+	}) => {
+		const context = await browser.newContext({ javaScriptEnabled: false });
+		const page = await context.newPage();
+		await page.goto("/txt");
+		// One tab per category in the enum, plus ALL; one tick per post.
+		await expect(page.locator("[data-tabs] [data-tab]")).toHaveCount(5);
+		await expect(page.locator("[data-quilt-ruler] [data-mark]")).toHaveCount(5);
+		await page.locator('[data-tabs] [data-tab="thoughts"]').click();
+		await expect(page).toHaveURL(/\/txt\/?\?q=thoughts$/);
+		await page.locator('[data-quilt-ruler] [data-mark][data-no="002"]').click();
+		await expect(page).toHaveURL(/\/txt\/why-i-joined-fisker\/?$/);
+		await expect(page.locator("h1")).toHaveText(/Your Car Knows You.re Getting Sick/);
 		await context.close();
 	});
 });
