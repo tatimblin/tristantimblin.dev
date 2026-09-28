@@ -1,23 +1,35 @@
 ---
-// /txt — the blog's front page as a QUILT: a search bar, then a grid of every
-// post's art padded out with fillers, and the panel that takes a freed block
-// of it when a tile is hovered or the bar is used. The page computes the
+// /txt — the blog's front page as an INSTRUMENT: one device screen of four
+// rows. The tab row is the layout's (the site mark, WRITING, the category
+// tabs — each a query on the quilt). Then the BOARD: the quilt, a grid of
+// every post's art padded out with fillers, and the panel that takes a freed
+// block of it when a tile is hovered or stepped to or the bar is used. Then
+// the CONTROLS: the count, the search, and the − / + that step through the
+// matching posts. Then the TIMELINE: one tick per month, the posts as the
+// tall ones, an accent playhead on the post in focus. The page computes the
 // index at build (numbers, slots, reading time) and renders the design
 // system's contract; src/lib/quilt/index.ts drives it on the client from the
-// JSON embedded below. With scripting off it is the full quilt, every tile a
-// link, and the bar submits to ?q= (which the script reads on load).
+// JSON embedded below. With scripting off it is the full quilt, every tile,
+// tab and tick a link, and the bar submits to ?q= (which the script reads on
+// load).
 import { getCollection } from "astro:content";
 import BlogLayout from "../../layouts/BlogLayout.astro";
+import Panels from "@whois/design-system/Panels";
+import Panel from "@whois/design-system/Panel";
 import Quilt from "@whois/design-system/Quilt";
 import QuiltCell from "@whois/design-system/QuiltCell";
 import QuiltPanel from "@whois/design-system/QuiltPanel";
 import SearchBar from "@whois/design-system/SearchBar";
 import ArtFrame from "@whois/design-system/ArtFrame";
+import Figure from "@whois/design-system/Figure";
+import IconButton from "@whois/design-system/IconButton";
+import TimeRuler from "@whois/design-system/TimeRuler";
 import {
 	BLOG_DESCRIPTION,
 	BLOG_TITLE,
 	byDateDesc,
 	categories,
+	categoryIds,
 	monthOf,
 	padNo,
 	postHref,
@@ -43,12 +55,14 @@ const numbers = postNumbers(posts);
 const lg = layout({ cols: COLS, postCount: posts.length });
 const md = layout({ cols: COLS_MD, postCount: posts.length });
 
-type QuiltPost = IndexedPost & { colMd: number; rowMd: number };
+type QuiltPost = IndexedPost & { colMd: number; rowMd: number; words: number; ym: string };
 const index: QuiltPost[] = posts.map((post) => {
 	const no = numbers.get(post.id)!;
 	const month = monthOf(post.data.date);
 	const at = toColRow(lg.slots[no - 1], COLS);
 	const atMd = toColRow(md.slots[no - 1], COLS_MD);
+	const stats = readingStats(post.body);
+	const date = new Date(post.data.date);
 	return {
 		id: post.id,
 		no,
@@ -56,10 +70,12 @@ const index: QuiltPost[] = posts.map((post) => {
 		excerpt: post.data.excerpt,
 		category: post.data.category,
 		tags: post.data.tags,
-		year: String(post.data.date.getUTCFullYear()),
+		year: String(date.getUTCFullYear()),
 		month: month.short,
 		monthLong: month.long,
-		minutes: readingStats(post.body).minutes,
+		minutes: stats.minutes,
+		words: stats.words,
+		ym: `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`,
 		href: postHref(post.id),
 		col: at.col,
 		row: at.row,
@@ -68,6 +84,7 @@ const index: QuiltPost[] = posts.map((post) => {
 	};
 });
 const art = new Map(posts.map((post) => [post.id, artFor(post.id)]));
+const maxMinutes = Math.max(1, ...index.map((p) => p.minutes));
 
 // Fillers: every cell the posts leave on the desktop grid, and the first
 // (tablet cells − posts) of them also get a tablet slot. Should the tablet
@@ -88,9 +105,19 @@ const fillers = Array.from({ length: fillerCount }, (_, k) => {
 	};
 });
 
-// The panel's build-time faces. The card is a placeholder the script refills;
-// browse and nothing are real links to ?q=, so they work with scripting off.
+// The tabs: a category is a query, so each is a real link to ?q=<id> (and
+// ALL to /txt); the script upgrades them and keeps aria-current in step with
+// the query. The page is static, so at build ALL is current; the script
+// corrects it from ?q= on load.
 const q = (word: string) => `/txt?q=${encodeURIComponent(word)}`;
+const tabs = [
+	{ label: "all", href: "/txt", query: "", active: true },
+	...categoryIds.map((id) => ({ label: categories[id].label.toLowerCase(), href: q(id), query: id })),
+];
+
+// The panel's build-time faces. The card is the latest post (the script
+// refills it); browse and nothing are real links to ?q=, so they work with
+// scripting off.
 const catCounts = new Map<string, number>();
 for (const p of index) if (p.category) catCounts.set(p.category, (catCounts.get(p.category) ?? 0) + 1);
 const browse = {
@@ -117,14 +144,44 @@ const nothing = {
 const first = index[0];
 const card = first
 	? {
-			kicker: `NO. ${padNo(first.no)} · ${first.month.toUpperCase()} ${first.year}`,
+			kicker: `NO. ${padNo(first.no)}`,
+			category: first.category,
+			minutes: first.minutes,
+			words: first.words,
+			month: first.month,
+			year: first.year,
 			title: first.title,
 			blurb: first.excerpt,
-			meta: `${first.category ?? ""} · ${first.minutes} min`,
+			gauge: {
+				value: first.minutes / maxMinutes,
+				caption: `${first.minutes} of ${maxMinutes} min`,
+				label: `${first.minutes} of ${maxMinutes} minutes`,
+			},
 			href: first.href,
 		}
 	: undefined;
 const captionOf = (p: QuiltPost) => `${p.month} ${p.year}${p.category ? ` · ${p.category}` : ""}`;
+
+// The timeline: one tick per month from January of the first post's year
+// through December of the current year (or of the newest post's, if a post
+// is dated past it), so a year label sits under every January and the
+// range grows a year at a time.
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const years = index.map((p) => Number(p.year));
+const firstYear = years.length ? Math.min(...years) : new Date().getUTCFullYear();
+const lastYear = Math.max(new Date().getUTCFullYear(), ...years);
+const timeline = {
+	from: `${firstYear}-01`,
+	to: `${lastYear}-12`,
+	marks: index.map((p) => ({
+		month: p.ym,
+		label: `${p.title}, ${cap(p.month)} ${p.year}`,
+		href: p.href,
+		no: padNo(p.no),
+	})),
+	playhead: first?.ym,
+	readout: first ? `latest · ${first.month} ${first.year}` : undefined,
+};
 ---
 
 <BlogLayout
@@ -132,56 +189,89 @@ const captionOf = (p: QuiltPost) => `${p.month} ${p.year}${p.category ? ` · ${p
 	description={BLOG_DESCRIPTION}
 	heading={BLOG_TITLE}
 	width="full"
+	tabs={tabs}
 >
-	<form class="blog__search" action="/txt" method="get" data-quilt-form>
-		<SearchBar
-			id="quilt-search"
-			label="search"
-			placeholder="a title, a topic, a year…"
-			count={`${index.length} posts`}
-			hint="/"
-			controls="quilt-panel-results"
+	<Panel class="blog__board">
+		<Quilt cols={COLS} rows={lg.rows} colsMd={COLS_MD} rowsMd={md.rows} aria-label="Posts">
+			{index.map((p) => (
+				<QuiltCell
+					col={p.col}
+					row={p.row}
+					colMd={p.colMd}
+					rowMd={p.rowMd}
+					href={p.href}
+					label={p.title}
+					no={padNo(p.no)}
+				>
+					{art.get(p.id) && <ArtFrame svg={art.get(p.id)!} decorative />}
+					<Fragment slot="caption">{captionOf(p)}</Fragment>
+				</QuiltCell>
+			))}
+			{fillers.map((f) => (
+				<QuiltCell
+					col={f.at?.col}
+					row={f.at?.row}
+					colMd={f.atMd?.col}
+					rowMd={f.atMd?.row}
+					filler
+					data-cell-lg={f.cell}
+					data-cell-md={f.cellMd}
+				>
+					<ArtFrame svg={fillerArtFor(f.file)} decorative />
+				</QuiltCell>
+			))}
+			<QuiltPanel
+				id="quilt-panel"
+				mode="hidden"
+				col={1}
+				row={1}
+				card={card}
+				browse={browse}
+				results={{ label: "", items: [] }}
+				nothing={nothing}
+			/>
+		</Quilt>
+	</Panel>
+
+	<Panels direction="row" class="blog__controls" data-controls>
+		<Panel pad="none" class="blog__cell blog__cell--count">
+			<Figure size="xl" data-search-count aria-live="polite">
+				<span data-count="figure">{index.length}</span>
+				<Fragment slot="unit"><span data-count="label">posts</span></Fragment>
+			</Figure>
+		</Panel>
+		<Panel pad="none" class="blog__cell blog__cell--search">
+			<form class="blog__search" action="/txt" method="get" data-quilt-form>
+				<SearchBar
+					variant="cell"
+					id="quilt-search"
+					label="search"
+					placeholder="a title, a topic, a year…"
+					hint="/"
+					controls="quilt-panel-results"
+				/>
+			</form>
+		</Panel>
+		<Panel pad="none" class="blog__cell blog__cell--step">
+			<IconButton variant="secondary" size="large" rounded glyph="−" aria-label="Previous post" data-step="older" type="button" />
+		</Panel>
+		<Panel pad="none" class="blog__cell blog__cell--step">
+			<IconButton variant="secondary" size="large" rounded glyph="+" aria-label="Next post" data-step="newer" type="button" />
+		</Panel>
+	</Panels>
+
+	<Panel pad="none" class="blog__timeline">
+		<TimeRuler
+			from={timeline.from}
+			to={timeline.to}
+			marks={timeline.marks}
+			playhead={timeline.playhead}
+			readout={timeline.readout}
+			label="timeline"
+			data-quilt-ruler
 		/>
-	</form>
-	<Quilt cols={COLS} rows={lg.rows} colsMd={COLS_MD} rowsMd={md.rows} aria-label="Posts">
-		{index.map((p) => (
-			<QuiltCell
-				col={p.col}
-				row={p.row}
-				colMd={p.colMd}
-				rowMd={p.rowMd}
-				href={p.href}
-				label={p.title}
-				no={padNo(p.no)}
-			>
-				{art.get(p.id) && <ArtFrame svg={art.get(p.id)!} decorative />}
-				<Fragment slot="caption">{captionOf(p)}</Fragment>
-			</QuiltCell>
-		))}
-		{fillers.map((f) => (
-			<QuiltCell
-				col={f.at?.col}
-				row={f.at?.row}
-				colMd={f.atMd?.col}
-				rowMd={f.atMd?.row}
-				filler
-				data-cell-lg={f.cell}
-				data-cell-md={f.cellMd}
-			>
-				<ArtFrame svg={fillerArtFor(f.file)} decorative />
-			</QuiltCell>
-		))}
-		<QuiltPanel
-			id="quilt-panel"
-			mode="hidden"
-			col={1}
-			row={1}
-			card={card}
-			browse={browse}
-			results={{ label: "", items: [] }}
-			nothing={nothing}
-		/>
-	</Quilt>
+	</Panel>
+
 	<script
 		type="application/json"
 		data-quilt-index

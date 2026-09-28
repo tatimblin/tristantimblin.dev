@@ -34,6 +34,19 @@
  * number, or the query — so the same hover scatters the same way on every
  * load, and a test can pin it.
  *
+ * STEPPING. The instrument's − / + buttons and the timeline's ticks PIN a
+ * post: `stepped` is a focus that behaves like a hover — the tile lit, the
+ * rest scattered by that post's seed, the card in a block that dodges it —
+ * but it also takes the accent ring (it was chosen, not passed over) and it
+ * persists until something else happens: typing or focusing the bar clears
+ * it, Escape clears it, a step or a tick moves it. A hover on another tile
+ * is a passing preview — the hovered card shows, and the step is back the
+ * moment the pointer leaves — so a pointer crossing the board on its way
+ * somewhere never loses the step. During a search a stepped
+ * post must be one of the matches (the wiring steps through them in
+ * chronological order); it then shows its card in place of the list, with
+ * the other matches still lit, and the list comes back when it is cleared.
+ *
  * THE LAYOUT. DOM order is newest first; a post's grid SLOT is a seeded
  * permutation of the cells keyed by the grid size, indexed by the post's
  * chronological number, so a new post takes a fresh slot and the old ones
@@ -59,6 +72,10 @@ export interface IndexedPost {
 	/** "february" */
 	monthLong: string;
 	minutes: number;
+	/** The word count (the card's stat; the engine does not read it). */
+	words?: number;
+	/** "2026-02" — the post's month on the time ruler (the engine does not read it). */
+	ym?: string;
 	href: string;
 	/** 1-based grid position, from `layout()`. */
 	col: number;
@@ -93,7 +110,7 @@ export interface Segment {
 	hl: boolean;
 }
 
-export type Mode = "rest" | "hover" | "browse" | "results" | "single" | "none";
+export type Mode = "rest" | "hover" | "step" | "browse" | "results" | "single" | "none";
 
 export type CellState = "lit" | "faint" | "gone";
 
@@ -105,6 +122,8 @@ export interface QuiltState {
 	hovered: number | null;
 	/** Position in the result list the arrow keys have moved to. */
 	active: number;
+	/** Index (into `posts`) of the post the stepper or the ruler pinned, or null. */
+	stepped?: number | null;
 }
 
 export interface CellResolution {
@@ -124,9 +143,9 @@ export interface Resolution {
 	result: SearchResult | null;
 	/** Post indices that match, best first (empty when not searching). */
 	matched: number[];
-	/** The post the arrow keys sit on (results/single), else null. */
+	/** The post the arrow keys sit on (results/single), or the stepped post; else null. */
 	active: number | null;
-	/** The post the panel must not cover: hovered, or the active result. */
+	/** The post the panel must not cover: hovered, stepped, or the active result. */
 	focus: number | null;
 	/** Where the panel sits; null at rest, or when no block can avoid the focus. */
 	block: BlockAt | null;
@@ -455,13 +474,24 @@ export interface ModeOptions {
 	result: SearchResult | null;
 	focused: boolean;
 	hovered: number | null;
+	stepped?: number | null;
 }
 
-/** Typing wins over focus, which wins over hover, which wins over rest. */
-export function mode({ result, focused, hovered }: ModeOptions): Mode {
-	if (result) return result.hits.length === 0 ? "none" : result.hits.length === 1 ? "single" : "results";
+/**
+ * Typing wins over focus, which wins over hover, which wins over a step,
+ * which wins over rest — a hover is a passing preview over a pinned step,
+ * and the step is back the moment the pointer leaves — except that a step on
+ * one of a search's matches shows that match's card over the list.
+ */
+export function mode({ result, focused, hovered, stepped = null }: ModeOptions): Mode {
+	if (result) {
+		if (result.hits.length === 0) return "none";
+		if (stepped !== null && result.hits.some((h) => h.i === stepped)) return "step";
+		return result.hits.length === 1 ? "single" : "results";
+	}
 	if (focused) return "browse";
 	if (hovered !== null) return "hover";
+	if (stepped !== null) return "step";
 	return "rest";
 }
 
@@ -478,15 +508,24 @@ export interface Grid {
 export function resolve(posts: IndexedPost[], grid: Grid, state: QuiltState): Resolution {
 	const { cols, rows, block = PANEL_BLOCK } = grid;
 	const result = search(posts, state.query);
-	const m = mode({ result, focused: state.focused, hovered: state.hovered });
+	const stepped = state.stepped ?? null;
+	const m = mode({ result, focused: state.focused, hovered: state.hovered, stepped });
 	const matched = result ? result.hits.map((h) => h.i) : [];
-	const active = matched.length ? matched[Math.min(Math.max(state.active, 0), matched.length - 1)] : null;
-	const focus = m === "hover" ? state.hovered : m === "single" || m === "results" ? active : null;
+	const active =
+		m === "step"
+			? stepped
+			: matched.length
+				? matched[Math.min(Math.max(state.active, 0), matched.length - 1)]
+				: null;
+	const focus =
+		m === "hover" ? state.hovered : m === "step" || m === "single" || m === "results" ? active : null;
 	const keep = new Set(matched);
 	const block_ = m === "rest" ? null : chooseBlock({ cols, rows, block, posts, keep, focus });
 
+	// A step scatters the way a hover on that post does, search or no search:
+	// the stepped post is the picture, whatever the query.
 	const seed =
-		m === "hover" && focus !== null
+		(m === "hover" || m === "step") && focus !== null
 			? `post:${posts[focus].no}`
 			: result
 				? `q:${result.tokens.join(" ")}`
@@ -511,8 +550,8 @@ export function resolve(posts: IndexedPost[], grid: Grid, state: QuiltState): Re
 		const roll = scatter({ cellIndex: index, seed });
 		// Browsing: the posts stay lit and the fillers only dim — nothing vanishes.
 		if (m === "browse") return post !== null ? lit : { state: "faint" as const, delay: roll.delay };
-		if (m === "hover" && post === focus) return lit;
-		if ((m === "results" || m === "single") && post !== null && keep.has(post)) return lit;
+		if ((m === "hover" || m === "step") && post === focus) return lit;
+		if ((m === "results" || m === "single" || m === "step") && post !== null && keep.has(post)) return lit;
 		return { state: roll.gone ? ("gone" as const) : ("faint" as const), delay: roll.delay };
 	}
 

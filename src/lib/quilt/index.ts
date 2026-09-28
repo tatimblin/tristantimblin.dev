@@ -1,15 +1,23 @@
 /**
- * THE QUILT'S WIRING — the DOM side of /txt.
+ * THE INSTRUMENT'S WIRING — the DOM side of /txt.
  *
- * The page renders the design system's contract (Quilt, QuiltCell,
- * QuiltPanel, SearchBar) and embeds its index as JSON; this module reads
- * both, keeps the one piece of state — `{ query, focused, hovered, active }`
- * — and on every change asks the engine (./engine.ts, pure) what the grid
- * should look like, then PAINTS the answer:
+ * The page renders the design system's contract (Panels, Quilt, QuiltCell,
+ * QuiltPanel, SearchBar, the tabs, the stepper, TimeRuler) and embeds its
+ * index as JSON; this module reads both, keeps the one piece of state —
+ * `{ query, focused, hovered, active, stepped }` — and on every change asks
+ * the engine (./engine.ts, pure) what the grid should look like, then
+ * PAINTS the answer:
  *
  *   a cell       data-state="lit | faint | gone", --scatter-delay, data-active
- *   the panel    data-mode, --panel-col / --panel-row, the faces' text
- *   the input    aria-expanded, aria-activedescendant, the live count
+ *   the panel    data-mode, --panel-col / --panel-row, the card's fields,
+ *                the gauge's --ring-value
+ *   the input    aria-expanded, aria-activedescendant
+ *   the tabs     aria-current on the tab whose query is the query
+ *   the count    the figure and its label (`5 posts`, `2 of 5 posts`)
+ *   the stepper  disabled when nothing matches
+ *   the ruler    --at (the playhead on the focused post's month, at rest on
+ *                the newest matching post), data-dim on a mark out of the
+ *                filter, the readout
  *
  * Nothing here decides anything: which cells scatter, where the block goes
  * and what the search found are the engine's, and are tested there.
@@ -20,19 +28,28 @@
  * or on the panel — so the card's READ link stays reachable — and leaving
  * both returns to rest after LEAVE_MS, which an arrival on another tile or
  * the panel cancels: moving tile to tile crosses the grid gap without the
- * quilt flashing back to rest in between. `/` and ⌘K focus the bar from anywhere that is not editable.
- * In the bar: ↑↓ move the active result (its tile takes the accent ring),
- * Enter opens it, Escape clears the query and, when it is already empty,
- * blurs. Links to `?q=` inside the panel (the browse pills, the nothing
- * face's suggestions) set the query in place instead of reloading. `?q=` on
- * the URL is read on load and kept in step with the input, debounced,
- * through replaceState — so a search is a link.
+ * quilt flashing back to rest in between. `/` and ⌘K focus the bar from
+ * anywhere that is not editable. In the bar: ↑↓ move the active result (its
+ * tile takes the accent ring), Enter opens it, Escape clears the step, then
+ * the query, then blurs. Links to `?q=` inside the panel (the browse pills,
+ * the nothing face's suggestions) and the TABS set the query in place
+ * instead of reloading. `?q=` on the URL is read on load and kept in step
+ * with the input, debounced, through replaceState — so a search is a link.
+ *
+ * STEPPING. − and + PIN a post (`stepped`): the older / newer one among the
+ * posts that match (chronological, newest first), from the one in focus, or
+ * from rest the newest (−) or the oldest (+), wrapping. A click on a
+ * timeline tick pins that post. A step holds until Escape, typing, focusing
+ * the bar or a tab; a hover on another tile only previews over it and the
+ * step is back when the pointer leaves — the pointer being elsewhere never
+ * clears it, which is what makes it the touch-friendly way through the
+ * quilt.
  *
  * VIEWPORTS. The engine runs on the desktop grid (5 columns) at ≥ 1024 and
  * the tablet one (3 columns, the posts' `colMd`/`rowMd`) below that. On a
  * phone (< 640) the same machine runs but nothing is hovered: the panel is
- * in flow, a tap navigates, and a cell that would be `gone` is painted
- * `faint` so the list never shows holes.
+ * in flow, a tap navigates, a step shows the card above the list, and a
+ * cell that would be `gone` is painted `faint` so the list never shows holes.
  *
  * LIFECYCLE. Wired on astro:page-load, guarded by data-quilt-wired on the
  * grid; the document-level listeners are removed on astro:before-swap.
@@ -55,6 +72,8 @@ import {
 interface QuiltPost extends IndexedPost {
 	colMd: number;
 	rowMd: number;
+	words: number;
+	ym: string;
 }
 interface QuiltIndex {
 	posts: QuiltPost[];
@@ -77,6 +96,8 @@ const pad = (no: number) => String(no).padStart(3, "0");
 const isEditable = (el: Element | null) =>
 	!!el &&
 	((el as HTMLElement).isContentEditable || /^(input|textarea|select)$/i.test(el.tagName));
+const plainClick = (e: MouseEvent) =>
+	e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
 
 function wire(): (() => void) | null {
 	const root = document.querySelector<HTMLElement>("[data-quilt]");
@@ -88,10 +109,10 @@ function wire(): (() => void) | null {
 
 	const { posts, grid } = JSON.parse(data.textContent || "{}") as QuiltIndex;
 	const postsMd = posts.map((p) => ({ ...p, col: p.colMd, row: p.rowMd }));
+	const maxMinutes = Math.max(1, ...posts.map((p) => p.minutes));
 
 	// The DOM, once. Post cells are in DOM order, which is the index's order.
 	const form = input.closest("form");
-	const count = document.querySelector<HTMLElement>("[data-search-count]");
 	const cells = [...root.querySelectorAll<HTMLElement>("[data-cell]")];
 	const postCells = cells.filter((c) => c.dataset.cell === "post");
 	const fillerCells = cells.filter((c) => c.dataset.cell === "filler");
@@ -99,9 +120,15 @@ function wire(): (() => void) | null {
 		panel.querySelector<T>(sel);
 	const card = {
 		kicker: hook('[data-card="kicker"]'),
+		category: hook('[data-card="category"]'),
+		minutes: hook('[data-card="minutes"]'),
+		words: hook('[data-card="words"]'),
+		month: hook('[data-card="month"]'),
+		year: hook('[data-card="year"]'),
 		title: hook('[data-card="title"]'),
 		blurb: hook('[data-card="blurb"]'),
-		meta: hook('[data-card="meta"]'),
+		gauge: hook('[data-card="gauge"]'),
+		gaugeCaption: hook('[data-card="gauge-caption"]'),
 		why: hook('[data-card="why"]'),
 		link: hook<HTMLAnchorElement>('[data-card="link"]'),
 	};
@@ -109,15 +136,35 @@ function wire(): (() => void) | null {
 	const list = hook<HTMLOListElement>('[data-results="list"]');
 	const rowTemplate = hook<HTMLTemplateElement>("template[data-result-template]");
 	const noneQuery = hook('[data-none="query"]');
+	// The instrument around the board.
+	const tabs = [...document.querySelectorAll<HTMLAnchorElement>("[data-tab]")];
+	const tabsNav = document.querySelector<HTMLElement>("[data-tabs]");
+	const countFigure = document.querySelector<HTMLElement>('[data-count="figure"]');
+	const countLabel = document.querySelector<HTMLElement>('[data-count="label"]');
+	const steppers = [...document.querySelectorAll<HTMLButtonElement>("[data-step]")];
+	const ruler = document.querySelector<HTMLElement>("[data-quilt-ruler]");
+	const readout = ruler?.querySelector<HTMLElement>('[data-time-ruler="readout"]') ?? null;
+	const months = ruler ? [...ruler.querySelectorAll<HTMLElement>("[data-month]")] : [];
+	const monthAt = new Map(months.map((m, k) => [m.dataset.month!, k]));
+	const marks = ruler ? [...ruler.querySelectorAll<HTMLElement>("[data-mark]")] : [];
+	const postByNo = new Map(posts.map((p, i) => [p.no, i]));
 
 	const mqLg = matchMedia("(min-width: 1024px)");
 	const mqPhone = matchMedia("(max-width: 639px)");
 	const view = (): View => (mqLg.matches ? "lg" : mqPhone.matches ? "phone" : "md");
 
-	const state: QuiltState = { query: "", focused: false, hovered: null, active: 0 };
+	const state: QuiltState = { query: "", focused: false, hovered: null, active: 0, stepped: null };
 	/** The last resolution painted — what the key handlers act on. */
 	let last: Resolution | null = null;
 	let activePos = -1;
+
+	/** The posts the stepper walks: the matches, newest first, or every
+	 *  post when nothing is typed (DOM order is newest first). */
+	const orderOf = (res: Resolution | null): number[] => {
+		if (!res) return [];
+		if (res.result) return [...res.matched].sort((a, b) => posts[b].no - posts[a].no);
+		return posts.map((_, i) => i);
+	};
 
 	// --- Paint ------------------------------------------------------------------
 
@@ -130,10 +177,11 @@ function wire(): (() => void) | null {
 		let face: string = mode;
 
 		// No block can dodge the focus (a post on the grid's one unavoidable
-		// cell). Hovering it shows nothing; a search still needs its list, so
-		// the block is chosen as if nothing were focused and covers the tile.
+		// cell). Hovering or stepping to it shows nothing; a search still needs
+		// its list, so the block is chosen as if nothing were focused and
+		// covers the tile.
 		if (mode !== "rest" && !block && v !== "phone") {
-			if (mode === "hover") face = "hidden";
+			if (mode === "hover" || mode === "step") face = "hidden";
 			else {
 				block = chooseBlock({ ...g, posts: ps, keep: new Set(res.matched), focus: null });
 				const at = block;
@@ -149,21 +197,28 @@ function wire(): (() => void) | null {
 		// On a phone the panel sits in flow above the list and covers nothing, but
 		// the resolution is the tablet grid's, where cells under the block come
 		// back `gone` — matches included. Undo that for posts the state keeps lit
-		// (a match, or any post while browsing), or a result shows as a faded tile.
-		if (v === "phone" && (mode === "results" || mode === "single" || mode === "browse")) {
+		// (a match, the stepped post, or any post while browsing), or a result
+		// shows as a faded tile.
+		if (v === "phone" && mode !== "rest" && mode !== "hover" && mode !== "none") {
 			const keep = new Set(res.matched);
+			if (res.focus !== null) keep.add(res.focus);
 			resolved = resolved.map((c) =>
 				c.post !== null && (mode === "browse" || keep.has(c.post)) ? { ...c, state: "lit", delay: 0 } : c,
 			);
 		}
 		last = { ...res, block, cells: resolved };
-		activePos = res.active === null ? -1 : res.matched.indexOf(res.active);
+		activePos = res.active === null || mode === "step" ? -1 : res.matched.indexOf(res.active);
 
-		// Cells.
+		// Cells. The ring: the active result while searching, the stepped post.
 		const byPost = new Map<number, CellResolution>();
 		for (const c of resolved) if (c.post !== null) byPost.set(c.post, c);
 		postCells.forEach((el, i) =>
-			paintCell(el, byPost.get(i), v, mode === "results" && i === res.active),
+			paintCell(
+				el,
+				byPost.get(i),
+				v,
+				(mode === "results" && i === res.active) || (mode === "step" && i === res.focus),
+			),
 		);
 		for (const el of fillerCells) {
 			if (v === "phone") continue;
@@ -174,14 +229,15 @@ function wire(): (() => void) | null {
 
 		// The panel.
 		if (face === "rest") face = "hidden";
-		else if (face === "hover" || face === "single") face = "card";
+		else if (face === "hover" || face === "single" || face === "step") face = "card";
 		panel.dataset.mode = face;
 		if (block) {
 			panel.style.setProperty("--panel-col", String(block.col));
 			panel.style.setProperty("--panel-row", String(block.row));
 		}
 		if (face === "card" && res.focus !== null) {
-			fillCard(ps[res.focus], mode === "single" ? res.result?.hits[0].why ?? null : null);
+			const hit = res.result?.hits.find((h) => h.i === res.focus);
+			fillCard(posts[res.focus], hit?.why ?? null);
 		} else if (face === "results" && res.result) {
 			fillResults(ps, res);
 		} else if (face === "none" && noneQuery) {
@@ -195,10 +251,53 @@ function wire(): (() => void) | null {
 		} else {
 			input.removeAttribute("aria-activedescendant");
 		}
-		if (count) {
-			count.textContent = res.result
-				? `${res.result.hits.length} of ${posts.length}`
-				: `${posts.length} posts`;
+
+		// The tabs: current when the query IS a category (or empty, for all).
+		const q = state.query.trim().toLowerCase();
+		for (const tab of tabs) {
+			if ((tab.dataset.tab ?? "") === q) tab.setAttribute("aria-current", "page");
+			else tab.removeAttribute("aria-current");
+		}
+
+		// The count.
+		if (countFigure && countLabel) {
+			if (res.result) {
+				countFigure.textContent = String(res.result.hits.length);
+				countLabel.textContent = `of ${posts.length} posts`;
+			} else {
+				countFigure.textContent = String(posts.length);
+				countLabel.textContent = "posts";
+			}
+		}
+
+		// The stepper: nothing to step through when nothing matches.
+		const order = orderOf(res);
+		for (const b of steppers) b.disabled = order.length === 0;
+
+		// The ruler: the playhead on the focused post's month, at rest on the
+		// newest matching post (the newest of all when nothing matches); marks
+		// outside the filter dim; the readout names the post in focus.
+		if (ruler) {
+			const at = res.focus ?? order[0] ?? 0;
+			const p = posts[at];
+			if (p) {
+				const k = monthAt.get(p.ym);
+				if (k !== undefined && months.length) {
+					ruler.style.setProperty("--at", `${(((k + 0.5) / months.length) * 100).toFixed(3)}%`);
+				}
+				if (readout) {
+					readout.textContent =
+						res.focus !== null ? `${p.month} ${p.year} · no. ${pad(p.no)}` : `latest · ${p.month} ${p.year}`;
+				}
+			}
+			const keep = new Set(res.matched);
+			for (const mark of marks) {
+				const i = postByNo.get(Number(mark.dataset.no));
+				const dim = !!res.result && (i === undefined || !keep.has(i));
+				mark.toggleAttribute("data-dim", dim);
+				if (dim) mark.setAttribute("aria-disabled", "true");
+				else mark.removeAttribute("aria-disabled");
+			}
 		}
 	}
 
@@ -218,11 +317,20 @@ function wire(): (() => void) | null {
 
 	const metaOf = (p: IndexedPost) => `${p.month} ${p.year}${p.category ? ` · ${p.category}` : ""}`;
 
-	function fillCard(p: IndexedPost, why: string | null) {
-		if (card.kicker) card.kicker.textContent = `NO. ${pad(p.no)} · ${p.month.toUpperCase()} ${p.year}`;
+	function fillCard(p: QuiltPost, why: string | null) {
+		if (card.kicker) card.kicker.textContent = `NO. ${pad(p.no)}`;
+		if (card.category) card.category.textContent = p.category ?? "";
+		if (card.minutes) card.minutes.textContent = String(p.minutes);
+		if (card.words) card.words.textContent = String(p.words);
+		if (card.month) card.month.textContent = p.month;
+		if (card.year) card.year.textContent = p.year;
 		if (card.title) card.title.textContent = p.title;
 		if (card.blurb) card.blurb.textContent = p.excerpt;
-		if (card.meta) card.meta.textContent = `${p.category ? `${p.category} · ` : ""}${p.minutes} min`;
+		if (card.gauge) {
+			card.gauge.style.setProperty("--ring-value", String(Math.round((p.minutes / maxMinutes) * 100)));
+			card.gauge.setAttribute("aria-label", `${p.minutes} of ${maxMinutes} minutes`);
+		}
+		if (card.gaugeCaption) card.gaugeCaption.textContent = `${p.minutes} of ${maxMinutes} min`;
 		if (card.why) card.why.textContent = why ? `MATCHED ${why}` : "";
 		if (card.link) card.link.href = p.href;
 	}
@@ -281,11 +389,35 @@ function wire(): (() => void) | null {
 		state.query = q;
 		state.active = 0;
 		state.hovered = null;
+		state.stepped = null;
 		paint();
 		syncUrl();
 	}
 
-	/** The pointer or focus has arrived on post `i`. */
+	/** Pin post `i`: the stepper's and the ruler's path. */
+	function pin(i: number) {
+		holdHover();
+		state.hovered = null;
+		state.stepped = i;
+		paint();
+	}
+
+	/** − (older, dir 1) and + (newer, dir −1) through the matching posts,
+	 *  newest first, from the post in focus; from rest − takes the newest
+	 *  and + the oldest, and both wrap. */
+	function step(dir: 1 | -1) {
+		const order = orderOf(last);
+		if (!order.length) return;
+		const cur = last?.focus ?? null;
+		const at = cur === null ? -1 : order.indexOf(cur);
+		const n = order.length;
+		const k = at < 0 ? (dir > 0 ? 0 : n - 1) : (at + dir + n) % n;
+		pin(order[k]);
+	}
+
+	/** The pointer or focus has arrived on post `i`. A step is not in the
+	 *  way: a hover previews over it and it returns on leave (the engine's
+	 *  order), so nothing here needs to know about it. */
 	function enter(i: number) {
 		if (last?.result) {
 			// Searching: a lit tile under the pointer becomes the active result.
@@ -336,31 +468,41 @@ function wire(): (() => void) | null {
 		const pos = Math.max(activePos, 0);
 		if (e.key === "ArrowDown" && n) {
 			e.preventDefault();
+			state.stepped = null;
 			state.active = (pos + 1) % n;
 			paint();
 		} else if (e.key === "ArrowUp" && n) {
 			e.preventDefault();
+			state.stepped = null;
 			state.active = (pos - 1 + n) % n;
 			paint();
 		} else if (e.key === "Enter") {
 			e.preventDefault();
 			const m = last?.mode;
-			if (last && last.active !== null && (m === "results" || m === "single")) {
-				navigate(posts[last.active].href);
+			if (last && last.focus !== null && (m === "results" || m === "single" || m === "step")) {
+				navigate(posts[last.focus].href);
 			}
 		} else if (e.key === "Escape") {
 			e.preventDefault();
-			if (state.query) setQuery("");
+			if (state.stepped !== null) {
+				state.stepped = null;
+				paint();
+			} else if (state.query) setQuery("");
 			else input.blur();
 		}
 	};
 
 	const onDocKey = (e: KeyboardEvent) => {
 		if (e.defaultPrevented) return;
+		const t = e.target as Element | null;
+		if (e.key === "Escape" && state.stepped !== null && !isEditable(t)) {
+			state.stepped = null;
+			paint();
+			return;
+		}
 		const slash = e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey;
 		const cmdK = (e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey) && !e.altKey;
 		if (!slash && !cmdK) return;
-		const t = e.target as Element | null;
 		if (isEditable(t) && t !== input) return;
 		if (t === input && slash) return;
 		e.preventDefault();
@@ -389,9 +531,10 @@ function wire(): (() => void) | null {
 	const onFocusIn = (e: FocusEvent) => {
 		const t = e.target as HTMLElement;
 		if (t === input) {
-			if (!state.focused || state.hovered !== null) {
+			if (!state.focused || state.hovered !== null || state.stepped !== null) {
 				state.focused = true;
 				state.hovered = null;
+				state.stepped = null;
 				paint();
 			}
 			return;
@@ -425,15 +568,44 @@ function wire(): (() => void) | null {
 	const onPanelDown = (e: PointerEvent) => e.preventDefault();
 
 	const here = location.pathname.replace(/\/$/, "");
-	const onPanelClick = (e: MouseEvent) => {
-		if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-		const a = (e.target as Element).closest("a");
-		if (!a || !panel.contains(a)) return;
+	const isQueryLink = (a: HTMLAnchorElement) => {
 		const url = new URL(a.href, location.href);
-		if (url.pathname.replace(/\/$/, "") !== here || !url.searchParams.has("q")) return;
+		return url.pathname.replace(/\/$/, "") === here && url.searchParams.has("q");
+	};
+	const onPanelClick = (e: MouseEvent) => {
+		if (!plainClick(e)) return;
+		const a = (e.target as Element).closest("a");
+		if (!a || !panel.contains(a) || !isQueryLink(a)) return;
 		e.preventDefault();
-		setQuery(url.searchParams.get("q") ?? "");
+		setQuery(new URL(a.href, location.href).searchParams.get("q") ?? "");
 		input.focus();
+	};
+
+	// A tab is a query, set in place; the focus stays on the tab.
+	const onTabClick = (e: MouseEvent) => {
+		if (!plainClick(e)) return;
+		const a = (e.target as Element).closest<HTMLAnchorElement>("[data-tab]");
+		if (!a) return;
+		e.preventDefault();
+		setQuery(a.dataset.tab ?? "");
+	};
+
+	const onStepClick = (e: MouseEvent) => {
+		const b = (e.currentTarget as HTMLButtonElement) ?? null;
+		if (!b || b.disabled) return;
+		step(b.dataset.step === "newer" ? -1 : 1);
+	};
+
+	// A lit tick pins its post; a dim one is not a control, and with the
+	// script off every tick is simply a link to its post.
+	const onRulerClick = (e: MouseEvent) => {
+		if (!plainClick(e)) return;
+		const a = (e.target as Element).closest<HTMLAnchorElement>("[data-mark]");
+		if (!a) return;
+		e.preventDefault();
+		if (a.hasAttribute("data-dim")) return;
+		const i = postByNo.get(Number(a.dataset.no));
+		if (i !== undefined) pin(i);
 	};
 
 	const onListOver = (e: PointerEvent) => {
@@ -458,6 +630,9 @@ function wire(): (() => void) | null {
 	panel.addEventListener("pointerdown", onPanelDown);
 	panel.addEventListener("click", onPanelClick);
 	list?.addEventListener("pointerover", onListOver);
+	tabsNav?.addEventListener("click", onTabClick);
+	for (const b of steppers) b.addEventListener("click", onStepClick);
+	ruler?.addEventListener("click", onRulerClick);
 	document.addEventListener("keydown", onDocKey);
 	document.addEventListener("focusin", onFocusIn);
 	document.addEventListener("focusout", onFocusOut);

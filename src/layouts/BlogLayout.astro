@@ -1,23 +1,38 @@
 ---
 // BlogLayout — the chrome for the blog's list pages: /txt, /txt/category/<id>
-// and /txt/tag/<tag>. The site header in the flow, then one
-// column holding a page header (kicker, h1, lede) and whatever the page puts in
-// the slot — a PostIndex, or the quilt. Pages stay thin: they fetch and group,
-// this owns the shell. `width="wide"` opens the column to the site container
-// with a compact header row; `width="full"` is that header row with no
+// and /txt/tag/<tag>. The site header in the flow, then one column holding
+// either a page header (kicker, h1, lede) over whatever the page puts in the
+// slot — a PostIndex — or, with `tabs`, THE INSTRUMENT: one Panels screen
+// whose first row is this layout's (the site mark, the h1 as a caps label,
+// the category tabs as pill links to `?q=`) and whose other rows the page
+// slots in (the quilt board, the controls, the timeline). Pages stay thin:
+// they fetch and group, this owns the shell. `width="wide"` opens the column
+// to the site container with a compact header row; `width="full"` is no
 // container at all — at ≥ 1024 the column (and the site header above it)
-// spans the viewport inside an even --space-6 gutter, so the quilt reads as
-// one edge-to-edge board. Wraps Layout.astro (the only html/head).
+// spans the viewport inside an even --space-6 gutter, so the screen reads
+// as one edge-to-edge device. Wraps Layout.astro (the only html/head).
 import Layout from "./Layout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import Heading from "@whois/design-system/Heading";
 import Mono from "@whois/design-system/Mono";
 import Body from "@whois/design-system/Body";
+import Pill from "@whois/design-system/Pill";
+import Panels from "@whois/design-system/Panels";
+import Panel from "@whois/design-system/Panel";
 // DS component styles are not global — once per page, and a layout's import
 // counts for everything it slots.
 import "@whois/design-system/styles.css";
 import "../styles/blog.css";
 import { blogNav } from "../lib/blog";
+
+interface Tab {
+	label: string;
+	/** A real link: `/txt?q=<category>`, or `/txt` for all. */
+	href: string;
+	/** The query the tab stands for; "" is all. The script keys on it. */
+	query: string;
+	active?: boolean;
+}
 
 interface Props {
 	/** The document title. */
@@ -32,9 +47,12 @@ interface Props {
 	 *  with a compact header row; or `full` — the viewport inside an even
 	 *  gutter, with the same compact header row (the quilt). */
 	width?: "measure" | "wide" | "full";
+	/** The instrument's tab row — the category tabs; with these the page is
+	 *  one Panels screen and the slot is its remaining rows. */
+	tabs?: Tab[];
 }
 
-const { title, description, noindex, heading, kicker, width = "measure" } = Astro.props;
+const { title, description, noindex, heading, kicker, width = "measure", tabs } = Astro.props;
 const hasLede = Astro.slots.has("lede");
 ---
 
@@ -48,14 +66,47 @@ const hasLede = Astro.slots.has("lede");
 				width === "full" && "blog__main--full",
 			]}
 		>
-			<header class="blog__header">
-				{kicker && <Mono class="blog__kicker">{kicker}</Mono>}
-				<Heading as="h1" size={4}>{heading}</Heading>
-				{hasLede && (
-					<Body class="blog__lede"><slot name="lede" /></Body>
-				)}
-			</header>
-			<slot />
+			{
+				tabs ? (
+					<Panels class="blog__instrument" data-instrument>
+						<Panel pad="none" class="blog__tabrow">
+							<div class="blog__ident">
+								<span class="blog__mark" aria-hidden="true">TT</span>
+								<Mono as="h1" tone="primary" class="blog__title">{heading}</Mono>
+							</div>
+							<nav class="blog__tabs" aria-label="Categories" data-tabs>
+								{tabs.map((t) => (
+									<Pill
+										as="a"
+										size="lg"
+										variant="outline"
+										href={t.href}
+										class="blog__tab"
+										data-tab={t.query}
+										aria-current={t.active ? "page" : undefined}
+									>
+										{t.query === "" && <span class="blog__tab-glyph" aria-hidden="true" />}
+										{t.label}
+									</Pill>
+								))}
+							</nav>
+							<Mono tone="tertiary" class="blog__site">tristantimblin.dev / txt</Mono>
+						</Panel>
+						<slot />
+					</Panels>
+				) : (
+					<Fragment>
+						<header class="blog__header">
+							{kicker && <Mono class="blog__kicker">{kicker}</Mono>}
+							<Heading as="h1" size={4}>{heading}</Heading>
+							{hasLede && (
+								<Body class="blog__lede"><slot name="lede" /></Body>
+							)}
+						</header>
+						<slot />
+					</Fragment>
+				)
+			}
 		</main>
 	</div>
 </Layout>

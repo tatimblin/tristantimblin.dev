@@ -50,17 +50,17 @@
 .blog__main--wide .blog__header {
 	margin-block-end: var(--space-7);
 }
-.blog__search {
-	margin: 0 0 var(--space-5);
-}
 
-/* THE FULL COLUMN — the quilt as an art board. At ≥ 1024 there is no
-   container: the column spans the viewport inside one even gutter. The
-   gutter is set as --container-pad on the whole shell, so the site header's
-   brand and nav (which pad by it) line up with the board's edges; below
-   1024 the site's own fluid gutter applies, as it does everywhere else. */
+/* THE FULL COLUMN — the instrument. At ≥ 1024 there is no container: the
+   column spans the viewport inside one even gutter. The gutter is set as
+   --container-pad on the whole shell, so the site header's brand and nav
+   (which pad by it) line up with the screen's edges; below 1024 the site's
+   own fluid gutter applies, as it does everywhere else. The screen sits
+   closer under the site header than a list page's title does: it is the
+   page, not a heading over one. */
 .blog__main--full {
 	max-width: none;
+	padding-block-start: var(--space-7);
 }
 @media (min-width: 1024px) {
 	.blog--full {
@@ -68,15 +68,148 @@
 	}
 }
 
+/* THE INSTRUMENT — /txt as one device screen (BlogLayout `tabs`): a Panels
+   frame whose rows are the tab row (the layout's), the board, the controls
+   and the timeline (the page's). The rows' insides are laid out here; the
+   surfaces, the gutters and the frame are the package's. */
+
+/* The tab row: the mark and the h1 as a caps label at the left, the tabs,
+   the site's name at the right. */
+.blog__tabrow {
+	display: flex;
+	align-items: center;
+	gap: var(--space-5);
+	min-block-size: var(--space-10);
+	padding-inline: var(--space-4);
+}
+.blog__ident {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	flex: none;
+}
+.blog__mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: var(--space-6);
+	block-size: var(--space-6);
+	border-radius: var(--border-radius-pill);
+	background: var(--wash-2);
+	font-family: var(--font-mono);
+	font-size: var(--font-size-0);
+	letter-spacing: var(--tracking-mono);
+	color: var(--text-primary);
+}
+.blog__title {
+	margin: 0;
+}
+/* The tabs scroll sideways on a narrow row rather than wrap: one line of
+   pills is the control; the scrollbar is not drawn. */
+.blog__tabs {
+	display: flex;
+	gap: var(--space-2);
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+	padding-block: var(--space-2);
+}
+.blog__tabs::-webkit-scrollbar {
+	display: none;
+}
+/* ALL carries a small square, the prototype's mark for "everything". */
+.blog__tab-glyph {
+	inline-size: var(--space-2);
+	block-size: var(--space-2);
+	border-radius: var(--border-radius-tile);
+	background: currentColor;
+}
+.blog__site {
+	flex: none;
+	margin-inline-start: auto;
+}
+
+/* The control row: the count, the search, − and +. The count cell is a
+   fixed width (two space steps) so the figure does not push the search
+   about as its label changes; the search takes the rest. */
+.blog__controls {
+	--panels-columns: calc(var(--space-13) + var(--space-11)) minmax(0, 1fr) var(--space-12) var(--space-12);
+	min-block-size: var(--space-12);
+}
+.blog__cell {
+	display: flex;
+	align-items: center;
+}
+.blog__cell--count {
+	padding-inline: var(--space-6);
+}
+.blog__search {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	block-size: 100%;
+	margin: 0;
+}
+.blog__cell--step {
+	justify-content: center;
+}
+
+/* The timeline row. */
+.blog__timeline {
+	padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+/* Tablet: the same rows; the count cell gives up its fixed width and the
+   steppers narrow, so the search keeps a line's worth of room. */
+@media (max-width: 1023px) {
+	.blog__site {
+		display: none;
+	}
+	.blog__controls {
+		--panels-columns: auto minmax(0, 1fr) var(--space-11) var(--space-11);
+	}
+	.blog__cell--count {
+		padding-inline: var(--space-5);
+	}
+}
+
 @media (max-width: 639px) {
 	.blog__main {
 		padding-block: var(--space-8) var(--space-10);
+	}
+	.blog__main--full {
+		padding-block-start: var(--space-5);
 	}
 	.blog__header,
 	.blog__main--wide .blog__header {
 		margin-block-end: var(--space-6);
 	}
-	.blog__search {
-		margin-block-end: var(--space-4);
+	/* Phone: the tabs scroll in their row; the controls become the count
+	   and the stepper on one line with the search full width under them;
+	   the timeline is the package's compact rendering. */
+	.blog__tabrow {
+		gap: var(--space-3);
+		min-block-size: var(--space-9);
+		padding-inline: var(--space-3);
+	}
+	.blog__controls {
+		--panels-columns: minmax(0, 1fr) var(--space-11) var(--space-11);
+		grid-auto-flow: row;
+	}
+	.blog__cell--count,
+	.blog__cell--step {
+		grid-row: 1;
+		min-block-size: var(--space-11);
+	}
+	.blog__cell--count {
+		padding-inline: var(--space-4);
+	}
+	.blog__cell--search {
+		grid-column: 1 / -1;
+		grid-row: 2;
+		min-block-size: var(--space-9);
+	}
+	.blog__timeline {
+		padding: var(--space-3) var(--space-4) var(--space-4);
 	}
 }
