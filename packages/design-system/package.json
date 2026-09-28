@@ -6,6 +6,7 @@
   "exports": {
     "./tokens.css": "./src/tokens/index.css",
     "./styles.css": "./src/styles/index.css",
+    "./icons": "./src/icons/icons.ts",
     "./*": "./src/components/*.astro"
   },
   "files": ["src"],

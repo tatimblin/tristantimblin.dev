@@ -1,0 +1,20 @@
+---
+// Blockquote — a quoted passage in reading text (styles/blockquote.css): a
+// subtle filled box with a bar down its left edge. Quieter than Callout, which
+// is an ATTENTION box with a badge; a quote recedes and lets the quoted voice
+// carry it. Markdown `>` maps here (src/components/mdx-components.ts), so the
+// paragraphs inside arrive as Body.
+//
+//   <Blockquote><Body>…</Body></Blockquote>
+//   <Blockquote cite="https://…">…</Blockquote>
+import { cx } from "../lib/cx";
+
+interface Props {
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<blockquote class={cx("ds-blockquote", className)} {...rest}><slot /></blockquote>

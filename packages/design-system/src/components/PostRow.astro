@@ -1,0 +1,32 @@
+---
+// PostRow — one line of a PostGroup, and the WHOLE line is the link: the title
+// on the left, an optional `meta` slot (a category with its icon, a count, a
+// date) in a column that lines up down the group, and an arrow at the far right
+// that answers the hover. Rows are separated by hairlines inside the group's
+// right column only.
+//
+//   <PostRow href="/txt/mega-desk">The Mega Desk</PostRow>
+//   <PostRow href="/txt/mega-desk">
+//     The Mega Desk
+//     <Fragment slot="meta"><Icon name="stack" /> Projects</Fragment>
+//   </PostRow>
+import { cx } from "../lib/cx";
+import Icon from "./Icon.astro";
+
+interface Props {
+	href: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { href, class: className, ...rest } = Astro.props;
+const hasMeta = Astro.slots.has("meta");
+---
+
+<li class={cx("ds-post-row", className)}>
+	<a class="ds-post-row__link" href={href} {...rest}>
+		<span class="ds-post-row__title"><slot /></span>
+		{hasMeta && <span class="ds-post-row__meta"><slot name="meta" /></span>}
+		<span class="ds-post-row__arrow" aria-hidden="true"><Icon name="external" /></span>
+	</a>
+</li>

@@ -1,0 +1,22 @@
+---
+// Prose — the reading container (styles/prose.css). Wrap rendered markdown in
+// it: it sets the rhythm between blocks, gives section headings the UI face
+// with a hairline under the h2s, and styles the tags markdown leaves as raw
+// HTML — fenced code, inline code, images, rules, tables, strikethrough. The
+// mapped elements (p, lists, links, blockquotes) style themselves through their
+// own DS components; this only spaces them.
+//
+//   <Prose><Content components={mdxComponents} /></Prose>
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "div", class: className, ...rest } = Astro.props;
+const Tag = as as any;
+---
+
+<Tag class={cx("ds-prose", className)} {...rest}><slot /></Tag>

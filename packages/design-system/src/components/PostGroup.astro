@@ -1,0 +1,23 @@
+---
+// PostGroup — one band of a PostList: a full-width hairline, the group's label
+// (a year, a category) in the left third, and its rows in the right two thirds,
+// top-aligned with the label. On a phone the label stacks above the rows.
+//
+//   <PostGroup label="2025">…PostRows…</PostGroup>
+//   <PostGroup><Fragment slot="label">2025 <Mono>3</Mono></Fragment>…</PostGroup>
+import { cx } from "../lib/cx";
+
+interface Props {
+	/** The group's label; or fill the `label` slot for richer markup. */
+	label?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { label, class: className, ...rest } = Astro.props;
+---
+
+<li class={cx("ds-post-group", className)} {...rest}>
+	<div class="ds-post-group__label"><slot name="label">{label}</slot></div>
+	<ol class="ds-post-group__rows"><slot /></ol>
+</li>

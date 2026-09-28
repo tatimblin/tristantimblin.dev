@@ -1,0 +1,122 @@
+/* Prose — the reading container.
+ *
+ * Rendered markdown arrives as a run of blocks: paragraphs and lists already
+ * mapped to DS components (Body, List, Anchor, Blockquote), headings mapped to
+ * H2–H4, and a few tags left raw because no component fits them (pre, code, img,
+ * hr, table, del). This file does three things for that run: the rhythm between
+ * the blocks, the section headings, and the raw tags. It never restyles a
+ * mapped component — those own their own type. */
+.ds-prose {
+	/* Section headings in the UI face, at the Semibold. The heading components
+	   read their face and weight from these two tokens, so a reading column
+	   retunes them by scope rather than by overriding .ds-heading — the same
+	   mechanism a theme uses. --font-weight-600 resolves to 560, which lands on
+	   the Semibold cut. */
+	--font-heading: var(--font-ui);
+	--font-heading-weight: var(--font-weight-600);
+	color: var(--text-secondary);
+}
+
+/* Rhythm. One gap between blocks; a larger one before a heading, and a
+   tighter one after it so the heading holds onto what it introduces. */
+.ds-prose > * + * {
+	margin-block-start: var(--space-5);
+}
+.ds-prose > * + :is(h2, h3, h4) {
+	margin-block-start: var(--space-8);
+}
+.ds-prose > :is(h2, h3, h4) + * {
+	margin-block-start: var(--space-4);
+}
+
+/* The h2 carries a hairline under it, so a section reads as a section. */
+.ds-prose > h2 {
+	padding-block-end: var(--space-3);
+	border-block-end: 1px solid var(--hairline);
+}
+
+/* Fenced code. Shiki runs with theme "css-variables" (astro.config), so the
+   token colours come from the --astro-code-* vars — mapped onto the DS
+   --token-* palette so highlighting follows the theme. Shiki writes the surface
+   as an inline background from --astro-code-background, so that var drives the
+   panel colour and the border and radius are drawn around it here. */
+.ds-prose pre.astro-code {
+	--astro-code-background: var(--code-snippet-background);
+	--astro-code-foreground: var(--text-primary);
+	--astro-code-token-comment: var(--token-comment);
+	--astro-code-token-keyword: var(--token-keyword);
+	--astro-code-token-string: var(--token-selector);
+	--astro-code-token-string-expression: var(--token-selector);
+	--astro-code-token-constant: var(--token-symbol);
+	--astro-code-token-parameter: var(--token-operator);
+	--astro-code-token-function: var(--token-function);
+	--astro-code-token-punctuation: var(--token-punctuation);
+	--astro-code-token-link: var(--hyperlink);
+}
+.ds-prose pre {
+	margin: 0;
+	padding: var(--space-4);
+	overflow-x: auto;
+	background: var(--code-snippet-background);
+	border: 1px solid var(--hairline);
+	border-radius: var(--border-radius-2);
+	font-family: var(--font-mono-code);
+	font-size: var(--font-size-1);
+	line-height: 1.6;
+	tab-size: 2;
+}
+.ds-prose pre code {
+	padding: 0;
+	background: none;
+	border: 0;
+	font: inherit;
+}
+
+/* Inline code (anything not inside a <pre>). MDX maps `code` globally, so it
+   cannot be mapped to InlineCode without also wrapping every fenced block; the
+   tag is styled here instead. */
+.ds-prose :not(pre) > code {
+	padding: 0.15em 0.4em;
+	background: var(--code-snippet-background);
+	border: 1px solid var(--hairline);
+	border-radius: var(--border-radius-0);
+	font-family: var(--font-mono-code);
+	font-size: 0.9em;
+	color: var(--text-primary);
+}
+
+/* Images fill the measure and take the surface radius. */
+.ds-prose img {
+	display: block;
+	inline-size: 100%;
+	block-size: auto;
+	border-radius: var(--border-radius-2);
+}
+
+.ds-prose hr {
+	border: 0;
+	border-block-start: 1px solid var(--hairline);
+	margin-block: var(--space-7);
+}
+
+.ds-prose del {
+	color: var(--text-tertiary);
+}
+
+/* Tables: hairlines between rows, the head in the UI face. */
+.ds-prose table {
+	inline-size: 100%;
+	border-collapse: collapse;
+	font-size: var(--font-size-1);
+}
+.ds-prose th {
+	font-family: var(--font-ui);
+	font-weight: var(--font-weight-600);
+	color: var(--text-primary);
+	text-align: start;
+}
+.ds-prose :is(th, td) {
+	padding: var(--space-2) var(--space-3);
+	border-block-end: 1px solid var(--hairline);
+	vertical-align: top;
+}

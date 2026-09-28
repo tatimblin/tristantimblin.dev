@@ -70,13 +70,14 @@ import "@whois/design-system/styles.css";
 — including columns/gutters/breakpoints for `Grid`. Open it instead of guessing a
 prop; this doc deliberately does not duplicate per-component API tables.
 
-**Components available (42):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (47):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Label`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Callout`, `Pill`, `Anchor`, `List`, `ListItem`,
-`InlineCode`, `Icon`, `VisuallyHidden`, `WidgetGrid`, `Widget` — and the
+`InlineCode`, `Icon`, `VisuallyHidden`, `WidgetGrid`, `Widget` — the
 instrument UI (next section): `Mono`, `Figure`, `Stat`, `Hairline`, `TickRuler`,
 `BarGraph`, `RingGauge`, `Legend`, `LegendItem`, `TileGrid`, `Tile`, `Faces`,
-`Face`.
+`Face` — and the reading UI (the section after it): `PostList`, `PostGroup`,
+`PostRow`, `Prose`, `Blockquote`.
 
 ## The decision gate
 
@@ -219,6 +220,46 @@ colour), passed as a CSS colour.
 
 The catalogue (`/design-system`) shows every one of these, and a "Widget — the
 pieces together" section with three sample widgets.
+
+---
+
+## Reading UI — the archive and the reading column
+
+The blog (`/txt`, `src/layouts/BlogLayout.astro` and `PostLayout.astro`) is the
+other family of components with no upstream: a quiet, near-monochrome page in
+the UI face, where the accent appears once, on a hovered title. Like the
+instrument UI it is this site's own, so its CSS may be edited freely.
+
+- `PostList` — the archive, an `<ol>` of groups. `PostGroup` — one band:
+  `label` (prop or slot; a year) in the left third over a full-width hairline,
+  its rows in the right two thirds. `PostRow` — one link per row: `href`, the
+  title in the default slot, an optional `meta` slot (an `Icon` and a category,
+  a count) in a column that lines up down the group, an arrow at the right.
+  Hairlines between rows run under the right column only. The rows subgrid into
+  one grid, which is what aligns the meta column; on a phone the label stacks
+  and the meta wraps under the title.
+- `Prose` — the reading container around rendered markdown. It spaces the
+  blocks, and retunes `--font-heading` / `--font-heading-weight` IN SCOPE so the
+  mapped `H2`–`H4` take the UI face at the Semibold with a hairline under each
+  h2 — the token layer doing a theme's job, rather than a rule against
+  `.ds-heading`. It also styles the tags markdown leaves raw (`pre`, inline
+  `code`, `img`, `hr`, `table`, `del`); the mapped components keep their own
+  type. `as` for the tag.
+- `Blockquote` — a quoted passage: `--wash-1` fill, a `--wash-3` bar down the
+  left edge, the surface radius on the right corners only. Markdown `>` maps to
+  it (`src/components/mdx-components.ts`), so its paragraphs arrive as `Body`.
+  Quieter than `Callout`, which is an attention box with a badge.
+
+```astro
+<PostList aria-label="Posts by year">
+  <PostGroup label="2026">
+    <PostRow href="/txt/asserting-on-agent-behavior">
+      Asserting on Agent Behavior
+      <Fragment slot="meta"><Icon name="code" /> Programming</Fragment>
+    </PostRow>
+  </PostGroup>
+</PostList>
+```
 
 ---
 

@@ -47,6 +47,12 @@ import WidgetGrid from "@whois/design-system/WidgetGrid";
 import Widget from "@whois/design-system/Widget";
 import Faces from "@whois/design-system/Faces";
 import Face from "@whois/design-system/Face";
+// The reading UI: the archive and the reading column.
+import PostList from "@whois/design-system/PostList";
+import PostGroup from "@whois/design-system/PostGroup";
+import PostRow from "@whois/design-system/PostRow";
+import Prose from "@whois/design-system/Prose";
+import Blockquote from "@whois/design-system/Blockquote";
 
 // Instrument tokens, for the swatch row: name → what it is for.
 const instrumentTokens = [
@@ -825,6 +831,69 @@ const faces = [
 				</Widget>
 			</WidgetGrid>
 		</section>
+		<!-- READING UI ----------------------------------------------------- -->
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">PostList · PostGroup · PostRow — the archive</h2>
+			<p class="ds-demo__note">
+				An index of writing in the UI face. A <code>PostGroup</code> opens with a
+				full-width hairline and puts its <code>label</code> (a year) in the left
+				third; its <code>PostRow</code>s fill the right two thirds, one link each —
+				title, an optional <code>meta</code> slot in a column that lines up down the
+				group, and an arrow that answers the hover. Hairlines between rows run under
+				the right column only. On a phone the label stacks above the rows and the
+				meta wraps under the title.
+			</p>
+			<PostList aria-label="Sample archive">
+				<PostGroup label="2026">
+					<PostRow href="#">Asserting on Agent Behavior<Fragment slot="meta"><Icon name="code" /> Programming</Fragment></PostRow>
+				</PostGroup>
+				<PostGroup label="2025">
+					<PostRow href="#">Tahoe Mountain Hair<Fragment slot="meta"><Icon name="map" /> Personal</Fragment></PostRow>
+					<PostRow href="#">The Mega Desk<Fragment slot="meta"><Icon name="stack" /> Projects</Fragment></PostRow>
+					<PostRow href="#">A row with no meta column at all</PostRow>
+				</PostGroup>
+			</PostList>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Prose — the reading column</h2>
+			<p class="ds-demo__note">
+				Wraps rendered markdown. It spaces the blocks, sets section headings in the
+				UI face with a hairline under each h2 (by retuning <code>--font-heading</code>
+				in scope, not by overriding <code>.ds-heading</code>), and styles the tags
+				markdown leaves raw: fenced and inline code, images, rules, tables. Mapped
+				blocks (Body, List, Anchor, Blockquote) keep their own type.
+			</p>
+			<Prose style="max-inline-size: 44rem;">
+				<Body>The first paragraph of a post, set in the body role. It carries an <Anchor href="#" underline>inline link</Anchor> and some <code>inline code</code> to show both against the reading colour.</Body>
+				<H2>A section heading</H2>
+				<Body>A paragraph under the heading, spaced tighter to it than to the block before it, so the heading holds onto what it introduces.</Body>
+				<Blockquote>
+					<Body>A quoted passage: the first wash as a fill, a bar of the third wash on the left, and the surface radius on the right corners only.</Body>
+				</Blockquote>
+				<H3>A sub-heading</H3>
+				<List variant="unordered">
+					<ListItem>A list item, from the mapped List.</ListItem>
+					<ListItem>Another, with <Strong>strong</Strong> and <EM>emphasis</EM>.</ListItem>
+				</List>
+				<pre><code>const measure = "44rem"; // fenced code, on the snippet surface</code></pre>
+				<hr />
+				<Body>After a rule. <del>Struck text</del> steps back to the tertiary ink.</Body>
+			</Prose>
+		</section>
+
+		<section class="ds-demo__section">
+			<h2 class="ds-demo__h">Blockquote</h2>
+			<p class="ds-demo__note">
+				Markdown <code>&gt;</code> maps here. Quieter than <code>Callout</code>, which is
+				an attention box with a badge; a quote recedes and lets the quoted voice carry it.
+			</p>
+			<Blockquote style="max-inline-size: 44rem;">
+				<Body>Test suites have always followed a simple contract: given this input, expect this output.</Body>
+				<Body>Agents don't work like that.</Body>
+			</Blockquote>
+		</section>
+
 
 		<!-- ANCHOR --------------------------------------------------------- -->
 		<section class="ds-demo__section">
