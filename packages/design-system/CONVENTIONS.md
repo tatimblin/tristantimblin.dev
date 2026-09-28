@@ -70,15 +70,15 @@ import "@whois/design-system/styles.css";
 — including columns/gutters/breakpoints for `Grid`. Open it instead of guessing a
 prop; this doc deliberately does not duplicate per-component API tables.
 
-**Components available (48):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (52):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Label`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Callout`, `Pill`, `Anchor`, `List`, `ListItem`,
 `InlineCode`, `Icon`, `VisuallyHidden`, `WidgetGrid`, `Widget` — the
 instrument UI (next section): `Mono`, `Figure`, `Stat`, `Hairline`, `TickRuler`,
 `BarGraph`, `RingGauge`, `Legend`, `LegendItem`, `TileGrid`, `Tile`, `Faces`,
 `Face` — the reading UI (the section after it): `PostList`, `PostGroup`,
-`PostRow`, `Prose`, `Blockquote` — and the art (the section after that):
-`ArtFrame`.
+`PostRow`, `Prose`, `Blockquote`, `Quilt`, `QuiltCell`, `QuiltPanel`,
+`SearchBar` — and the art (the section after that): `ArtFrame`.
 
 ## The decision gate
 
@@ -261,6 +261,91 @@ instrument UI it is this site's own, so its CSS may be edited freely.
   </PostGroup>
 </PostList>
 ```
+
+### Quilt — the index as a grid of art tiles
+
+`/txt` is a **quilt**: a grid of landscape art tiles, one per post, padded
+with fillers, with a search bar above it. Hovering or focusing a post
+scatters the others and a text card takes a freed 3×2 block; typing filters
+the same grid. The package holds the **markup, the geometry and the state
+contract** (`styles/quilt.css`, `quilt-panel.css`, `search-bar.css`); every
+decision — which cells scatter, where the block goes, what the search found
+— is the site's (`src/lib/quilt/engine.ts`, pure; `src/lib/quilt/index.ts`,
+the DOM wiring), which paints the attributes below. Nothing here ships JS.
+
+```astro
+<SearchBar id="quilt-search" label="Search" placeholder="a title, a topic, a year…"
+           count="5 posts" hint="/" controls="quilt-panel-results" />
+<Quilt cols={5} rows={3} colsMd={3} aria-label="Posts">
+  <QuiltCell col={3} row={1} colMd={2} rowMd={1} href="/txt/mega-desk"
+             label="The Mega Desk" no="003">
+    <ArtFrame svg={raw} decorative />
+    <Fragment slot="caption">APR 2025 · PROJECTS</Fragment>   <!-- phones only -->
+  </QuiltCell>
+  <QuiltCell col={1} row={1} colMd={1} rowMd={2} filler><ArtFrame svg={filler} decorative /></QuiltCell>
+  <QuiltPanel id="quilt-panel" mode="hidden" col={3} row={2}
+              card={…} browse={…} results={…} nothing={…} />
+</Quilt>
+```
+
+- `Quilt` — the grid: `cols`/`rows` for ≥ 1024, `colsMd`/`rowsMd` for
+  640–1023 (`rows` = max(3, ceil(posts / cols)), explicit so the block always
+  has lines). `position: relative`, `role="group"`, `data-quilt`. Under 640
+  it is two columns of captioned tiles in DOM order.
+- `QuiltCell` — a post (`href`, `label` = the link's accessible name, `no`,
+  a decorative `ArtFrame` in the slot, the meta line in `caption`) or a
+  `filler` (aria-hidden). Placement is `col`/`row` and `colMd`/`rowMd`, set
+  inline as `--cell-col`/`--cell-row`/`--cell-col-md`/`--cell-row-md` — the
+  stylesheet picks the pair per viewport; a filler with no tablet slot is
+  dropped there, and every filler is dropped on a phone. Renders
+  `data-cell="post | filler"`, `data-no`, `data-md` (has a tablet slot).
+- `QuiltPanel` — four faces, every one rendered. `card` (kicker, title,
+  excerpt, `CATEGORY · 3 MIN · READ ↗` in the accent, an optional why),
+  `browse` (categories with counts, years, the latest post — `Pill as="a"`
+  and `Anchor` links to `?q=`), `results` (`role="listbox"` id
+  `<id>-results`, rows `role="option"` id `<id>-opt-<n>`, the title with
+  `<mark>` on the query, meta and why), `nothing` (the sentence,
+  coverage, suggestion pills). Props fill them at build; hooks let a script
+  refill in place: `data-card="kicker | title | blurb | meta | why | link"`,
+  `data-results="label | list"`, `data-none="query | suggestions"`, and a
+  `<template data-result-template>` with one empty row
+  (`data-result="title | meta | why"`) to clone. `flow` renders it in flow
+  (the phone rendering) anywhere.
+- `SearchBar` — `role="search"`; a caps `Mono` label for the input; the
+  input is `type="search" role="combobox" aria-autocomplete="list"
+  aria-controls={controls}` (`name` defaults to `q`, so inside a GET form it
+  lands on `?q=` with scripting off); the count is `aria-live="polite"`
+  (`data-search-count`); `hint` is an outline `Pill`, not drawn without a
+  keyboard. `:focus-within` turns the hairline to the accent. `value` and
+  `expanded` render a state statically.
+
+**The state contract** — what the script sets, and all it sets:
+
+| On | Attribute / property | Meaning |
+| --- | --- | --- |
+| a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. |
+| a cell | `--scatter-delay` (ms) | the stagger into faint/gone (0–240); the return to lit has none |
+| a post cell | `data-active` | the accent ring on the art — the search result the arrows are on |
+| the panel | `data-mode="card \| browse \| results \| none \| hidden"` | which face shows; the others are `visibility: hidden` (out of the a11y tree and tab order), so no per-face `aria-hidden` |
+| the panel | `--panel-col`, `--panel-row` | the block's top-left cell, 1-based; the block is `--panel-cols` × `--panel-rows` (3 × 2). On the tablet grid the block is every column, so only the row matters |
+| a result row | `aria-selected="true"` | the active row (accent bar + `--wash-1`); mirror it as `aria-activedescendant` on the input |
+| the input | `aria-expanded`, `aria-activedescendant` | whether the panel shows; the active option's id |
+
+Transitions run on `--duration-settle` (the scatter) and `--duration-swap`
+(faces, the ring), both `0s` under reduced motion. The panel is an
+**absolutely positioned grid item**, so its containing block is the grid
+area its placement names: it lands on cells by line number, and its content
+never sizes a row. It is a size query container, and the card fits its
+block — three excerpt lines at the full 270px block, two, then one, then the
+title alone at the next step down as the block shrinks — rather than clip.
+
+**Geometry** (the container is 1200px; the gap `--space-3`):
+
+| Viewport | Columns | Cell | Block | Mode |
+| --- | --- | --- | --- | --- |
+| ≥ 1024 | `cols` (5) | ~230×130, 16:9 | 3×2 ≈ 715×270 | hover quilt |
+| 640–1023 | `colsMd` (3) | ~227×128 at 768 | full width × 2 rows | hover quilt |
+| < 640 | 2 | ~179×101 at 390 | none — the panel is in flow above the tiles | captioned list, a tap navigates |
 
 ---
 

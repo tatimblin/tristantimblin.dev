@@ -1,0 +1,309 @@
+/* QuiltPanel — the text block in a freed 3×2 block of the quilt.
+ *
+ * AN ABSOLUTELY POSITIONED GRID ITEM. The panel is a child of the grid with
+ * position: absolute and a grid placement, so its containing block is the
+ * grid AREA that placement names (CSS Grid §9): --panel-col/--panel-row put
+ * its top-left on a cell, the spans take the block, and inset: 0 fills it.
+ * No measured pixels, and its content — however tall — never sizes a row.
+ * The cells under it are `gone` (quilt.css), so it sits on the page, not on
+ * a surface: the freed block IS the surface.
+ *
+ * FOUR FACES, ONE ATTRIBUTE. Every face is rendered in the same grid cell
+ * and data-mode on the root says which shows; the rest are visibility:
+ * hidden, which takes them out of the accessibility tree and the tab order
+ * as well as off the screen, so no face needs an aria-hidden of its own
+ * (Faces' cross-fade keys on that attribute; this one keys on the mode, so
+ * a script changes one thing). `hidden` fades the panel out, a beat
+ * after the tiles have begun to scatter; it comes back with no delay.
+ *
+ * UNDER 640PX the panel is in flow: full width, above the tiles (grid row 1,
+ * every column; the tiles auto-place after it), no inset, and display: none
+ * when hidden so an empty panel takes no room. `--flow-true` is that at any
+ * width, for the catalogue. */
+.ds-quilt-panel {
+	--panel-cols: 3;
+	--panel-rows: 2;
+
+	position: absolute;
+	inset: 0;
+	grid-column: var(--panel-col, 1) / span var(--panel-cols);
+	grid-row: var(--panel-row, 1) / span var(--panel-rows);
+	z-index: 1;
+	box-sizing: border-box;
+	/* Inset from the block's edge by the gap, so the text does not touch
+	   the tiles beside it. */
+	padding: var(--quilt-gap, var(--space-3));
+	display: grid;
+	grid-template-rows: minmax(0, 1fr);
+	/* A query container on BOTH axes: an absolutely positioned box with
+	   inset: 0 has a definite size, so the faces can fit themselves to the
+	   block they were given (a 3×2 block is 270px tall at the 1200px
+	   container, less on a narrower page) rather than clip. */
+	container: panel / size;
+	font-family: var(--font-ui);
+	color: var(--text-primary);
+	transition:
+		opacity var(--duration-settle) var(--ease-reveal) calc(var(--duration-settle) / 3),
+		translate var(--duration-settle) var(--ease-reveal) calc(var(--duration-settle) / 3),
+		visibility var(--duration-settle) var(--ease-reveal) calc(var(--duration-settle) / 3);
+}
+.ds-quilt-panel[data-mode="hidden"] {
+	opacity: 0;
+	visibility: hidden;
+	translate: 0 var(--space-2);
+	pointer-events: none;
+	transition-delay: 0s;
+}
+
+/* The faces: stacked in the one cell, a flex column each, clipped to the
+   block (a card's excerpt clamps; a list's rows are capped by the script). */
+.ds-quilt-panel__face {
+	grid-area: 1 / 1;
+	min-inline-size: 0;
+	min-block-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	overflow: hidden;
+	opacity: 0;
+	visibility: hidden;
+	transition:
+		opacity var(--duration-swap) var(--ease-reveal),
+		visibility var(--duration-swap) var(--ease-reveal);
+}
+.ds-quilt-panel[data-mode="card"] > [data-face="card"],
+.ds-quilt-panel[data-mode="browse"] > [data-face="browse"],
+.ds-quilt-panel[data-mode="results"] > [data-face="results"],
+.ds-quilt-panel[data-mode="none"] > [data-face="none"] {
+	opacity: 1;
+	visibility: visible;
+}
+/* The key hint sits on the block's bottom edge whatever the face holds, and
+   is not drawn where there is no keyboard to press. */
+.ds-quilt-panel__keys {
+	margin-block-start: auto;
+}
+/* A caps label in the panel wraps: the browse face's runs to 45
+   characters, which is a phone's width. */
+.ds-quilt-panel .ds-caps {
+	white-space: normal;
+}
+@media (hover: none) {
+	.ds-quilt-panel__keys {
+		display: none;
+	}
+}
+
+/* THE CARD FACE. Kicker at the top, title and excerpt in the middle, the
+   accent meta and the why on the bottom edge — spread over the block's
+   height like the prototype. The title is the UI face at the big regular
+   step (the blog sets titles regular; the heading face would shout here),
+   with display leading and tracking from the type tokens; the excerpt is
+   Body, clamped to three lines, which is what the 270px block holds under
+   a two-line title. */
+.ds-quilt-panel__card {
+	justify-content: space-between;
+}
+.ds-quilt-panel__body {
+	/* A block, not a grid: a grid item is blockified, and Chrome blockifies
+	   the excerpt's -webkit-box to flow-root, which drops the line clamp. */
+	display: block;
+	min-block-size: 0;
+}
+.ds-quilt-panel__title {
+	margin: 0;
+	font-family: var(--font-ui);
+	font-weight: var(--font-weight-400);
+	font-size: var(--font-size-7);
+	line-height: var(--line-height-heading);
+	letter-spacing: var(--tracking-heading);
+	color: var(--text-primary);
+	text-wrap: balance;
+}
+.ds-quilt-panel__body > .ds-quilt-panel__title {
+	margin-block-end: var(--space-3);
+}
+.ds-quilt-panel__blurb {
+	max-inline-size: 60ch;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
+	overflow: hidden;
+}
+.ds-quilt-panel__foot {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: var(--space-4);
+	flex-wrap: wrap;
+}
+/* The one link on the card keeps the accent under the pointer (Mono's link
+   rule would turn it to the ink). */
+a.ds-quilt-panel__read:hover,
+a.ds-quilt-panel__read:focus-visible {
+	color: var(--accent);
+	text-decoration: underline;
+	text-underline-offset: var(--space-1);
+}
+.ds-quilt-panel__why:empty {
+	display: none;
+}
+/* The card fitted to its block: three lines of excerpt need a 240px block
+   (the full-size one is 270); a shorter block shows two, then one, then
+   only the title at the next step down — the card never clips mid-line. */
+@container panel (max-block-size: 239px) {
+	.ds-quilt-panel__blurb {
+		-webkit-line-clamp: 2;
+	}
+}
+@container panel (max-block-size: 199px) {
+	.ds-quilt-panel__blurb {
+		-webkit-line-clamp: 1;
+	}
+	.ds-quilt-panel__title {
+		font-size: var(--font-size-6);
+	}
+}
+@container panel (max-block-size: 159px) {
+	.ds-quilt-panel__blurb {
+		display: none;
+	}
+}
+
+/* THE BROWSE FACE. Each group is one row — its label, then its pill links,
+   wrapping — so the three groups, the lead and the keys fit the block; the
+   latest post is an anchor in the ink at the next step up. */
+.ds-quilt-panel__group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2) var(--space-3);
+}
+.ds-quilt-panel__group > .ds-mono:first-child {
+	flex: none;
+	min-inline-size: var(--space-12);
+}
+.ds-quilt-panel__pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+.ds-quilt-panel__latest {
+	--color: var(--text-primary);
+	font-size: var(--font-size-5);
+	line-height: var(--line-height-ui);
+}
+
+/* THE RESULTS FACE. A listbox of two-line rows — the title, then its meta
+   and why in the structure voice — close-set, so four fit a full-size
+   block under the label and over the keys (the script caps the list at
+   four). The active row (aria-selected) carries the accent bar on its left
+   edge and the first wash; the bar is the focus ring's width so the two
+   accents on the page agree. The marked query in a title sits on the
+   emphasis tint with the accent under it. */
+.ds-quilt-panel__results {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	min-block-size: 0;
+	overflow: hidden;
+}
+.ds-quilt-panel__result-link {
+	display: grid;
+	gap: var(--space-1);
+	padding: var(--space-1) var(--space-3);
+	border-inline-start: var(--focus-ring);
+	border-inline-start-color: transparent;
+	border-radius: 0 var(--border-radius-0) var(--border-radius-0) 0;
+	color: inherit;
+	text-decoration: none;
+	transition:
+		background var(--duration-swap) var(--ease-reveal),
+		border-color var(--duration-swap) var(--ease-reveal);
+}
+.ds-quilt-panel__result[aria-selected="true"] .ds-quilt-panel__result-link,
+.ds-quilt-panel__result-link:hover {
+	background: var(--wash-1);
+}
+.ds-quilt-panel__result[aria-selected="true"] .ds-quilt-panel__result-link {
+	border-inline-start-color: var(--accent);
+}
+.ds-quilt-panel__result-title {
+	min-inline-size: 0;
+	font-size: var(--font-size-4);
+	line-height: var(--line-height-ui);
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.ds-quilt-panel__result-title mark {
+	background: var(--emphasis);
+	color: inherit;
+	border-radius: var(--border-radius-tile);
+	box-shadow: 0 1px 0 var(--accent);
+}
+.ds-quilt-panel__result-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1) var(--space-3);
+}
+.ds-quilt-panel__result-meta > :empty {
+	display: none;
+}
+
+/* THE NONE FACE. The sentence at the title step, the coverage line, the
+   suggestions as pills. */
+.ds-quilt-panel__none .ds-quilt-panel__blurb {
+	-webkit-line-clamp: 2;
+}
+
+/* The tablet grid is three columns, so the block is every column and the
+   script sets only --panel-row. */
+@media (min-width: 640px) and (max-width: 1023px) {
+	.ds-quilt-panel {
+		grid-column: 1 / -1;
+	}
+}
+
+/* IN FLOW: a phone, or `flow`. A block between the bar and the tiles; the
+   faces are not clipped, a card's excerpt shows whole, and a results row
+   stacks its meta under the title. */
+@media (max-width: 639px) {
+	.ds-quilt-panel {
+		position: static;
+		grid-column: 1 / -1;
+		grid-row: 1;
+		padding: 0;
+		margin-block-end: var(--space-3);
+		/* In flow the height is the content's, so only the inline axis can
+		   be queried — and the card shows whole, no tier applies. */
+		container-type: inline-size;
+	}
+	.ds-quilt-panel[data-mode="hidden"] {
+		display: none;
+	}
+	.ds-quilt-panel__face {
+		overflow: visible;
+	}
+	.ds-quilt-panel__blurb,
+	.ds-quilt-panel__none .ds-quilt-panel__blurb {
+		-webkit-line-clamp: unset;
+	}
+	.ds-quilt-panel__title {
+		font-size: var(--font-size-6);
+	}
+	.ds-quilt-panel__result-title {
+		white-space: normal;
+	}
+}
+.ds-quilt-panel--flow-true {
+	position: static;
+	grid-area: auto;
+	padding: 0;
+	container-type: inline-size;
+}
+.ds-quilt-panel--flow-true .ds-quilt-panel__face {
+	overflow: visible;
+}

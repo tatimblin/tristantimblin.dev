@@ -1,0 +1,76 @@
+---
+// SearchBar — the full-width bar above the quilt (styles/search-bar.css): a
+// caps Mono label, the native input in the UI face, a live count, and the
+// key hint as an outline Pill (hidden where there is no keyboard). The bar's
+// hairline takes the accent while the input has focus.
+//
+//   <SearchBar id="quilt-search" label="Search" placeholder="a title, a topic, a year…"
+//              count="5 posts" hint="/" controls="quilt-panel-results" />
+//
+// The input is a combobox over the panel's results listbox (aria-controls
+// names it); a script keeps aria-expanded in step with whether the panel
+// shows, moves aria-activedescendant to the active option's id, and rewrites
+// the count (data-search-count, aria-live="polite") — `2 of 5` while a query
+// is typed, `5 posts` otherwise. Hooks: data-search-bar on the root,
+// data-search-input on the input. `name` defaults to `q` so the bar inside a
+// GET form lands on `?q=` with scripting off. `expanded` and `value` render a
+// state statically. `class` merges; everything else passes to the ROOT.
+import { cx } from "../lib/cx";
+import Mono from "./Mono.astro";
+import Pill from "./Pill.astro";
+
+interface Props {
+	id?: string;
+	label?: string;
+	placeholder?: string;
+	count?: string;
+	/** The key that focuses the bar, shown as a pill; none hides it. */
+	hint?: string;
+	/** The id of the listbox the combobox controls (the panel's `<id>-results`). */
+	controls?: string;
+	name?: string;
+	value?: string;
+	expanded?: boolean;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	id = "search",
+	label = "search",
+	placeholder = "a title, a topic, a year…",
+	count,
+	hint,
+	controls,
+	name = "q",
+	value,
+	expanded = false,
+	class: className,
+	...rest
+} = Astro.props;
+---
+
+<div class={cx("ds-search-bar", className)} role="search" data-search-bar {...rest}>
+	<Mono as="label" for={id} class="ds-search-bar__label">{label}</Mono>
+	<input
+		class="ds-search-bar__input"
+		id={id}
+		name={name}
+		type="search"
+		role="combobox"
+		aria-autocomplete="list"
+		aria-expanded={expanded ? "true" : "false"}
+		aria-controls={controls}
+		autocomplete="off"
+		autocapitalize="off"
+		autocorrect="off"
+		spellcheck="false"
+		placeholder={placeholder}
+		value={value}
+		data-search-input
+	/>
+	<Mono class="ds-search-bar__count" aria-live="polite" data-search-count>{count}</Mono>
+	{hint && (
+		<Pill variant="outline" class="ds-search-bar__hint" aria-hidden="true">{hint}</Pill>
+	)}
+</div>

@@ -1,0 +1,129 @@
+---
+// QuiltCell — one cell of a Quilt (styles/quilt.css): a post, which is a link
+// around its art with the post's title as the link's name (the art is
+// decorative; the frame inside is `<ArtFrame decorative />`), or a filler,
+// which is aria-hidden art and nothing else.
+//
+//   <QuiltCell col={3} row={1} href="/txt/mega-desk" label="The Mega Desk" no="003">
+//     <ArtFrame svg={raw} decorative />
+//     <Fragment slot="caption">APR 2025 · PROJECTS</Fragment>   the meta line under the title, phones only
+//   </QuiltCell>
+//   <QuiltCell col={1} row={1} filler><ArtFrame svg={filler} decorative /></QuiltCell>
+//
+// THE STATE CONTRACT, which a script drives and this file renders statically:
+//   data-state="lit | faint | gone"   lit is the rest state; faint is the
+//                                     ghost (low opacity, greyscale on a desktop
+//                                     with a pointer); gone is invisible and
+//                                     takes no pointer, but a post stays
+//                                     focusable so Tab still reaches it.
+//   --scatter-delay                   the cell's stagger (0–240ms) into faint
+//                                     or gone; the return to lit has none.
+//   data-active                       the accent ring on the art — the active
+//                                     search result.
+// Placement: `col`/`row` for the ≥ 1024 grid and `colMd`/`rowMd` for the
+// 640–1023 one, as custom properties the stylesheet reads per viewport (an
+// inline style for a real API, like Grid's spans); under 640 every cell flows
+// in DOM order. A filler without a `colMd` is dropped on the tablet grid, and
+// every filler is dropped on a phone. `data-no` carries the post's number for
+// a script that keys on it. `class` merges; the rest passes to the cell.
+import { cx } from "../lib/cx";
+import Mono from "./Mono.astro";
+
+type State = "lit" | "faint" | "gone";
+
+interface Props {
+	col?: number;
+	row?: number;
+	colMd?: number;
+	rowMd?: number;
+	/** A post: the link. */
+	href?: string;
+	/** The post's title — the link's accessible name, and the phone caption's first line. */
+	label?: string;
+	/** The post's chronological number, zero-padded ("003"). */
+	no?: string | number;
+	/** A filler: aria-hidden, no link. */
+	filler?: boolean;
+	state?: State;
+	/** The accent ring. */
+	active?: boolean;
+	/** The scatter stagger in ms, when rendering a scattered state statically. */
+	delay?: number;
+	class?: string;
+	style?: string;
+	[key: string]: unknown;
+}
+
+const {
+	col,
+	row,
+	colMd,
+	rowMd,
+	href,
+	label,
+	no,
+	filler = false,
+	state = "lit",
+	active = false,
+	delay,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+if (!filler && !href) {
+	throw new Error("QuiltCell: a post cell needs an `href` (or say `filler`).");
+}
+
+const vars = [
+	col && `--cell-col:${col}`,
+	row && `--cell-row:${row}`,
+	colMd && `--cell-col-md:${colMd}`,
+	rowMd && `--cell-row-md:${rowMd}`,
+	delay != null && `--scatter-delay:${delay}ms`,
+	style,
+]
+	.filter(Boolean)
+	.join(";");
+
+const hasCaption = Astro.slots.has("caption");
+---
+
+{
+	filler ? (
+		<div
+			class={cx("ds-quilt-cell", className)}
+			data-cell="filler"
+			data-state={state}
+			data-md={colMd ? "" : undefined}
+			aria-hidden="true"
+			style={vars || undefined}
+			{...rest}
+		>
+			<slot />
+		</div>
+	) : (
+		<div
+			class={cx("ds-quilt-cell", className)}
+			data-cell="post"
+			data-state={state}
+			data-no={no}
+			data-active={active ? "" : undefined}
+			data-md={colMd ? "" : undefined}
+			style={vars || undefined}
+			{...rest}
+		>
+			<a class="ds-quilt-cell__link" href={href} aria-label={label}>
+				<slot />
+				<span class="ds-quilt-cell__caption">
+					<span class="ds-quilt-cell__title">{label}</span>
+					{hasCaption && (
+						<Mono class="ds-quilt-cell__meta">
+							<slot name="caption" />
+						</Mono>
+					)}
+				</span>
+			</a>
+		</div>
+	)
+}

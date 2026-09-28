@@ -56,6 +56,171 @@ import Blockquote from "@whois/design-system/Blockquote";
 // The art: the frame, and the file every artwork starts from.
 import ArtFrame from "@whois/design-system/ArtFrame";
 import artTemplate from "@whois/design-system/art/_template.svg?raw";
+// The quilt: the grid, its cells, the panel, and the search bar above it.
+import Quilt from "@whois/design-system/Quilt";
+import QuiltCell from "@whois/design-system/QuiltCell";
+import QuiltPanel from "@whois/design-system/QuiltPanel";
+import SearchBar from "@whois/design-system/SearchBar";
+
+// THE QUILT DEMOS. The five posts' real art and ten fillers on the 5×3 grid,
+// in the states the site's script drives (each set by hand here: the
+// components render a state; deciding one is the engine's job). Slots and
+// scatter are made up to show the contract, not computed.
+const quiltArt = import.meta.glob<string>("../content/txt/*.svg", {
+	query: "?raw",
+	import: "default",
+	eager: true,
+});
+const quiltFillers = Object.entries(
+	import.meta.glob<string>("../../packages/design-system/src/art/filler-*.svg", {
+		query: "?raw",
+		import: "default",
+		eager: true,
+	}),
+)
+	.sort(([a], [b]) => a.localeCompare(b))
+	.map(([, svg]) => svg);
+const artOf = (slug: string) =>
+	quiltArt[`../content/txt/${slug}.svg`] ?? artTemplate;
+
+interface QuiltPost {
+	slug: string;
+	title: string;
+	blurb: string;
+	cat: string;
+	no: string;
+	month: string;
+	year: string;
+	min: number;
+	col: number;
+	row: number;
+	colMd: number;
+	rowMd: number;
+}
+const quiltPosts: QuiltPost[] = [
+	{ slug: "asserting-on-agent-behavior", title: "Asserting on Agent Behavior", blurb: "I built Aptitude — a test harness that lets you run cognitive tests against agent behavior by asserting on tool calls, parameters, and ordering.", cat: "programming", no: "005", month: "feb", year: "2026", min: 3, col: 2, row: 1, colMd: 1, rowMd: 1 },
+	{ slug: "tahoe-mountain-hair", title: "Tahoe Mountain Hair", blurb: "A hair care routine to reproduce Tahoe's mineral-rich water and dry air in San Francisco's soft water and humidity.", cat: "personal", no: "004", month: "jun", year: "2025", min: 2, col: 5, row: 1, colMd: 3, rowMd: 1 },
+	{ slug: "mega-desk", title: "The Mega Desk", blurb: "Building an 8-foot hardwood standing desk for a shared home office — from sourcing burnt ash in Berkeley to finding an extension cable on Etsy.", cat: "projects", no: "003", month: "apr", year: "2025", min: 4, col: 3, row: 2, colMd: 2, rowMd: 2 },
+	{ slug: "why-i-joined-fisker", title: "Your Car Knows You're Getting Sick", blurb: "I joined Fisker to build a health product from vehicle signal data — steering patterns, braking behavior, and acceleration habits can detect cognitive decline.", cat: "thoughts", no: "002", month: "jul", year: "2024", min: 4, col: 1, row: 3, colMd: 1, rowMd: 3 },
+	{ slug: "no-honey-we-have-a-dashboard-at-home", title: "No Honey, We Have a Dashboard at Home", blurb: "Internal tools teams spend months building dashboards that are worse versions of things VS Code already provides out of the box.", cat: "programming", no: "001", month: "may", year: "2023", min: 3, col: 4, row: 3, colMd: 3, rowMd: 3 },
+];
+// The ten cells the posts leave on the 5×3 grid, in reading order; the
+// first four also have a slot on the 3×3 tablet grid.
+const quiltFillerSlots: Array<[number, number, number?, number?]> = [
+	[1, 1, 2, 1], [3, 1, 1, 2], [4, 1, 3, 2], [1, 2, 2, 3],
+	[2, 2], [4, 2], [5, 2], [2, 3], [3, 3], [5, 3],
+];
+const kicker = (p: QuiltPost) => `no. ${p.no} · ${p.month} ${p.year}`;
+const metaOf = (p: QuiltPost) => `${p.month} ${p.year} · ${p.cat}`;
+const cardOf = (p: QuiltPost, why?: string) => ({
+	kicker: kicker(p),
+	title: p.title,
+	blurb: p.blurb,
+	meta: `${p.cat} · ${p.min} min`,
+	why,
+	href: `/txt/${p.slug}`,
+});
+const browseDemo = {
+	categories: [
+		{ label: "programming", count: 2, href: "/txt?q=programming" },
+		{ label: "projects", count: 1, href: "/txt?q=projects" },
+		{ label: "thoughts", count: 1, href: "/txt?q=thoughts" },
+		{ label: "personal", count: 1, href: "/txt?q=personal" },
+	],
+	years: ["2026", "2025", "2024", "2023"].map((y) => ({ label: y, href: `/txt?q=${y}` })),
+	latest: { title: quiltPosts[0].title, href: `/txt/${quiltPosts[0].slug}` },
+};
+const resultsDemo = {
+	label: "2 posts for “home”",
+	items: [
+		{
+			href: `/txt/${quiltPosts[4].slug}`,
+			title: [
+				{ text: "No Honey, We Have a Dashboard at ", hl: false },
+				{ text: "Home", hl: true },
+			],
+			meta: metaOf(quiltPosts[4]),
+		},
+		{
+			href: `/txt/${quiltPosts[2].slug}`,
+			title: quiltPosts[2].title,
+			meta: metaOf(quiltPosts[2]),
+			why: "matched tag · home office",
+		},
+	],
+	active: 0,
+};
+const nothingDemo = {
+	query: "recipes",
+	suggestions: ["agents", "desk", "vscode", "health", "projects", "2025"].map((w) => ({
+		label: w,
+		href: `/txt?q=${w}`,
+	})),
+};
+
+type QuiltCellState = "lit" | "faint" | "gone";
+interface QuiltDemo {
+	id: string;
+	title: string;
+	note: string;
+	search: { value?: string; count: string; expanded?: boolean };
+	panel: { mode: "hidden" | "card" | "browse" | "results" | "none"; col: number; row: number };
+	/** Posts that stay lit; everything else scatters. Unset: nothing scatters. */
+	lit?: string[];
+	/** Fillers only go faint (the browse state). */
+	fillersFaint?: boolean;
+	active?: string;
+	card?: QuiltPost;
+}
+const quiltDemos: QuiltDemo[] = [
+	{
+		id: "rest",
+		title: "Rest — every cell lit, the panel hidden",
+		note: "Five posts and ten fillers; data-state=\"lit\" on every cell and data-mode=\"hidden\" on the panel, which still holds its block (3 / 2 here) so nothing moves when it opens.",
+		search: { count: "5 posts" },
+		panel: { mode: "hidden", col: 3, row: 2 },
+	},
+	{
+		id: "hover",
+		title: "Hovered — one post lit, the rest scattered, the card in the freed block",
+		note: "Pointer (or focus) on the post at 1 / 3: the block that avoids it and sits farthest away is 3 / 1, its cells go gone, every other cell rolls faint or gone with its own --scatter-delay, and the panel shows the card face.",
+		search: { count: "5 posts" },
+		panel: { mode: "card", col: 3, row: 1 },
+		lit: ["why-i-joined-fisker"],
+		card: quiltPosts[3],
+	},
+	{
+		id: "browse",
+		title: "Browse — the bar focused and empty",
+		note: "Posts stay lit, fillers go faint, and the block farthest from the bar's left end (3 / 2) opens on the browse face: categories with counts, years, the latest post — each a real link to ?q=.",
+		search: { count: "5 posts", expanded: true },
+		panel: { mode: "browse", col: 3, row: 2 },
+		lit: quiltPosts.map((p) => p.slug),
+		fillersFaint: true,
+	},
+	{
+		id: "results",
+		title: "Results — two hits, the active one ringed",
+		note: "“home” matches two posts. The block hiding the fewest matches that avoids the active post (4 / 3) is 1 / 1; the active tile carries data-active, the accent ring; the list marks the query and says why the other matched.",
+		search: { value: "home", count: "2 of 5", expanded: true },
+		panel: { mode: "results", col: 1, row: 1 },
+		lit: ["no-honey-we-have-a-dashboard-at-home", "mega-desk"],
+		active: "no-honey-we-have-a-dashboard-at-home",
+	},
+];
+const inBlock = (d: QuiltDemo, c: number, r: number) =>
+	d.panel.mode !== "hidden" &&
+	c >= d.panel.col && c < d.panel.col + 3 && r >= d.panel.row && r < d.panel.row + 2;
+// A made-up scatter, deterministic per cell, standing in for the engine's.
+const roll = (c: number, r: number, salt: number) => (((r * 5 + c) * 7919 + salt * 104729) % 97) / 97;
+const cellState = (d: QuiltDemo, c: number, r: number, slug?: string): { state: QuiltCellState; delay: number } => {
+	if (!d.lit) return { state: "lit", delay: 0 };
+	if (inBlock(d, c, r)) return { state: "gone", delay: Math.round(roll(c, r, 1) * 240) };
+	if (slug && d.lit.includes(slug)) return { state: "lit", delay: 0 };
+	if (!slug && d.fillersFaint) return { state: "faint", delay: Math.round(roll(c, r, 1) * 240) };
+	if (slug && d.fillersFaint) return { state: "lit", delay: 0 };
+	return { state: roll(c, r, 2) < 0.5 ? "gone" : "faint", delay: Math.round(roll(c, r, 1) * 240) };
+};
 
 // Art tokens, for the swatch row: name → what it is for.
 const artTokens = [
@@ -1120,6 +1285,137 @@ const faces = [
 			</div>
 		</section>
 
+		<!-- QUILT ---------------------------------------------------------- -->
+		<section class="ds-demo__section" id="quilt">
+			<h2 class="ds-demo__h">Quilt · QuiltCell — the grid of art tiles and its states</h2>
+			<p class="ds-demo__note">
+				<code>&lt;Quilt cols rows colsMd rowsMd&gt;</code> is the grid (quilt.css): five
+				16:9 cells across at ≥ 1024, three at 640–1023 (a cell takes its
+				<code>colMd</code>/<code>rowMd</code> slot; a filler without one drops), and on a
+				phone two columns of captioned tiles in DOM order with no fillers.
+				<code>&lt;QuiltCell col row href label no&gt;</code> is a post — a link named by
+				its title around a decorative <code>ArtFrame</code>, its <code>caption</code> slot
+				the meta line under the title on phones; <code>filler</code> is aria-hidden art.
+				The script's contract on a cell: <code>data-state="lit | faint | gone"</code>,
+				<code>--scatter-delay</code>, <code>data-active</code> (the accent ring). Every
+				state below is set by hand; <code>src/lib/quilt/engine.ts</code> decides them on
+				the page. Resize to 768 and 390 for the other two grids.
+			</p>
+			{quiltDemos.map((d) => (
+				<figure class="ds-demo__quilt" id={`quilt-${d.id}`}>
+					<figcaption class="ds-demo__quilt-cap">
+						<Mono variant="value">{d.title}</Mono>
+						<Mono variant="text">{d.note}</Mono>
+					</figcaption>
+					<SearchBar
+						id={`quilt-${d.id}-search`}
+						label="search"
+						count={d.search.count}
+						value={d.search.value}
+						expanded={d.search.expanded}
+						hint="/"
+						controls={`quilt-${d.id}-panel-results`}
+					/>
+					<Quilt cols={5} rows={3} colsMd={3} aria-label={`quilt demo: ${d.id}`}>
+						{quiltPosts.map((p) => {
+							const s = cellState(d, p.col, p.row, p.slug);
+							return (
+								<QuiltCell
+									col={p.col}
+									row={p.row}
+									colMd={p.colMd}
+									rowMd={p.rowMd}
+									href={`/txt/${p.slug}`}
+									label={p.title}
+									no={p.no}
+									state={s.state}
+									delay={s.delay}
+									active={d.active === p.slug}
+								>
+									<ArtFrame svg={artOf(p.slug)} decorative />
+									<Fragment slot="caption">{metaOf(p)}</Fragment>
+								</QuiltCell>
+							);
+						})}
+						{quiltFillerSlots.map(([c, r, cMd, rMd], i) => {
+							const s = cellState(d, c, r);
+							return (
+								<QuiltCell col={c} row={r} colMd={cMd} rowMd={rMd} filler state={s.state} delay={s.delay}>
+									<ArtFrame svg={quiltFillers[i % quiltFillers.length]} decorative />
+								</QuiltCell>
+							);
+						})}
+						<QuiltPanel
+							id={`quilt-${d.id}-panel`}
+							mode={d.panel.mode}
+							col={d.panel.col}
+							row={d.panel.row}
+							card={d.card ? cardOf(d.card) : cardOf(quiltPosts[0])}
+							browse={browseDemo}
+							results={resultsDemo}
+							nothing={nothingDemo}
+						/>
+					</Quilt>
+				</figure>
+			))}
+		</section>
+
+		<section class="ds-demo__section" id="quilt-panel">
+			<h2 class="ds-demo__h">QuiltPanel — the four faces</h2>
+			<p class="ds-demo__note">
+				One panel, four faces, <code>data-mode</code> picks: <code>card</code> (a hovered
+				post, or the single hit with its <code>why</code>), <code>browse</code>,
+				<code>results</code> (a listbox; the active option is
+				<code>aria-selected</code>), <code>none</code>; <code>hidden</code> fades it out.
+				Inside a Quilt it is absolutely positioned on the 3×2 block at
+				<code>--panel-col</code> / <code>--panel-row</code>; here, and on a phone, it is in
+				flow (<code>flow</code>). Text is filled through hooks
+				(<code>data-card</code>, <code>data-results</code>, <code>data-none</code>) and a
+				<code>&lt;template data-result-template&gt;</code> holds one empty row.
+			</p>
+			<div class="ds-demo__panels">
+				{(
+					[
+						["card", "card — a single hit, with why"],
+						["browse", "browse"],
+						["results", "results"],
+						["none", "none"],
+					] as const
+				).map(([mode, label]) => (
+					<div class="ds-demo__panel">
+						<Mono variant="value">data-mode="{mode}" — {label}</Mono>
+						<QuiltPanel
+							id={`panel-${mode}`}
+							mode={mode}
+							flow
+							card={cardOf(quiltPosts[1], "matched tag · hair care")}
+							browse={browseDemo}
+							results={resultsDemo}
+							nothing={nothingDemo}
+						/>
+					</div>
+				))}
+			</div>
+		</section>
+
+		<section class="ds-demo__section" id="search-bar">
+			<h2 class="ds-demo__h">SearchBar</h2>
+			<p class="ds-demo__note">
+				<code>&lt;SearchBar id label placeholder count hint controls&gt;</code>: the caps
+				label, a native <code>type="search"</code> input that is a combobox over the
+				panel's results listbox, the live count (<code>aria-live="polite"</code>,
+				<code>data-search-count</code>), the key hint as an outline pill (not drawn
+				without a keyboard). The hairline takes the accent while the input has focus —
+				click into either bar. <code>value</code> and <code>expanded</code> render a state
+				statically.
+			</p>
+			<Flex direction="column" gap={4}>
+				<SearchBar id="search-rest" count="5 posts" hint="/" />
+				<SearchBar id="search-typed" value="home" count="2 of 5" hint="/" expanded />
+				<SearchBar id="search-plain" label="find" placeholder="no count, no hint" />
+			</Flex>
+		</section>
+
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Anchor — variants</h2>
 			<Flex direction="column" gap={2} alignItems="start">
@@ -1740,6 +2036,45 @@ const faces = [
 		.ds-demo__art-sizes {
 			grid-template-columns: minmax(0, 1fr);
 		}
+	}
+
+	/* The quilt demos: a bar over a grid, the pair stacked with the page's
+	   own rhythm; the panel demos side by side, each on the page surface. */
+	.ds-demo__quilt {
+		margin: 0 0 var(--space-8);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-5);
+	}
+	/* The quilt wants the site's 1200px container, and the catalogue's column
+	   is 624px at 1440 once the fixed token panel has its clearance — so the
+	   figure runs past the column, up to the panel's edge (its width, its
+	   inset and a gap), and stops at the container width. */
+	@media (min-width: 901px) {
+		.ds-demo__quilt {
+			inline-size: min(
+				var(--container-max, 1200px),
+				calc(100vw - 264px - var(--space-4) - var(--space-6) - var(--space-5))
+			);
+		}
+	}
+	.ds-demo__quilt-cap {
+		display: grid;
+		gap: var(--space-2);
+		max-width: 68ch;
+	}
+	.ds-demo__panels {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+		gap: var(--space-4);
+	}
+	.ds-demo__panel {
+		display: grid;
+		align-content: start;
+		gap: var(--space-4);
+		padding: var(--space-4);
+		border: 1px solid var(--hairline);
+		border-radius: var(--border-radius-1);
 	}
 
 	.ds-demo__note {

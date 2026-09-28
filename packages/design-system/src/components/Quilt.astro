@@ -1,0 +1,74 @@
+---
+// Quilt — the grid of art tiles on /txt (styles/quilt.css): one QuiltCell per
+// post, fillers in the cells left over, and one QuiltPanel that takes a 3×2
+// block of cells when something is hovered, focused or searched. The
+// component is the geometry and the state CONTRACT; the behaviour (which
+// cell is lit, where the panel goes) is the site's script, which paints
+// data attributes and custom properties onto what is rendered here.
+//
+//   <Quilt cols={5} rows={3} aria-label="Posts">
+//     <QuiltCell col={3} row={1} href="/txt/mega-desk" label="The Mega Desk" no="003">
+//       <ArtFrame svg={raw} decorative />
+//       <Fragment slot="caption">APR 2025 · PROJECTS</Fragment>
+//     </QuiltCell>
+//     <QuiltCell col={1} row={1} filler><ArtFrame svg={filler} decorative /></QuiltCell>
+//     <QuiltPanel id="quilt-panel" mode="hidden" col={3} row={2} … />
+//   </Quilt>
+//
+// THREE MODES BY VIEWPORT, all in the stylesheet: ≥ 1024 the hover quilt at
+// `cols` (5); 640–1023 the hover quilt at `colsMd` (3), where a cell takes
+// its `colMd`/`rowMd` slot and a filler without one drops out; < 640 two
+// columns of CAPTIONED tiles in DOM order, no fillers, the panel in flow above
+// the tiles. Rows are explicit (`rows`, `rowsMd`; the engine's
+// max(3, ceil(posts / cols))) so the panel's block always has lines to sit on.
+//
+// The grid is `position: relative`, and the panel is an absolutely positioned
+// grid item: its containing block is the grid AREA its placement names, so
+// `--panel-col/--panel-row` land it on the block without measured pixels and
+// its content never sizes a row. `role="group"` with the caller's aria-label;
+// pass another role to override. `class` merges; `style` and everything else
+// pass through.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	/** Columns ≥ 1024. */
+	cols?: number;
+	/** Rows ≥ 1024: max(3, ceil(posts / cols)). */
+	rows?: number;
+	/** Columns 640–1023. */
+	colsMd?: number;
+	/** Rows 640–1023; defaults to `rows`. */
+	rowsMd?: number;
+	class?: string;
+	style?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	cols = 5,
+	rows = 3,
+	colsMd = 3,
+	rowsMd,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+
+const vars = [
+	`--quilt-cols-lg:${cols}`,
+	`--quilt-rows-lg:${rows}`,
+	`--quilt-cols-md:${colsMd}`,
+	rowsMd && `--quilt-rows-md:${rowsMd}`,
+	style,
+]
+	.filter(Boolean)
+	.join(";");
+---
+
+<Tag class={cx("ds-quilt", className)} data-quilt style={vars} role="group" {...rest}>
+	<slot />
+</Tag>

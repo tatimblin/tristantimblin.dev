@@ -1,0 +1,179 @@
+/* Quilt · QuiltCell — the grid of art tiles on /txt, and the scatter.
+ *
+ * A grid of landscape cells (the art's 16:9), a post or a filler in each,
+ * and the panel over a 3×2 block of them. The stylesheet holds the GEOMETRY
+ * for three viewports and the STATE CONTRACT a script drives; it decides
+ * nothing itself.
+ *
+ *   ≥ 1024      the hover quilt at --quilt-cols-lg (5) — a cell ~230×130 at
+ *               the 1200px container, the reference's tile scale.
+ *   640–1023    the hover quilt at --quilt-cols-md (3), where a cell takes
+ *               its tablet slot (--cell-col-md/--cell-row-md) and a filler
+ *               without one drops out.
+ *   < 640       two columns of CAPTIONED tiles in DOM order: a tile with no
+ *               text in it cannot be hovered on a phone, so the title and
+ *               the meta line come back under the art, the fillers go, and
+ *               the panel (quilt-panel.css) is an in-flow block above the
+ *               tiles. A tap navigates; nothing reveals.
+ *
+ * The rows are explicit, so the panel's block always has grid lines to sit
+ * on, and the grid is position: relative for the panel, an absolutely
+ * positioned grid item whose containing block is the area its placement
+ * names — so the panel lands on cells by line number, with no measured
+ * pixels, and its content never sizes a row. */
+.ds-quilt {
+	/* The cell's shape — the art's, so a frame fills a cell exactly. */
+	--quilt-aspect: 16 / 9;
+	--quilt-gap: var(--space-3);
+	/* The ghost's opacity: a tile that has stepped back but is still there. */
+	--quilt-faint: 0.22;
+	--quilt-cols: var(--quilt-cols-lg, 5);
+	--quilt-rows: var(--quilt-rows-lg, 3);
+
+	position: relative;
+	display: grid;
+	/* minmax(0, 1fr), not 1fr: an inline SVG's intrinsic width must not
+	   widen its column (widget-grid.css has the same note). */
+	grid-template-columns: repeat(var(--quilt-cols), minmax(0, 1fr));
+	grid-template-rows: repeat(var(--quilt-rows), auto);
+	gap: var(--quilt-gap);
+	font-family: var(--font-ui);
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+	.ds-quilt {
+		--quilt-cols: var(--quilt-cols-md, 3);
+		--quilt-rows: var(--quilt-rows-md, var(--quilt-rows-lg, 3));
+	}
+}
+@media (max-width: 639px) {
+	.ds-quilt {
+		--quilt-cols: 2;
+		grid-template-rows: none;
+	}
+}
+
+/* THE CELL. Placed by custom properties the component sets inline
+   (--cell-col/--cell-row for the desktop grid, --cell-col-md/--cell-row-md
+   for the tablet one); each viewport picks its pair below, and a cell
+   without one flows. The art inside takes the cell's shape through the
+   frame's own --art-ratio. */
+.ds-quilt-cell {
+	grid-column: var(--quilt-cell-col, auto);
+	grid-row: var(--quilt-cell-row, auto);
+	min-inline-size: 0;
+	--art-ratio: var(--quilt-aspect);
+	transition:
+		opacity var(--duration-settle) var(--ease-reveal),
+		filter var(--duration-settle) var(--ease-reveal);
+}
+@media (min-width: 1024px) {
+	.ds-quilt-cell {
+		--quilt-cell-col: var(--cell-col, auto);
+		--quilt-cell-row: var(--cell-row, auto);
+	}
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+	.ds-quilt-cell {
+		--quilt-cell-col: var(--cell-col-md, auto);
+		--quilt-cell-row: var(--cell-row-md, auto);
+	}
+	/* The tablet grid has fewer cells; a filler that was not given one of
+	   them is not drawn. */
+	.ds-quilt-cell[data-cell="filler"]:not([data-md]) {
+		display: none;
+	}
+}
+@media (max-width: 639px) {
+	.ds-quilt-cell[data-cell="filler"] {
+		display: none;
+	}
+}
+
+/* THE SCATTER. Three states, one attribute. Into faint or gone a cell waits
+   its own --scatter-delay (the engine's 0–240ms stagger, set inline by the
+   script); back to lit, everything returns at once. Under reduced motion
+   --duration-settle is 0s and the scatter is a cut.
+
+   faint is opacity alone by default; the greyscale that makes a ghost read
+   as one is gated to a desktop with a pointer, since fifteen filtered inline
+   SVGs at once is a cost a low-end tablet should not pay. gone takes no
+   pointer but a post stays FOCUSABLE — Tab must still reach every tile
+   while a hovered one has scattered the rest, and focusing a gone tile is
+   what lights it. */
+.ds-quilt-cell[data-state="faint"],
+.ds-quilt-cell[data-state="gone"] {
+	transition-delay: var(--scatter-delay, 0ms);
+}
+.ds-quilt-cell[data-state="faint"] {
+	opacity: var(--quilt-faint);
+}
+@media (hover: hover) and (min-width: 1024px) {
+	.ds-quilt-cell[data-state="faint"] {
+		filter: grayscale(1);
+	}
+}
+.ds-quilt-cell[data-state="gone"] {
+	opacity: 0;
+	pointer-events: none;
+}
+/* A phone's tiles are the page: nothing there vanishes, so the list never
+   shows holes — a gone cell renders as faint. */
+@media (max-width: 639px) {
+	.ds-quilt-cell[data-state="gone"] {
+		opacity: var(--quilt-faint);
+		pointer-events: auto;
+	}
+}
+
+/* THE LINK. The whole cell, named by aria-label (the art is decorative);
+   the focus ring outside it, and the ACTIVE RING — the search result the
+   arrow keys are on — drawn on the frame as an inset outline, so it sits
+   over the art and follows the frame's corner. The frame's own hover rule
+   (art-frame.css, `a:hover .ds-art`) runs the art's motion under the
+   pointer; nothing to add here. */
+.ds-quilt-cell__link {
+	display: block;
+	color: inherit;
+	text-decoration: none;
+	border-radius: var(--art-radius);
+}
+.ds-quilt-cell__link:focus-visible {
+	outline: var(--focus-ring);
+	outline-offset: var(--focus-ring-offset);
+}
+.ds-quilt-cell .ds-art {
+	transition: outline-color var(--duration-swap) var(--ease-reveal);
+	outline: var(--focus-ring);
+	outline-color: transparent;
+	outline-offset: calc(-1 * var(--focus-ring-offset));
+}
+.ds-quilt-cell[data-active] .ds-art {
+	outline-color: var(--accent);
+}
+
+/* THE CAPTION. Under the art on a phone only: the title in the UI face at
+   the small step, the meta line in the structure voice. Elsewhere the link's
+   name is its aria-label and this is not drawn. */
+.ds-quilt-cell__caption {
+	display: none;
+}
+@media (max-width: 639px) {
+	.ds-quilt-cell__caption {
+		display: grid;
+		gap: var(--space-1);
+		padding-block: var(--space-2) var(--space-1);
+	}
+	.ds-quilt-cell__title {
+		font-size: var(--font-size-1);
+		line-height: var(--line-height-ui);
+		color: var(--text-primary);
+	}
+	/* A 179px cell: the full caps tracking costs the meta line a word, so it
+	   takes the mono step (Mono's own phone rule for widget tiles does the
+	   same). Three classes to out-rank the doubled .ds-caps. */
+	.ds-quilt-cell .ds-quilt-cell__meta.ds-caps {
+		letter-spacing: var(--tracking-mono);
+		margin-inline-end: calc(-1 * var(--tracking-mono));
+		white-space: normal;
+	}
+}
