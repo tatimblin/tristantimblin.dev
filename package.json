@@ -10,7 +10,8 @@
     "build:site": "bunx --bun astro build",
     "preview": "bunx --bun astro preview",
     "astro": "bunx --bun astro",
-    "test": "playwright test"
+    "test": "playwright test",
+    "validate:art": "bun packages/design-system/scripts/validate-art.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",
