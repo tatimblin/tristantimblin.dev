@@ -1,0 +1,47 @@
+---
+// BlogLayout — the chrome for the blog's list pages: /txt, /txt/categories,
+// /txt/category/<id> and /txt/tag/<tag>. The site header in the flow, then one
+// column holding a page header (kicker, h1, lede) and whatever the page puts in
+// the slot — a PostIndex, usually. Pages stay thin: they fetch and group, this
+// owns the shell. Wraps Layout.astro (the only html/head).
+import Layout from "./Layout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import Heading from "@whois/design-system/Heading";
+import Mono from "@whois/design-system/Mono";
+import Body from "@whois/design-system/Body";
+// DS component styles are not global — once per page, and a layout's import
+// counts for everything it slots.
+import "@whois/design-system/styles.css";
+import "../styles/blog.css";
+import { blogNav } from "../lib/blog";
+
+interface Props {
+	/** The document title. */
+	title: string;
+	description?: string;
+	noindex?: boolean;
+	/** The page's h1. */
+	heading: string;
+	/** A small caps label above the h1 ("Category", "Tag"). */
+	kicker?: string;
+}
+
+const { title, description, noindex, heading, kicker } = Astro.props;
+const hasLede = Astro.slots.has("lede");
+---
+
+<Layout title={title} description={description} noindex={noindex}>
+	<div class="blog">
+		<SiteHeader variant="flow" links={blogNav} />
+		<main class="blog__main">
+			<header class="blog__header">
+				{kicker && <Mono class="blog__kicker">{kicker}</Mono>}
+				<Heading as="h1" size={4}>{heading}</Heading>
+				{hasLede && (
+					<Body class="blog__lede"><slot name="lede" /></Body>
+				)}
+			</header>
+			<slot />
+		</main>
+	</div>
+</Layout>

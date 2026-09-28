@@ -1,0 +1,48 @@
+---
+// PostIndex — the blog's archive, grouped by year, newest first. Shared by /txt
+// and every category and tag page, which is the reason it is a component: one
+// place decides how a post row reads (title, category with its icon, arrow).
+// The DS PostList / PostGroup / PostRow draw it; this only knows the collection.
+import type { CollectionEntry } from "astro:content";
+import PostList from "@whois/design-system/PostList";
+import PostGroup from "@whois/design-system/PostGroup";
+import PostRow from "@whois/design-system/PostRow";
+import Icon from "@whois/design-system/Icon";
+import Body from "@whois/design-system/Body";
+import { categories, groupByYear, postHref } from "../../lib/blog";
+
+interface Props {
+	posts: CollectionEntry<"txt">[];
+	label?: string;
+}
+
+const { posts, label = "Posts by year" } = Astro.props;
+const groups = groupByYear(posts);
+---
+
+{
+	groups.length === 0 ? (
+		<Body variant="tertiary">Nothing here yet.</Body>
+	) : (
+		<PostList aria-label={label}>
+			{groups.map(({ year, posts }) => (
+				<PostGroup label={String(year)}>
+					{posts.map((post) => {
+						const cat = post.data.category ? categories[post.data.category] : null;
+						return (
+							<PostRow href={postHref(post.id)}>
+								{post.data.title}
+								{cat && (
+									<Fragment slot="meta">
+										<Icon name={cat.icon} />
+										{cat.label}
+									</Fragment>
+								)}
+							</PostRow>
+						);
+					})}
+				</PostGroup>
+			))}
+		</PostList>
+	)
+}

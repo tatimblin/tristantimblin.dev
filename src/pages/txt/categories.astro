@@ -1,0 +1,70 @@
+---
+// /txt/categories — where the header's "Categories" link goes: every category
+// with its icon and count, as rows of the same list the archive uses, then the
+// tags as a quiet row of pills (their pages still exist; this is their home).
+import { getCollection } from "astro:content";
+import BlogLayout from "../../layouts/BlogLayout.astro";
+import PostList from "@whois/design-system/PostList";
+import PostGroup from "@whois/design-system/PostGroup";
+import PostRow from "@whois/design-system/PostRow";
+import Icon from "@whois/design-system/Icon";
+import Flex from "@whois/design-system/Flex";
+import Pill from "@whois/design-system/Pill";
+import { categories, categoryHref, categoryIds, tagHref } from "../../lib/blog";
+
+const posts = (await getCollection("txt")).filter(
+	(post) => import.meta.env.PROD === false || !post.data.draft
+);
+
+const countOf = (id: string) => posts.filter((post) => post.data.category === id).length;
+const listed = categoryIds.filter((id) => countOf(id) > 0);
+
+const tags = [...new Set(posts.flatMap((post) => post.data.tags))].sort();
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+---
+
+<BlogLayout
+	title="Categories — Tristan Timblin"
+	description="Writing by Tristan Timblin, by category."
+	heading="Categories"
+>
+	<Fragment slot="lede">Every post files under one of these.</Fragment>
+	<PostList aria-label="Categories and tags">
+		<PostGroup label="Categories">
+			{listed.map((id) => (
+				<PostRow href={categoryHref(id)}>
+					<span class="cat"><Icon name={categories[id].icon} />{categories[id].label}</span>
+					<Fragment slot="meta">{plural(countOf(id), "post")}</Fragment>
+				</PostRow>
+			))}
+		</PostGroup>
+		<PostGroup label="Tags">
+			<li>
+				<Flex gap={2} wrap="wrap" class="tags">
+					{tags.map((tag) => (
+						<Pill as="a" href={tagHref(tag)} variant="outline">{tag.replace(/-/g, " ")}</Pill>
+					))}
+				</Flex>
+			</li>
+		</PostGroup>
+	</PostList>
+</BlogLayout>
+
+<style>
+	/* The category's icon sits before its name, sized to the type as the row's
+	   meta icons are. */
+	.cat {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+	.cat :global(svg) {
+		inline-size: 1em;
+		block-size: 1em;
+		flex: none;
+	}
+	/* Lines the pills up with the rows' text edge and pitch. */
+	.tags {
+		padding-block: var(--space-4);
+	}
+</style>

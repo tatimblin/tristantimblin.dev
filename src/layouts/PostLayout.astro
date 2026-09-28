@@ -1,0 +1,157 @@
+---
+// PostLayout — the reading experience for a /txt post. Wraps ArticleLayout
+// (which owns the article SEO) and composes the chrome from the design system:
+// the site header in the flow, a post header (date line, title, excerpt, the
+// category as a pill), a hero image when the post names one, and the body in
+// a Prose column. The body arrives via <slot /> already mapped to DS components
+// (src/components/mdx-components.ts, applied at the <Content> render site in
+// txt/[slug].astro).
+//
+// Only the hero's bleed is bespoke CSS: it runs from the viewport's left edge
+// to the column's right edge, rounded on the right. Everything else is a DS
+// component or the shared shell in src/styles/blog.css.
+import ArticleLayout from "./ArticleLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import Heading from "@whois/design-system/Heading";
+import Text from "@whois/design-system/Text";
+import Body from "@whois/design-system/Body";
+import Pill from "@whois/design-system/Pill";
+import Icon from "@whois/design-system/Icon";
+import Prose from "@whois/design-system/Prose";
+import "@whois/design-system/styles.css";
+import "../styles/blog.css";
+import { intrinsicSize } from "../lib/intrinsicSize";
+import {
+	blogNav,
+	categories,
+	categoryHref,
+	formatDate,
+	isoDate,
+	type CategoryId,
+} from "../lib/blog";
+
+interface Props {
+	title: string;
+	description?: string;
+	category?: CategoryId;
+	tags?: string[];
+	date: Date;
+	modified?: Date | null;
+	/** The post's image: the social card, and the hero under the header. */
+	image?: string;
+	imageAlt?: string;
+	canonical?: string;
+}
+
+const {
+	title,
+	description,
+	category,
+	tags = [],
+	date,
+	modified,
+	image,
+	imageAlt,
+	canonical,
+} = Astro.props;
+
+const cat = category ? categories[category] : null;
+// Sized from the file at build time so the browser reserves the box before the
+// bytes land — the same reader the mapped post images use.
+const heroSize = image ? intrinsicSize(image) : null;
+---
+
+<ArticleLayout
+	title={title}
+	description={description}
+	image={image}
+	canonical={canonical}
+	publishDate={date}
+	modifiedDate={modified}
+	tags={tags}
+>
+	<div class="blog">
+		<SiteHeader variant="flow" links={blogNav} />
+		<main class="blog__main">
+			<article>
+				<header class="post__header">
+					<Text as="p" size={1} variant="tertiary" family="numeric" class="post__date">
+						<time datetime={isoDate(date)}>{formatDate(date)}</time>
+						{modified && (
+							<span>
+								{" · Updated "}
+								<time datetime={isoDate(modified)}>{formatDate(modified)}</time>
+							</span>
+						)}
+					</Text>
+					<Heading as="h1" size={4} class="post__title">{title}</Heading>
+					{description && <Body class="post__excerpt">{description}</Body>}
+					{cat && category && (
+						<Pill as="a" href={categoryHref(category)} class="post__category">
+							<Icon name={cat.icon} />{cat.label}
+						</Pill>
+					)}
+				</header>
+
+				{image && (
+					<figure class="post__hero">
+						<img
+							src={image}
+							alt={imageAlt ?? ""}
+							width={heroSize?.w}
+							height={heroSize?.h}
+							decoding="async"
+						/>
+					</figure>
+				)}
+
+				<Prose>
+					<slot />
+				</Prose>
+			</article>
+		</main>
+	</div>
+</ArticleLayout>
+
+<style>
+	.post__header {
+		margin-block-end: var(--space-8);
+	}
+	.post__header > * + * {
+		margin-block-start: var(--space-3);
+	}
+	.post__date {
+		display: block;
+	}
+	/* Two lines at most at this measure; narrower than the column so a long
+	   title wraps early rather than running the full width. */
+	.post__title {
+		max-width: 32.5rem;
+		text-wrap: balance;
+	}
+	.post__excerpt {
+		max-width: 32.5rem;
+	}
+	.post__category {
+		margin-block-start: var(--space-4);
+	}
+
+	/* THE HERO BLEED. The column is centred, so half the viewport minus half the
+	   column is the space to its left; a negative margin of exactly that runs the
+	   figure to the viewport's edge while its right edge stays on the column's.
+	   Rounded on the right only — the left is the viewport. Under the measure
+	   (a phone) the margin is the gutter, so the image still meets the edge. */
+	.post__hero {
+		margin: 0 0 var(--space-8) 0;
+		margin-inline-start: min(calc(50% - 50vw), calc(-1 * var(--container-pad)));
+	}
+	.post__hero img {
+		display: block;
+		inline-size: 100%;
+		block-size: auto;
+		max-block-size: 70vh;
+		object-fit: cover;
+		border-start-end-radius: var(--border-radius-3);
+		border-end-end-radius: var(--border-radius-3);
+	}
+</style>

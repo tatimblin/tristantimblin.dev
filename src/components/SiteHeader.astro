@@ -1,18 +1,25 @@
 ---
-// Hero site header — the brand + nav bar that overlays the top of the
-// full-viewport dotgrid scene (AXIOM-style). Mirrors SiteFooter's model: fixed
-// markup + scoped <style> using DS tokens, so it re-tints with the theme toggle
-// (the <dotted-grid> samples --color-fg / --color-bg fresh each frame, and this
-// bar tracks the same tokens).
+// Site header — the brand + nav bar. Mirrors SiteFooter's model: fixed markup +
+// scoped <style> using DS tokens, so it re-tints with the theme toggle (the
+// <dotted-grid> samples --color-fg / --color-bg fresh each frame, and this bar
+// tracks the same tokens).
 //
-// Hero-only: it's rendered inside the landing hero (not global) because other
-// pages have their own headers and no dark scene to overlay.
+// Two placements, one component — so the site has one header, not two:
+//   overlay  (default) absolute over the top of the full-viewport dotgrid scene
+//            (AXIOM-style), rendered inside the landing hero.
+//   flow     in the normal flow at the top of a page — the blog's quiet top bar
+//            (BlogLayout / PostLayout).
 //
-// Nav is data-driven so adding links is a one-line edit.
-const links = [{ label: "Ergonomist", href: "/txt" }];
+// Nav is data-driven; pass `links` to change it per page.
+interface Props {
+	links?: Array<{ label: string; href: string }>;
+	variant?: "overlay" | "flow";
+}
+
+const { links = [{ label: "Writing", href: "/txt" }], variant = "overlay" } = Astro.props;
 ---
 
-<header class="site-header">
+<header class:list={["site-header", variant === "flow" && "site-header--flow"]}>
 	<a class="site-header__brand" href="/">tristantimblin.dev</a>
 	<nav class="site-header__nav" aria-label="Primary">
 		{
@@ -56,6 +63,12 @@ const links = [{ label: "Ergonomist", href: "/txt" }];
 		   built for a paragraph; at chrome size that voice competes with the hero it
 		   is overlaying. Neue Montreal recedes, so the bar reads as bar. */
 		font-family: var(--font-ui);
+	}
+
+	/* In the flow: a plain bar above the page, hit-testable everywhere. */
+	.site-header--flow {
+		position: static;
+		pointer-events: auto;
 	}
 
 	.site-header__brand {

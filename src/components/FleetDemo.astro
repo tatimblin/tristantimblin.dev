@@ -36,9 +36,9 @@ import "@whois/vscode-fleet-demo/element.css";
 </script>
 
 <style>
-	/* The type selector rides along with the class on purpose: TxtPostLayout's
-	   prose rhythm reaches in as `.txt-prose :global(> * + *)`, which lands at
-	   the same specificity a bare scoped `.fleet-demo` would. The extra element
+	/* The type selector rides along with the class on purpose: the DS Prose
+	   container's rhythm reaches in as `.ds-prose > * + *`, which lands at the
+	   same specificity a bare scoped `.fleet-demo` would. The extra element
 	   name settles the tie rather than leaving it to injection order. */
 	fleet-demo.fleet-demo {
 		/* Token bridge. element.css asks for --color-accent/--color-border/
@@ -78,18 +78,17 @@ import "@whois/vscode-fleet-demo/element.css";
 		   element's own children (poster, iframe) are `position: absolute;
 		   inset: 0` — padding on the host would simply be painted through. */
 
-		/* A touch more air than the prose rhythm (.txt-prose > * + *): this is a
+		/* A touch more air than the prose rhythm (.ds-prose > * + *): this is a
 		   figure, not another paragraph. */
 		margin-block: var(--space-7, 40px);
 	}
 
-	/* TxtPostLayout dresses every prose image — `width: 100%; height: auto;
-	   margin-block: var(--space-6); border-radius: var(--radius)` — which is
-	   right for a photo sitting in the column and wrong for a poster the element
-	   has already positioned `absolute; inset: 0` inside its own framed box.
-	   That rule outranks element.css, and the block margins in particular would
-	   pull the screenshot 32px off the top and bottom of the frame, opening dark
-	   bands. Restated here, where the scope attribute wins the tie back. */
+	/* Prose dresses every image in the column — `inline-size: 100%; block-size:
+	   auto; border-radius: var(--border-radius-2)` — which is right for a photo
+	   sitting in the column and wrong for a poster the element has already
+	   positioned `absolute; inset: 0` inside its own framed box. That rule
+	   outranks element.css, so the poster's own sizing and square corners are
+	   restated here, where the scope attribute wins the tie back. */
 	.fleet-demo [data-poster] img {
 		height: 100%;
 		margin-block: 0;

@@ -1,7 +1,7 @@
 ---
 import type { GetStaticPaths } from "astro";
 import { getCollection, render } from "astro:content";
-import TxtPostLayout from "../../layouts/TxtPostLayout.astro";
+import PostLayout from "../../layouts/PostLayout.astro";
 import { mdxComponents } from "../../components/mdx-components";
 
 export const getStaticPaths = (async () => {
@@ -15,22 +15,20 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { post } = Astro.props;
-const { title, excerpt, icon, tags, date, modified, image, canonical } = post.data;
+const { title, excerpt, category, tags, date, modified, image, imageAlt, canonical } = post.data;
 const { Content } = await render(post);
-
-// Use the post's own social card when set; otherwise <Seo> falls back to /og.jpg.
-const cardImage = image ?? undefined;
 ---
 
-<TxtPostLayout
+<PostLayout
 	title={title}
 	description={excerpt}
-	icon={icon}
+	category={category}
 	tags={tags}
 	date={date}
 	modified={modified}
-	image={cardImage}
+	image={image ?? undefined}
+	imageAlt={imageAlt ?? undefined}
 	canonical={canonical ?? undefined}
 >
 	<Content components={mdxComponents} />
-</TxtPostLayout>
+</PostLayout>

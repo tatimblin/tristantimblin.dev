@@ -1,5 +1,6 @@
 import rss from "@astrojs/rss";
 import { getCollection } from "astro:content";
+import { BLOG_DESCRIPTION, BLOG_TITLE } from "../lib/blog";
 
 export async function GET(context) {
 	const posts = (await getCollection("txt"))
@@ -7,8 +8,8 @@ export async function GET(context) {
 		.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 
 	return rss({
-		title: "The Ergonomist — Tristan Timblin",
-		description: "Writing by Tristan Timblin.",
+		title: `${BLOG_TITLE} — Tristan Timblin`,
+		description: BLOG_DESCRIPTION,
 		site: context.site,
 		items: posts.map((post) => ({
 			title: post.data.title,

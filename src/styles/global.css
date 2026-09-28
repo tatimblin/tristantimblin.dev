@@ -85,7 +85,7 @@ body {
      that actually draws them; until then this makes the request fail visibly
      rather than silently render something wrong.
      NB font-synthesis-STYLE is deliberately left ON: no face ships an italic
-     either, and the post blockquotes genuinely use one (TxtPostLayout). A faux
+     either, and markdown emphasis (the DS EM) genuinely uses one. A faux
      oblique is an acceptable stand-in; faux small caps are not. */
   font-synthesis-small-caps: none;
   overflow-x: clip;

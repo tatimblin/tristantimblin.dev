@@ -5,19 +5,16 @@
 // in small wrapper components under ./mdx/. Prop-less mappings (headings, list
 // item, em/strong) reference the DS component directly.
 //
-// Deliberately NOT mapped — kept as raw tags, styled via scoped CSS in
-// TxtPostLayout (`.txt-prose :global(…)`):
+// Deliberately NOT mapped — kept as raw tags, styled by the DS Prose container
+// the post body sits in (packages/design-system/src/styles/prose.css):
 //   - `code`: MDX maps it globally, so mapping to InlineCode would also wrap
 //     fenced-block `<pre><code>`. Inline + block code are handled in CSS.
-//   - `pre`, `hr`, `del`: no clean 1:1 DS component.
-//   - `blockquote`: the nearest DS component is Callout, which is an ATTENTION
-//     box — border, surface, an icon — and a pulled quote is the opposite gesture:
-//     it recedes into the page and lets the quoted voice carry it. TxtPostLayout
-//     styles it as a quiet editorial left-rule instead, matching the homepage
-//     passage treatment. The <p> INSIDE it is mapped, so the quote is still set in
-//     the Body role; only the frame is hand-authored.
-//     (Previously absent from both the map and this list, which read as an
-//     oversight rather than a decision.)
+//   - `pre`, `hr`, `del`, `table`: no clean 1:1 DS component.
+//
+// `blockquote` IS mapped, to the DS Blockquote — a quiet filled box with a bar
+// down its left edge. Not Callout, which is an ATTENTION box with a badge; a
+// pulled quote is the opposite gesture. The <p> inside is mapped too, so the
+// quote is set in the Body role.
 //
 // `img` IS mapped (to ./mdx/Img.astro) — not for a DS component, but because
 // markdown cannot express width/height, lazy loading, or a reveal hook, and the
@@ -28,6 +25,7 @@ import H4 from "@whois/design-system/H4";
 import ListItem from "@whois/design-system/ListItem";
 import EM from "@whois/design-system/EM";
 import Strong from "@whois/design-system/Strong";
+import Blockquote from "@whois/design-system/Blockquote";
 
 import P from "./mdx/P.astro";
 import A from "./mdx/A.astro";
@@ -45,6 +43,7 @@ export const mdxComponents = {
 	ul: Ul,
 	ol: Ol,
 	li: ListItem,
+	blockquote: Blockquote,
 	em: EM,
 	strong: Strong,
 };

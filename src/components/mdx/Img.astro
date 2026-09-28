@@ -7,7 +7,7 @@
 //      the page reflowed as each one decoded (a real CLS cost on 680KB of photos).
 //      Measured here rather than hardcoded in each post so re-exporting an image
 //      can't silently desynchronise the numbers. The CSS still drives the rendered
-//      size (`width: 100%; height: auto` in TxtPostLayout) — these attributes only
+//      size (`inline-size: 100%; block-size: auto` in the DS Prose) — these attributes only
 //      publish the ASPECT so the browser can reserve the right box up front.
 //   2. Lazy loading + async decode, so a long post doesn't fetch every photo at once.
 //   3. data-reveal, so each image eases in as it is scrolled to instead of

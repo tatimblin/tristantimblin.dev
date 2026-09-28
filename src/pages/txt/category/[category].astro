@@ -1,0 +1,39 @@
+---
+// /txt/category/<id> — one category's posts, by year. Same list as /txt from a
+// smaller pile; a real route rather than a filter, so it works with JS off and
+// can be linked.
+import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+import BlogLayout from "../../../layouts/BlogLayout.astro";
+import PostIndex from "../../../components/txt/PostIndex.astro";
+import { categories, categoryIds, type CategoryId } from "../../../lib/blog";
+
+export const getStaticPaths = (async () => {
+	const posts = (await getCollection("txt")).filter(
+		(post) => import.meta.env.PROD === false || !post.data.draft
+	);
+	// Every category gets a page, even an empty one: the set is closed and small,
+	// and a link to a category should never 404 because its last post moved.
+	return categoryIds.map((category) => ({
+		params: { category },
+		props: { category, posts: posts.filter((post) => post.data.category === category) },
+	}));
+}) satisfies GetStaticPaths;
+
+interface Props {
+	category: CategoryId;
+	posts: Awaited<ReturnType<typeof getCollection<"txt">>>;
+}
+
+const { category, posts } = Astro.props;
+const { label } = categories[category];
+---
+
+<BlogLayout
+	title={`${label} — Tristan Timblin`}
+	description={`Writing by Tristan Timblin, filed under ${label}.`}
+	kicker="Category"
+	heading={label}
+>
+	<PostIndex posts={posts} label={`${label} posts by year`} />
+</BlogLayout>

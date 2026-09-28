@@ -1,119 +1,22 @@
 ---
-// /txt as a news front page, in the shape of a modern news product rather than a
-// printed sheet: a lead with its art, a "Latest" rail beside it, a featured strip
-// of thumbnail rows beneath, all on warm paper in rounded surfaces.
-//
-// The chrome (top bar, wordmark, category rail, paper) is NewsroomLayout's.
-// This page owns the edit: which story leads, what sits in the rail, what runs
-// as a row.
-//
-// Filtering does NOT happen here. Each category is its own route
-// (src/pages/txt/tag/[tag].astro) rendering the same <FrontPage /> from a smaller
-// pile of stories, so a tag still gets a real editorial edit — a lead with art, a
-// rail, a featured strip — rather than collapsing to a grid of uniform cards.
-// It also makes the chips ordinary links: they work with JS off, they need no
-// second copy of every story in the DOM, and nothing has to be hidden.
+// /txt — the blog's front page: an intro, then every post by year.
 import { getCollection } from "astro:content";
-import NewsroomLayout from "../../layouts/NewsroomLayout.astro";
-import FrontPage from "../../components/txt/FrontPage.astro";
-import { getTickerData } from "../../lib/ticker";
-import { railTags } from "../../lib/tags";
+import BlogLayout from "../../layouts/BlogLayout.astro";
+import PostIndex from "../../components/txt/PostIndex.astro";
+import Anchor from "@whois/design-system/Anchor";
+import { BLOG_DESCRIPTION, BLOG_TITLE } from "../../lib/blog";
 
-const posts = (await getCollection("txt"))
-	.filter((post) => import.meta.env.PROD === false || !post.data.draft)
-	.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
-
-type Post = (typeof posts)[number];
-
-// Ranking, art extraction and the story markup all belong to <FrontPage />, which
-// /txt and every /txt/tag/<tag> page share. What is left here is the edition's own
-// numbering and the wire.
-const year = (post: Post) => new Date(post.data.date).getUTCFullYear();
-const volume = posts.length ? year(posts[0]) - year(posts[posts.length - 1]) + 1 : undefined;
-
-/** Roman numeral for the edition label in the ticker. NewsroomLayout formats the
- *  masthead's own copy; this one is for the wire segment's text. */
-function toRomanLabel(n: number): string {
-	const table: Array<[number, string]> = [
-		[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
-		[100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
-		[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
-	];
-	let rest = Math.floor(n);
-	let out = "";
-	for (const [value, numeral] of table) {
-		while (rest >= value) { out += numeral; rest -= value; }
-	}
-	return out;
-}
-
-// The tags worth offering as sections, most-used first, for the category rail.
-// Not every tag in the collection: one carried by a single story is a label, not a
-// section, and the rail is a list of places to go. See src/lib/tags.ts.
-const railed = railTags(posts);
-
-// Weather + quotes, fetched daily by .github/workflows/ticker.yml and read here
-// at build time. A source that failed is absent rather than zeroed, so the
-// segments below are built by filter rather than by placeholder.
-const wire = getTickerData();
-const signed = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}`;
-
-const tickerSegments = [
-	{ label: "Date", live: "date" as const },
-	{ label: "Time", live: "time" as const },
-	{ label: "Location", value: `${wire.city}, ${wire.region}` },
-	wire.weather
-		? { label: "Weather", value: `${wire.weather.tempF}\u00B0F ${wire.weather.label}` }
-		: null,
-	...wire.quotes.map((q) => ({
-		label: q.symbol,
-		value:
-			q.changePct === null
-				? `$${q.price.toFixed(2)}`
-				: `$${q.price.toFixed(2)} ${signed(q.changePct)}%`,
-		tone:
-			q.changePct === null || q.changePct === 0
-				? undefined
-				: ((q.changePct > 0 ? "up" : "down") as "up" | "down"),
-	})),
-	volume && posts.length
-		? { label: "Edition", value: `Vol. ${toRomanLabel(volume)} \u00B7 No. ${posts.length}` }
-		: null,
-].filter(Boolean) as Array<{
-	label: string;
-	value?: string;
-	live?: "date" | "time";
-	tone?: "up" | "down";
-}>;
-
-
+const posts = (await getCollection("txt")).filter(
+	(post) => import.meta.env.PROD === false || !post.data.draft
+);
 ---
 
-<NewsroomLayout
-	title="The Ergonomist — Tristan Timblin"
-	description="Writing by Tristan Timblin."
-	wordmarkLead="The"
-	wordmark="Ergonomist"
-	strapline={["Hyper Local", "Hyper Specific"]}
-	volume={volume}
-	issue={posts.length || undefined}
-	dateline={posts[0]?.data.date}
-	tags={railed}
-	ticker={tickerSegments}
->
-	{
-		posts.length === 0 ? (
-			<p class="np-empty">No stories yet.</p>
-		) : (
-			<FrontPage posts={posts} />
-		)
-	}
-</NewsroomLayout>
-
-<style>
-	.np-empty {
-		margin: var(--space-8) 0;
-		font-family: var(--font-body);
-		color: var(--text-tertiary);
-	}
-</style>
+<BlogLayout title={`${BLOG_TITLE} — Tristan Timblin`} description={BLOG_DESCRIPTION} heading={BLOG_TITLE}>
+	<Fragment slot="lede">
+		Notes from Tristan Timblin on the things I build and use: software, furniture,
+		the occasional routine. Also on{" "}
+		<Anchor href="https://github.com/tatimblin" underline>GitHub</Anchor>, and there is
+		an <Anchor href="/rss.xml" underline>RSS feed</Anchor>.
+	</Fragment>
+	<PostIndex posts={posts} />
+</BlogLayout>

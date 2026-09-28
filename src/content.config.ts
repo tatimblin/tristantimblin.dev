@@ -1,5 +1,6 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
+import { categoryIds } from "./lib/blog";
 
 const gallery = defineCollection({
 	loader: glob({ pattern: "**/*.yaml", base: "./src/content/gallery" }),
@@ -18,7 +19,9 @@ const txt = defineCollection({
 	schema: z.object({
 		title: z.string(),
 		date: z.coerce.date(),
-		icon: z.string().optional(),
+		// ONE category from the closed set in src/lib/blog.ts — the label and icon
+		// the index shows beside the title. Tags stay free-form and plural.
+		category: z.enum(categoryIds).optional(),
 		tags: z.array(z.string()).default([]),
 		excerpt: z.string(),
 		// Social card override; falls back to the site default when null.
@@ -28,7 +31,7 @@ const txt = defineCollection({
 		modified: z.coerce.date().nullable().default(null),
 		draft: z.boolean().default(false),
 		// Reserved hook for the two-layer goal: name an alternate themed layout
-		// later. Unused for now (all posts use the default TxtPostLayout).
+		// later. Unused for now (all posts use the default PostLayout).
 		layout: z.string().optional(),
 	}),
 });
