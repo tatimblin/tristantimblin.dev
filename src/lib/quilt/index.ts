@@ -16,7 +16,11 @@
  *
  * INPUTS. Hover and focus on a tile are the same path (a keyboard user gets
  * the card too); the search input's focus is the browse state; typing wins
- * over both. `/` and ⌘K focus the bar from anywhere that is not editable.
+ * over both. The hover HOLDS while the pointer (or focus) is on a post tile
+ * or on the panel — so the card's READ link stays reachable — and leaving
+ * both returns to rest after LEAVE_MS, which an arrival on another tile or
+ * the panel cancels: moving tile to tile crosses the grid gap without the
+ * quilt flashing back to rest in between. `/` and ⌘K focus the bar from anywhere that is not editable.
  * In the bar: ↑↓ move the active result (its tile takes the accent ring),
  * Enter opens it, Escape clears the query and, when it is already empty,
  * blurs. Links to `?q=` inside the panel (the browse pills, the nothing
@@ -61,6 +65,12 @@ type View = "lg" | "md" | "phone";
 /** The results face shows this many rows; ↑↓ wrap within them. */
 const RESULT_ROWS = 4;
 const URL_DEBOUNCE_MS = 150;
+/** The grace before a hover lets go: longer than the pointer takes to cross
+ *  a gap between tiles (a frame or two), shorter than a beat anyone would
+ *  read as lag. A new arrival inside it cancels the leave, and the leave
+ *  itself waits for the next frame — input is dispatched before rAF, so a
+ *  pointerover held up behind one long frame still gets to cancel it. */
+const LEAVE_MS = 100;
 const POST_CELL = '[data-cell="post"]';
 
 const pad = (no: number) => String(no).padStart(3, "0");
@@ -290,16 +300,32 @@ function wire(): (() => void) | null {
 		}
 	}
 
+	let leaveTimer: ReturnType<typeof setTimeout> | undefined;
+	let leaveFrame = 0;
+	function holdHover() {
+		clearTimeout(leaveTimer);
+		cancelAnimationFrame(leaveFrame);
+	}
 	function leave() {
+		holdHover();
 		if (state.hovered === null) return;
 		state.hovered = null;
 		paint();
+	}
+	/** Let go of the hover after LEAVE_MS, unless something arrives first. */
+	function leaveSoon() {
+		holdHover();
+		if (state.hovered === null) return;
+		leaveTimer = setTimeout(() => (leaveFrame = requestAnimationFrame(leave)), LEAVE_MS);
 	}
 
 	const postIndexOf = (el: Element | null) => {
 		const cell = el?.closest<HTMLElement>(POST_CELL) ?? null;
 		return cell && root.contains(cell) ? postCells.indexOf(cell) : -1;
 	};
+	/** A hover holds while it is on a post tile or on the panel. */
+	const holdsHover = (el: Element | null) =>
+		!!el && (postIndexOf(el) >= 0 || panel.contains(el));
 
 	// --- Listeners --------------------------------------------------------------
 
@@ -344,8 +370,20 @@ function wire(): (() => void) | null {
 
 	const onOver = (e: PointerEvent) => {
 		if (view() === "phone") return;
-		const i = postIndexOf(e.target as Element);
+		const t = e.target as Element;
+		if (!holdsHover(t)) return;
+		holdHover();
+		const i = postIndexOf(t);
 		if (i >= 0) enter(i);
+	};
+
+	// Off a tile or the panel, onto anything that does not hold the hover
+	// (a filler, the gap, the page): let go, after the grace.
+	const onOut = (e: PointerEvent) => {
+		if (view() === "phone") return;
+		if (!holdsHover(e.target as Element)) return;
+		if (holdsHover(e.relatedTarget as Element | null)) return;
+		leaveSoon();
 	};
 
 	const onFocusIn = (e: FocusEvent) => {
@@ -373,7 +411,9 @@ function wire(): (() => void) | null {
 			state.focused = false;
 			changed = true;
 		}
-		if (postIndexOf(from) >= 0 && postIndexOf(to) < 0 && state.hovered !== null) {
+		// Tab from a tile to the card's READ link keeps the card.
+		if (holdsHover(from) && !holdsHover(to) && state.hovered !== null) {
+			holdHover();
 			state.hovered = null;
 			changed = true;
 		}
@@ -413,6 +453,7 @@ function wire(): (() => void) | null {
 	input.addEventListener("keydown", onInputKey);
 	form?.addEventListener("submit", onSubmit);
 	root.addEventListener("pointerover", onOver);
+	root.addEventListener("pointerout", onOut);
 	root.addEventListener("pointerleave", leave);
 	panel.addEventListener("pointerdown", onPanelDown);
 	panel.addEventListener("click", onPanelClick);
@@ -434,6 +475,7 @@ function wire(): (() => void) | null {
 
 	return () => {
 		clearTimeout(urlTimer);
+		holdHover();
 		document.removeEventListener("keydown", onDocKey);
 		document.removeEventListener("focusin", onFocusIn);
 		document.removeEventListener("focusout", onFocusOut);

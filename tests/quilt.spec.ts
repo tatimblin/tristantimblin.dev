@@ -14,7 +14,8 @@ import { test, expect, type Page } from "@playwright/test";
  *   rest        every cell lit, one link per post, fillers aria-hidden and
  *               drawn faint; a full-width board inside an even gutter
  *   hover/focus the tile lit, the rest faint or gone on a stagger, the card
- *               in a block that dodges it; leaving restores; deterministic
+ *               in a block that dodges it; leaving the tile restores (the
+ *               panel holds it, tile to tile never passes rest); deterministic
  *   typing      the count, ?q= via replaceState, ?q= on load
  *   results     <mark>, the why, the listbox, ↑↓ wrap, the ring, Enter
  *   single/none the card; the nothing face and its pills
@@ -224,6 +225,88 @@ test.describe("quilt — hover and focus", () => {
 		await page.mouse.move(1, 1);
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 		expect((await cells(page)).every((c) => c.state === "lit")).toBe(true);
+	});
+
+	test("leaving a tile for anything but another tile or the panel returns to rest", async ({
+		page,
+	}) => {
+		await page.goto("/txt");
+		const center = async (sel: string) => {
+			const b = (await page.locator(sel).boundingBox())!;
+			return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+		};
+
+		// Onto a filler, still inside the quilt (005's hover leaves a few of
+		// them faint rather than gone, so there is one to land on).
+		await page.locator(`${post("005")} a`).hover();
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
+		const faintFiller = '[data-cell="filler"][data-state="faint"] >> visible=true >> nth=0';
+		await expect(page.locator(faintFiller)).toBeVisible();
+		const f = await center(faintFiller);
+		await page.mouse.move(f.x, f.y);
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
+		expect((await cells(page)).every((c) => c.state === "lit")).toBe(true);
+
+		// Onto empty page space below the board.
+		await page.locator(`${post("003")} a`).hover();
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
+		const q = (await page.locator("[data-quilt]").boundingBox())!;
+		await page.mouse.move(q.x + q.width / 2, q.y + q.height + 40, { steps: 4 });
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
+		await expect(page.locator(SEARCH)).toHaveAttribute("aria-expanded", "false");
+	});
+
+	test("tile to tile across the gap never passes through rest", async ({ page }) => {
+		await page.goto("/txt");
+		// 005 sits beside 003 on the desktop grid and only faints under its hover.
+		await page.locator(`${post("003")} a`).hover();
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
+		await expect(page.locator(post("005"))).toHaveAttribute("data-state", "faint");
+		await page.evaluate(() => {
+			const panel = document.querySelector<HTMLElement>("[data-quilt-panel]")!;
+			const seen: string[] = [];
+			(window as unknown as { __modes: string[] }).__modes = seen;
+			new MutationObserver(() => seen.push(panel.dataset.mode!)).observe(panel, {
+				attributes: true,
+				attributeFilter: ["data-mode"],
+			});
+		});
+		const b = (await page.locator(post("005")).boundingBox())!;
+		await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 10 });
+		await expect(card(page, "title")).toHaveText("Asserting on Agent Behavior");
+		// Past the leave grace, and still no rest in between.
+		await page.waitForTimeout(250);
+		const modes = await page.evaluate(() => (window as unknown as { __modes: string[] }).__modes);
+		expect(modes).not.toContain("hidden");
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
+		await expect(page.locator(post("005"))).toHaveAttribute("data-state", "lit");
+	});
+
+	test("the panel holds the hover: the card's READ link is reachable by pointer and by Tab", async ({
+		page,
+	}) => {
+		await page.goto("/txt");
+		await page.locator(`${post("003")} a`).hover();
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
+		const read = card(page, "link");
+		await read.hover();
+		await page.waitForTimeout(250);
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
+		await expect(card(page, "title")).toHaveText("The Mega Desk");
+		// Off the panel onto the page: it lets go.
+		await page.mouse.move(1, 1, { steps: 4 });
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
+
+		// Keyboard: from the last tile, Tab lands on READ and the card stays;
+		// Tab on, out of the quilt, and it lets go.
+		await page.locator(`${post("001")} a`).focus();
+		await expect(card(page, "title")).toHaveText("No Honey, We Have a Dashboard at Home");
+		await page.keyboard.press("Tab");
+		await expect(read).toBeFocused();
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
+		await expect(read).toHaveAttribute("href", "/txt/no-honey-we-have-a-dashboard-at-home");
+		await page.keyboard.press("Tab");
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 	});
 
 	test("the same tile scatters identically, hover after hover and load after load", async ({
