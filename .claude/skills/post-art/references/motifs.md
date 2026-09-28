@@ -128,6 +128,22 @@ so prefer the coloured box. The check takes round caps and joins.
 </g>
 ```
 
+### Failed checkbox
+
+A failed step, a broken assertion, a red test. The cross is a **symbol, not
+text**: two ink strokes with round caps on a coloured box, never on ink (ink
+on ink disappears). Beside a passing box it reads as "one failed". To make it
+blink, put the box *and* its cross in the blink group together.
+
+```svg
+<g transform="translate(100 70)">
+  <rect x="0" y="0" width="14" height="14" rx="2" fill="var(--art-green)" />
+  <path d="M 3.5 7 L 6 9.5 L 10.5 4.5" fill="none" stroke="var(--art-ink)" stroke-linecap="round" stroke-linejoin="round" class="art-line" vector-effect="non-scaling-stroke" />
+  <rect x="30" y="0" width="14" height="14" rx="2" fill="var(--art-coral)" />
+  <path d="M 34 4 L 40 10 M 40 4 L 34 10" fill="none" stroke="var(--art-ink)" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
+</g>
+```
+
 ### Concentric rings
 
 Focus, a source, radiation, a ripple, a target. Put the centre near a corner
@@ -248,4 +264,25 @@ centre line is optional. For a thicker band, move the inner edge in.
 ```svg
 <path d="M -10 40 H 200 A 50 50 0 0 1 200 140 H -10 V 120 H 200 A 30 30 0 0 0 200 60 H -10 Z" fill="var(--art-lavender)" />
 <path d="M -10 50 H 200 A 40 40 0 0 1 200 130 H -10" fill="none" stroke="var(--art-ink)" stroke-dasharray="4 4" class="art-line" vector-effect="non-scaling-stroke" />
+```
+
+### Folded planes
+
+Terrain, a fold, a zigzag of states, a mountain. The reference has several:
+a zigzag of planes, and faceted peaks. Alternate the faces: the lit one ink,
+the shaded one a colour, the back one an outline (the plate). A faceted
+mountain is the same idea as triangles sharing a ridge, run off the bottom,
+with a dim wireframe ridge for the peak behind.
+
+```svg
+<g transform="translate(20 50)">
+  <path d="M 0 40 L 40 0 V 60 L 0 100 Z" fill="var(--art-ink)" />
+  <path d="M 40 0 L 80 40 V 100 L 40 60 Z" fill="var(--art-lavender)" />
+  <path d="M 80 40 L 120 0 V 60 L 80 100 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+</g>
+<g transform="translate(240 40)">
+  <path d="M 0 0 L -60 150 H -10 Z" fill="var(--art-ink)" />
+  <path d="M 0 0 L 90 150 H -10 Z" fill="var(--art-lavender)" />
+  <path d="M 0 0 L 50 30 L 110 40 M 50 30 L 90 150" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
+</g>
 ```

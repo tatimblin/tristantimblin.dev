@@ -111,9 +111,15 @@ edges**. You never paint something plate-coloured to hide something else.
   `(-0.866, 0.5)` and up `(0, -1)`, so a 40-unit edge is `(±34.6, 20)`. The top
   face is `--art-ink`. The sides are one fill colour, or `fill="none"` with an
   ink outline (the plate).
+  - An iso edge has slope **±0.577** (tan 30°), not 0.5. Place a point by a
+    parameter `t` along the axis vector: `(x0 + 0.866·t, y0 + 0.5·t)`.
+  - In 320×180 a long iso subject can only run off **top and right** or
+    **left and bottom**. It can never run off left and right both: the
+    frame is too short for the rise.
 - **Cylinders.** Every ellipse has ry = rx / 2.
 - **Dots.** Terminal dots on traces are r 2.5. Scattered dots are r 1.5 to 3,
-  in `--art-ink` or one fill.
+  in `--art-ink` or one fill. Window-chrome dots (the three on a title bar)
+  are circles of r ≥ 1.5; short dashes there read as text.
 - **Budgets.**
   - At most **120 elements**. One `<path>` with many subpaths is one element,
     so draw grids, ticks and fans that way.
@@ -121,6 +127,27 @@ edges**. You never paint something plate-coloured to hide something else.
     about 2 KB, so delete it if you get close.
   - At most **3 `<clipPath>`s**.
   - `<g>` nesting at most **4 deep**.
+
+## Drawing traps
+
+The validator passes all of these; your eye has to catch them.
+
+- **Paint order.** Later elements paint over earlier ones, and the motion
+  group is no exception. If dots or nodes must sit above moving lines, draw
+  a second static group *after* the motion group.
+- **Seams and cuts show what is behind.** An evenodd hole, or a gap between
+  two faces, reveals anything drawn under it. Start hidden geometry exactly
+  where it becomes visible, not at its true origin behind the face.
+- **Line ends.** A line that ends exactly on the edge of a filled shape reads
+  as a collision. Stop it short, with a clear gap, or run it under the shape.
+- **Contrast.** Ink on ink disappears (a cursor on an ink row, a white dot on
+  a white face). Put the mark on a colour, or cut it to the plate with an
+  evenodd hole.
+- **Symbols are not text.** A check, a cross (✕), an arrow: line work, fine
+  to draw. Letters, digits and logos are not.
+- **Outlines overlap honestly.** Overlapping *unfilled* shapes may let their
+  back edges show through each other, as on the reference; that is a
+  wireframe, not a mistake. Only filled solids hide what is behind them.
 
 ## Motion
 
@@ -146,7 +173,7 @@ edges**. You never paint something plate-coloured to hide something else.
 | `spin` | `rotate(1turn)` per loop, about the group's **fill-box centre** | Make the group's bounding box centred on the pivot: a full circle as its outermost shape does it. Put something asymmetric inside (spokes, a pin dot) or the spin is invisible. |
 | `drift` | `translate(6, -8)` units, out and back (alternate, ease-in-out), half a loop each way | A small move. Use it for a dot field, a cursor, a floating ball. It needs no clipPath, because the move is small and the frame clips. |
 | `slide` | `translateX(-40)` units per loop, linear | The group must **repeat every 40 units** (10 and 20 divide it) and run from x ≤ 0 to at least x = 360, one period past the right edge, so the loop is seamless. Use it for tick rules, tape and conveyor rows. |
-| `blink` | opacity dips to 0.3 and back on a hard step, four per loop | Use it for a node under test or a status light. Keep the group small, usually one filled shape. |
+| `blink` | opacity dips to 0.3 and back on a hard step, four per loop | Use it for a node under test or a status light. Keep the group small: one filled shape, or a shape and its mark (a failed node and its cross). |
 | `dash` | `stroke-dashoffset` advances by −8 (one period of `4 4` or `2 6`), six per loop | **Every** stroked shape in the group must be dashed (on itself or through the group). Nothing inside sets `stroke-dashoffset`. Use it for signal moving along a trace. |
 
 ## Accessibility
@@ -162,6 +189,11 @@ src/content/txt/<slug>.svg                  a post's art, beside <slug>.mdx
 packages/design-system/src/art/filler-NN.svg   quilt fillers (abstract, no motion)
 packages/design-system/src/art/_template.svg   the starting file
 ```
+
+**Fillers** are quieter than post art: fewer and smaller fills, more
+`--art-ink-2` line work, no `art-line--2` emphasis stroke, and no motion.
+Across the set the dominant colour rotates through the four, and structure
+carries the variety.
 
 **The root** is exactly
 `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">`, with an
@@ -195,3 +227,15 @@ basename; a filler's slug is `filler-NN`. Apply a clip with
 itself or a parent `<g>`). A shape with no `fill` — an outline included —
 renders with SVG's default **black fill**, invisible on the plate and covering
 what is behind it; the validator fails it. `<line>` is exempt: it cannot fill.
+
+## Proposals from Phase 2
+
+Asked for by the Phase 2 artists. These are changes to the motion contract in
+the DS frame (`art-frame.css`) and the validator, and are *not yet in the
+frame*: don't draw for them.
+
+- **Drift direction.** `drift` always goes (6, −8). Artists want a direction
+  choice, e.g. downward for "settling" (asked twice).
+- **Blink fully off.** `blink` dims only to 0.3; a caret wants to go fully off.
+- **Iso slide.** `slide` moves only along x; a slide along an iso axis would
+  let a conveyor or tape run on an iso plane.

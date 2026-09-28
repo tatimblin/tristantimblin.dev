@@ -34,10 +34,10 @@ Your job is one small, sparse, off-centre SVG that reads as the post's idea at
    motion kinds and file rules. Do not draw from memory of it.
 2. **The reference image**, `.playwright-mcp/refs/illustration-style.jpg`. Open
    it and look, because the language is the look, not only the rules.
-3. **`references/motifs.md`**: fifteen valid snippets to copy and adapt: iso
-   box, cylinder, chip, pill, node-and-trace, cursor, checkbox, concentric
-   rings, fan of flow lines, dashed path, dot field, stacked cards, tape reel,
-   grid with pips and ribbon.
+3. **`references/motifs.md`**: seventeen valid snippets to copy and adapt: iso
+   box, cylinder, chip, pill, node-and-trace, cursor, checkbox, failed
+   checkbox, concentric rings, fan of flow lines, dashed path, dot field,
+   stacked cards, tape reel, grid with pips, ribbon, and folded planes.
 4. **The post** (`src/content/txt/<slug>.mdx`), for a post's art. Read the
    whole post, not only the title.
 
@@ -50,14 +50,19 @@ Your job is one small, sparse, off-centre SVG that reads as the post's idea at
    caption to explain it, choose a simpler metaphor.
 2. **Pick the dominant colour**, then at most two supporting colours. Ink is
    always there. Two colours total is often best. Across posts and fillers,
-   vary the dominant colour so the quilt doesn't read as one colour.
+   vary the dominant colour so the quilt doesn't read as one colour. For a
+   set of fillers, rotate the dominant colour through all four.
 3. **Pick the crop.** Decide which one or two edges the subject runs off, and
    where the dark space is. The weight sits off-centre, for example a third
    in, or bleeding off a corner. Symmetric, centred compositions are wrong
    here.
 4. **Sketch on the 10-unit grid.** Write down the key coordinates (the main
    solid, the trace path, the terminal points) before you write markup.
-   Isometric edges use (±0.866, 0.5) steps.
+   Isometric edges use (±0.866, 0.5) steps: an iso edge has slope ±0.577
+   (tan 30°), **not** 0.5, so place a point by a parameter along the axis
+   vector, `(x0 + 0.866·t, y0 + 0.5·t)`, rather than eyeballing it. In a
+   320×180 frame a long iso subject can only run off **top and right** or
+   **left and bottom**, never left and right both; choose the crop to fit.
 5. **Draw with 3 to 6 motifs**, not 15. Sparse is the language: one hero
    element, one or two supporting ones and some texture (dots, a dim grid, a
    dashed path).
@@ -65,6 +70,20 @@ Your job is one small, sparse, off-centre SVG that reads as the post's idea at
    and dash (see the motion table in `language.md`). It should be the post's
    verb: signal moving, a reel turning, a node under test. Fillers have no
    motion. The still frame must read as complete, because it is the poster.
+7. **Mind the traps the validator can't see** (paint order, seams, line ends,
+   contrast): see "Drawing traps" in `language.md`. The one that bites most:
+   later elements paint over earlier ones, **the motion group included**. If
+   dots or nodes must sit above moving lines, draw a second static group
+   after the motion group.
+
+### Fillers
+
+A filler is a post's art with the idea taken out: structure, not a story.
+It is **quieter** than post art, which means fewer and smaller fills, more
+`--art-ink-2` line work, no `art-line--2` emphasis stroke, and no motion.
+Across a set, rotate the dominant colour through the four and let the
+structure (grid, rings, iso, fan, folded planes) carry the variety. Judge a
+set together on a contact sheet (§5).
 
 ## 3. The file
 
@@ -137,6 +156,8 @@ fails on, or a trap it cannot see.
   - [ ] `spin`: it rotates about the group's fill-box centre, so the bounding
         box is centred on the pivot, and something asymmetric shows the turn.
   - [ ] `drift`: it eases out (6, −8) and back. Keep it to small, loose things.
+  - [ ] `blink`: a small group, one shape or a shape *and its mark* (a
+        failed node and its cross).
   - [ ] The still frame reads as complete on its own.
 - [ ] **Ids** go only on a `<clipPath>`, or on things inside `<defs>` that a
       `<use href="#…">` points at. Every id is prefixed `<slug>-`, where the
@@ -165,21 +186,36 @@ every shipped file.
 ## 5. Look at it
 
 A validator pass is not a finished drawing. Look at it at tile size and hero
-size, in both themes, still and moving.
+size, in both themes, still and moving. Screenshot, then **read the PNG**.
 
-- **The art catalogue** at `/design-system/art#<slug>`, once it exists (Phase 2,
-  U2.7). Run `bunx astro dev` (never `bunx --bun`), then screenshot the entry in
-  both themes at 1440 and 390 viewport widths, and toggle `play`.
-- **Before the catalogue exists**, or for a quick look at any file:
+- **A quick look, no server**: from the repo root,
   ```sh
-  bun .claude/skills/post-art/scripts/preview.mjs --serve src/content/txt/<slug>.svg
+  S=.claude/skills/post-art/scripts/preview.mjs
+  bun $S --shot /tmp/<slug>.png src/content/txt/<slug>.svg
   ```
-  This serves http://localhost:4399/ (set `PREVIEW_PORT` to use another, e.g.
-  when other sessions are drawing too) with the real tokens and `art-frame.css`,
-  showing the file at 230px and 720px on the dark and light pages, with a
-  play/pause button. Without `--serve` it writes
-  `/tmp/post-art-preview/<slug>.html` and prints the path; screenshot that with
-  Playwright (`file://…`) — the safest mode when several artworks are in flight.
+  renders the file with the real tokens and `art-frame.css` at 230px and
+  720px on the dark and light pages, and writes a still PNG 1440 wide. It
+  drives headless Chromium through the `playwright` library already in the
+  repo, so it works when the Playwright MCP browser is locked by another
+  session (likely, when several artists draw in parallel). Use this route.
+  - **`--motion`** also writes `/tmp/<slug>.motion.png`, a mid-motion frame,
+    and prints the motion group's play-state, opacity and transform (and
+    dash offset) at rest and playing, ending in `paused at rest: yes` and
+    `moves when playing: yes`. Both must say yes.
+  - **`--sheet`** lays every file out at 230px, four across, on the dark page
+    then the light page: the way to judge a set of fillers side by side.
+    `bun $S --sheet --shot /tmp/fillers.png packages/design-system/src/art/filler-*.svg`
+  - Without `--shot` it writes `/tmp/post-art-preview/<name>.html` and prints
+    the path; `--serve` serves it on `PREVIEW_PORT` (default 4399) with a
+    play/pause button, re-reading the files on every reload.
+
+  Delete your PNGs when you are done.
+- **The art catalogue**, preferred once you are close:
+  `/design-system/art#<slug>` (`src/pages/design-system/art.astro`) shows
+  every file through the real `ArtFrame` in both themes, with its bytes,
+  element count and motion, and a "play all" toggle. Run `bunx astro dev`
+  (never `bunx --bun`), then screenshot the entry at 1440 and 390 viewport
+  widths.
 - **In the quilt** at `/txt`, once the quilt exists (Phase 3). The tile should
   read at 230px next to its neighbours, and the motion should run on hover.
 
@@ -195,6 +231,8 @@ What to check:
 ## 6. What not to do
 
 - **No text.** No letters, digits, labels or logos, not even drawn as paths.
+  A symbol is not text: a check, a cross (✕) or an arrow drawn as line work
+  is fine.
 - **No gradients, blurs, shadows, patterns, masks or opacity.** Flat fills only.
 - **No literal colours.** Every colour is a token.
 - **No plate inside the file.** No background rect, and no `--art-plate` used to
@@ -212,6 +250,9 @@ What to check:
 
 ## Committing
 
-Commit one artwork per commit, as `feat(txt): the art for <slug>` or
-`feat(design-system): fillers …`. Report anything this skill made hard, so it
-can be folded back in.
+Commit one artwork per commit, touching only your file(s), as
+`feat(art): <slug> — <the metaphor in a few words>`, lowercase (e.g.
+`feat(art): mega-desk — an 8-ft slab too long for the frame`; a filler set is
+`feat(art): <n> quilt filler tiles`). When other agents commit in the same tree,
+use `git commit -- <file>` and retry on `index.lock`. Report anything this
+skill made hard, so it can be folded back in.
