@@ -6,15 +6,16 @@
 //             (kicker, h1, lede) over whatever the page puts in the slot — a
 //             PostIndex. `width="wide"` opens the column to the site
 //             container with a compact header row.
-//   `tabs`    THE INSTRUMENT: the whole page is one frameless Panels screen,
-//             edge to edge and at least the viewport tall. Its first row is
-//             this layout's and is the page's header (the banner): the "TT"
-//             mark linking home, the h1 as a caps label, the category tabs as
-//             pill links to `?q=`, the site's name. No SiteHeader above it —
-//             the row already carries the site. The rest is <main>, a nested
-//             Panels whose rows the page slots in (the board, the controls,
-//             the timeline); the board row takes the leftover height. The
-//             site footer (Layout's) follows below the screen.
+//   `tabs`    THE INSTRUMENT: the site header as on every page, then <main> in
+//             the site's container (--container-max, --container-pad), holding
+//             one frameless Panels screen — no radius, its rows cut by the
+//             --panel-gutter hairline. Its first row is this layout's: the h1
+//             as a caps label and the category tabs as pill links to `?q=`;
+//             the rest the page slots in (the board, the controls, the
+//             timeline). The header's brand and nav sit on the container's
+//             content edges, as on the homepage, so the rows line up under
+//             them; the screen fills the viewport below the header and the
+//             site footer (Layout's) follows.
 //
 // Pages stay thin: they fetch and group, this owns the shell. Wraps
 // Layout.astro (the only html/head).
@@ -54,7 +55,8 @@ interface Props {
 	 *  with a compact header row. Not read with `tabs`. */
 	width?: "measure" | "wide";
 	/** The instrument's tab row — the category tabs; with these the page is
-	 *  one full-page Panels screen and the slot is its remaining rows. */
+	 *  one Panels screen in the site container and the slot is its remaining
+	 *  rows. */
 	tabs?: Tab[];
 }
 
@@ -65,34 +67,33 @@ const hasLede = Astro.slots.has("lede");
 <Layout title={title} description={description} noindex={noindex}>
 	{
 		tabs ? (
-			<Panels frame={false} class="blog blog--instrument" data-instrument>
-				<Panel as="header" pad="none" class="blog__tabrow">
-					<div class="blog__ident">
-						<a class="blog__mark" href="/" aria-label="tristantimblin.dev, home">TT</a>
-						<Mono as="h1" tone="primary" class="blog__title">{heading}</Mono>
-					</div>
-					<nav class="blog__tabs" aria-label="Categories" data-tabs>
-						{tabs.map((t) => (
-							<Pill
-								as="a"
-								size="lg"
-								variant="outline"
-								href={t.href}
-								class="blog__tab"
-								data-tab={t.query}
-								aria-current={t.active ? "page" : undefined}
-							>
-								{t.query === "" && <span class="blog__tab-glyph" aria-hidden="true" />}
-								{t.label}
-							</Pill>
-						))}
-					</nav>
-					<Mono tone="tertiary" class="blog__site">tristantimblin.dev / txt</Mono>
-				</Panel>
-				<Panels as="main" class="blog__stage">
-					<slot />
-				</Panels>
-			</Panels>
+			<div class="blog blog--instrument">
+				<SiteHeader variant="flow" links={blogNav} />
+				<main class="blog__main blog__main--instrument">
+					<Panels frame={false} class="blog__instrument" data-instrument>
+						<Panel pad="none" class="blog__tabrow">
+							<Mono as="h1" tone="primary" class="blog__title">{heading}</Mono>
+							<nav class="blog__tabs" aria-label="Categories" data-tabs>
+								{tabs.map((t) => (
+									<Pill
+										as="a"
+										size="lg"
+										variant="outline"
+										href={t.href}
+										class="blog__tab"
+										data-tab={t.query}
+										aria-current={t.active ? "page" : undefined}
+									>
+										{t.query === "" && <span class="blog__tab-glyph" aria-hidden="true" />}
+										{t.label}
+									</Pill>
+								))}
+							</nav>
+						</Panel>
+						<slot />
+					</Panels>
+				</main>
+			</div>
 		) : (
 			<div class="blog">
 				<SiteHeader variant="flow" links={blogNav} />

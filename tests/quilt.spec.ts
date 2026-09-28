@@ -12,7 +12,8 @@ import { test, expect, type Page } from "@playwright/test";
  * ?q=) reach the engine.
  *
  *   rest        every cell lit, one link per post, fillers aria-hidden and
- *               drawn faint; the instrument is the page, edge to edge
+ *               drawn faint; the instrument in the site container, under
+ *               the site header, its edges on the header's brand and nav
  *   hover/focus the tile lit, the rest faint or gone on a stagger, the card
  *               in a block that dodges it; leaving the tile restores (the
  *               panel holds it, tile to tile never passes rest); deterministic
@@ -34,7 +35,7 @@ import { test, expect, type Page } from "@playwright/test";
  *   timeline    one tick per month, a named link per post, the playhead on
  *               the post in focus (at rest the latest), dim ticks under a
  *               filter, a click pins
- *   card        the infra card's fields and its gauge; the big tier at 1920
+ *   card        the infra card's fields and its gauge; one size at 1440 and 1920
  *   count       the figure and its label
  *   layouts     the frame's rows; tablet; phone; no horizontal overflow
  *
@@ -203,72 +204,88 @@ test.describe("quilt — rest", () => {
 		}
 	});
 
-	test("one instrument: the whole page — four rows edge to edge, no frame, the timeline on the screen's floor", async ({
+	test("one instrument: four rows in the site container, under the site header, square-cornered", async ({
 		page,
 	}) => {
 		await page.goto("/txt");
 		const m = await page.evaluate(() => {
-			const rect = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
+			const rect = (sel: string) => document.querySelector(sel)!.getBoundingClientRect().toJSON();
+			const probe = document.createElement("div");
+			probe.style.cssText = "width: var(--container-max); padding-inline: var(--container-pad); box-sizing: border-box";
+			document.body.append(probe);
+			const cs = getComputedStyle(probe);
+			const container = { max: parseFloat(cs.width), pad: parseFloat(cs.paddingLeft) };
+			probe.remove();
 			const frame = document.querySelector("[data-instrument]")!;
 			return {
+				container,
 				vw: document.documentElement.clientWidth,
 				vh: window.innerHeight,
 				scroll: document.documentElement.scrollWidth,
 				radius: getComputedStyle(frame).borderTopLeftRadius,
 				frame: frame.getBoundingClientRect().toJSON(),
-				rows: [
-					...document.querySelectorAll(
-						"[data-instrument] > header.ds-panel, [data-instrument] > main > :is(.ds-panel, .ds-panels)",
-					),
-				].map((r) => r.getBoundingClientRect().toJSON()),
+				rows: [...document.querySelectorAll("[data-instrument] > :is(.ds-panel, .ds-panels)")].map((r) =>
+					r.getBoundingClientRect().toJSON(),
+				),
 				quilt: rect("[data-quilt]"),
 				h1s: document.querySelectorAll("h1").length,
 				h1: rect(".blog__title"),
 				tabs: rect("[data-tabs]"),
-				siteHeader: document.querySelectorAll(".site-header").length,
+				siteHeaders: document.querySelectorAll(".site-header").length,
+				header: rect(".site-header"),
+				brand: rect(".site-header__brand"),
+				nav: rect(".site-header__nav"),
 			};
 		});
 		expect(m.scroll).toBe(m.vw);
-		// No frame: no radius, no margin — the screen is the page.
+		// The site's container: --container-max, centred, inside --container-pad.
+		const inset = Math.max(m.container.pad, (m.vw - m.container.max) / 2 + m.container.pad);
+		expect(m.frame.left).toBeCloseTo(inset, 0);
+		expect(m.frame.right).toBeCloseTo(m.vw - inset, 0);
+		// No frame: square corners, the rows cut by the gutter alone.
 		expect(m.radius).toBe("0px");
-		expect(m.frame.top).toBe(0);
-		expect(m.frame.left).toBe(0);
-		expect(m.frame.right).toBe(m.vw);
-		expect(m.frame.height).toBeGreaterThanOrEqual(m.vh - 1);
-		// The tab row is the page header: no site header above it, one h1.
-		expect(m.siteHeader).toBe(0);
+		// The main nav, once, above the screen; its brand and nav on the screen's edges.
+		expect(m.siteHeaders).toBe(1);
+		expect(m.frame.top).toBeGreaterThanOrEqual(m.header.bottom - 1);
+		expect(m.brand.left).toBeCloseTo(m.frame.left, 0);
+		expect(m.nav.right).toBeCloseTo(m.frame.right, 0);
 		expect(m.h1s).toBe(1);
-		// Tabs, board, controls, timeline: each full width, under the last, a hair apart.
+		// Tabs, board, controls, timeline: each the container's width, under the last, a hair apart.
 		expect(m.rows).toHaveLength(4);
 		for (const r of m.rows) {
-			expect(r.left).toBe(0);
-			expect(r.right).toBe(m.vw);
+			expect(r.left).toBeCloseTo(m.frame.left, 0);
+			expect(r.right).toBeCloseTo(m.frame.right, 0);
 		}
 		for (let i = 1; i < m.rows.length; i++) {
 			const gap = m.rows[i].top - m.rows[i - 1].bottom;
 			expect(gap, `row ${i}`).toBeGreaterThan(0);
 			expect(gap, `row ${i}`).toBeLessThanOrEqual(3);
 		}
-		// The board takes the spare height, so the timeline sits on the floor.
-		expect(m.rows[3].bottom).toBeCloseTo(m.vh, 0);
+		// The board takes the spare height: the timeline rests one gutter off the floor.
+		expect(m.rows[3].bottom).toBeCloseTo(m.vh - m.container.pad, 0);
 		// The h1 and the tabs are in the first row; the quilt is the second, inset.
 		expect(m.h1.top).toBeGreaterThanOrEqual(m.rows[0].top);
 		expect(m.tabs.bottom).toBeLessThanOrEqual(m.rows[0].bottom + 1);
 		expect(m.quilt.top).toBeGreaterThanOrEqual(m.rows[1].top);
 		expect(m.quilt.bottom).toBeLessThanOrEqual(m.rows[1].bottom + 1);
-		expect(m.quilt.left).toBeGreaterThan(0);
-		expect(m.quilt.right).toBeLessThan(m.vw);
+		expect(m.quilt.left).toBeGreaterThan(m.frame.left);
+		expect(m.quilt.right).toBeLessThan(m.frame.right);
 	});
 
-	test("the tab row is the banner: the mark links home, and the footer follows below the screen", async ({
-		page,
-	}) => {
+	test("the site header is the banner; the tab row is in main, with the one h1 and no mark", async ({ page }) => {
 		await page.goto("/txt");
 		const banner = page.getByRole("banner");
 		await expect(banner).toHaveCount(1);
-		await expect(banner.getByRole("heading", { level: 1, name: "Writing" })).toHaveCount(1);
-		await expect(banner.getByRole("navigation", { name: "Categories" })).toHaveCount(1);
-		await expect(banner.getByRole("link", { name: /tristantimblin\.dev, home/ })).toHaveAttribute("href", "/");
+		await expect(banner.getByRole("link", { name: "tristantimblin.dev" })).toHaveAttribute("href", "/");
+		await expect(banner.getByRole("navigation", { name: "Primary" })).toHaveCount(1);
+		const main = page.getByRole("main");
+		await expect(main.getByRole("heading", { level: 1, name: "Writing" })).toHaveCount(1);
+		await expect(main.getByRole("navigation", { name: "Categories" })).toHaveCount(1);
+		await expect(page.locator("[data-instrument]")).toHaveCount(1);
+		expect(await main.locator("[data-instrument]").count()).toBe(1);
+		// The "TT" mark and the site's name in the row are gone: the header carries the site.
+		await expect(page.locator(".blog__tabrow")).not.toContainText(/\bTT\b|tristantimblin\.dev/i);
+		await expect(page.locator(".blog__mark, .blog__site")).toHaveCount(0);
 		// ALL's glyph stands a step clear of its label.
 		const gap = await page
 			.locator('[data-tab=""]')
@@ -1134,7 +1151,7 @@ test.describe("instrument — the card", () => {
 		await expect(card(page, "year")).toHaveText("2026");
 	});
 
-	test("the block grows with the board: at 1920 the card takes the big tier", async ({ page }) => {
+	test("the block is the container's: the same card at 1440 and at 1920", async ({ page }) => {
 		const measure = async (width: number, height: number) => {
 			await page.setViewportSize({ width, height });
 			await page.goto("/txt");
@@ -1148,11 +1165,12 @@ test.describe("instrument — the card", () => {
 		};
 		const a = await measure(1440, 1000);
 		const b = await measure(1920, 1100);
-		expect(a.w).toBeGreaterThan(780);
-		expect(a.h).toBeGreaterThan(280);
-		expect(b.w).toBeGreaterThan(a.w);
-		expect(b.h).toBeGreaterThan(a.h);
-		expect(b.title).toBeGreaterThan(a.title);
+		// 3×2 cells of the capped board: ~658×250 at either width.
+		expect(a.w).toBeGreaterThan(600);
+		expect(a.h).toBeGreaterThan(230);
+		expect(b.w).toBeCloseTo(a.w, 0);
+		expect(b.h).toBeCloseTo(a.h, 0);
+		expect(b.title).toBe(a.title);
 	});
 });
 
@@ -1177,11 +1195,7 @@ test.describe("instrument — layouts", () => {
 	test("tablet (900): the same rows, three columns, the stepper beside the count", async ({ page }) => {
 		await page.setViewportSize({ width: 900, height: 1100 });
 		await page.goto("/txt");
-		expect(
-			await page
-				.locator("[data-instrument] > header.ds-panel, [data-instrument] > main > :is(.ds-panel, .ds-panels)")
-				.count(),
-		).toBe(4);
+		expect(await page.locator("[data-instrument] > :is(.ds-panel, .ds-panels)").count()).toBe(4);
 		expect(
 			await page.locator("[data-quilt]").evaluate((q) => getComputedStyle(q).gridTemplateColumns.split(" ").length),
 		).toBe(3);
