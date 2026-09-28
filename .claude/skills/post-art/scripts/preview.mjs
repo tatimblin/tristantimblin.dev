@@ -5,7 +5,7 @@
 // exist yet, or you want to look at a file before it has a post.
 //
 //   bun .claude/skills/post-art/scripts/preview.mjs <file.svg…>            // writes the page, prints its path
-//   bun .claude/skills/post-art/scripts/preview.mjs --serve <file.svg…>    // and serves it on http://localhost:4399/
+//   PREVIEW_PORT=4401 bun .claude/skills/post-art/scripts/preview.mjs --serve <file.svg…>   // serves it (default port 4399)
 //
 // Re-run after an edit (the page is a snapshot). With --serve it re-reads the
 // files on every request, so a reload is enough.
@@ -58,11 +58,15 @@ h2{font-size:14px;font-weight:400}p{margin:0}button{position:fixed;top:12px;righ
 ${rows}</body></html>`;
 }
 
+// Named after the files and on a settable port, so several sessions drawing
+// different artworks at once never overwrite each other's preview.
 if (serve) {
-	Bun.serve({ port: 4399, fetch: () => new Response(page(), { headers: { "content-type": "text/html" } }) });
-	console.log("http://localhost:4399/");
+	const port = Number(process.env.PREVIEW_PORT) || 4399;
+	Bun.serve({ port, fetch: () => new Response(page(), { headers: { "content-type": "text/html" } }) });
+	console.log(`http://localhost:${port}/`);
 } else {
-	const out = "/tmp/post-art-preview/index.html";
+	const name = files.map((f) => basename(f, ".svg")).join("+");
+	const out = `/tmp/post-art-preview/${name}.html`;
 	mkdirSync(dirname(out), { recursive: true });
 	writeFileSync(out, page());
 	console.log(out);

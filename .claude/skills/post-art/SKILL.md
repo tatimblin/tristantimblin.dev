@@ -174,9 +174,12 @@ size, in both themes, still and moving.
   ```sh
   bun .claude/skills/post-art/scripts/preview.mjs --serve src/content/txt/<slug>.svg
   ```
-  This serves http://localhost:4399/ with the real tokens and `art-frame.css`,
+  This serves http://localhost:4399/ (set `PREVIEW_PORT` to use another, e.g.
+  when other sessions are drawing too) with the real tokens and `art-frame.css`,
   showing the file at 230px and 720px on the dark and light pages, with a
-  play/pause button. Without `--serve` it writes `/tmp/post-art-preview/index.html`.
+  play/pause button. Without `--serve` it writes
+  `/tmp/post-art-preview/<slug>.html` and prints the path; screenshot that with
+  Playwright (`file://…`) — the safest mode when several artworks are in flight.
 - **In the quilt** at `/txt`, once the quilt exists (Phase 3). The tile should
   read at 230px next to its neighbours, and the motion should run on hover.
 
