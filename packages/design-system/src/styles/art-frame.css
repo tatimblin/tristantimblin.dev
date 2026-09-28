@@ -1,0 +1,143 @@
+/* ArtFrame — the window every artwork renders through. The plate, its 1px
+ * edge and the corner; the art's line weights; and the motion contract. No
+ * colour is spelled here: everything resolves from the ART tokens in
+ * tokens.overrides.css, so an art file, this sheet and the theme agree by
+ * construction.
+ *
+ * The frame is a 16:9 box (the file's viewBox is 0 0 320 180) that CLIPS: the
+ * language expects shapes to run out of frame, and a hero that asks for a
+ * different `ratio` crops the same drawing rather than letterboxing it — the
+ * component sets preserveAspectRatio to slice on the root for that. */
+.ds-art {
+	position: relative;
+	display: block;
+	inline-size: 100%;
+	aspect-ratio: var(--art-ratio, 16 / 9);
+	overflow: hidden;
+	background: var(--art-plate);
+	border: 1px solid var(--art-edge);
+	border-radius: var(--art-radius);
+	/* currentColor inside the art is the ink, so a shape may say so. */
+	color: var(--art-ink);
+}
+/* No plate, edge or corner: the drawing straight on the page (a hero that
+ * sits on its own surface). It still clips to the box. */
+.ds-art--chrome-false {
+	background: none;
+	border: 0;
+	border-radius: 0;
+}
+.ds-art > svg {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	/* The default line: 1 unit, which vector-effect="non-scaling-stroke" on
+	 * each shape makes 1px on screen at any render size — the same hairline
+	 * in a 230px tile and a 720px hero, as in the reference. Inherited, so a
+	 * shape needs no class to take it. */
+	stroke-width: 1;
+}
+
+/* LINE WEIGHTS. The two the language has, as classes so the file names its
+ * intent rather than a number: .art-line is the line (the inherited default,
+ * spelled out), .art-line--2 the one emphasis outline a tile may carry. */
+.ds-art .art-line {
+	stroke-width: 1;
+}
+.ds-art .art-line--2 {
+	stroke-width: 1.5;
+}
+
+/* MOTION. A file marks at most one group data-motion="spin|drift|slide|blink|
+ * dash" and the frame owns the keyframes — so every artwork moves the same
+ * way, and no file carries a <style> or an <animate>. Transform and opacity
+ * only, apart from `dash`, which advances a dashed trace by stroke-dashoffset
+ * (a bent trace has no transform that does it).
+ *
+ * PAUSED AT REST. The still frame is the poster — a file must read at t=0 —
+ * and it runs only under the pointer, under keyboard focus, inside a hovered
+ * or focused link (the quilt's cells), or when the frame says data-art-play
+ * (the open post's hero, the catalogue's toggle). Leaving pauses in place.
+ *
+ * ONE CLOCK. --duration-loop is one cycle; each kind takes its natural fraction
+ * of it through --art-cycle, and the file's data-speed (0.5 | 1 | 2) divides it
+ * again. Under prefers-reduced-motion the token is 0s, the animation has no
+ * active interval, and the art holds its still frame — nothing more to do.
+ *
+ * Every loop is seamless: a spin ends where it starts; a drift alternates, out
+ * and back; a slide moves a group repeating every 40 units by exactly 40; a
+ * blink returns to lit; a dash advances by one 8-unit period (the language's
+ * dash patterns, 4 4 and 2 6, both sum to 8). */
+.ds-art [data-motion] {
+	transform-box: fill-box;
+	transform-origin: center;
+	animation-duration: calc(
+		var(--duration-loop) * var(--art-cycle, 1) / var(--art-speed, 1)
+	);
+	animation-timing-function: linear;
+	animation-iteration-count: infinite;
+	animation-play-state: paused;
+}
+.ds-art [data-speed="0.5"] {
+	--art-speed: 0.5;
+}
+.ds-art [data-speed="2"] {
+	--art-speed: 2;
+}
+.ds-art [data-motion="spin"] {
+	animation-name: ds-art-spin;
+}
+.ds-art [data-motion="drift"] {
+	animation-name: ds-art-drift;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
+	--art-cycle: 0.5;
+}
+.ds-art [data-motion="slide"] {
+	animation-name: ds-art-slide;
+}
+.ds-art [data-motion="blink"] {
+	animation-name: ds-art-blink;
+	animation-timing-function: steps(1, end);
+	--art-cycle: 0.25;
+}
+.ds-art [data-motion="dash"] {
+	animation-name: ds-art-dash;
+	--art-cycle: calc(1 / 6);
+}
+
+.ds-art:hover [data-motion],
+.ds-art:focus-within [data-motion],
+.ds-art[data-art-play] [data-motion],
+a:hover .ds-art [data-motion],
+a:focus-visible .ds-art [data-motion] {
+	animation-play-state: running;
+}
+
+/* Lengths in a transform on an SVG element are user units, so these are grid
+ * units of the 320×180 drawing, not screen pixels. */
+@keyframes ds-art-spin {
+	to {
+		transform: rotate(1turn);
+	}
+}
+@keyframes ds-art-drift {
+	to {
+		transform: translate(6px, -8px);
+	}
+}
+@keyframes ds-art-slide {
+	to {
+		transform: translateX(-40px);
+	}
+}
+@keyframes ds-art-blink {
+	50% {
+		opacity: 0.3;
+	}
+}
+@keyframes ds-art-dash {
+	to {
+		stroke-dashoffset: -8px;
+	}
+}

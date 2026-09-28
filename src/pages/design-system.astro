@@ -53,6 +53,119 @@ import PostGroup from "@whois/design-system/PostGroup";
 import PostRow from "@whois/design-system/PostRow";
 import Prose from "@whois/design-system/Prose";
 import Blockquote from "@whois/design-system/Blockquote";
+// The art: the frame, and the file every artwork starts from.
+import ArtFrame from "@whois/design-system/ArtFrame";
+import artTemplate from "@whois/design-system/art/_template.svg?raw";
+
+// Art tokens, for the swatch row: name → what it is for.
+const artTokens = [
+	["--art-plate", "the tile fill, both themes"],
+	["--art-edge", "the tile's 1px edge"],
+	["--art-ink", "line work and white fills"],
+	["--art-ink-2", "the ink at 45% — grids, dashed paths, ghost outlines"],
+	["--art-lavender", "fill"],
+	["--art-coral", "fill — the site accent"],
+	["--art-cyan", "fill"],
+	["--art-green", "fill"],
+	["--art-radius", "the frame's corner (--border-radius-1)"],
+	["--duration-loop", "one cycle of an art animation (6s; 0s under reduced motion)"],
+] as const;
+
+// Small drawings in the language, one per thing the frame owns. Written here
+// rather than as files in the package, so the art folder holds only what the
+// quilt ships. Each is the template's shape: viewBox 0 0 320 180, token
+// colours only, non-scaling strokes, at most one data-motion group.
+const line = 'fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke"';
+const line2 = 'fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke"';
+const open = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">';
+// The two weights and the two dash patterns, top to bottom.
+const artLines = `${open}
+	<path d="M 20 40 H 300" ${line} />
+	<path d="M 20 70 H 300" fill="none" stroke="var(--art-ink)" class="art-line--2" vector-effect="non-scaling-stroke" />
+	<path d="M 20 100 H 300" ${line2} />
+	<path d="M 20 130 H 300" ${line2} stroke-dasharray="4 4" />
+	<path d="M 20 160 H 300" ${line2} stroke-dasharray="2 6" />
+</svg>`;
+// Ticks every 10 units from 0 to 360 — one period (40) past the right edge,
+// since the slide moves the group left by exactly 40.
+const tall = Array.from({ length: 10 }, (_, i) => `M ${i * 40} 120 v 16`).join(" ");
+const short = Array.from({ length: 37 }, (_, i) => i * 10)
+	.filter((x) => x % 40 !== 0)
+	.map((x) => `M ${x} 120 v 8`)
+	.join(" ");
+const dots = [
+	[150, 40, 3, "lavender"], [190, 70, 2, "ink"], [230, 30, 2.5, "lavender"],
+	[270, 60, 1.5, "ink"], [300, 100, 3, "lavender"], [210, 110, 2, "lavender"],
+	[250, 140, 1.5, "ink"], [170, 150, 2.5, "lavender"], [290, 150, 2, "ink"],
+	[130, 100, 1.5, "lavender"], [320, 30, 2.5, "lavender"], [110, 60, 2, "ink"],
+] as const;
+const artMotions: Array<[string, string, string]> = [
+	[
+		"spin",
+		`${open}
+	<path d="M -10 90 H 200" ${line} />
+	<circle cx="200" cy="90" r="2.5" fill="var(--art-ink)" />
+	<circle cx="270" cy="90" r="60" ${line2} />
+	<g data-motion="spin">
+		<circle cx="270" cy="90" r="44" ${line} />
+		<path d="M 270 46 V 134 M 226 90 H 314 M 238.9 58.9 L 301.1 121.1 M 301.1 58.9 L 238.9 121.1" ${line} />
+		<circle cx="270" cy="58" r="3" fill="var(--art-cyan)" />
+		<circle cx="270" cy="90" r="6" fill="var(--art-ink)" />
+	</g>
+</svg>`,
+		"a reel turning about its own centre — one turn per loop",
+	],
+	[
+		"drift",
+		`${open}
+	<path d="M 40 -10 V 190 M 80 -10 V 190" ${line2} stroke-dasharray="2 6" />
+	<path d="M 40 130 H 80" ${line} />
+	<circle cx="80" cy="130" r="2.5" fill="var(--art-ink)" />
+	<g data-motion="drift">
+		${dots.map(([x, y, r, c]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--art-${c})" />`).join("\n\t\t")}
+	</g>
+</svg>`,
+		"a dot field easing out and back — a slow alternate translate",
+	],
+	[
+		"slide",
+		`${open}
+	<path d="M -10 120 H 330" ${line} />
+	<g data-motion="slide">
+		<path d="${tall}" ${line} />
+		<path d="${short}" ${line2} />
+	</g>
+	<rect x="158" y="96" width="4" height="40" rx="2" fill="var(--art-coral)" />
+	<path d="M 160 -10 V 90" ${line2} stroke-dasharray="4 4" />
+</svg>`,
+		"a rule repeating every 40 units, moved left by 40 — seamless",
+	],
+	[
+		"blink",
+		`${open}
+	<path d="M -10 100 H 60 V 60 H 140 M 140 60 H 220 V 100 H 330" ${line} />
+	<circle cx="60" cy="100" r="2.5" fill="var(--art-ink)" />
+	<circle cx="220" cy="100" r="2.5" fill="var(--art-ink)" />
+	<circle cx="140" cy="60" r="14" ${line2} />
+	<g data-motion="blink">
+		<circle cx="140" cy="60" r="8" fill="var(--art-coral)" />
+	</g>
+</svg>`,
+		"a node dimming and lighting — a hard step, four per loop",
+	],
+	[
+		"dash",
+		`${open}
+	<path d="M -10 40 H 60 V 120 H 160 V 60 H 260 V 140 H 330" ${line} />
+	<g data-motion="dash">
+		<path d="M -10 60 H 40 V 140 H 140 V 80 H 240 V 160 H 330" fill="none" stroke="var(--art-green)" stroke-dasharray="4 4" class="art-line" vector-effect="non-scaling-stroke" />
+	</g>
+	<circle cx="60" cy="40" r="2.5" fill="var(--art-ink)" />
+	<circle cx="260" cy="140" r="2.5" fill="var(--art-ink)" />
+</svg>`,
+		"a dashed trace advancing by one period — stroke-dashoffset, six per loop",
+	],
+];
 
 // Instrument tokens, for the swatch row: name → what it is for.
 const instrumentTokens = [
@@ -894,6 +1007,114 @@ const faces = [
 			</Blockquote>
 		</section>
 
+		<!-- ART ------------------------------------------------------------ -->
+		<section class="ds-demo__section" id="art">
+			<h2 class="ds-demo__h">Art — tokens and the frame</h2>
+			<p class="ds-demo__note">
+				The illustration language the post art is drawn in (tokens.overrides.css →
+				ART; <code>ArtFrame</code>; art-frame.css): white 1px line work and flat fills
+				in four colours on a near-black landscape plate — the same plate in both
+				themes. A file names no colour but these tokens, and the frame owns the
+				plate, the edge, the corner, the line weights and the motion, so the whole
+				language retunes in one place. Every file starts from
+				<code>packages/design-system/src/art/_template.svg</code>.
+			</p>
+			<div class="ds-demo__swatches">
+				{artTokens.map(([name, note]) => (
+					<div class="ds-demo__swatch-row">
+						{name === "--art-plate" || name === "--art-edge" ? (
+							<span class="ds-demo__swatch" style={`background: var(${name}); border-color: var(--art-edge)`} />
+						) : name === "--art-radius" ? (
+							<span class="ds-demo__swatch" style="background: var(--art-plate); border-color: var(--art-edge); border-radius: var(--art-radius)" />
+						) : name === "--duration-loop" ? (
+							<span class="ds-demo__swatch" style="border-style: dashed" />
+						) : (
+							<span class="ds-demo__swatch ds-demo__swatch--art" style={`--swatch: var(${name})`}><i /></span>
+						)}
+						<Mono variant="value">{name}</Mono>
+						<Mono variant="text">{note}</Mono>
+					</div>
+				))}
+			</div>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">The frame — the template at tile size and hero size</h2>
+			<p class="ds-demo__note">
+				<code>&lt;ArtFrame svg={"{raw}"} label="…" /&gt;</code> inlines the file on the
+				plate (<code>role="img"</code>); with no label, or <code>decorative</code>, it is
+				aria-hidden and the link around it names the post. Strokes are
+				<code>vector-effect="non-scaling-stroke"</code>, so the line is 1px at 230px
+				and at 720px alike.
+			</p>
+			<div class="ds-demo__art-sizes">
+				<ArtFrame svg={artTemplate} label="_template.svg at tile size" />
+				<ArtFrame svg={artTemplate} label="_template.svg at hero size" />
+			</div>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Both themes — the plate is fixed</h2>
+			<div class="ds-demo__art-themes">
+				{(["light", "dark"] as const).map((t) => (
+					<div class={`maximeheckel-${t} ds-demo__art-page`}>
+						<Mono>{t} page</Mono>
+						<ArtFrame svg={artTemplate} label={`_template.svg on the ${t} theme`} />
+					</div>
+				))}
+			</div>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Line weights</h2>
+			<p class="ds-demo__note">
+				Top to bottom: <code>.art-line</code> (1, the inherited default),
+				<code>.art-line--2</code> (1.5, one emphasis outline), <code>--art-ink-2</code>
+				for the secondary line, and the two dash patterns, <code>4 4</code> and
+				<code>2 6</code>.
+			</p>
+			<div class="ds-demo__art-sizes">
+				<ArtFrame svg={artLines} label="the two line weights and two dash patterns, at tile size" />
+				<ArtFrame svg={artLines} label="the two line weights and two dash patterns, at hero size" />
+			</div>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Motion — five kinds, paused until hovered</h2>
+			<p class="ds-demo__note">
+				A file marks one group <code>data-motion</code> and the frame owns the
+				keyframes, timed by <code>--duration-loop</code> (<code>data-speed</code> 0.5 / 1 / 2
+				divides it). Paused at rest — the still frame is the poster — and running on
+				hover, focus, inside a hovered link, or with <code>play</code>
+				(<code>data-art-play</code>). Under reduced motion the loop is 0s and nothing
+				moves. The first frame sits inside a link, the quilt's case.
+			</p>
+			<label class="ds-demo__art-toggle">
+				<input type="checkbox" data-art-play-toggle />
+				<Mono variant="text">play all — sets data-art-play on each frame</Mono>
+			</label>
+			<div class="ds-demo__art-grid">
+				{artMotions.map(([kind, svg, note], i) => (
+					<figure class="ds-demo__art-fig">
+						{i === 0 ? (
+							<a href="#art" class="ds-demo__art-link" aria-label={`${kind} demo, inside a link`}>
+								<ArtFrame svg={svg} decorative data-art-demo />
+							</a>
+						) : (
+							<ArtFrame svg={svg} label={`${kind} demo`} data-art-demo />
+						)}
+						<figcaption class="ds-demo__art-cap">
+							<Mono variant="value">data-motion="{kind}"</Mono>
+							<Mono variant="text">{note}</Mono>
+						</figcaption>
+					</figure>
+				))}
+			</div>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Ratio and chrome</h2>
+			<p class="ds-demo__note">
+				<code>ratio</code> crops the same drawing to another box (the frame clips;
+				nothing letterboxes); <code>chrome={"{false}"}</code> drops the plate, the edge
+				and the corner for a drawing that sits on its own surface.
+			</p>
+			<div class="ds-demo__art-sizes">
+				<ArtFrame svg={artTemplate} label="the template cropped to 1 / 1" ratio="1 / 1" />
+				<ArtFrame svg={artTemplate} label="the template at 3 / 1, no chrome" ratio="3 / 1" chrome={false} />
+			</div>
+		</section>
+
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Anchor — variants</h2>
 			<Flex direction="column" gap={2} alignItems="start">
@@ -1213,9 +1434,20 @@ const faces = [
 		});
 	}
 
+	// The art demo: the checkbox sets data-art-play on every demo frame, the
+	// attribute the post page sets on its hero.
+	function initArtDemo() {
+		const toggle = document.querySelector<HTMLInputElement>("[data-art-play-toggle]");
+		const frames = document.querySelectorAll<HTMLElement>("[data-art-demo]");
+		toggle?.addEventListener("change", () => {
+			for (const frame of frames) frame.toggleAttribute("data-art-play", toggle.checked);
+		});
+	}
+
 	document.addEventListener("astro:page-load", () => {
 		initTokenControls();
 		initFacesDemo();
+		initArtDemo();
 	});
 </script>
 
@@ -1426,6 +1658,83 @@ const faces = [
 		font-family: var(--font-mono);
 		font-size: var(--font-size-0);
 		line-height: 1;
+	}
+
+	/* Art swatches: the ink and the fills are only ever seen on the plate, so
+	   each sits on a plate square. */
+	.ds-demo__swatch--art {
+		display: grid;
+		place-items: center;
+		background: var(--art-plate);
+		border-color: var(--art-edge);
+	}
+	.ds-demo__swatch--art > i {
+		display: block;
+		inline-size: 60%;
+		block-size: 60%;
+		border-radius: var(--border-radius-tile);
+		background: var(--swatch);
+	}
+	/* A quilt tile (~230px at the 1200px container, five across) beside a
+	   hero-width frame: the same file, the same 1px line. */
+	.ds-demo__art-sizes {
+		display: grid;
+		grid-template-columns: 230px minmax(0, 1fr);
+		gap: var(--space-4);
+		align-items: start;
+	}
+	/* The template on each theme's page, side by side: the wrapper's theme
+	   class re-resolves every token in scope. */
+	.ds-demo__art-themes {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: var(--space-4);
+	}
+	.ds-demo__art-page {
+		display: grid;
+		gap: var(--space-3);
+		padding: var(--space-4);
+		background: var(--background);
+		color: var(--text-primary);
+		border: 1px solid var(--hairline);
+		border-radius: var(--border-radius-1);
+	}
+	.ds-demo__art-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-bottom: var(--space-4);
+		cursor: pointer;
+	}
+	.ds-demo__art-toggle input {
+		accent-color: var(--accent);
+	}
+	.ds-demo__art-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+		gap: var(--space-4);
+	}
+	.ds-demo__art-fig {
+		margin: 0;
+		display: grid;
+		gap: var(--space-2);
+	}
+	.ds-demo__art-cap {
+		display: grid;
+		gap: var(--space-1);
+	}
+	.ds-demo__art-link {
+		display: block;
+		border-radius: var(--art-radius);
+	}
+	.ds-demo__art-link:focus-visible {
+		outline: var(--focus-ring);
+		outline-offset: var(--focus-ring-offset);
+	}
+	@media (max-width: 640px) {
+		.ds-demo__art-sizes {
+			grid-template-columns: minmax(0, 1fr);
+		}
 	}
 
 	.ds-demo__note {

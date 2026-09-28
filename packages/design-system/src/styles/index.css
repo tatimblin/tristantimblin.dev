@@ -36,3 +36,5 @@
 @import "./post-list.css";
 @import "./prose.css";
 @import "./blockquote.css";
+/* The art: the frame every artwork renders through. */
+@import "./art-frame.css";

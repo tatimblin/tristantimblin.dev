@@ -70,14 +70,15 @@ import "@whois/design-system/styles.css";
 — including columns/gutters/breakpoints for `Grid`. Open it instead of guessing a
 prop; this doc deliberately does not duplicate per-component API tables.
 
-**Components available (47):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (48):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Label`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Callout`, `Pill`, `Anchor`, `List`, `ListItem`,
 `InlineCode`, `Icon`, `VisuallyHidden`, `WidgetGrid`, `Widget` — the
 instrument UI (next section): `Mono`, `Figure`, `Stat`, `Hairline`, `TickRuler`,
 `BarGraph`, `RingGauge`, `Legend`, `LegendItem`, `TileGrid`, `Tile`, `Faces`,
-`Face` — and the reading UI (the section after it): `PostList`, `PostGroup`,
-`PostRow`, `Prose`, `Blockquote`.
+`Face` — the reading UI (the section after it): `PostList`, `PostGroup`,
+`PostRow`, `Prose`, `Blockquote` — and the art (the section after that):
+`ArtFrame`.
 
 ## The decision gate
 
@@ -260,6 +261,93 @@ instrument UI it is this site's own, so its CSS may be edited freely.
   </PostGroup>
 </PostList>
 ```
+
+---
+
+## Art — the illustration language and its frame
+
+Every post has its own hand-drawn SVG, and the quilt on `/txt` pads the grid
+with fillers, all in one language taken from the reference tile sheet
+(`.playwright-mcp/refs/illustration-style.jpg`): **white 1px line work and flat
+fills in four colours on a near-black landscape plate** — circuits with
+right-angle bends and terminal dots, isometric solids, concentric rings, flow
+lines, dashed paths, dot fields; systems metaphors, no text, compositions that
+crop off the tile's edges. The language is centralised so a file carries only
+its drawing: the **tokens** name every colour, the **frame** owns the plate and
+the motion, a **validator** holds the rules, and the `post-art` skill
+(`.claude/skills/post-art/`) is how an AI session draws one.
+
+**Tokens** (`tokens.overrides.css` → ART, on the theme classes, the same values
+in both themes — the plate is a fixed dark, so a light page shows dark windows
+on bone; "ink on bone" is a one-block retune later):
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `--art-plate` | `oklch(17% 0.008 280)` | the tile fill |
+| `--art-edge` | `oklch(34% 0.006 280)` | the tile's 1px edge |
+| `--art-ink` | `oklch(97% 0 0)` | line work and white fills |
+| `--art-ink-2` | the ink at 45% | secondary lines: grids, dashed paths, ghost outlines — the one dimming |
+| `--art-lavender` `--art-coral` `--art-cyan` `--art-green` | `#bda3ea` · `var(--accent)` · `#54b4cb` · `#4a9c63` | the fills; coral IS the site accent |
+| `--art-radius` | `var(--border-radius-1)` | the frame's corner |
+| `--duration-loop` | `6s` (MOTION; `0s` under reduced motion) | one cycle of an art animation |
+
+A file's every `fill`/`stroke` is `none`, `currentColor` (the ink) or one of
+these — never a literal, never an `opacity` attribute. The ink plus at most
+three of the four colours per file; one dominates.
+
+**Files.** A post's art is `src/content/txt/<slug>.svg` beside its `.mdx`
+(the content loader globs only `*.{md,mdx}`, so it is invisible to it);
+fillers are `packages/design-system/src/art/filler-NN.svg`. Every file starts
+from **`packages/design-system/src/art/_template.svg`**, whose comments carry
+the rules (they are stripped on render): `viewBox="0 0 320 180"` on a 10-unit
+grid, a 16-unit safe area, at least one shape running out of frame; every
+stroked shape `vector-effect="non-scaling-stroke"` (1px at any size) with its
+weight by class, `art-line` (1, the inherited default) or `art-line--2` (1.5,
+one emphasis outline); dashes `4 4` or `2 6`; isometrics at true 30°; no
+`width`/`height`/`style`/`text`/gradients/filters/ids except a `clipPath`'s
+prefixed with the slug; ≤ 120 elements, ≤ 12 KB. The validator
+(`scripts/validate-art.mjs`, `bun run validate:art <file>`) and
+`tests/post-art.spec.ts` enforce all of it. Import a file with `?raw`
+(`@whois/design-system/art/_template.svg?raw`, or an `import.meta.glob` with
+`query: "?raw"`); it must be inlined, since its colours are tokens and its
+motion is the frame's CSS.
+
+**`ArtFrame`** — the window every artwork renders through
+(`styles/art-frame.css`): the plate, the edge, the corner, `overflow: hidden`
+and the aspect ratio; it strips the file's prolog and comments and puts
+`aria-hidden`/`focusable="false"` and a slice fit on the root.
+
+```astro
+<ArtFrame svg={raw} label="The Mega Desk" />          role="img" — a hero, the catalogue
+<ArtFrame svg={raw} decorative />                     aria-hidden — inside the link that names the post, or a filler
+<ArtFrame svg={raw} label="…" play />                 motion running from the start (the open post)
+<ArtFrame svg={raw} label="…" ratio="3 / 1" chrome={false} />   another crop; no plate, edge or corner
+```
+
+A frame with no `label` is aria-hidden whether or not it says `decorative`;
+the art is decorative inside a link, and the **link** carries the title.
+`chrome={false}` leaves the ink on whatever is behind it, so on a light page
+it wants a dark surface of its own.
+
+**Motion contract.** A file marks at most one group `<g data-motion="spin |
+drift | slide | blink | dash" data-speed="0.5 | 1 | 2">`; the frame owns the
+keyframes (`transform-box: fill-box; transform-origin: center`), paused at
+rest and **running on `:hover`, `:focus-within`, inside a hovered or focused
+`a`, or when the frame carries `data-art-play`** (the `play` prop, or a
+script's `toggleAttribute`). Durations are fractions of `--duration-loop`
+divided by `data-speed`, and every loop is seamless: `spin` one turn; `drift`
+a slow alternate translate, out and back; `slide` moves the group left by
+exactly 40 units, so draw it repeating every 40 and one period past the right
+edge; `blink` dims to 0.3 and back on a hard step, four per loop; `dash`
+advances a `4 4` or `2 6` dashed trace by its 8-unit period via
+`stroke-dashoffset`, six per loop (the one non-transform/opacity animation —
+a bent trace has no transform that does it). The still frame is the poster:
+a drawing must read at t=0, and under reduced motion the loop is `0s` and it
+is all that ever shows.
+
+The catalogue's "Art" section shows the swatches, the template at tile and
+hero size and on both pages, the line weights, the five motions with a
+play-all toggle, and the ratio/chrome variants.
 
 ---
 

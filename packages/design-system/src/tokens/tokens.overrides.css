@@ -197,6 +197,13 @@
 	--duration-reveal: 900ms;
 	--duration-settle: 420ms;
 	--duration-swap: 260ms;
+	/*   loop   — one cycle of an art animation (art-frame.css): a reel's turn, a
+	 *            tape's period, a dot field's drift out and back. Slow, because
+	 *            the art only moves under the pointer and should feel like an
+	 *            instrument idling, not a loader. Each motion kind takes a fixed
+	 *            fraction of it (a blink is a quarter, a dash advance a sixth),
+	 *            and a file's data-speed divides it again. */
+	--duration-loop: 6s;
 
 	/* How far a revealing element rises as it fades in. A --space-* step rather
 	 * than a bespoke length so the motion shares the layout's rhythm. */
@@ -216,12 +223,15 @@
  * slide-in, which is hidden until it plays) still says so itself. The
  * packages keep their own handling: they are consumed standalone, so they
  * carry literal fallbacks and their own @media blocks, and this does not reach
- * those. */
+ * those. --duration-loop is here too: a zero-length loop is an animation with
+ * no active interval, so a post's art holds its still frame — which is the
+ * poster it was drawn as — without a reduced-motion rule of its own. */
 @media (prefers-reduced-motion: reduce) {
 	:root {
 		--duration-reveal: 0s;
 		--duration-settle: 0s;
 		--duration-swap: 0s;
+		--duration-loop: 0s;
 	}
 }
 
@@ -352,6 +362,46 @@
 .maximeheckel-dark {
 	--emphasis: oklch(from var(--accent) l c h / 12%);
 	--lit: var(--accent);
+}
+
+/* ART ----------------------------------------------------------------------
+ * The illustration language the post art is drawn in (ArtFrame, art-frame.css,
+ * the .svg files beside each post and the fillers in src/art/): white 1px line
+ * work and flat fills in four colours on a near-black landscape plate. The
+ * values were sampled from the reference tile sheet, and an art file may name
+ * NO colour but these — every fill and stroke in it is one of these tokens,
+ * `none` or currentColor (the validator holds that line) — so the whole
+ * language retunes here and nowhere else.
+ *
+ * The plate is a FIXED dark, in both themes, rather than the theme's card
+ * colour: the palette was chosen against near-black and the white line is the
+ * language, so a light page shows dark windows on bone, the way the
+ * instrument references show dark screens on light devices. Declared on the
+ * theme classes, not :root, for two reasons: --art-coral is the site accent,
+ * which lives there; and a wrapper element carrying the other theme's class
+ * (the art catalogue shows every file in both themes side by side) then
+ * re-resolves these in scope. The light theme is free to retune the plate and
+ * the ink here later — "ink on bone" is a one-block change that touches no
+ * file. */
+.maximeheckel-light,
+.maximeheckel-dark {
+	/* The tile: its fill and its 1px edge. Sampled #18181f and #3d3d42. */
+	--art-plate: oklch(17% 0.008 280);
+	--art-edge: oklch(34% 0.006 280);
+	/* The line, and white fills. --art-ink-2 is the one dimming the language
+	 * allows — grids, dashed paths, ghost outlines — as the ink at 45% rather
+	 * than an opacity attribute, so it composes over any fill. */
+	--art-ink: oklch(97% 0 0);
+	--art-ink-2: color-mix(in oklab, var(--art-ink) 45%, transparent);
+	/* The four fills. Coral IS the accent: one warm colour on the page, so a
+	 * card's accent meta beside coral art never reads as two near-oranges (the
+	 * sampled #ea6a4f is within a hair of it). */
+	--art-lavender: #bda3ea;
+	--art-coral: var(--accent);
+	--art-cyan: #54b4cb;
+	--art-green: #4a9c63;
+	/* The frame's corner: the reference's small radius is the surface step. */
+	--art-radius: var(--border-radius-1);
 }
 
 /* A repair, not a retune. -----------------------------------------------
