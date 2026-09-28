@@ -63,16 +63,7 @@ test.describe("post art: every published post has its art", () => {
 			});
 		const missing = posts.filter((f) => !existsSync(join(POSTS, f.replace(/\.mdx$/, ".svg"))));
 
-		// GATED UNTIL PHASE 2. No post art exists yet — it arrives one post at a
-		// time — so until every post has its file this reports the missing ones
-		// as a fixme rather than failing the suite. The moment the last one lands
-		// it turns strict on its own; Phase 2's catalogue unit can then drop the
-		// gate.
-		test.fixme(
-			missing.length > 0,
-			`no art yet for: ${missing.join(", ")} (Phase 2 draws them)`,
-		);
-		expect(missing).toEqual([]);
+		expect(missing, `no art for: ${missing.join(", ")}`).toEqual([]);
 	});
 });
 
