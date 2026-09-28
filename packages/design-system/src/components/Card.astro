@@ -48,10 +48,14 @@ const cls = cx(
 	className,
 );
 
-// Slots are forwarded only when filled: a forwarded-but-empty slot would still
-// count as present in CardHeader and take its place in the row.
-const hasTitle = Astro.slots.has("title");
-const hasMeta = Astro.slots.has("meta");
+// A slot counts only if it RENDERS something. Astro.slots.has() alone is not
+// enough: a wrapper that forwards a slot conditionally (Widget does) still
+// registers it, so has() was true for an empty title and every titleless Widget
+// drew an empty header — 52px of dead band with a hairline above the carousel.
+const filled = async (name: string) =>
+	Astro.slots.has(name) && (await Astro.slots.render(name)).trim() !== "";
+const hasTitle = await filled("title");
+const hasMeta = await filled("meta");
 ---
 
 <Box as={as} class={cls} {...rest}>

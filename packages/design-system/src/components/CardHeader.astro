@@ -29,8 +29,11 @@ interface Props {
 
 const { as = "div", title, squeeze = "meta", class: className, ...rest } = Astro.props;
 const Tag = as as any;
-const hasTitle = Boolean(title) || Astro.slots.has("title");
-const hasMeta = Astro.slots.has("meta");
+// Rendered, not merely registered — see Card.astro.
+const filled = async (name: string) =>
+	Astro.slots.has(name) && (await Astro.slots.render(name)).trim() !== "";
+const hasTitle = Boolean(title) || (await filled("title"));
+const hasMeta = await filled("meta");
 const cls = cx(
 	"ds-card-header",
 	squeeze === "title" && "ds-card-header--squeeze-title",
