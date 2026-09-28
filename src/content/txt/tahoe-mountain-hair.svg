@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <!-- Tahoe's water, carried to the city: a folded-plane mountain cropped
+       off the top-left runs a dashed route down to a cylinder of water,
+       rings on its surface, lavender minerals settling below the level. -->
+  <g>
+    <!-- The mountain: two folded planes, the front one ink and lavender. -->
+    <path d="M 50 -10 L -30 70 L 40 90 Z" fill="var(--art-ink)" />
+    <path d="M 50 -10 L 40 90 L 120 60 Z" fill="var(--art-lavender)" />
+    <!-- The peak behind: only its visible edges and its fold. -->
+    <path d="M 96 36 L 120 20 L 168 52 M 120 20 L 136 62" fill="none" stroke="var(--art-ink)" stroke-linejoin="round" class="art-line" vector-effect="non-scaling-stroke" />
+    <!-- Dry air: a few loose specks. -->
+    <circle cx="150" cy="20" r="1.5" fill="var(--art-ink)" />
+    <circle cx="200" cy="34" r="2" fill="var(--art-ink)" />
+    <circle cx="290" cy="20" r="1.5" fill="var(--art-ink)" />
+    <!-- The route from the mountain to the water. -->
+    <path d="M 40 90 V 140 H 160" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="4 4" class="art-line" vector-effect="non-scaling-stroke" />
+    <circle cx="40" cy="90" r="2.5" fill="var(--art-ink)" />
+    <circle cx="160" cy="140" r="2.5" fill="var(--art-ink)" />
+    <!-- The cylinder of water, cropped through the bottom edge. -->
+    <path d="M 160 80 V 200 M 280 80 V 200" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 160 120 A 60 30 0 0 0 280 120" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="2 6" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
+    <!-- The surface, and its concentric rings. -->
+    <ellipse cx="220" cy="80" rx="60" ry="30" fill="var(--art-cyan)" />
+    <ellipse cx="220" cy="80" rx="44" ry="22" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <ellipse cx="220" cy="80" rx="26" ry="13" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <ellipse cx="220" cy="80" rx="8" ry="4" fill="var(--art-ink)" />
+  </g>
+  <!-- Minerals settling: thin above the level line, thick below it. -->
+  <g data-motion="drift" data-speed="0.5">
+    <circle cx="196" cy="126" r="2" fill="var(--art-lavender)" />
+    <circle cx="242" cy="132" r="1.5" fill="var(--art-ink)" />
+    <circle cx="180" cy="152" r="3" fill="var(--art-lavender)" />
+    <rect x="206" y="146" width="6" height="6" fill="var(--art-lavender)" />
+    <circle cx="232" cy="158" r="2.5" fill="var(--art-lavender)" />
+    <circle cx="258" cy="150" r="2" fill="var(--art-lavender)" />
+    <circle cx="220" cy="168" r="1.5" fill="var(--art-ink)" />
+    <circle cx="196" cy="172" r="2.5" fill="var(--art-lavender)" />
+    <rect x="246" y="168" width="6" height="6" fill="var(--art-lavender)" />
+    <circle cx="266" cy="176" r="3" fill="var(--art-lavender)" />
+    <circle cx="176" cy="180" r="2" fill="var(--art-lavender)" />
+  </g>
+</svg>
