@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <!-- The Mega Desk: an 8-ft slab too long for the frame. Three glued boards
+       on the right iso axis run off the top and right edges; two telescoping
+       legs stand under it; the motor cable between them falls just short; a
+       dimension rule rides parallel above the back edge. -->
+  <g>
+    <!-- Dimension rule, parallel to the back edge: ticks every 10, major every 40. -->
+    <path d="M 155.9 -17 L 346.4 93" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 173.2 -7 V -14 M 181.9 -2 V -5 M 190.5 3 V 0 M 199.2 8 V 5 M 207.8 13 V 6 M 216.5 18 V 15 M 225.2 23 V 20 M 233.8 28 V 25 M 242.5 33 V 26 M 251.1 38 V 35 M 259.8 43 V 40 M 268.5 48 V 45 M 277.1 53 V 46 M 285.8 58 V 55 M 294.4 63 V 60 M 303.1 68 V 65 M 311.8 73 V 66 M 320.4 78 V 75" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+
+    <!-- Two legs: an outer column from under the slab, a collar, the cyan lift
+         stage below. Same length in iso, so the right one lands 86.6 lower. -->
+    <path d="M 94 80 H 106 V 190 H 94 Z M 244 166.6 H 256 V 190 H 244 Z" fill="var(--art-cyan)" />
+    <path d="M 91 3.5 V 80 A 9 4.5 0 0 0 109 80 V 13.9 M 241 90.1 V 166.6 A 9 4.5 0 0 0 259 166.6 V 100.5" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+
+    <!-- The motor cable, sagging from each leg, its two ends just short of each other. -->
+    <path d="M 109 100 C 118 132 138 146 158 146 M 186 150 C 210 150 232 140 241 124" fill="none" stroke="var(--art-ink)" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
+    <rect x="152" y="143" width="8" height="6" fill="var(--art-coral)" />
+    <rect x="180" y="147" width="8" height="6" fill="var(--art-coral)" />
+
+    <!-- The slab: three boards glued edge to edge (white top faces, the seams
+         are the plate), a coral front edge, running out of frame both ways. -->
+    <path d="M -52 -115 L 398.4 145 L 390.6 149.5 L -59.8 -110.5 Z" fill="var(--art-ink)" />
+    <path d="M -61.1 -109.8 L 389.3 150.2 L 381.5 154.8 L -68.8 -105.2 Z" fill="var(--art-ink)" />
+    <path d="M -70.1 -104.5 L 380.2 155.5 L 372.4 160 L -77.9 -100 Z" fill="var(--art-ink)" />
+    <path d="M -77.9 -100 L 372.4 160 V 172 L -77.9 -88 Z" fill="var(--art-coral)" />
+
+    <!-- Sawdust under the desk. -->
+    <circle cx="30" cy="110" r="2" fill="var(--art-ink)" />
+    <circle cx="52" cy="140" r="1.5" fill="var(--art-coral)" />
+    <rect x="24" y="150" width="6" height="6" fill="var(--art-coral)" />
+  </g>
+</svg>
