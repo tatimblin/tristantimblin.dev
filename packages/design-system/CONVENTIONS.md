@@ -207,7 +207,11 @@ colour), passed as a CSS colour.
 **Hairline graphics.**
 - `Hairline` — `fade` (default true), `orientation="horizontal|vertical"`.
 - `TickRuler` — `segments=[{share, color?}]` (colours default to `--tone-N` by
-  order), `playhead={0..1}` (accent line + dot), `pitch`, `height`.
+  order), `playhead={0..1}` (accent line + dot), `lit` (with a playhead: the
+  ticks up to it in the primary ink — a progress ruler), `pitch`, `height`.
+  The playhead's position is `--at` on the ruler element, so a script moves
+  it with one `style.setProperty("--at", "37%")` (the post page's reading
+  ruler does).
 - `BarGraph` — `values`, `max`, `lit={i|"last"|"max"}` (an index, where Tile's
   `lit` is a boolean), `height`, `label` (its accessible name; without one it
   is `aria-hidden`, as RingGauge is).
@@ -245,7 +249,9 @@ instrument UI it is this site's own, so its CSS may be edited freely.
   h2 — the token layer doing a theme's job, rather than a rule against
   `.ds-heading`. It also styles the tags markdown leaves raw (`pre`, inline
   `code`, `img`, `hr`, `table`, `del`); the mapped components keep their own
-  type. `as` for the tag.
+  type. `as` for the tag; `numbered` puts each h2's index (`01`, a CSS
+  counter in the mono) before it, for a page whose contents rail numbers the
+  same sections.
 - `Blockquote` — a quoted passage: `--wash-1` fill, a `--wash-3` bar down the
   left edge, the surface radius on the right corners only. Markdown `>` maps to
   it (`src/components/mdx-components.ts`), so its paragraphs arrive as `Body`.

@@ -1,34 +1,65 @@
 ---
-// PostLayout — the reading experience for a /txt post. Wraps ArticleLayout
-// (which owns the article SEO) and composes the chrome from the design system:
-// the site header in the flow, a post header (date line, title, excerpt, the
-// category as a pill), a hero image when the post names one, and the body in
-// a Prose column. The body arrives via <slot /> already mapped to DS components
-// (src/components/mdx-components.ts, applied at the <Content> render site in
-// txt/[slug].astro).
+// PostLayout — the reading page for a /txt post, on the instrument UI. Wraps
+// ArticleLayout (which owns the article SEO) and composes the chrome from the
+// design system, top to bottom:
 //
-// Only the hero's bleed is bespoke CSS: it runs from the viewport's left edge
-// to the column's right edge, rounded on the right. Everything else is a DS
-// component or the shared shell in src/styles/blog.css.
+//   1. A strip — `← TXT` and `005 / 005` in the structure voice — over a
+//      TickRuler that is the READING RULER: its playhead (and the lit stretch
+//      behind it) is the share of the page read, moved by the script below.
+//   2. The hero: the post's art in its frame (playing — the one page where the
+//      art moves without a pointer) beside the kicker `TXT · 005 · 02 FEB 2026`,
+//      the title in the big regular grotesk, the excerpt, the stat pairs
+//      (`3 min / read`, `582 / words`) and the category and tag pills.
+//   3. A hairline, then the body: a contents rail built from the h2s (sticky
+//      beside the prose on a desktop, a compact list above it below that; the
+//      current section lit by the same script) and the Prose column, whose h2s
+//      are numbered to match the rail.
+//   4. A hairline, then the neighbours: the previous and next posts as their
+//      art, or a line saying there is none.
+//
+// The hero and the body share one grid — a 22rem column for the art and the
+// rail, the rest for the words — so the title, the excerpt and the prose all
+// start on the same line. Under 1024 everything stacks. The art is framed
+// (the plate, both themes): a frame without its chrome leaves white ink on a
+// light page, so this one keeps it.
+//
+// The body arrives via <slot /> already mapped to DS components
+// (src/components/mdx-components.ts, applied at the <Content> render site in
+// txt/[slug].astro). `image` is the social card only; the art is the hero.
 import ArticleLayout from "./ArticleLayout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import ArtFrame from "@whois/design-system/ArtFrame";
 import Heading from "@whois/design-system/Heading";
-import Text from "@whois/design-system/Text";
 import Body from "@whois/design-system/Body";
+import Mono from "@whois/design-system/Mono";
+import Stat from "@whois/design-system/Stat";
 import Pill from "@whois/design-system/Pill";
 import Icon from "@whois/design-system/Icon";
+import Hairline from "@whois/design-system/Hairline";
+import TickRuler from "@whois/design-system/TickRuler";
 import Prose from "@whois/design-system/Prose";
 import "@whois/design-system/styles.css";
 import "../styles/blog.css";
-import { intrinsicSize } from "../lib/intrinsicSize";
 import {
 	blogNav,
 	categories,
-	categoryHref,
-	formatDate,
 	isoDate,
+	kickerDate,
+	monthOf,
+	padNo,
+	tagHref,
 	type CategoryId,
 } from "../lib/blog";
+
+/** A neighbouring post, as the foot of the page shows it. */
+export interface Neighbour {
+	title: string;
+	href: string;
+	date: Date;
+	minutes: number;
+	/** Its raw art, or null when it has none. */
+	art: string | null;
+}
 
 interface Props {
 	title: string;
@@ -37,10 +68,19 @@ interface Props {
 	tags?: string[];
 	date: Date;
 	modified?: Date | null;
-	/** The post's image: the social card, and the hero under the header. */
+	/** The social card. Not shown on the page: the art is the hero. */
 	image?: string;
-	imageAlt?: string;
 	canonical?: string;
+	/** The post's chronological number, and how many there are. */
+	no: number;
+	total: number;
+	stats: { words: number; minutes: number };
+	/** The post's raw art (src/content/txt/<slug>.svg), or null. */
+	art?: string | null;
+	/** The h2s, for the contents rail. */
+	headings?: Array<{ slug: string; text: string }>;
+	prev?: Neighbour | null;
+	next?: Neighbour | null;
 }
 
 const {
@@ -51,14 +91,20 @@ const {
 	date,
 	modified,
 	image,
-	imageAlt,
 	canonical,
+	no,
+	total,
+	stats,
+	art = null,
+	headings = [],
+	prev = null,
+	next = null,
 } = Astro.props;
 
 const cat = category ? categories[category] : null;
-// Sized from the file at build time so the browser reserves the box before the
-// bytes land — the same reader the mapped post images use.
-const heroSize = image ? intrinsicSize(image) : null;
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const neighbourMeta = (n: Neighbour) =>
+	`${monthOf(n.date).short} ${new Date(n.date).getUTCFullYear()} · ${n.minutes} min`;
 ---
 
 <ArticleLayout
@@ -72,86 +118,356 @@ const heroSize = image ? intrinsicSize(image) : null;
 >
 	<div class="blog">
 		<SiteHeader variant="flow" links={blogNav} />
-		<main class="blog__main">
-			<article>
-				<header class="post__header">
-					<Text as="p" size={1} variant="tertiary" family="numeric" class="post__date">
-						<time datetime={isoDate(date)}>{formatDate(date)}</time>
-						{modified && (
-							<span>
-								{" · Updated "}
-								<time datetime={isoDate(modified)}>{formatDate(modified)}</time>
-							</span>
-						)}
-					</Text>
-					<Heading as="h1" size={4} class="post__title">{title}</Heading>
-					{description && <Body class="post__excerpt">{description}</Body>}
-					{cat && category && (
-						<Pill as="a" href={categoryHref(category)} class="post__category">
-							<Icon name={cat.icon} />{cat.label}
-						</Pill>
-					)}
+		<main class="blog__main blog__main--wide">
+			<article class="post" data-post>
+				<div class="post__strip">
+					<Mono as="a" href="/txt" class="post__back">← txt</Mono>
+					<Mono class="post__count">{padNo(no)} / {padNo(total)}</Mono>
+				</div>
+				<TickRuler
+					playhead={0}
+					lit
+					height="var(--space-4)"
+					class="post__ruler"
+					data-post-ruler
+				/>
+
+				<header class="post__hero">
+					{art && <ArtFrame svg={art} label={title} play class="post__art" />}
+					<div class="post__lead">
+						<Mono class="post__kicker post__date">
+							txt · {padNo(no)} · <time datetime={isoDate(date)}>{kickerDate(date)}</time>
+							{modified && (
+								<Fragment>
+									{" "}· updated <time datetime={isoDate(modified)}>{kickerDate(modified)}</time>
+								</Fragment>
+							)}
+						</Mono>
+						<Heading as="h1" size={4} class="post__title">{title}</Heading>
+						{description && <Body class="post__excerpt">{description}</Body>}
+						<div class="post__meta">
+							<Stat size="sm" value={`${stats.minutes} min`} label="read" />
+							<Stat size="sm" value={stats.words.toLocaleString("en-US")} label="words" />
+							{(cat || tags.length > 0) && (
+								<div class="post__tags">
+									{cat && category && (
+										<Pill
+											as="a"
+											href={`/txt?q=${encodeURIComponent(category)}`}
+											class="post__category"
+										>
+											<Icon name={cat.icon} />{cat.label}
+										</Pill>
+									)}
+									{tags.map((tag) => (
+										<Pill as="a" variant="outline" href={tagHref(tag)} class="post__tag">
+											{tag.replace(/[-_]+/g, " ")}
+										</Pill>
+									))}
+								</div>
+							)}
+						</div>
+					</div>
 				</header>
 
-				{image && (
-					<figure class="post__hero">
-						<img
-							src={image}
-							alt={imageAlt ?? ""}
-							width={heroSize?.w}
-							height={heroSize?.h}
-							decoding="async"
-						/>
-					</figure>
-				)}
+				<Hairline class="post__rule" />
 
-				<Prose>
-					<slot />
-				</Prose>
+				<div class="post__body">
+					{headings.length > 0 && (
+						<nav class="post__rail" aria-label="Contents" data-post-rail>
+							<Mono class="post__rail-label">Contents</Mono>
+							<ol class="post__rail-list">
+								{headings.map((h, i) => (
+									<li>
+										<Mono as="a" href={`#${h.slug}`} tone="tertiary" class="post__rail-link">
+											{pad2(i + 1)} — {h.text}
+										</Mono>
+									</li>
+								))}
+							</ol>
+						</nav>
+					)}
+					<Prose numbered class="post__prose">
+						<slot />
+					</Prose>
+				</div>
+
+				<Hairline class="post__rule" />
+
+				<nav class="post__neighbours" aria-label="Previous and next posts">
+					{prev ? (
+						<a class="post__neighbour" href={prev.href} data-neighbour="prev">
+							{prev.art && <ArtFrame svg={prev.art} decorative class="post__neighbour-art" />}
+							<span class="post__neighbour-text">
+								<Mono tone="tertiary">← previous</Mono>
+								<Heading as="span" size={2} class="post__neighbour-title">{prev.title}</Heading>
+								<Mono>{neighbourMeta(prev)}</Mono>
+							</span>
+						</a>
+					) : (
+						<Mono tone="tertiary" class="post__neighbour post__neighbour--none">
+							first post — nothing older
+						</Mono>
+					)}
+					{next ? (
+						<a class="post__neighbour post__neighbour--next" href={next.href} data-neighbour="next">
+							{next.art && <ArtFrame svg={next.art} decorative class="post__neighbour-art" />}
+							<span class="post__neighbour-text">
+								<Mono tone="tertiary">next →</Mono>
+								<Heading as="span" size={2} class="post__neighbour-title">{next.title}</Heading>
+								<Mono>{neighbourMeta(next)}</Mono>
+							</span>
+						</a>
+					) : (
+						<Mono tone="tertiary" class="post__neighbour post__neighbour--none post__neighbour--next">
+							latest post — nothing newer
+						</Mono>
+					)}
+				</nav>
 			</article>
 		</main>
 	</div>
 </ArticleLayout>
 
+<script>
+	// THE READING RULER AND THE RAIL. One rAF-throttled scroll handler does
+	// both: the share of the document scrolled becomes --at on the ruler (the
+	// playhead and its lit stretch follow, per TickRuler's contract), and the
+	// rail's current entry is the last h2 whose top has passed the reading
+	// line, a third of the way down the viewport — at the very end of the
+	// page the last section is current whether or not its heading got there.
+	// No transitions anywhere: a position that tracks the scroll 1:1 is state,
+	// not motion, so it is the same cut under prefers-reduced-motion.
+	//
+	// Wired on astro:page-load, guarded by data-post-wired on the article; the
+	// window listeners are dropped on astro:before-swap.
+	function wire() {
+		const article = document.querySelector<HTMLElement>("[data-post]");
+		if (!article || article.dataset.postWired) return;
+		article.dataset.postWired = "true";
+
+		const ruler = article.querySelector<HTMLElement>("[data-post-ruler]");
+		const links = [
+			...article.querySelectorAll<HTMLAnchorElement>('[data-post-rail] a[href^="#"]'),
+		];
+		const headings = links.map((a) =>
+			document.getElementById(decodeURIComponent(a.hash.slice(1))),
+		);
+
+		let queued = false;
+		const paint = () => {
+			queued = false;
+			const max = document.documentElement.scrollHeight - window.innerHeight;
+			const at = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 1;
+			ruler?.style.setProperty("--at", `${(at * 100).toFixed(2)}%`);
+
+			if (!links.length) return;
+			const line = window.innerHeight * 0.3;
+			let current = -1;
+			headings.forEach((h, i) => {
+				if (h && h.getBoundingClientRect().top <= line) current = i;
+			});
+			if (at >= 0.999) current = headings.length - 1;
+			links.forEach((a, i) => {
+				if (i === current) a.setAttribute("aria-current", "true");
+				else a.removeAttribute("aria-current");
+			});
+		};
+		const schedule = () => {
+			if (queued) return;
+			queued = true;
+			requestAnimationFrame(paint);
+		};
+
+		window.addEventListener("scroll", schedule, { passive: true });
+		window.addEventListener("resize", schedule, { passive: true });
+		paint();
+
+		document.addEventListener(
+			"astro:before-swap",
+			() => {
+				window.removeEventListener("scroll", schedule);
+				window.removeEventListener("resize", schedule);
+			},
+			{ once: true },
+		);
+	}
+
+	document.addEventListener("astro:page-load", wire);
+</script>
+
 <style>
-	.post__header {
-		margin-block-end: var(--space-8);
+	/* THE STRIP AND THE RULER. The way back and the count on one line, the
+	   ruler close under it. */
+	.post__strip {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-4);
+		margin-block-end: var(--space-4);
 	}
-	.post__header > * + * {
-		margin-block-start: var(--space-3);
+
+	/* THE SHARED GRID. The hero and the body split the same way at ≥ 1024:
+	   the art's column (a 22rem frame is ~200px tall at 16:9, the reference
+	   hero's scale) and the words. Below that, one column: art, then text;
+	   rail, then prose. --post-gap is the gutter between the two. */
+	.post__hero,
+	.post__body {
+		--post-gap: var(--space-10);
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-7) var(--post-gap);
 	}
-	.post__date {
-		display: block;
+	@media (min-width: 1024px) {
+		.post__hero,
+		.post__body {
+			grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+		}
 	}
-	/* Two lines at most at this measure; narrower than the column so a long
-	   title wraps early rather than running the full width. */
+
+	/* THE HERO. The art sits on the row's bottom line with the stats, the
+	   lead column stacks down to it. */
+	.post__hero {
+		align-items: end;
+		margin-block-start: var(--space-10);
+	}
+	.post__art {
+		inline-size: 100%;
+	}
+	.post__lead {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-5);
+		min-inline-size: 0;
+	}
+	/* The kicker may carry an "updated" clause; let it wrap on a phone. */
+	.post__kicker {
+		white-space: normal;
+		line-height: var(--line-height-ui);
+	}
+	/* The big regular grotesk: the top of the scale, Regular through the
+	   .blog scope's heading weight. Wraps early rather than running the full
+	   column, and balanced so two lines share the words. */
 	.post__title {
-		max-width: 32.5rem;
+		font-size: var(--font-size-8);
+		max-inline-size: 18ch;
 		text-wrap: balance;
 	}
 	.post__excerpt {
-		max-width: 32.5rem;
+		max-inline-size: var(--blog-measure);
 	}
-	.post__category {
-		margin-block-start: var(--space-4);
+	/* The stat pairs, and the pills at the far right of the same line. */
+	.post__meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--space-5) var(--space-8);
+		margin-block-start: var(--space-2);
+	}
+	.post__tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin-inline-start: auto;
 	}
 
-	/* THE HERO BLEED. The column is centred, so half the viewport minus half the
-	   column is the space to its left; a negative margin of exactly that runs the
-	   figure to the viewport's edge while its right edge stays on the column's.
-	   Rounded on the right only — the left is the viewport. Under the measure
-	   (a phone) the margin is the gutter, so the image still meets the edge. */
-	.post__hero {
-		margin: 0 0 var(--space-8) 0;
-		margin-inline-start: min(calc(50% - 50vw), calc(-1 * var(--container-pad)));
+	.post__rule {
+		margin-block: var(--space-10);
 	}
-	.post__hero img {
-		display: block;
-		inline-size: 100%;
-		block-size: auto;
-		max-block-size: 70vh;
-		object-fit: cover;
-		border-start-end-radius: var(--border-radius-3);
-		border-end-end-radius: var(--border-radius-3);
+
+	/* THE BODY. The rail is sticky beside the prose on a desktop; below that
+	   it is a compact list above the prose, its entries wrapping in a row. */
+	.post__body {
+		align-items: start;
+	}
+	.post__rail {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+	.post__rail-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-3) var(--space-5);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.post__rail-link {
+		display: inline-block;
+		white-space: normal;
+		line-height: var(--line-height-ui);
+	}
+	.post__rail-link[aria-current] {
+		color: var(--text-primary);
+	}
+	@media (min-width: 1024px) {
+		.post__rail {
+			position: sticky;
+			top: var(--space-8);
+		}
+		.post__rail-list {
+			flex-direction: column;
+			gap: var(--space-3);
+		}
+	}
+	.post__prose {
+		max-inline-size: var(--blog-measure);
+		min-inline-size: 0;
+	}
+
+	/* THE NEIGHBOURS. Two cards, the older one left, the newer one right and
+	   ending at the right edge; each the art at 7rem beside three lines. A
+	   missing side is one line of the structure voice in the same place. */
+	.post__neighbours {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-6);
+	}
+	@media (min-width: 640px) {
+		.post__neighbours {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+	.post__neighbour {
+		display: flex;
+		align-items: center;
+		gap: var(--space-5);
+		min-inline-size: 0;
+		color: inherit;
+		text-decoration: none;
+	}
+	.post__neighbour--next {
+		justify-content: flex-end;
+		text-align: end;
+	}
+	/* The newer post reads art-last, mirroring the older one. */
+	a.post__neighbour--next {
+		flex-direction: row-reverse;
+	}
+	.post__neighbour--none {
+		align-self: center;
+	}
+	.post__neighbour-art {
+		flex: none;
+		inline-size: 7rem;
+	}
+	.post__neighbour-text {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		min-inline-size: 0;
+	}
+	.post__neighbour-title {
+		transition: color var(--duration-swap) var(--ease-reveal);
+	}
+	.post__neighbour:hover .post__neighbour-title,
+	.post__neighbour:focus-visible .post__neighbour-title {
+		color: var(--accent);
+	}
+	a.post__neighbour:focus-visible {
+		outline: var(--focus-ring);
+		outline-offset: var(--focus-ring-offset);
+		border-radius: var(--art-radius);
 	}
 </style>

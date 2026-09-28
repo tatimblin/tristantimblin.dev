@@ -1,22 +1,45 @@
 ---
+// /txt/<slug> — one post. Thin: the collection entry, the numbers the layout
+// prints (its chronological number of the total, reading time), its art and
+// its neighbours' — everything computed here, rendered by PostLayout.
 import type { GetStaticPaths } from "astro";
 import { getCollection, render } from "astro:content";
-import PostLayout from "../../layouts/PostLayout.astro";
+import PostLayout, { type Neighbour } from "../../layouts/PostLayout.astro";
 import { mdxComponents } from "../../components/mdx-components";
+import { neighbours, postHref, postNumbers, readingStats } from "../../lib/blog";
+import { artFor } from "../../lib/quilt/art";
 
 export const getStaticPaths = (async () => {
 	const posts = (await getCollection("txt")).filter(
 		(post) => import.meta.env.PROD === false || !post.data.draft
 	);
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: { post },
-	}));
+	const numbers = postNumbers(posts);
+	const neighbour = (p: (typeof posts)[number] | null): Neighbour | null =>
+		p && {
+			title: p.data.title,
+			href: postHref(p.id),
+			date: p.data.date,
+			minutes: readingStats(p.body).minutes,
+			art: artFor(p.id),
+		};
+	return posts.map((post) => {
+		const { prev, next } = neighbours(posts, post.id);
+		return {
+			params: { slug: post.id },
+			props: {
+				post,
+				no: numbers.get(post.id)!,
+				total: posts.length,
+				prev: neighbour(prev),
+				next: neighbour(next),
+			},
+		};
+	});
 }) satisfies GetStaticPaths;
 
-const { post } = Astro.props;
-const { title, excerpt, category, tags, date, modified, image, imageAlt, canonical } = post.data;
-const { Content } = await render(post);
+const { post, no, total, prev, next } = Astro.props;
+const { title, excerpt, category, tags, date, modified, image, canonical } = post.data;
+const { Content, headings } = await render(post);
 ---
 
 <PostLayout
@@ -27,8 +50,14 @@ const { Content } = await render(post);
 	date={date}
 	modified={modified}
 	image={image ?? undefined}
-	imageAlt={imageAlt ?? undefined}
 	canonical={canonical ?? undefined}
+	no={no}
+	total={total}
+	stats={readingStats(post.body)}
+	art={artFor(post.id)}
+	headings={headings.filter((h) => h.depth === 2).map(({ slug, text }) => ({ slug, text }))}
+	prev={prev}
+	next={next}
 >
 	<Content components={mdxComponents} />
 </PostLayout>

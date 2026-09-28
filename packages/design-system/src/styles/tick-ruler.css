@@ -8,7 +8,11 @@
  *
  * The PLAYHEAD is the one accent: a full-height line at a fraction of the
  * width, with a dot on top. The ruler leaves headroom for the dot only when
- * it has one, so a plain ruler is exactly its ticks. */
+ * it has one, so a plain ruler is exactly its ticks. Its position is --at on
+ * the ruler itself (the component sets it inline; a script moves it there),
+ * and with `lit` the stretch from the left edge to it is redrawn in the
+ * primary ink — the same ticks, on the same pitch, over the dim ones — so
+ * the ruler reads as progress: how far, of the whole. */
 .ds-ticks {
 	position: relative;
 	display: flex;
@@ -27,6 +31,20 @@
 	min-inline-size: 1px;
 	block-size: 100%;
 	background: var(--ticks-image);
+}
+
+/* The lit stretch. An overlay from the left edge to the playhead, painted
+   with the same gradient the segments use, so its ticks land on theirs. It
+   starts below the dot's headroom, where the segments start. */
+.ds-ticks--lit-true::before {
+	content: "";
+	position: absolute;
+	inset-block: var(--space-2) 0;
+	inset-inline-start: 0;
+	inline-size: var(--at, 0%);
+	background: var(--ticks-image);
+	color: var(--text-primary);
+	pointer-events: none;
 }
 
 .ds-ticks__playhead {

@@ -92,9 +92,11 @@ test.describe("/txt", () => {
 	test("a post carries its date, category pill and reading column", async ({ page }) => {
 		await page.goto("/txt/mega-desk");
 		await expect(page.locator(".post__date time").first()).toHaveAttribute("datetime", "2025-04-06");
-		await expect(page.locator(".post__date")).toContainText("Apr 6, 2025");
+		// The kicker: `TXT · 003 · 06 APR 2025` (the caps voice uppercases it).
+		await expect(page.locator(".post__date")).toContainText(/06 Apr 2025/i);
 		const pill = page.locator("a.ds-pill.post__category");
-		await expect(pill).toHaveAttribute("href", "/txt/category/projects");
+		// The category is a query on the quilt, not a route.
+		await expect(pill).toHaveAttribute("href", "/txt?q=projects");
 		await expect(pill).toContainText(/projects/i);
 		await expect(page.locator(".ds-prose")).toBeVisible();
 		expect(await page.locator(".ds-prose > p, .ds-prose > .ds-body").count()).toBeGreaterThan(3);

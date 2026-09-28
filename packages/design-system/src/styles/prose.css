@@ -35,6 +35,31 @@
 	border-block-end: 1px solid var(--hairline);
 }
 
+/* NUMBERED. Each h2 is preceded by its index in the structure voice — `01`
+   in the mono at label size, the tertiary ink — from a CSS counter, so a
+   contents rail that numbers the same sections (the post page's) agrees with
+   the headings by construction. The mono sits on the heading's baseline and
+   a fixed gap away; the heading's own type is untouched. */
+.ds-prose--numbered-true {
+	counter-reset: ds-prose-section;
+}
+.ds-prose--numbered-true > h2 {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-4);
+}
+.ds-prose--numbered-true > h2::before {
+	counter-increment: ds-prose-section;
+	content: counter(ds-prose-section, decimal-leading-zero);
+	flex: none;
+	font-family: var(--font-mono);
+	font-size: var(--font-size-0);
+	font-weight: var(--font-weight-400);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: var(--tracking-caps);
+	color: var(--text-tertiary);
+}
+
 /* Fenced code. Shiki runs with theme "css-variables" (astro.config), so the
    token colours come from the --astro-code-* vars — mapped onto the DS
    --token-* palette so highlighting follows the theme. Shiki writes the surface

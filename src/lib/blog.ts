@@ -111,3 +111,24 @@ export function readingStats(body: string | undefined): { words: number; minutes
 		.filter(Boolean).length;
 	return { words, minutes: Math.max(1, Math.ceil(words / 200)) };
 }
+
+/** The post's chronological neighbours: `prev` is the one published before
+ *  it (older), `next` the one after (newer); null at either end. */
+export function neighbours<T extends Dated & { id: string }>(
+	posts: T[],
+	id: string,
+): { prev: T | null; next: T | null } {
+	const asc = byDateDesc(posts).reverse();
+	const i = asc.findIndex((post) => post.id === id);
+	if (i === -1) return { prev: null, next: null };
+	return { prev: asc[i - 1] ?? null, next: asc[i + 1] ?? null };
+}
+
+/** The post page's kicker date: `02 Feb 2026` — day padded, month short,
+ *  UTC like the rest (the caps voice uppercases it on the page). */
+export const kickerDate = (d: Date) => {
+	const date = new Date(d);
+	const day = String(date.getUTCDate()).padStart(2, "0");
+	const month = date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+	return `${day} ${month} ${date.getUTCFullYear()}`;
+};

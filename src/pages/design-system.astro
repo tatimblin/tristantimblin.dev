@@ -945,12 +945,16 @@ const faces = [
 			<h2 class="ds-demo__h">TickRuler</h2>
 			<p class="ds-demo__note">
 				Hairlines on a pitch (<code>--tick-pitch</code>), in currentColor. A plain
-				stretch; with the accent playhead at a fraction; split into share segments,
-				which take the rank ramp in order unless given a colour.
+				stretch; with the accent playhead at a fraction; <code>lit</code> with the
+				ticks up to the playhead in the ink (a progress ruler — the post page's
+				reading ruler, whose script moves <code>--at</code> on the element); split
+				into share segments, which take the rank ramp in order unless given a
+				colour.
 			</p>
 			<Flex direction="column" gap={5} alignItems="stretch">
 				<TickRuler />
 				<TickRuler playhead={0.38} />
+				<TickRuler playhead={0.38} lit />
 				<TickRuler segments={[{ share: 46 }, { share: 29 }, { share: 14 }, { share: 6 }, { share: 5 }]} />
 				<TickRuler pitch="8px" height="var(--space-4)" />
 			</Flex>
