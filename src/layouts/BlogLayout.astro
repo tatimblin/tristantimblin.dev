@@ -4,8 +4,10 @@
 // column holding a page header (kicker, h1, lede) and whatever the page puts in
 // the slot — a PostIndex, or the quilt. Pages stay thin: they fetch and group,
 // this owns the shell. `width="wide"` opens the column to the site container
-// with a compact header row, for the quilt. Wraps Layout.astro (the only
-// html/head).
+// with a compact header row; `width="full"` is that header row with no
+// container at all — at ≥ 1024 the column (and the site header above it)
+// spans the viewport inside an even --space-6 gutter, so the quilt reads as
+// one edge-to-edge board. Wraps Layout.astro (the only html/head).
 import Layout from "./Layout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import Heading from "@whois/design-system/Heading";
@@ -26,9 +28,10 @@ interface Props {
 	heading: string;
 	/** A small caps label above the h1 ("Category", "Tag"). */
 	kicker?: string;
-	/** The column: the reading measure (the lists), or the site's full
-	 *  container with a compact header row (the quilt). */
-	width?: "measure" | "wide";
+	/** The column: the reading measure (the lists); the site's container
+	 *  with a compact header row; or `full` — the viewport inside an even
+	 *  gutter, with the same compact header row (the quilt). */
+	width?: "measure" | "wide" | "full";
 }
 
 const { title, description, noindex, heading, kicker, width = "measure" } = Astro.props;
@@ -36,9 +39,15 @@ const hasLede = Astro.slots.has("lede");
 ---
 
 <Layout title={title} description={description} noindex={noindex}>
-	<div class="blog">
+	<div class:list={["blog", width === "full" && "blog--full"]}>
 		<SiteHeader variant="flow" links={blogNav} />
-		<main class:list={["blog__main", width === "wide" && "blog__main--wide"]}>
+		<main
+			class:list={[
+				"blog__main",
+				width !== "measure" && "blog__main--wide",
+				width === "full" && "blog__main--full",
+			]}
+		>
 			<header class="blog__header">
 				{kicker && <Mono class="blog__kicker">{kicker}</Mono>}
 				<Heading as="h1" size={4}>{heading}</Heading>

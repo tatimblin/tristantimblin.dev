@@ -12,7 +12,7 @@ import { test, expect, type Page } from "@playwright/test";
  * ?q=) reach the engine.
  *
  *   rest        every cell lit, one link per post, fillers aria-hidden and
- *               drawn faint
+ *               drawn faint; a full-width board inside an even gutter
  *   hover/focus the tile lit, the rest faint or gone on a stagger, the card
  *               in a block that dodges it; leaving restores; deterministic
  *   typing      the count, ?q= via replaceState, ?q= on load
@@ -151,6 +151,40 @@ test.describe("quilt — rest", () => {
 			expect(p.opacity).toBe(1);
 			expect(p.filter).toBe("none");
 		}
+	});
+
+	test("a full-width board: the quilt, the bar and the header span the viewport inside one gutter", async ({
+		page,
+	}) => {
+		await page.goto("/txt");
+		const m = await page.evaluate(() => {
+			const probe = document.createElement("div");
+			probe.style.width = "var(--space-6)";
+			document.body.append(probe);
+			const gutter = probe.getBoundingClientRect().width;
+			probe.remove();
+			const rect = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
+			return {
+				gutter,
+				vw: document.documentElement.clientWidth,
+				scroll: document.documentElement.scrollWidth,
+				quilt: rect("[data-quilt]"),
+				bar: rect(".blog__search"),
+				h1: rect(".blog__header h1"),
+				brand: rect(".site-header__brand"),
+				nav: rect(".site-header__nav"),
+			};
+		});
+		expect(m.gutter).toBeGreaterThan(0);
+		expect(m.scroll).toBe(m.vw);
+		for (const r of [m.quilt, m.bar]) {
+			expect(r.left).toBeCloseTo(m.gutter, 0);
+			expect(r.right).toBeCloseTo(m.vw - m.gutter, 0);
+		}
+		// The heading and the site header's brand and nav sit on the same edges.
+		expect(m.h1.left).toBeCloseTo(m.gutter, 0);
+		expect(m.brand.left).toBeCloseTo(m.gutter, 0);
+		expect(m.nav.right).toBeCloseTo(m.vw - m.gutter, 0);
 	});
 });
 

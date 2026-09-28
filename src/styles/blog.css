@@ -54,6 +54,20 @@
 	margin: 0 0 var(--space-5);
 }
 
+/* THE FULL COLUMN — the quilt as an art board. At ≥ 1024 there is no
+   container: the column spans the viewport inside one even gutter. The
+   gutter is set as --container-pad on the whole shell, so the site header's
+   brand and nav (which pad by it) line up with the board's edges; below
+   1024 the site's own fluid gutter applies, as it does everywhere else. */
+.blog__main--full {
+	max-width: none;
+}
+@media (min-width: 1024px) {
+	.blog--full {
+		--container-pad: var(--space-6);
+	}
+}
+
 @media (max-width: 639px) {
 	.blog__main {
 		padding-block: var(--space-8) var(--space-10);
