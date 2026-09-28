@@ -392,10 +392,9 @@ const faces = [
 			<p class="ds-demo__note">
 				Uppercase always gets tracking: every letterform in a text face is fitted to sit
 				beside lowercase, so capitals run together jam. That is most of why all-caps
-				reads as hard. <code>--tracking-caps</code> (0.1em) is the workhorse;
-				<code>--tracking-caps-display</code> (0.16em) is for masthead marks where the
-				tracking is doing compositional work. The site had been making that decision
-				five times at 0.04 / 0.08 / 0.1 / 0.14 / 0.18em.
+				reads as hard. <code>--tracking-caps</code> (0.14em) is the one step, for every
+				small uppercase label. The site had been making that decision five times at
+				0.04 / 0.08 / 0.1 / 0.14 / 0.18em.
 			</p>
 			<p class="ds-demo__note">
 				<strong>What the four faces support</strong>, read out of the files in
@@ -420,7 +419,6 @@ const faces = [
 			</p>
 			<Flex direction="column" gap={2} alignItems="start">
 				<Text class="ds-caps" family="mono" size={1}>ds-caps · section mark</Text>
-				<Text class="ds-caps ds-caps--display" family="mono" size={1}>ds-caps--display · masthead mark</Text>
 				<span class="ds-numeric" style="font-size: var(--font-size-6);">ds-numeric&nbsp;·&nbsp;1034 / 1543 / 0158</span>
 				<span style="font-size: var(--font-size-0); color: var(--text-tertiary);">--font-size-0 · the caption step, below the scale's 14px floor</span>
 			</Flex>
@@ -831,6 +829,8 @@ const faces = [
 				</Widget>
 			</WidgetGrid>
 		</section>
+
+		<!-- ANCHOR --------------------------------------------------------- -->
 		<!-- READING UI ----------------------------------------------------- -->
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">PostList · PostGroup · PostRow — the archive</h2>
@@ -894,8 +894,6 @@ const faces = [
 			</Blockquote>
 		</section>
 
-
-		<!-- ANCHOR --------------------------------------------------------- -->
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Anchor — variants</h2>
 			<Flex direction="column" gap={2} alignItems="start">

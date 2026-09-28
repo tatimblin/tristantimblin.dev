@@ -2,7 +2,7 @@ name: Volo Seasons Collection
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Daily at 6 AM UTC (offset from ticker's 5 AM). Games are
+    - cron: '0 6 * * *'  # Daily at 6 AM UTC (offset from baywheels' 3 and github's 4). Games are
                          # Tuesday evenings Pacific ≈ Wednesday 03:00 UTC, so this
                          # picks up a result the same night it is recorded.
   workflow_dispatch:  # Allow manual trigger

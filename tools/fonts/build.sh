@@ -36,17 +36,17 @@ SRC_PP_MONDWEST="$ASSETS/Bitmap Font Pack - Free for Personal Use/PPMondwest-Reg
 PPX="$ASSETS/mondwest-pixel/otf"
 SRC_PP_MONDWEST_THIN="$PPX/MondwestPixel-Thin.otf"    # 200 — available, no role yet
 SRC_PP_MONDWEST_LIGHT="$PPX/MondwestPixel-Light.otf"  # 300 — body text
-# PP Neue Montreal — UI text (widget labels and figures, the masthead's marks). TWO
+# PP Neue Montreal — UI text (widget labels and figures, the blog's chrome). TWO
 # cuts under one family, like Migra: the browser then matches by font-weight and
 # never synthesises. Regular carries the labels and figures; Semibold is what the
-# newsroom masthead's marks (/txt) ask for.
+# blog's post titles and section headings (/txt) ask for.
 # The OTFs are from Pangram Pangram's own pack, NOT the woff2 that floats around on
 # the font-mirror sites: that file reports itself as usWeightClass 700 "Bold" at
 # version 2.600 with 743 glyphs, i.e. a different cut of a different release from
 # what it is named after. Same rule as the four above — subset the vendor original.
 NM="$ASSETS/PP Neue Montreal - Free for Personal Use v3.0/otf"
 SRC_NEUE_MONTREAL_REGULAR="$NM/PPNeueMontreal-Regular.otf"    # 400 — UI text
-SRC_NEUE_MONTREAL_SEMIBOLD="$NM/PPNeueMontreal-Semibold.otf"  # 600 — masthead marks (/txt)
+SRC_NEUE_MONTREAL_SEMIBOLD="$NM/PPNeueMontreal-Semibold.otf"  # 600 — post titles, section headings (/txt)
 
 # The google-fonts "latin" subset definition: ASCII + Latin-1, the OE/ij
 # ligatures, spacing modifiers, general punctuation (curly quotes, en/em dashes,

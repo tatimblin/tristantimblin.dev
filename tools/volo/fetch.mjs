@@ -48,7 +48,7 @@ const ENDPOINT = "https://www.volosports.com/hapi/v1/graphql";
 // volosports.com sits behind Cloudflare, which rejects a non-browser client with
 // a 403 BEFORE the request reaches Hasura — so a 403 here means the User-Agent
 // was refused, not that the token is bad. Real auth failures arrive as HTTP 200
-// with a GraphQL `errors` array. (Same trap as api.nasdaq.com in ../ticker.)
+// with a GraphQL `errors` array.
 const UA =
 	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
 	"(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";

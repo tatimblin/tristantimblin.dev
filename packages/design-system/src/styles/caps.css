@@ -9,12 +9,10 @@
  *
  * The site already knew this (every `text-transform: uppercase` on it carries a
  * letter-spacing), but it knew it five separate times, at 0.04 / 0.08 / 0.1 /
- * 0.14 / 0.18em, for what is really two jobs. This is those two jobs:
+ * 0.14 / 0.18em, for what is really one job:
  *
  *   .ds-caps            small uppercase labels — kickers, section marks, widget
  *                       headers, meta rows.
- *   .ds-caps--display   the masthead's own marks, where the tracking is doing
- *                       compositional work and wants to read as deliberate.
  *
  * Doubled selector for the same reason as .ds-heading / .ds-body: this renders
  * through Text, whose `spaced` variant sets a letter-spacing of its own, and one
@@ -31,9 +29,4 @@
 	   a phantom indent at the end of the run. Visible whenever a caps label is
 	   centred, right-aligned, or sits inside a border/background. */
 	margin-inline-end: calc(-1 * var(--tracking-caps, 0.14em));
-}
-
-.ds-caps--display.ds-caps--display {
-	letter-spacing: var(--tracking-caps-display, 0.16em);
-	margin-inline-end: calc(-1 * var(--tracking-caps-display, 0.16em));
 }

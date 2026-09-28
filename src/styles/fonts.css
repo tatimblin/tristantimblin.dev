@@ -136,11 +136,12 @@
    recedes, so the display faces keep the personality and the interface reads as
    interface.
    TWO CUTS UNDER ONE FAMILY, on the same reasoning as Migra above: the browser
-   matches by font-weight and never synthesises. Regular carries the labels and the
-   widget figures (the instrument UI's numeral is the thin one); Semibold is what the
-   newsroom masthead's marks ask for (NewsroomLayout, FrontPage) and, until this cut
-   existed, silently did not get (global.css refuses faux-bolding, so the request
-   rendered at the one weight that had shipped).
+   matches by font-weight and never synthesises. Regular carries the labels, the
+   widget figures (the instrument UI's numeral is the thin one) and the blog's page
+   titles; Semibold is what the blog's post titles and section headings ask for
+   (the DS PostRow and Prose) and, until this cut existed, silently did not get
+   (global.css refuses faux-bolding, so the request rendered at the one weight
+   that had shipped).
    The smallest correction on the site — the glyphs already sit close to Migra's
    x-height (0.510 vs 0.530), so 103.9% is a nudge rather than a rescue. It is the
    same on both cuts because their metrics are identical. */

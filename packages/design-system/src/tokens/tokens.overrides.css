@@ -108,7 +108,7 @@
 	 * every two-line heading look like two separate lines.) */
 	--line-height-heading: 1.15;
 	--line-height-body: var(--font-body-line-height);
-	/* The third leading, for the UI face at label sizes — a strapline box, a meta
+	/* The third leading, for the UI face at label sizes — a post title, a meta
 	 * row, a two-line widget header. Heading leading is too tight for something
 	 * that wraps and body leading is far too loose for a label, so these sites had
 	 * nothing to reach for and were hand-typing 1.2 / 1.25 / 1.3 / 1.35 / 1.45. */
@@ -128,16 +128,14 @@
 	/* TRACKING ---------------------------------------------------------------
 	 * Uppercase is set in letterforms that were drawn to sit next to LOWERCASE.
 	 * Run together they jam, which is most of why all-caps reads as hard to read —
-	 * so uppercase always gets tracking, never none. Two steps, because the site
-	 * genuinely has two jobs here and had been hand-typing five different values
-	 * for them (0.04 / 0.08 / 0.1 / 0.14 / 0.18em):
+	 * so uppercase always gets tracking, never none. One step for the one job the
+	 * site has, which had been hand-typed as five different values (0.04 / 0.08 /
+	 * 0.1 / 0.14 / 0.18em):
 	 *   --tracking-caps          small uppercase labels — kickers, section marks,
-	 *                            widget headers, meta rows. The workhorse.
-	 *   --tracking-caps-display  the masthead's own marks, where the tracking is
-	 *                            doing compositional work and wants to be wide
-	 *                            enough to read as deliberate.
-	 * Anything uppercase should reach for one of these rather than inventing a
-	 * sixth value.
+	 *                            widget headers, meta rows, pills.
+	 * Anything uppercase should reach for this rather than inventing a sixth
+	 * value. (A wider display step once existed for the old /txt masthead; it
+	 * went with the masthead.)
 	 *   --tracking-mono          the small tracking for MONO set in sentence case
 	 *                            (a handle, a stat's label) and for caps on a phone
 	 *                            tile, where the full caps tracking costs a word a
@@ -146,7 +144,6 @@
 	 * --tracking-caps was 0.1em; the instrument voice (see INSTRUMENT UI below)
 	 * tracks its labels wider, and the two jobs are the same job. */
 	--tracking-caps: 0.14em;
-	--tracking-caps-display: 0.16em;
 	--tracking-mono: 0.05em;
 
 	/* UI text: the small, functional type that LABELS things rather than says them —

@@ -147,11 +147,11 @@ const {
 		     Reading text moved to the Light (300) when the face gained thinned cuts,
 		     which on its own would argue for swapping this entry rather than adding
 		     to it — but the Regular did NOT stop painting early. The DS's Text
-		     component still defaults to 400, so above the fold on /txt it is 28
-		     elements against the Light's 1 (measured, not assumed). Preloading only
-		     the body role would leave the cut that actually covers the first screen
-		     to late discovery — exactly the swap these tags exist to prevent. The
-		     Light costs 11 KB, and it is the one every paragraph below the fold needs.
+		     component still defaults to 400, so every heading, label and meta line
+		     above the fold still asks for the Regular. Preloading only the body role
+		     would leave the cut that covers much of the first screen to late
+		     discovery — exactly the swap these tags exist to prevent. The Light costs
+		     11 KB, and it is the one every paragraph below the fold needs.
 
 		     The Thin (200) is NOT preloaded: it is served but holds no role, so
 		     nothing requests it and a preload would be a wasted fetch the browser
