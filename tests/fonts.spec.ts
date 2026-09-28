@@ -150,7 +150,7 @@ test("body copy gets the REAL Light cut, not the Regular standing in for it", as
 	expect(state.cuts["400"], "the Regular cut did not load").toBe("loaded");
 });
 
-test("the masthead ear gets a REAL semibold, not a synthesised one", async ({
+test("a post title gets a REAL semibold, not a synthesised one", async ({
 	page,
 }) => {
 	// Two things, and the second is why this test is not just the one above.
@@ -168,14 +168,14 @@ test("the masthead ear gets a REAL semibold, not a synthesised one", async ({
 	// they are now set at the regular weight (the instrument UI's thin numeral), so
 	// nothing on the homepage requests 600 any more and the cut is never fetched
 	// there — check() would answer false for a face that is perfectly healthy. The
-	// newsroom masthead's strapline (NewsroomLayout.astro, .np__strapline) is the
-	// role that still wants the Semibold, so that is the page to ask on.
+	// blog's post titles (the DS PostRow, .ds-post-row__title) are the role that
+	// wants the Semibold, so that is the page to ask on.
 	await page.goto("/txt");
 	await page.waitForFunction(() => document.fonts.status === "loaded", undefined, {
 		timeout: 15_000,
 	});
 	const state = await page.evaluate(() => {
-		const el = document.querySelector<HTMLElement>(".np__strapline");
+		const el = document.querySelector<HTMLElement>(".ds-post-row__title");
 		return {
 			found: !!el,
 			family: el
@@ -187,7 +187,7 @@ test("the masthead ear gets a REAL semibold, not a synthesised one", async ({
 			regularLoaded: document.fonts.check('400 16px "Neue Montreal"'),
 		};
 	});
-	expect(state.found, "the strapline has moved — has the masthead markup changed?").toBe(true);
+	expect(state.found, "no post title found — has the PostRow markup changed?").toBe(true);
 	expect(state.family).toBe("Neue Montreal");
 	// --font-weight-600 resolves to 560, which CSS font matching lands on the
 	// Semibold; anything under 500 would have fallen back to the Regular.
