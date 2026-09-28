@@ -110,6 +110,7 @@ const fixtures: Array<[string, string, string]> = [
 	["the xlink namespace", RULES.attribute, wrap("", '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 320 180">')],
 	// 4. paint
 	["a hex fill", RULES.paint, wrap('<circle cx="60" cy="30" r="3" fill="#ffffff" />')],
+	["an outline with no fill (renders black-filled)", RULES.paint, wrap(`<circle cx="60" cy="30" r="3" stroke="var(--art-ink)" vector-effect="non-scaling-stroke" />`)],
 	["an rgb stroke", RULES.paint, wrap('<path d="M 0 0 H 10" fill="none" stroke="rgb(255,255,255)" class="art-line" vector-effect="non-scaling-stroke" />')],
 	["a named colour", RULES.paint, wrap('<circle cx="60" cy="30" r="3" fill="white" />')],
 	["an opacity attribute", RULES.paint, wrap('<circle cx="60" cy="30" r="3" fill="var(--art-ink)" opacity="0.5" />')],
@@ -126,6 +127,7 @@ const fixtures: Array<[string, string, string]> = [
 	// 6. motion
 	["two data-motion groups", RULES.motion, wrap(`<g data-motion="spin"><circle cx="60" cy="30" r="3" fill="var(--art-coral)" /></g><g data-motion="blink"><circle cx="90" cy="30" r="3" fill="var(--art-coral)" /></g>`)],
 	["a motion outside the set", RULES.motion, wrap(`<g data-motion="wiggle"><circle cx="60" cy="30" r="3" fill="var(--art-coral)" /></g>`)],
+	["a transform on the motion group (the animation replaces it)", RULES.motion, wrap(`<g data-motion="spin" transform="translate(4 0)"><circle cx="60" cy="30" r="3" fill="var(--art-coral)" /></g>`)],
 	["a speed outside the set", RULES.motion, wrap(`<g data-motion="spin" data-speed="3"><circle cx="60" cy="30" r="3" fill="var(--art-coral)" /></g>`)],
 	["data-speed without data-motion", RULES.motion, wrap(`<g data-speed="2"><circle cx="60" cy="30" r="3" fill="var(--art-coral)" /></g>`)],
 	["data-motion on a shape", RULES.motion, wrap(`<circle cx="60" cy="30" r="3" fill="var(--art-coral)" data-motion="blink" />`)],

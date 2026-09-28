@@ -183,13 +183,13 @@ export function validateArt(source, { slug } = {}) {
 			if (el.attrs.has(a)) fail(RULES.paint, el, `no ${a}; var(--art-ink-2) is the one dimming`);
 		}
 		if (el.attrs.has("color")) fail(RULES.paint, el, `no color attribute; currentColor is the ink, set by the frame`);
-		// A shape that says neither fill nor stroke paints SVG's default: black,
-		// invisible on the plate and never what was meant.
-		if (SHAPE.has(el.name) && !inside(el, "clipPath")) {
-			const f = inherited(el, "fill");
-			const s = inherited(el, "stroke");
-			if (f === undefined && (s === undefined || s === "none")) {
-				fail(RULES.paint, el, `a shape must say its fill (none or a token): SVG's default is black`);
+		// A shape with no fill (its own or a group's) paints SVG's default:
+		// black — invisible on the plate, and never what was meant. That holds for
+		// a STROKED outline too: it renders as a black-filled shape under its line,
+		// the easiest trap in the language to miss by eye. <line> cannot fill.
+		if (SHAPE.has(el.name) && el.name !== "line" && !inside(el, "clipPath")) {
+			if (inherited(el, "fill") === undefined) {
+				fail(RULES.paint, el, `a shape must say its fill (fill="none" for an outline, or a token): SVG's default is black`);
 			}
 		}
 	}
@@ -229,6 +229,11 @@ export function validateArt(source, { slug } = {}) {
 		if (!MOTION.has(kind)) fail(RULES.motion, el, `data-motion="${kind}" is not one of ${MOTIONS.join(" | ")}`);
 		if (el.name !== "g") fail(RULES.motion, el, `data-motion belongs on a <g> that holds what moves`);
 		if (el.children.length === 0) fail(RULES.motion, el, `the data-motion group is empty; nothing would move`);
+		// The frame's keyframes set the group's CSS transform, which replaces a
+		// transform attribute outright: the group would jump when motion starts.
+		if (el.attrs.has("transform")) {
+			fail(RULES.motion, el, `no transform on the data-motion group (its animation replaces it); wrap it in an outer <g transform>`);
+		}
 		if (kind === "dash") {
 			for (const d of [el, ...flatten(el).slice(1)]) {
 				if (d.attrs.has("stroke-dashoffset")) {

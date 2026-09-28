@@ -191,7 +191,7 @@ points at. Every id is prefixed `<slug>-`, where the slug is the file's
 basename; a filler's slug is `filler-NN`. Apply a clip with
 `clip-path="url(#<slug>-…)"`. Every reference must resolve inside the file.
 
-**Fill.** Every shape states its `fill` explicitly, as `none` or a token. The
-validator only fails a shape that has neither a fill nor a stroke. A stroked
-shape with no `fill` passes, but renders with SVG's default **black fill**,
-which is invisible on the plate and covers what is behind it.
+**Fill.** Every shape states its `fill` explicitly, as `none` or a token (on
+itself or a parent `<g>`). A shape with no `fill` — an outline included —
+renders with SVG's default **black fill**, invisible on the plate and covering
+what is behind it; the validator fails it. `<line>` is exempt: it cannot fill.

@@ -107,8 +107,9 @@ fails on, or a trap it cannot see.
       optional `preserveAspectRatio` is allowed). It has no `width`, `height`,
       `style` or `xmlns:xlink`. There is no nested `<svg>`, and no `<symbol>`,
       `<marker>`, `<title>` or `<desc>`.
-- [ ] **Every shape states its `fill`**: `none` or a token. The validator
-      passes a stroked shape with no fill, but it renders **black-filled**.
+- [ ] **Every shape states its `fill`**: `none` or a token (a `<g>`'s fill
+      counts). An outline with no fill renders **black-filled**; the validator
+      fails it.
 - [ ] **Every stroked shape** carries `vector-effect="non-scaling-stroke"` **on
       itself**, even when `stroke` is set on a parent `<g>`.
 - [ ] **Paints are exact strings**, one of `none`, `currentColor`,
