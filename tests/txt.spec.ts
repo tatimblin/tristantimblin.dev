@@ -11,7 +11,9 @@ import { test, expect, type Page } from "@playwright/test";
  * resolve. The properties worth pinning:
  *
  *  1. EXACTLY ONE LINK PER POST on the index, newest first; fillers link nothing.
- *  2. A CATEGORY PAGE LISTS ONLY ITS POSTS, and /txt/categories reaches it.
+ *  2. A CATEGORY PAGE LISTS ONLY ITS POSTS, is noindex, and links its query on
+ *     the quilt (/txt?q=<id>). There is no categories page: /txt/categories is
+ *     a 301 to /txt in public/_redirects (Cloudflare Pages, so not in dev).
  *  3. TAG PAGES STILL RESOLVE — they predate the redesign and may be linked.
  *  4. IT WORKS WITH SCRIPTING OFF: tiles, rows and nav are plain links.
  *  5. A POST carries its date, title, category pill and a reading column.
@@ -50,19 +52,20 @@ test.describe("/txt", () => {
 		expect(await page.locator('[data-cell="filler"] a').count()).toBe(0);
 	});
 
-	test("a category page lists only its posts, and the categories page links it", async ({
+	test("a category page lists only its posts and links its query on the quilt", async ({
 		page,
 	}) => {
-		await page.goto("/txt/categories");
-		const programming = page.locator('a.ds-post-row__link[href="/txt/category/programming"]');
-		await expect(programming).toHaveCount(1);
-		await programming.click();
-		await expect(page).toHaveURL(/\/txt\/category\/programming\/?$/);
+		await page.goto("/txt/category/programming");
 		expect(await postLinks(page)).toEqual([
 			"/txt/asserting-on-agent-behavior",
 			"/txt/no-honey-we-have-a-dashboard-at-home",
 		]);
 		await expect(page.locator(".ds-post-row__meta")).toHaveText([/Programming/, /Programming/]);
+		// Thin archive, like the tag pages.
+		await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+		await page.locator('a.ds-pill[href="/txt?q=programming"]').click();
+		await expect(page).toHaveURL(/\/txt\/?\?q=programming$/);
+		await expect(page.locator("[data-search-input]")).toHaveValue("programming");
 	});
 
 	test("tag pages still resolve", async ({ page }) => {
@@ -77,10 +80,9 @@ test.describe("/txt", () => {
 	test("tiles, rows and nav are reachable with scripting off", async ({ browser }) => {
 		const context = await browser.newContext({ javaScriptEnabled: false });
 		const page = await context.newPage();
-		await page.goto("/txt");
-		await page.locator('.site-header a[href="/txt/categories"]').click();
-		await expect(page).toHaveURL(/\/txt\/categories\/?$/);
-		await page.goto("/txt");
+		await page.goto("/txt/tag/diy");
+		await page.locator('.site-header a[href="/txt"]').click();
+		await expect(page).toHaveURL(/\/txt\/?$/);
 		await page.locator('[data-cell="post"] a[href="/txt/mega-desk"]').click();
 		await expect(page).toHaveURL(/\/txt\/mega-desk\/?$/);
 		await expect(page.locator("h1")).toHaveText("The Mega Desk");

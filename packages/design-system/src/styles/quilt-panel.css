@@ -244,13 +244,21 @@ a.ds-quilt-panel__read:focus-visible {
 	border-radius: var(--border-radius-tile);
 	box-shadow: 0 1px 0 var(--accent);
 }
+/* One mono line, `APR 2025 · PROJECTS · MATCHED TAG · HOME OFFICE`: the why
+   joins the meta with the same ` · ` the meta uses inside itself (no column
+   gap, so the spacing matches), in the meta's tone. It wraps whole when the
+   row is narrow. */
 .ds-quilt-panel__result-meta {
 	display: flex;
 	flex-wrap: wrap;
-	gap: var(--space-1) var(--space-3);
+	row-gap: var(--space-1);
 }
 .ds-quilt-panel__result-meta > :empty {
 	display: none;
+}
+.ds-quilt-panel__result-meta > :not(:empty) ~ :not(:empty)::before {
+	content: "\00a0·\00a0";
+	color: var(--text-tertiary);
 }
 
 /* THE NONE FACE. The sentence at the title step, the coverage line, the

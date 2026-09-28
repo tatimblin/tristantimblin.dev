@@ -7,9 +7,9 @@
  * of the five posts is "ai", "diy", "vscode", "personal" and "career", which is
  * five labels for five posts and nothing an icon could be drawn for. So a post
  * names ONE `category` from the closed set below, and that is what the index
- * shows beside its title and what the Categories page lists. Tags stay in the
- * frontmatter and keep their pages (/txt/tag/<tag>); they are just no longer the
- * thing the list is organised by.
+ * shows beside its title and what the quilt's browse face offers as a query
+ * (/txt?q=<id>). Tags stay in the frontmatter and keep their pages
+ * (/txt/tag/<tag>); they are just no longer the thing the list is organised by.
  *
  * Each category owns an icon from the DS set (packages/design-system/src/icons)
  * — never an emoji, which the old `icon` frontmatter field used to carry.
@@ -19,11 +19,10 @@ import type { IconName } from "@whois/design-system/icons";
 export const BLOG_TITLE = "Writing";
 export const BLOG_DESCRIPTION = "Writing by Tristan Timblin.";
 
-/** The quiet nav in the blog's header. */
-export const blogNav = [
-	{ label: "Writing", href: "/txt" },
-	{ label: "Categories", href: "/txt/categories" },
-];
+/** The quiet nav in the blog's header. There is no categories page: a
+ *  category is a query on the quilt (/txt?q=<id>), and /txt/categories 301s to
+ *  /txt (public/_redirects). */
+export const blogNav = [{ label: "Writing", href: "/txt" }];
 
 export const categories = {
 	programming: { label: "Programming", icon: "code" },

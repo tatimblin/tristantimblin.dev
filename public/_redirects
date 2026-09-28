@@ -1,0 +1,5 @@
+# Cloudflare Pages redirects (https://developers.cloudflare.com/pages/configuration/redirects/)
+#
+# /txt/categories was the old categories index; categories are now queries on
+# the /txt quilt (/txt?q=<category>), and /txt/category/<id> stays as a list.
+/txt/categories /txt 301

@@ -11,6 +11,7 @@ import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import BlogLayout from "../../../layouts/BlogLayout.astro";
 import PostIndex from "../../../components/txt/PostIndex.astro";
+import Pill from "@whois/design-system/Pill";
 
 export const getStaticPaths = (async () => {
 	const posts = (await getCollection("txt")).filter(
@@ -41,5 +42,10 @@ const label = tag.replace(/-/g, " ");
 	kicker="Tag"
 	heading={label}
 >
+	<Fragment slot="lede">
+		<Pill as="a" href={`/txt?q=${encodeURIComponent(label)}`} variant="outline">
+			search this in the quilt
+		</Pill>
+	</Fragment>
 	<PostIndex posts={posts} label={`Posts tagged ${label}, by year`} />
 </BlogLayout>

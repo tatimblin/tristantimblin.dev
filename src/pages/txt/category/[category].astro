@@ -1,11 +1,16 @@
 ---
 // /txt/category/<id> — one category's posts, by year. Same list as /txt from a
 // smaller pile; a real route rather than a filter, so it works with JS off and
-// can be linked.
+// can be linked (the post header's category pill points here). The quilt's own
+// take on a category is the query /txt?q=<id>, linked from the header.
+//
+// noindex: like the tag pages, it is thin archive — every post on it is on
+// /txt and at its own URL.
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import BlogLayout from "../../../layouts/BlogLayout.astro";
 import PostIndex from "../../../components/txt/PostIndex.astro";
+import Pill from "@whois/design-system/Pill";
 import { categories, categoryIds, type CategoryId } from "../../../lib/blog";
 
 export const getStaticPaths = (async () => {
@@ -32,8 +37,14 @@ const { label } = categories[category];
 <BlogLayout
 	title={`${label} — Tristan Timblin`}
 	description={`Writing by Tristan Timblin, filed under ${label}.`}
+	noindex
 	kicker="Category"
 	heading={label}
 >
+	<Fragment slot="lede">
+		<Pill as="a" href={`/txt?q=${encodeURIComponent(category)}`} variant="outline">
+			search this in the quilt
+		</Pill>
+	</Fragment>
 	<PostIndex posts={posts} label={`${label} posts by year`} />
 </BlogLayout>

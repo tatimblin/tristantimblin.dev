@@ -17,8 +17,14 @@ export default defineConfig({
 		// MDX for the /txt posts: lets each post map markdown elements (p, h2,
 		// a, …) onto @whois/design-system components via <Content components={…}/>.
 		mdx(),
-		// Keep the scratch /vc-experiments page out of the sitemap; it's also
-		// noindex'd in its Layout usage so crawlers skip it entirely.
-		sitemap({ filter: (page) => !page.includes('/vc-experiments') }),
+		// Keep noindex pages out of the sitemap: the scratch /vc-experiments page,
+		// and the /txt category and tag lists (thin archive — the quilt and the
+		// posts carry the content).
+		sitemap({
+			filter: (page) =>
+				!page.includes('/vc-experiments') &&
+				!page.includes('/txt/category/') &&
+				!page.includes('/txt/tag/'),
+		}),
 	],
 });
