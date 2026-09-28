@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <g>
+    <path d="M 170 -10 H 330 M 170 10 H 330 M 170 30 H 330 M 170 50 H 330 M 170 70 H 330 M 170 90 H 330 M 170 110 H 330 M 170 -10 V 110 M 190 -10 V 110 M 210 -10 V 110 M 230 -10 V 110 M 250 -10 V 110 M 270 -10 V 110 M 290 -10 V 110 M 310 -10 V 110" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M -10 130 H 110 V 70 H 170" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <circle cx="170" cy="70" r="2.5" fill="var(--art-ink)" />
+    <path d="M 250 110 V 190" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="2 6" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
+    <circle cx="200" cy="20" r="4" fill="var(--art-coral)" />
+    <circle cx="260" cy="60" r="4" fill="var(--art-coral)" />
+    <circle cx="220" cy="80" r="4" fill="var(--art-coral)" />
+    <circle cx="300" cy="100" r="4" fill="var(--art-coral)" />
+    <circle cx="280" cy="20" r="4" fill="var(--art-ink)" />
+    <circle cx="240" cy="40" r="4" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <circle cx="60" cy="40" r="1.5" fill="var(--art-ink)" />
+  </g>
+</svg>

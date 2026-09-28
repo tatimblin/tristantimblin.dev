@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <g>
+    <path d="M 140 -10 V 40 H 220 V 100 H 330 M 180 190 V 140 H 260 V 60 H 330" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
+    <rect x="217" y="37" width="6" height="6" fill="var(--art-coral)" />
+    <rect x="257" y="97" width="6" height="6" fill="var(--art-coral)" />
+    <rect x="177" y="137" width="6" height="6" fill="var(--art-ink)" />
+    <circle cx="140" cy="40" r="2.5" fill="var(--art-ink)" />
+    <circle cx="300" cy="30" r="3" fill="var(--art-coral)" />
+    <circle cx="160" cy="90" r="2" fill="var(--art-ink)" />
+    <rect x="287" y="147" width="6" height="6" fill="var(--art-coral)" />
+    <circle cx="320" cy="120" r="3" fill="var(--art-coral)" />
+    <circle cx="110" cy="150" r="1.5" fill="var(--art-ink)" />
+    <circle cx="240" cy="160" r="1.5" fill="var(--art-ink)" />
+    <rect x="97" y="57" width="6" height="6" fill="var(--art-lavender)" />
+    <circle cx="200" cy="80" r="1.5" fill="var(--art-coral)" />
+  </g>
+</svg>

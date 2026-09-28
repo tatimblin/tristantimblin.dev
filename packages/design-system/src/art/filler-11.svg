@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <g>
+    <path d="M 60 -10 L 330 145.9 M -10 80 L 190 195.5" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 160 44 L 186 29 V 59 L 160 74 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 150 50 L 176 35 V 65 L 150 80 Z" fill="var(--art-lavender)" />
+    <path d="M 220 84 L 246 69 V 99 L 220 114 Z" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 210 90 L 236 75 V 105 L 210 120 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 290 134 L 316 119 V 149 L 290 164 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 280 140 L 306 125 V 155 L 280 170 Z" fill="var(--art-lavender)" />
+    <path d="M 240 -10 L 266 -25 V 5 L 240 20 Z" fill="var(--art-lavender)" />
+    <path d="M 70 140 L 96 125 V 155 L 70 170 Z" fill="var(--art-ink)" />
+    <circle cx="60" cy="50" r="2" fill="var(--art-lavender)" />
+    <circle cx="110" cy="100" r="1.5" fill="var(--art-ink)" />
+    <circle cx="300" cy="60" r="1.5" fill="var(--art-ink)" />
+  </g>
+</svg>

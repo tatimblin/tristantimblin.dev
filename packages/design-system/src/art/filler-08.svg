@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <g>
+    <path d="M 130 30 V 90 M 190 30 V 90" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <ellipse cx="160" cy="90" rx="30" ry="15" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 130 60 A 30 15 0 0 0 190 60" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="2 6" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
+    <ellipse cx="160" cy="30" rx="30" ry="15" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <circle cx="160" cy="52" r="9" fill="var(--art-green)" />
+    <path d="M 200 70 V 130 M 260 70 V 130" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <ellipse cx="230" cy="130" rx="30" ry="15" fill="var(--art-ink)" />
+    <path d="M 200 100 A 30 15 0 0 0 260 100" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="2 6" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
+    <ellipse cx="230" cy="70" rx="30" ry="15" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <circle cx="230" cy="96" r="9" fill="var(--art-green)" />
+    <path d="M 270 110 V 170 M 330 110 V 170" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <ellipse cx="300" cy="170" rx="30" ry="15" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 270 140 A 30 15 0 0 0 330 140" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="2 6" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
+    <ellipse cx="300" cy="110" rx="30" ry="15" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <circle cx="300" cy="138" r="9" fill="var(--art-ink)" />
+    <circle cx="50" cy="60" r="1.5" fill="var(--art-ink)" />
+    <circle cx="80" cy="130" r="2.5" fill="var(--art-green)" />
+  </g>
+</svg>

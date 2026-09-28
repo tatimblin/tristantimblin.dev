@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <g>
+    <path d="M 240 140 L 283.3 165 L 240 190 L 196.7 165 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 283.3 165 V 175 L 240 200 V 190 Z" fill="var(--art-cyan)" />
+    <path d="M 196.7 165 L 240 190 V 200 L 196.7 175 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 240 75 L 283.3 100 L 240 125 L 196.7 100 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 283.3 100 V 110 L 240 135 V 125 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 196.7 100 L 240 125 V 135 L 196.7 110 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 240 10 L 283.3 35 L 240 60 L 196.7 35 Z" fill="var(--art-ink)" />
+    <path d="M 283.3 35 V 45 L 240 70 V 60 Z" fill="var(--art-cyan)" />
+    <path d="M 196.7 35 L 240 60 V 70 L 196.7 45 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 196.7 45 V 100 M 283.3 45 V 100 M 196.7 110 V 165 M 283.3 110 V 165" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="2 6" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M -10 110 H 90 V 60 H 150" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
+    <circle cx="150" cy="60" r="2.5" fill="var(--art-ink)" />
+    <circle cx="60" cy="30" r="2" fill="var(--art-cyan)" />
+    <circle cx="120" cy="150" r="3" fill="var(--art-cyan)" />
+    <circle cx="170" cy="120" r="1.5" fill="var(--art-ink)" />
+  </g>
+</svg>

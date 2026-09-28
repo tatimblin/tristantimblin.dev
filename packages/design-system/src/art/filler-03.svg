@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <g>
+    <path d="M -10 10 C 130 10 170 70 250 70 M -10 40 C 130 40 170 70 250 70 M -10 70 H 250 M -10 100 C 130 100 170 70 250 70 M -10 130 C 130 130 170 70 250 70 M -10 160 C 130 160 170 70 250 70" fill="none" stroke="var(--art-ink)" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
+    <circle cx="256" cy="70" r="6" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 262 70 H 330" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="4 4" class="art-line" vector-effect="non-scaling-stroke" />
+    <rect x="30" y="5" width="24" height="10" rx="5" fill="var(--art-lavender)" />
+    <rect x="70" y="95" width="24" height="10" rx="5" fill="var(--art-lavender)" />
+    <rect x="20" y="155" width="24" height="10" rx="5" fill="var(--art-lavender)" />
+    <rect x="110" y="65" width="24" height="10" rx="5" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <rect x="110" y="65" width="10" height="10" rx="5" fill="var(--art-ink)" />
+  </g>
+</svg>

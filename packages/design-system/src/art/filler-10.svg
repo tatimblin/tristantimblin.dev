@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <g>
+    <path d="M 140 -10 V 75 H 200 M 265 100 V 140 H 330 M 205 80 V 160 H 120" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
+    <circle cx="120" cy="160" r="2.5" fill="var(--art-ink)" />
+    <rect x="220" y="30" width="10" height="10" fill="var(--art-cyan)" />
+    <rect x="230" y="40" width="10" height="10" fill="var(--art-cyan)" />
+    <rect x="250" y="40" width="10" height="10" fill="var(--art-ink)" />
+    <rect x="240" y="60" width="10" height="10" fill="var(--art-cyan)" />
+    <rect x="270" y="20" width="10" height="10" fill="var(--art-cyan)" />
+    <rect x="280" y="70" width="10" height="10" fill="var(--art-cyan)" />
+    <rect x="300" y="50" width="10" height="10" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <rect x="315" y="90" width="10" height="10" fill="var(--art-cyan)" />
+    <rect x="200" y="70" width="10" height="10" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <rect x="260" y="90" width="10" height="10" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <rect x="290" y="-5" width="10" height="10" fill="var(--art-green)" />
+    <path d="M 290 110 H 300 V 120 H 290 Z M 295 112.5 A 2.5 2.5 0 1 0 295 117.5 A 2.5 2.5 0 1 0 295 112.5 Z" fill="var(--art-ink)" fill-rule="evenodd" />
+    <circle cx="60" cy="50" r="1.5" fill="var(--art-ink)" />
+  </g>
+</svg>

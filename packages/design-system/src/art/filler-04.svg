@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <g>
+    <path d="M 20 190 L 330 11 M 150 190 L 330 86.1" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 85 190 L 330 48.5" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="4 4" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 60 166.9 V 158.9 M 100 143.8 V 135.8 M 140 120.7 V 112.7 M 180 97.6 V 89.6 M 220 74.5 V 66.5 M 260 51.4 V 43.4 M 300 28.3 V 20.3" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
+    <path d="M 140 151.3 L 152.1 158.3 L 140 165.3 L 127.9 158.3 Z" fill="var(--art-green)" />
+    <path d="M 200 116.6 L 212.1 123.6 L 200 130.6 L 187.9 123.6 Z" fill="var(--art-green)" />
+    <path d="M 260 82 L 272.1 89 L 260 96 L 247.9 89 Z" fill="var(--art-ink)" />
+    <path d="M 300 58.900000000000006 L 312.1 65.9 L 300 72.9 L 287.9 65.9 Z" fill="var(--art-green)" />
+    <circle cx="50" cy="40" r="1.5" fill="var(--art-ink)" />
+    <circle cx="90" cy="70" r="2.5" fill="var(--art-green)" />
+    <circle cx="140" cy="30" r="1.5" fill="var(--art-ink)" />
+  </g>
+</svg>
