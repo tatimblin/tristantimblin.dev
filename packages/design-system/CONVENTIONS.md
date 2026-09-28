@@ -330,7 +330,7 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
 
 | On | Attribute / property | Meaning |
 | --- | --- | --- |
-| a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. |
+| a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. A **filler is never brighter than faint**: it is drawn faint and greyscale at every state but `gone`, so the posts are the only tiles at full strength. |
 | a cell | `--scatter-delay` (ms) | the stagger into faint/gone (0–240); the return to lit has none |
 | a post cell | `data-active` | the accent ring on the art — the search result the arrows are on |
 | the panel | `data-mode="card \| browse \| results \| none \| hidden"` | which face shows; the others are `visibility: hidden` (out of the a11y tree and tab order), so no per-face `aria-hidden` |
@@ -343,14 +343,20 @@ Transitions run on `--duration-settle` (the scatter) and `--duration-swap`
 **absolutely positioned grid item**, so its containing block is the grid
 area its placement names: it lands on cells by line number, and its content
 never sizes a row. It is a size query container, and the card fits its
-block — three excerpt lines at the full 270px block, two, then one, then the
-title alone at the next step down as the block shrinks — rather than clip.
+block — three excerpt lines at a 240px+ block, two, then one, then the
+title alone at the next step down as the block shrinks — rather than clip;
+on a big board (a block ≥ 360px tall and 900px wide) the title steps up to
+`--font-size-8` and the excerpt to `--font-size-5`.
 
-**Geometry** (the container is 1200px; the gap `--space-3`):
+**Geometry.** On `/txt` the quilt is a full-width board (`BlogLayout
+width="full"`): at ≥ 1024 the column is the viewport inside a `--space-6`
+gutter on each side, and the gap tightens to `--space-2` so the tiles read as
+one sheet; below that the gap is `--space-3` and the site's fluid gutter
+applies.
 
 | Viewport | Columns | Cell | Block | Mode |
 | --- | --- | --- | --- | --- |
-| ≥ 1024 | `cols` (5) | ~230×130, 16:9 | 3×2 ≈ 715×270 | hover quilt |
+| ≥ 1024 | `cols` (5) | ~269×151 at 1440, ~365×205 at 1920; 16:9 | 3×2 ≈ 823×310 at 1440, ≈ 1110×418 at 1920 | hover quilt |
 | 640–1023 | `colsMd` (3) | ~227×128 at 768 | full width × 2 rows | hover quilt |
 | < 640 | 2 | ~179×101 at 390 | none — the panel is in flow above the tiles | captioned list, a tap navigates |
 

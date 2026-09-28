@@ -11,7 +11,8 @@ import { test, expect, type Page } from "@playwright/test";
  * DOM the design system defines, and that the inputs (pointer, focus, keys,
  * ?q=) reach the engine.
  *
- *   rest        every cell lit, one link per post, fillers aria-hidden
+ *   rest        every cell lit, one link per post, fillers aria-hidden and
+ *               drawn faint
  *   hover/focus the tile lit, the rest faint or gone on a stagger, the card
  *               in a block that dodges it; leaving restores; deterministic
  *   typing      the count, ?q= via replaceState, ?q= on load
@@ -112,6 +113,44 @@ test.describe("quilt — rest", () => {
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 		await expect(page.locator(SEARCH)).toHaveAttribute("aria-expanded", "false");
 		await expect(page.locator("[data-search-count]")).toHaveText("5 posts");
+	});
+
+	test("fillers are faint and greyscale at rest; the posts are at full strength", async ({
+		page,
+	}) => {
+		await page.goto("/txt");
+		const look = (sel: string) =>
+			page.locator(sel).evaluateAll((els) =>
+				els
+					.filter((e) => e.checkVisibility())
+					.map((e) => {
+						const s = getComputedStyle(e);
+						return { state: (e as HTMLElement).dataset.state, opacity: Number(s.opacity), filter: s.filter };
+					}),
+			);
+		const faint = await page
+			.locator("[data-quilt]")
+			.evaluate((q) => Number(getComputedStyle(q).getPropertyValue("--quilt-faint")));
+		// Settled: the cells ease in from the stylesheet's first paint.
+		await expect
+			.poll(async () =>
+				(await look('[data-cell="filler"]')).every(
+					(f) => Math.abs(f.opacity - faint) < 0.01 && f.filter === "grayscale(1)",
+				),
+			)
+			.toBe(true);
+		const fillers = await look('[data-cell="filler"]');
+		expect(fillers.length).toBeGreaterThan(0);
+		for (const f of fillers) {
+			// Still `lit` in the state contract — it is the paint that holds it back.
+			expect(f.state).toBe("lit");
+			expect(f.opacity).toBeCloseTo(faint, 2);
+			expect(f.filter).toBe("grayscale(1)");
+		}
+		for (const p of await look('[data-cell="post"]')) {
+			expect(p.opacity).toBe(1);
+			expect(p.filter).toBe("none");
+		}
 	});
 });
 

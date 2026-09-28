@@ -30,15 +30,15 @@
 	grid-row: var(--panel-row, 1) / span var(--panel-rows);
 	z-index: 1;
 	box-sizing: border-box;
-	/* Inset from the block's edge by the gap, so the text does not touch
-	   the tiles beside it. */
-	padding: var(--quilt-gap, var(--space-3));
+	/* Inset from the block's edge, so the text does not touch the tiles
+	   beside it — a fixed step, not the gap, which tightens on a board. */
+	padding: var(--space-3);
 	display: grid;
 	grid-template-rows: minmax(0, 1fr);
 	/* A query container on BOTH axes: an absolutely positioned box with
 	   inset: 0 has a definite size, so the faces can fit themselves to the
-	   block they were given (a 3×2 block is 270px tall at the 1200px
-	   container, less on a narrower page) rather than clip. */
+	   block they were given (a 3×2 block is ~310px tall on a 1440 board,
+	   ~420 at 1920, less on a narrower page) rather than clip. */
 	container: panel / size;
 	font-family: var(--font-ui);
 	color: var(--text-primary);
@@ -99,7 +99,7 @@
    height like the prototype. The title is the UI face at the big regular
    step (the blog sets titles regular; the heading face would shout here),
    with display leading and tracking from the type tokens; the excerpt is
-   Body, clamped to three lines, which is what the 270px block holds under
+   Body, clamped to three lines, which is what a 240px+ block holds under
    a two-line title. */
 .ds-quilt-panel__card {
 	justify-content: space-between;
@@ -148,8 +148,8 @@ a.ds-quilt-panel__read:focus-visible {
 .ds-quilt-panel__why:empty {
 	display: none;
 }
-/* The card fitted to its block: three lines of excerpt need a 240px block
-   (the full-size one is 270); a shorter block shows two, then one, then
+/* The card fitted to its block: three lines of excerpt need a 240px block;
+   a shorter block shows two, then one, then
    only the title at the next step down — the card never clips mid-line. */
 @container panel (max-block-size: 239px) {
 	.ds-quilt-panel__blurb {
@@ -167,6 +167,17 @@ a.ds-quilt-panel__read:focus-visible {
 @container panel (max-block-size: 159px) {
 	.ds-quilt-panel__blurb {
 		display: none;
+	}
+}
+/* And up: a full-width board on a big screen gives the block ~1100×420, where
+   the full-size card's type would sit small in an empty field — the title
+   takes the display step and the excerpt the next body step. */
+@container panel (min-block-size: 360px) and (min-inline-size: 900px) {
+	.ds-quilt-panel__title {
+		font-size: var(--font-size-8);
+	}
+	.ds-quilt-panel__blurb {
+		--font-body-size: var(--font-size-5);
 	}
 }
 

@@ -5,8 +5,8 @@
  * for three viewports and the STATE CONTRACT a script drives; it decides
  * nothing itself.
  *
- *   ≥ 1024      the hover quilt at --quilt-cols-lg (5) — a cell ~230×130 at
- *               the 1200px container, the reference's tile scale.
+ *   ≥ 1024      the hover quilt at --quilt-cols-lg (5) — a cell ~269×151 on
+ *               /txt's full-width board at 1440, ~365×205 at 1920.
  *   640–1023    the hover quilt at --quilt-cols-md (3), where a cell takes
  *               its tablet slot (--cell-col-md/--cell-row-md) and a filler
  *               without one drops out.
@@ -24,6 +24,8 @@
 .ds-quilt {
 	/* The cell's shape — the art's, so a frame fills a cell exactly. */
 	--quilt-aspect: 16 / 9;
+	/* The gap: a step on a tablet, a hairline-tight --space-2 on the desktop
+	   board, so the tiles read as one sheet rather than a list of cards. */
 	--quilt-gap: var(--space-3);
 	/* The ghost's opacity: a tile that has stepped back but is still there. */
 	--quilt-faint: 0.22;
@@ -38,6 +40,11 @@
 	grid-template-rows: repeat(var(--quilt-rows), auto);
 	gap: var(--quilt-gap);
 	font-family: var(--font-ui);
+}
+@media (min-width: 1024px) {
+	.ds-quilt {
+		--quilt-gap: var(--space-2);
+	}
 }
 @media (min-width: 640px) and (max-width: 1023px) {
 	.ds-quilt {
@@ -118,6 +125,16 @@
 }
 .ds-quilt-cell[data-state="faint"] {
 	opacity: var(--quilt-faint);
+}
+/* A FILLER IS NEVER BRIGHTER THAN FAINT. It links nothing, so it is drawn as
+   the ghost at rest too — lit and faint look the same on it, and the posts
+   are the only tiles at full strength. gone (below, same specificity, later)
+   still takes it out in a scatter. The greyscale is not gated like the
+   ghost's: a filler's filter never changes, so there is no transition for a
+   tablet to pay for. */
+.ds-quilt-cell[data-cell="filler"] {
+	opacity: var(--quilt-faint);
+	filter: grayscale(1);
 }
 @media (hover: hover) and (min-width: 1024px) {
 	.ds-quilt-cell[data-state="faint"] {
