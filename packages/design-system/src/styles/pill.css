@@ -42,8 +42,10 @@
 		color var(--duration-swap) var(--ease-reveal),
 		border-color var(--duration-swap) var(--ease-reveal);
 }
-/* The tracking's phantom trailing space would sit the text off-centre. */
-.ds-pill > :last-child,
+/* The tracking's phantom trailing space would sit the text off-centre. Not
+   on an icon (an svg or an aria-hidden glyph): when it is the last ELEMENT
+   the text is a bare node after it, and the pull would eat the gap. */
+.ds-pill > :last-child:not(svg, [aria-hidden="true"]),
 .ds-pill:not(:has(> *)) {
 	margin-inline-end: calc(-1 * var(--tracking-caps));
 }

@@ -5,8 +5,8 @@
  * for three viewports and the STATE CONTRACT a script drives; it decides
  * nothing itself.
  *
- *   ≥ 1024      the hover quilt at --quilt-cols-lg (5) — a cell ~269×151 on
- *               /txt's full-width board at 1440, ~365×205 at 1920.
+ *   ≥ 1024      the hover quilt at --quilt-cols-lg (5) — a cell ~275×155 on
+ *               /txt's full-bleed board at 1440, ~371×209 at 1920.
  *   640–1023    the hover quilt at --quilt-cols-md (3), where a cell takes
  *               its tablet slot (--cell-col-md/--cell-row-md) and a filler
  *               without one drops out.

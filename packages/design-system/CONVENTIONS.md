@@ -213,13 +213,16 @@ colour), passed as a CSS colour.
 
 **The device screen.** `<Panels>` is the hardware metronome's display: one
 sheet cut into flat panels by a `--panel-gutter` of the page, rounded once at
-the outside (`frame={false}` for none). A column of rows by default;
+the outside (`frame={false}` for none — a screen that IS the page, its rows
+edge to edge, as on `/txt`). A column of rows by default;
 `direction="row"` is a row of cells on a grid — `columns` gives the template
 inline, or set `--panels-columns` per breakpoint in your own CSS, since an
 inline value would out-rank a media query — and a Panels inside a Panels
 takes no frame of its own. `<Panel pad="none|sm|md|lg">` is one surface: the
 card colour, no edge, an inset step; lay its inside out in your own CSS. The
-/txt index is four rows of it (tabs, the board, the controls, the timeline).
+/txt index is four rows of it (tabs, the board, the controls, the timeline),
+frameless and the full page: the tab row a `<Panel as="header">`, the rest a
+nested `<Panels as="main">`.
 
 ```astro
 <Panels>
@@ -404,18 +407,18 @@ on a big board (a block ≥ 360px tall and 900px wide) the title steps up to
 `--font-size-8` and the excerpt to `--font-size-5`.
 
 **Geometry.** On `/txt` the quilt is the board row of one `Panels`
-instrument (`BlogLayout width="full"` with `tabs`): at ≥ 1024 the frame is
-the viewport inside a `--space-6` gutter on each side, the board a `Panel`
-inside it, and the gap tightens to `--space-2` so the tiles read as one
-sheet; below that the gap is `--space-3` and the site's fluid gutter
-applies. The cell sizes below are the board's at each width, a step
-narrower than the frame.
+instrument (`BlogLayout` with `tabs`): a `frame={false}` screen that is the
+whole page, edge to edge and at least the viewport tall, the board a
+`Panel` (`--space-4` inset) that takes the spare height and centres the
+quilt in it. At ≥ 1024 the gap tightens to `--space-2` so the tiles read as
+one sheet; below that it is `--space-3`. The cell sizes below are the
+board's at each width.
 
 | Viewport | Columns | Cell | Block | Mode |
 | --- | --- | --- | --- | --- |
-| ≥ 1024 | `cols` (5) | ~263×148 at 1440, ~359×202 at 1920; 16:9 | 3×2 ≈ 805×304 at 1440, ≈ 1093×412 at 1920 | hover quilt |
-| 640–1023 | `colsMd` (3) | ~227×128 at 768 | full width × 2 rows | hover quilt |
-| < 640 | 2 | ~179×101 at 390 | none — the panel is in flow above the tiles | captioned list, a tap navigates |
+| ≥ 1024 | `cols` (5) | ~275×155 at 1440, ~371×209 at 1920; 16:9 | 3×2 ≈ 842×318 at 1440, ≈ 1130×425 at 1920 | hover quilt |
+| 640–1023 | `colsMd` (3) | ~237×133 at 768 | full width × 2 rows | hover quilt |
+| < 640 | 2 | ~173×97 at 390 | none — the panel is in flow above the tiles | captioned list, a tap navigates |
 
 ---
 

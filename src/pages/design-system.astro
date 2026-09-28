@@ -1126,7 +1126,8 @@ const faces = [
 				gives the template, or set <code>--panels-columns</code> per breakpoint in your own
 				CSS) and takes no frame of its own. <code>&lt;Panel pad&gt;</code> is one surface
 				— the card colour, no edge — with an inset step (none / sm / md / lg). The /txt
-				index is four rows of this.
+				index is four rows of this with <code>frame={"{false}"}</code>: no radius and no
+				clip, the rows edge to edge, the whole page.
 			</p>
 			<Panels class="ds-demo__device">
 				<Panel pad="sm" class="ds-demo__device-row">
