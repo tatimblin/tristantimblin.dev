@@ -29,6 +29,19 @@
 
   --container-max: 1200px;
   --container-pad: clamp(1rem, 4vw, 2rem);
+  /* THE CONTAINER AS AN INSET — the one source for every full-width row that
+     sits in the site's container: the site header, the homepage's hero and
+     content rows (FullHeroLayout's --hero-inset is this), the blog's columns.
+     --container-pad gutters, the content capped at --container-max and
+     centred; above the cap the inset grows to absorb the extra width. Padding
+     a full-width box by it, rather than centring a max-width box, is what
+     keeps them all on one line: 100vw counts a classic scrollbar that a
+     centred box's width does not, so the two methods disagree by half a
+     scrollbar whenever one is drawn. */
+  --container-inset: max(
+    var(--container-pad),
+    (100vw - var(--container-max)) / 2 + var(--container-pad)
+  );
   --grid-gap: 1.5rem;
   --radius: 12px;
 }

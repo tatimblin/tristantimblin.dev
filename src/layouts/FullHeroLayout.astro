@@ -119,11 +119,10 @@ const { title, description, image, preloadMedia } = Astro.props;
 		/* Contained: every inset region (header, wordmark, heading, content rows)
 		   sits in the same box as .container — --container-pad gutters, capped at
 		   --container-max and centred. Above the cap the inset grows to absorb the
-		   extra width. The scene stays full-bleed behind it. */
-		--hero-inset: max(
-			var(--container-pad),
-			(100vw - var(--container-max)) / 2 + var(--container-pad)
-		);
+		   extra width. The scene stays full-bleed behind it. The site's one
+		   --container-inset (global.css), so every page's header and rows sit
+		   on the same line as the homepage's. */
+		--hero-inset: var(--container-inset);
 		/* SCENE-OWNED BOTTOM UI. A scene whose own interactive/legible UI hugs its
 		   BOTTOM edge (e.g. the carousel's date scrubber + caption) declares how much
 		   of that edge it occupies; the heading group then rests ABOVE it rather than

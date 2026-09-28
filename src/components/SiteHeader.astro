@@ -45,9 +45,10 @@ const { links = [{ label: "Writing", href: "/txt" }], variant = "overlay" } = As
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-4, 1rem);
-		/* --hero-inset when inside FullHeroLayout, so the bar shares the contained
-		   page box; the plain gutter everywhere else. */
-		padding-inline: var(--hero-inset, var(--container-pad, clamp(1rem, 4vw, 2rem)));
+		/* The site's container inset (global.css) on every page, so the brand and
+		   nav sit in the same place on the homepage and everywhere else, on the
+		   edges of the page's contained rows. */
+		padding-inline: var(--container-inset);
 		padding-block: var(--space-4, 1rem);
 		background: transparent;
 		/* Let pointers fall through the empty bar to the scene; the brand + links
