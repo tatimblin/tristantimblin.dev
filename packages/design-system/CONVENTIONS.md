@@ -213,15 +213,18 @@ colour), passed as a CSS colour.
 
 **The device screen.** `<Panels>` is the hardware metronome's display: one
 sheet cut into flat panels by a `--panel-gutter` of the page, rounded once at
-the outside (`frame={false}` for none — the square-cornered screen `/txt`
-sets in the site container). A column of rows by default;
+the outside (`frame={false}` for none — the square-cornered row of cells
+`/txt` sets on the page). A column of rows by default;
 `direction="row"` is a row of cells on a grid — `columns` gives the template
 inline, or set `--panels-columns` per breakpoint in your own CSS, since an
 inline value would out-rank a media query — and a Panels inside a Panels
 takes no frame of its own. `<Panel pad="none|sm|md|lg">` is one surface: the
-card colour, no edge, an inset step; lay its inside out in your own CSS. The
-/txt index is four rows of it (tabs, the board, the controls, the timeline),
-frameless, in `<main>` under the site header, spanning the site container.
+card colour, no edge, an inset step; lay its inside out in your own CSS. A
+Panel is a surface, so use one only where a surface is wanted: on the /txt
+index only the control row is a Panels (a frameless `direction="row"` of
+cells — the count, the search, − and +); the tabs, the board and the
+timeline sit straight on the page as plain layout rows, set apart by space
+tokens, since a gutter between unfilled rows draws nothing.
 
 ```astro
 <Panels>
@@ -405,19 +408,21 @@ title alone at the next step down as the block shrinks — rather than clip;
 on a big board (a block ≥ 360px tall and 900px wide) the title steps up to
 `--font-size-8` and the excerpt to `--font-size-5`.
 
-**Geometry.** On `/txt` the quilt is the board row of one `Panels`
-instrument (`BlogLayout` with `tabs`): a `frame={false}` screen in the
-site container (`--container-max` inside `--container-pad` gutters) under
-the site header, filling the viewport below it, the board a `Panel`
-(`--space-4` inset) that takes the spare height and centres the quilt in it. At ≥ 1024 the gap tightens to `--space-2` so the tiles read as
+**Geometry.** On `/txt` the quilt is the board row of the instrument
+(`BlogLayout` with `tabs`): rows straight on the page, in the site container
+(padded by the site's `--container-inset`, as the site header and the
+homepage's rows are, so the quilt's edges fall on the header's brand and
+nav) under the site header, filling the viewport below it; the board is a
+plain row, no surface and no inset, that takes the spare height and centres
+the quilt in it. At ≥ 1024 the gap tightens to `--space-2` so the tiles read as
 one sheet; below that it is `--space-3`. The cell sizes below are the
 board's at each width.
 
 | Viewport | Columns | Cell | Block | Mode |
 | --- | --- | --- | --- | --- |
-| ≥ 1024 | `cols` (5) | ~214×121 at 1440 and wider (the container caps it); 16:9 | 3×2 ≈ 658×250 | hover quilt |
-| 640–1023 | `colsMd` (3) | ~217×122 at 768 | full width × 2 rows | hover quilt |
-| < 640 | 2 | ~157×88 at 390 | none — the panel is in flow above the tiles | captioned list, a tap navigates |
+| ≥ 1024 | `cols` (5) | ~221×124 at 1440 and wider (the container caps it); 16:9 | 3×2 ≈ 678×256 | hover quilt |
+| 640–1023 | `colsMd` (3) | ~228×128 at 768 | full width × 2 rows | hover quilt |
+| < 640 | 2 | ~173×97 at 390 | none — the panel is in flow above the tiles | captioned list, a tap navigates |
 
 ---
 

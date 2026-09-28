@@ -56,9 +56,9 @@
 
 /* The faces: stacked in the one cell, a flex column each on the card
    surface, clipped to the block (a card's excerpt clamps; a list's rows are
-   capped by the script). The wash, not the card colour: the panel sits on
-   a Panel of the instrument, which is already that colour, and a wash is
-   one step off whatever it lands on in both themes. */
+   capped by the script). The wash, not the card colour: a wash is one
+   step off whatever it lands on in both themes — on /txt the page itself,
+   over the scattered tiles. */
 .ds-quilt-panel__face {
 	grid-area: 1 / 1;
 	min-inline-size: 0;

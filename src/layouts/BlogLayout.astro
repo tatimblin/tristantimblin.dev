@@ -7,15 +7,14 @@
 //             PostIndex. `width="wide"` opens the column to the site
 //             container with a compact header row.
 //   `tabs`    THE INSTRUMENT: the site header as on every page, then <main> in
-//             the site's container (--container-max, --container-pad), holding
-//             one frameless Panels screen — no radius, its rows cut by the
-//             --panel-gutter hairline. Its first row is this layout's: the h1
-//             as a caps label and the category tabs as pill links to `?q=`;
-//             the rest the page slots in (the board, the controls, the
-//             timeline). The header's brand and nav sit on the container's
-//             content edges, as on the homepage, so the rows line up under
-//             them; the screen fills the viewport below the header and the
-//             site footer (Layout's) follows.
+//             the site's container (padded by --container-inset, as the
+//             homepage's rows and the header are, so the rows' edges fall on
+//             the header's brand and nav). Its rows sit straight on the page,
+//             spaced rather than cut: this layout's tab row (the category
+//             tabs as pill links to `?q=`, the h1 visually hidden), then what
+//             the page slots in (the board, the controls, the timeline). Only
+//             the controls carry a surface. The screen fills the viewport
+//             below the header and the site footer (Layout's) follows.
 //
 // Pages stay thin: they fetch and group, this owns the shell. Wraps
 // Layout.astro (the only html/head).
@@ -25,8 +24,7 @@ import Heading from "@whois/design-system/Heading";
 import Mono from "@whois/design-system/Mono";
 import Body from "@whois/design-system/Body";
 import Pill from "@whois/design-system/Pill";
-import Panels from "@whois/design-system/Panels";
-import Panel from "@whois/design-system/Panel";
+import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 // DS component styles are not global — once per page, and a layout's import
 // counts for everything it slots.
 import "@whois/design-system/styles.css";
@@ -55,7 +53,7 @@ interface Props {
 	 *  with a compact header row. Not read with `tabs`. */
 	width?: "measure" | "wide";
 	/** The instrument's tab row — the category tabs; with these the page is
-	 *  one Panels screen in the site container and the slot is its remaining
+	 *  the instrument in the site container and the slot is its remaining
 	 *  rows. */
 	tabs?: Tab[];
 }
@@ -70,9 +68,9 @@ const hasLede = Astro.slots.has("lede");
 			<div class="blog blog--instrument">
 				<SiteHeader variant="flow" links={blogNav} />
 				<main class="blog__main blog__main--instrument">
-					<Panels frame={false} class="blog__instrument" data-instrument>
-						<Panel pad="none" class="blog__tabrow">
-							<Mono as="h1" tone="primary" class="blog__title">{heading}</Mono>
+					<div class="blog__instrument" data-instrument>
+						<div class="blog__row blog__tabrow">
+							<VisuallyHidden as="h1">{heading}</VisuallyHidden>
 							<nav class="blog__tabs" aria-label="Categories" data-tabs>
 								{tabs.map((t) => (
 									<Pill
@@ -89,9 +87,9 @@ const hasLede = Astro.slots.has("lede");
 									</Pill>
 								))}
 							</nav>
-						</Panel>
+						</div>
 						<slot />
-					</Panels>
+					</div>
 				</main>
 			</div>
 		) : (

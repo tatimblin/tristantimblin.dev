@@ -1125,9 +1125,10 @@ const faces = [
 				with <code>direction="row"</code> is a row of cells (a grid — <code>columns</code>
 				gives the template, or set <code>--panels-columns</code> per breakpoint in your own
 				CSS) and takes no frame of its own. <code>&lt;Panel pad&gt;</code> is one surface
-				— the card colour, no edge — with an inset step (none / sm / md / lg). The /txt
-				index is four rows of this with <code>frame={"{false}"}</code>: no radius and no
-				clip, in the site container under the site header.
+				— the card colour, no edge — with an inset step (none / sm / md / lg). On the /txt
+				index only the control row is one — a <code>direction="row"</code> Panels with
+				<code>frame={"{false}"}</code>, square-cornered on the page; the tabs, the board
+				and the timeline are plain rows on the page, with no surface.
 			</p>
 			<Panels class="ds-demo__device">
 				<Panel pad="sm" class="ds-demo__device-row">

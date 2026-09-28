@@ -37,7 +37,8 @@ import { test, expect, type Page } from "@playwright/test";
  *               filter, a click pins
  *   card        the infra card's fields and its gauge; one size at 1440 and 1920
  *   count       the figure and its label
- *   layouts     the frame's rows; tablet; phone; no horizontal overflow
+ *   layouts     the rows, the one surface, the header as the homepage's; tablet;
+ *               phone; no horizontal overflow
  *
  * TEXT. The script writes the kicker and the why in capitals and everything
  * else in lowercase (CSS draws it in capitals), so assertions read the DOM's
@@ -204,7 +205,7 @@ test.describe("quilt — rest", () => {
 		}
 	});
 
-	test("one instrument: four rows in the site container, under the site header, square-cornered", async ({
+	test("one instrument: four rows on the page in the site container, under the site header, on its brand and nav", async ({
 		page,
 	}) => {
 		await page.goto("/txt");
@@ -222,14 +223,11 @@ test.describe("quilt — rest", () => {
 				vw: document.documentElement.clientWidth,
 				vh: window.innerHeight,
 				scroll: document.documentElement.scrollWidth,
-				radius: getComputedStyle(frame).borderTopLeftRadius,
 				frame: frame.getBoundingClientRect().toJSON(),
-				rows: [...document.querySelectorAll("[data-instrument] > :is(.ds-panel, .ds-panels)")].map((r) =>
+				rows: [...document.querySelectorAll("[data-instrument] > .blog__row")].map((r) =>
 					r.getBoundingClientRect().toJSON(),
 				),
 				quilt: rect("[data-quilt]"),
-				h1s: document.querySelectorAll("h1").length,
-				h1: rect(".blog__title"),
 				tabs: rect("[data-tabs]"),
 				siteHeaders: document.querySelectorAll(".site-header").length,
 				header: rect(".site-header"),
@@ -242,34 +240,86 @@ test.describe("quilt — rest", () => {
 		const inset = Math.max(m.container.pad, (m.vw - m.container.max) / 2 + m.container.pad);
 		expect(m.frame.left).toBeCloseTo(inset, 0);
 		expect(m.frame.right).toBeCloseTo(m.vw - inset, 0);
-		// No frame: square corners, the rows cut by the gutter alone.
-		expect(m.radius).toBe("0px");
-		// The main nav, once, above the screen; its brand and nav on the screen's edges.
+		// The main nav, once, above the rows; its brand and nav on the rows' edges.
 		expect(m.siteHeaders).toBe(1);
 		expect(m.frame.top).toBeGreaterThanOrEqual(m.header.bottom - 1);
 		expect(m.brand.left).toBeCloseTo(m.frame.left, 0);
 		expect(m.nav.right).toBeCloseTo(m.frame.right, 0);
-		expect(m.h1s).toBe(1);
-		// Tabs, board, controls, timeline: each the container's width, under the last, a hair apart.
+		// Tabs, board, controls, timeline: each the container's width, under the
+		// last, set apart by space rather than a hairline gutter.
 		expect(m.rows).toHaveLength(4);
 		for (const r of m.rows) {
 			expect(r.left).toBeCloseTo(m.frame.left, 0);
 			expect(r.right).toBeCloseTo(m.frame.right, 0);
 		}
 		for (let i = 1; i < m.rows.length; i++) {
-			const gap = m.rows[i].top - m.rows[i - 1].bottom;
-			expect(gap, `row ${i}`).toBeGreaterThan(0);
-			expect(gap, `row ${i}`).toBeLessThanOrEqual(3);
+			expect(m.rows[i].top - m.rows[i - 1].bottom, `row ${i}`).toBeGreaterThanOrEqual(16);
 		}
 		// The board takes the spare height: the timeline rests one gutter off the floor.
 		expect(m.rows[3].bottom).toBeCloseTo(m.vh - m.container.pad, 0);
-		// The h1 and the tabs are in the first row; the quilt is the second, inset.
-		expect(m.h1.top).toBeGreaterThanOrEqual(m.rows[0].top);
+		// The tabs are the first row, their first pill on the container's edge;
+		// the quilt is the second, spanning the container edge to edge.
+		expect(m.tabs.left).toBeCloseTo(m.frame.left, 0);
 		expect(m.tabs.bottom).toBeLessThanOrEqual(m.rows[0].bottom + 1);
 		expect(m.quilt.top).toBeGreaterThanOrEqual(m.rows[1].top);
 		expect(m.quilt.bottom).toBeLessThanOrEqual(m.rows[1].bottom + 1);
-		expect(m.quilt.left).toBeGreaterThan(m.frame.left);
-		expect(m.quilt.right).toBeLessThan(m.frame.right);
+		expect(m.quilt.left).toBeCloseTo(m.frame.left, 0);
+		expect(m.quilt.right).toBeCloseTo(m.frame.right, 0);
+	});
+
+	for (const theme of ["dark", "light"] as const) {
+		test(`the page is the site background, bar the control row's cells (${theme})`, async ({ page }) => {
+			await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
+			await page.goto("/txt");
+			const m = await page.evaluate(() => {
+				const bg = (el: Element) => getComputedStyle(el).backgroundColor;
+				const clear = (c: string) => c === "rgba(0, 0, 0, 0)" || c === "transparent";
+				const page = bg(document.body);
+				const inst = document.querySelector("[data-instrument]")!;
+				// Everything in the tab row, the board (bar the quilt's own tiles and
+				// card) and the timeline, up to the page.
+				const bare = [
+					inst,
+					document.querySelector("main")!,
+					...document.querySelectorAll(
+						"[data-instrument] > .blog__row:not(.blog__controls), [data-quilt]",
+					),
+				].map((el) => ({ cls: el.className, clear: clear(bg(el)) }));
+				const cells = [...document.querySelectorAll(".blog__controls > .ds-panel")].map((el) => bg(el));
+				return { page, bare, cells, board: bg(document.querySelector(".blog__board")!) };
+			});
+			for (const b of m.bare) expect(b.clear, b.cls).toBe(true);
+			// Four cells, each a surface a step off the page.
+			expect(m.cells).toHaveLength(4);
+			for (const c of m.cells) {
+				expect(c).not.toBe("rgba(0, 0, 0, 0)");
+				expect(c).not.toBe(m.page);
+			}
+		});
+	}
+
+	test("the header is the homepage's: the brand and nav boxes on /txt equal those on / at 1440 and 1920", async ({
+		page,
+	}) => {
+		const boxes = async (path: string) => {
+			await page.goto(path);
+			return page.evaluate(() =>
+				[".site-header__brand", ".site-header__nav"].map((s) => document.querySelector(s)!.getBoundingClientRect().toJSON()),
+			);
+		};
+		for (const [width, height] of [
+			[1440, 900],
+			[1920, 1100],
+		]) {
+			await page.setViewportSize({ width, height });
+			const home = await boxes("/");
+			const txt = await boxes("/txt");
+			for (let i = 0; i < home.length; i++) {
+				for (const k of ["x", "y", "width", "height"] as const) {
+					expect(txt[i][k], `${width} ${i ? "nav" : "brand"} ${k}`).toBeCloseTo(home[i][k], 1);
+				}
+			}
+		}
 	});
 
 	test("the site header is the banner; the tab row is in main, with the one h1 and no mark", async ({ page }) => {
@@ -279,7 +329,18 @@ test.describe("quilt — rest", () => {
 		await expect(banner.getByRole("link", { name: "tristantimblin.dev" })).toHaveAttribute("href", "/");
 		await expect(banner.getByRole("navigation", { name: "Primary" })).toHaveCount(1);
 		const main = page.getByRole("main");
-		await expect(main.getByRole("heading", { level: 1, name: "Writing" })).toHaveCount(1);
+		// One h1, for a reader only: visually hidden, and no WRITING label beside the pills.
+		const h1 = main.getByRole("heading", { level: 1, name: "Writing" });
+		await expect(h1).toHaveCount(1);
+		expect(await main.locator("h1").count()).toBe(1);
+		await expect(h1).toHaveClass(/ds-visually-hidden/);
+		expect((await h1.boundingBox())!.width).toBeLessThanOrEqual(1);
+		// Beside the hidden h1 the row holds the tabs alone.
+		const rest = await page
+			.locator(".blog__tabrow")
+			.evaluate((r) => [...r.children].filter((c) => c.tagName !== "H1").map((c) => (c as HTMLElement).innerText).join(" "));
+		expect(rest).not.toMatch(/writing/i);
+		expect(await page.locator(".blog__tabrow > :not(h1, [data-tabs])").count()).toBe(0);
 		await expect(main.getByRole("navigation", { name: "Categories" })).toHaveCount(1);
 		await expect(page.locator("[data-instrument]")).toHaveCount(1);
 		expect(await main.locator("[data-instrument]").count()).toBe(1);
@@ -646,7 +707,7 @@ test.describe("quilt — keys", () => {
 	test("/ and ⌘K/Ctrl-K focus the search from the page", async ({ page }) => {
 		await page.goto("/txt");
 		const input = page.locator(SEARCH);
-		await page.getByRole("heading", { level: 1, name: "Writing", exact: true }).click();
+		await page.locator(".blog__cell--count").click();
 		await page.keyboard.press("/");
 		await expect(input).toBeFocused();
 		await expect(input).toHaveValue(""); // the slash is not typed
@@ -1165,7 +1226,7 @@ test.describe("instrument — the card", () => {
 		};
 		const a = await measure(1440, 1000);
 		const b = await measure(1920, 1100);
-		// 3×2 cells of the capped board: ~658×250 at either width.
+		// 3×2 cells of the capped board: ~678×256 at either width.
 		expect(a.w).toBeGreaterThan(600);
 		expect(a.h).toBeGreaterThan(230);
 		expect(b.w).toBeCloseTo(a.w, 0);
@@ -1195,7 +1256,7 @@ test.describe("instrument — layouts", () => {
 	test("tablet (900): the same rows, three columns, the stepper beside the count", async ({ page }) => {
 		await page.setViewportSize({ width: 900, height: 1100 });
 		await page.goto("/txt");
-		expect(await page.locator("[data-instrument] > :is(.ds-panel, .ds-panels)").count()).toBe(4);
+		expect(await page.locator("[data-instrument] > .blog__row").count()).toBe(4);
 		expect(
 			await page.locator("[data-quilt]").evaluate((q) => getComputedStyle(q).gridTemplateColumns.split(" ").length),
 		).toBe(3);

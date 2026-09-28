@@ -1,17 +1,17 @@
 ---
-// /txt — the blog's front page as an INSTRUMENT: one device screen of four
-// rows. The tab row is the layout's (the site mark, WRITING, the category
+// /txt — the blog's front page as an INSTRUMENT: four rows straight on the
+// page, in the site container. The tab row is the layout's (the category
 // tabs — each a query on the quilt). Then the BOARD: the quilt, a grid of
 // every post's art padded out with fillers, and the panel that takes a freed
 // block of it when a tile is hovered or stepped to or the bar is used. Then
-// the CONTROLS: the count, the search, and the − / + that step through the
-// matching posts. Then the TIMELINE: one tick per month, the posts as the
-// tall ones, an accent playhead on the post in focus. The page computes the
-// index at build (numbers, slots, reading time) and renders the design
-// system's contract; src/lib/quilt/index.ts drives it on the client from the
-// JSON embedded below. With scripting off it is the full quilt, every tile,
-// tab and tick a link, and the bar submits to ?q= (which the script reads on
-// load).
+// the CONTROLS, the one row with a surface: the count, the search, and the
+// − / + that step through the matching posts. Then the TIMELINE: one tick
+// per month, the posts as the tall ones, an accent playhead on the post in
+// focus. The page computes the index at build (numbers, slots, reading
+// time) and renders the design system's contract; src/lib/quilt/index.ts
+// drives it on the client from the JSON embedded below. With scripting off
+// it is the full quilt, every tile, tab and tick a link, and the bar submits
+// to ?q= (which the script reads on load).
 import { getCollection } from "astro:content";
 import BlogLayout from "../../layouts/BlogLayout.astro";
 import Panels from "@whois/design-system/Panels";
@@ -190,7 +190,7 @@ const timeline = {
 	heading={BLOG_TITLE}
 	tabs={tabs}
 >
-	<Panel class="blog__board">
+	<div class="blog__row blog__board">
 		<Quilt cols={COLS} rows={lg.rows} colsMd={COLS_MD} rowsMd={md.rows} aria-label="Posts">
 			{index.map((p) => (
 				<QuiltCell
@@ -230,9 +230,9 @@ const timeline = {
 				nothing={nothing}
 			/>
 		</Quilt>
-	</Panel>
+	</div>
 
-	<Panels direction="row" class="blog__controls" data-controls>
+	<Panels direction="row" frame={false} class="blog__row blog__controls" data-controls>
 		<Panel pad="none" class="blog__cell blog__cell--count">
 			<Figure size="xl" data-search-count aria-live="polite">
 				<span data-count="figure">{index.length}</span>
@@ -259,7 +259,7 @@ const timeline = {
 		</Panel>
 	</Panels>
 
-	<Panel pad="none" class="blog__timeline">
+	<div class="blog__row blog__timeline">
 		<TimeRuler
 			from={timeline.from}
 			to={timeline.to}
@@ -269,7 +269,7 @@ const timeline = {
 			label="timeline"
 			data-quilt-ruler
 		/>
-	</Panel>
+	</div>
 
 	<script
 		type="application/json"
