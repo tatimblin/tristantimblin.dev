@@ -284,8 +284,20 @@ a.ds-quilt-panel__read:focus-visible {
 	.ds-quilt-panel[data-mode="hidden"] {
 		display: none;
 	}
+	/* In flow the panel is as tall as its content, and the stacked faces
+	   would all count — the results list would sit in a block the browse
+	   face's height, with the gap above the keys. So the hidden faces take
+	   no room here (no cross-fade to lose: faces of different heights would
+	   jump the tiles below anyway). */
 	.ds-quilt-panel__face {
+		display: none;
 		overflow: visible;
+	}
+	.ds-quilt-panel[data-mode="card"] > [data-face="card"],
+	.ds-quilt-panel[data-mode="browse"] > [data-face="browse"],
+	.ds-quilt-panel[data-mode="results"] > [data-face="results"],
+	.ds-quilt-panel[data-mode="none"] > [data-face="none"] {
+		display: flex;
 	}
 	.ds-quilt-panel__blurb,
 	.ds-quilt-panel__none .ds-quilt-panel__blurb {

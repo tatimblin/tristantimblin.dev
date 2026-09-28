@@ -80,3 +80,35 @@ export const formatDate = (d: Date) =>
 	});
 
 export const isoDate = (d: Date) => new Date(d).toISOString().split("T")[0];
+
+/** The month, UTC for the reason above: `{ short: "feb", long: "february" }`. */
+export function monthOf(d: Date): { short: string; long: string } {
+	const date = new Date(d);
+	const of = (month: "short" | "long") =>
+		date.toLocaleDateString("en-US", { month, timeZone: "UTC" }).toLowerCase();
+	return { short: of("short"), long: of("long") };
+}
+
+/**
+ * Every post's chronological number, 1-based: the first post ever is 1, so a
+ * new post takes the next number and the old ones keep theirs. Keyed by id,
+ * over whatever list is given (the rendered one — in PROD the non-draft
+ * posts). `padNo` prints it the way the quilt's kicker does (`005`).
+ */
+export function postNumbers<T extends Dated & { id: string }>(posts: T[]): Map<string, number> {
+	const asc = byDateDesc(posts).reverse();
+	return new Map(asc.map((post, i) => [post.id, i + 1]));
+}
+
+export const padNo = (no: number) => String(no).padStart(3, "0");
+
+/** Words and minutes at 200 words a minute, off the raw body (markdown and
+ *  all — close enough for a reading-time line, and it never goes under 1). */
+export function readingStats(body: string | undefined): { words: number; minutes: number } {
+	const words = (body ?? "")
+		.replace(/^---[\s\S]*?---/, "")
+		.replace(/<[^>]+>/g, " ")
+		.split(/\s+/)
+		.filter(Boolean).length;
+	return { words, minutes: Math.max(1, Math.ceil(words / 200)) };
+}

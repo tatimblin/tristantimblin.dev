@@ -794,17 +794,18 @@ test.describe("reveal — the /txt index", () => {
 	test("8. INDEX: /txt has no reveal targets and nothing hidden on a hard load", async ({
 		page,
 	}) => {
-		// The index is a text-only list (title, category, arrow — no art), and the
-		// reveal is an ASSET-arrival mechanism: it holds a region back until its
-		// image has decoded. Gating text would pay the page's LCP for nothing, so
-		// the index carries no targets at all. This pins that: the coordinator has
-		// nothing to hold, and the page is fully visible on a hard load — the path
-		// tests 6 and 7 do not exercise, since ClientRouter tears the reveal down
-		// before a swapped page mounts.
+		// The index is the quilt: inline SVG art in every tile, and inline SVG has
+		// no asset arrival to wait for. The reveal is an ASSET-arrival mechanism —
+		// it holds a region back until its image has decoded — so gating the
+		// tiles would pay the page's LCP for nothing, and the index carries no
+		// targets at all. This pins that: the coordinator has nothing to hold, and
+		// the page is fully visible on a hard load — the path tests 6 and 7 do
+		// not exercise, since ClientRouter tears the reveal down before a swapped
+		// page mounts.
 		await page.goto("/txt");
 		const state = await readReveal(page);
 		expect(state.total, "the index should carry no reveal targets").toBe(0);
 		expect(state.faded).toBe(0);
-		await expect(page.locator(".ds-post-row__link").first()).toBeVisible();
+		await expect(page.locator('[data-cell="post"] a').first()).toBeVisible();
 	});
 });

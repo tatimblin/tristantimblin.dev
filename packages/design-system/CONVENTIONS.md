@@ -298,7 +298,8 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
   inline as `--cell-col`/`--cell-row`/`--cell-col-md`/`--cell-row-md` — the
   stylesheet picks the pair per viewport; a filler with no tablet slot is
   dropped there, and every filler is dropped on a phone. Renders
-  `data-cell="post | filler"`, `data-no`, `data-md` (has a tablet slot).
+  `data-cell="post | filler"`, `data-no`, `data-lg` / `data-md` (has a
+  desktop / tablet slot — a filler without one is not drawn on that grid).
 - `QuiltPanel` — four faces, every one rendered. `card` (kicker, title,
   excerpt, `CATEGORY · 3 MIN · READ ↗` in the accent, an optional why),
   `browse` (categories with counts, years, the latest post — `Pill as="a"`

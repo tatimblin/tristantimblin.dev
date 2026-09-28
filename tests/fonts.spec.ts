@@ -164,18 +164,20 @@ test("a post title gets a REAL semibold, not a synthesised one", async ({
 	// the 600 cut is really loaded where it is asked for: together, the two say the
 	// emphasis is drawn, not faked, and not quietly absent.
 	//
-	// ON /txt, NOT THE HOMEPAGE. The widget figures used to be the Semibold's user;
-	// they are now set at the regular weight (the instrument UI's thin numeral), so
-	// nothing on the homepage requests 600 any more and the cut is never fetched
-	// there — check() would answer false for a face that is perfectly healthy. The
-	// blog's post titles (the DS PostRow, .ds-post-row__title) are the role that
-	// wants the Semibold, so that is the page to ask on.
-	await page.goto("/txt");
+	// ON A POST, NOT THE HOMEPAGE OR THE INDEX. The widget figures used to be the
+	// Semibold's user; they are now set at the regular weight (the instrument UI's
+	// thin numeral), so nothing on the homepage requests 600 any more and the cut
+	// is never fetched there — check() would answer false for a face that is
+	// perfectly healthy. The index moved on too: the quilt has no text titles
+	// (the art carries them; the card sets its title regular). A post's section
+	// headings (Prose retunes h2–h4 onto the UI face at the Semibold) are the
+	// role that wants the cut, so that is the page to ask on — one with an h2.
+	await page.goto("/txt/asserting-on-agent-behavior");
 	await page.waitForFunction(() => document.fonts.status === "loaded", undefined, {
 		timeout: 15_000,
 	});
 	const state = await page.evaluate(() => {
-		const el = document.querySelector<HTMLElement>(".ds-post-row__title");
+		const el = document.querySelector<HTMLElement>(".ds-prose h2");
 		return {
 			found: !!el,
 			family: el
@@ -187,7 +189,7 @@ test("a post title gets a REAL semibold, not a synthesised one", async ({
 			regularLoaded: document.fonts.check('400 16px "Neue Montreal"'),
 		};
 	});
-	expect(state.found, "no post title found — has the PostRow markup changed?").toBe(true);
+	expect(state.found, "no section heading found — has the Prose markup changed?").toBe(true);
 	expect(state.family).toBe("Neue Montreal");
 	// --font-weight-600 resolves to 560, which CSS font matching lands on the
 	// Semibold; anything under 500 would have fallen back to the Regular.

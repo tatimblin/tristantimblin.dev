@@ -40,11 +40,29 @@
 	margin-block-start: var(--space-4);
 }
 
+/* THE WIDE COLUMN — the quilt's. The site container, and a compact header
+   row: the title alone, close over the search bar, which sits a step above
+   the grid (the bar is the page's control, the quilt its content; the
+   prototype's 48/24). */
+.blog__main--wide {
+	max-width: var(--container-max);
+}
+.blog__main--wide .blog__header {
+	margin-block-end: var(--space-7);
+}
+.blog__search {
+	margin: 0 0 var(--space-5);
+}
+
 @media (max-width: 639px) {
 	.blog__main {
 		padding-block: var(--space-8) var(--space-10);
 	}
-	.blog__header {
-		margin-block-end: var(--space-8);
+	.blog__header,
+	.blog__main--wide .blog__header {
+		margin-block-end: var(--space-6);
+	}
+	.blog__search {
+		margin-block-end: var(--space-4);
 	}
 }

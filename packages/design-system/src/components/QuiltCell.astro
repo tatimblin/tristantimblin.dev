@@ -23,9 +23,11 @@
 // Placement: `col`/`row` for the ≥ 1024 grid and `colMd`/`rowMd` for the
 // 640–1023 one, as custom properties the stylesheet reads per viewport (an
 // inline style for a real API, like Grid's spans); under 640 every cell flows
-// in DOM order. A filler without a `colMd` is dropped on the tablet grid, and
-// every filler is dropped on a phone. `data-no` carries the post's number for
-// a script that keys on it. `class` merges; the rest passes to the cell.
+// in DOM order. A filler without a `colMd` is dropped on the tablet grid, one
+// without a `col` on the desktop grid (the tablet grid can need more fillers
+// than the desktop one), and every filler is dropped on a phone. `data-no`
+// carries the post's number for a script that keys on it. `class` merges; the
+// rest passes to the cell.
 import { cx } from "../lib/cx";
 import Mono from "./Mono.astro";
 
@@ -95,6 +97,7 @@ const hasCaption = Astro.slots.has("caption");
 			class={cx("ds-quilt-cell", className)}
 			data-cell="filler"
 			data-state={state}
+			data-lg={col ? "" : undefined}
 			data-md={colMd ? "" : undefined}
 			aria-hidden="true"
 			style={vars || undefined}

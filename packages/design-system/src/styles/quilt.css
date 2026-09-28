@@ -71,6 +71,10 @@
 		--quilt-cell-col: var(--cell-col, auto);
 		--quilt-cell-row: var(--cell-row, auto);
 	}
+	/* A filler that only has a tablet slot is not drawn here either. */
+	.ds-quilt-cell[data-cell="filler"]:not([data-lg]) {
+		display: none;
+	}
 }
 @media (min-width: 640px) and (max-width: 1023px) {
 	.ds-quilt-cell {
@@ -103,6 +107,14 @@
 .ds-quilt-cell[data-state="faint"],
 .ds-quilt-cell[data-state="gone"] {
 	transition-delay: var(--scatter-delay, 0ms);
+}
+/* A cut with a stagger is still a stagger: under reduced motion every cell
+   changes at once. */
+@media (prefers-reduced-motion: reduce) {
+	.ds-quilt-cell[data-state="faint"],
+	.ds-quilt-cell[data-state="gone"] {
+		transition-delay: 0ms;
+	}
 }
 .ds-quilt-cell[data-state="faint"] {
 	opacity: var(--quilt-faint);

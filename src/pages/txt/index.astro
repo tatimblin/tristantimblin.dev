@@ -1,22 +1,197 @@
 ---
-// /txt — the blog's front page: an intro, then every post by year.
+// /txt — the blog's front page as a QUILT: a search bar, then a grid of every
+// post's art padded out with fillers, and the panel that takes a freed block
+// of it when a tile is hovered or the bar is used. The page computes the
+// index at build (numbers, slots, reading time) and renders the design
+// system's contract; src/lib/quilt/index.ts drives it on the client from the
+// JSON embedded below. With scripting off it is the full quilt, every tile a
+// link, and the bar submits to ?q= (which the script reads on load).
 import { getCollection } from "astro:content";
 import BlogLayout from "../../layouts/BlogLayout.astro";
-import PostIndex from "../../components/txt/PostIndex.astro";
-import Anchor from "@whois/design-system/Anchor";
-import { BLOG_DESCRIPTION, BLOG_TITLE } from "../../lib/blog";
+import Quilt from "@whois/design-system/Quilt";
+import QuiltCell from "@whois/design-system/QuiltCell";
+import QuiltPanel from "@whois/design-system/QuiltPanel";
+import SearchBar from "@whois/design-system/SearchBar";
+import ArtFrame from "@whois/design-system/ArtFrame";
+import {
+	BLOG_DESCRIPTION,
+	BLOG_TITLE,
+	byDateDesc,
+	categories,
+	monthOf,
+	padNo,
+	postHref,
+	postNumbers,
+	readingStats,
+} from "../../lib/blog";
+import { artFor, fillerArtFor } from "../../lib/quilt/art";
+import { layout, toColRow, type IndexedPost } from "../../lib/quilt/engine";
 
-const posts = (await getCollection("txt")).filter(
-	(post) => import.meta.env.PROD === false || !post.data.draft
+const COLS = 5;
+const COLS_MD = 3;
+
+const posts = byDateDesc(
+	(await getCollection("txt")).filter(
+		(post) => import.meta.env.PROD === false || !post.data.draft,
+	),
 );
+const numbers = postNumbers(posts);
+
+// One layout per grid: the desktop 5-column quilt and the tablet 3-column
+// one. A post's slot comes from its chronological number, so it stays put
+// as newer posts arrive.
+const lg = layout({ cols: COLS, postCount: posts.length });
+const md = layout({ cols: COLS_MD, postCount: posts.length });
+
+type QuiltPost = IndexedPost & { colMd: number; rowMd: number };
+const index: QuiltPost[] = posts.map((post) => {
+	const no = numbers.get(post.id)!;
+	const month = monthOf(post.data.date);
+	const at = toColRow(lg.slots[no - 1], COLS);
+	const atMd = toColRow(md.slots[no - 1], COLS_MD);
+	return {
+		id: post.id,
+		no,
+		title: post.data.title,
+		excerpt: post.data.excerpt,
+		category: post.data.category,
+		tags: post.data.tags,
+		year: String(post.data.date.getUTCFullYear()),
+		month: month.short,
+		monthLong: month.long,
+		minutes: readingStats(post.body).minutes,
+		href: postHref(post.id),
+		col: at.col,
+		row: at.row,
+		colMd: atMd.col,
+		rowMd: atMd.row,
+	};
+});
+const art = new Map(posts.map((post) => [post.id, artFor(post.id)]));
+
+// Fillers: every cell the posts leave on the desktop grid, and the first
+// (tablet cells − posts) of them also get a tablet slot. Should the tablet
+// grid ever need more fillers than the desktop one (ten posts: 12 cells
+// against 10), the extra ones have a tablet slot only.
+const fillerCount = Math.max(lg.fillerCells.length, md.fillerCells.length);
+const fillers = Array.from({ length: fillerCount }, (_, k) => {
+	const cell = lg.fillerCells[k];
+	const cellMd = md.fillerCells[k];
+	// The file cycles from the desktop order; a tablet-only filler continues it.
+	const file = (lg.fillerOrder[k] ?? md.fillerOrder[k]) + 1;
+	return {
+		file,
+		cell,
+		cellMd,
+		at: cell != null ? toColRow(cell, COLS) : null,
+		atMd: cellMd != null ? toColRow(cellMd, COLS_MD) : null,
+	};
+});
+
+// The panel's build-time faces. The card is a placeholder the script refills;
+// browse and nothing are real links to ?q=, so they work with scripting off.
+const q = (word: string) => `/txt?q=${encodeURIComponent(word)}`;
+const catCounts = new Map<string, number>();
+for (const p of index) if (p.category) catCounts.set(p.category, (catCounts.get(p.category) ?? 0) + 1);
+const browse = {
+	categories: [...catCounts].map(([id, count]) => ({
+		label: categories[id as keyof typeof categories].label.toLowerCase(),
+		count,
+		href: q(id),
+	})),
+	years: [...new Set(index.map((p) => p.year))].map((y) => ({ label: y, href: q(y) })),
+	latest: index[0] ? { title: index[0].title, href: index[0].href } : undefined,
+};
+const tagCounts = new Map<string, number>();
+for (const p of index) for (const t of p.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+const topTags = [...tagCounts]
+	.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+	.slice(0, 2)
+	.map(([t]) => t);
+const nothing = {
+	query: "",
+	suggestions: [...catCounts.keys(), ...topTags]
+		.slice(0, 6)
+		.map((w) => ({ label: w.replace(/[-_]+/g, " "), href: q(w) })),
+};
+const first = index[0];
+const card = first
+	? {
+			kicker: `NO. ${padNo(first.no)} · ${first.month.toUpperCase()} ${first.year}`,
+			title: first.title,
+			blurb: first.excerpt,
+			meta: `${first.category ?? ""} · ${first.minutes} min`,
+			href: first.href,
+		}
+	: undefined;
+const captionOf = (p: QuiltPost) => `${p.month} ${p.year}${p.category ? ` · ${p.category}` : ""}`;
 ---
 
-<BlogLayout title={`${BLOG_TITLE} — Tristan Timblin`} description={BLOG_DESCRIPTION} heading={BLOG_TITLE}>
-	<Fragment slot="lede">
-		Notes from Tristan Timblin on the things I build and use: software, furniture,
-		the occasional routine. Also on{" "}
-		<Anchor href="https://github.com/tatimblin" underline>GitHub</Anchor>, and there is
-		an <Anchor href="/rss.xml" underline>RSS feed</Anchor>.
-	</Fragment>
-	<PostIndex posts={posts} />
+<BlogLayout
+	title={`${BLOG_TITLE} — Tristan Timblin`}
+	description={BLOG_DESCRIPTION}
+	heading={BLOG_TITLE}
+	width="wide"
+>
+	<form class="blog__search" action="/txt" method="get" data-quilt-form>
+		<SearchBar
+			id="quilt-search"
+			label="search"
+			placeholder="a title, a topic, a year…"
+			count={`${index.length} posts`}
+			hint="/"
+			controls="quilt-panel-results"
+		/>
+	</form>
+	<Quilt cols={COLS} rows={lg.rows} colsMd={COLS_MD} rowsMd={md.rows} aria-label="Posts">
+		{index.map((p) => (
+			<QuiltCell
+				col={p.col}
+				row={p.row}
+				colMd={p.colMd}
+				rowMd={p.rowMd}
+				href={p.href}
+				label={p.title}
+				no={padNo(p.no)}
+			>
+				{art.get(p.id) && <ArtFrame svg={art.get(p.id)!} decorative />}
+				<Fragment slot="caption">{captionOf(p)}</Fragment>
+			</QuiltCell>
+		))}
+		{fillers.map((f) => (
+			<QuiltCell
+				col={f.at?.col}
+				row={f.at?.row}
+				colMd={f.atMd?.col}
+				rowMd={f.atMd?.row}
+				filler
+				data-cell-lg={f.cell}
+				data-cell-md={f.cellMd}
+			>
+				<ArtFrame svg={fillerArtFor(f.file)} decorative />
+			</QuiltCell>
+		))}
+		<QuiltPanel
+			id="quilt-panel"
+			mode="hidden"
+			col={1}
+			row={1}
+			card={card}
+			browse={browse}
+			results={{ label: "", items: [] }}
+			nothing={nothing}
+		/>
+	</Quilt>
+	<script
+		type="application/json"
+		data-quilt-index
+		set:html={JSON.stringify({
+			posts: index,
+			grid: { lg: { cols: COLS, rows: lg.rows }, md: { cols: COLS_MD, rows: md.rows } },
+		}).replace(/</g, "\\u003c")}
+	/>
 </BlogLayout>
+
+<script>
+	import "../../lib/quilt";
+</script>
