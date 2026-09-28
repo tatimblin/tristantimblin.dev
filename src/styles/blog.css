@@ -51,27 +51,33 @@
 	margin-block-end: var(--space-7);
 }
 
-/* THE FULL COLUMN — the instrument. At ≥ 1024 there is no container: the
-   column spans the viewport inside one even gutter. The gutter is set as
-   --container-pad on the whole shell, so the site header's brand and nav
-   (which pad by it) line up with the screen's edges; below 1024 the site's
-   own fluid gutter applies, as it does everywhere else. The screen sits
-   closer under the site header than a list page's title does: it is the
-   page, not a heading over one. */
-.blog__main--full {
-	max-width: none;
-	padding-block-start: var(--space-7);
-}
-@media (min-width: 1024px) {
-	.blog--full {
-		--container-pad: var(--space-6);
-	}
-}
+/* THE INSTRUMENT — /txt as one device screen (BlogLayout `tabs`): the whole
+   page is a frameless Panels (the package's surfaces and gutters, no radius,
+   no margin) whose rows run edge to edge — the tab row (the layout's, the
+   page header), then <main>, a nested Panels holding the page's rows: the
+   board, the controls and the timeline.
 
-/* THE INSTRUMENT — /txt as one device screen (BlogLayout `tabs`): a Panels
-   frame whose rows are the tab row (the layout's), the board, the controls
-   and the timeline (the page's). The rows' insides are laid out here; the
-   surfaces, the gutters and the frame are the package's. */
+   It is at least the viewport tall (the small viewport on a phone, so the
+   browser's bars coming and going do not resize it), and the BOARD takes
+   whatever height is left, so at rest the timeline sits on the bottom of the
+   screen. The quilt keeps its tiles' aspect — the rows are the art's 16:9 —
+   so the board centres it in the spare height rather than stretch it; the
+   spare is the board's own surface above and below. When the content is
+   taller than the screen the page scrolls as any other, and the site footer
+   follows below the screen. */
+.blog--instrument {
+	min-block-size: 100vh;
+	min-block-size: 100svh;
+}
+.blog__stage {
+	flex: 1 0 auto;
+}
+.blog__board {
+	flex: 1 0 auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
 
 /* The tab row: the mark and the h1 as a caps label at the left, the tabs,
    the site's name at the right. */
@@ -90,6 +96,7 @@
 }
 .blog__mark {
 	display: inline-flex;
+	flex: none;
 	align-items: center;
 	justify-content: center;
 	inline-size: var(--space-6);
@@ -100,6 +107,18 @@
 	font-size: var(--font-size-0);
 	letter-spacing: var(--tracking-mono);
 	color: var(--text-primary);
+	text-decoration: none;
+	transition:
+		background var(--duration-settle) var(--ease-reveal),
+		color var(--duration-settle) var(--ease-reveal);
+}
+.blog__mark:hover {
+	background: var(--accent);
+	color: var(--background);
+}
+.blog__mark:focus-visible {
+	outline: var(--panel-gutter) solid var(--accent);
+	outline-offset: var(--panel-gutter);
 }
 .blog__title {
 	margin: 0;
@@ -118,8 +137,13 @@
 .blog__tabs::-webkit-scrollbar {
 	display: none;
 }
-/* ALL carries a small square, the prototype's mark for "everything". */
+/* ALL carries a small square, the prototype's mark for "everything", a step
+   clear of its label. */
+.blog__tabs .blog__tab {
+	gap: var(--space-2);
+}
 .blog__tab-glyph {
+	flex: none;
 	inline-size: var(--space-2);
 	block-size: var(--space-2);
 	border-radius: var(--border-radius-tile);
@@ -177,9 +201,6 @@
 	.blog__main {
 		padding-block: var(--space-8) var(--space-10);
 	}
-	.blog__main--full {
-		padding-block-start: var(--space-5);
-	}
 	.blog__header,
 	.blog__main--wide .blog__header {
 		margin-block-end: var(--space-6);
@@ -187,6 +208,11 @@
 	/* Phone: the tabs scroll in their row; the controls become the count
 	   and the stepper on one line with the search full width under them;
 	   the timeline is the package's compact rendering. */
+	/* The board is a list here, so it reads from the top; the spare height
+	   falls under the last tile. */
+	.blog__board {
+		justify-content: flex-start;
+	}
 	.blog__tabrow {
 		gap: var(--space-3);
 		min-block-size: var(--space-9);

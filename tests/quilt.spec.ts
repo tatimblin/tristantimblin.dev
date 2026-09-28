@@ -12,7 +12,7 @@ import { test, expect, type Page } from "@playwright/test";
  * ?q=) reach the engine.
  *
  *   rest        every cell lit, one link per post, fillers aria-hidden and
- *               drawn faint; a full-width board inside an even gutter
+ *               drawn faint; the instrument is the page, edge to edge
  *   hover/focus the tile lit, the rest faint or gone on a stagger, the card
  *               in a block that dodges it; leaving the tile restores (the
  *               panel holds it, tile to tile never passes rest); deterministic
@@ -203,53 +203,86 @@ test.describe("quilt — rest", () => {
 		}
 	});
 
-	test("one instrument: four rows in a frame that spans the viewport inside one gutter", async ({
+	test("one instrument: the whole page — four rows edge to edge, no frame, the timeline on the screen's floor", async ({
 		page,
 	}) => {
 		await page.goto("/txt");
 		const m = await page.evaluate(() => {
-			const probe = document.createElement("div");
-			probe.style.width = "var(--space-6)";
-			document.body.append(probe);
-			const gutter = probe.getBoundingClientRect().width;
-			probe.remove();
 			const rect = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
+			const frame = document.querySelector("[data-instrument]")!;
 			return {
-				gutter,
 				vw: document.documentElement.clientWidth,
+				vh: window.innerHeight,
 				scroll: document.documentElement.scrollWidth,
-				frame: rect("[data-instrument]"),
-				rows: [...document.querySelectorAll("[data-instrument] > :is(.ds-panel, .ds-panels)")].map((r) =>
-					r.getBoundingClientRect().toJSON(),
-				),
+				radius: getComputedStyle(frame).borderTopLeftRadius,
+				frame: frame.getBoundingClientRect().toJSON(),
+				rows: [
+					...document.querySelectorAll(
+						"[data-instrument] > header.ds-panel, [data-instrument] > main > :is(.ds-panel, .ds-panels)",
+					),
+				].map((r) => r.getBoundingClientRect().toJSON()),
 				quilt: rect("[data-quilt]"),
+				h1s: document.querySelectorAll("h1").length,
 				h1: rect(".blog__title"),
 				tabs: rect("[data-tabs]"),
-				brand: rect(".site-header__brand"),
-				nav: rect(".site-header__nav"),
+				siteHeader: document.querySelectorAll(".site-header").length,
 			};
 		});
-		expect(m.gutter).toBeGreaterThan(0);
 		expect(m.scroll).toBe(m.vw);
-		expect(m.frame.left).toBeCloseTo(m.gutter, 0);
-		expect(m.frame.right).toBeCloseTo(m.vw - m.gutter, 0);
-		// The site header's brand and nav sit on the frame's edges.
-		expect(m.brand.left).toBeCloseTo(m.gutter, 0);
-		expect(m.nav.right).toBeCloseTo(m.vw - m.gutter, 0);
-		// Tabs, board, controls, timeline: each under the last, a hair apart.
+		// No frame: no radius, no margin — the screen is the page.
+		expect(m.radius).toBe("0px");
+		expect(m.frame.top).toBe(0);
+		expect(m.frame.left).toBe(0);
+		expect(m.frame.right).toBe(m.vw);
+		expect(m.frame.height).toBeGreaterThanOrEqual(m.vh - 1);
+		// The tab row is the page header: no site header above it, one h1.
+		expect(m.siteHeader).toBe(0);
+		expect(m.h1s).toBe(1);
+		// Tabs, board, controls, timeline: each full width, under the last, a hair apart.
 		expect(m.rows).toHaveLength(4);
+		for (const r of m.rows) {
+			expect(r.left).toBe(0);
+			expect(r.right).toBe(m.vw);
+		}
 		for (let i = 1; i < m.rows.length; i++) {
 			const gap = m.rows[i].top - m.rows[i - 1].bottom;
 			expect(gap, `row ${i}`).toBeGreaterThan(0);
 			expect(gap, `row ${i}`).toBeLessThanOrEqual(3);
 		}
-		// The h1 and the tabs are in the first row; the quilt is the second.
+		// The board takes the spare height, so the timeline sits on the floor.
+		expect(m.rows[3].bottom).toBeCloseTo(m.vh, 0);
+		// The h1 and the tabs are in the first row; the quilt is the second, inset.
 		expect(m.h1.top).toBeGreaterThanOrEqual(m.rows[0].top);
 		expect(m.tabs.bottom).toBeLessThanOrEqual(m.rows[0].bottom + 1);
 		expect(m.quilt.top).toBeGreaterThanOrEqual(m.rows[1].top);
 		expect(m.quilt.bottom).toBeLessThanOrEqual(m.rows[1].bottom + 1);
-		expect(m.quilt.left).toBeGreaterThan(m.frame.left);
-		expect(m.quilt.right).toBeLessThan(m.frame.right);
+		expect(m.quilt.left).toBeGreaterThan(0);
+		expect(m.quilt.right).toBeLessThan(m.vw);
+	});
+
+	test("the tab row is the banner: the mark links home, and the footer follows below the screen", async ({
+		page,
+	}) => {
+		await page.goto("/txt");
+		const banner = page.getByRole("banner");
+		await expect(banner).toHaveCount(1);
+		await expect(banner.getByRole("heading", { level: 1, name: "Writing" })).toHaveCount(1);
+		await expect(banner.getByRole("navigation", { name: "Categories" })).toHaveCount(1);
+		await expect(banner.getByRole("link", { name: /tristantimblin\.dev, home/ })).toHaveAttribute("href", "/");
+		// ALL's glyph stands a step clear of its label.
+		const gap = await page
+			.locator('[data-tab=""]')
+			.evaluate((a) => {
+				const g = a.querySelector(".blog__tab-glyph")!.getBoundingClientRect();
+				const r = document.createRange();
+				r.selectNodeContents(a);
+				r.setStartAfter(a.querySelector(".blog__tab-glyph")!);
+				return r.getBoundingClientRect().left - g.right;
+			});
+		expect(gap).toBeGreaterThanOrEqual(6);
+		const footer = (await page.getByRole("contentinfo").boundingBox())!;
+		const frame = (await page.locator("[data-instrument]").boundingBox())!;
+		expect(footer.y).toBeGreaterThanOrEqual(frame.y + frame.height);
 	});
 });
 
@@ -1144,7 +1177,11 @@ test.describe("instrument — layouts", () => {
 	test("tablet (900): the same rows, three columns, the stepper beside the count", async ({ page }) => {
 		await page.setViewportSize({ width: 900, height: 1100 });
 		await page.goto("/txt");
-		expect(await page.locator("[data-instrument] > :is(.ds-panel, .ds-panels)").count()).toBe(4);
+		expect(
+			await page
+				.locator("[data-instrument] > header.ds-panel, [data-instrument] > main > :is(.ds-panel, .ds-panels)")
+				.count(),
+		).toBe(4);
 		expect(
 			await page.locator("[data-quilt]").evaluate((q) => getComputedStyle(q).gridTemplateColumns.split(" ").length),
 		).toBe(3);
