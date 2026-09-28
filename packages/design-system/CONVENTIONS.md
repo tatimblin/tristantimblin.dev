@@ -70,15 +70,16 @@ import "@whois/design-system/styles.css";
 — including columns/gutters/breakpoints for `Grid`. Open it instead of guessing a
 prop; this doc deliberately does not duplicate per-component API tables.
 
-**Components available (52):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (55):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Label`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Callout`, `Pill`, `Anchor`, `List`, `ListItem`,
 `InlineCode`, `Icon`, `VisuallyHidden`, `WidgetGrid`, `Widget` — the
 instrument UI (next section): `Mono`, `Figure`, `Stat`, `Hairline`, `TickRuler`,
-`BarGraph`, `RingGauge`, `Legend`, `LegendItem`, `TileGrid`, `Tile`, `Faces`,
-`Face` — the reading UI (the section after it): `PostList`, `PostGroup`,
-`PostRow`, `Prose`, `Blockquote`, `Quilt`, `QuiltCell`, `QuiltPanel`,
-`SearchBar` — and the art (the section after that): `ArtFrame`.
+`TimeRuler`, `BarGraph`, `RingGauge`, `Legend`, `LegendItem`, `TileGrid`,
+`Tile`, `Faces`, `Face`, `Panels`, `Panel` — the reading UI (the section after
+it): `PostList`, `PostGroup`, `PostRow`, `Prose`, `Blockquote`, `Quilt`,
+`QuiltCell`, `QuiltPanel`, `SearchBar` — and the art (the section after that):
+`ArtFrame`.
 
 ## The decision gate
 
@@ -140,6 +141,7 @@ glass, caps mono labels), and the components below have no upstream at all.
 | `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
 | `--hairline`, `--hairline-fade` | the edge colour; the divider gradient that fades at both ends. |
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px), `--tracking-mono` (0.05em) | the steps below the generated scales. |
+| `--panel-gutter` (2px) | the hair of page between the flat panels of a `Panels` screen — the gutter IS a panel's edge. |
 | `--ticks-image` | the tick ruler as a gradient (hairlines on `--tick-pitch`, in currentColor) for any box that should read as a ruler — TickRuler's segments, the player's progress bar. |
 | `--focus-ring`, `--focus-ring-offset` | the focus ring for anything focusable that is not a native control: `outline: var(--focus-ring); outline-offset: var(--focus-ring-offset)`. |
 | `--duration-*` under `prefers-reduced-motion: reduce` | all 0s, so a transition timed by a token is a cut for that visitor and no component needs a reduced-motion block of its own. |
@@ -197,12 +199,41 @@ colour), passed as a CSS colour.
   (sm = mono at label size, the dashboard stat pair), `inline`.
 - `Pill` — `variant="subtle"` (default) `| "outline" | "accent" | info | success
   | warning | danger`; `as="button"|"a"` makes it a pill button; an `Icon` in
-  the default slot sits before the text.
+  the default slot sits before the text. `size="lg"` is the tab step (the
+  small button's height, more air inside) for a row of pill links that is a
+  page's control — the /txt category tabs — and `aria-current` on one draws
+  it as the selected tab (the subtle fill on an outline row).
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
   = pill button. `IconButton` — same variants, `size="xs|small|large|xl"`,
-  `rounded` = round button. Upstream has only `small|large`; `xs` (the pill's
-  height, for a card header's meta slot) and `xl` (the one big control a
-  screen has) are this site's steps, an exception to the parity rule.
+  `rounded` = round button, `glyph="−"` a text character in place of an icon
+  (aria-hidden; give the button an `aria-label`). Upstream has only
+  `small|large`; `xs` (the pill's height, for a card header's meta slot) and
+  `xl` (the one big control a screen has) are this site's steps, an exception
+  to the parity rule.
+
+**The device screen.** `<Panels>` is the hardware metronome's display: one
+sheet cut into flat panels by a `--panel-gutter` of the page, rounded once at
+the outside (`frame={false}` for none). A column of rows by default;
+`direction="row"` is a row of cells on a grid — `columns` gives the template
+inline, or set `--panels-columns` per breakpoint in your own CSS, since an
+inline value would out-rank a media query — and a Panels inside a Panels
+takes no frame of its own. `<Panel pad="none|sm|md|lg">` is one surface: the
+card colour, no edge, an inset step; lay its inside out in your own CSS. The
+/txt index is four rows of it (tabs, the board, the controls, the timeline).
+
+```astro
+<Panels>
+  <Panel pad="sm">…tabs…</Panel>
+  <Panel>…the board…</Panel>
+  <Panels direction="row" columns="var(--space-14) minmax(0, 1fr) var(--space-12) var(--space-12)">
+    <Panel><Figure size="xl" unit="posts">5</Figure></Panel>
+    <Panel pad="none"><SearchBar variant="cell" … /></Panel>
+    <Panel pad="none"><IconButton rounded glyph="−" aria-label="Previous post" /></Panel>
+    <Panel pad="none"><IconButton rounded glyph="+" aria-label="Next post" /></Panel>
+  </Panels>
+  <Panel pad="lg"><TimeRuler … /></Panel>
+</Panels>
+```
 
 **Hairline graphics.**
 - `Hairline` — `fade` (default true), `orientation="horizontal|vertical"`.
@@ -212,11 +243,26 @@ colour), passed as a CSS colour.
   The playhead's position is `--at` on the ruler element, so a script moves
   it with one `style.setProperty("--at", "37%")` (the post page's reading
   ruler does).
+- `TimeRuler` — ticks on a time scale: `from`/`to` (`YYYY-MM`, inclusive),
+  one tick per month, a taller one on each January with the year under it
+  (`--k`/`--months` position the labels), and `marks=[{month, label, href,
+  no?, dim?}]` — a tall lit tick per post that is a real `<a>` to it, named
+  by `label` (the title and date), filling its month's column so the column
+  is the hit area (two posts in a month split it). `playhead="YYYY-MM"` draws
+  TickRuler's accent line and dot; `label` (default `timeline`) and `readout`
+  are the line above. The contract a script drives: `--at` on the root (the
+  playhead glides), `data-month` on every column (find a post's column,
+  read its `--k`), `data-mark`/`data-no` on a mark and `data-dim` +
+  `aria-disabled` on one outside the filter (tick colour, no pointer),
+  `data-time-ruler="readout"`.
 - `BarGraph` — `values`, `max`, `lit={i|"last"|"max"}` (an index, where Tile's
   `lit` is a boolean), `height`, `label` (its accessible name; without one it
   is `aria-hidden`, as RingGauge is).
 - `RingGauge` — `value={0..1}`, `segments`, `diameter` (a length), `stroke`,
-  `label`; children sit in the centre.
+  `label`; children sit in the centre. The arc's length is `--ring-value`
+  (0–100) on the root, so a script moves it in one `setProperty` and it
+  glides on `--duration-settle` — TickRuler's `--at` rule; update the
+  `aria-label` beside it.
 - `Legend` — `items=[{label, value?, color?}]` or `LegendItem` children (`label`,
   `value` prop or slot, `color`); dots take `--tone-N` by position.
 - `TileGrid` — `cols`, `rows`, `fit="width|height"`, `cells=[{level?, lit?,
@@ -306,16 +352,23 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
   dropped there, and every filler is dropped on a phone. Renders
   `data-cell="post | filler"`, `data-no`, `data-lg` / `data-md` (has a
   desktop / tablet slot — a filler without one is not drawn on that grid).
-- `QuiltPanel` — four faces, every one rendered. `card` (kicker, title,
-  excerpt, `CATEGORY · 3 MIN · READ ↗` in the accent, an optional why),
-  `browse` (categories with counts, years, the latest post — `Pill as="a"`
-  and `Anchor` links to `?q=`), `results` (`role="listbox"` id
-  `<id>-results`, rows `role="option"` id `<id>-opt-<n>`, the title with
-  `<mark>` on the query, meta and why), `nothing` (the sentence,
-  coverage, suggestion pills). Props fill them at build; hooks let a script
-  refill in place: `data-card="kicker | title | blurb | meta | why | link"`,
-  `data-results="label | list"`, `data-none="query | suggestions"`, and a
-  `<template data-result-template>` with one empty row
+- `QuiltPanel` — four faces, every one rendered, on a hairlined wash surface
+  that fills the block. `card` is the INFRA CARD: `{ kicker, category,
+  minutes, words, month, year, title, blurb, gauge: { value, caption,
+  label? }, why?, href }` — a header row (`NO. 005`, the category as a Pill)
+  over a `Hairline`, three `Stat size="sm"` pairs (`3 min / read`, `541 /
+  words`, `FEB / 2026`), the title and the excerpt, and at the right a
+  `RingGauge` of the post's minutes over the longest post's captioned `3 OF
+  5 MIN` with the `READ ▸` `Button` under it. `browse` (categories with
+  counts, years, the latest post — `Pill as="a"` and `Anchor` links to
+  `?q=`), `results` (`role="listbox"` id `<id>-results`, rows
+  `role="option"` id `<id>-opt-<n>`, the title with `<mark>` on the query,
+  meta and why), `nothing` (the sentence, coverage, suggestion pills). Props
+  fill them at build; hooks let a script refill in place: `data-card="kicker
+  | category | minutes | words | month | year | title | blurb | gauge |
+  gauge-caption | why | link"` (the gauge takes `--ring-value` and an
+  aria-label), `data-results="label | list"`, `data-none="query |
+  suggestions"`, and a `<template data-result-template>` with one empty row
   (`data-result="title | meta | why"`) to clone. `flow` renders it in flow
   (the phone rendering) anywhere.
 - `SearchBar` — `role="search"`; a caps `Mono` label for the input; the
@@ -324,7 +377,9 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
   lands on `?q=` with scripting off); the count is `aria-live="polite"`
   (`data-search-count`); `hint` is an outline `Pill`, not drawn without a
   keyboard. `:focus-within` turns the hairline to the accent. `value` and
-  `expanded` render a state statically.
+  `expanded` render a state statically. `variant="cell"` is the bar with no
+  frame of its own — flush inside a `Panel` cell, focus an accent line along
+  the cell's bottom edge — the /txt instrument's search cell.
 
 **The state contract** — what the script sets, and all it sets:
 
@@ -348,15 +403,17 @@ title alone at the next step down as the block shrinks — rather than clip;
 on a big board (a block ≥ 360px tall and 900px wide) the title steps up to
 `--font-size-8` and the excerpt to `--font-size-5`.
 
-**Geometry.** On `/txt` the quilt is a full-width board (`BlogLayout
-width="full"`): at ≥ 1024 the column is the viewport inside a `--space-6`
-gutter on each side, and the gap tightens to `--space-2` so the tiles read as
-one sheet; below that the gap is `--space-3` and the site's fluid gutter
-applies.
+**Geometry.** On `/txt` the quilt is the board row of one `Panels`
+instrument (`BlogLayout width="full"` with `tabs`): at ≥ 1024 the frame is
+the viewport inside a `--space-6` gutter on each side, the board a `Panel`
+inside it, and the gap tightens to `--space-2` so the tiles read as one
+sheet; below that the gap is `--space-3` and the site's fluid gutter
+applies. The cell sizes below are the board's at each width, a step
+narrower than the frame.
 
 | Viewport | Columns | Cell | Block | Mode |
 | --- | --- | --- | --- | --- |
-| ≥ 1024 | `cols` (5) | ~269×151 at 1440, ~365×205 at 1920; 16:9 | 3×2 ≈ 823×310 at 1440, ≈ 1110×418 at 1920 | hover quilt |
+| ≥ 1024 | `cols` (5) | ~263×148 at 1440, ~359×202 at 1920; 16:9 | 3×2 ≈ 805×304 at 1440, ≈ 1093×412 at 1920 | hover quilt |
 | 640–1023 | `colsMd` (3) | ~227×128 at 768 | full width × 2 rows | hover quilt |
 | < 640 | 2 | ~179×101 at 390 | none — the panel is in flow above the tiles | captioned list, a tap navigates |
 

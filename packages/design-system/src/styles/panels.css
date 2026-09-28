@@ -1,0 +1,54 @@
+/* Panels · Panel — a device screen: flat surfaces separated by a hair of the
+ * page, in one rounded frame.
+ *
+ * The reference is the hardware metronome's display: its screen is not a
+ * stack of cards but one sheet cut into panels by 2px gutters, each panel a
+ * few percent off the page, the whole thing rounded once at the outside. So
+ * the FRAME carries the page colour (the gutters are it showing through), the
+ * radius and the clip; a PANEL is the card colour and nothing else — no
+ * border, no radius, no shadow — because the gutter is its edge.
+ *
+ * A Panels inside a Panels (a row of cells inside a column of rows) has no
+ * frame: it is cut by the same gutter, and the outer frame clips it. */
+.ds-panels {
+	display: flex;
+	flex-direction: column;
+	gap: var(--panel-gutter);
+	min-inline-size: 0;
+	background: var(--background);
+}
+.ds-panels--frame-true {
+	border-radius: var(--border-radius-3);
+	overflow: hidden;
+}
+.ds-panels .ds-panels--frame-true {
+	border-radius: 0;
+	overflow: visible;
+}
+
+/* A row of cells: a grid, so a template can give the count cell its width
+   and the search its stretch (the metronome's 4/4 · 120 · ♪ row). With no
+   template the cells share the row alike. */
+.ds-panels--direction-row {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: minmax(0, 1fr);
+	grid-template-columns: var(--panels-columns, none);
+}
+
+.ds-panel {
+	box-sizing: border-box;
+	min-inline-size: 0;
+	background: var(--card-background);
+	color: var(--text-primary);
+	font-family: var(--font-ui);
+}
+.ds-panel--pad-sm {
+	padding: var(--space-3);
+}
+.ds-panel--pad-md {
+	padding: var(--space-4);
+}
+.ds-panel--pad-lg {
+	padding: var(--space-5);
+}

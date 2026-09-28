@@ -30,9 +30,14 @@
 .ds-ring__track {
 	stroke: var(--wash-3);
 }
+/* The arc: a dash of --ring-value units on the 100-unit path, then a gap
+   longer than the path, so the value is one custom property on the root and
+   a change of it glides on the settle duration. */
 .ds-ring__arc {
 	stroke: var(--accent);
 	stroke-linecap: butt;
+	stroke-dasharray: var(--ring-value, 0) 100;
+	transition: stroke-dasharray var(--duration-settle) var(--ease-reveal);
 }
 .ds-ring__center {
 	position: relative;

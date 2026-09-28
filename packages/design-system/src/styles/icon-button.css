@@ -38,6 +38,14 @@
 	display: flex;
 	z-index: 1;
 }
+/* A text glyph in place of an icon: the UI face at regular weight, on one
+   line, a step under the icon's box at each size (below). */
+.ds-icon-button__glyph {
+	font-family: var(--font-ui);
+	font-weight: var(--font-weight-400);
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
 
 .ds-icon-button:disabled {
 	cursor: not-allowed;
@@ -105,6 +113,9 @@
 	width: 12px;
 	height: 12px;
 }
+.ds-icon-button--size-xs .ds-icon-button__glyph {
+	font-size: var(--font-size-1);
+}
 .ds-icon-button--size-small {
 	inline-size: var(--space-6);
 	block-size: var(--space-6);
@@ -112,6 +123,9 @@
 .ds-icon-button--size-small svg {
 	width: 16px;
 	height: 16px;
+}
+.ds-icon-button--size-small .ds-icon-button__glyph {
+	font-size: var(--font-size-3);
 }
 .ds-icon-button--size-large {
 	inline-size: var(--space-7);
@@ -121,6 +135,9 @@
 	width: 18px;
 	height: 18px;
 }
+.ds-icon-button--size-large .ds-icon-button__glyph {
+	font-size: var(--font-size-5);
+}
 .ds-icon-button--size-xl {
 	inline-size: var(--space-10);
 	block-size: var(--space-10);
@@ -128,4 +145,7 @@
 .ds-icon-button--size-xl svg {
 	width: 24px;
 	height: 24px;
+}
+.ds-icon-button--size-xl .ds-icon-button__glyph {
+	font-size: var(--font-size-6);
 }

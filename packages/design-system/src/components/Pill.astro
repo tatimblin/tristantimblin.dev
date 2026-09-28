@@ -6,8 +6,14 @@
 //   <Pill variant="accent" as="a" href="…">next</Pill>   the CTA
 //   <Pill as="button" type="button">tap</Pill>    a pill button
 //   <Pill variant="success">live</Pill>           the DS tints still exist
+//   <Pill as="a" size="lg" href="/txt?q=projects" aria-current="page">projects</Pill>   a tab
 //
 // An icon goes in the default slot ahead of the text; it is sized to the type.
+// `size="lg"` is the tab step — the pill-button height of the instrument's
+// tab row (--space-6), wider inside — for a row of pills that is the page's
+// primary control rather than a badge; `aria-current` on one of them draws
+// it as the selected tab (the subtle fill, no edge). This site's step, not
+// upstream's, like IconButton's xs and xl.
 import { cx } from "../lib/cx";
 
 type Variant =
@@ -22,6 +28,7 @@ type Variant =
 interface Props {
 	as?: string;
 	variant?: Variant;
+	size?: "md" | "lg";
 	// The DS `dark` variant exists but carries no rules, so no class.
 	dark?: boolean;
 	class?: string;
@@ -31,6 +38,7 @@ interface Props {
 const {
 	as = "span",
 	variant = "subtle",
+	size = "md",
 	dark: _dark,
 	class: className,
 	...rest
@@ -38,7 +46,12 @@ const {
 
 const Tag = as as any;
 
-const cls = cx("ds-pill", `ds-pill--variant-${variant}`, className);
+const cls = cx(
+	"ds-pill",
+	`ds-pill--variant-${variant}`,
+	size !== "md" && `ds-pill--size-${size}`,
+	className,
+);
 ---
 
 <Tag class={cls} {...rest}><slot /></Tag>

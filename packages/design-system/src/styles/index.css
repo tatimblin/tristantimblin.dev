@@ -32,6 +32,9 @@
 @import "./ring-gauge.css";
 @import "./legend.css";
 @import "./tile-grid.css";
+@import "./time-ruler.css";
+/* The device screen: flat panels in one frame. */
+@import "./panels.css";
 /* The reading UI: the archive and the reading column. */
 @import "./post-list.css";
 @import "./prose.css";

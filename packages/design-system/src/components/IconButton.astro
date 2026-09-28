@@ -7,6 +7,10 @@
 //   rounded: boolean
 // The single icon child is wrapped in .ds-icon-button__content, as the DS's
 // IconButton.tsx wraps it in a Flex.
+//
+// `glyph` draws a text character instead of an icon — the metronome's − and
+// + — in the UI face, sized to the button and aria-hidden; the caller gives
+// the button its name (`aria-label="Next post"`).
 import { cx } from "../lib/cx";
 
 interface Props {
@@ -14,6 +18,8 @@ interface Props {
 	variant?: "primary" | "secondary" | "tertiary";
 	size?: "xs" | "small" | "large" | "xl";
 	rounded?: boolean;
+	/** A character in place of an icon (`−`, `+`); aria-hidden. */
+	glyph?: string;
 	class?: string;
 	[key: string]: unknown;
 }
@@ -23,6 +29,7 @@ const {
 	variant = "secondary",
 	size = "large",
 	rounded,
+	glyph,
 	class: className,
 	...rest
 } = Astro.props;
@@ -39,5 +46,8 @@ const cls = cx(
 ---
 
 <Tag class={cls} {...rest}>
-	<span class="ds-icon-button__content"><slot /></span>
+	<span class="ds-icon-button__content">
+		{glyph ? <span class="ds-icon-button__glyph" aria-hidden="true">{glyph}</span> : null}
+		<slot />
+	</span>
 </Tag>

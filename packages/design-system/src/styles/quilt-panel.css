@@ -5,8 +5,10 @@
  * grid AREA that placement names (CSS Grid §9): --panel-col/--panel-row put
  * its top-left on a cell, the spans take the block, and inset: 0 fills it.
  * No measured pixels, and its content — however tall — never sizes a row.
- * The cells under it are `gone` (quilt.css), so it sits on the page, not on
- * a surface: the freed block IS the surface.
+ * The cells under it are `gone` (quilt.css), so the freed block is clear,
+ * and the FACE draws the surface: the infra card of the reference dashboard
+ * — an ink wash inside a hairline, the surface radius — filling the block
+ * to its cells' edges, the grid gap keeping it off the tiles beside it.
  *
  * FOUR FACES, ONE ATTRIBUTE. Every face is rendered in the same grid cell
  * and data-mode on the root says which shows; the rest are visibility:
@@ -17,8 +19,8 @@
  * after the tiles have begun to scatter; it comes back with no delay.
  *
  * UNDER 640PX the panel is in flow: full width, above the tiles (grid row 1,
- * every column; the tiles auto-place after it), no inset, and display: none
- * when hidden so an empty panel takes no room. `--flow-true` is that at any
+ * every column; the tiles auto-place after it), and display: none when
+ * hidden so an empty panel takes no room. `--flow-true` is that at any
  * width, for the catalogue. */
 .ds-quilt-panel {
 	--panel-cols: 3;
@@ -30,9 +32,6 @@
 	grid-row: var(--panel-row, 1) / span var(--panel-rows);
 	z-index: 1;
 	box-sizing: border-box;
-	/* Inset from the block's edge, so the text does not touch the tiles
-	   beside it — a fixed step, not the gap, which tightens on a board. */
-	padding: var(--space-3);
 	display: grid;
 	grid-template-rows: minmax(0, 1fr);
 	/* A query container on BOTH axes: an absolutely positioned box with
@@ -55,15 +54,23 @@
 	transition-delay: 0s;
 }
 
-/* The faces: stacked in the one cell, a flex column each, clipped to the
-   block (a card's excerpt clamps; a list's rows are capped by the script). */
+/* The faces: stacked in the one cell, a flex column each on the card
+   surface, clipped to the block (a card's excerpt clamps; a list's rows are
+   capped by the script). The wash, not the card colour: the panel sits on
+   a Panel of the instrument, which is already that colour, and a wash is
+   one step off whatever it lands on in both themes. */
 .ds-quilt-panel__face {
 	grid-area: 1 / 1;
 	min-inline-size: 0;
 	min-block-size: 0;
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
+	padding: var(--space-4) var(--space-5);
+	background: var(--wash-1);
+	border: 1px solid var(--hairline);
+	border-radius: var(--border-radius-2);
 	overflow: hidden;
 	opacity: 0;
 	visibility: hidden;
@@ -94,15 +101,54 @@
 	}
 }
 
-/* THE CARD FACE. Kicker at the top, title and excerpt in the middle, the
-   accent meta and the why on the bottom edge — spread over the block's
-   height like the prototype. The title is the UI face at the big regular
-   step (the blog sets titles regular; the heading face would shout here),
-   with display leading and tracking from the type tokens; the excerpt is
-   Body, clamped to three lines, which is what a 240px+ block holds under
-   a two-line title. */
+/* THE CARD FACE — the infra card. A header row (the number, the category
+   pill) over a hairline; then two columns: the MAIN one stacks the three
+   stat pairs, the title and the excerpt, the SIDE one holds the ring gauge
+   with its caption at the top and the READ button on the bottom edge. The
+   title is the UI face at the big regular step (the blog sets titles
+   regular; the heading face would shout here), with display leading and
+   tracking from the type tokens; the excerpt is Body at the small step —
+   the reference card's size, and what lets three lines and a two-line title
+   share a 1440 board's ~310px block — clamped to three lines. */
 .ds-quilt-panel__card {
+	gap: 0;
+}
+.ds-quilt-panel__card-head {
+	display: flex;
 	justify-content: space-between;
+	align-items: center;
+	gap: var(--space-3);
+	flex: none;
+}
+.ds-quilt-panel__category:empty {
+	display: none;
+}
+.ds-quilt-panel__rule {
+	margin-block: var(--space-3) var(--space-4);
+}
+.ds-quilt-panel__card-body {
+	display: flex;
+	gap: var(--space-6);
+	flex: 1 1 auto;
+	min-block-size: 0;
+}
+.ds-quilt-panel__card-main {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	min-block-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+.ds-quilt-panel__stats {
+	display: flex;
+	gap: var(--space-6);
+	flex: none;
+}
+/* The month reads as a date mark: capitals, tracked, in the value's mono. */
+.ds-quilt-panel__stat--caps .ds-stat__value {
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
 }
 .ds-quilt-panel__body {
 	/* A block, not a grid: a grid item is blockified, and Chrome blockifies
@@ -130,38 +176,48 @@
 	-webkit-line-clamp: 3;
 	overflow: hidden;
 }
-.ds-quilt-panel__foot {
-	display: flex;
-	justify-content: space-between;
-	align-items: baseline;
-	gap: var(--space-4);
-	flex-wrap: wrap;
-}
-/* The one link on the card keeps the accent under the pointer (Mono's link
-   rule would turn it to the ink). */
-a.ds-quilt-panel__read:hover,
-a.ds-quilt-panel__read:focus-visible {
-	color: var(--accent);
-	text-decoration: underline;
-	text-underline-offset: var(--space-1);
+.ds-quilt-panel__card .ds-quilt-panel__blurb {
+	--font-body-size: var(--font-size-1);
 }
 .ds-quilt-panel__why:empty {
 	display: none;
 }
-/* The card fitted to its block: three lines of excerpt need a 240px block;
-   a shorter block shows two, then one, then
-   only the title at the next step down — the card never clips mid-line. */
-@container panel (max-block-size: 239px) {
+.ds-quilt-panel__card-side {
+	flex: none;
+	inline-size: var(--space-13);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: flex-end;
+	gap: var(--space-3);
+}
+.ds-quilt-panel__gauge {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+}
+/* The caption is one line, whatever the panel's wrap rule for caps says. */
+.ds-quilt-panel__gauge .ds-caps {
+	white-space: nowrap;
+}
+/* The card fitted to its block: three excerpt lines under a title that may
+   wrap need a 280px block (a 1440 board's is ~304); a shorter block shows
+   two lines at the next title step down, then loses the stats and the gauge
+   (the READ button stays: it is the card's link), then the excerpt — the
+   card never clips mid-line. */
+@container panel (max-block-size: 279px) {
 	.ds-quilt-panel__blurb {
 		-webkit-line-clamp: 2;
 	}
-}
-@container panel (max-block-size: 199px) {
-	.ds-quilt-panel__blurb {
-		-webkit-line-clamp: 1;
-	}
 	.ds-quilt-panel__title {
 		font-size: var(--font-size-6);
+	}
+}
+@container panel (max-block-size: 239px) {
+	.ds-quilt-panel__stats,
+	.ds-quilt-panel__gauge {
+		display: none;
 	}
 }
 @container panel (max-block-size: 159px) {
@@ -171,13 +227,13 @@ a.ds-quilt-panel__read:focus-visible {
 }
 /* And up: a full-width board on a big screen gives the block ~1100×420, where
    the full-size card's type would sit small in an empty field — the title
-   takes the display step and the excerpt the next body step. */
+   takes the display step and the excerpt the body step. */
 @container panel (min-block-size: 360px) and (min-inline-size: 900px) {
 	.ds-quilt-panel__title {
 		font-size: var(--font-size-8);
 	}
-	.ds-quilt-panel__blurb {
-		--font-body-size: var(--font-size-5);
+	.ds-quilt-panel__card .ds-quilt-panel__blurb {
+		--font-body-size: var(--font-size-3);
 	}
 }
 
@@ -294,7 +350,6 @@ a.ds-quilt-panel__read:focus-visible {
 		position: static;
 		grid-column: 1 / -1;
 		grid-row: 1;
-		padding: 0;
 		margin-block-end: var(--space-3);
 		/* In flow the height is the content's, so only the inline axis can
 		   be queried — and the card shows whole, no tier applies. */
@@ -328,11 +383,25 @@ a.ds-quilt-panel__read:focus-visible {
 	.ds-quilt-panel__result-title {
 		white-space: normal;
 	}
+	/* The card stacks: the side column becomes a row under the text, the
+	   gauge and its caption side by side at the left, READ at the right. */
+	.ds-quilt-panel__card-body {
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+	.ds-quilt-panel__card-side {
+		inline-size: auto;
+		flex-direction: row;
+		align-items: center;
+	}
+	.ds-quilt-panel__gauge {
+		flex-direction: row;
+		gap: var(--space-3);
+	}
 }
 .ds-quilt-panel--flow-true {
 	position: static;
 	grid-area: auto;
-	padding: 0;
 	container-type: inline-size;
 }
 .ds-quilt-panel--flow-true .ds-quilt-panel__face {

@@ -1,0 +1,62 @@
+---
+// Panels — a device screen: flat panels separated by a hair of the page, in
+// one rounded frame (styles/panels.css). The hardware metronome's display —
+// the signature, the tempo and the note as a row of cells, the tabs above,
+// the ruler below — and the /txt instrument, which is four rows of it.
+//
+//   <Panels>                                   the frame: a column of rows
+//     <Panel pad="md">…</Panel>
+//     <Panels direction="row" columns="var(--space-14) minmax(0, 1fr) var(--space-12)">
+//       <Panel>…</Panel> <Panel>…</Panel> <Panel>…</Panel>      a row of cells
+//     </Panels>
+//   </Panels>
+//
+// A Panels is a column by default; `direction="row"` sets its panels side by
+// side, every one the same width, or on the grid template `columns` names
+// (an inline style for a real API, like Grid's spans — set `--panels-columns`
+// in your own CSS instead when the template changes per breakpoint, since an
+// inline value would out-rank a media query). A Panels inside a Panels has
+// no frame of its own: the outer one clips, and its gutters run through.
+// `frame={false}` drops the radius and the clip on an outer one too, for a
+// screen that runs to the page's edge. `class` merges; the rest passes to
+// the root.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	direction?: "column" | "row";
+	/** A grid-template-columns value for a row of cells. */
+	columns?: string;
+	/** The rounded, clipping frame (default true). */
+	frame?: boolean;
+	class?: string;
+	style?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	direction = "column",
+	columns,
+	frame = true,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+const vars = [columns && `--panels-columns:${columns}`, style].filter(Boolean).join(";");
+---
+
+<Tag
+	class={cx(
+		"ds-panels",
+		`ds-panels--direction-${direction}`,
+		frame && "ds-panels--frame-true",
+		className,
+	)}
+	style={vars || undefined}
+	{...rest}
+>
+	<slot />
+</Tag>

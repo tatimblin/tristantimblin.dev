@@ -285,6 +285,12 @@
 	--border-radius-tile: 2px;
 	--border-radius-pill: 9999px;
 
+	/* The gutter of a Panels screen (panels.css): the hair of page showing
+	 * between the flat panels of one device display, so rows and cells read
+	 * as one instrument cut into parts rather than a stack of cards. Below the
+	 * space scale, like the tile radius, and the same width as it. */
+	--panel-gutter: 2px;
+
 	/* The pitch of a tick ruler's hairlines, and the ruler itself: hairlines on
 	 * that pitch in currentColor, as a gradient any box can take as its
 	 * background — TickRuler's segments, the player's progress bar. Colour it

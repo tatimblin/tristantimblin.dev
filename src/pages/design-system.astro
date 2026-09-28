@@ -37,6 +37,10 @@ import Figure from "@whois/design-system/Figure";
 import Stat from "@whois/design-system/Stat";
 import Hairline from "@whois/design-system/Hairline";
 import TickRuler from "@whois/design-system/TickRuler";
+import TimeRuler from "@whois/design-system/TimeRuler";
+// The device screen: flat panels in one frame.
+import Panels from "@whois/design-system/Panels";
+import Panel from "@whois/design-system/Panel";
 import BarGraph from "@whois/design-system/BarGraph";
 import RingGauge from "@whois/design-system/RingGauge";
 import Legend from "@whois/design-system/Legend";
@@ -110,16 +114,33 @@ const quiltFillerSlots: Array<[number, number, number?, number?]> = [
 	[1, 1, 2, 1], [3, 1, 1, 2], [4, 1, 3, 2], [1, 2, 2, 3],
 	[2, 2], [4, 2], [5, 2], [2, 3], [3, 3], [5, 3],
 ];
-const kicker = (p: QuiltPost) => `no. ${p.no} · ${p.month} ${p.year}`;
 const metaOf = (p: QuiltPost) => `${p.month} ${p.year} · ${p.cat}`;
+const longestMin = Math.max(...quiltPosts.map((p) => p.min));
 const cardOf = (p: QuiltPost, why?: string) => ({
-	kicker: kicker(p),
+	kicker: `no. ${p.no}`,
+	category: p.cat,
+	minutes: p.min,
+	words: p.min * 180 + 1,
+	month: p.month,
+	year: p.year,
 	title: p.title,
 	blurb: p.blurb,
-	meta: `${p.cat} · ${p.min} min`,
+	gauge: {
+		value: p.min / longestMin,
+		caption: `${p.min} of ${longestMin} min`,
+		label: `${p.min} of ${longestMin} minutes`,
+	},
 	why,
 	href: `/txt/${p.slug}`,
 });
+// The timeline demo: one tick per month over the posts' years, the five as marks.
+const monthNo: Record<string, string> = { jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06", jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12" };
+const rulerMarks = quiltPosts.map((p) => ({
+	month: `${p.year}-${monthNo[p.month]}`,
+	label: `${p.title}, ${p.month} ${p.year}`,
+	href: `/txt/${p.slug}`,
+	no: p.no,
+}));
 const browseDemo = {
 	categories: [
 		{ label: "programming", count: 2, href: "/txt?q=programming" },
@@ -859,6 +880,18 @@ const faces = [
 				<IconButton variant="secondary" size="large" rounded aria-label="play"><Icon name="play" /></IconButton>
 				<IconButton variant="secondary" size="xs" rounded aria-label="previous"><Icon name="arrow" size={3} /></IconButton>
 			</Flex>
+			<p class="ds-demo__note" style="margin-top: var(--space-5);">
+				<code>glyph</code> draws a character in place of an icon — the − and + that step
+				the /txt instrument — aria-hidden, in the UI face, sized to the button; the
+				caller names the button.
+			</p>
+			<Flex gap={3} wrap="wrap" alignItems="center">
+				<IconButton variant="secondary" size="large" rounded glyph="−" aria-label="Previous post" />
+				<IconButton variant="secondary" size="large" rounded glyph="+" aria-label="Next post" />
+				<IconButton variant="tertiary" size="xl" rounded glyph="+" aria-label="Next post" />
+				<IconButton variant="secondary" size="small" rounded glyph="−" aria-label="Previous post" />
+				<IconButton variant="secondary" size="xs" glyph="+" aria-label="Add" />
+			</Flex>
 		</section>
 
 		<!-- CARD ----------------------------------------------------------- -->
@@ -938,6 +971,19 @@ const faces = [
 				<Pill variant="warning">warning</Pill>
 				<Pill variant="danger">danger</Pill>
 			</Flex>
+			<p class="ds-demo__note" style="margin-top: var(--space-5);">
+				<code>size="lg"</code> is the tab step: the small button's height with more air
+				inside, for a row of pill links that is the page's control (the /txt category
+				tabs). <code>aria-current</code> on one draws it as the selected tab — the subtle
+				fill on an outline row.
+			</p>
+			<Flex gap={2} wrap="wrap" alignItems="center">
+				<Pill as="a" href="#" size="lg" variant="outline" aria-current="page">all</Pill>
+				<Pill as="a" href="#" size="lg" variant="outline">programming</Pill>
+				<Pill as="a" href="#" size="lg" variant="outline">projects</Pill>
+				<Pill as="a" href="#" size="lg" variant="outline">thoughts</Pill>
+				<Pill as="a" href="#" size="lg" variant="outline">personal</Pill>
+			</Flex>
 		</section>
 
 		<!-- HAIRLINE GRAPHICS ---------------------------------------------- -->
@@ -982,7 +1028,9 @@ const faces = [
 				A hairline ring with one accent arc for <code>value</code> (0–1);
 				<code>segments</code> breaks the track into dashes; <code>diameter</code> is a
 				length (not <code>size</code>, which is a scale step everywhere else). Children
-				sit in the centre.
+				sit in the centre. The arc's length is <code>--ring-value</code> (0–100) on the
+				root, so a script moves it in one call and it glides — the last gauge below
+				takes a new value every two seconds.
 			</p>
 			<Flex gap={6} wrap="wrap" alignItems="center">
 				<RingGauge value={0.9} />
@@ -992,6 +1040,9 @@ const faces = [
 				</RingGauge>
 				<RingGauge value={0.25} diameter="var(--space-13)" stroke={1}>
 					<Figure size="md" unit="bpm">120</Figure>
+				</RingGauge>
+				<RingGauge value={0.6} diameter="var(--space-12)" stroke={3} label="3 of 5 minutes" data-demo-ring>
+					<Mono variant="value" size={1} data-demo-ring-label>60%</Mono>
 				</RingGauge>
 			</Flex>
 		</section>
@@ -1038,6 +1089,73 @@ const faces = [
 					</TileGrid>
 				</div>
 			</Flex>
+		</section>
+
+		<section class="ds-demo__section" id="time-ruler">
+			<h2 class="ds-demo__h">TimeRuler — ticks on a time scale</h2>
+			<p class="ds-demo__note">
+				One tick per month from <code>from</code> to <code>to</code> (YYYY-MM), a taller
+				one on each January with the year under it, and a tall lit one for every
+				<code>mark</code> — a real link to the post, named by its title and date, whose
+				hit area is the whole month column. The accent playhead sits on
+				<code>playhead</code>'s month; a script glides it by setting <code>--at</code> on
+				the root, dims a mark out of the filter with <code>data-dim</code>, and rewrites
+				the readout (<code>data-time-ruler="readout"</code>). Click a tall tick here: it
+				is a link. The second ruler has two marks dimmed, as under a filter.
+			</p>
+			<Flex direction="column" gap={6} alignItems="stretch">
+				<TimeRuler from="2023-01" to="2026-12" playhead="2026-02" readout="latest · feb 2026" marks={rulerMarks} />
+				<TimeRuler
+					from="2023-01"
+					to="2026-12"
+					playhead="2025-04"
+					readout="apr 2025 · no. 003"
+					marks={rulerMarks.map((m) => ({ ...m, dim: m.no === "004" || m.no === "002" }))}
+				/>
+				<TimeRuler from="2025-06" to="2026-12" label="since" marks={rulerMarks.filter((m) => m.month >= "2025-06")} />
+			</Flex>
+		</section>
+
+		<section class="ds-demo__section" id="panels">
+			<h2 class="ds-demo__h">Panels · Panel — a device screen</h2>
+			<p class="ds-demo__note">
+				The hardware metronome's display: one sheet cut into flat panels by a
+				<code>--panel-gutter</code> of the page, rounded once at the outside.
+				<code>&lt;Panels&gt;</code> is the frame and a column of rows; a Panels inside it
+				with <code>direction="row"</code> is a row of cells (a grid — <code>columns</code>
+				gives the template, or set <code>--panels-columns</code> per breakpoint in your own
+				CSS) and takes no frame of its own. <code>&lt;Panel pad&gt;</code> is one surface
+				— the card colour, no edge — with an inset step (none / sm / md / lg). The /txt
+				index is four rows of this.
+			</p>
+			<Panels class="ds-demo__device">
+				<Panel pad="sm" class="ds-demo__device-row">
+					<Mono tone="primary">tabs</Mono>
+					<Flex gap={2}>
+						<Pill as="a" href="#" size="lg" variant="outline" aria-current="page">all</Pill>
+						<Pill as="a" href="#" size="lg" variant="outline">programming</Pill>
+						<Pill as="a" href="#" size="lg" variant="outline">projects</Pill>
+					</Flex>
+				</Panel>
+				<Panel pad="lg">
+					<Body>A row — the board, the reading column, whatever the screen shows. It is the card colour with no border: the gutter above and below is its edge.</Body>
+				</Panel>
+				<Panels direction="row" columns="var(--space-14) minmax(0, 1fr) var(--space-12) var(--space-12)">
+					<Panel class="ds-demo__device-cell"><Figure size="xl" unit="posts">5</Figure></Panel>
+					<Panel pad="none" class="ds-demo__device-cell">
+						<SearchBar variant="cell" id="device-search" hint="/" />
+					</Panel>
+					<Panel pad="none" class="ds-demo__device-cell ds-demo__device-cell--centre">
+						<IconButton variant="secondary" size="large" rounded glyph="−" aria-label="Previous" />
+					</Panel>
+					<Panel pad="none" class="ds-demo__device-cell ds-demo__device-cell--centre">
+						<IconButton variant="secondary" size="large" rounded glyph="+" aria-label="Next" />
+					</Panel>
+				</Panels>
+				<Panel pad="lg">
+					<TimeRuler from="2023-01" to="2026-12" playhead="2026-02" readout="latest · feb 2026" marks={rulerMarks} />
+				</Panel>
+			</Panels>
 		</section>
 
 		<section class="ds-demo__section">
@@ -1411,12 +1529,19 @@ const faces = [
 				<code>data-search-count</code>), the key hint as an outline pill (not drawn
 				without a keyboard). The hairline takes the accent while the input has focus —
 				click into either bar. <code>value</code> and <code>expanded</code> render a state
-				statically.
+				statically. <code>variant="cell"</code> is the bar with no frame of its own, for a
+				Panel cell of an instrument screen (the Panels section above): focus is an
+				accent line along the cell's bottom edge.
 			</p>
-			<Flex direction="column" gap={4}>
+			<Flex direction="column" gap={4} alignItems="stretch">
 				<SearchBar id="search-rest" count="5 posts" hint="/" />
 				<SearchBar id="search-typed" value="home" count="2 of 5" hint="/" expanded />
 				<SearchBar id="search-plain" label="find" placeholder="no count, no hint" />
+				<Panels>
+					<Panel pad="none" style="block-size: var(--space-12);">
+						<SearchBar id="search-cell" variant="cell" hint="/" />
+					</Panel>
+				</Panels>
 			</Flex>
 		</section>
 
@@ -1749,11 +1874,31 @@ const faces = [
 		});
 	}
 
+	// The ring demo: a new --ring-value every two seconds, the way a script
+	// moves the quilt card's gauge — the arc glides there on its own.
+	let ringTimer: ReturnType<typeof setInterval> | undefined;
+	function initRingDemo() {
+		clearInterval(ringTimer);
+		const ring = document.querySelector<HTMLElement>("[data-demo-ring]");
+		const label = document.querySelector<HTMLElement>("[data-demo-ring-label]");
+		if (!ring) return;
+		const values = [60, 20, 100, 40, 80];
+		let k = 0;
+		ringTimer = setInterval(() => {
+			k = (k + 1) % values.length;
+			ring.style.setProperty("--ring-value", String(values[k]));
+			ring.setAttribute("aria-label", `${values[k]}%`);
+			if (label) label.textContent = `${values[k]}%`;
+		}, 2000);
+	}
+
 	document.addEventListener("astro:page-load", () => {
 		initTokenControls();
 		initFacesDemo();
 		initArtDemo();
+		initRingDemo();
 	});
+	document.addEventListener("astro:before-swap", () => clearInterval(ringTimer));
 </script>
 
 <style>
@@ -2079,6 +2224,21 @@ const faces = [
 		padding: var(--space-4);
 		border: 1px solid var(--hairline);
 		border-radius: var(--border-radius-1);
+	}
+
+	/* The device demo: the tab row's insides, and the control cells. */
+	.ds-demo__device-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+	}
+	.ds-demo__device-cell {
+		display: flex;
+		align-items: center;
+		min-block-size: var(--space-12);
+	}
+	.ds-demo__device-cell--centre {
+		justify-content: center;
 	}
 
 	.ds-demo__note {

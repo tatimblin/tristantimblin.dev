@@ -1,0 +1,149 @@
+---
+// TimeRuler — a tick ruler on a time scale: one tick per month from `from`
+// to `to`, a taller lit tick for every `mark` (a post's month), year labels
+// under the January ticks, a readout line above, and the accent playhead
+// with its dot at one month (styles/time-ruler.css). The /txt instrument's
+// timeline row.
+//
+//   <TimeRuler from="2023-01" to="2026-12" label="timeline"
+//              readout="latest · feb 2026" playhead="2026-02"
+//              marks={[{ month: "2026-02", label: "Asserting on Agent Behavior, Feb 2026",
+//                        href: "/txt/asserting-on-agent-behavior", no: "005" }]} />
+//
+// A MARK IS A LINK: a real <a> to the post, named by `label` (the title and
+// the date), so the ruler works with scripting off and a screen reader hears
+// what each tall tick is. It fills its month's column, so the hit area is the
+// column, not the 3px bar; two posts in one month split the column. The
+// plain ticks are decoration and carry nothing.
+//
+// THE CONTRACT a script drives (the site's src/lib/quilt/index.ts):
+//   --at                the playhead's position on the root, a percentage —
+//                       `setProperty("--at", …)` glides it (TickRuler's rule)
+//   data-month          on every month column, "YYYY-MM": a script finds a
+//                       post's column by it and reads the playhead position
+//                       from the column's `--k` / `--n`
+//   data-mark, data-no  on a mark; data-dim (with aria-disabled) is a mark
+//                       whose post is not in the current filter: drawn in the
+//                       tick colour, not clickable
+//   data-time-ruler="readout"   the right-hand line above the ticks
+// `class` merges; everything else passes to the root.
+import { cx } from "../lib/cx";
+import Mono from "./Mono.astro";
+
+interface Mark {
+	/** "YYYY-MM" */
+	month: string;
+	/** The accessible name: the title and the date. */
+	label: string;
+	href: string;
+	no?: string | number;
+	dim?: boolean;
+}
+
+interface Props {
+	as?: string;
+	/** "YYYY-MM", inclusive. */
+	from: string;
+	/** "YYYY-MM", inclusive. */
+	to: string;
+	marks?: Mark[];
+	/** "YYYY-MM" the playhead sits on; none draws no playhead. */
+	playhead?: string;
+	/** The caps label at the left of the readout line (default "timeline"). */
+	label?: string;
+	/** The right-hand readout. */
+	readout?: string;
+	class?: string;
+	style?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	from,
+	to,
+	marks = [],
+	playhead,
+	label = "timeline",
+	readout,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+
+const parse = (ym: string): [number, number] => {
+	const m = /^(\d{4})-(\d{2})$/.exec(ym);
+	if (!m) throw new Error(`TimeRuler: "${ym}" is not YYYY-MM`);
+	return [Number(m[1]), Number(m[2])];
+};
+const [y0, m0] = parse(from);
+const [y1, m1] = parse(to);
+const n = (y1 - y0) * 12 + (m1 - m0) + 1;
+if (n < 1) throw new Error(`TimeRuler: \`to\` (${to}) is before \`from\` (${from})`);
+
+const key = (k: number) => {
+	const abs = y0 * 12 + (m0 - 1) + k;
+	return `${Math.floor(abs / 12)}-${String((abs % 12) + 1).padStart(2, "0")}`;
+};
+const months = Array.from({ length: n }, (_, k) => key(k));
+const byMonth = new Map<string, Mark[]>();
+for (const mark of marks) byMonth.set(mark.month, [...(byMonth.get(mark.month) ?? []), mark]);
+
+/** The playhead's position: the centre of month k, a percentage of the width. */
+const at = (k: number) => `${(((k + 0.5) / n) * 100).toFixed(3)}%`;
+const headK = playhead ? months.indexOf(playhead) : -1;
+const years = months.flatMap((ym, k) => (ym.endsWith("-01") || k === 0 ? [{ label: ym.slice(0, 4), k }] : []));
+
+const vars = [`--months:${n}`, headK >= 0 && `--at:${at(headK)}`, style].filter(Boolean).join(";");
+---
+
+<Tag
+	class={cx("ds-time-ruler", className)}
+	style={vars}
+	data-time-ruler
+	role="group"
+	aria-label={label}
+	{...rest}
+>
+	<div class="ds-time-ruler__head">
+		<Mono>{label}</Mono>
+		<Mono tone="secondary" class="ds-time-ruler__readout" data-time-ruler="readout">{readout}</Mono>
+	</div>
+	<div class="ds-time-ruler__strip">
+		{
+			months.map((ym, k) => (
+				<span
+					class="ds-time-ruler__month"
+					data-month={ym}
+					data-year={ym.endsWith("-01") ? "" : undefined}
+					style={`--k:${k}`}
+				>
+					{byMonth.get(ym)?.map((mark) => (
+						<a
+							class="ds-time-ruler__mark"
+							href={mark.href}
+							aria-label={mark.label}
+							title={mark.label}
+							data-mark
+							data-no={mark.no}
+							data-dim={mark.dim ? "" : undefined}
+							aria-disabled={mark.dim ? "true" : undefined}
+						/>
+					))}
+				</span>
+			))
+		}
+		{playhead ? <span class="ds-time-ruler__playhead" aria-hidden="true" /> : null}
+	</div>
+	<div class="ds-time-ruler__years" aria-hidden="true">
+		{
+			years.map((y) => (
+				<Mono tone="tertiary" class="ds-time-ruler__year" style={`--k:${y.k}`}>
+					{y.label}
+				</Mono>
+			))
+		}
+	</div>
+</Tag>

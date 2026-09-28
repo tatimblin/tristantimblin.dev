@@ -84,6 +84,20 @@
 	--pill-color: var(--danger);
 }
 
+/* size: lg — the tab step. The instrument's tab row is a line of pill
+   buttons that IS the page's control, so it stands at the small button's
+   height with a step more air inside. An aria-current one is the selected
+   tab: the subtle fill on an outline row (the edge goes, the ink comes up). */
+.ds-pill--size-lg {
+	min-block-size: var(--space-6);
+	padding-inline: var(--space-4);
+}
+.ds-pill[aria-current] {
+	--pill-background: var(--wash-1);
+	--pill-color: var(--text-primary);
+	border-color: transparent;
+}
+
 /* As a control. */
 button.ds-pill,
 a.ds-pill {
