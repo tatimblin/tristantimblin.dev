@@ -515,6 +515,10 @@ test.describe("quilt — phone (390px)", () => {
 		const states = (await cells(page)).map((c) => c.state);
 		expect(states).not.toContain("gone");
 		expect(states).toContain("faint");
+		// Both matches stay lit. The panel covers nothing on a phone, so the
+		// tablet block must not fade a match that sits under it (it did: the desk).
+		await expect(page.locator(post("001"))).toHaveAttribute("data-state", "lit");
+		await expect(page.locator(post("003"))).toHaveAttribute("data-state", "lit");
 
 		const overflow = await page.evaluate(
 			() => document.documentElement.scrollWidth - document.documentElement.clientWidth,

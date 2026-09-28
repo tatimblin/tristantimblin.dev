@@ -136,6 +136,16 @@ function wire(): (() => void) | null {
 				}
 			}
 		}
+		// On a phone the panel sits in flow above the list and covers nothing, but
+		// the resolution is the tablet grid's, where cells under the block come
+		// back `gone` — matches included. Undo that for posts the state keeps lit
+		// (a match, or any post while browsing), or a result shows as a faded tile.
+		if (v === "phone" && (mode === "results" || mode === "single" || mode === "browse")) {
+			const keep = new Set(res.matched);
+			resolved = resolved.map((c) =>
+				c.post !== null && (mode === "browse" || keep.has(c.post)) ? { ...c, state: "lit", delay: 0 } : c,
+			);
+		}
 		last = { ...res, block, cells: resolved };
 		activePos = res.active === null ? -1 : res.matched.indexOf(res.active);
 
