@@ -1,30 +1,47 @@
 ---
-// Heading — DS <Text as="h1" size={headingSize[size]} css={headingCSS[size]} />.
-// The DS `size` prop (1-4) maps to a Text size, plus a shared headingCSS
-// (font-weight-600, line-height 1.5, letter-spacing -0.3px) applied via .ds-heading.
+// Heading — DS <Text as="h1" size={headingSize[size]} css={headingCSS} />, with
+// the scale extended to this site's display steps.
+//
+//   size  1–6: a Heading step maps to a Text step one scale up (1 → 4 … 4 →
+//         7, the DS's four), and 5 → 8 (44px) and 6 → 9 (72px) are the two
+//         DISPLAY steps — a page title, a post's title.
+//   responsive  the display steps are display type, and display type is
+//         sized to its column: with `responsive` a heading steps DOWN one
+//         Heading size below 1024 (6 → 5, 5 → 4, …), so a title set across
+//         a wide grid does not arrive on a phone at a size the column cannot
+//         hold. `size={5} responsive` is the page-title step (44 / 32);
+//         `size={6} responsive` the post title (72 / 44).
+//
+// The shared heading CSS (face, weight, leading, tracking) is .ds-heading
+// (heading.css), in the roles layer; the size is Text's class, and the
+// responsive step-down heading.css's.
 import { cx } from "../lib/cx";
 import Text from "./Text.astro";
 
-type HeadingSize = 1 | 2 | 3 | 4;
+type HeadingSize = 1 | 2 | 3 | 4 | 5 | 6;
 
 interface Props {
 	as?: string;
 	size?: HeadingSize | string;
+	responsive?: boolean;
 	class?: string;
 	[key: string]: unknown;
 }
 
-// headingSize: DS size → Text size ('@initial' variant collapses to the value).
+// headingSize: DS size → Text size, one scale up.
 const headingSize: Record<string, number> = {
 	1: 4,
 	2: 5,
 	3: 6,
 	4: 7,
+	5: 8,
+	6: 9,
 };
 
 const {
 	as = "h1", // DEFAULT_TAG
 	size = 1, // DS default size '1'
+	responsive = false,
 	class: className,
 	...rest
 } = Astro.props;
@@ -32,6 +49,11 @@ const {
 const textSize = headingSize[String(size)] ?? 4;
 ---
 
-<Text {...rest} as={as} size={textSize} class={cx("ds-heading", className)}>
+<Text
+	{...rest}
+	as={as}
+	size={textSize}
+	class={cx("ds-heading", responsive && `ds-heading--size-${size} ds-heading--responsive-true`, className)}
+>
 	<slot />
 </Text>

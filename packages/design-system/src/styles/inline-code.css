@@ -1,7 +1,7 @@
 /* InlineCode — exact port of the DS styled('code', {...}). No variants.
    boxShadow is Shadows[1] from tokens/shadows.ts, inlined below. */
 .ds-inline-code {
-	font-family: var(--font-mono-code);
+	font-family: var(--font-mono);
 	line-height: 1.45rem;
 	border-radius: var(--border-radius-1);
 	background-color: var(--foreground);

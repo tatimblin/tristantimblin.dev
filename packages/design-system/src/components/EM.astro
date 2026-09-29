@@ -1,6 +1,8 @@
 ---
-// EM — DS <Text as="em" variant="tertiary" weight="3" spaced={false}
-//      style={{ letterSpacing: '-0.3px' }} />. Delegates to Text with overrides.
+// EM — DS <Text as="em" variant="tertiary" weight="3" />. Delegates to Text
+// with overrides. (Upstream also set a -0.3px letter-spacing inline; an
+// absolute tracking is right at one size only, and the emphasis reads without
+// it.)
 import Text from "./Text.astro";
 
 interface Props {
@@ -10,19 +12,9 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { style, ...rest } = Astro.props;
-const mergedStyle = ["letter-spacing: -0.3px", style]
-	.filter(Boolean)
-	.join("; ");
+const props = Astro.props;
 ---
 
-<Text
-	{...rest}
-	as="em"
-	variant="tertiary"
-	weight={3}
-	spaced={false}
-	style={mergedStyle}
->
+<Text {...props} as="em" variant="tertiary" weight={3}>
 	<slot />
 </Text>

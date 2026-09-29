@@ -1,9 +1,9 @@
 ---
-// H1 — DS <Heading as="h1" size="4" spaced={false} variant="primary" />.
+// H1 — DS <Heading as="h1" size="4" variant="primary" />.
 import Heading from "./Heading.astro";
 const props = Astro.props;
 ---
 
-<Heading {...props} as="h1" size={4} spaced={false} variant="primary">
+<Heading {...props} as="h1" size={4} variant="primary">
 	<slot />
 </Heading>

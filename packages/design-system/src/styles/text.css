@@ -1,4 +1,4 @@
-/* Text — exact port of the DS styled('span', { ... variants }). */
+/* Text — the DS styled('span', { ... variants }), on this site's scale and faces. */
 .ds-text {
 	margin: 0;
 	padding: 0;
@@ -12,45 +12,36 @@
 	-webkit-text-stroke-width: 1px;
 }
 
-/* spaced (boolean) */
+/* spaced (boolean, off by default): the body role's leading and tracking,
+   for a run of text that should sit like a paragraph without being one. */
 .ds-text--spaced-true {
-	letter-spacing: 0.3px;
-	line-height: 1.75;
+	letter-spacing: var(--font-body-letter-spacing);
+	line-height: var(--line-height-body);
 }
 
-/* family */
-.ds-text--family-default {
-	font-family: inherit;
+/* family — the site's faces by ROLE. A face on this site travels with its
+   weight where the family has more than one cut (Migra: two; FS Mondwest:
+   one, which IS the bold). The default is `inherit`, which needs no class. */
+.ds-text--family-ui {
+	font-family: var(--font-ui);
 }
-.ds-text--family-display {
-	font-family: var(--font-display);
+.ds-text--family-subheading {
+	font-family: var(--font-subheading);
+	font-weight: var(--font-weight-400);
 }
-.ds-text--family-serif {
-	font-family: var(--font-serif);
+.ds-text--family-hero {
+	font-family: var(--font-hero);
+	font-weight: var(--font-hero-weight);
 }
 .ds-text--family-mono {
 	font-family: var(--font-mono);
 }
-.ds-text--family-code {
-	font-family: var(--font-mono-code);
-}
-/* The figures family. Was MISSING: TxtPostLayout has been asking for
-   family="numeric" on the post meta line, which emitted .ds-text--family-numeric
-   and matched no rule at all, so the date silently rendered in whatever face it
-   inherited. Same failure mode --font-mono-code was in before it was defined.
-   Carries tabular figures with the face, for the reason numeric.css gives: a
-   family alone does not decide how its numbers behave, and a date or a count is
-   exactly the figure that should not shift width as it changes. */
-.ds-text--family-numeric {
-	font-family: var(--font-numeric);
-	font-variant-numeric: tabular-nums;
-}
 
-/* size → --font-size-* (note: size 2 maps to --font-size-1 in the DS source) */
-.ds-text--size-1 {
-	font-size: var(--font-size-1);
+/* size → --font-size-N. No 2: the scale has no such token. */
+.ds-text--size-0 {
+	font-size: var(--font-size-0);
 }
-.ds-text--size-2 {
+.ds-text--size-1 {
 	font-size: var(--font-size-1);
 }
 .ds-text--size-3 {
@@ -70,6 +61,9 @@
 }
 .ds-text--size-8 {
 	font-size: var(--font-size-8);
+}
+.ds-text--size-9 {
+	font-size: var(--font-size-9);
 }
 
 /* truncate (boolean) */

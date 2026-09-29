@@ -376,7 +376,7 @@ const instrumentTokens = [
 const steps = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0].map(Boolean);
 const graphValues = [2, 3, 3, 4, 6, 5, 7, 9, 8, 11, 13, 12, 16, 18, 21, 25];
 
-const textSizes = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+const textSizes = [0, 1, 3, 4, 5, 6, 7, 8, 9] as const;
 const textVariants = [
 	"default",
 	"primary",
@@ -388,7 +388,7 @@ const textVariants = [
 	"danger",
 ] as const;
 const textWeights = [2, 3, 4] as const;
-const families = ["default", "display", "serif", "mono", "code"] as const;
+const families = ["default", "ui", "subheading", "hero", "mono"] as const;
 const iconNames = [
 	"chevron",
 	"check",
@@ -534,8 +534,14 @@ const faces = [
 	{
 		token: "--font-body",
 		name: "PP Mondwest Light",
-		use: "everything else; --font-sans and the DS --font-display alias it",
+		use: "reading text; --font-sans aliases it",
 		css: "font-family: var(--font-body); font-weight: var(--font-body-weight);",
+	},
+	{
+		token: "--font-ui",
+		name: "Neue Montreal",
+		use: "the interface \u2014 widgets, figures, labels, the blog's chrome; --font-numeric aliases it",
+		css: "font-family: var(--font-ui); font-weight: var(--font-weight-400);",
 	},
 ];
 ---
@@ -608,7 +614,7 @@ const faces = [
 
 		{/* TYPOGRAPHY ----------------------------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Faces — the four roles</h2>
+			<h2 class="ds-demo__h">Faces — the five roles</h2>
 			<p class="ds-demo__note">
 				Self-hosted from <code>/fonts</code> (built by <code>tools/fonts/build.sh</code>,
 				@font-face'd in <code>src/styles/fonts.css</code>). Reach for the ROLE token, not
@@ -631,9 +637,14 @@ const faces = [
 
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Text — sizes</h2>
+			<p class="ds-demo__note">
+				0–9, each <code>--font-size-N</code>: 12 / 14 / 16 / 18 / 20 / 24 / 32 / 44 / 72.
+				There is no 2 — the scale has no such token. 8 and 9 are the display steps;
+				<code>Heading</code> reaches them as sizes 5 and 6.
+			</p>
 			<Flex direction="column" gap={2} alignItems="start">
 				{textSizes.map((s) => (
-					<Text size={s}>size {s} — The quick brown fox (14/14/16/18/20/24/32/44)</Text>
+					<Text size={s}>size {s} — The quick brown fox</Text>
 				))}
 			</Flex>
 		</section>
@@ -1734,7 +1745,7 @@ assertions:
 		{/* GRID: columns / gutters / breakpoints ------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Grid — 12 columns + spans</h2>
-			<Text size={2} variant="tertiary">
+			<Text size={1} variant="tertiary">
 				A 12-track grid. GridItem <InlineCode>colSpan</InlineCode> maps to
 				<InlineCode>grid-column: span N</InlineCode>. Spans in each row sum to 12.
 			</Text>
@@ -1758,7 +1769,7 @@ assertions:
 
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Grid — gutters (gap → --space-* tokens)</h2>
-			<Text size={2} variant="tertiary">
+			<Text size={1} variant="tertiary">
 				Same 4-column grid at increasing gap tokens. The gutter is the only
 				thing changing.
 			</Text>
@@ -1790,7 +1801,7 @@ assertions:
 
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Grid — breakpoints</h2>
-			<Text size={2} variant="tertiary">
+			<Text size={1} variant="tertiary">
 				Resize the window. First row uses intrinsic
 				<InlineCode>auto-fill / minmax()</InlineCode> (no media queries).
 				Second row switches column count at the DS breakpoints (sm 640 · md
@@ -2074,7 +2085,7 @@ assertions:
 	}
 	.ds-controls__note {
 		margin: var(--space-1) 0 var(--space-2);
-		font-family: var(--font-display);
+		font-family: var(--font-body);
 		font-size: 0.72rem;
 		line-height: 1.35;
 		color: var(--text-tertiary);
@@ -2357,7 +2368,7 @@ assertions:
 	}
 
 	.ds-demo__note code {
-		font-family: var(--font-mono-code);
+		font-family: var(--font-mono);
 	}
 
 	/* One row per face: the token that selects it, what it is, where it goes, and a
@@ -2371,7 +2382,7 @@ assertions:
 	}
 
 	.ds-demo__face-token {
-		font-family: var(--font-mono-code);
+		font-family: var(--font-mono);
 		font-size: var(--font-size-1);
 		color: var(--accent);
 	}

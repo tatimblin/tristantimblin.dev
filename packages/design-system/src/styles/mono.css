@@ -52,6 +52,13 @@
 	font-size: var(--widget-font-md, var(--font-size-3));
 }
 
+/* truncate — one line, ellipsised (Text's rule). */
+.ds-mono--truncate-true {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 /* tone — the colour, when the variant's default is not the one wanted. */
 .ds-mono--tone-primary {
 	color: var(--text-primary);

@@ -169,9 +169,9 @@ const neighbourRows = [
 				</Grid>
 
 				<Grid as="header" templateColumns={COLUMNS} gapX={4} class="post__head">
-					<Heading as="h1" size={4} class="post__title">{title}</Heading>
+					<Heading as="h1" size={6} responsive class="post__title">{title}</Heading>
 					{description && (
-						<Text as="p" size={5} variant="primary" spaced={false} class="post__lead">
+						<Text as="p" size={5} variant="primary" class="post__lead">
 							{description}
 						</Text>
 					)}
@@ -228,7 +228,6 @@ const neighbourRows = [
 									as="a"
 									size={3}
 									variant="primary"
-									spaced={false}
 									href={post.href}
 									class="post__index-title"
 									data-neighbour={key}
@@ -249,7 +248,7 @@ const neighbourRows = [
 							>
 								<Mono>{label}</Mono>
 								<Mono>—</Mono>
-								<Text as="span" size={3} variant="tertiary" spaced={false} class="post__index-title">
+								<Text as="span" size={3} variant="tertiary" class="post__index-title">
 									{none}
 								</Text>
 								<Mono class="post__filed">—</Mono>
@@ -294,16 +293,16 @@ const neighbourRows = [
 		margin-block-start: var(--space-8);
 	}
 
-	/* THE TITLE, THE LEAD AND THE MARK. The title at the display step across
-	   three columns, its lines almost touching (the heading leading retuned
-	   below 1 in scope), balanced so two lines share the words; the lead a
-	   step down in the second and third; the mark in the fourth, spanning
-	   both rows and resting on the lead's last line. */
+	/* THE TITLE, THE LEAD AND THE MARK. The title at the display step
+	   (Heading size 6, responsive: 72px, 44px below 1024) across three
+	   columns, its lines almost touching (the heading leading retuned below
+	   1 in scope), balanced so two lines share the words; the lead a step
+	   down in the second and third; the mark in the fourth, spanning both
+	   rows and resting on the lead's last line. */
 	.post__title {
 		grid-column: 1 / span 3;
 		grid-row: 1;
 		margin-block-start: var(--space-5);
-		font-size: var(--font-size-9);
 		--line-height-heading: 0.95;
 		text-wrap: balance;
 		overflow-wrap: anywhere;
@@ -418,7 +417,6 @@ const neighbourRows = [
 		.post__title {
 			grid-column: 1;
 			grid-row: auto;
-			font-size: var(--font-size-8);
 		}
 		.post__lead {
 			grid-column: 1;

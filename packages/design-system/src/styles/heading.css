@@ -34,3 +34,26 @@
 	font-family: var(--font-subheading);
 	font-weight: var(--font-weight-400);
 }
+
+/* THE RESPONSIVE STEP. Display type is sized to its column: a `responsive`
+   heading steps DOWN one Heading size below 1024 — 6 (72px) to 5 (44px),
+   5 (44px) to 4 (32px), and so on — so a title set across a wide grid does
+   not arrive on a phone at a size the column cannot hold. In the roles
+   layer, so it wins over Text's size class on the same element. */
+@media (max-width: 1023px) {
+	.ds-heading--responsive-true.ds-heading--size-6 {
+		font-size: var(--font-size-8);
+	}
+	.ds-heading--responsive-true.ds-heading--size-5 {
+		font-size: var(--font-size-7);
+	}
+	.ds-heading--responsive-true.ds-heading--size-4 {
+		font-size: var(--font-size-6);
+	}
+	.ds-heading--responsive-true.ds-heading--size-3 {
+		font-size: var(--font-size-5);
+	}
+	.ds-heading--responsive-true.ds-heading--size-2 {
+		font-size: var(--font-size-4);
+	}
+}

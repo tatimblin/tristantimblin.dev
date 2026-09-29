@@ -91,16 +91,13 @@
 	 * this size wants its lines almost touching) and --tracking-heading. */
 	--font-size-9: 72px;
 
-	/* The steps BELOW the generated weight scale, which starts at 400. Same reason
-	 * as --font-size-0 above: tokens.generated.css is re-emitted from the upstream
-	 * @maximeheckel/design-system package, so it cannot be extended there without
-	 * the next regeneration dropping the addition. That scale was written for a
-	 * variable UI sans and never needed a sub-400 step; the body face now ships two
-	 * (fonts.css), and a weight asked for as a bare number is exactly the kind of
-	 * literal the rest of this file exists to name. 200/300 are the real
-	 * usWeightClass values of the Thin and Light cuts, so a request lands on a file
-	 * rather than being resolved to the nearest one. */
-	--font-weight-200: 200;
+	/* The step BELOW the generated weight scale, which starts at 400. Same
+	 * reason as --font-size-0 above: tokens.generated.css is re-emitted from the
+	 * upstream package, so it cannot be extended there without the next
+	 * regeneration dropping the addition. 300 is the real usWeightClass of the
+	 * Light cut (fonts.css), so a request lands on a file rather than being
+	 * resolved to the nearest one. (The Thin, 200, is served but holds no
+	 * role and has no token: a weight nothing asks for is not a step.) */
 	--font-weight-300: 300;
 
 	--font-body-size: var(--font-size-3);
@@ -167,9 +164,7 @@
 	--font-ui: "Neue Montreal", "Neue Montreal Fallback", ui-sans-serif, system-ui,
 		sans-serif;
 
-	/* The DS's own font tokens, retargeted onto those roles. --font-display is the
-	 * DS's default face (it generates it as Inter); pointing it at the body face
-	 * keeps DS components on the site's type without touching the generated layer.
+	/* The DS's own font tokens, retargeted onto those roles.
 	 *
 	 * --font-mono / --font-numeric were Fira Code and Space Grotesk, both from
 	 * Google Fonts. --font-mono stays on the system mono stack: code wants a real
@@ -180,13 +175,10 @@
 	 * not code, so they were set in a terminal face by default rather than by
 	 * intent. --font-ui is that missing face, and its figures are what this role
 	 * wanted all along.
-	 *
-	 * --font-mono-code is referenced by text.css (family="code") and inline-code.css
-	 * but was never defined anywhere, so both resolved to nothing. Defined here. */
-	--font-display: var(--font-body);
+	 * --font-display (the DS's default face, Inter) has no consumer left: Text's
+	 * families are the site's roles, and a bare element inherits the body's. */
 	--font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 	--font-numeric: var(--font-ui);
-	--font-mono-code: var(--font-mono);
 
 	/* MOTION -----------------------------------------------------------------
 	 * The DS ships no easing/duration tokens, so every timing on the site used to

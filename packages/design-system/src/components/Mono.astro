@@ -8,6 +8,7 @@
 //   <Mono variant="text">Allocated</Mono>        dim sentence case
 //   <Mono variant="value" size={1}>90%</Mono>    a figure at label size
 //   <Mono as="a" variant="text" href="…">@handle</Mono>
+//   <Mono truncate>a label that ellipsises</Mono>
 import { cx } from "../lib/cx";
 
 type Variant = "caps" | "text" | "value";
@@ -19,6 +20,8 @@ interface Props {
 	variant?: Variant;
 	size?: Size;
 	tone?: Tone;
+	/** One line, ellipsised where it runs out of room (as Text's). */
+	truncate?: boolean;
 	class?: string;
 	[key: string]: unknown;
 }
@@ -28,6 +31,7 @@ const {
 	variant = "caps",
 	size = 0,
 	tone,
+	truncate = false,
 	class: className,
 	...rest
 } = Astro.props;
@@ -42,6 +46,7 @@ const cls = cx(
 	variant === "caps" && "ds-caps",
 	size !== 0 && `ds-mono--size-${size}`,
 	tone && `ds-mono--tone-${tone}`,
+	truncate && "ds-mono--truncate-true",
 	className,
 );
 ---
