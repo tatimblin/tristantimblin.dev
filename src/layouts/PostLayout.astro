@@ -183,7 +183,7 @@ const neighbourRows = [
 					<Grid as="figure" templateColumns={COLUMNS} gapX={4} class="post__fig" data-post-hero>
 						<Mono class="post__fig-label">fig. 01 /</Mono>
 						<div class="post__hero">
-							<Img src={hero.src} alt={hero.alt} loading="eager" />
+							<Img src={hero.src} alt={hero.alt} priority />
 						</div>
 						<Mono as="figcaption" class="post__figcap">{hero.caption ?? hero.alt}</Mono>
 					</Grid>

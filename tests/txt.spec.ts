@@ -252,6 +252,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(img).toHaveAttribute("src", "/blog-images/aptitude-pass.webp");
 		await expect(img).toHaveAttribute("alt", /read-order test/);
 		await expect(img).toHaveAttribute("width", /^\d+$/);
+		// The page's largest paint: fetched first, and never held back by the
+		// reveal (which keeps an armed image at opacity 0 until its module runs).
+		await expect(img).toHaveAttribute("fetchpriority", "high");
+		await expect(img).toHaveAttribute("loading", "eager");
+		await expect(img).not.toHaveAttribute("data-reveal");
 		await expect(hero.locator("figcaption")).toHaveText(/aptitude, passing — the read-order test/i);
 		const image = await box(page, "[data-post-hero] img");
 		expect(Math.abs(image.x - (article.x + col + gap))).toBeLessThanOrEqual(1);

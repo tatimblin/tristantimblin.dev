@@ -13,6 +13,10 @@
 //   3. data-reveal, so each image eases in as it is scrolled to instead of
 //      snapping in on decode (see src/lib/reveal.ts).
 //
+// `priority` is for the one image that is the page's largest paint (a post's
+// hero, PostLayout): no reveal — which holds an armed page's image at opacity 0
+// until the coordinator's module runs — and fetched eagerly at high priority.
+//
 // Dimensions are read straight from the file header — no image library, and no
 // build step beyond what Astro already runs in frontmatter (Node).
 import { intrinsicSize } from "../../lib/intrinsicSize";
@@ -21,10 +25,12 @@ interface Props {
 	src: string;
 	alt?: string;
 	title?: string;
+	/** The page's LCP image: eager, fetchpriority high, no reveal. */
+	priority?: boolean;
 	[key: string]: unknown;
 }
 
-const { src, alt = "", ...rest } = Astro.props;
+const { src, alt = "", priority = false, ...rest } = Astro.props;
 
 const size = intrinsicSize(src);
 ---
@@ -32,10 +38,11 @@ const size = intrinsicSize(src);
 <img
 	src={src}
 	alt={alt}
-	loading="lazy"
-	decoding="async"
+	loading={priority ? "eager" : "lazy"}
+	decoding={priority ? undefined : "async"}
+	fetchpriority={priority ? "high" : undefined}
 	width={size?.w}
 	height={size?.h}
-	data-reveal
+	data-reveal={priority ? undefined : ""}
 	{...rest}
 />
