@@ -312,7 +312,10 @@ function wire(): (() => void) | null {
 		// number, title and meta, and its place among the posts the stepper
 		// walks, oldest first (`5 / 5` is the newest of five), which is the
 		// progress bar's share too.
-		const at = res.focus ?? order[0] ?? 0;
+		// A search that matches nothing has no post in focus: no bar fills and
+		// the readout says so rather than naming the newest post.
+		const none = !!res.result && order.length === 0;
+		const at = none ? -1 : (res.focus ?? order[0] ?? 0);
 		const p = posts[at];
 		if (ruler && p) {
 			const k = monthAt.get(p.ym);
@@ -339,6 +342,12 @@ function wire(): (() => void) | null {
 			write(focus.meta, `${p.month} ${p.year} · ${p.words} w`);
 			write(focus.position, `${rank} / ${n}`);
 			for (const bar of focus.progress) bar.style.setProperty("--progress", n ? String(rank / n) : "0");
+		} else if (none) {
+			write(focus.no, "00");
+			write(focus.title, "Nothing matches");
+			write(focus.meta, `“${state.query.trim()}”`);
+			write(focus.position, "0 / 0");
+			for (const bar of focus.progress) bar.style.setProperty("--progress", "0");
 		}
 	}
 

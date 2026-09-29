@@ -154,7 +154,7 @@ const DOCK = "[data-quilt-dock]";
 /** The in-focus readout's hook, in the foot. */
 const focus = (page: Page, hook: string) => page.locator(`${FOOT} [data-focus="${hook}"]`);
 /** The readout names the post in focus: `05`, the title, `feb 2026 · 554 w`. */
-const expectFocus = async (page: Page, no: string, title: string, meta?: RegExp) => {
+const expectFocus = async (page: Page, no: string, title: string, meta?: RegExp | string) => {
 	await expect(focus(page, "no")).toHaveText(no);
 	await expect(focus(page, "title")).toHaveText(title);
 	if (meta) await expect(focus(page, "meta")).toHaveText(meta);
@@ -1491,6 +1491,17 @@ test.describe("instrument — the timeline", () => {
 		});
 	}
 
+	test("the docked foot's hairline draws only while it is stuck (where scroll-state queries exist)", async ({ page, browserName }) => {
+		test.skip(browserName !== "chromium", "scroll-state container queries are Chromium-only; elsewhere no line draws");
+		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.goto("/txt/");
+		const line = () =>
+			page.evaluate(() => getComputedStyle(document.querySelector(".blog__foot")!, "::before").opacity);
+		await expect.poll(line).toBe("1");
+		await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+		await expect.poll(line).toBe("0");
+	});
+
 	test("a slot per month over whole years, a named link per post in its month, a bar its words tall, the latest filled", async ({
 		page,
 	}) => {
@@ -2111,10 +2122,12 @@ test.describe("instrument — the foot", () => {
 		await expectFocus(page, "01", "No Honey, We Have a Dashboard at Home");
 		await expect(focus(page, "position")).toHaveText("1 / 2");
 		expect(await progress()).toBe("0.5");
-		// Nothing matches: nothing to place, the newest post still named.
+		// Nothing matches: nothing in focus — the readout says so, no bar fills.
 		await page.locator(SEARCH).fill("zzz");
 		await expect(focus(page, "position")).toHaveText("0 / 0");
+		await expectFocus(page, "00", "Nothing matches", "“zzz”");
 		expect(await progress()).toBe("0");
+		await expect(page.locator(`${RULER} [data-mark][data-focus]`)).toHaveCount(0);
 	});
 
 	test("one stepper per viewport: the foot's on a desktop and a tablet, the dock's on a phone; the other is display: none", async ({
