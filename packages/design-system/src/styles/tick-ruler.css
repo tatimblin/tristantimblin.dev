@@ -30,7 +30,15 @@
 	flex: var(--share, 1) 1 0;
 	min-inline-size: 1px;
 	block-size: 100%;
-	background: var(--ticks-image);
+	/* The ruler owns its gradient. A custom property substitutes its var()s
+	   where it is DECLARED, so a --ticks-image token on :root would fix the
+	   pitch at the root's value and a `pitch` set on the ruler could never
+	   reach it; spelled here, --tick-pitch resolves on the segment. */
+	background: repeating-linear-gradient(
+		to right,
+		currentColor 0 1px,
+		transparent 1px var(--tick-pitch)
+	);
 }
 
 /* The lit stretch. An overlay from the left edge to the playhead, painted
@@ -42,7 +50,11 @@
 	inset-block: var(--space-2) 0;
 	inset-inline-start: 0;
 	inline-size: var(--at, 0%);
-	background: var(--ticks-image);
+	background: repeating-linear-gradient(
+		to right,
+		currentColor 0 1px,
+		transparent 1px var(--tick-pitch)
+	);
 	color: var(--text-primary);
 	pointer-events: none;
 }

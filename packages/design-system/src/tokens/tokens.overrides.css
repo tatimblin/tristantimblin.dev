@@ -253,13 +253,49 @@
  * apart, 1px hairlines, ONE accent used once per card for the lit thing, and
  * everything else the ink at a few strengths. The tokens below are that
  * vocabulary. The components that consume them (Mono, Figure, Stat, Pill,
- * TickRuler, BarGraph, RingGauge, Legend, TileGrid, Hairline, and the card
- * chrome) are documented in CONVENTIONS.md.
+ * TickRuler, BarGraph, Legend, TileGrid, Hairline, and the card chrome) are
+ * documented in CONVENTIONS.md.
  *
  * Alpha washes rather than solid greys, throughout: a wash is the ink at a low
  * opacity, so the same token reads correctly on the page, on a card, and on a
- * card on a card, in both themes, without a per-surface variant. */
+ * card on a card, in both themes, without a per-surface variant.
+ *
+ * The steps that do not depend on the theme sit on :root; everything derived
+ * from a theme token (the inks, the accent) sits on the two theme classes, as
+ * the ART block does, so a wrapper carrying the other theme's class (the
+ * catalogue shows the same specimen on both pages) re-resolves them in scope.
+ * A custom property substitutes its var()s where it is declared: on :root,
+ * `var(--text-primary)` would be the html element's ink, whatever class the
+ * wrapper carried. */
 :root {
+	/* The steps BELOW the generated scales, on the same reasoning as
+	 * --font-size-0 above. Tiles are ~10px squares at phone size, where the
+	 * smallest DS radius (4px) reads as a circle; and a pill is a pill because
+	 * its radius is larger than any height it will ever have. */
+	--border-radius-tile: 2px;
+	--border-radius-pill: 9999px;
+
+	/* The pitch of a tick ruler's hairlines (TickRuler draws its own gradient
+	 * on it, tick-ruler.css) and the ruler as a gradient any box can take as
+	 * its background — the player's progress bar. Colour it with `color` on
+	 * the box (currentColor resolves where the gradient is PAINTED); a var()
+	 * inside would not do, since a custom property substitutes its var()s
+	 * where it is declared, i.e. here — which is also why the pitch inside
+	 * this gradient is fixed at the root's. */
+	--tick-pitch: var(--space-1);
+	--ticks-image: repeating-linear-gradient(
+		to right,
+		currentColor 0 1px,
+		transparent 1px var(--tick-pitch)
+	);
+
+	/* The focus ring's distance from the thing it rings. Consumers set their
+	 * own offset only where a clip would cut an outset ring. */
+	--focus-ring-offset: 2px;
+}
+
+.maximeheckel-light,
+.maximeheckel-dark {
 	/* The edge. One colour for card borders, dividers and outlined pills, so a
 	 * hairline is a hairline everywhere. --hairline-fade is the divider that
 	 * fades out at both ends — the reference dashboard's header rule — as a
@@ -295,32 +331,10 @@
 	--tone-4: var(--text-tertiary);
 	--tone-5: color-mix(in oklab, var(--text-primary) 22%, transparent);
 
-	/* The steps BELOW the generated scales, on the same reasoning as
-	 * --font-size-0 above. Tiles are ~10px squares at phone size, where the
-	 * smallest DS radius (4px) reads as a circle; and a pill is a pill because
-	 * its radius is larger than any height it will ever have. */
-	--border-radius-tile: 2px;
-	--border-radius-pill: 9999px;
-
-	/* The pitch of a tick ruler's hairlines, and the ruler itself: hairlines on
-	 * that pitch in currentColor, as a gradient any box can take as its
-	 * background — TickRuler's segments, the player's progress bar. Colour it
-	 * with `color` on the box (currentColor resolves where the gradient is
-	 * PAINTED); a var() inside would not do, since a custom property
-	 * substitutes its var()s where it is declared, i.e. here. */
-	--tick-pitch: var(--space-1);
-	--ticks-image: repeating-linear-gradient(
-		to right,
-		currentColor 0 1px,
-		transparent 1px var(--tick-pitch)
-	);
-
 	/* The focus ring, for everything focusable that is not a native control:
 	 * a pill or a button, a graph that became a slider, a flip surface. One
-	 * width and colour, so focus looks the same on every card. Consumers set
-	 * their own offset only where the card's clip would cut an outset ring. */
+	 * width and colour, so focus looks the same on every card. */
 	--focus-ring: 2px solid var(--accent);
-	--focus-ring-offset: 2px;
 }
 
 /* THE ACCENT. Orange-red, and one per card. The DS red alone is crimson and

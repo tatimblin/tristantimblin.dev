@@ -150,9 +150,9 @@ const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 					g.pieces.map((p) => (
 						<article class="art-cat__piece" id={p.slug} aria-labelledby={`${p.slug}-h`}>
 							<header class="art-cat__meta">
-								<h3 class="art-cat__slug" id={`${p.slug}-h`}>
+								<Mono as="h3" variant="value" size={1} class="art-cat__slug" id={`${p.slug}-h`}>
 									<a href={`#${p.slug}`} class="art-cat__self">#{p.slug}</a>
-								</h3>
+								</Mono>
 								<Mono variant="text">{p.title}</Mono>
 								<span class="art-cat__stats">
 									<Mono variant="value">{p.bytes} B ({kb(p.bytes)})</Mono>
@@ -280,9 +280,6 @@ const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 	}
 	.art-cat__slug {
 		margin: 0;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-2);
-		font-weight: var(--font-weight-500);
 	}
 	.art-cat__self {
 		color: var(--text-primary);

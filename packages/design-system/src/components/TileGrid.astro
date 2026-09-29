@@ -51,13 +51,13 @@ const cls = cx("ds-tiles", `ds-tiles--fit-${fit}`, className);
 	fit === "height" ? (
 		<div class="ds-tiles-box">
 			<Tag class={cls} style={vars} {...rest}>
-				{cells?.map((c) => <Tile level={c.level} lit={c.lit} title={c.title} />)}
+				{cells?.map((c: Cell) => <Tile level={c.level} lit={c.lit} title={c.title} />)}
 				<slot />
 			</Tag>
 		</div>
 	) : (
 		<Tag class={cls} style={vars} {...rest}>
-			{cells?.map((c) => <Tile level={c.level} lit={c.lit} title={c.title} />)}
+			{cells?.map((c: Cell) => <Tile level={c.level} lit={c.lit} title={c.title} />)}
 			<slot />
 		</Tag>
 	)

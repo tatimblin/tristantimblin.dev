@@ -31,6 +31,6 @@ const Tag = as as any;
 ---
 
 <Tag class={cx("ds-legend", className)} {...rest}>
-	{items?.map((it) => <LegendItem label={it.label} value={it.value} color={it.color} />)}
+	{items?.map((it: Item) => <LegendItem label={it.label} value={it.value} color={it.color} />)}
 	<slot />
 </Tag>
