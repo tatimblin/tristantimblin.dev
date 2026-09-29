@@ -35,3 +35,10 @@
 
 /fleet-demo/assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Astro's build output (dist/_astro): every JS/CSS chunk and processed image is
+# named by its content hash, so a changed file is a new URL — cache forever. No
+# other rule here matches /_astro/*, and none may: Cloudflare joins the values of
+# every matching rule (see /fleet-demo above).
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
