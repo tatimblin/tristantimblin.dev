@@ -42,8 +42,6 @@
     var(--container-pad),
     (100vw - var(--container-max)) / 2 + var(--container-pad)
   );
-  --grid-gap: 1.5rem;
-  --radius: 12px;
 }
 
 *,
@@ -146,40 +144,13 @@ img {
   display: block;
 }
 
+/* THE CONTAINER: a full-width row padded by the inset above, which is how
+   every contained row on the site sits — the site header and footer, the
+   homepage's rows (FullHeroLayout's --hero-inset is the same inset), the
+   blog's wide column. Compose the class; never centre a max-width box (the
+   half-scrollbar disagreement the inset's note explains). /txt's instrument
+   rows deliberately take the bare --container-pad gutter instead (blog.css),
+   so the quilt reads as a board edge to edge under a contained header. */
 .container {
-  max-width: var(--container-max);
-  margin-inline: auto;
-  padding-inline: var(--container-pad);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: var(--grid-gap);
-}
-
-.col-span-4 {
-  grid-column: span 4;
-}
-.col-span-5 {
-  grid-column: span 5;
-}
-.col-span-6 {
-  grid-column: span 6;
-}
-.col-span-7 {
-  grid-column: span 7;
-}
-.col-span-12 {
-  grid-column: span 12;
-}
-
-@media (max-width: 640px) {
-  .col-span-4,
-  .col-span-5,
-  .col-span-6,
-  .col-span-7,
-  .col-span-12 {
-    grid-column: 1 / -1;
-  }
+  padding-inline: var(--container-inset);
 }

@@ -16,7 +16,7 @@
 //                             content rising from below cleanly meets the pinned
 //                             heading. The consumer composes ALL grids/sections
 //                             here: full-bleed by default; a contained row opts
-//                             into gutters with the .fh-row helper.
+//                             into gutters with the site's .container class.
 //
 // Wraps the base Layout (html/head/tokens/fonts/ClientRouter) unchanged.
 import Layout from "./Layout.astro";
@@ -114,12 +114,11 @@ const { title, description, image, preloadMedia } = Astro.props;
 		   (The "tristan" wordmark is now a full-width SVG that fills the gutters at
 		   any size, so it no longer has a fixed type step here.) */
 		--heading-size: 2rem;
-		/* Contained: every inset region (header, wordmark, heading, content rows)
-		   sits in the same box as .container — --container-pad gutters, capped at
-		   --container-max and centred. Above the cap the inset grows to absorb the
-		   extra width. The scene stays full-bleed behind it. The site's one
-		   --container-inset (global.css), so every page's header and rows sit
-		   on the same line as the homepage's. */
+		/* Contained: the heading region sits in the same box as every .container
+		   row — the site's one --container-inset (global.css), so the lockup lines
+		   up with the header above it and the content rows below. The scene stays
+		   full-bleed behind it. Named here because the videos widget reads it to
+		   work out how much page margin lies outside the container. */
 		--hero-inset: var(--container-inset);
 		/* SCENE-OWNED BOTTOM UI. A scene whose own interactive/legible UI hugs its
 		   BOTTOM edge (e.g. the carousel's date scrubber + caption) declares how much
@@ -268,13 +267,4 @@ const { title, description, image, preloadMedia } = Astro.props;
 		z-index: 2;
 	}
 
-</style>
-
-{/* .fh-row: the container helper for a CONTAINED content row (gutters, full
-     width to match the heading's inset). Contents opt in by wrapping in .fh-row;
-     full-bleed sections just omit it. Global so consumers can use it. */}
-<style is:global>
-	.fh-row {
-		padding-inline: var(--hero-inset);
-	}
 </style>

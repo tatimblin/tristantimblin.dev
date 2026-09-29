@@ -159,7 +159,7 @@ import "@whois/wobble-text/styles.css";
 	     1–5) — rises into the pinned lockup and pushes it away. The video carousel
 	     no longer lives here: it's a cell in the widget grid below that
 	     parallaxes UP to visually sit alongside this row (see widgets/videos). */}
-	<div class="fh-row">
+	<div class="container">
 		<Grid class="home__grid">
 			{/* Eases in as it is scrolled to. Marked on the grid CELL rather than on
 			     <wobble-text> inside it, so the reveal's opacity and the element's
@@ -247,7 +247,7 @@ import "@whois/wobble-text/styles.css";
 	     own — and with `data-reveal-eager`, which trips the observer just BEFORE
 	     it reaches the viewport — it is already opaque when it crosses the fold,
 	     which is where its entrance is choreographed to start. */}
-	<div class="fh-row home__widgets">
+	<div class="container home__widgets">
 		<WidgetGrid cols={4}>
 			<Videos data-reveal data-reveal-group="videos" data-reveal-eager />
 

@@ -2027,13 +2027,12 @@ assertions:
 </Layout>
 
 <style>
-	/* The page's two knobs: the catalogue's measure, and the token panel's
-	   width (the Knobs is placed by the page). Layout knobs, not tokens — no
-	   DS step names a column width. */
+	/* The page's one knob: the token panel's width (the Knobs is placed by the
+	   page). A layout knob, not a token — no DS step names a panel width. The
+	   catalogue itself is the site container wide. */
 	.ds-demo {
-		--demo-measure: 1000px;
 		--demo-panel: 264px;
-		max-width: var(--demo-measure);
+		max-width: var(--container-max);
 		margin-inline: auto;
 		padding: var(--space-10) var(--space-6);
 		color: var(--text-primary);

@@ -43,8 +43,9 @@
    row: the title alone, close over the search bar, which sits a step above
    the grid (the bar is the page's control, the quilt its content; the
    prototype's 48/24). */
-/* The container by the site's one inset (global.css), as the header and the
-   homepage's rows take it, so the column's edges fall on the brand and nav. */
+/* The site container (the same --container-inset the .container class pads
+   by, global.css) — restated here rather than composed, since the base column
+   above pads by the bare gutter at the same weight and would tie with it. */
 .blog__main--wide {
 	max-width: none;
 	padding-inline: var(--container-inset);
@@ -69,8 +70,9 @@
 
    The header keeps the container (--container-inset, global.css) so it sits
    where it sits on every other page; the rows below take the whole page,
-   padded only by the container's gutter (--container-pad), so the quilt reads
-   as an art board edge to edge.
+   padded only by the container's gutter (--container-pad) — the ONE deliberate
+   exception to the site container (since fbf8839) — so the quilt reads as an
+   art board edge to edge.
 
    The rows stack at their own height: the quilt starts right under the bar
    (a --space-3 step), grows with the posts and scrolls with the page; the

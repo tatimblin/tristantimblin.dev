@@ -10,7 +10,9 @@ import Text from "@whois/design-system/Text";
 const year = new Date().getFullYear();
 ---
 
-<footer class="site-footer">
+{/* A .container row (global.css), so the footer's edges fall on the header's
+     brand and nav — one container, top and bottom. */}
+<footer class="site-footer container">
 	{/* <Text size={1} variant="tertiary">, not a bare <p>: the size step and the
 	     tertiary ink are both DS decisions, so they come from the component rather
 	     than being retyped as a font-size and a colour in the scoped block below.
@@ -56,7 +58,6 @@ const year = new Date().getFullYear();
 		justify-content: space-between;
 		gap: var(--space-4, 1rem);
 		padding-block: var(--space-5, 1.5rem);
-		padding-inline: var(--container-pad, clamp(1rem, 4vw, 2rem));
 		border-top: 1px solid var(--border-color, var(--color-border));
 		background: var(--color-bg);
 		color: var(--color-fg);

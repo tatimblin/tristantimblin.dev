@@ -19,7 +19,10 @@ interface Props {
 const { links = [{ label: "Writing", href: "/txt/" }], variant = "overlay" } = Astro.props;
 ---
 
-<header class:list={["site-header", variant === "flow" && "site-header--flow"]}>
+{/* A .container row (global.css): the brand and nav sit on the same line as
+     every contained row on the site — the homepage's, the blog's wide column,
+     the footer. */}
+<header class:list={["site-header", "container", variant === "flow" && "site-header--flow"]}>
 	<a class="site-header__brand" href="/">tristantimblin.dev</a>
 	<nav class="site-header__nav" aria-label="Primary">
 		{
@@ -45,10 +48,6 @@ const { links = [{ label: "Writing", href: "/txt/" }], variant = "overlay" } = A
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-4, 1rem);
-		/* The site's container inset (global.css) on every page, so the brand and
-		   nav sit in the same place on the homepage and everywhere else, on the
-		   edges of the page's contained rows. */
-		padding-inline: var(--container-inset);
 		padding-block: var(--space-4, 1rem);
 		background: transparent;
 		/* Let pointers fall through the empty bar to the scene; the brand + links
