@@ -504,10 +504,17 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 		};
 
 		// No wrap, and the ends are disabled rather than inert — the same slider
-		// semantics as packages/video-carousel.
+		// semantics as packages/video-carousel. Disabling the FOCUSED arrow drops
+		// focus to <body>, where the keys no longer reach the widget — so End on
+		// "next" (or a last click on it) would strand a keyboard reader. Focus
+		// moves to the sibling, which is enabled whenever there is more than one
+		// season.
 		const sync = () => {
+			const focused = document.activeElement;
 			prev.disabled = index === 0;
 			next.disabled = index === panels.length - 1;
+			if (focused === next && next.disabled && !prev.disabled) prev.focus();
+			else if (focused === prev && prev.disabled && !next.disabled) next.focus();
 		};
 
 		const onPrev = () => select(index - 1);
