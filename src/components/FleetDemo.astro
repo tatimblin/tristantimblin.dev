@@ -10,7 +10,15 @@
 // element.css already dresses the poster, button, caption, progress bar and
 // error note. The scoped rules below deliberately do NOT restate any of that;
 // they bridge the element's token names onto the site's, and handle layout.
+//
+// The poster is a screenshot of the workbench, an import drawn as a <Picture>
+// (AVIF, a WebP fallback) at the widths of the row it bleeds — the same three
+// columns as a post's hero (src/lib/ruled-image.ts). Lazy: it is well below
+// the fold, and the element owns its own entrance, so no reveal hook.
+import { Picture } from "astro:assets";
 import "@whois/vscode-fleet-demo/element.css";
+import poster from "../assets/fleet-demo-poster.webp";
+import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 ---
 
 <fleet-demo class="fleet-demo" data-prose-bleed>
@@ -18,11 +26,13 @@ import "@whois/vscode-fleet-demo/element.css";
 	    centered flex column stacked over the (later) iframe, with the screenshot
 	    absolutely filling it and the button/caption riding on top. */}
 	<div data-poster>
-		<img
-			src="/blog-images/fleet-demo-poster.webp"
+		<Picture
+			src={poster}
 			alt="VS Code running a fleet-management extension: vehicle explorer, door controls, and a CAN terminal"
-			width="1400"
-			height="875"
+			formats={["avif"]}
+			fallbackFormat="webp"
+			widths={[...RULED_WIDTHS.wide]}
+			sizes={RULED_SIZES.wide}
 			loading="lazy"
 			decoding="async"
 		/>
@@ -66,6 +76,14 @@ import "@whois/vscode-fleet-demo/element.css";
 		margin: 0;
 		border-radius: 0;
 		border-color: var(--hairline, var(--color-border));
+	}
+
+	/* The poster's <picture> wrapper contributes no box: the overlay is a flex
+	   column with a gap, and an in-flow wrapper of nothing would push the
+	   button and caption down by one gap. The img inside is absolute, as
+	   element.css positions it. */
+	.fleet-demo [data-poster] picture {
+		display: contents;
 	}
 
 	/* Prose dresses every image in the column — `inline-size: 100%; block-size:

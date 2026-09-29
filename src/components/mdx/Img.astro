@@ -3,9 +3,9 @@
 // every relative image in a post to this component as its IMPORT — an
 // ImageMetadata with the file's real width/height/format, checked at build
 // time — and this renders it as a <Picture>: AVIF with a WebP fallback, a
-// srcset cut to the widths the ruled page draws it at, so a phone downloads
-// a phone's worth of pixels. Every image in a /txt post gets four things a
-// bare markdown image cannot express:
+// srcset cut to the widths the ruled page draws it at (src/lib/ruled-image.ts),
+// so a phone downloads a phone's worth of pixels. Every image in a /txt post
+// gets four things a bare markdown image cannot express:
 //
 //   1. INTRINSIC DIMENSIONS, from the import. Markdown has no syntax for
 //      width/height, so these images shipped without them and the page
@@ -13,8 +13,8 @@
 //      CSS still drives the rendered size (`inline-size: 100%; block-size:
 //      auto` in the DS Prose) — these attributes only publish the ASPECT so
 //      the browser can reserve the right box up front.
-//   2. RESPONSIVE SOURCES. `sizes` is the page's grid arithmetic (below), so
-//      the browser picks the candidate nearest the box it will draw.
+//   2. RESPONSIVE SOURCES. `sizes` is the page's grid arithmetic, so the
+//      browser picks the candidate nearest the box it will draw.
 //   3. Lazy loading + async decode, so a long post doesn't fetch every photo at once.
 //   4. data-reveal, so each image eases in as it is scrolled to instead of
 //      snapping in on decode (see src/lib/reveal.ts).
@@ -22,20 +22,11 @@
 // `priority` is for the one image that is the page's largest paint (a post's
 // hero, PostLayout): no reveal — which holds an armed page's image at opacity 0
 // until the coordinator's module runs — and fetched eagerly at high priority
-// (Astro sets loading/decoding/fetchpriority from the flag).
-//
-// THE SIZES. The post sits in the site container: `min(100vw, 1200px)` less a
-// `clamp(1rem, 4vw, 2rem)` gutter each side — so the content is 100vw − 32px
-// under 400, 92vw to 800, 100vw − 64px to 1264 and 1136px above it. From 1024
-// the page is four columns with a 16px gap (PostLayout's --ruled-columns /
-// --ruled-gap): the hero spans the last three, a body figure the middle two.
-//   hero  = ¾·content − 4px   (848px at the cap)
-//   body  = ½·content − 8px   (560px at the cap)
-// Below 1024 both are the whole content width. `widths` brackets those boxes
-// at 1× and 2×; Astro drops any candidate wider than the source and adds the
-// source's own width, so a 1200px original tops out at itself.
+// (Astro sets loading/decoding/fetchpriority from the flag). It is also the
+// image on the wide row (three columns); a body image sits in two.
 import { Picture } from "astro:assets";
 import type { ImageMetadata } from "astro";
+import { RULED_SIZES, RULED_WIDTHS } from "../../lib/ruled-image";
 
 interface Props {
 	src: ImageMetadata;
@@ -47,12 +38,7 @@ interface Props {
 }
 
 const { src, alt = "", priority = false, ...rest } = Astro.props;
-
-const NARROW = "(min-width: 800px) calc(100vw - 64px), (min-width: 400px) 92vw, calc(100vw - 32px)";
-const HERO_SIZES = `(min-width: 1264px) 848px, (min-width: 1024px) calc(75vw - 52px), ${NARROW}`;
-const BODY_SIZES = `(min-width: 1264px) 560px, (min-width: 1024px) calc(50vw - 40px), ${NARROW}`;
-const HERO_WIDTHS = [400, 640, 848, 1280, 1696];
-const BODY_WIDTHS = [400, 560, 800, 1120];
+const row = priority ? "wide" : "column";
 ---
 
 <Picture
@@ -60,8 +46,8 @@ const BODY_WIDTHS = [400, 560, 800, 1120];
 	alt={alt}
 	formats={["avif"]}
 	fallbackFormat="webp"
-	widths={priority ? HERO_WIDTHS : BODY_WIDTHS}
-	sizes={priority ? HERO_SIZES : BODY_SIZES}
+	widths={[...RULED_WIDTHS[row]]}
+	sizes={RULED_SIZES[row]}
 	priority={priority}
 	data-reveal={priority ? undefined : ""}
 	{...rest}
