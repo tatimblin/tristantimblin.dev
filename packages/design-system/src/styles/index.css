@@ -54,6 +54,9 @@
 @import "./legend.css" layer(ds.components);
 @import "./tile-grid.css" layer(ds.components);
 @import "./time-ruler.css" layer(ds.components);
+/* The spec sheet's labels: on a dotted rule, on a dimension line. */
+@import "./rule-label.css" layer(ds.components);
+@import "./dimension-label.css" layer(ds.components);
 /* The reading UI: the archive and the reading column. */
 @import "./post-list.css" layer(ds.components);
 @import "./prose.css" layer(ds.components);

@@ -7,3 +7,31 @@
 	gap: var(--space-1);
 	min-inline-size: 0;
 }
+
+/* THE NUMERAL (variant="numeral") — the spec sheet's pair: the value big and
+ * thin, the label small beside it. The numeral is the display role (Mondwest
+ * Thin): at this size the Regular's stems read as bold, the Thin's as a
+ * drawn line, which is the look. Tabular, so a count that steps does not
+ * shift; no tracking, a bitmap face on its own grid. Line-height 1 and
+ * flex-start put the label's first line on the numeral's top edge. */
+.ds-stat--variant-numeral {
+	flex-direction: row;
+	align-items: flex-start;
+	gap: var(--space-2);
+}
+.ds-stat__numeral {
+	flex: none;
+	font-family: var(--font-display);
+	font-weight: var(--font-display-weight);
+	font-size: var(--font-size-8);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: var(--tracking-heading);
+	line-height: 1;
+	color: var(--text-primary);
+}
+/* The label may run to a few lines (a title and its meta), so it wraps. */
+.ds-stat--variant-numeral > .ds-stat__label {
+	white-space: normal;
+	line-height: var(--line-height-ui);
+	min-inline-size: 0;
+}

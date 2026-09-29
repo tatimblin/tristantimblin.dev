@@ -77,12 +77,13 @@ such rules off DS elements (`h2:where(:not(.ds-heading))`, global.css).
 every artwork on both pages. Open it instead of guessing a prop; this doc
 deliberately does not duplicate per-component API tables.
 
-**Components available (60):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (62):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Pill`, `Chip`, `Anchor`, `List`, `ListItem`, `Icon`,
 `VisuallyHidden`, `WidgetGrid`, `Widget`, `WidgetEmpty`, `HitArea` — the
 instrument UI (next section): `Mono`, `Figure`, `Stat`, `StatStrip`,
-`Hairline`, `TickRuler`, `TimeRuler`, `BarGraph`, `Legend`, `LegendItem`,
+`Hairline`, `RuleLabel`, `DimensionLabel`, `TickRuler`, `TimeRuler`,
+`BarGraph`, `Legend`, `LegendItem`,
 `TileGrid`, `Tile`, `Faces`, `Face` — the reading UI (the section after it):
 `PostList`, `PostGroup`, `PostRow`, `Prose`, `Blockquote`, `Fig`, `Index`,
 `IndexRow`, `Quilt`, `QuiltCell`, `QuiltPanel`, `SearchBar` — the art:
@@ -229,6 +230,10 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   size, the figure voice's.
 - `Stat` — `value` + `label` (props or default/`label` slots): the mono pair
   (the value at the next step, in the ink), several in a row.
+  `variant="numeral"` is the spec sheet's pair instead: the value big and
+  thin (`--font-display`, Mondwest Thin, at `--font-size-8`) with a caps
+  label BESIDE it on the numeral's top edge; the label wraps (a `<br>`, or a
+  title and a meta line in the `label` slot).
 - `StatStrip` — a row of hairline-cut cells under a hairline: every child is
   a cell (an equal share of the width, a hairline on its right edge — put
   `Stat`s in it), and the `action` slot is the last cell, a fixed width
@@ -250,6 +255,15 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
 
 **Hairline graphics.**
 - `Hairline` — a 1px rule fading at both ends; an `hr`, or `as="span"`.
+- `RuleLabel` — a caps label under a 1px DOTTED hairline (`--hairline-strong`),
+  no box: `no` (a leading number in the accent), the label in the default
+  slot, a trailing `meta` slot in the tertiary ink at the far end; `dim` (the
+  row and the number in the tertiary ink — a filler's `F_07`), `truncate`
+  (one line, ellipsised; the label wraps without it). A tile's title row.
+- `DimensionLabel` — `|—•—•— LABEL —•—•—|`: the caps label in the ink,
+  centred on a dimension line (an end tick at each edge, a hairline, dots on
+  an even pitch; drawn by `::before`/`::after`, never read out). `as="h2"`
+  when it heads the section it spans.
 - `TickRuler` — `segments=[{share, color?}]` (colours default to `--tone-N` by
   order): a share bar, or a plain stretch.
 - `TimeRuler` — ticks on a time scale: `from`/`to` (`YYYY-MM`, inclusive),
@@ -568,6 +582,8 @@ quilt's cells do); it strips the file's prolog and comments and puts
 <ArtFrame svg={raw} decorative />                     aria-hidden — inside the link that names the post, or a filler
 <ArtFrame svg={raw} label="…" play />                 motion running from the start (the open post)
 <ArtFrame svg={raw} label="…" variant="mark" play />  the MARK: no chrome, the page's ink (the open post)
+<ArtFrame svg={raw} decorative variant="bare" />      no plate, edge or corner; the art's own inks, still clipped
+<ArtFrame svg={raw} decorative variant="corners" />   bare, with an L-tick at each crop corner
 ```
 
 A frame with no `label` is aria-hidden whether or not it says `decorative`;
@@ -576,6 +592,12 @@ the art is decorative inside a link, and the **link** carries the title.
 plate, edge or corner, and `--art-ink` retuned in scope to `--text-primary`
 (with `--art-ink-2` re-derived from it), so the line work and the "white" faces
 are the same ink as the title it sits beside; the fills keep their colours.
+`variant="bare"` is the window with its chrome taken away — no plate, edge or
+corner — but the art's OWN inks (`--art-ink` follows the theme), still the
+16:9 box and still clipped, so the crop is the only edge: the spec sheet's
+tile under a `RuleLabel`. `variant="corners"` is bare plus a registration
+mark at each crop corner: an 8px (`--space-2`) L of two 1px bars in
+`--text-tertiary`, drawn by the frame's `::after` over the art.
 
 **Motion contract.** A file marks at most one group `<g data-motion="spin |
 drift | slide | blink | dash" data-speed="0.5 | 1 | 2">`; the frame owns the
@@ -682,8 +704,8 @@ All resolve globally from `@whois/design-system/tokens.css` (imported in
 Layout): spacing `--space-0..15`, radii `--border-radius-0..3` (+ `-tile`,
 `-pill`), type `--font-size-0..9` (no `-2`; `0` = 12px and `9` = 72px are the
 site's steps below and above the generated scale), weights
-`--font-weight-400/500/600/700` (`700` is the site's: the Bold cut Mondwest and
-Migra ship), the leadings `--line-height-heading/-body/-ui` (1.15 / 1.6 / 1.3),
+`--font-weight-200/400/500/600/700` (`200` and `700` are the site's: Mondwest's
+Thin, and the Bold cut Mondwest and Migra ship), the leadings `--line-height-heading/-body/-ui` (1.15 / 1.6 / 1.3),
 the trackings `--tracking-heading` (0, a bitmap face), `--tracking-caps` (0.1em),
 `--tracking-mono` (0.04em), the theme colors `--text-primary/secondary/tertiary`,
 `--accent`, `--accent-hover`, `--on-accent`, `--background`,
@@ -718,6 +740,7 @@ with metric-matched fallbacks in `src/styles/fonts.css`):
 | `--font-hero` + `--font-hero-weight` | Migra Bold | the hero lockup only (the wordmark takes the Medium itself) |
 | `--font-heading` + `--font-heading-weight` | Mondwest Bold | every heading: the post title, section heads, DS `H1`–`H4`, a bare `h2`, the hero lede |
 | `--font-ui` | Mondwest Regular | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome, the search bar; `--font-numeric` aliases it |
+| `--font-display` + `--font-display-weight` | Mondwest Thin (200) | the big thin numeral: `Stat variant="numeral"` |
 | `--font-body` + `--font-body-weight/-size/-line-height/-letter-spacing` | Neue Montreal Regular | reading text (`Body`, and the bare `body`) |
 | `--font-code` | the system mono stack | code alone — fenced blocks and inline code; no file is loaded (`--font-mono` is its legacy name) |
 
@@ -741,13 +764,14 @@ visual or a new token in `tokens.overrides.css` with its reason.
 | `CardHeader` | default, `title`, `meta` |
 | `Figure` | default, `unit` |
 | `Stat` | default (the value), `label` |
+| `RuleLabel` | default (the label), `meta` |
 | `StatStrip` | default (the cells), `action` |
 | `Legend` / `LegendItem` | default; `value` |
 | `PostGroup` / `PostRow` | default; `label` / `meta` |
 | `Fig` | default (the image), `caption` |
 | `Knobs` | default, `meta`, `note`, `actions` |
 | `SearchBar` | `chips`, `controls` |
-| `TileGrid`, `Faces`, `Index`, `IndexRow`, `Prose`, `Blockquote`, `HitArea`, `ThemePage`, `Quilt`, `QuiltCell` | default |
+| `DimensionLabel`, `TileGrid`, `Faces`, `Index`, `IndexRow`, `Prose`, `Blockquote`, `HitArea`, `ThemePage`, `Quilt`, `QuiltCell` | default |
 
 ### After adding a component
 

@@ -32,6 +32,8 @@ import Mono from "@whois/design-system/Mono";
 import Figure from "@whois/design-system/Figure";
 import Stat from "@whois/design-system/Stat";
 import Hairline from "@whois/design-system/Hairline";
+import RuleLabel from "@whois/design-system/RuleLabel";
+import DimensionLabel from "@whois/design-system/DimensionLabel";
 import TickRuler from "@whois/design-system/TickRuler";
 import TimeRuler from "@whois/design-system/TimeRuler";
 // The ruled screen: the boxed chip and the stat strip.
@@ -404,6 +406,7 @@ const iconNames = [
 	"code",
 	"copy",
 	"command",
+	"search",
 ] as const;
 const iconVariants = ["default", "primary", "secondary", "tertiary"] as const;
 
@@ -523,6 +526,12 @@ const faces = [
 		name: "Mondwest Regular",
 		use: "the interface \u2014 widget chrome, the label voice (Mono, caps), figures, the blog's chrome; --font-numeric aliases it",
 		css: "font-family: var(--font-ui); font-weight: var(--font-weight-400);",
+	},
+	{
+		token: "--font-display",
+		name: "Mondwest Thin",
+		use: "the big thin numeral \u2014 Stat\u2019s numeral variant: a count or an index set large",
+		css: "font-family: var(--font-display); font-weight: var(--font-display-weight);",
 	},
 	{
 		token: "--font-body",
@@ -778,12 +787,50 @@ const faces = [
 				<Stat value="10%" label="Reserve" />
 				<Stat value="1,034" label="rides" />
 			</Flex>
+			<p class="ds-demo__note" style="margin-top: var(--space-6);">
+				<code>Stat variant="numeral"</code>: the spec sheet's pair — the value big and
+				thin (<code>--font-display</code>, Mondwest Thin, at <code>--font-size-8</code>)
+				with a caps label beside it on the numeral's top edge. The label wraps: a
+				<code>&lt;br&gt;</code>, or a title and its meta in the <code>label</code> slot.
+			</p>
+			<Flex gap={6} wrap="wrap" alignItems="start">
+				<Stat variant="numeral" value="05" label="Posts" />
+				<Stat variant="numeral" value="15"><Fragment slot="label">Min<br />read</Fragment></Stat>
+				<Stat variant="numeral" value="04" label="Topics" />
+				<Stat variant="numeral" value="05">
+					<Fragment slot="label">Asserting on<br />agent behavior<br /><Mono tone="tertiary">Feb 2026 · 554 w</Mono></Fragment>
+				</Stat>
+			</Flex>
 		</section>
 
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Hairline</Heading>
 			<p class="ds-demo__note">A 1px rule that fades at both ends — the card header's divider. An <code>hr</code>, or <code>as="span"</code> when decorative.</p>
 			<Hairline />
+		</section>
+
+		<section class="ds-demo__section" id="rule-label">
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">RuleLabel · DimensionLabel — the spec sheet's labels</Heading>
+			<p class="ds-demo__note">
+				<code>RuleLabel</code>: a caps label under a 1px dotted hairline — an optional
+				leading <code>no</code> in the accent, the label, an optional trailing
+				<code>meta</code> slot in the tertiary ink. <code>dim</code> takes the row
+				to the tertiary ink (a filler's tag); <code>truncate</code> holds it to one
+				line. <code>DimensionLabel</code>: the label centred on a dimension line —
+				end ticks, a hairline, dots on an even pitch.
+			</p>
+			<div class="ds-demo__rule-labels">
+				<RuleLabel no="05">Asserting on agent behavior</RuleLabel>
+				<RuleLabel no="04">Tahoe mountain hair<Mono slot="meta">Latest</Mono></RuleLabel>
+				<RuleLabel no="01" truncate>No honey, we have a dashboard at home</RuleLabel>
+				<RuleLabel no="01">No honey, we have a dashboard at home</RuleLabel>
+				<RuleLabel dim>F_07</RuleLabel>
+			</div>
+			<Flex direction="column" gap={5} style="margin-top: var(--space-6);">
+				<DimensionLabel>Entries</DimensionLabel>
+				<DimensionLabel>Timeline · words per post</DimensionLabel>
+				<DimensionLabel style="max-inline-size: 16rem;">In focus</DimensionLabel>
+			</Flex>
 		</section>
 
 		<section class="ds-demo__section">
@@ -1511,6 +1558,30 @@ assertions:
 				))}
 			</div>
 
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Bare and corners — the window with no chrome</h2>
+			<p class="ds-demo__note">
+				<code>variant="bare"</code> takes the plate, the edge and the corner away and
+				keeps the art's own inks and the clip: the crop is the only edge (the spec
+				sheet's tiles, under a <code>RuleLabel</code>). <code>variant="corners"</code>
+				is bare with an L-tick at each crop corner in the tertiary ink.
+			</p>
+			<div class="ds-demo__art-themes">
+				{(["light", "dark"] as const).map((t) => (
+					<ThemePage theme={t}>
+						<div class="ds-demo__art-bare">
+							<div>
+								<RuleLabel no="05">bare</RuleLabel>
+								<ArtFrame svg={artTemplate} label={`_template.svg bare on the ${t} page`} variant="bare" />
+							</div>
+							<div>
+								<RuleLabel no="06">corners</RuleLabel>
+								<ArtFrame svg={artTemplate} label={`_template.svg with corner marks on the ${t} page`} variant="corners" />
+							</div>
+						</div>
+					</ThemePage>
+				))}
+			</div>
+
 			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">The mark — the art on the page, in the page's ink</h2>
 			<p class="ds-demo__note">
 				<code>variant="mark"</code> is the drawing beside a title rather than in a
@@ -2075,6 +2146,21 @@ assertions:
 	.ds-demo__section {
 		padding-block: var(--space-6);
 		border-top: 1px solid var(--hairline);
+	}
+	.ds-demo__rule-labels {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+		gap: var(--space-5) var(--space-6);
+	}
+	.ds-demo__art-bare {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+		gap: var(--space-5);
+	}
+	.ds-demo__art-bare > div {
+		display: grid;
+		gap: var(--space-2);
+		align-content: start;
 	}
 	.ds-demo__h {
 		margin-bottom: var(--space-4);

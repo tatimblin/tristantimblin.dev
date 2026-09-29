@@ -24,7 +24,7 @@
 	 * system face that holds the web font's exact box, so the swap doesn't
 	 * reflow) → a plain generic stack as the last resort.
 	 *
-	 * Three faces, four roles:
+	 * Three faces, five roles:
 	 *   hero      Migra Bold — the hero lockup only ("& other stories"; the
 	 *             wordmark takes the Medium, and says so itself).
 	 *   heading   Mondwest Bold — every heading: the post title at 72px, the
@@ -32,6 +32,10 @@
 	 *   ui        Mondwest Regular — the interface: widget chrome, labels, the
 	 *             caps voice, the figures, the blog's chrome, the search bar.
 	 *   body      Neue Montreal Regular — reading text.
+	 *   display   Mondwest Thin — the big thin numeral (Stat's `numeral`
+	 *             variant): a count or an index set large, where the Regular's
+	 *             2px stems would read as bold. The same drawing as the UI
+	 *             face at its thinnest cut, so it sits beside the caps.
 	 * Migra and Mondwest ship discrete cuts under one family, so a role that
 	 * uses them names the family AND the weight — hence the -weight companions.
 	 * Reach for the pair together; setting the family without the weight lands
@@ -41,6 +45,8 @@
 	--font-ui: "Mondwest", "Mondwest Fallback", ui-sans-serif, system-ui, sans-serif;
 	--font-heading: var(--font-ui);
 	--font-heading-weight: var(--font-weight-700);
+	--font-display: var(--font-ui);
+	--font-display-weight: var(--font-weight-200);
 	--font-body: "Neue Montreal", "Neue Montreal Fallback", ui-sans-serif, system-ui,
 		sans-serif;
 
@@ -52,6 +58,9 @@
 	 * asks for the cut it gets. (The generated 500/600 remain for a face that
 	 * has them — Neue Montreal's Semibold.) */
 	--font-weight-700: 700;
+	/* And the step BELOW it, for the same reason: Mondwest's Thin cut, the
+	 * display role's weight. (The Light, 300, holds no role and has no name.) */
+	--font-weight-200: 200;
 
 	/* The BODY role's companions, named the same way --font-hero-weight names
 	 * Migra's cut. --font-body says which FACE reading text is set in; these say

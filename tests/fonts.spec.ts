@@ -107,8 +107,9 @@ test("body copy gets Neue Montreal's Regular, and every Mondwest cut is declared
 	// font matching falls back within the family. What separates the cuts is which
 	// FILE a face loaded from, so the assertion goes to the FontFace objects
 	// themselves: find each declared Mondwest face and require that it reached
-	// status "loaded" rather than "error" or "unloaded". The 200 and 300 hold no
-	// role, which is exactly why nothing else would notice them going missing.
+	// status "loaded" rather than "error" or "unloaded". The 300 holds no role
+	// and the 200 only the display numeral, which is exactly why nothing else
+	// would notice them going missing.
 	await page.goto("/");
 	await page.waitForFunction(() => document.fonts.status === "loaded", undefined, {
 		timeout: 15_000,

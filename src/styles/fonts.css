@@ -79,8 +79,9 @@
    (--font-heading) and the UI's emphasis. The Light (300) and Thin (200) are
    thinned from the Regular in bitmap space — 2 px stems taken to 1.5 px and
    1 px on the face's own 50-per-em grid, with cap height, x-height and every
-   advance width held fixed — and are served for a display use that wants them;
-   no role asks for them today.
+   advance width held fixed. The Thin is the display role (--font-display:
+   the big thin numeral); the Light is served for a use that wants it and
+   holds no role.
 
    TWO size-adjusts, because two drawings. The Regular, Light and Thin are one
    drawing at three stem widths (identical metrics, verified), so one 118.2%

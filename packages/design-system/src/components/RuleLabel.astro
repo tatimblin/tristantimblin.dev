@@ -1,0 +1,59 @@
+---
+// RuleLabel — a label on a dotted rule, the spec sheet's caption (styles/
+// rule-label.css): a 1px DOTTED hairline with a small caps label under it —
+// an optional leading number in the accent, the label, and an optional
+// trailing `meta` in the tertiary ink at the far end. A quilt tile's title
+// row (`05 ASSERTING ON AGENT BEHAVIOR`), a filler's file tag (`F_07`, dim).
+// No box: the rule is the only line.
+//
+//   <RuleLabel no="05">Asserting on agent behavior</RuleLabel>
+//   <RuleLabel no="05" truncate>A title that runs out of room…</RuleLabel>
+//   <RuleLabel no="05">Title<Mono slot="meta">Latest</Mono></RuleLabel>
+//   <RuleLabel dim>F_07</RuleLabel>
+//
+// `dim` takes the whole row to the tertiary ink, the number with it (a
+// filler is texture, not an entry). `truncate` holds the label to one line
+// and ellipsises it; without it the label wraps. Polymorphic `as`; `class`
+// merges; everything else passes through.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	/** The leading number, in the accent (the tertiary ink when `dim`). */
+	no?: string | number;
+	/** The whole row in the tertiary ink, no accent. */
+	dim?: boolean;
+	/** One line, ellipsised. */
+	truncate?: boolean;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "div",
+	no,
+	dim = false,
+	truncate = false,
+	class: className,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+const hasMeta = Astro.slots.has("meta");
+const cls = cx(
+	"ds-rule-label",
+	"ds-mono",
+	"ds-caps",
+	dim && "ds-rule-label--dim-true",
+	truncate && "ds-rule-label--truncate-true",
+	className,
+);
+---
+
+<Tag class={cls} {...rest}>
+	<span class="ds-rule-label__text">
+		{no != null && <span class="ds-rule-label__no">{no}</span>}
+		<slot />
+	</span>
+	{hasMeta && <span class="ds-rule-label__meta"><slot name="meta" /></span>}
+</Tag>

@@ -228,6 +228,15 @@ export const icons = {
 		attrs: `stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img"`,
 		body: `<path d="M5 14L8.5 17.5L19 6.5" />`,
 	},
+	// The site's own (no upstream): a magnifier drawn in the set's hand — a
+	// 24-unit box, the 2-unit stroke with round caps and joins — the lens a
+	// circle, the handle a short diagonal off its lower right.
+	search: {
+		viewBox: "0 0 24 24",
+		attrs: `stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img"`,
+		body: `<circle cx="11" cy="11" r="7.5" />
+	<path d="M16.5 16.5L20.5 20.5" />`,
+	},
 } satisfies Record<string, IconData>;
 
 export type IconName = keyof typeof icons;
