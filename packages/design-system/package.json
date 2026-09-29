@@ -13,5 +13,10 @@
   "files": ["src"],
   "scripts": {
     "gen-tokens": "bun scripts/gen-tokens.mjs"
+  },
+  "devDependencies": {
+    "@maximeheckel/design-system": "4.2.3",
+    "react": "^19",
+    "react-dom": "^19"
   }
 }
