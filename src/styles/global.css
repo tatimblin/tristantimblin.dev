@@ -1,32 +1,9 @@
 /* Design-system tokens (spacing --space-*, type --font-size-*, colors, radii,
-   fonts) come from @whois/design-system/tokens.css, imported AFTER this file in
-   Layout.astro. This block defines only what the DS layer does NOT provide:
-   the site's section palette, a few named font-size aliases still used by legacy
-   components, and layout knobs. The legacy --color-* names are bridged onto DS
-   tokens there, as is --font-sans below. */
+   fonts, the type roles) come from @whois/design-system/tokens.css, imported
+   AFTER this file in Layout.astro. This block defines only what the DS layer
+   does NOT provide: the site container. Everything else the site's CSS reads
+   is a DS token. */
 :root {
-  --section-1-bg: #bcd6ee;
-  --section-1-fg: #14305a;
-  --section-2-bg: #b9cdec;
-  --section-2-fg: #14305a;
-  --section-3-bg: #b8dcb8;
-  --section-3-fg: #143d1f;
-
-  /* Legacy alias for the body face. The role tokens (--font-hero, --font-heading,
-     --font-ui, --font-body) are defined in the DS token layer; this name stays
-     because a handful of pre-DS rules still reference it. */
-  --font-sans: var(--font-body);
-
-  /* Named font-size aliases still referenced by legacy components (DS uses a
-     numeric --font-size-1..8 scale instead). */
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.5rem;
-  --font-size-2xl: 2rem;
-  --font-size-3xl: clamp(2rem, 5vw, 3.5rem);
-  --line-height-tight: 1.15;
-  --line-height-base: 1.6;
-
   --container-max: 1200px;
   --container-pad: clamp(1rem, 4vw, 2rem);
   /* THE CONTAINER AS AN INSET — the one source for every full-width row that
@@ -67,9 +44,12 @@
 
 body {
   margin: 0;
-  font: var(--font-size-base) / var(--line-height-base) var(--font-sans);
-  color: var(--color-fg);
-  background: var(--color-bg);
+  /* The BODY role, as the DS Body component sets it (tokens.overrides.css):
+     anything not set by a component reads as reading text. */
+  font: var(--font-body-size) / var(--font-body-line-height) var(--font-body);
+  font-weight: var(--font-body-weight);
+  color: var(--text-primary);
+  background: var(--background);
   /* Grayscale AA rather than the OS default. On a dark page subpixel rendering
      fattens every stem — worst on Mondwest, whose strokes are already square and
      heavy — so this is the one lever that genuinely thins the type on a face that
@@ -127,16 +107,18 @@ h6:where(:not(.ds-heading)) {
      at -0.02em/-0.01em while .ds-heading set -0.3px, so a bare <h1> and an <H1>
      did not match. Both now come from the same tokens .ds-heading uses, so the
      element and the component render identically. */
-  line-height: var(--line-height-heading, var(--line-height-tight));
-  letter-spacing: var(--tracking-heading, -0.02em);
+  line-height: var(--line-height-heading);
+  letter-spacing: var(--tracking-heading);
 }
 
+/* A bare h1 is the page-title step (Heading size 5, 44px) and a bare h2 the
+   section step (size 3, 32px) — the same steps the components take. */
 h1:where(:not(.ds-heading)) {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-8);
 }
 
 h2:where(:not(.ds-heading)) {
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-7);
 }
 
 img {

@@ -715,7 +715,7 @@ with metric-matched fallbacks in `src/styles/fonts.css`):
 | `--font-hero` + `--font-hero-weight` | Migra Bold | the hero lockup only (the wordmark takes the Medium itself) |
 | `--font-heading` + `--font-heading-weight` | Mondwest Bold | every heading: the post title, section heads, DS `H1`–`H4`, a bare `h2`, the hero lede |
 | `--font-ui` | Mondwest Regular | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome, the search bar; `--font-numeric` aliases it |
-| `--font-body` + `--font-body-weight/-size/-line-height/-letter-spacing` | Neue Montreal Regular | reading text (`Body`); `--font-sans` aliases it |
+| `--font-body` + `--font-body-weight/-size/-line-height/-letter-spacing` | Neue Montreal Regular | reading text (`Body`, and the bare `body`) |
 | `--font-code` | the system mono stack | code alone — fenced blocks and inline code; no file is loaded (`--font-mono` is its legacy name) |
 
 Migra and Mondwest are ONE family each with discrete cuts (Migra 500/700;

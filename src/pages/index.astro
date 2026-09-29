@@ -548,12 +548,12 @@ import "@whois/wobble-text/styles.css";
 	}
 
 	/* Year labels (below their tick in horizontal mode) sit faint like the ticks. The
-	   label is text — far more ink than a 1px tick — so at full --color-fg it read
+	   label is text — far more ink than a 1px tick — so at the primary ink it read
 	   bolder than the hairline ticks even under the ruler's shared rest opacity.
-	   --color-muted drops its weight to match, so the whole ruler reads as one quiet
-	   affordance. */
+	   The tertiary ink drops its weight to match, so the whole ruler reads as one
+	   quiet affordance. */
 	:global(.hero-carousel .vc__tick-year) {
-		color: var(--color-muted);
+		color: var(--text-tertiary);
 	}
 
 	/* Caption LAST, at the foot of the stack: overlay text (no white panel) below the
@@ -567,11 +567,11 @@ import "@whois/wobble-text/styles.css";
 		z-index: 1;
 		padding: 0;
 		background: none;
-		color: var(--color-fg);
+		color: var(--text-primary);
 		opacity: var(--vc-rest-opacity, 0.5);
 	}
 	:global(.hero-carousel .vc__loc) {
-		color: var(--text-secondary, var(--color-fg));
+		color: var(--text-secondary);
 	}
 
 	/* HERO INTRO -------------------------------------------------------- */
