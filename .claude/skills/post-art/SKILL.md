@@ -23,7 +23,10 @@ drawing**:
 
 - the **tokens** name every colour;
 - the **frame** (`ArtFrame`) draws the plate, the edge and the corner, and owns
-  the motion;
+  the motion — except on the open post, where the art is a **mark**
+  (`variant="mark"`): no plate, no edge, the line work in the page's own
+  ink, small in the fourth column beside the title. A drawing has to read
+  without its plate too;
 - the **validator** holds every rule.
 
 You draw on the dark palette, but **the plate follows the theme**: on the
@@ -225,13 +228,18 @@ size, in both themes, still and moving. Screenshot, then **read the PNG**.
   widths.
 - **In the quilt** at `/txt`, once the quilt exists (Phase 3). The tile should
   read at 230px next to its neighbours, and the motion should run on hover.
+- **On the post** at `/txt/<slug>`, where the art is the MARK beside the
+  title: ~270px wide, no plate, the page's ink, playing. With no plate
+  behind it, a cut shows the page and a "white" face is the title's ink;
+  check it still reads as the drawing, on both pages.
 
 What to check:
 
 - **At 230px** you can name the idea in one glance.
 - **At 720px** it isn't empty, and nothing looks accidental.
 - **Something crops an edge.**
-- **The plate shows through** where you meant it to.
+- **The plate shows through** where you meant it to — and as a mark, with no
+  plate at all, the drawing still holds.
 - **The light column reads as the same drawing**, inverted: no line lost, no
   fill sinking into the bone plate, and the dark faces reading as faces.
 - **The motion** loops without a jump and is paused at rest.

@@ -168,7 +168,7 @@ The validator passes all of these; your eye has to catch them.
 
 - **When it plays.** Art moves only on hover, on focus, inside a hovered or
   focused link (the quilt's cells), or with `data-art-play` on the frame (the
-  open post's hero). At rest it is paused.
+  open post's mark). At rest it is paused.
 - **The still frame is the poster.** The art must read as complete with the
   animation at t = 0. Under reduced motion `--duration-loop` is 0s, and the
   still frame is all anyone sees.

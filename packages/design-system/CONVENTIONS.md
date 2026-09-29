@@ -290,11 +290,30 @@ instrument UI it is this site's own, so its CSS may be edited freely.
   `code`, `img`, `hr`, `table`, `del`); the mapped components keep their own
   type. `as` for the tag; `numbered` puts each h2's index (`01`, a CSS
   counter in the mono) before it, for a page whose contents rail numbers the
-  same sections.
+  same sections. **`variant="ruled"`** is the post page's column (below):
+  the body cut into SECTIONS at each h2, each a grid row under a hairline on
+  the page's four columns — `--ruled-columns` / `--ruled-gap`, four and
+  `--space-4` unless the page sets them — its number and heading sticky in
+  the first column, its text in the next two on a subgrid (a block that says
+  `data-prose-bleed` takes the row), the fourth air; below 1024 the heads
+  stack. It expects the sectioned markup the site's rehype plugin emits
+  (`src/lib/mdx/post-sections.ts`; the shape is in `Prose.astro`) and dresses
+  it: images as `figure.ds-prose-figure` on a hairline, square, with a
+  `Fig. 0N / <alt>` caption; fences as `figure.ds-prose-code` between two
+  hairlines with no box, under a header row (`01.1 / <title>` left, the
+  language right); links in the ink on a 1px underline (`--hyperlink` and
+  `--anchor-border-color` retuned in scope); inline code on `--wash-1` with
+  no box. The mono voice in all of it is `Mono`'s own classes.
 - `Blockquote` — a quoted passage: `--wash-1` fill, a `--wash-3` bar down the
   left edge, the surface radius on the right corners only. Markdown `>` maps to
   it (`src/components/mdx-components.ts`), so its paragraphs arrive as `Body`.
   Quieter than `Callout`, which is an attention box with a badge.
+  **`variant="pull"`** is the ruled page's quote, and what markdown maps to
+  there: no fill or corner, a 2px bar of `--accent` down the left edge, the
+  words a step up — the body role's size and leading retuned in scope to
+  `--font-size-5` / `--line-height-ui`, the primary ink — and an attribution
+  as a `footer` in the caps mono (`<Mono as="footer">`, or a quote's last
+  line starting with a dash, which the plugin turns into one).
 
 ```astro
 <PostList aria-label="Posts by year">
@@ -306,6 +325,43 @@ instrument UI it is this site's own, so its CSS may be edited freely.
   </PostGroup>
 </PostList>
 ```
+
+### The ruled post — one grid, every row on it
+
+A post (`src/layouts/PostLayout.astro`, `/txt/<slug>`) is one four-column
+grid in the site container — `--ruled-columns` / `--ruled-gap` set on the
+article, the tokens the ruled `Prose` reads, so the page's rows and the
+body's sections fall on the same lines — under the site header:
+
+1. the STATUS STRIP, one `Grid` row between two `--hairline-strong` rules in
+   the caps `Mono`: `TXT / 005` (the ink) · the category (a link to its
+   query on the quilt) · `3 MIN · 541 WORDS` · the date `02.02.2026` on the
+   right edge (the ink, a `time`);
+2. the column numbers `01 02 03 04`, aria-hidden;
+3. the TITLE (`Heading` as h1) across the first three columns at
+   `--font-size-9`, the heading tokens retuned in scope to the UI face at
+   the Semibold and `--line-height-heading` to 0.95; the LEAD — the
+   excerpt, `Text` at size 5 in the primary ink — in the second and third;
+   the art as a MARK (`ArtFrame variant="mark" play`) in the fourth,
+   resting on the lead's last line;
+4. the HERO, when the frontmatter has one (`hero: { src, alt, caption? }`):
+   `Fig. 01 /` bottom-aligned in the first column, the image on a hairline
+   across the other three, the caption (or the alt) in the mono under it;
+5. the SECTIONS — `Prose variant="ruled"` around the mapped body, which the
+   plugin has cut at each h2 (`00 / Intro` for what comes first; a post with
+   no h2s is one section, its text at the same measure as any other);
+6. the INDEX, `nav` rows at the foot: a header row filled with
+   `--text-primary` and typed in `--background` (the Monos take it through
+   `--text-secondary` retuned on the row) — `INDEX · NO. · TITLE · FILED` —
+   then hairline-cut rows for the tags (joined with ` · `, each a link), the
+   PREVIOUS (older) post and the NEXT (newer): label, number, the title as
+   a link at size 3, the month filed. An end with nothing beyond it is a
+   dimmed row, `Nothing older` / `Nothing newer`.
+
+Below 1024 it is one column: the strip two by two, no column numbers, the
+title at `--font-size-8`, the mark after the lead at 16rem, the hero and
+the table full width (the table three columns, FILED under the title).
+There is no contents rail and no reading ruler.
 
 ### Quilt — the index as a grid of art tiles
 
@@ -512,12 +568,19 @@ and the aspect ratio; it strips the file's prolog and comments and puts
 <ArtFrame svg={raw} decorative />                     aria-hidden — inside the link that names the post, or a filler
 <ArtFrame svg={raw} label="…" play />                 motion running from the start (the open post)
 <ArtFrame svg={raw} label="…" ratio="3 / 1" chrome={false} />   another crop; no plate, edge or corner
+<ArtFrame svg={raw} label="…" variant="mark" play />           the MARK: no chrome, the page's ink (the open post)
 ```
 
 A frame with no `label` is aria-hidden whether or not it says `decorative`;
 the art is decorative inside a link, and the **link** carries the title.
 `chrome={false}` leaves the ink on whatever is behind it; the ink follows the
-theme, so it reads on the theme's own page colour.
+theme, so it reads on the theme's own page colour. `variant="mark"` is the
+drawing ON the page rather than in a window — no plate, edge or corner, and
+`--art-ink` retuned in scope to `--text-primary` (with `--art-ink-2`
+re-derived from it), so the line work and the "white" faces are the same
+ink as the title it sits beside; the fills keep their colours. It is how a
+post page shows its art, small, in the fourth column by the title — so a
+drawing must read without its plate, on both pages.
 
 **Motion contract.** A file marks at most one group `<g data-motion="spin |
 drift | slide | blink | dash" data-speed="0.5 | 1 | 2">`; the frame owns the
