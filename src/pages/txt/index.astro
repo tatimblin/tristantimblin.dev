@@ -14,7 +14,6 @@
 // the client from the JSON embedded below. With scripting off it is the
 // full quilt, every tile, chip and tick a link, and the bar submits to ?q=
 // (which the script reads on load).
-import { getCollection } from "astro:content";
 import BlogLayout from "../../layouts/BlogLayout.astro";
 import Quilt from "@whois/design-system/Quilt";
 import QuiltCell from "@whois/design-system/QuiltCell";
@@ -24,7 +23,6 @@ import TimeRuler from "@whois/design-system/TimeRuler";
 import {
 	BLOG_DESCRIPTION,
 	BLOG_TITLE,
-	byDateDesc,
 	categories,
 	categoryIds,
 	monthOf,
@@ -35,15 +33,12 @@ import {
 } from "../../lib/blog";
 import { artFor, fillerArtFor } from "../../lib/quilt/art";
 import { layout, toColRow, type IndexedPost } from "../../lib/quilt/engine";
+import { getPosts } from "../../lib/posts";
 
 const COLS = 5;
 const COLS_MD = 3;
 
-const posts = byDateDesc(
-	(await getCollection("txt")).filter(
-		(post) => import.meta.env.PROD === false || !post.data.draft,
-	),
-);
+const posts = await getPosts();
 const numbers = postNumbers(posts);
 
 // One layout per grid: the desktop 5-column quilt and the tablet 3-column

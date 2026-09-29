@@ -5,17 +5,16 @@
 // PostLayout. The body arrives already cut into sections (the rehype plugin
 // in astro.config, src/lib/mdx/post-sections.ts) and mapped onto DS
 // components at the <Content> below.
-import type { GetStaticPaths } from "astro";
-import { getCollection, render } from "astro:content";
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import { render } from "astro:content";
 import PostLayout, { type Neighbour } from "../../layouts/PostLayout.astro";
 import { mdxComponents } from "../../components/mdx-components";
 import { neighbours, postHref, postNumbers, readingStats } from "../../lib/blog";
 import { artFor } from "../../lib/quilt/art";
+import { getPosts } from "../../lib/posts";
 
 export const getStaticPaths = (async () => {
-	const posts = (await getCollection("txt")).filter(
-		(post) => import.meta.env.PROD === false || !post.data.draft
-	);
+	const posts = await getPosts();
 	const numbers = postNumbers(posts);
 	const neighbour = (p: (typeof posts)[number] | null): Neighbour | null =>
 		p && {
@@ -38,6 +37,8 @@ export const getStaticPaths = (async () => {
 		};
 	});
 }) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { post, no, total, prev, next } = Astro.props;
 const { title, excerpt, category, tags, date, modified, image, canonical, hero } = post.data;

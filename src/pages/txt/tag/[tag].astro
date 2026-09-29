@@ -8,15 +8,14 @@
 // crawler, and none of it is content that does not already exist on /txt or
 // the posts themselves.
 import type { GetStaticPaths } from "astro";
-import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
 import BlogLayout from "../../../layouts/BlogLayout.astro";
 import PostIndex from "../../../components/txt/PostIndex.astro";
 import Pill from "@whois/design-system/Pill";
+import { getPosts } from "../../../lib/posts";
 
 export const getStaticPaths = (async () => {
-	const posts = (await getCollection("txt")).filter(
-		(post) => import.meta.env.PROD === false || !post.data.draft
-	);
+	const posts = await getPosts();
 	const tags = new Set<string>();
 	for (const post of posts) for (const tag of post.data.tags) tags.add(tag);
 
@@ -28,7 +27,7 @@ export const getStaticPaths = (async () => {
 
 interface Props {
 	tag: string;
-	posts: Awaited<ReturnType<typeof getCollection<"txt">>>;
+	posts: CollectionEntry<"txt">[];
 }
 
 const { tag, posts } = Astro.props;
