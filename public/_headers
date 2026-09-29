@@ -21,7 +21,16 @@
 # safe to cache forever. index.html is the one unhashed file and the only thing
 # that names the current asset hashes, so it must never be served stale: a cached
 # index pointing at a rebuilt bundle's old filenames is a demo that 404s on boot.
-/fleet-demo/*
+#
+# The no-cache rule names the page itself, NOT /fleet-demo/*: Cloudflare applies
+# every rule that matches a path and joins their values, so a wildcard here also
+# matched assets/ and sent them `no-cache, public, max-age=31536000, immutable`.
+# The embed requests /fleet-demo/index.html, which Pages redirects to the
+# directory, so both spellings are listed.
+/fleet-demo/
+  Cache-Control: no-cache
+
+/fleet-demo/index.html
   Cache-Control: no-cache
 
 /fleet-demo/assets/*
