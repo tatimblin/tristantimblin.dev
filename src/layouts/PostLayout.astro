@@ -276,15 +276,14 @@ const neighbourRows = [
 
 	/* THE TITLE, THE LEAD AND THE MARK. The title at the display step
 	   (Heading size 6, responsive: 72px, 44px below 1024) across three
-	   columns, its lines almost touching (the heading leading retuned below
-	   1 in scope), balanced so two lines share the words; the lead a step
+	   columns at the heading leading (Mondwest's descenders are deep: any
+	   tighter and a g reaches the next line's caps), balanced so two lines share the words; the lead a step
 	   down in the second and third; the mark in the fourth, spanning both
 	   rows and resting on the lead's last line. */
 	.post__title {
 		grid-column: 1 / span 3;
 		grid-row: 1;
 		margin-block-start: var(--space-5);
-		--line-height-heading: 0.95;
 		text-wrap: balance;
 		overflow-wrap: anywhere;
 	}
@@ -343,9 +342,6 @@ const neighbourRows = [
 		.post__title {
 			grid-column: 1;
 			grid-row: auto;
-			/* Two lines of a big bitmap face need a hair more air than one
-			   wide line does: at 0.95 a descender reaches the next cap. */
-			--line-height-heading: 1.05;
 			text-wrap: pretty;
 		}
 		.post__lead {

@@ -9,6 +9,8 @@ import WidgetGrid from "@whois/design-system/WidgetGrid";
 import Body from "@whois/design-system/Body";
 import Text from "@whois/design-system/Text";
 import Anchor from "@whois/design-system/Anchor";
+import Blockquote from "@whois/design-system/Blockquote";
+import Mono from "@whois/design-system/Mono";
 import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import BikeStats from "../widgets/bike-stats/BikeStats.astro";
 import Github from "../widgets/github/Github.astro";
@@ -137,21 +139,20 @@ import "@whois/wobble-text/styles.css";
 	<StoriesHeading slot="heading">
 		{/* A short "who I am" lede. Static (no reveal). The parent regions opt
 		     pointers out; .hero-intro opts back in.
-		     On the SAME 12-col grid as the body copy below (.home__grid) so the lede
-		     shares its exact measure — cols 1–5 — instead of an eyeballed max-width. */}
-		<Grid class="hero-intro" align="end">
+		     On the SAME grid as the body copy below (.home__grid; one --home-columns
+		     template, below) so the lede shares its exact measure — cols 1–5 —
+		     instead of an eyeballed max-width. */}
+		<Grid class="hero-intro" align="end" templateColumns="var(--home-columns)" gapX={5}>
 			<GridItem class="hero-intro__lede">
-				{/* A RAW <p>, deliberately — NOT <Body>. This line is a sentence, but it
-				     is not the reading role: it is a small uppercase statement set in the
-				     sub-heading face, and every part of that (face, 14px step, 1.5 leading,
-				     caps tracking) is the opposite of what --font-body-* describes. Body
-				     would replace all four, and .ds-body.ds-body is (0,2,0) against this
-				     file's scoped (0,1,1), so the page could not win them back. The setting
-				     therefore stays whole in .hero-intro__lede p below rather than being
-				     split half into props and half into CSS. */}
-				<p>
+				{/* Not <Body>: this line is a sentence, but it is not the reading
+				     role. It is a small uppercase STATEMENT in the heading face at its
+				     Bold — a quieter, more graphic register than the hero face above
+				     it — so it is a Text: the caps role (the site's one caps tracking),
+				     the heading family, the small step, the body leading (`spaced`)
+				     since it wraps to two or three lines, the secondary ink. */}
+				<Text as="p" size={1} caps family="heading" spaced variant="secondary">
 					American computer programmer and human-computer interaction engineer.
-				</p>
+				</Text>
 			</GridItem>
 		</Grid>
 	</StoriesHeading>
@@ -161,20 +162,16 @@ import "@whois/wobble-text/styles.css";
 	     no longer lives here: it's a cell in the widget grid below that
 	     parallaxes UP to visually sit alongside this row (see widgets/videos). */}
 	<div class="container">
-		<Grid class="home__grid">
+		<Grid class="home__grid" templateColumns="var(--home-columns)" gapX={5}>
 			{/* Eases in as it is scrolled to. Marked on the grid CELL rather than on
 			     <wobble-text> inside it, so the reveal's opacity and the element's
 			     `filter` stay on separate boxes (a filter on the same element as a
 			     fading ancestor is the containing-block hazard called out in
 			     src/lib/reveal.ts). */}
 			<GridItem class="home__copy" data-reveal>
-				{/* <Body> rather than bare <p> + a local type rule. This copy IS the
-				     reading role, so it should be set by the role and nothing else: the
-				     rule it replaces hand-rolled the face at --font-size-4 (18px, the
-				     SUB-HEADING step) with 1.6 leading and no tracking, while post prose
-				     runs the role's 16px/1.7/0.3px — so the site had two different "body
-				     texts" and this was the louder one. Body takes no size prop on purpose;
-				     retuning reading text is one edit in tokens.overrides.css. */}
+				{/* <Body>: this copy IS the reading role, so it is set by the role and
+				     nothing else. Body takes no size prop on purpose; retuning reading
+				     text is one edit in tokens.overrides.css. */}
 				<wobble-text scale="3.2" speed="0.3">
 					<Body>
 						I am a craftsman, I create things to be used. Even if they often are
@@ -182,34 +179,25 @@ import "@whois/wobble-text/styles.css";
 						through in an empathetic design, where with a deep understanding of
 						another I can build them worlds.
 					</Body>
-					<blockquote class="home__quote" cite="https://future-sf.com/fiction/1700/">
-						{/* Same role as the copy around it — the blockquote's job is to MARK
-						     the passage (rule, indent, quieter ink), not to re-set the type,
-						     which is why the face/size/leading have left .home__quote. The
-						     quieter ink is a Body prop rather than a local colour: the role
-						     already has a variant for it. */}
-						<Body variant="tertiary">
+					{/* The DS Blockquote — the one quote on the site, the same one a post
+					     draws: no fill, the accent bar down the left edge, the words a step
+					     up in the primary ink (the Body inside reads the retuned body
+					     tokens), and the attribution as a `footer` in the caps mono, the
+					     pattern the posts' plugin emits. The link is a discreet Anchor
+					     underlined at rest: the caption's ink, the accent under the
+					     pointer — the DS's one link. */}
+					<Blockquote class="home__quote" cite="https://future-sf.com/fiction/1700/">
+						<Body>
 							I'm arrogant enough to demand the Reader's complete, total
 							attention. The Reader should likewise demand that the Writer puts
 							all of herself into her text, to infuse it with her soul. We
 							deserve each other. It's an act of love to read and an act of love
 							to write.
 						</Body>
-						{/* <Text size={1}>, not <Body>: the attribution is a label on the
-						     quote, so it steps DOWN off the scale — which is exactly what Body
-						     refuses to do. It replaces a `font-size: var(--font-size-2)` that
-						     never applied: the DS scale is 1,3,4,5,6,7,8, so that token does
-						     not exist and the declaration was invalid at computed-value time,
-						     leaving the cite silently inheriting the paragraph's size. (DS
-						     size 1 → --font-size-1, 14px. DS size 2 also maps to --font-size-1;
-						     1 is the honest spelling.) */}
-						{/* The link is a discreet Anchor underlined at rest: the tertiary
-						     ink of the cite around it, its own underline, the accent under
-						     the pointer — the DS's one link. */}
-						<Text as="cite" size={1} variant="tertiary" class="home__cite">
-							&mdash; Ken Liu, in <Anchor discreet underline="always" href="https://future-sf.com/fiction/1700/">&ldquo;Good Stories&rdquo;</Anchor>
-						</Text>
-					</blockquote>
+						<Mono as="footer">
+							Ken Liu, in <Anchor discreet underline="always" href="https://future-sf.com/fiction/1700/">&ldquo;Good Stories&rdquo;</Anchor>
+						</Mono>
+					</Blockquote>
 					<Body>
 						So I build to be read. With care in what won't be seen.
 					</Body>
@@ -568,14 +556,38 @@ import "@whois/wobble-text/styles.css";
 		color: var(--text-secondary);
 	}
 
+	/* THE PAGE'S COLUMNS ------------------------------------------------ */
+	/* ONE template for the two grids that must agree — the hero lede and the
+	   content row — as a custom property each Grid consumes through its
+	   templateColumns prop: twelve columns, and one at the compact step, where
+	   the property changes and both grids follow. The lede and the copy take
+	   the same five of them, so the two blocks share one measure and one left
+	   edge (and the copy's left edge is "other stories'"). */
+	.hero-intro,
+	.home__grid {
+		--home-columns: repeat(12, 1fr);
+	}
+	.hero-intro__lede,
+	.home__copy {
+		grid-column: 1 / span 5;
+		min-width: 0;
+	}
+	@media (max-width: 900px) {
+		.hero-intro,
+		.home__grid {
+			--home-columns: minmax(0, 1fr);
+		}
+		.hero-intro__lede,
+		.home__copy {
+			grid-column: 1;
+		}
+	}
+
 	/* HERO INTRO -------------------------------------------------------- */
 	/* Sits with the lockup in the lower-left of the first screen. The parent
 	   .fh__heading opts pointers out (so its empty area doesn't block content
-	   rising below); this block opts back in for its lede. */
-	/* Intro lede on the shared 12-col grid (see .home__grid): it occupies cols 1–5 —
-	   the SAME span as the body copy below — so both blocks share one measure and one
-	   left edge. Stacks on the ≤900px layout. */
-	/* NO top margin: .sh__sub already supplies the single --sh-heading-gap that binds
+	   rising below); this block opts back in for its lede.
+	   NO top margin: .sh__sub already supplies the single --sh-heading-gap that binds
 	   the intro to "other stories" as one group. A margin here stacked on top of it
 	   and split the lockup in two. */
 	.hero-intro {
@@ -583,117 +595,30 @@ import "@whois/wobble-text/styles.css";
 		   scrubber on mobile, and its empty area would swallow the drag); the lede
 		   text opts back in below. */
 		pointer-events: none;
-		grid-template-columns: repeat(12, 1fr);
-		column-gap: var(--space-5);
 	}
-
-	.hero-intro__lede {
-		/* Matches .home__copy exactly — change both together. */
-		grid-column: 1 / span 5;
-		min-width: 0;
-	}
-
+	/* The lede's setting is the Text's (face, step, caps, leading, ink); only
+	   the pointer opt-in is the page's. */
 	.hero-intro__lede p {
-		margin: 0;
 		pointer-events: auto;
-		/* Uppercase statement line in the heading face at its Bold — a quieter,
-		   more graphic register than the hero face above it, still prominent at
-		   --text-secondary. Mondwest is normalised onto Migra's x-height in
-		   fonts.css, so the --font-size-1 step means the same here as anywhere
-		   else. The weight travels WITH the family, as every face on this site
-		   does (font-synthesis-weight is off globally). */
-		font-family: var(--font-heading);
-		font-weight: var(--font-heading-weight);
-		font-size: var(--font-size-1);
-		line-height: 1.5;
-		text-transform: uppercase;
-		/* The site's caps tracking, not a sixth hand-typed value. Uppercase is drawn
-		   to sit next to lowercase and jams when run together, so it always gets
-		   tracking — and --tracking-caps is the workhorse step for small uppercase
-		   marks like this one. Wider than the 0.04em it replaces (1.4px against
-		   0.56px at 14px), which on a full sentence rather than a two-word label is a
-		   visible loosening; it is the register this line is already going for. */
-		letter-spacing: var(--tracking-caps);
-		color: var(--text-secondary);
-	}
-
-	@media (max-width: 900px) {
-		/* Single column: the grid collapses, the lede goes full-width. */
-		.hero-intro {
-			display: block;
-		}
 	}
 
 	/* CONTENT ROW ------------------------------------------------------- */
-	/* The 12-col template lives here (not the DS Grid's inline templateColumns
-	   prop) so it can be media-queried; <Grid> supplies display:grid. */
-	.home__grid {
-		grid-template-columns: repeat(12, 1fr);
-		column-gap: var(--space-5);
-	}
-
-	/* Start at the left gutter (col 1) so the copy shares a left edge with "other
-	   stories"; span a readable column subset. */
 	.home__copy {
-		grid-column: 1 / span 5;
-		min-width: 0;
 		padding-block-start: var(--space-5);
 	}
-
-	/* NO TYPE RULE FOR THE PARAGRAPHS HERE — see the <Body> wrappers in the markup.
-	   There used to be one (--font-body at --font-size-4/1.6, --text-secondary) and
-	   it was a hand-rolled Body at the wrong step: 18px is the sub-heading size, so
-	   this page's prose ran a full step louder than every post's. Body carries all
-	   four of those declarations from the --font-body-* tokens, and its default
-	   `secondary` variant is the same ink this set. It must not come back either:
-	   .ds-body.ds-body is (0,2,0) and Astro scopes this file's selectors with
-	   :where(), so a rule here could only fight the role from below.
-	   Layout below is still the page's business. */
+	/* Layout is the page's business; the paragraphs' type is Body's. */
 	.home__copy :global(p + p) {
 		margin-block-start: var(--space-5);
 	}
 
-	/* Ken Liu passage set apart from the surrounding copy: same body face, but
-	   indented + ruled + darker to mark it as borrowed words. NOT italic — PP
-	   Mondwest has no italic cut and a synthesised oblique shears a bitmap face
-	   off its pixel grid; the rule, the indent and the quieter colour already do
-	   the marking.
-	   MARKING ONLY — the rule, the indent, the ink. The face/size/leading that used
-	   to sit here (--font-body at --font-size-3/1.6, and no letter-spacing, so it
-	   quietly dropped the 0.3px the body role tracks Mondwest at) were a second
-	   hand-roll of the same role the copy around it was hand-rolling; the <Body>
-	   inside the element carries them now. The colour stays because it is the
-	   marking, and it keeps the quote tertiary for anything that inherits rather
-	   than asking for the variant (the <cite> below does ask, explicitly). */
+	/* The Ken Liu passage: the DS Blockquote marks it (the accent bar, the step
+	   up); the page only sets it apart from the copy around it. */
 	.home__quote {
-		margin: 0;
 		margin-block: var(--space-5) var(--space-6);
-		padding-inline-start: var(--space-5);
-		margin-inline-start: var(--space-4);
-		border-inline-start: 2px solid var(--text-tertiary, currentColor);
-		/* One neutral step quieter than the body (--text-secondary), so the
-		   borrowed words recede. --text-primary is a blue accent in dark mode. */
-		color: var(--text-tertiary);
 	}
 
-	/* Placement only. The size is <Text size={1}> and the ink is variant="tertiary";
-	   what is left is where the attribution sits and the fact that it must not be
-	   italic — the UA styles <cite> that way, and see the no-italic note above.
-	   DESCENDANT SELECTOR, not a bare .home__cite: the element now carries .ds-text,
-	   whose `margin: 0` is (0,1,0) — the same weight a scoped single class gets —
-	   so the margin below would be a tie decided by stylesheet order. Qualifying it
-	   with the parent makes it (0,2,0) and settles it on intent instead. */
-	.home__quote .home__cite {
-		display: block;
-		margin-block-start: var(--space-3);
-		font-style: normal;
-	}
-
-	/* Stacked layout (≤900px): single column (only the copy lives here now). */
+	/* Stacked layout (≤900px): the copy sits a step under the lockup. */
 	@media (max-width: 900px) {
-		.home__grid {
-			display: block;
-		}
 		.home__copy {
 			margin-block-start: var(--space-5);
 			padding-block-start: 0;

@@ -19,6 +19,10 @@
 	font-family: var(--font-ui);
 	font-weight: var(--font-weight-400);
 }
+.ds-text--family-heading {
+	font-family: var(--font-heading);
+	font-weight: var(--font-heading-weight);
+}
 .ds-text--family-body {
 	font-family: var(--font-body);
 	font-weight: var(--font-body-weight);
