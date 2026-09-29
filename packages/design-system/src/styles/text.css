@@ -5,13 +5,6 @@
 	text-rendering: optimizeLegibility;
 }
 
-/* outline (boolean) */
-.ds-text--outline-true {
-	color: transparent !important;
-	-webkit-text-stroke-color: var(--text-primary);
-	-webkit-text-stroke-width: 1px;
-}
-
 /* spaced (boolean, off by default): the body role's leading and tracking,
    for a run of text that should sit like a paragraph without being one. */
 .ds-text--spaced-true {
@@ -73,10 +66,7 @@
 	white-space: nowrap;
 }
 
-/* variant → color */
-.ds-text--variant-default {
-	color: currentColor;
-}
+/* variant → the ink. The default is currentColor, which needs no class. */
 .ds-text--variant-primary {
 	color: var(--text-primary);
 }
@@ -85,27 +75,4 @@
 }
 .ds-text--variant-tertiary {
 	color: var(--text-tertiary);
-}
-.ds-text--variant-info {
-	color: var(--accent);
-}
-.ds-text--variant-success {
-	color: var(--success);
-}
-.ds-text--variant-warning {
-	color: var(--warning);
-}
-.ds-text--variant-danger {
-	color: var(--danger);
-}
-
-/* weight → --font-weight-* */
-.ds-text--weight-2 {
-	font-weight: var(--font-weight-400);
-}
-.ds-text--weight-3 {
-	font-weight: var(--font-weight-500);
-}
-.ds-text--weight-4 {
-	font-weight: var(--font-weight-600);
 }

@@ -99,23 +99,6 @@
 		scaleX(var(--anchor-arrow-direction, 1));
 }
 
-/* favicon */
-.ds-anchor--favicon-true {
-	--anchor-icon-size: 1em;
-}
-.ds-anchor--favicon-true:before {
-	content: "";
-	display: inline-block;
-	vertical-align: middle;
-	width: var(--anchor-icon-size, 1.05em);
-	height: var(--anchor-icon-size, 1.05em);
-	mask-image: var(--anchor-icon);
-	-webkit-mask-repeat: no-repeat;
-	background-color: currentColor;
-	margin-right: 0.18em;
-	transform: translateY(-2px);
-}
-
 /* underline */
 .ds-anchor--underline-true {
 	border-bottom: 1px solid;

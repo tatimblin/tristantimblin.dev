@@ -16,18 +16,15 @@ import H3 from "@whois/design-system/H3";
 import H4 from "@whois/design-system/H4";
 import EM from "@whois/design-system/EM";
 import Strong from "@whois/design-system/Strong";
-import Label from "@whois/design-system/Label";
 import Button from "@whois/design-system/Button";
 import IconButton from "@whois/design-system/IconButton";
 import Card from "@whois/design-system/Card";
 import CardHeader from "@whois/design-system/CardHeader";
 import CardBody from "@whois/design-system/CardBody";
-import Callout from "@whois/design-system/Callout";
 import Pill from "@whois/design-system/Pill";
 import Anchor from "@whois/design-system/Anchor";
 import List from "@whois/design-system/List";
 import ListItem from "@whois/design-system/ListItem";
-import InlineCode from "@whois/design-system/InlineCode";
 import Icon from "@whois/design-system/Icon";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 // The instrument UI: voices, card chrome, hairline graphics.
@@ -41,7 +38,6 @@ import TimeRuler from "@whois/design-system/TimeRuler";
 import Chip from "@whois/design-system/Chip";
 import StatStrip from "@whois/design-system/StatStrip";
 import BarGraph from "@whois/design-system/BarGraph";
-import RingGauge from "@whois/design-system/RingGauge";
 import Legend from "@whois/design-system/Legend";
 import LegendItem from "@whois/design-system/LegendItem";
 import TileGrid from "@whois/design-system/TileGrid";
@@ -391,17 +387,7 @@ const steps = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0].map(Boolean);
 const graphValues = [2, 3, 3, 4, 6, 5, 7, 9, 8, 11, 13, 12, 16, 18, 21, 25];
 
 const textSizes = [0, 1, 3, 4, 5, 6, 7, 8, 9] as const;
-const textVariants = [
-	"default",
-	"primary",
-	"secondary",
-	"tertiary",
-	"info",
-	"success",
-	"warning",
-	"danger",
-] as const;
-const textWeights = [2, 3, 4] as const;
+const textVariants = ["default", "primary", "secondary", "tertiary"] as const;
 const families = ["default", "ui", "subheading", "hero", "mono"] as const;
 const iconNames = [
 	"chevron",
@@ -417,16 +403,7 @@ const iconNames = [
 	"copy",
 	"command",
 ] as const;
-const iconVariants = [
-	"default",
-	"primary",
-	"secondary",
-	"tertiary",
-	"info",
-	"danger",
-	"success",
-	"warning",
-] as const;
+const iconVariants = ["default", "primary", "secondary", "tertiary"] as const;
 
 // ── Token control panel ─────────────────────────────────────────────────────
 // A three.js/lil-gui-style panel that live-edits the DS tokens driving every
@@ -652,14 +629,6 @@ const faces = [
 			</Flex>
 		</section>
 
-		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Text — weights</h2>
-			<Flex direction="column" gap={1} alignItems="start">
-				{textWeights.map((w) => (
-					<Text weight={w} size={4}>weight {w}</Text>
-				))}
-			</Flex>
-		</section>
 
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Text — families</h2>
@@ -671,11 +640,17 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Text — flags (outline / spaced / truncate)</h2>
+			<h2 class="ds-demo__h">Text — spaced / truncate / caps</h2>
+			<p class="ds-demo__note">
+				<code>spaced</code> is off by default; on, it is the body role's leading and
+				tracking for a run that should sit like a paragraph without being one.
+				<code>caps</code> composes the caps role. <code>truncate</code> is one line,
+				ellipsised.
+			</p>
 			<Flex direction="column" gap={2} alignItems="start">
-				<Text outline size={7}>outline face</Text>
-				<Text spaced size={4}>spaced letter-spacing</Text>
-				<div style="width:220px; border:1px dashed var(--border-color);">
+				<Text spaced size={4}>spaced — the body role's leading and tracking</Text>
+				<Text caps size={1} variant="secondary">caps — the uppercase label role</Text>
+				<div style="width:220px; border:1px dashed var(--hairline);">
 					<Text truncate size={4}>truncate this very long line that overflows its container</Text>
 				</div>
 			</Flex>
@@ -722,7 +697,7 @@ const faces = [
 				at 16px.
 			</p>
 			<Flex direction="column" gap={2} alignItems="start">
-				<Text class="ds-caps" family="mono" size={1}>ds-caps · section mark</Text>
+				<Text caps family="mono" size={1}>ds-caps · section mark</Text>
 				<span class="ds-numeric" style="font-size: var(--font-size-6);">ds-numeric&nbsp;·&nbsp;1034 / 1543 / 0158</span>
 				<span style="font-size: var(--font-size-0); color: var(--text-tertiary);">--font-size-0 · the caption step, below the scale's 14px floor</span>
 			</Flex>
@@ -766,15 +741,15 @@ const faces = [
 			<p class="ds-demo__note">
 				Small mono type that labels rather than says. <code>caps</code> is the panel
 				label (the default), <code>text</code> the quiet sentence case, <code>value</code>
-				a figure at label size. Sizes 0 / 1 / 3; tones override the variant's colour.
-				Inside a WidgetGrid the size follows the cell.
+				a figure at label size. Sizes 0 / 1; tones override the variant's colour;
+				<code>truncate</code> ellipsises. Inside a WidgetGrid the size follows the cell.
 			</p>
 			<Flex direction="column" gap={3} alignItems="start">
 				<Mono>caps · the panel label</Mono>
 				<Mono variant="text">text · sentence case, the quiet ink</Mono>
 				<Mono variant="value">value · 1,457 / 90% / 12:04</Mono>
 				<Mono size={1}>caps · size 1</Mono>
-				<Mono size={3}>caps · size 3</Mono>
+				<Mono truncate style="max-inline-size: 12rem;">truncate · a label that runs out of room and ellipsises</Mono>
 				<Mono tone="primary">tone primary</Mono>
 				<Mono tone="accent">tone accent</Mono>
 				<Mono as="a" variant="text" href="#">as a link · @handle</Mono>
@@ -785,35 +760,26 @@ const faces = [
 			<h2 class="ds-demo__h">Figure · Stat</h2>
 			<p class="ds-demo__note">
 				<code>Figure</code>: the big regular-weight numeral with a caps unit on its
-				baseline (sizes md / lg / xl). <code>Stat</code>: a value over a dim label — sm is
-				mono at label size (the dashboard's stat pair), md the numeric face, lg the figure;
-				<code>inline</code> puts the two on one baseline.
+				baseline — one size, the figure voice's (the type token, or the cell's step
+				inside a WidgetGrid). <code>Stat</code>: a value over a dim label, both in the
+				mono, the value at the next step — the dashboard's stat pair; several sit in a
+				row.
 			</p>
 			<Flex gap={6} wrap="wrap" alignItems="end">
-				<Figure size="md" unit="rides">1,034</Figure>
 				<Figure unit="contributions">1,457</Figure>
-				<Figure size="xl" unit="bpm">120</Figure>
+				<Figure unit="miles">1,551</Figure>
 			</Flex>
 			<Flex gap={6} wrap="wrap" alignItems="end" style="margin-top: var(--space-5);">
-				<Stat size="sm" value="90%" label="Allocated" />
-				<Stat size="sm" value="10%" label="Reserve" />
+				<Stat value="90%" label="Allocated" />
+				<Stat value="10%" label="Reserve" />
 				<Stat value="1,034" label="rides" />
-				<Stat size="lg" value="320" label="readers" />
-				<Stat value="48" label="hours" inline />
 			</Flex>
 		</section>
 
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Hairline</h2>
-			<Flex direction="column" gap={4} alignItems="stretch">
-				<Hairline />
-				<Hairline fade={false} />
-				<Flex gap={4} alignItems="stretch" style="block-size: var(--space-8);">
-					<Mono>left</Mono>
-					<Hairline orientation="vertical" />
-					<Mono>right</Mono>
-				</Flex>
-			</Flex>
+			<p class="ds-demo__note">A 1px rule that fades at both ends — the card header's divider. An <code>hr</code>, or <code>as="span"</code> when decorative.</p>
+			<Hairline />
 		</section>
 
 		<section class="ds-demo__section">
@@ -843,11 +809,20 @@ const faces = [
 
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Heading + H1–H4 · EM · Strong</h2>
+			<p class="ds-demo__note">
+				Heading sizes 1–4 are the DS's (one Text step up each); 5 (44px) and 6 (72px)
+				are the display steps, and with <code>responsive</code> a heading steps down
+				one size below 1024 — <code>size={"{5}"} responsive</code> is a page title
+				(44 / 32), <code>size={"{6}"} responsive</code> the post title (72 / 44).
+				Resize to see the last two step.
+			</p>
 			<H1>H1 heading</H1>
 			<H2>H2 heading</H2>
 			<H3>H3 heading</H3>
 			<H4>H4 heading</H4>
 			<Heading as="p" size={2}>Heading as p, size 2</Heading>
+			<Heading as="p" size={5} responsive>Size 5, responsive</Heading>
+			<Heading as="p" size={6} responsive>Size 6</Heading>
 			<Text size={4}>Body with <EM>emphasis</EM> and <Strong>strong</Strong>.</Text>
 		</section>
 
@@ -874,74 +849,58 @@ const faces = [
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">IconButton — variants / sizes / rounded</h2>
 			<p class="ds-demo__note">
-				<code>rounded</code> is the round button of the instrument UI; <code>xl</code> is the
-				one big control a screen has (the metronome's pause), small the − / + beside it,
-				and <code>xs</code> the pill-height one that fits a card header's meta slot.
+				<code>secondary</code> (the default) is an ink wash in a hairline;
+				<code>outline</code> the hairline alone, the ruled screen's. Sizes
+				<code>xs</code> (the pill-height one that fits a card header's meta slot),
+				<code>sm</code>, <code>lg</code>, <code>xl</code> (the one big control a screen
+				has). <code>rounded</code> is the round button of the instrument UI;
+				<code>square</code> drops the corner.
 			</p>
 			<Flex gap={3} wrap="wrap" alignItems="center">
-				<IconButton variant="primary" size="large" aria-label="a"><Icon name="check" /></IconButton>
-				<IconButton variant="secondary" size="large" aria-label="b"><Icon name="copy" /></IconButton>
-				<IconButton variant="tertiary" size="large" aria-label="c"><Icon name="command" /></IconButton>
-				<IconButton variant="secondary" size="small" aria-label="d"><Icon name="chevron" /></IconButton>
-				<IconButton variant="primary" size="xl" rounded aria-label="pause"><Icon name="pause" /></IconButton>
-				<IconButton variant="secondary" size="small" rounded aria-label="minus"><Icon name="chevron" /></IconButton>
-				<IconButton variant="secondary" size="small" rounded aria-label="plus"><Icon name="chevron" /></IconButton>
-				<IconButton variant="secondary" size="large" rounded aria-label="play"><Icon name="play" /></IconButton>
-				<IconButton variant="secondary" size="xs" rounded aria-label="previous"><Icon name="arrow" size={3} /></IconButton>
+				<IconButton size="xs" rounded aria-label="previous"><Icon name="arrow" size={3} /></IconButton>
+				<IconButton size="sm" aria-label="chevron"><Icon name="chevron" /></IconButton>
+				<IconButton size="lg" aria-label="copy"><Icon name="copy" /></IconButton>
+				<IconButton size="xl" rounded aria-label="pause"><Icon name="pause" /></IconButton>
+				<IconButton size="sm" rounded aria-label="minus"><Icon name="chevron" /></IconButton>
+				<IconButton size="lg" rounded aria-label="play"><Icon name="play" /></IconButton>
 			</Flex>
 			<p class="ds-demo__note" style="margin-top: var(--space-5);">
 				<code>glyph</code> draws a character in place of an icon — the − and + that step
 				the /txt instrument — aria-hidden, in the UI face, sized to the button; the
-				caller names the button.
+				caller names the button. <code>variant="outline"</code> with <code>square</code>
+				is the ruled screen's small square button, the stepper in the search bar.
 			</p>
 			<Flex gap={3} wrap="wrap" alignItems="center">
-				<IconButton variant="secondary" size="large" rounded glyph="−" aria-label="Previous post" />
-				<IconButton variant="secondary" size="large" rounded glyph="+" aria-label="Next post" />
-				<IconButton variant="tertiary" size="xl" rounded glyph="+" aria-label="Next post" />
-				<IconButton variant="secondary" size="small" rounded glyph="−" aria-label="Previous post" />
-				<IconButton variant="secondary" size="xs" glyph="+" aria-label="Add" />
-			</Flex>
-			<p class="ds-demo__note" style="margin-top: var(--space-5);">
-				<code>variant="outline"</code> is a hairline and no fill (the wash comes up under
-				the pointer), and <code>square</code> drops the corner: the ruled screen's small
-				square button — the − / + stepper in the /txt search bar.
-			</p>
-			<Flex gap={3} wrap="wrap" alignItems="center">
-				<IconButton variant="outline" square size="small" glyph="−" aria-label="Previous post" />
-				<IconButton variant="outline" square size="small" glyph="+" aria-label="Next post" />
-				<IconButton variant="outline" square size="large" aria-label="copy"><Icon name="copy" /></IconButton>
-				<IconButton variant="outline" size="small" glyph="+" aria-label="Add" />
+				<IconButton size="lg" rounded glyph="−" aria-label="Previous post" />
+				<IconButton size="lg" rounded glyph="+" aria-label="Next post" />
+				<IconButton size="xs" glyph="+" aria-label="Add" />
+				<IconButton variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
+				<IconButton variant="outline" square size="sm" glyph="+" aria-label="Next post" />
+				<IconButton variant="outline" square size="lg" aria-label="copy"><Icon name="copy" /></IconButton>
 			</Flex>
 		</section>
 
 		{/* CARD ----------------------------------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Card — the flat card / variants</h2>
+			<h2 class="ds-demo__h">Card — the flat card</h2>
 			<p class="ds-demo__note">
-				A surface a few percent off the page inside a 1px hairline; no shadow, so
-				<code>depth</code> is accepted and ignored. The header is <code>CardHeader</code>:
+				A surface a few percent off the page inside a 1px hairline; no shadow, no
+				depth scale, no glass — one card. The header is <code>CardHeader</code>:
 				<code>title</code> (a prop, or a slot for a title a script rewrites) in the caps
 				mono voice over a hairline that fades at both ends, with the <code>meta</code>
 				slot on the right — Card and Widget both render it, and so can a page by hand.
 				<code>squeeze="title"</code> leaves the meta unclipped and ellipsises the title
-				instead. Secondary is an ink wash (it was the glass); tertiary is transparent;
-				<code>chrome={"{false}"}</code> is no frame, fill or clip at all.
+				instead. <code>chrome={"{false}"}</code> is no frame, fill or clip at all.
 			</p>
 			<Grid templateColumns="repeat(auto-fill, minmax(280px, 1fr))" gap={4}>
 				<Card title="infra #1">
 					<CardBody><Text size={3}>Body content.</Text></CardBody>
 				</Card>
-				<Card depth={3} title="depth 3 — still flat">
-					<CardBody><Text size={3}>Body content.</Text></CardBody>
-				</Card>
-				<Card variant="secondary" title="Secondary (wash)">
-					<CardBody><Text size={3}>An ink wash, not a fill.</Text></CardBody>
-				</Card>
-				<Card variant="tertiary" title="with meta">
+				<Card title="with meta">
 					<Pill slot="meta">low risk</Pill>
-					<CardBody><Text size={3}>Tertiary variant; the meta slot on the Card.</Text></CardBody>
+					<CardBody><Text size={3}>The meta slot on the Card.</Text></CardBody>
 				</Card>
-				<Card variant="tertiary">
+				<Card>
 					<CardHeader title="Manual header">
 						<Pill slot="meta">low risk</Pill>
 					</CardHeader>
@@ -962,48 +921,22 @@ const faces = [
 		</section>
 
 		{/* CALLOUT + PILL ------------------------------------------------- */}
-		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Callout — variants</h2>
-			<Flex direction="column" gap={3} alignItems="stretch">
-				<Callout variant="info">Info callout with default icon.</Callout>
-				<Callout variant="danger">Danger callout with default icon.</Callout>
-				<Callout variant="warning">Warning callout (no default icon per source).</Callout>
-				<Callout variant="info" label="LABEL">Info with a text label instead of icon.</Callout>
-			</Flex>
-		</section>
 
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Pill — variants</h2>
 			<p class="ds-demo__note">
 				Caps mono in a capsule. <code>subtle</code> (the default) is the header pill,
-				<code>outline</code> the poster badge, <code>accent</code> the one CTA; the four DS
-				tints remain. As a <code>button</code> or <code>a</code> it is a pill button.
+				<code>outline</code> the quiet link or toggle (its edge is the Chip's). As a
+				<code>button</code> or <code>a</code> it is a pill button. (The /txt index's
+				filters are the ruled bar's <code>Chip</code>s, next section.)
 			</p>
 			<Flex gap={2} wrap="wrap" alignItems="center">
 				<Pill><Icon name="check" />low risk</Pill>
 				<Pill variant="outline">0/360°</Pill>
-				<Pill variant="accent">next</Pill>
 				<Pill as="button" type="button">tap</Pill>
 				<Pill as="button" type="button" variant="outline">skip</Pill>
-				<Pill as="a" href="#" variant="accent">next</Pill>
-				<Pill variant="info">info</Pill>
-				<Pill variant="success">success</Pill>
-				<Pill variant="warning">warning</Pill>
-				<Pill variant="danger">danger</Pill>
-			</Flex>
-			<p class="ds-demo__note" style="margin-top: var(--space-5);">
-				<code>size="lg"</code> is the tab step: the small button's height with more air
-				inside, for a row of pill links that is a page's control.
-				<code>aria-current</code> on one draws it as the selected tab — the subtle fill
-				on an outline row. (The /txt index's filters are now the ruled bar's
-				<code>Chip</code>s, next section.)
-			</p>
-			<Flex gap={2} wrap="wrap" alignItems="center">
-				<Pill as="a" href="#" size="lg" variant="outline" aria-current="page">all</Pill>
-				<Pill as="a" href="#" size="lg" variant="outline">programming</Pill>
-				<Pill as="a" href="#" size="lg" variant="outline">projects</Pill>
-				<Pill as="a" href="#" size="lg" variant="outline">thoughts</Pill>
-				<Pill as="a" href="#" size="lg" variant="outline">personal</Pill>
+				<Pill as="a" href="#" variant="outline">home</Pill>
+				<Pill as="button" type="button" disabled>disabled</Pill>
 			</Flex>
 		</section>
 
@@ -1036,18 +969,12 @@ const faces = [
 			<h2 class="ds-demo__h">TickRuler</h2>
 			<p class="ds-demo__note">
 				Hairlines on a pitch (<code>--tick-pitch</code>), in currentColor. A plain
-				stretch; with the accent playhead at a fraction; <code>lit</code> with the
-				ticks up to the playhead in the ink (a progress ruler — the post page's
-				reading ruler, whose script moves <code>--at</code> on the element); split
-				into share segments, which take the rank ramp in order unless given a
-				colour.
+				stretch, or split into share segments, which take the rank ramp in order unless
+				given a colour — the github tile's language ruler.
 			</p>
 			<Flex direction="column" gap={5} alignItems="stretch">
 				<TickRuler />
-				<TickRuler playhead={0.38} />
-				<TickRuler playhead={0.38} lit />
 				<TickRuler segments={[{ share: 46 }, { share: 29 }, { share: 14 }, { share: 6 }, { share: 5 }]} />
-				<TickRuler pitch="8px" height="var(--space-4)" />
 			</Flex>
 		</section>
 
@@ -1058,7 +985,7 @@ const faces = [
 				largest value); <code>lit</code> draws one bar in the accent — by INDEX (or
 				<code>"last"</code> / <code>"max"</code>), where Tile's <code>lit</code> is a
 				boolean. <code>label</code> names it as an image; without one it is
-				<code>aria-hidden</code>, like RingGauge.
+				<code>aria-hidden</code>.
 			</p>
 			<Flex gap={6} wrap="wrap" alignItems="end">
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} /></div>
@@ -1067,30 +994,6 @@ const faces = [
 			</Flex>
 		</section>
 
-		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">RingGauge</h2>
-			<p class="ds-demo__note">
-				A hairline ring with one accent arc for <code>value</code> (0–1);
-				<code>segments</code> breaks the track into dashes; <code>diameter</code> is a
-				length (not <code>size</code>, which is a scale step everywhere else). Children
-				sit in the centre. The arc's length is <code>--ring-value</code> (0–100) on the
-				root, so a script moves it in one call and it glides — the last gauge below
-				takes a new value every two seconds.
-			</p>
-			<Flex gap={6} wrap="wrap" alignItems="center">
-				<RingGauge value={0.9} />
-				<RingGauge value={0.35} segments={12} />
-				<RingGauge value={0.62} diameter="var(--space-12)" segments={24}>
-					<Mono variant="value" size={1}>62%</Mono>
-				</RingGauge>
-				<RingGauge value={0.25} diameter="var(--space-13)" stroke={1}>
-					<Figure size="md" unit="bpm">120</Figure>
-				</RingGauge>
-				<RingGauge value={0.6} diameter="var(--space-12)" stroke={3} label="3 of 5 minutes" data-demo-ring>
-					<Mono variant="value" size={1} data-demo-ring-label>60%</Mono>
-				</RingGauge>
-			</Flex>
-		</section>
 
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Legend</h2>
@@ -1165,23 +1068,23 @@ const faces = [
 			<h2 class="ds-demo__h">StatStrip — hairline-cut stat cells and the accent action</h2>
 			<p class="ds-demo__note">
 				A row of cells under a hairline, each child a cell with a hairline on its right
-				edge and an equal share of the width — put <code>Stat size="sm"</code> pairs in
+				edge and an equal share of the width — put <code>Stat</code> pairs in
 				it — and the <code>action</code> slot as the last cell, fixed width, filled with
 				the accent and <code>--on-accent</code> on it: give it the link. The bottom strip
 				of the /txt card.
 			</p>
 			<Flex direction="column" gap={4} alignItems="stretch">
 				<StatStrip>
-					<Stat size="sm" label="read">3 min</Stat>
-					<Stat size="sm" label="words">541</Stat>
-					<Stat size="sm" label="published">feb 2026</Stat>
+					<Stat label="read">3 min</Stat>
+					<Stat label="words">541</Stat>
+					<Stat label="published">feb 2026</Stat>
 					<a slot="action" href="#">read <span aria-hidden="true">→</span></a>
 				</StatStrip>
 				<StatStrip>
-					<Stat size="sm" value="12" label="rides" />
-					<Stat size="sm" value="240 km" label="distance" />
-					<Stat size="sm" value="9h 12m" label="moving" />
-					<Stat size="sm" value="1,204 m" label="climbed" />
+					<Stat value="12" label="rides" />
+					<Stat value="240 km" label="distance" />
+					<Stat value="9h 12m" label="moving" />
+					<Stat value="1,204 m" label="climbed" />
 				</StatStrip>
 			</Flex>
 		</section>
@@ -1201,8 +1104,8 @@ const faces = [
 				<CardBody>
 					<Faces data-faces-demo-stack>
 						<Face>
-							<Figure size="md" unit="bpm">120</Figure>
-							<TickRuler playhead={0.42} />
+							<Figure unit="bpm">120</Figure>
+							<TickRuler />
 						</Face>
 						<Face hidden>
 							<TickRuler segments={[{ share: 46 }, { share: 29 }, { share: 25 }]} />
@@ -1227,21 +1130,18 @@ const faces = [
 				<Widget size="1x1" title="tempo">
 					<Pill slot="meta" as="button" type="button">tap</Pill>
 					<CardBody>
-						<Figure size="xl" unit="bpm" style="margin-block-start: auto;">120</Figure>
-						<TickRuler playhead={0.42} />
+						<Figure unit="bpm" style="margin-block-start: auto;">120</Figure>
+						<TickRuler />
 					</CardBody>
 				</Widget>
 				<Widget size="1x1" title="infra #1">
 					<Pill slot="meta"><Icon name="check" />low risk</Pill>
 					<CardBody>
 						<Flex gap={5}>
-							<Stat size="sm" value="90%" label="Allocated" />
-							<Stat size="sm" value="10%" label="Reserve" />
+							<Stat value="90%" label="Allocated" />
+							<Stat value="10%" label="Reserve" />
 						</Flex>
-						<Flex gap={4} alignItems="center" style="margin-block-start: auto;">
-							<RingGauge value={0.9} segments={16} diameter="var(--space-11)" />
-							<Legend items={[{ label: "A1", value: "10%" }, { label: "A2", value: "20%" }, { label: "A3", value: "70%" }]} />
-						</Flex>
+						<Legend style="margin-block-start: auto;" items={[{ label: "A1", value: "10%" }, { label: "A2", value: "20%" }, { label: "A3", value: "70%" }]} />
 					</CardBody>
 				</Widget>
 				<Widget size="2x1" title="steps">
@@ -1249,9 +1149,9 @@ const faces = [
 					<CardBody>
 						<TileGrid cols={16} cells={steps.map((on) => ({ lit: on }))} />
 						<Flex gap={4} alignItems="center" justifyContent="center" style="margin-block-start: auto;">
-							<IconButton variant="secondary" size="small" rounded aria-label="slower"><Icon name="chevron" /></IconButton>
-							<IconButton variant="primary" size="xl" rounded aria-label="pause"><Icon name="pause" /></IconButton>
-							<IconButton variant="secondary" size="small" rounded aria-label="faster"><Icon name="chevron" /></IconButton>
+							<IconButton size="sm" rounded aria-label="slower"><Icon name="chevron" /></IconButton>
+							<IconButton size="xl" rounded aria-label="pause"><Icon name="pause" /></IconButton>
+							<IconButton size="sm" rounded aria-label="faster"><Icon name="chevron" /></IconButton>
 						</Flex>
 					</CardBody>
 				</Widget>
@@ -1297,7 +1197,7 @@ const faces = [
 				<H2>A section heading</H2>
 				<Body>A paragraph under the heading, spaced tighter to it than to the block before it, so the heading holds onto what it introduces.</Body>
 				<Blockquote>
-					<Body>A quoted passage: the first wash as a fill, a bar of the third wash on the left, and the surface radius on the right corners only.</Body>
+					<Body>A quoted passage: the accent bar down the left edge, the words a step up in the primary ink.</Body>
 				</Blockquote>
 				<H3>A sub-heading</H3>
 				<List variant="unordered">
@@ -1344,7 +1244,7 @@ assertions:
   - tool: Read
     called: false</code></pre>
 						</figure>
-						<Blockquote variant="pull">
+						<Blockquote>
 							<Body>"I typically make everything agentic, as that's what will scale better. The majority of tasks are best solved by AI."</Body>
 							<Mono as="footer">Brace Sproul / LangChain</Mono>
 						</Blockquote>
@@ -1360,17 +1260,13 @@ assertions:
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Blockquote</h2>
 			<p class="ds-demo__note">
-				Markdown <code>&gt;</code> maps here. Quieter than <code>Callout</code>, which is
-				an attention box with a badge; a quote recedes and lets the quoted voice carry it.
-				<code>variant="pull"</code> is the ruled page's quote: no fill, a 2px accent bar,
-				the words up a step (the body role's size and leading retuned in scope),
-				and an attribution as a <code>footer</code> in the caps mono.
+				Markdown <code>&gt;</code> maps here. The ruled page's quote — the one design:
+				no fill, the accent bar (<code>--bar-width</code>), the words up a step (the
+				body role's size and leading retuned in scope), and an attribution as a
+				<code>footer</code> in the caps mono (in a post, the sections plugin moves it
+				out into the figure's caption).
 			</p>
 			<Blockquote style="max-inline-size: 44rem;">
-				<Body>Test suites have always followed a simple contract: given this input, expect this output.</Body>
-				<Body>Agents don't work like that.</Body>
-			</Blockquote>
-			<Blockquote variant="pull" style="max-inline-size: 44rem; margin-top: var(--space-5);">
 				<Body>"I typically make everything agentic, as that's what will scale better. The majority of tasks are best solved by AI."</Body>
 				<Mono as="footer">Brace Sproul / LangChain</Mono>
 			</Blockquote>
@@ -1541,7 +1437,8 @@ assertions:
 			<p class="ds-demo__note">
 				<code>&lt;ArtFrame svg={"{raw}"} label="…" /&gt;</code> inlines the file on the
 				plate (<code>role="img"</code>); with no label, or <code>decorative</code>, it is
-				aria-hidden and the link around it names the post. Strokes are
+				aria-hidden and the link around it names the post. The box is the file's 16:9
+				and clips (<code>--art-ratio</code> retunes it in scope). Strokes are
 				<code>vector-effect="non-scaling-stroke"</code>, so the line is 1px at 230px
 				and at 720px alike.
 			</p>
@@ -1606,17 +1503,6 @@ assertions:
 				))}
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Ratio and chrome</h2>
-			<p class="ds-demo__note">
-				<code>ratio</code> crops the same drawing to another box (the frame clips;
-				nothing letterboxes); <code>chrome={"{false}"}</code> drops the plate, the edge
-				and the corner for a drawing that sits on its own surface.
-			</p>
-			<div class="ds-demo__art-sizes">
-				<ArtFrame svg={artTemplate} label="the template cropped to 1 / 1" ratio="1 / 1" />
-				<ArtFrame svg={artTemplate} label="the template at 3 / 1, no chrome" ratio="3 / 1" chrome={false} />
-			</div>
-
 			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">The mark — the art on the page, in the page's ink</h2>
 			<p class="ds-demo__note">
 				<code>variant="mark"</code> is the drawing beside a title rather than in a
@@ -1674,8 +1560,8 @@ assertions:
 								{c.label}
 							</Chip>
 						))}
-						<IconButton slot="controls" variant="outline" square size="small" glyph="−" aria-label="Previous post" />
-						<IconButton slot="controls" variant="outline" square size="small" glyph="+" aria-label="Next post" />
+						<IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
+						<IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />
 					</SearchBar>
 					<Quilt cols={5} rows={3} colsMd={3} aria-label={`quilt demo: ${d.id}`}>
 						{quiltPosts.map((p) => {
@@ -1786,15 +1672,15 @@ assertions:
 					{chipsDemo.map((c) => (
 						<Chip slot="chips" as="a" href={c.href} data-chip={c.query} aria-current={c.query === "" ? "page" : undefined}>{c.label}</Chip>
 					))}
-					<IconButton slot="controls" variant="outline" square size="small" glyph="−" aria-label="Previous post" />
-					<IconButton slot="controls" variant="outline" square size="small" glyph="+" aria-label="Next post" />
+					<IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
+					<IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />
 				</SearchBar>
 				<SearchBar id="search-typed" value="projects" count="1 of 5 posts" hint="/" expanded>
 					{chipsDemo.map((c) => (
 						<Chip slot="chips" as="a" href={c.href} data-chip={c.query} aria-current={c.query === "projects" ? "page" : undefined}>{c.label}</Chip>
 					))}
-					<IconButton slot="controls" variant="outline" square size="small" glyph="−" aria-label="Previous post" />
-					<IconButton slot="controls" variant="outline" square size="small" glyph="+" aria-label="Next post" />
+					<IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
+					<IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />
 				</SearchBar>
 				<SearchBar id="search-plain" label="find" placeholder="no chips, no controls, no hint" />
 			</Flex>
@@ -1811,7 +1697,6 @@ assertions:
 				<Anchor href="#" arrow="right">arrow right</Anchor>
 				<Anchor href="#" arrow="left">arrow left</Anchor>
 				<Anchor href="https://example.com" external>external</Anchor>
-				<Anchor href="https://github.com/x" favicon>github favicon</Anchor>
 			</Flex>
 		</section>
 
@@ -1832,10 +1717,6 @@ assertions:
 			</Grid>
 		</section>
 
-		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">InlineCode</h2>
-			<Text size={4}>Run <InlineCode>bun install</InlineCode> then <InlineCode>bun dev</InlineCode>.</Text>
-		</section>
 
 		{/* ICON ----------------------------------------------------------- */}
 		<section class="ds-demo__section">
@@ -1871,8 +1752,8 @@ assertions:
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Grid — 12 columns + spans</h2>
 			<Text size={1} variant="tertiary">
-				A 12-track grid. GridItem <InlineCode>colSpan</InlineCode> maps to
-				<InlineCode>grid-column: span N</InlineCode>. Spans in each row sum to 12.
+				A 12-track grid. GridItem <code>colSpan</code> maps to
+				<code>grid-column: span N</code>. Spans in each row sum to 12.
 			</Text>
 			<Grid templateColumns="repeat(12, 1fr)" gap={3} style="margin-top:12px;">
 				{Array.from({ length: 12 }).map((_, i) => (
@@ -1928,7 +1809,7 @@ assertions:
 			<h2 class="ds-demo__h">Grid — breakpoints</h2>
 			<Text size={1} variant="tertiary">
 				Resize the window. First row uses intrinsic
-				<InlineCode>auto-fill / minmax()</InlineCode> (no media queries).
+				<code>auto-fill / minmax()</code> (no media queries).
 				Second row switches column count at the DS breakpoints (sm 640 · md
 				768 · lg 1024).
 			</Text>
@@ -2131,31 +2012,11 @@ assertions:
 			});
 		}
 
-		// The ring demo: a new --ring-value every two seconds, the way a script
-		// would move one — the arc glides there on its own.
-		let ringTimer: ReturnType<typeof setInterval> | undefined;
-		function initRingDemo() {
-			clearInterval(ringTimer);
-			const ring = document.querySelector<HTMLElement>("[data-demo-ring]");
-			const label = document.querySelector<HTMLElement>("[data-demo-ring-label]");
-			if (!ring) return;
-			const values = [60, 20, 100, 40, 80];
-			let k = 0;
-			ringTimer = setInterval(() => {
-				k = (k + 1) % values.length;
-				ring.style.setProperty("--ring-value", String(values[k]));
-				ring.setAttribute("aria-label", `${values[k]}%`);
-				if (label) label.textContent = `${values[k]}%`;
-			}, 2000);
-		}
-
 		document.addEventListener("astro:page-load", () => {
 			initTokenControls();
 			initFacesDemo();
 			initArtDemo();
-			initRingDemo();
 		});
-		document.addEventListener("astro:before-swap", () => clearInterval(ringTimer));
 	</script>
 </Layout>
 

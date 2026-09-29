@@ -46,12 +46,9 @@
 }
 
 /* size. 0 is the label step (default); 1 the next one up, for a value or a
-   label that leads. */
+   label that leads (a stat's value, the search bar's input). */
 .ds-mono--size-1 {
 	font-size: var(--widget-font-sm, var(--font-size-1));
-}
-.ds-mono--size-3 {
-	font-size: var(--widget-font-md, var(--font-size-3));
 }
 
 /* truncate — one line, ellipsised (Text's rule). */

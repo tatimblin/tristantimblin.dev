@@ -8,18 +8,14 @@
 // for content that sits straight on the page (a halftone filling its cell)
 // while keeping the card's radius and its place in a grid.
 //
-// `depth` is accepted but ignored: the DS's shadow scale has no place on a flat
-// surface (card.css explains), and dropping the prop would break every call
-// site that set it for nothing. `glass` likewise.
+// There is one card: flat, a surface in a hairline. The DS's depth scale,
+// glass and secondary/tertiary surfaces have no place on it and are gone.
 import { cx } from "../lib/cx";
 import Box from "./Box.astro";
 import CardHeader from "./CardHeader.astro";
 
 interface Props {
 	as?: string;
-	depth?: 0 | 1 | 2 | 3;
-	variant?: "primary" | "secondary" | "tertiary";
-	glass?: boolean;
 	chrome?: boolean;
 	title?: string;
 	squeeze?: "meta" | "title";
@@ -30,9 +26,6 @@ interface Props {
 
 const {
 	as,
-	depth: _depth,
-	variant,
-	glass: _glass,
 	chrome = true,
 	title,
 	squeeze,
@@ -41,12 +34,7 @@ const {
 	...rest
 } = Astro.props;
 
-const cls = cx(
-	"ds-card",
-	variant && `ds-card--variant-${variant}`,
-	!chrome && "ds-card--chrome-false",
-	className,
-);
+const cls = cx("ds-card", !chrome && "ds-card--chrome-false", className);
 
 // A slot counts only if it RENDERS something. Astro.slots.has() alone is not
 // enough: a wrapper that forwards a slot conditionally (Widget does) still

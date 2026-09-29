@@ -1,9 +1,9 @@
 /* IconButton — the flat icon button; `rounded` makes it the metronome's round
- * button (the big pause, the small − and +). A departure from the DS port on
- * the same grounds as button.css: no inset shadows, no glow. Variants are the
- * same three emphases as Button plus `outline`; sizes add `xl` for the one big
- * control a screen has. Composes `ds-control` (control.css) for the reset,
- * the pointer, the focus ring and the disabled state. */
+ * button (the small − and + that page the seasons). A departure from the DS
+ * port on the same grounds as button.css: no inset shadows, no glow. Two
+ * variants — an ink wash in a hairline, or the hairline alone — and four
+ * sizes. Composes `ds-control` (control.css) for the reset, the pointer, the
+ * focus ring and the disabled state. */
 
 .ds-icon-button {
 	user-select: none;
@@ -50,18 +50,6 @@
 	--button-content-scale: 0.95;
 }
 
-/* variant: primary */
-.ds-icon-button--variant-primary {
-	--button-background: var(--accent);
-	--button-border: transparent;
-	--button-color: var(--on-accent);
-}
-.ds-icon-button--variant-primary:hover:not(:disabled),
-.ds-icon-button--variant-primary:focus-visible {
-	--button-background: var(--accent-hover);
-	--button-color: var(--on-accent);
-}
-
 /* variant: secondary — an ink wash inside a hairline */
 .ds-icon-button--variant-secondary {
 	--button-background: var(--wash-1);
@@ -70,16 +58,6 @@
 .ds-icon-button--variant-secondary:hover:not(:disabled),
 .ds-icon-button--variant-secondary:focus-visible {
 	--button-background: var(--wash-2);
-}
-
-/* variant: tertiary — nothing until pointed at */
-.ds-icon-button--variant-tertiary {
-	--button-border: transparent;
-	--button-background: transparent;
-}
-.ds-icon-button--variant-tertiary:hover:not(:disabled),
-.ds-icon-button--variant-tertiary:focus-visible {
-	--button-background: var(--wash-1);
 }
 
 /* variant: outline — a hairline and nothing else until pointed at; the
@@ -118,26 +96,26 @@
 .ds-icon-button--size-xs .ds-icon-button__glyph {
 	font-size: var(--widget-font-sm, var(--font-size-1));
 }
-.ds-icon-button--size-small {
+.ds-icon-button--size-sm {
 	inline-size: var(--space-6);
 	block-size: var(--space-6);
 }
-.ds-icon-button--size-small svg {
+.ds-icon-button--size-sm svg {
 	width: 16px;
 	height: 16px;
 }
-.ds-icon-button--size-small .ds-icon-button__glyph {
+.ds-icon-button--size-sm .ds-icon-button__glyph {
 	font-size: var(--widget-font-md, var(--font-size-3));
 }
-.ds-icon-button--size-large {
+.ds-icon-button--size-lg {
 	inline-size: var(--space-7);
 	block-size: var(--space-7);
 }
-.ds-icon-button--size-large svg {
+.ds-icon-button--size-lg svg {
 	width: 18px;
 	height: 18px;
 }
-.ds-icon-button--size-large .ds-icon-button__glyph {
+.ds-icon-button--size-lg .ds-icon-button__glyph {
 	font-size: var(--widget-font-lg, var(--font-size-5));
 }
 .ds-icon-button--size-xl {

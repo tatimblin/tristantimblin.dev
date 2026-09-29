@@ -1,16 +1,18 @@
-/* Blockquote — a quoted passage: the first ink wash as a fill, a bar of the
- * third wash down the left edge, the surface radius on the right corners only
- * (the bar is the left edge, and a rounded bar reads as a pill). The type is
- * whatever the children bring — Body, when it comes from markdown — in the
- * secondary ink, so the quote sits a step back from the paragraph around it. */
+/* Blockquote — the quote on the ruled page. No fill and no corner; a bar of
+ * the accent (--bar-width) down the left edge — the one place the accent
+ * appears in a post's text — and the words a step up from the paragraph:
+ * the body face still, at --font-size-5 on the UI leading, in the primary
+ * ink. The Body inside reads the body role's tokens, so the retune is those
+ * tokens in scope, the way Prose retunes its headings. The attribution is a
+ * `footer` in the caps mono (Mono's classes, emitted by the plugin or
+ * written as `<Mono as="footer">`), a step under the words. */
 .ds-blockquote {
+	--font-body-size: var(--font-size-5);
+	--font-body-line-height: var(--line-height-ui);
 	margin: 0;
-	padding: var(--space-4) var(--space-5);
-	background: var(--wash-1);
-	border-inline-start: var(--bar-width) solid var(--wash-3);
-	border-start-end-radius: var(--border-radius-1);
-	border-end-end-radius: var(--border-radius-1);
-	color: var(--text-secondary);
+	padding: 0 0 0 var(--space-4);
+	border-inline-start: var(--bar-width) solid var(--accent);
+	color: var(--text-primary);
 }
 .ds-blockquote > * + * {
 	margin-block-start: var(--space-3);
@@ -18,25 +20,7 @@
 .ds-blockquote > p {
 	color: inherit;
 }
-
-/* PULL (variant="pull") — the quote on the ruled page. No fill and no
- * corner; a bar of the accent (--bar-width) down the left edge — the one place the
- * accent appears in a post's text — and the words a step up from the
- * paragraph: the body face still, at --font-size-5 on the UI leading, in
- * the primary ink. The Body inside reads the body role's tokens, so the
- * retune is those tokens in scope, the way Prose retunes its headings. The
- * attribution is a `footer` in the caps mono (Mono's classes, emitted by the
- * plugin or written as `<Mono as="footer">`), a step under the words. */
-.ds-blockquote--variant-pull {
-	--font-body-size: var(--font-size-5);
-	--font-body-line-height: var(--line-height-ui);
-	padding: 0 0 0 var(--space-4);
-	background: none;
-	border-inline-start: var(--bar-width) solid var(--accent);
-	border-radius: 0;
-	color: var(--text-primary);
-}
-.ds-blockquote--variant-pull > footer {
+.ds-blockquote > footer {
 	display: block;
 	margin-block-start: var(--space-3);
 }

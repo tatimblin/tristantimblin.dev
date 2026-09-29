@@ -1,19 +1,17 @@
 ---
-// Button — exact port of DS StyledButton (styled('button', { … })).
+// Button — the DS StyledButton (styled('button', { … })), flat (button.css).
 // Source: /tmp/mh-design-system/src/components/Button/{Button.tsx,Button.styles.tsx,Button.types.ts}
 //
 // The React component computes `hasIcon` from which of startIcon/endIcon are
 // passed, and wraps the icons in a <Flex> with a margin. Here the icons come in
-// as the named slots "start-icon" / "end-icon" (and legacy "icon"), and we
-// mirror the margin wrappers. `hasIcon` is computed from slot presence.
-//
-// Legacy: variant="icon" reroutes to StyledIconButton in the DS. We mirror that
-// by rendering with the icon-button base classes + tertiary variant.
+// as the named slots "start-icon" / "end-icon", and we mirror the margin
+// wrappers. `hasIcon` is computed from slot presence. (Upstream's
+// variant="icon", which rerouted to the icon button, is IconButton here.)
 import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
-	variant?: "primary" | "secondary" | "tertiary" | "icon";
+	variant?: "primary" | "secondary" | "tertiary";
 	inverted?: boolean;
 	rounded?: boolean;
 	class?: string;
@@ -36,50 +34,32 @@ const hasStart = Astro.slots.has("start-icon");
 const hasEnd = Astro.slots.has("end-icon");
 // Mirror Button.tsx: hasIcon = startIcon ? 'startIcon' : endIcon ? 'endIcon' : 'none'.
 const hasIcon = hasStart ? "startIcon" : hasEnd ? "endIcon" : "none";
+
+const cls = cx(
+	"ds-button",
+	// The voice: the caps mono, declared once (mono.css, caps.css); and a
+	// control (control.css).
+	"ds-mono",
+	"ds-caps",
+	"ds-control",
+	`ds-button--variant-${variant}`,
+	`ds-button--has-icon-${hasIcon}`,
+	inverted && "ds-button--inverted-true",
+	rounded && "ds-button--rounded-true",
+	className,
+);
 ---
 
-{
-	variant === "icon" ? (
-		<Tag
-			class={cx(
-				"ds-icon-button",
-				"ds-icon-button--variant-tertiary",
-				"ds-icon-button--size-large",
-				className,
-			)}
-			{...rest}
-		>
-			<span class="ds-icon-button__content">
-				<slot name="icon" />
-			</span>
-		</Tag>
-	) : (
-		<Tag
-			class={cx(
-				"ds-button",
-				"ds-control",
-				// The voice: the caps mono, declared once (mono.css, caps.css).
-				"ds-mono",
-				"ds-caps",
-				`ds-button--variant-${variant}`,
-				`ds-button--has-icon-${hasIcon}`,
-				inverted && "ds-button--inverted-true",
-				rounded && "ds-button--rounded-true",
-				className,
-			)}
-			{...rest}
-		>
-			{hasStart ? (
-				<span class="ds-button__start-icon">
-					<slot name="start-icon" />
-				</span>
-			) : null}
-			<slot />
-			{hasEnd ? (
-				<span class="ds-button__end-icon">
-					<slot name="end-icon" />
-				</span>
-			) : null}
-		</Tag>
-	)
-}
+<Tag class={cls} {...rest}>
+	{hasStart ? (
+		<span class="ds-button__start-icon">
+			<slot name="start-icon" />
+		</span>
+	) : null}
+	<slot />
+	{hasEnd ? (
+		<span class="ds-button__end-icon">
+			<slot name="end-icon" />
+		</span>
+	) : null}
+</Tag>

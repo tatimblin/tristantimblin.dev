@@ -1,9 +1,0 @@
-/* Label — the hardcoded css the DS Label passes to Text. */
-.ds-label {
-	display: inline-block;
-	cursor: pointer;
-	user-select: none;
-	margin-right: 8px;
-	letter-spacing: 0px;
-	vertical-align: top;
-}

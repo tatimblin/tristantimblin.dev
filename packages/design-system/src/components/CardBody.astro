@@ -1,22 +1,16 @@
 ---
-// Card.Body — DS styled('div', { variants: { dotMatrix } }).
+// Card.Body — the card's content box (styles/card.css); inside a Widget it
+// fills the rest of the cell as a flex column.
 import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
-	dotMatrix?: boolean;
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "div", dotMatrix, class: className, ...rest } = Astro.props;
+const { as = "div", class: className, ...rest } = Astro.props;
 const Tag = as as any;
-
-const cls = cx(
-	"ds-card-body",
-	dotMatrix && "ds-card-body--dot-matrix-true",
-	className,
-);
 ---
 
-<Tag class={cls} {...rest}><slot /></Tag>
+<Tag class={cx("ds-card-body", className)} {...rest}><slot /></Tag>

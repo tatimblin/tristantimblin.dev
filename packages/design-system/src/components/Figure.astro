@@ -1,9 +1,10 @@
 ---
 // Figure — one big regular-weight numeral with a small caps unit on its
-// baseline (styles/figure.css).
+// baseline (styles/figure.css): `1,457` over CONTRIBUTIONS, `1,551` MILES.
+// One size — the figure voice's (`--voice-figure-size`: the type token, or
+// the cell's step inside a WidgetGrid).
 //
 //   <Figure unit="contributions">1,457</Figure>
-//   <Figure size="xl" unit="bpm">120</Figure>
 //   <Figure><Fragment slot="unit">…custom unit markup…</Fragment>3.2</Figure>
 import { cx } from "../lib/cx";
 import Mono from "./Mono.astro";
@@ -11,24 +12,17 @@ import Mono from "./Mono.astro";
 interface Props {
 	as?: string;
 	unit?: string;
-	size?: "md" | "lg" | "xl";
 	class?: string;
 	[key: string]: unknown;
 }
 
-const {
-	as = "span",
-	unit,
-	size = "lg",
-	class: className,
-	...rest
-} = Astro.props;
+const { as = "span", unit, class: className, ...rest } = Astro.props;
 
 const Tag = as as any;
 const hasUnitSlot = Astro.slots.has("unit");
 ---
 
-<Tag class={cx("ds-figure", `ds-figure--size-${size}`, className)} {...rest}>
+<Tag class={cx("ds-figure", className)} {...rest}>
 	<span class="ds-figure__num"><slot /></span>
 	{
 		hasUnitSlot ? (

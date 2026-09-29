@@ -35,26 +35,22 @@
 @import "./figure.css" layer(ds.components);
 @import "./stat.css" layer(ds.components);
 @import "./stat-strip.css" layer(ds.components);
-@import "./label.css" layer(ds.components);
 @import "./button.css" layer(ds.components);
 @import "./icon-button.css" layer(ds.components);
 @import "./card.css" layer(ds.components);
 @import "./faces.css" layer(ds.components);
 @import "./widget-empty.css" layer(ds.components);
 @import "./hit-area.css" layer(ds.components);
-@import "./callout.css" layer(ds.components);
 @import "./pill.css" layer(ds.components);
 @import "./chip.css" layer(ds.components);
 @import "./anchor.css" layer(ds.components);
 @import "./list.css" layer(ds.components);
-@import "./inline-code.css" layer(ds.components);
 @import "./icon.css" layer(ds.components);
 @import "./visually-hidden.css" layer(ds.components);
 /* Hairline graphics. */
 @import "./hairline.css" layer(ds.components);
 @import "./tick-ruler.css" layer(ds.components);
 @import "./bar-graph.css" layer(ds.components);
-@import "./ring-gauge.css" layer(ds.components);
 @import "./legend.css" layer(ds.components);
 @import "./tile-grid.css" layer(ds.components);
 @import "./time-ruler.css" layer(ds.components);

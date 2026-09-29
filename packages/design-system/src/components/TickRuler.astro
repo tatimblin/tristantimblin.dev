@@ -1,19 +1,13 @@
 ---
-// TickRuler — hairline ticks on a pitch, optionally split into share segments
-// and/or marked with an accent playhead (styles/tick-ruler.css).
+// TickRuler — hairline ticks on a pitch, optionally split into share
+// segments (styles/tick-ruler.css).
 //
 //   <TickRuler />                                          one plain stretch
-//   <TickRuler playhead={0.37} />                          with the accent marker
-//   <TickRuler playhead={0.37} lit />                      the stretch behind it in the ink: a progress ruler
 //   <TickRuler segments={[{ share: 46 }, { share: 29, color: "var(--tone-2)" }]} />
-//   <TickRuler pitch="6px" height="var(--space-8)" />
 //
 // Segments without a `color` take the rank ramp in order (--tone-1..5), which
 // is what a share bar wants: the leader in the accent, the rest stepping down.
-//
-// The playhead's position is `--at` ON THE RULER (a percentage), not on the
-// marker, so a script that has the ruler moves it in one call —
-// `ruler.style.setProperty("--at", "37%")` — and the lit stretch follows.
+// The github tile's language ruler.
 import { cx } from "../lib/cx";
 
 interface Segment {
@@ -24,69 +18,23 @@ interface Segment {
 interface Props {
 	as?: string;
 	segments?: Segment[];
-	/** 0–1 fraction of the width at which to draw the accent playhead. */
-	playhead?: number;
-	/** With a playhead: the ticks up to it in the primary ink, so the ruler
-	 *  reads as progress (how far, of the whole). */
-	lit?: boolean;
-	/** CSS length: distance between ticks (default --tick-pitch, 4px). */
-	pitch?: string;
-	/** CSS length: the ruler's height (default --space-6). */
-	height?: string;
 	class?: string;
-	style?: string;
 	[key: string]: unknown;
 }
 
-const {
-	as = "div",
-	segments,
-	playhead,
-	lit = false,
-	pitch,
-	height,
-	class: className,
-	style,
-	...rest
-} = Astro.props;
+const { as = "div", segments, class: className, ...rest } = Astro.props;
 
 const Tag = as as any;
-const hasPlayhead = typeof playhead === "number";
 const segs: Segment[] = segments?.length ? segments : [{ share: 1 }];
 
-const vars = [
-	pitch && `--tick-pitch:${pitch}`,
-	height && `--ticks-height:${height}`,
-	hasPlayhead && `--at:${Math.min(Math.max(playhead, 0), 1) * 100}%`,
-	style,
-]
-	.filter(Boolean)
-	.join(";");
-
 const segStyle = (s: Segment, i: number) =>
-	[`--tick-share:${s.share}`, `color:${s.color ?? `var(--tone-${Math.min(i + 1, 5)})`}`]
-		.filter(Boolean)
-		.join(";");
+	[`--tick-share:${s.share}`, `color:${s.color ?? `var(--tone-${Math.min(i + 1, 5)})`}`].join(";");
 ---
 
-<Tag
-	class={cx(
-		"ds-ticks",
-		hasPlayhead && "ds-ticks--playhead-true",
-		hasPlayhead && lit && "ds-ticks--lit-true",
-		className,
-	)}
-	style={vars || undefined}
-	aria-hidden="true"
-	{...rest}
->
+<Tag class={cx("ds-ticks", className)} aria-hidden="true" {...rest}>
 	{
 		segs.map((s, i) => (
-			<span
-				class="ds-ticks__seg"
-				style={segments?.length ? segStyle(s, i) : undefined}
-			/>
+			<span class="ds-ticks__seg" style={segments?.length ? segStyle(s, i) : undefined} />
 		))
 	}
-	{hasPlayhead ? <span class="ds-playhead" /> : null}
 </Tag>

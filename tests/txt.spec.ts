@@ -414,7 +414,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(figure.locator("figcaption")).toHaveText(/^fig\. 02 \/ aptitude, failing/i);
 
 		// The quote: the accent bar, no fill, the words a step up, the attribution.
-		const quote = body.locator("blockquote.ds-blockquote--variant-pull");
+		const quote = body.locator("blockquote.ds-blockquote");
 		await expect(quote).toHaveCount(1);
 		await expect(quote).toHaveCSS("background-color", TRANSPARENT);
 		await expect(quote).toHaveCSS("border-left-width", "2px");
@@ -422,7 +422,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		// The attribution is outside the quoted words: the figure's caption.
 		await expect(quote.locator("footer")).toHaveCount(0);
 		await expect(
-			body.locator("figure.ds-prose-quote:has(> blockquote.ds-blockquote--variant-pull) > figcaption"),
+			body.locator("figure.ds-prose-quote:has(> blockquote.ds-blockquote) > figcaption"),
 		).toHaveText(/brace sproul \/ langchain/i);
 		expect(await quote.locator("> p").first().textContent()).not.toMatch(/^\s*—/);
 	});

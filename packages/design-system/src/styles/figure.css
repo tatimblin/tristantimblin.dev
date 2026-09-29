@@ -1,5 +1,5 @@
 /* Figure — the big numeral of the instrument UI: `120` on the metronome,
- * `1,457` over CONTRIBUTIONS. One number in the numeric face at REGULAR
+ * `1,457` over CONTRIBUTIONS. One number in the figure voice at REGULAR
  * weight — the thin numeral is the look; a semibold figure is the one thing
  * this must not be — with a caps mono unit set small beside it on the
  * baseline. The unit wraps under the number when a tile is too narrow for
@@ -13,26 +13,14 @@
 	color: var(--text-primary);
 }
 .ds-figure__num {
-	/* The figure voice, from its tokens (--voice-figure-*): the UI face with
-	   tabular figures, so a live value updates without its digits shifting;
-	   display tracking, because the space between letters grows with the
-	   type. A shadow-DOM consumer reads the same tokens. */
+	/* The figure voice, from its tokens (--voice-figure-*, tokens.overrides.css;
+	   the grid redefines the size): the UI face with tabular figures, so a
+	   live value updates without its digits shifting; display tracking,
+	   because the space between letters grows with the type. A shadow-DOM
+	   consumer reads the same tokens. */
 	font-family: var(--voice-figure-family);
+	font-size: var(--voice-figure-size);
 	font-variant-numeric: tabular-nums;
 	font-weight: var(--voice-figure-weight);
 	letter-spacing: var(--voice-figure-tracking);
-}
-
-/* size. Inside a WidgetGrid each step follows the cell through the widget
-   scale (widget-grid.css defines the --widget-font-* tokens on the grid);
-   anywhere else the fallback is the type token — the one scoping pattern
-   every voice uses. */
-.ds-figure--size-md .ds-figure__num {
-	font-size: var(--widget-font-lg, var(--font-size-6));
-}
-.ds-figure--size-lg .ds-figure__num {
-	font-size: var(--voice-figure-size);
-}
-.ds-figure--size-xl .ds-figure__num {
-	font-size: var(--widget-font-xl, var(--font-size-8));
 }

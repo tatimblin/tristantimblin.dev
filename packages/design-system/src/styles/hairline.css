@@ -1,6 +1,5 @@
-/* Hairline — a 1px rule. Fades out at both ends by default (the reference
- * dashboard's header divider, the same gradient the card header draws), or
- * solid with fade={false}. Vertical for a gutter between cells. */
+/* Hairline — a 1px rule that fades out at both ends (the reference
+ * dashboard's header divider, the same gradient the card header draws). */
 .ds-hairline {
 	display: block;
 	flex: none;
@@ -9,22 +8,4 @@
 	inline-size: 100%;
 	block-size: 1px;
 	background: var(--hairline-fade);
-}
-.ds-hairline--fade-false {
-	background: var(--hairline);
-}
-.ds-hairline--orientation-vertical {
-	inline-size: 1px;
-	block-size: 100%;
-	align-self: stretch;
-	background: linear-gradient(
-		to bottom,
-		transparent,
-		var(--hairline) 12%,
-		var(--hairline) 88%,
-		transparent
-	);
-}
-.ds-hairline--orientation-vertical.ds-hairline--fade-false {
-	background: var(--hairline);
 }

@@ -158,10 +158,8 @@ const introLabel = (): Element =>
 		{
 			className: [
 				"ds-text",
-				"ds-text--family-default",
 				"ds-text--size-6",
 				"ds-text--variant-primary",
-				"ds-text--weight-2",
 				"ds-heading",
 				"ds-prose-section__title",
 			],

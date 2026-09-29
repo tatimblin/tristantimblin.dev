@@ -1,14 +1,25 @@
 ---
-// Anchor — DS styled('a', { …, variants: { discreet, external, arrow, favicon,
-// underline } }). Exact port of the variant API + defaults.
+// Anchor — DS styled('a', { …, variants: { discreet, external, arrow,
+// underline } }), plus this site's `variant="ink"`.
 //
-// The DS Anchor.tsx computes an icon data-URI from `href` + the active variant
-// (getIconString) and injects it via the `css` prop as `--icon: url(...)`. That
-// is a real per-instance API (icon depends on href/variant), so we port the
-// logic and render it as an inline `style="--anchor-icon: url(...)"` — allowed per
-// CONVENTIONS.md (unlike an ad-hoc css prop).
+// The DS Anchor.tsx computes an icon data-URI from the active variant and
+// injects it via the `css` prop as `--icon: url(...)`. That is a real
+// per-instance API, so it is rendered here as an inline
+// `style="--anchor-icon: url(...)"` — allowed per CONVENTIONS.md (unlike an
+// ad-hoc css prop). The two icons the site uses (the arrow, the external
+// mark) are below; the upstream favicons (Twitter, GitHub, Bluesky) are gone
+// with the `favicon` variant nothing set.
 import { cx } from "../lib/cx";
-import { getIconString, type ArrowPosition } from "../lib/anchor-icons";
+
+export type ArrowPosition = "left" | "right";
+
+// Base 64 of the ArrowIcon and the ExternalLink icon, width and height set
+// to "var(--size, 1.05em)" inside the SVG (a separate document: the name is
+// the upstream's, and no CSS variable reaches into a mask image anyway).
+const ARROW =
+	"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSJ2YXIoLS1zaXplLCAxLjA1ZW0pIiBoZWlnaHQ9InZhcigtLXNpemUsIDEuMDVlbSkiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48bGluZSB4MT0iNSIgeTE9IjEyIiB4Mj0iMTkiIHkyPSIxMiI+PC9saW5lPjxwb2x5bGluZSBwb2ludHM9IjEyIDUgMTkgMTIgMTIgMTkiPjwvcG9seWxpbmU+PC9zdmc+";
+const EXTERNAL =
+	"data:image/svg+xml;base64,PHN2ZyBzdHJva2U9ImN1cnJlbnRDb2xvciIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIyIiB3aWR0aD0idmFyKC0tc2l6ZSwgMS4xNWVtKSIgaGVpZ2h0PSJ2YXIoLS1zaXplLCAxLjE1ZW0pIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgcm9sZT0iaW1nIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik04IDVINUMzLjg5NTQzIDUgMyA1Ljg5NTQzIDMgN1YxMkMzIDEzLjEwNDYgMy44OTU0MyAxNCA1IDE0SDEwQzExLjEwNDYgMTQgMTIgMTMuMTA0NiAxMiAxMlY4LjUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjEuMjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PC9wYXRoPgo8cGF0aCBkPSJNNy41IDkuNUwxNCAzTTE0IDNWN00xNCAzSDEwIiBzdHJva2Utd2lkdGg9IjEuMjUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjwvcGF0aD48L3N2Zz4=";
 
 interface Props {
 	as?: string;
@@ -22,8 +33,6 @@ interface Props {
 	/** An underline visible on hover; `"always"` draws it at rest too, in
 	 *  the text's own colour (the accent under the pointer). */
 	underline?: boolean | "always";
-	/** Renders a favicon for the domain in href (Twitter, Github, Bluesky) */
-	favicon?: boolean;
 	/** Colors the Anchor typography tertiary to blend with the corpus */
 	discreet?: boolean;
 	/** Renders an external link icon */
@@ -39,7 +48,6 @@ const {
 	variant = "default",
 	arrow,
 	underline,
-	favicon,
 	discreet,
 	external,
 	class: className,
@@ -49,7 +57,8 @@ const {
 
 const Tag = as as any;
 
-const icon = href && getIconString(href, { arrow, external, favicon });
+// getIconString: an arrow wins; else the external mark; else none.
+const icon = arrow ? ARROW : external ? EXTERNAL : null;
 
 const cls = cx(
 	"ds-anchor",
@@ -60,13 +69,11 @@ const cls = cx(
 	// external emits a rule only for the `true` case (the `false` key is empty).
 	external && "ds-anchor--external-true",
 	arrow && `ds-anchor--arrow-${arrow}`,
-	favicon && "ds-anchor--favicon-true",
 	underline && "ds-anchor--underline-true",
 	underline === "always" && "ds-anchor--underline-always",
 	className,
 );
 
-// Port of the DS css prop: '--icon': `url(${icon})`.
 const iconStyle = icon ? `--anchor-icon: url(${icon})` : undefined;
 const mergedStyle =
 	typeof style === "string"

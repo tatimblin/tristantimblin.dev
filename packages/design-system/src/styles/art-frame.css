@@ -20,15 +20,8 @@
 	/* currentColor inside the art is the ink, so a shape may say so. */
 	color: var(--art-ink);
 }
-/* No plate, edge or corner: the drawing straight on the page (a hero that
- * sits on its own surface). It still clips to the box. */
-.ds-art--chrome-false {
-	background: none;
-	border: 0;
-	border-radius: 0;
-}
 /* THE MARK (variant="mark"): the drawing on the page, in the page's ink. No
- * chrome, as above, and --art-ink retuned in scope to --text-primary — the
+ * plate, edge or corner, and --art-ink retuned in scope to --text-primary — the
  * title's colour — so the line work and the "white" faces are the page's own
  * ink rather than the plate's, on both themes; the dimmed line follows it, as
  * it is re-derived here from the retuned ink (a custom property substitutes

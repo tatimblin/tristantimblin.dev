@@ -7,9 +7,6 @@
 // components; this only spaces them.
 //
 //   <Prose><Content components={mdxComponents} /></Prose>
-//   <Prose numbered>…</Prose>     each h2 carries its index (01, 02 …) in the
-//                                 structure voice — for a page with a contents
-//                                 rail that numbers the same sections
 //   <Prose variant="ruled">…</Prose>
 //
 // RULED is the reading column on a four-column grid, cut into SECTIONS at each
@@ -44,8 +41,6 @@ import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
-	/** Number the h2s (01, 02 …) with a CSS counter, so a contents rail can match. */
-	numbered?: boolean;
 	/** `column` (default): one reading column. `ruled`: sections on the
 	 *  four-column grid, each under a hairline with its number and heading in
 	 *  the first column — content pre-cut into `.ds-prose-section`s. */
@@ -56,7 +51,6 @@ interface Props {
 
 const {
 	as = "div",
-	numbered = false,
 	variant = "column",
 	class: className,
 	...rest
@@ -65,7 +59,6 @@ const Tag = as as any;
 
 const cls = cx(
 	"ds-prose",
-	numbered && "ds-prose--numbered-true",
 	variant !== "column" && `ds-prose--variant-${variant}`,
 	className,
 );

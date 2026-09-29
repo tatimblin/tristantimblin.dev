@@ -3,32 +3,18 @@
  * a shadowed, optionally glassy surface with a `depth` scale, and none of that
  * survives here. A card is a surface a few percent off the page with a 1px
  * hairline round it — the reference dashboard card — and nothing else says
- * "card". The `depth` prop is still accepted so call sites don't break, but it
- * carries no rule: there is one depth, and it is flat. */
+ * "card": one depth, one surface. */
 
 /* CardWrapper */
 .ds-card {
 	position: relative;
-	background: var(--card-bg, var(--card-background));
+	background: var(--card-background);
 	border-radius: var(--border-radius-2);
 	border: 1px solid var(--hairline);
 	box-shadow: none;
 	overflow: hidden;
 }
 
-/* variant */
-.ds-card--variant-primary {
-	--card-bg: var(--card-background);
-}
-/* "Secondary" was the glass material. On a flat surface the same job — a card
-   that sits on another surface without asserting its own — is an ink wash, which
-   follows whatever it lands on in both themes. */
-.ds-card--variant-secondary {
-	--card-bg: var(--wash-1);
-}
-.ds-card--variant-tertiary {
-	--card-bg: transparent;
-}
 /* chrome={false}: no frame, no fill, no clip — content that sits straight on
    the page and may run past the cell (a ruler protruding into the gutter).
    The radius stays, so content that rounds itself to it still matches the
@@ -111,12 +97,4 @@
    the same distance below it rather than a full pad away. */
 .ds-card-header + .ds-card-body {
 	padding-block-start: var(--space-3);
-}
-.ds-card-body--dot-matrix-true {
-	background-image: radial-gradient(
-		oklch(from var(--hairline) l c h / 54%) 1px,
-		transparent 0
-	);
-	background-position: center center;
-	background-size: 12px 12px;
 }

@@ -8,7 +8,6 @@
 //   <ArtFrame svg={raw} label="The Mega Desk" />        role="img", standalone (a hero, the catalogue)
 //   <ArtFrame svg={raw} decorative />                   aria-hidden: inside a link that names the post, or a filler
 //   <ArtFrame svg={raw} label="…" play />               motion running (the open post)
-//   <ArtFrame svg={raw} label="…" ratio="2 / 1" chrome={false} />   another crop, no plate or edge
 //   <ArtFrame svg={raw} label="…" variant="mark" play />       the art as a page MARK: no plate, the page's ink
 //
 // The art is decorative inside a link — the LINK carries the title — so a
@@ -17,11 +16,13 @@
 // on hover and focus by itself; `play` sets data-art-play, the attribute a
 // script may toggle too. `class` merges; everything else passes through.
 //
-// `variant="mark"` is the art drawn ON the page rather than in a window: no
-// plate, edge or corner (as chrome={false}), and the line work in the page's
-// own ink — --art-ink retuned to --text-primary in scope, so the drawing reads
-// as a mark beside a title, in the same colour as the title. Small by design:
-// a column of a grid, not a hero.
+// Two variants. `frame` (the default) is the window on the plate: the tile.
+// `mark` is the art drawn ON the page rather than in a window: no plate,
+// edge or corner, and the line work in the page's own ink — --art-ink
+// retuned to --text-primary in scope, so the drawing reads as a mark beside
+// a title, in the same colour as the title. Small by design: a column of a
+// grid, not a hero. The box is the file's 16:9 (a caller may retune
+// `--art-ratio` in scope; the quilt's cells do) and it clips.
 import { cx } from "../lib/cx";
 
 interface Props {
@@ -33,16 +34,11 @@ interface Props {
 	decorative?: boolean;
 	/** Motion running from the start, not only under the pointer. */
 	play?: boolean;
-	/** A CSS aspect-ratio; the drawing is cropped to it. Default 16 / 9, the file's own. */
-	ratio?: string;
-	/** false: no plate, edge or corner — the drawing straight on the page. */
-	chrome?: boolean;
 	/** `frame` (default) is the window on the plate; `mark` is the drawing on
 	 *  the page in the page's ink, no chrome — a page mark beside a title. */
 	variant?: "frame" | "mark";
 	as?: string;
 	class?: string;
-	style?: string;
 	[key: string]: unknown;
 }
 
@@ -51,12 +47,9 @@ const {
 	label,
 	decorative = false,
 	play = false,
-	ratio,
-	chrome = true,
 	variant = "frame",
 	as = "div",
 	class: className,
-	style,
 	...rest
 } = Astro.props;
 
@@ -66,7 +59,7 @@ const Tag = as as any;
 // editor's, not the language's), and the comments — the template's grid and
 // safe-area notes are for the author, not the page. Then the root takes
 // aria-hidden/focusable (the frame, not the svg, carries the name) and the
-// slice fit that lets a `ratio` crop instead of letterbox.
+// slice fit, so a box of another ratio crops rather than letterboxes.
 const body = svg
 	.replace(/^\s*<\?xml[^>]*\?>/i, "")
 	.replace(/^\s*<!DOCTYPE[^>]*>/i, "")
@@ -86,25 +79,13 @@ const inner = body.replace(
 	`<svg aria-hidden="true" focusable="false"${fit}`,
 );
 
-const cls = cx(
-	"ds-art",
-	!chrome && "ds-art--chrome-false",
-	variant !== "frame" && `ds-art--variant-${variant}`,
-	className,
-);
-const vars = [ratio && `--art-ratio:${ratio}`, style].filter(Boolean).join(";");
+const cls = cx("ds-art", variant !== "frame" && `ds-art--variant-${variant}`, className);
 
 const a11y = label && !decorative
 	? { role: "img", "aria-label": label }
 	: { "aria-hidden": "true" };
 ---
 
-<Tag
-	class={cls}
-	style={vars || undefined}
-	data-art-play={play ? "" : undefined}
-	{...a11y}
-	{...rest}
->
+<Tag class={cls} data-art-play={play ? "" : undefined} {...a11y} {...rest}>
 	<Fragment set:html={inner} />
 </Tag>

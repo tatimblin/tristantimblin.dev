@@ -7,32 +7,23 @@
 // ergonomics we expose a single component keyed by `name`:
 //     <Icon name="chevron" size={4} variant="primary" />
 //
-// Variant + size + outline map 1:1 to the StyledSVG variants + defaultVariants
-// (variant: 'default', outline: true, size: 5). Each name's viewBox / inner
-// markup / per-icon svg attributes come from src/icons/icons.ts (verbatim from
-// IconList.tsx). The full <svg> is assembled as a string and rendered via a
-// Fragment so the per-icon raw attribute string (stroke-width, transform, …)
-// and the inner markup are emitted exactly as transcribed.
+// `variant` is the stroke's ink (default: currentColor); `size` the step
+// (defaultVariants: 'default', 5). Always an outline — a stroke, no fill.
+// Each name's viewBox / inner markup / per-icon svg attributes come from
+// src/icons/icons.ts (verbatim from IconList.tsx). The full <svg> is
+// assembled as a string and rendered via a Fragment so the per-icon raw
+// attribute string (stroke-width, transform, …) and the inner markup are
+// emitted exactly as transcribed.
 import { cx } from "../lib/cx";
 import { icons, type IconName } from "../icons/icons";
 
-type Variant =
-	| "default"
-	| "primary"
-	| "secondary"
-	| "tertiary"
-	| "info"
-	| "danger"
-	| "success"
-	| "warning";
+type Variant = "default" | "primary" | "secondary" | "tertiary";
 type Size = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
 
 interface Props {
 	name: IconName;
-	// defaultVariants from Icon.styles.tsx.
 	variant?: Variant;
 	size?: Size;
-	outline?: boolean;
 	class?: string;
 	[key: string]: unknown;
 }
@@ -41,7 +32,6 @@ const {
 	name,
 	variant = "default",
 	size = 5,
-	outline = true,
 	class: className,
 	...rest
 } = Astro.props;
@@ -50,10 +40,8 @@ const icon = icons[name];
 
 const cls = cx(
 	"ds-icon",
-	variant && `ds-icon--variant-${variant}`,
-	size && `ds-icon--size-${size}`,
-	// boolean variant: DS only emits a rule for `outline: true`.
-	outline && "ds-icon--outline-true",
+	variant !== "default" && `ds-icon--variant-${variant}`,
+	`ds-icon--size-${size}`,
 	className,
 );
 

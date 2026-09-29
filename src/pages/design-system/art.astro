@@ -16,7 +16,6 @@ import H2 from "@whois/design-system/H2";
 import Mono from "@whois/design-system/Mono";
 import Anchor from "@whois/design-system/Anchor";
 import ThemePage from "@whois/design-system/ThemePage";
-import InlineCode from "@whois/design-system/InlineCode";
 
 const postFiles = import.meta.glob<string>("../../content/txt/*.svg", {
 	query: "?raw",
@@ -122,10 +121,10 @@ const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 			<Mono><Anchor href="/design-system/#art" discreet arrow="left">design system</Anchor></Mono>
 			<H1>Art</H1>
 			<p class="art-cat__note">
-				Every post's art and every quilt filler through <InlineCode>ArtFrame</InlineCode>,
+				Every post's art and every quilt filler through <code>ArtFrame</code>,
 				on the light and dark pages side by side, at hero and tile size. Motion is
-				paused at rest and runs on hover; the toggle sets <InlineCode>data-art-play</InlineCode>
-				on every frame. Link to one piece with <InlineCode>/design-system/art#&lt;slug&gt;</InlineCode>.
+				paused at rest and runs on hover; the toggle sets <code>data-art-play</code>
+				on every frame. Link to one piece with <code>/design-system/art#&lt;slug&gt;</code>.
 			</p>
 			<nav class="art-cat__toc" aria-label="Art groups">
 				{groups.map((g) => (

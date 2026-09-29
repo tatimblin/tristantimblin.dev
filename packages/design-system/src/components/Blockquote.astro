@@ -1,38 +1,28 @@
 ---
-// Blockquote — a quoted passage in reading text (styles/blockquote.css): a
-// subtle filled box with a bar down its left edge. Quieter than Callout, which
-// is an ATTENTION box with a badge; a quote recedes and lets the quoted voice
-// carry it. Markdown `>` maps here (src/components/mdx-components.ts), so the
-// paragraphs inside arrive as Body.
+// Blockquote — the quote on the ruled page (styles/blockquote.css): no fill,
+// a bar of the accent down the left edge (the one place the accent appears
+// in a post's text), the words a step up — the body face at --font-size-5 in
+// the primary ink, set by retuning the body role's tokens in scope (the Body
+// inside reads them), not by restyling .ds-body. Markdown `>` maps here
+// (src/components/mdx-components.ts), so the paragraphs inside arrive as
+// Body. An attribution, when there is one, is a `footer` in the caps mono
+// after the words — or, in a post, the sections plugin moves it out into a
+// `figure.ds-prose-quote`'s caption.
 //
 //   <Blockquote><Body>…</Body></Blockquote>
 //   <Blockquote cite="https://…">…</Blockquote>
-//   <Blockquote variant="pull">
+//   <Blockquote>
 //     <Body>…</Body>
 //     <Mono as="footer">Brace Sproul / LangChain</Mono>     the attribution
 //   </Blockquote>
-//
-// `variant="pull"` is the quote on the ruled page: no fill, a 2px bar of the
-// accent down the left edge, and the words a step up — the body face at
-// --font-size-5 in the primary ink, set by retuning the body role's tokens in
-// scope (the Body inside reads them), not by restyling .ds-body. An
-// attribution, when there is one, is a `footer` in the caps mono after it.
 import { cx } from "../lib/cx";
 
 interface Props {
-	/** `quiet` (default): the filled box. `pull`: the accent bar, the words up a step. */
-	variant?: "quiet" | "pull";
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { variant = "quiet", class: className, ...rest } = Astro.props;
-
-const cls = cx(
-	"ds-blockquote",
-	variant !== "quiet" && `ds-blockquote--variant-${variant}`,
-	className,
-);
+const { class: className, ...rest } = Astro.props;
 ---
 
-<blockquote class={cls} {...rest}><slot /></blockquote>
+<blockquote class={cx("ds-blockquote", className)} {...rest}><slot /></blockquote>

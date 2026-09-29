@@ -100,8 +100,8 @@ const monthDay = (date: string) =>
 		<CardBody class="wx-bw-body">
 			<Figure unit="miles">{fmt(bike.miles)}</Figure>
 			<div class="wx-bw-stats">
-				<Stat size="sm" value={fmt(bike.rides)} label="rides" />
-				<Stat size="sm" value={fmt(bike.hours)} label="hours" />
+				<Stat value={fmt(bike.rides)} label="rides" />
+				<Stat value={fmt(bike.hours)} label="hours" />
 			</div>
 			{/* Decoration: the figures above carry the content. A masked box, not an
 			     <img>, so the drawing takes its colour from the ink token. */}

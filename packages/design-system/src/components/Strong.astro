@@ -1,11 +1,11 @@
 ---
-// Strong — DS <Text as="strong" variant="primary" weight="3" />.
-// Delegates to Text with overrides.
+// Strong — DS <Text as="strong" variant="primary" />: the emphasis is the
+// louder ink. (Upstream also set weight 500; the body face has no cut above
+// the Regular, so it never drew one.)
 import Text from "./Text.astro";
 
 interface Props {
 	size?: number | string;
-	variant?: string;
 	class?: string;
 	[key: string]: unknown;
 }
@@ -13,6 +13,6 @@ interface Props {
 const props = Astro.props;
 ---
 
-<Text {...props} as="strong" variant="primary" weight={3}>
+<Text {...props} as="strong" variant="primary">
 	<slot />
 </Text>

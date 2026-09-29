@@ -1,22 +1,22 @@
-/* Pill — a small capsule of caps mono: `LOW RISK` in a card header, `0/360°`
- * on the poster, `TAP` and `NEXT` on the metronome. A departure from the DS
- * port (which was a rounded rectangle at text size in the UI face): the pill
- * is in the structure voice, fully round, and comes in three shapes of
- * emphasis plus the four status tints the DS had:
+/* Pill — a small capsule of caps mono: `LOW RISK` in a card header, `30D` on
+ * the visitors tile, `PAUSED` on the player. A departure from the DS port
+ * (which was a rounded rectangle at text size in the UI face): the pill is
+ * in the structure voice, fully round, and comes in two shapes of emphasis:
  *
  *   subtle    (the default when no variant is given) an ink wash — the header
  *             pill. A small icon in front is welcome; the gap is for it.
- *   outline   a hairline, no fill — the poster's badges, a quiet toggle.
- *   accent    filled with the accent — the ONE call to action on a card.
- *   info / success / warning / danger — the DS tints, kept, now in the voice.
+ *   outline   a hairline, no fill — a quiet link or toggle (the 404's ways
+ *             back). Its edge is the Chip's: the hairline at rest, the
+ *             strong one under the pointer.
  *
  * THE VOICE IS NOT HERE. Pill.astro composes the `ds-mono ds-caps` classes,
  * which own the face, the size (fluid inside a widget), the weight, the
  * tracking and the case; this file is the box and the colour. Same for Chip
  * and Button: one caps mono, declared once (mono.css, caps.css).
  *
- * As a <button> or <a> it is a pill BUTTON: pointer, a hover step, the focus
- * ring. Nothing else changes, so a static pill and a pill button read the same. */
+ * As a <button> or <a> it is a pill BUTTON (`ds-control`): pointer, a hover
+ * step, the focus ring. Nothing else changes, so a static pill and a pill
+ * button read the same. */
 .ds-pill {
 	display: inline-flex;
 	align-items: center;
@@ -55,50 +55,13 @@
 	--pill-background: var(--wash-1);
 	--pill-color: var(--text-primary);
 }
-/* The outline's edge is the Chip's: the hairline at rest, the strong one
-   under the pointer. */
 .ds-pill--variant-outline {
 	--pill-background: transparent;
 	--pill-color: var(--text-secondary);
 	border-color: var(--hairline);
 }
-.ds-pill--variant-accent {
-	--pill-background: var(--accent);
-	--pill-color: var(--on-accent);
-}
-.ds-pill--variant-info {
-	--pill-background: var(--emphasis);
-	--pill-color: var(--accent);
-}
-.ds-pill--variant-success {
-	--pill-background: var(--success-emphasis);
-	--pill-color: var(--success);
-}
-.ds-pill--variant-warning {
-	--pill-background: var(--warning-emphasis);
-	--pill-color: var(--warning);
-}
-.ds-pill--variant-danger {
-	--pill-background: var(--danger-emphasis);
-	--pill-color: var(--danger);
-}
 
-/* size: lg — the tab step. The instrument's tab row is a line of pill
-   buttons that IS the page's control, so it stands at the small button's
-   height with a step more air inside. An aria-current one is the selected
-   tab: the subtle fill on an outline row (the edge goes, the ink comes up). */
-.ds-pill--size-lg {
-	min-block-size: var(--space-6);
-	padding-inline: var(--space-4);
-}
-.ds-pill[aria-current] {
-	--pill-background: var(--wash-1);
-	--pill-color: var(--text-primary);
-	border-color: transparent;
-}
-
-/* As a control (Pill.astro composes `ds-control` for the reset, the
-   pointer, the ring and the disabled state): the hover steps. */
+/* As a control: the hover steps. */
 :is(button, a).ds-pill:hover:not(:disabled),
 :is(button, a).ds-pill:focus-visible {
 	--pill-background: var(--wash-2);
@@ -108,8 +71,4 @@
 	--pill-background: var(--wash-1);
 	--pill-color: var(--text-primary);
 	border-color: var(--hairline-strong);
-}
-:is(button, a).ds-pill--variant-accent:hover:not(:disabled),
-:is(button, a).ds-pill--variant-accent:focus-visible {
-	--pill-background: var(--accent-hover);
 }

@@ -1,13 +1,15 @@
 ---
 // IconButton — the flat icon button (styles/icon-button.css); `rounded` for
 // the round buttons of the instrument UI.
-//   variant: primary | secondary | tertiary | outline   (default: secondary)
-//   size:    xs | small | large | xl           (default: large; xs is the
-//            pill-height button that fits a card header's meta slot)
+//   variant: secondary | outline     (default: secondary — an ink wash in a
+//            hairline; outline is the hairline alone, the ruled screen's)
+//   size:    xs | sm | lg | xl       (default: lg; xs is the pill-height
+//            button that fits a card header's meta slot, xl the one big
+//            control a screen has)
 //   rounded: boolean     the round button
 //   square:  boolean     no corner at all
 // The single icon child is wrapped in .ds-icon-button__content, as the DS's
-// IconButton.tsx wraps it in a Flex.
+// IconButton.tsx wraps it in a Flex. A `ds-control` (control.css).
 //
 // `glyph` draws a text character instead of an icon — the /txt stepper's −
 // and + — in the UI face, sized to the button and aria-hidden; the caller
@@ -20,8 +22,8 @@ import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
-	variant?: "primary" | "secondary" | "tertiary" | "outline";
-	size?: "xs" | "small" | "large" | "xl";
+	variant?: "secondary" | "outline";
+	size?: "xs" | "sm" | "lg" | "xl";
 	rounded?: boolean;
 	/** No corner: the ruled screen's square button. */
 	square?: boolean;
@@ -34,7 +36,7 @@ interface Props {
 const {
 	as = "button",
 	variant = "secondary",
-	size = "large",
+	size = "lg",
 	rounded,
 	square,
 	glyph,

@@ -1,8 +1,4 @@
 /* Icon — exact port of the DS styled('svg', { variants }) in Icon.styles.tsx. */
-.ds-icon {
-	/* base: no width/height/color rules — driven entirely by size + variant. */
-}
-
 /* An icon sitting NEXT TO A TEXT LABEL is a different problem from an icon on its
    own, and the `size` scale below solves only the second one. Beside text, the
    thing to match is the label's LINE BOX, not the label's baseline: size the icon
@@ -22,43 +18,20 @@
 	flex: none;
 }
 
-/* variant → stroke/fill token pairs (verbatim from Icon.styles.tsx) */
-.ds-icon--variant-default {
+/* Always an outline: the stroke is the ink (currentColor unless a variant
+   names one), never a fill. */
+.ds-icon {
 	stroke: currentColor;
 	fill: none;
 }
 .ds-icon--variant-primary {
 	stroke: var(--text-primary);
-	fill: none;
 }
 .ds-icon--variant-secondary {
 	stroke: var(--text-secondary);
-	fill: none;
 }
 .ds-icon--variant-tertiary {
 	stroke: var(--text-tertiary);
-	fill: none;
-}
-.ds-icon--variant-info {
-	stroke: var(--accent);
-	fill: var(--emphasis);
-}
-.ds-icon--variant-danger {
-	stroke: var(--danger);
-	fill: var(--danger-emphasis);
-}
-.ds-icon--variant-success {
-	stroke: var(--success);
-	fill: var(--success-emphasis);
-}
-.ds-icon--variant-warning {
-	stroke: var(--warning);
-	fill: var(--warning-emphasis);
-}
-
-/* outline boolean → fill: none (later than the variants, so it wins). */
-.ds-icon--outline-true {
-	fill: none;
 }
 
 /* size → width/height. Size 4 is a hardcoded 20px in the DS source; the rest map

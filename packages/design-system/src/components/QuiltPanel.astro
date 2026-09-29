@@ -178,9 +178,9 @@ const indexLine = (no: string) => `[index] 000${no} · log_${no}.txt`;
 			</div>
 		</div>
 		<StatStrip class="ds-quilt-panel__stats">
-			<Stat size="sm" label="read"><span data-card="minutes">{card?.minutes}</span> min</Stat>
-			<Stat size="sm" label="words"><span data-card="words">{card?.words}</span></Stat>
-			<Stat size="sm" label="published">
+			<Stat label="read"><span data-card="minutes">{card?.minutes}</span> min</Stat>
+			<Stat label="words"><span data-card="words">{card?.words}</span></Stat>
+			<Stat label="published">
 				<span data-card="month">{card?.month}</span> <span data-card="year">{card?.year}</span>
 			</Stat>
 			<a slot="action" class="ds-quilt-panel__read" href={card?.href} data-card="link">

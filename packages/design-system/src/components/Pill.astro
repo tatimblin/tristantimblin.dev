@@ -1,48 +1,26 @@
 ---
 // Pill — a capsule of caps mono (styles/pill.css). No variant = `subtle`.
 //
-//   <Pill>low risk</Pill>                         subtle ink wash
-//   <Pill variant="outline">0/360°</Pill>
-//   <Pill variant="accent" as="a" href="…">next</Pill>   the CTA
+//   <Pill>low risk</Pill>                         subtle: the ink wash
+//   <Pill variant="outline">0/360°</Pill>         a hairline, no fill
 //   <Pill as="button" type="button">tap</Pill>    a pill button
-//   <Pill variant="success">live</Pill>           the DS tints still exist
-//   <Pill as="a" size="lg" href="/txt?q=projects" aria-current="page">projects</Pill>   a tab
+//   <Pill as="a" href="…" variant="outline">home</Pill>
 //
 // An icon goes in the default slot ahead of the text; it is sized to the type.
-// `size="lg"` is the tab step — the pill-button height of the instrument's
-// tab row (--space-6), wider inside — for a row of pills that is the page's
-// primary control rather than a badge; `aria-current` on one of them draws
-// it as the selected tab (the subtle fill, no edge). This site's step, not
-// upstream's, like IconButton's xs and xl.
+// The voice is the `ds-mono ds-caps` classes composed here; as a button or a
+// link it is a `ds-control` too.
 import { cx } from "../lib/cx";
 
-type Variant =
-	| "subtle"
-	| "outline"
-	| "accent"
-	| "info"
-	| "success"
-	| "warning"
-	| "danger";
+type Variant = "subtle" | "outline";
 
 interface Props {
 	as?: string;
 	variant?: Variant;
-	size?: "md" | "lg";
-	// The DS `dark` variant exists but carries no rules, so no class.
-	dark?: boolean;
 	class?: string;
 	[key: string]: unknown;
 }
 
-const {
-	as = "span",
-	variant = "subtle",
-	size = "md",
-	dark: _dark,
-	class: className,
-	...rest
-} = Astro.props;
+const { as = "span", variant = "subtle", class: className, ...rest } = Astro.props;
 
 const Tag = as as any;
 
@@ -55,7 +33,6 @@ const cls = cx(
 	// and the disabled state are control.css's.
 	(as === "button" || as === "a") && "ds-control",
 	`ds-pill--variant-${variant}`,
-	size !== "md" && `ds-pill--size-${size}`,
 	className,
 );
 ---
