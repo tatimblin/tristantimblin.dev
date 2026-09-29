@@ -3,8 +3,9 @@
  * lift.
  *
  * Plain CSS (not an Astro scoped <style>) so the .vc__* selectors reaching into
- * the video-carousel's light DOM survive verbatim. The .wx-videos / .home__widgets
- * prefixes keep everything contained to this widget + the page's grid. */
+ * the video-carousel's light DOM survive verbatim. The .wx-videos prefix keeps
+ * everything contained to this widget; the grid rule below keys on the grid
+ * that HOLDS it (:has), so the page needs no class of its own for it. */
 
 /* SINGLE SOURCE OF TRUTH for the ruler's protrusion width. Mirrors the package's
    --vc-ruler-w formula (date gutter + longest tick + end pad). Defined on the
@@ -17,7 +18,7 @@
    the part it can't absorb is reserved, and once the margin is wide enough the
    grid — and the card's right edge — runs to the container edge like every other
    row. */
-.home__widgets .ds-widget-grid {
+.ds-widget-grid:has(.wx-videos) {
 	--vc-ruler-gutter: calc(4.5rem + 32px + 0.5rem);
 	--vc-outer-margin: calc(
 		var(--hero-inset, var(--container-pad)) - var(--container-pad)
@@ -32,7 +33,7 @@
    Numeric column (not -1/-2): the grid has no explicit row template, so negative
    lines are unreliable with grid-auto-flow: dense + implicit tracks.
    grid-auto-flow: dense then packs the auto-placed 1×1 widgets around this. */
-.home__widgets .wx-videos {
+.wx-videos {
 	grid-column: var(--widget-cols, 4) / span 1;
 	grid-row: 1 / span 2;
 	/* Explicit 2-row span sets the height; release the DS 1×2 box so it
@@ -79,7 +80,7 @@
    ink, while holding the image together. <dotted-grid> resolves --color-fg from its own computed
    style and re-reads it on every theme change, so scoping the alias here is enough.
    Dark keeps the primary ink: light dots on black already glow at the right weight. */
-.maximeheckel-light .home__widgets .wx-videos dotted-grid {
+.maximeheckel-light .wx-videos dotted-grid {
 	--color-fg: color-mix(in oklab, var(--text-primary) 50%, var(--text-secondary));
 }
 
@@ -93,7 +94,7 @@
    the tallest edge exactly matched, and only the sides trimmed — ~11% of the clip's
    width at 1440, split evenly, where there is nothing a portrait phone clip frames.
    The ruler stretches with the stage, so it spans the cell's full height too. */
-.home__widgets .wx-videos video-carousel {
+.wx-videos video-carousel {
 	flex: 1 1 auto;
 	min-height: 0;
 }
@@ -102,7 +103,7 @@
    (its right edge aligns with the grid's right column edge) and the ruler + its
    gap overhang into the reserved gutter. stage is flex:1 → takes the 100%; the
    fixed-width ruler takes the overflow. */
-.home__widgets .wx-videos .vc__main {
+.wx-videos .vc__main {
 	flex: 1 1 auto;
 	min-height: 0;
 	width: calc(100% + var(--vc-ruler-gutter) + var(--space-4));
@@ -110,12 +111,12 @@
 
 /* The stage fills the cell (overriding the height-cap-derived max-width), and the
    grid fills the stage: drop its 9:16 box and let the shader cover-map instead. */
-.home__widgets .wx-videos .vc__stage {
+.wx-videos .vc__stage {
 	max-width: none;
 	width: 100%;
 	border-radius: var(--border-radius-2);
 }
-.home__widgets .wx-videos .vc__grid {
+.wx-videos .vc__grid {
 	flex: 1 1 auto;
 	min-height: 0;
 	aspect-ratio: auto;
@@ -126,10 +127,10 @@
    src/pages/index.astro → .hero-carousel), so the footer copy is hidden here to
    avoid showing it twice. Drop the reserved ruler gutter too. */
 @media (max-width: 900px) {
-	.home__widgets .ds-widget-grid {
+	.ds-widget-grid:has(.wx-videos) {
 		padding-inline-end: 0;
 	}
-	.home__widgets .wx-videos {
+	.wx-videos {
 		display: none;
 	}
 }

@@ -36,11 +36,10 @@ import "@whois/vscode-fleet-demo/element.css";
 </script>
 
 <style>
-	/* The type selector rides along with the class on purpose: the DS Prose
-	   container's rhythm reaches in as `.ds-prose > * + *`, which lands at the
-	   same specificity a bare scoped `.fleet-demo` would. The extra element
-	   name settles the tie rather than leaving it to injection order. */
-	fleet-demo.fleet-demo {
+	/* A plain class is enough: the DS Prose container's rhythm (`.ds-prose >
+	   * + *`) sits in a cascade layer under this unlayered sheet, so the site
+	   wins at any specificity. */
+	.fleet-demo {
 		/* Token bridge. element.css asks for --color-accent/--color-border/
 		   --color-muted (generic names, with literal fallbacks, so the package
 		   stands alone); this site's DS publishes --accent/--border-color/
@@ -73,8 +72,9 @@ import "@whois/vscode-fleet-demo/element.css";
 	   auto; border-radius: var(--border-radius-2)` — which is right for a photo
 	   sitting in the column and wrong for a poster the element has already
 	   positioned `absolute; inset: 0` inside its own framed box. That rule
-	   outranks element.css, so the poster's own sizing and square corners are
-	   restated here, where the scope attribute wins the tie back. */
+	   outranks element.css (the package's sheet is imported before it), so the
+	   poster's own sizing and square corners are restated here, where the
+	   site's unlayered rule wins. */
 	.fleet-demo [data-poster] img {
 		height: 100%;
 		margin-block: 0;

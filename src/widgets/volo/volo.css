@@ -1,9 +1,11 @@
 /* Volo widget styles.
  *
- * Plain CSS (not an Astro scoped <style>) so these globally-reaching selectors
- * survive verbatim, matching the other widgets. The .wx-volo/.wx-vl-* prefix
- * keeps them contained; the .home__widgets prefix matches the page's widget-grid
- * containment.
+ * Plain CSS (not an Astro scoped <style>) because one rule reaches a DS
+ * element the widget does not render itself: the card header, which the
+ * Widget draws and this file makes a query container through `headerClass`.
+ * The .wx-volo/.wx-vl-* prefix keeps the rules contained; nothing else is
+ * needed — the package's CSS sits in a cascade layer under the site's, so a
+ * plain class here always wins.
  *
  * The card chrome, the header, the standing pill, the round buttons, the mono
  * voices, the panel stack and the divider are design-system components
@@ -13,7 +15,7 @@
  * and for the season in progress on the chart. The only literal colour is the
  * team's own, which comes from Volo per team and is inline on its dot. */
 
-.home__widgets .wx-volo {
+.wx-volo {
 	/* One game row. Fluid off the cell like the type it holds, so the list keeps
 	   its proportions as the tile grows. The ceiling is set by the worst case:
 	   nine games plus the header plus the career field have to fit the square. */
@@ -25,7 +27,7 @@
 
 /* The standing pill's glyph: the team's Volo colour. A hairline ring keeps a
    white or near-background team readable in both themes. */
-.home__widgets .wx-vl-dot {
+.wx-vl-dot {
 	flex: none;
 	inline-size: 0.7em;
 	block-size: 0.7em;
@@ -42,10 +44,10 @@
    heading ellipsise as the last resort. The HEADER, not the card: cqi units
    resolve against the nearest container, and the DS fluid scale inside the
    body (--widget-cell, 100cqi) must keep resolving against the grid. */
-.home__widgets .wx-vl-head {
+.wx-vl-head {
 	container: vl-head / inline-size;
 }
-.home__widgets .wx-vl-meta {
+.wx-vl-meta {
 	display: flex;
 	align-items: center;
 	gap: var(--space-3);
@@ -53,18 +55,18 @@
 }
 /* The team is the give: a long name (22 characters, in one season) ellipsises
    before the heading, the pill or the buttons move. */
-.home__widgets .wx-vl-team {
+.wx-vl-team {
 	min-inline-size: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-.home__widgets .wx-vl-nav {
+.wx-vl-nav {
 	display: flex;
 	gap: var(--space-2);
 }
 /* The DS icon set has one arrow and it points right; prev is it, turned round. */
-.home__widgets .wx-vl-arrow--prev svg {
+.wx-vl-arrow--prev svg {
 	transform: rotate(180deg);
 }
 
@@ -74,15 +76,15 @@
    pill keeps its dot and the tally and drops the placing (the rank chart at the
    foot of the tile is where the placings are). */
 @container vl-head (max-width: 480px) {
-	.home__widgets .wx-vl-team,
-	.home__widgets .wx-vl-place {
+	.wx-vl-team,
+	.wx-vl-place {
 		display: none;
 	}
 }
 /* Narrowest: a tighter gap in the meta group (the heading's own ellipsis is
    the header's squeeze="title"). */
 @container vl-head (max-width: 430px) {
-	.home__widgets .wx-vl-meta {
+	.wx-vl-meta {
 		gap: var(--space-2);
 	}
 }
@@ -90,7 +92,7 @@
 /* PANEL STACK --------------------------------------------------------------
    A DS Faces stack (Volo.astro says why it is not `fill`); a panel only
    tightens the face's gap to the table's rhythm. */
-.home__widgets .wx-vl-panel {
+.wx-vl-panel {
 	gap: var(--space-2);
 }
 
@@ -104,7 +106,7 @@
    6–9 games, and dividing the space made the rhythm change under the reader
    every time the arrows moved. The slack at the bottom is where the career
    field sits. */
-.home__widgets .wx-vl-games {
+.wx-vl-games {
 	display: grid;
 	/* date | opponent | result | score. The bracket round has no column of its
 	   own — it rides the divider instead. */
@@ -116,10 +118,10 @@
 	/* Containing block for the bracket labels, which centre across the grid. */
 	position: relative;
 }
-.home__widgets .wx-vl-game {
+.wx-vl-game {
 	display: contents;
 }
-.home__widgets .wx-vl-game > :not(.wx-vl-round) {
+.wx-vl-game > :not(.wx-vl-round) {
 	display: flex;
 	align-items: center;
 	/* Stretch so the rule is drawn at the ROW's top edge, and the four cells'
@@ -127,32 +129,32 @@
 	align-self: stretch;
 	border-block-start: 1px solid var(--hairline);
 }
-.home__widgets .wx-vl-game:first-child > :not(.wx-vl-round) {
+.wx-vl-game:first-child > :not(.wx-vl-round) {
 	border-block-start: none;
 }
 /* Separation as padding, not column-gap: a gap would notch the hairline. */
-.home__widgets .wx-vl-game > :not(.wx-vl-round) + :not(.wx-vl-round) {
+.wx-vl-game > :not(.wx-vl-round) + :not(.wx-vl-round) {
 	padding-inline-start: var(--space-3);
 }
 /* …except the score, whose margin tick is zeroed at 50% of the cell: a leading
    pad would put that origin half a gap off the figures it belongs to. The gap
    rides the result letter's trailing edge instead. */
-.home__widgets .wx-vl-game > .wx-vl-score,
-.home__widgets .wx-vl-game > .wx-vl-time {
+.wx-vl-game > .wx-vl-score,
+.wx-vl-game > .wx-vl-time {
 	padding-inline-start: 0;
 }
-.home__widgets .wx-vl-game > .wx-vl-result {
+.wx-vl-game > .wx-vl-result {
 	padding-inline-end: var(--space-3);
 }
 
-.home__widgets .wx-vl-date {
+.wx-vl-date {
 	color: var(--text-tertiary);
 }
-.home__widgets .wx-vl-opp {
+.wx-vl-opp {
 	min-inline-size: 0;
 }
 /* The name has to be able to shrink for its own ellipsis to fire. */
-.home__widgets .wx-vl-opp-name {
+.wx-vl-opp-name {
 	min-inline-size: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -160,31 +162,31 @@
 }
 /* The opponent's standing, after the name. `flex: none` so it is the NAME that
    ellipsises when the row is tight — a truncated number is worse than none. */
-.home__widgets .wx-vl-rank {
+.wx-vl-rank {
 	flex: none;
 	margin-inline-start: var(--space-2);
 	color: var(--text-tertiary);
 }
 /* Games not yet played read back: the season shows its results first and its
    fixtures as the quieter remainder. */
-.home__widgets .wx-vl-game[data-result="upcoming"] .wx-vl-opp {
+.wx-vl-game[data-result="upcoming"] .wx-vl-opp {
 	color: var(--text-secondary);
 }
 
 /* The result letter. A win is the ink, a loss the dim ink, a tie between: the
    instrument's strengths, not a traffic light. */
-.home__widgets .wx-vl-result {
+.wx-vl-result {
 	color: var(--text-tertiary);
 }
-.home__widgets .wx-vl-game[data-result="W"] .wx-vl-result {
+.wx-vl-game[data-result="W"] .wx-vl-result {
 	color: var(--text-primary);
 }
-.home__widgets .wx-vl-game[data-result="T"] .wx-vl-result {
+.wx-vl-game[data-result="T"] .wx-vl-result {
 	color: var(--text-secondary);
 }
 
-.home__widgets .wx-vl-score,
-.home__widgets .wx-vl-time {
+.wx-vl-score,
+.wx-vl-time {
 	position: relative; /* anchors .wx-vl-bar */
 	white-space: nowrap;
 	/* CENTRED over the margin tick's zero, which is this cell's midpoint. */
@@ -192,31 +194,31 @@
 	/* Doubles as the margin scale; also holds the column steady across seasons. */
 	min-inline-size: var(--vl-range);
 }
-.home__widgets .wx-vl-game[data-result="L"] .wx-vl-score {
+.wx-vl-game[data-result="L"] .wx-vl-score {
 	color: var(--text-secondary);
 }
-.home__widgets .wx-vl-time {
+.wx-vl-time {
 	color: var(--text-secondary);
 }
-.home__widgets .wx-vl-dash {
+.wx-vl-dash {
 	color: var(--text-tertiary);
 }
-.home__widgets .wx-vl-score--ff {
+.wx-vl-score--ff {
 	color: var(--text-tertiary);
 }
 /* A walkover credited a real score: the figures stand, the row says why. */
-.home__widgets .wx-vl-score[data-forfeit="true"] {
+.wx-vl-score[data-forfeit="true"] {
 	text-decoration: underline dotted;
 	text-underline-offset: 0.2em;
 }
 
 /* THE ACCENT, ONCE in the list: the next game's time, or — in a season with
    nothing left to play — its last result. */
-.home__widgets .wx-vl-game[data-lit="true"] .wx-vl-time,
-.home__widgets .wx-vl-game[data-lit="true"][data-result] .wx-vl-result {
+.wx-vl-game[data-lit="true"] .wx-vl-time,
+.wx-vl-game[data-lit="true"][data-result] .wx-vl-result {
 	color: var(--accent);
 }
-.home__widgets .wx-vl-game[data-lit="true"][data-result="upcoming"] .wx-vl-opp {
+.wx-vl-game[data-lit="true"][data-result="upcoming"] .wx-vl-opp {
 	color: var(--text-primary);
 }
 
@@ -226,7 +228,7 @@
    by a hairline notch) and runs right for a win, left for a loss, so the sign
    reads before the length. Normalised against a FIXED per-sport cap (see
    marginCap() in volo.ts), so the scale holds as the arrows move. */
-.home__widgets .wx-vl-bar {
+.wx-vl-bar {
 	position: absolute;
 	/* Straddles the divider, and sits over it: the next row's hairline is
 	   painted later and would otherwise cover it. */
@@ -237,20 +239,20 @@
 	min-inline-size: 2px; /* a one-run game is still a result, not nothing */
 	background: var(--text-tertiary);
 }
-.home__widgets .wx-vl-game[data-result="W"] .wx-vl-bar {
+.wx-vl-game[data-result="W"] .wx-vl-bar {
 	inset-inline-start: 50%;
 	background: var(--text-primary);
 }
-.home__widgets .wx-vl-game[data-result="L"] .wx-vl-bar {
+.wx-vl-game[data-result="L"] .wx-vl-bar {
 	inset-inline-end: 50%;
 }
 /* A tie has no direction: it sits astride the zero. */
-.home__widgets .wx-vl-game[data-result="T"] .wx-vl-bar {
+.wx-vl-game[data-result="T"] .wx-vl-bar {
 	inset-inline-start: calc(50% - 2px);
 	inline-size: 4px;
 }
 /* The zero itself, on every played row, so the origin reads as a column. */
-.home__widgets .wx-vl-score:not(.wx-vl-score--ff)::after {
+.wx-vl-score:not(.wx-vl-score--ff)::after {
 	content: "";
 	position: absolute;
 	inset-block-end: -3px;
@@ -265,7 +267,7 @@
    every row is --vl-row tall with no gap, so the divider above row i sits at
    --vl-row × i. The card's background knocks a gap in the hairline, the way a
    label on a rule should. */
-.home__widgets .wx-vl-round {
+.wx-vl-round {
 	position: absolute;
 	inset-block-start: calc(var(--vl-row) * var(--vl-i, 0));
 	inset-inline-start: 50%;
@@ -275,7 +277,7 @@
 	color: var(--text-tertiary);
 }
 
-.home__widgets .wx-vl-empty {
+.wx-vl-empty {
 	margin: auto;
 }
 
@@ -285,14 +287,14 @@
    above it, never this. The y axis is the FINAL placement after the playoffs,
    normalised by league size (finalPlacement()/rankSeries() in volo.ts).
    `margin-block-start: auto` pins it: every pixel of slack lands above. */
-.home__widgets .wx-vl-career {
+.wx-vl-career {
 	/* The inline reset matters — this is a <figure>, and the UA indents it. */
 	margin: auto 0 0;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
 }
-.home__widgets .wx-vl-career-cap {
+.wx-vl-career-cap {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -301,7 +303,7 @@
 	flex-wrap: wrap;
 	gap: var(--space-2) var(--space-4);
 }
-.home__widgets .wx-vl-legend {
+.wx-vl-legend {
 	display: flex;
 	align-items: center;
 	gap: var(--space-3);
@@ -309,23 +311,23 @@
 }
 /* Line swatches: the finish solid ink, the seed a dashed hairline — the same
    strokes the plot draws. */
-.home__widgets .wx-vl-key {
+.wx-vl-key {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-1);
 	color: var(--text-tertiary);
 }
-.home__widgets .wx-vl-key::before {
+.wx-vl-key::before {
 	content: "";
 	inline-size: var(--space-3);
 	border-block-start: 1px solid var(--text-primary);
 }
-.home__widgets .wx-vl-key--seed::before {
+.wx-vl-key--seed::before {
 	border-block-start-style: dashed;
 	border-block-start-color: var(--text-tertiary);
 }
 
-.home__widgets .wx-vl-chart {
+.wx-vl-chart {
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr);
 	column-gap: var(--space-3);
@@ -334,7 +336,7 @@
 /* 1st at the top, last at the bottom — the two ends of the axis, and nothing
    in between: there is no meaningful midpoint across leagues of different
    sizes. */
-.home__widgets .wx-vl-axis {
+.wx-vl-axis {
 	grid-area: 1 / 1;
 	display: flex;
 	flex-direction: column;
@@ -344,46 +346,46 @@
 
 /* The plot and its hit areas share a box so the bands are positioned against
    exactly the width the SVG stretches to. */
-.home__widgets .wx-vl-plotwrap {
+.wx-vl-plotwrap {
 	grid-area: 1 / 2;
 	position: relative;
 }
-.home__widgets .wx-vl-plot {
+.wx-vl-plot {
 	display: block;
 	inline-size: 100%;
 	block-size: clamp(42px, calc(var(--widget-cell) * 0.2), 72px);
 	overflow: visible;
 }
-.home__widgets .wx-vl-plot path {
+.wx-vl-plot path {
 	fill: none;
 	/* The plot box stretches to the tile's width; without this the horizontals
 	   go fat while the verticals stay thin. */
 	vector-effect: non-scaling-stroke;
 	stroke-width: 1;
 }
-.home__widgets .wx-vl-rule {
+.wx-vl-rule {
 	stroke: var(--hairline);
 }
-.home__widgets .wx-vl-line {
+.wx-vl-line {
 	stroke: var(--text-primary);
 }
 /* Where each season went INTO the playoffs — the reference, so set back:
    dashed and dim. The gap between the two lines is the thing worth seeing. */
-.home__widgets .wx-vl-seed {
+.wx-vl-seed {
 	stroke: var(--text-tertiary);
 	stroke-dasharray: 2 2;
 }
 /* The season in progress: the accent, drawn over whichever line it sits on. */
-.home__widgets .wx-vl-plot .wx-vl-now-line {
+.wx-vl-plot .wx-vl-now-line {
 	stroke: var(--accent);
 	stroke-width: 1.5;
 }
-.home__widgets .wx-vl-plot .wx-vl-now-line.is-seed {
+.wx-vl-plot .wx-vl-now-line.is-seed {
 	stroke-dasharray: 2 2;
 }
 /* …and the playhead dot at its end, in HTML so the stretched SVG cannot
    squash it into an ellipse. */
-.home__widgets .wx-vl-now {
+.wx-vl-now {
 	position: absolute;
 	z-index: 1;
 	inline-size: var(--space-2);
@@ -399,11 +401,11 @@
    pick a season out, click to jump the schedule above to it, and the one on
    show keeps a wash. Real <button>s (focusable, operable) stripped of chrome;
    the one on show is lit even while disabled on a phone. */
-.home__widgets .wx-vl-hits {
+.wx-vl-hits {
 	position: absolute;
 	inset: 0;
 }
-.home__widgets .wx-vl-hit {
+.wx-vl-hit {
 	position: absolute;
 	inset-block: 0;
 	appearance: none;
@@ -414,21 +416,21 @@
 	border-radius: var(--border-radius-tile);
 	transition: background var(--duration-swap) var(--ease-reveal);
 }
-.home__widgets .wx-vl-hit:not(:disabled) {
+.wx-vl-hit:not(:disabled) {
 	cursor: pointer;
 }
-.home__widgets .wx-vl-hit:not(:disabled):hover {
+.wx-vl-hit:not(:disabled):hover {
 	background: var(--wash-1);
 }
-.home__widgets .wx-vl-hit.is-active {
+.wx-vl-hit.is-active {
 	background: var(--wash-1);
 }
-.home__widgets .wx-vl-hit:not(:disabled):focus-visible {
+.wx-vl-hit:not(:disabled):focus-visible {
 	outline: var(--focus-ring);
 	outline-offset: calc(-1 * var(--focus-ring-offset));
 }
 
-.home__widgets .wx-vl-years {
+.wx-vl-years {
 	grid-area: 2 / 2;
 	display: grid;
 	grid-template-columns: repeat(var(--vl-cols, 6), 1fr);
@@ -438,11 +440,11 @@
 	color: var(--text-tertiary);
 }
 /* One equal column per year, matching the plot's time axis. */
-.home__widgets .wx-vl-year {
+.wx-vl-year {
 	justify-self: center;
 }
-.home__widgets .wx-vl-year .ds-mono,
-.home__widgets .wx-vl-axis .ds-mono {
+.wx-vl-year .ds-mono,
+.wx-vl-axis .ds-mono {
 	color: inherit;
 }
 
@@ -453,18 +455,18 @@
    occupies. And release the square: a nine-game season plus the header plus
    the chart does not fit ~343px (the videos tile set the precedent). */
 @media (max-width: 900px) {
-	.home__widgets .wx-volo {
+	.wx-volo {
 		aspect-ratio: auto;
 		--vl-tile: calc(var(--widget-cell) * 2 + var(--space-5));
 		--vl-row: clamp(30px, calc(var(--vl-tile) * 0.095), 38px);
 	}
-	.home__widgets .wx-vl-round {
+	.wx-vl-round {
 		padding-inline: var(--space-3);
 	}
-	.home__widgets .wx-vl-career {
+	.wx-vl-career {
 		padding-block-start: var(--space-4);
 	}
-	.home__widgets .wx-vl-plot {
+	.wx-vl-plot {
 		block-size: clamp(52px, calc(var(--vl-tile) * 0.17), 80px);
 	}
 }

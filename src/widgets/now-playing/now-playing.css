@@ -3,8 +3,8 @@
  * Plain CSS (not an Astro scoped <style>) so the ::part() selectors that pierce
  * the <spotify-player> shadow DOM survive verbatim — Astro would otherwise add a
  * scope hash and break them. The .wx-nowplaying / .wx-np-* prefixes keep them
- * contained; the .home__widgets prefix matches the page's widget-grid
- * containment.
+ * contained; the package's CSS sits in a cascade layer under the site's, so a
+ * plain class here always wins.
  *
  * The card, header, body and pill are design-system components. The player's
  * insides can't be — they live in its shadow DOM — so they take the DS voices
@@ -14,12 +14,12 @@
  * shadow on the cover; the one accent is the playhead. */
 
 /* The state pill says nothing until the script knows the state. */
-.home__widgets .wx-nowplaying:not(.is-known) .wx-np-state {
+.wx-nowplaying:not(.is-known) .wx-np-state {
 	visibility: hidden;
 }
 
 /* The player fills the card body. */
-.home__widgets .wx-nowplaying spotify-player {
+.wx-nowplaying spotify-player {
 	display: block;
 	flex: 1 1 auto;
 	min-block-size: 0;
@@ -53,23 +53,23 @@
 		left bottom / 100% 65% no-repeat;
 }
 
-.home__widgets .wx-nowplaying spotify-player::part(root) {
+.wx-nowplaying spotify-player::part(root) {
 	padding: 0;
 }
 
 /* The cover: a flat square tile, left-aligned over the text like the rest of
    the card's content, filling the height the text and ruler leave. */
-.home__widgets .wx-nowplaying spotify-player::part(album) {
+.wx-nowplaying spotify-player::part(album) {
 	justify-content: flex-start;
 	border-radius: var(--border-radius-tile);
 }
-.home__widgets .wx-nowplaying spotify-player::part(art) {
+.wx-nowplaying spotify-player::part(art) {
 	border-radius: var(--border-radius-tile);
 	background: var(--wash-1);
 }
 
 /* The album name is a third line a 1×1 can't afford. */
-.home__widgets .wx-nowplaying spotify-player::part(album-text) {
+.wx-nowplaying spotify-player::part(album-text) {
 	display: none;
 }
 
@@ -78,19 +78,19 @@
    on a single line so a long name can't wrap and steal height from the cover
    (which would resize it on every track change); the component watches for
    the overflow and scrolls such a line as a car-radio marquee instead. */
-.home__widgets .wx-nowplaying spotify-player::part(title),
-.home__widgets .wx-nowplaying spotify-player::part(artist) {
+.wx-nowplaying spotify-player::part(title),
+.wx-nowplaying spotify-player::part(artist) {
 	white-space: nowrap;
 	line-height: var(--line-height-ui);
 }
-.home__widgets .wx-nowplaying spotify-player::part(title) {
+.wx-nowplaying spotify-player::part(title) {
 	font-family: var(--font-numeric);
 	font-size: var(--widget-font-md);
 	font-weight: var(--font-weight-400);
 	letter-spacing: var(--tracking-heading);
 	color: var(--text-primary);
 }
-.home__widgets .wx-nowplaying spotify-player::part(artist) {
+.wx-nowplaying spotify-player::part(artist) {
 	font-family: var(--voice-mono-family);
 	font-size: var(--widget-font-xs);
 	letter-spacing: var(--tracking-mono);
@@ -100,13 +100,13 @@
 
 /* Progress: the ruler across the full width, the two timestamps under its
    ends in the mono value voice — an instrument's scale, not a media bar. */
-.home__widgets .wx-nowplaying spotify-player::part(progress) {
+.wx-nowplaying spotify-player::part(progress) {
 	display: grid;
 	grid-template-columns: auto auto;
 	justify-content: space-between;
 	gap: var(--space-2) 0;
 }
-.home__widgets .wx-nowplaying spotify-player::part(progress-bar) {
+.wx-nowplaying spotify-player::part(progress-bar) {
 	grid-column: 1 / -1;
 	grid-row: 1;
 	inline-size: 100%;
@@ -114,8 +114,8 @@
 	/* The track's ink (see --ssp-track above). */
 	color: var(--text-tertiary);
 }
-.home__widgets .wx-nowplaying spotify-player::part(elapsed),
-.home__widgets .wx-nowplaying spotify-player::part(remaining) {
+.wx-nowplaying spotify-player::part(elapsed),
+.wx-nowplaying spotify-player::part(remaining) {
 	grid-row: 2;
 	padding: 0;
 	font-family: var(--voice-mono-family);
@@ -124,19 +124,19 @@
 	color: var(--text-tertiary);
 	opacity: 1;
 }
-.home__widgets .wx-nowplaying spotify-player::part(elapsed) {
+.wx-nowplaying spotify-player::part(elapsed) {
 	color: var(--text-primary);
 }
 /* The component rounds the elapsed stretch's leading end, which would shave
    the first tick; the ruler is square. */
 /* (Separate rules: one engine's unknown pseudo-element would void a list.) */
-.home__widgets .wx-nowplaying spotify-player::part(progress-bar)::-webkit-progress-bar {
+.wx-nowplaying spotify-player::part(progress-bar)::-webkit-progress-bar {
 	border-radius: 0;
 }
-.home__widgets .wx-nowplaying spotify-player::part(progress-bar)::-webkit-progress-value {
+.wx-nowplaying spotify-player::part(progress-bar)::-webkit-progress-value {
 	border-radius: 0;
 }
-.home__widgets .wx-nowplaying spotify-player::part(progress-bar)::-moz-progress-bar {
+.wx-nowplaying spotify-player::part(progress-bar)::-moz-progress-bar {
 	border-radius: 0;
 }
 
@@ -146,15 +146,15 @@
    cover becomes a small tile beside the title and artist instead of over
    them — the art stays, at the size of the two lines it sits next to. */
 @media (max-width: 900px) {
-	.home__widgets .wx-nowplaying .wx-np-state {
+	.wx-nowplaying .wx-np-state {
 		display: none;
 	}
-	.home__widgets .wx-nowplaying spotify-player::part(details) {
+	.wx-nowplaying spotify-player::part(details) {
 		flex-direction: row;
 		align-items: flex-end;
 		gap: var(--space-2);
 	}
-	.home__widgets .wx-nowplaying spotify-player::part(album) {
+	.wx-nowplaying spotify-player::part(album) {
 		flex: none;
 		inline-size: var(--space-8);
 		block-size: var(--space-8);

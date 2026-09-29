@@ -13,7 +13,6 @@ import Mono from "@whois/design-system/Mono";
 import Figure from "@whois/design-system/Figure";
 import Stat from "@whois/design-system/Stat";
 import { getBikeStats } from "./bike-stats";
-import "./bike-stats.css";
 
 const bike = getBikeStats();
 
@@ -109,3 +108,65 @@ const monthDay = (date: string) =>
 		</CardBody>
 	</Widget>
 )}
+
+<style>
+	/* The card chrome, header, figure and stat pairs are design-system
+	   components; this lays them down the left and draws the bike on the right.
+	   Scoped: the DS spreads the scope attribute onto each component's root,
+	   and its CSS sits in a layer under this. */
+
+	/* The figure at the top, the stat pairs at the bottom: a left column of
+	   readings, with the bike filling the space to their right. */
+	.wx-bw-body {
+		justify-content: space-between;
+	}
+	.wx-bw-stats {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+
+	/* The Lyft e-bike, drawn in ink. /images/lyft-ebike-ink.png is an alpha mask
+	   derived from the product render (tools/bike-stats/lyft-ebike-sideview.png,
+	   kept out of public/ because only the mask ships): tonal darkness plus
+	   traced edges, cropped to the bike, floor shadow removed. As a mask it has
+	   no colour of its own; the box's fill gives it one, so it is the ink token
+	   in either theme (dark on bone, light on the dark card) with no blend-mode
+	   guesswork. It sits on the body's bottom padding line, level with the last
+	   stat, and runs off the card's right edge: the front wheel, basket and bars
+	   stay in view and the rear wheel is cropped, like the posters' cropped
+	   type. It is absolutely positioned so it never takes layout space from the
+	   readings; the left inset keeps it clear of the stat column. */
+	.wx-bw-bike {
+		position: absolute;
+		inset-inline-start: 44%;
+		inset-block-end: var(--widget-pad);
+		block-size: 62%;
+		aspect-ratio: 1000 / 607;
+		background: var(--text-secondary);
+		mask: url("/images/lyft-ebike-ink.png") no-repeat left bottom / contain;
+		pointer-events: none;
+
+		/* Hidden and offset at rest. The script above adds .is-in to the card
+		   on first scroll-into-view, which rolls the bike in from the right and
+		   fades it up. */
+		opacity: 0;
+		transform: translateX(var(--space-8));
+		transition:
+			transform var(--duration-reveal) var(--ease-reveal),
+			opacity var(--duration-reveal) var(--ease-reveal);
+	}
+	.wx-baywheels.is-in .wx-bw-bike {
+		opacity: 1;
+		transform: none;
+	}
+	/* Reduced motion: simply present, not waiting on the scroll-into-view. (The
+	   transition itself needs no rule here — --duration-reveal is 0s under the
+	   preference, tokens.overrides.css.) */
+	@media (prefers-reduced-motion: reduce) {
+		.wx-bw-bike {
+			transform: none;
+			opacity: 1;
+		}
+	}
+</style>

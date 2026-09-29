@@ -80,10 +80,10 @@
    instrument, so it never leaves it: it cannot cover the quilt's last row
    at rest, nor reach the site footer, which follows the page's one
    container gutter. Nothing fills or centres to the viewport. */
-.blog.blog--instrument {
+.blog--instrument {
 	min-height: 0;
 }
-.blog__main.blog__main--instrument {
+.blog__main--instrument {
 	/* The full width of the page (its auto margins would otherwise shrink it
 	   to fit its content in the column): the bar, the quilt and the timeline
 	   run to the page's gutters, not the site container. Only the site
