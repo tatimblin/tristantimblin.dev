@@ -1,12 +1,9 @@
 # Cloudflare Pages redirects (https://developers.cloudflare.com/pages/configuration/redirects/)
 #
-# /txt/categories was the old categories index, and /txt/category/<id> one
-# category's list; categories are now queries on the /txt quilt
-# (/txt/?q=<category>). Both spellings of each, with and without the slash.
+# /txt/categories was the old categories index; categories are now queries on
+# the /txt quilt (/txt/?q=<category>). Both spellings, with and without the slash.
 /txt/categories /txt/ 301
 /txt/categories/ /txt/ 301
-/txt/category/:cat /txt/?q=:cat 301
-/txt/category/:cat/ /txt/?q=:cat 301
 
 # The gallery is gone; its pages go home.
 /gallery / 301

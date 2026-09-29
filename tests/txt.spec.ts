@@ -11,8 +11,8 @@ import { test, expect, type Page } from "@playwright/test";
  * own spec).
  * The tag pages are still the year-grouped list, and the older
  * /txt/tag/<tag> URLs still resolve. Categories are a closed set and only
- * queries on the quilt (/txt?q=<id>): /txt/categories and /txt/category/<id>
- * are 301s in public/_redirects (Cloudflare Pages, so not in dev or preview).
+ * queries on the quilt (/txt?q=<id>): /txt/category/<id> is simply gone (404),
+ * and /txt/categories is a 301 in public/_redirects (Cloudflare Pages only).
  * The properties worth pinning:
  *
  *  1. EXACTLY ONE LINK PER POST on the index, newest first; fillers link nothing.
