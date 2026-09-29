@@ -382,7 +382,8 @@ test.describe("reveal — below-the-fold behaviour", () => {
 	test("post images carry intrinsic dimensions", async ({ page }) => {
 		// Not a reveal assertion: markdown can't express width/height, so these
 		// images shipped without them and reflowed the article as each decoded. The
-		// mapped <Img> reads the real file, so a re-export can't desync the numbers.
+		// mapped <Img> takes them off the image's import (Astro reads the file at
+		// build time), so a re-export can't desync the numbers.
 		await page.goto("/txt/mega-desk/");
 		const imgs = await page.evaluate(() =>
 			Array.from(document.querySelectorAll<HTMLImageElement>(".ds-prose img")).map(
