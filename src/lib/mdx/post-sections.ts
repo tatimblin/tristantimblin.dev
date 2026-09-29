@@ -17,51 +17,64 @@
  *     <div class="ds-prose-section__body">…the blocks up to the next h2…</div>
  *   </section>
  *
- * Whatever comes before the first h2 is section 00, headed "Intro"; a post
- * with no h2s is one such section. Inside a body, three blocks are given
- * their ruled dress: a paragraph that is only an image becomes a figure with
- * a `Fig. 0N / <alt>` caption — numbered on from the hero when the
- * frontmatter has one, since that is Fig. 01 on the page; a fenced block
- * becomes a figure with a header row, `<section>.<n> / <title>` on the left
- * (the fence's `title="…"` meta, recorded by the remark half below because
- * Shiki drops it) and the language on the right; and a quote whose last
- * paragraph starts with a dash becomes a quote with a `footer`, the
- * attribution. The mono voice throughout is the design system's own Mono
- * classes, so the page needs no rule for it.
+ * Whatever comes before the first h2 is section 00, labelled "Intro"; a post
+ * with no h2s is one such section. The label is NOT an h2 — it is set like
+ * one (the classes H2 renders) but it is not a heading the author wrote, so
+ * it stays out of the document outline and out of the page's heading list.
  *
- * Both plugins run on every markdown file Astro renders and do nothing
- * unless the file is under src/content/txt — the other markdown on the
- * site keeps its one column. The tags Astro maps onto components (h2, p,
- * img, blockquote) are the same tags afterwards, so the mapping still
- * lands; the wrappers are plain elements no mapping names. `mdxjsEsm`
- * nodes (a post's `import`s) stay at the root, where MDX needs them.
+ * Inside a body, three blocks are given their ruled dress: a paragraph that
+ * is only an image (or only a link around one) becomes a figure with a
+ * `Fig. 0N / <alt>` caption — numbered on from the hero when the frontmatter
+ * has one, since that is Fig. 01 on the page; a fenced block becomes a figure
+ * with a header row, `<section>.<n> / <title>` on the left and the language on
+ * the right; and a quote whose last line starts with a dash — its own
+ * paragraph, or the last line of the last one — becomes a figure: the
+ * blockquote, then a `figcaption`, the attribution, outside the quoted words.
+ * The mono voice throughout is the design system's own Mono classes, so the
+ * page needs no rule for it.
+ *
+ * THE FENCE'S TITLE. Shiki replaces the fence and keeps none of its meta, so
+ * `shikiPostCode` — a Shiki transformer, registered in astro.config's
+ * `markdown.shikiConfig.transformers` — stamps the `title="…"` meta onto the
+ * `pre` as `data-title` while it still has it, and the rehype half reads it
+ * back off the same element. Each fence carries its own title, so a fence
+ * nested in a list or a quote cannot shift the labels of the ones after it.
+ * The remark half only fixes one authoring slip first: a fence with a title
+ * and no language (```` ``` title="x" ````) parses the title AS the language,
+ * so it is moved back into the meta.
+ *
+ * The remark and rehype halves run on every markdown file Astro renders and
+ * do nothing unless the file is under TXT_BASE — the other markdown on the
+ * site keeps its one column. The tags Astro maps onto components (h2, p, img,
+ * blockquote) are the same tags afterwards, so the mapping still lands; the
+ * wrappers are plain elements no mapping names. `mdxjsEsm` nodes (a post's
+ * `import`s) stay at the root, where MDX needs them.
  */
-import type { Element, ElementContent, Root, RootContent } from "hast";
+import type { Element, ElementContent, Root, RootContent, Text } from "hast";
 import type { Code, Root as MdRoot } from "mdast";
+import type { ShikiConfig } from "@astrojs/markdown-remark";
 import type { VFile } from "vfile";
+import { TXT_BASE } from "../blog";
 
-const TXT = /[\\/]src[\\/]content[\\/]txt[\\/]/;
+type ShikiTransformer = NonNullable<ShikiConfig["transformers"]>[number];
 
-const inTxt = (file: VFile) => TXT.test(file.path ?? file.history[0] ?? "");
+/** The collection's folder as a path fragment, `/src/content/txt/`. */
+const TXT_DIR = `/${TXT_BASE.replace(/^\.\//, "").replace(/\/$/, "")}/`;
 
-/** What the remark half records per fence, in document order. */
-interface Fence {
-	lang: string | null;
-	title: string | null;
-}
+const inTxt = (file: VFile) =>
+	(file.path ?? file.history[0] ?? "").replace(/\\/g, "/").includes(TXT_DIR);
 
 interface PostData {
-	postCode?: Fence[];
 	astro?: { frontmatter?: { hero?: unknown } };
 }
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
 /** `title="env.yml"` / `title='env.yml'` / `title=env.yml` out of a fence's meta. */
-const titleOf = (meta: string | null | undefined): string | null => {
+export const titleOf = (meta: string | null | undefined): string | null => {
 	if (!meta) return null;
 	const m = /(?:^|\s)title=(?:"([^"]*)"|'([^']*)'|(\S+))/.exec(meta);
-	return m ? (m[1] ?? m[2] ?? m[3]) : null;
+	return m ? (m[1] ?? m[2] ?? m[3] ?? null) : null;
 };
 
 /** Every mdast node, depth first. */
@@ -72,21 +85,39 @@ function walkMd(node: { type: string; children?: unknown[] }, visit: (n: Code) =
 	}
 }
 
+/** An info string's first word that is really meta: `title="x"`, `a=b`. */
+const META_AS_LANG = /^[\w-]+=/;
+
 /**
- * The remark half: records each fence's language and `title` meta on the
- * file, in document order, for the rehype half to read back — the
- * highlighter replaces the fence and keeps neither.
+ * The remark half: a fence written with a title and no language has its
+ * title parsed as the language (the info string's first word). Move it back
+ * into the meta, where the Shiki transformer looks for it.
  */
 export function remarkPostCode() {
 	return (tree: MdRoot, file: VFile) => {
 		if (!inTxt(file)) return;
-		const fences: Fence[] = [];
 		walkMd(tree, (node) => {
-			fences.push({ lang: node.lang ?? null, title: titleOf(node.meta) });
+			if (node.lang && META_AS_LANG.test(node.lang)) {
+				node.meta = [node.lang, node.meta].filter(Boolean).join(" ");
+				node.lang = null;
+			}
 		});
-		(file.data as PostData).postCode = fences;
 	};
 }
+
+/**
+ * The Shiki half: stamps the fence's `title="…"` meta on its `pre` as
+ * `data-title`, for the rehype half to read. Astro already stamps the
+ * language (`data-language`). Harmless outside /txt — the rehype half, which
+ * is scoped, is the only reader.
+ */
+export const shikiPostCode: ShikiTransformer = {
+	name: "post-code-title",
+	pre(node) {
+		const title = titleOf(this.options.meta?.__raw);
+		if (title) node.properties.dataTitle = title;
+	},
+};
 
 const isElement = (node: unknown): node is Element =>
 	typeof node === "object" && node !== null && (node as Element).type === "element";
@@ -112,30 +143,107 @@ const el = (
 	children: ElementContent[],
 ): Element => ({ type: "element", tagName, properties, children });
 
+const MONO = ["ds-mono", "ds-mono--variant-caps", "ds-caps"];
+
 /** A caps Mono, as Mono.astro renders one. */
 const mono = (value: string, tone?: "primary"): Element =>
+	el("span", { className: [...MONO, ...(tone ? [`ds-mono--tone-${tone}`] : [])] }, [
+		{ type: "text", value },
+	]);
+
+/** Section 00's label: set as H2.astro renders a heading, but not one. */
+const introLabel = (): Element =>
 	el(
 		"span",
 		{
 			className: [
-				"ds-mono",
-				"ds-mono--variant-caps",
-				"ds-caps",
-				...(tone ? [`ds-mono--tone-${tone}`] : []),
+				"ds-text",
+				"ds-text--family-default",
+				"ds-text--size-6",
+				"ds-text--variant-primary",
+				"ds-text--weight-2",
+				"ds-heading",
+				"ds-prose-section__title",
 			],
 		},
-		[{ type: "text", value }],
+		[{ type: "text", value: "Intro" }],
 	);
 
-/** The one element child of a paragraph that is only an image, or null. */
-function soleImage(node: RootContent): Element | null {
+/** A paragraph that is only an image, or only a link around one: the
+ *  paragraph's one child (the img, or the a) and the img, or null. */
+function soleImage(node: RootContent): { content: Element; img: Element } | null {
 	if (!isElement(node) || node.tagName !== "p") return null;
 	const kids = node.children.filter((c) => !isBlank(c));
 	const only = kids[0];
-	return kids.length === 1 && isElement(only) && only.tagName === "img" ? only : null;
+	if (kids.length !== 1 || !isElement(only)) return null;
+	if (only.tagName === "img") return { content: only, img: only };
+	if (only.tagName === "a") {
+		const inner = only.children.filter((c) => !isBlank(c));
+		const img = inner[0];
+		if (inner.length === 1 && isElement(img) && img.tagName === "img") return { content: only, img };
+	}
+	return null;
 }
 
 const DASH = /^\s*(?:—|–|--)\s*/;
+/** A dash opening a line after a soft break: `…the words\n— Author`. */
+const LINE_DASH = /\n\s*(?:—|–|--)\s*/;
+
+/**
+ * A quote's attribution, taken out of it: the last paragraph when it starts
+ * with a dash (and is not the only one), or the last line of the last
+ * paragraph when that line does. Returns the attribution's content with the
+ * dash dropped, having removed it from the quote; null when there is none.
+ */
+function takeAttribution(quote: Element): ElementContent[] | null {
+	const kids = quote.children.filter((c) => !isBlank(c));
+	const last: ElementContent | undefined = kids.at(-1);
+	if (last?.type !== "element" || last.tagName !== "p") return null;
+
+	// Its own paragraph: `> words` / `>` / `> — Author`.
+	if (kids.length > 1 && DASH.test(text(last))) {
+		const first = last.children.find((c) => c.type === "text");
+		if (first?.type === "text") first.value = first.value.replace(DASH, "");
+		quote.children.splice(quote.children.lastIndexOf(last), 1);
+		trimEnd(quote.children);
+		return last.children;
+	}
+
+	// The last line of the last paragraph: `> words` / `> — Author`, one
+	// paragraph with a soft break. The attribution is everything after the
+	// last text node's last line-opening dash.
+	for (let i = last.children.length - 1; i >= 0; i--) {
+		const child = last.children[i];
+		if (child.type !== "text") continue;
+		let at = -1;
+		let len = 0;
+		for (const m of child.value.matchAll(new RegExp(LINE_DASH, "g"))) {
+			at = m.index;
+			len = m[0].length;
+		}
+		if (at === -1) continue;
+		// Only a LINE that is the attribution: nothing after it may break again.
+		const rest = last.children.slice(i + 1);
+		if (child.value.slice(at + len).includes("\n") || rest.some((c) => text(c).includes("\n"))) {
+			return null;
+		}
+		const after: Text = { type: "text", value: child.value.slice(at + len) };
+		child.value = child.value.slice(0, at);
+		last.children = last.children.slice(0, i + 1);
+		trimEnd(last.children);
+		return [after, ...rest].filter((c) => !(c.type === "text" && c.value === ""));
+	}
+	return null;
+}
+
+/** Drop trailing whitespace-only text, so the quote ends on its words. */
+function trimEnd(children: ElementContent[]) {
+	while (children.length > 0) {
+		const tail = children.at(-1);
+		if (tail?.type !== "text" || tail.value.trim() !== "") break;
+		children.pop();
+	}
+}
 
 /**
  * The rehype half: the cut, and the dress on figures, fences and quotes.
@@ -144,10 +252,8 @@ export function rehypePostSections() {
 	return (tree: Root, file: VFile) => {
 		if (!inTxt(file)) return;
 		const data = file.data as PostData;
-		const fences = data.postCode ?? [];
 		// The figures count on from the hero, which is Fig. 01 when there is one.
 		let figure = data.astro?.frontmatter?.hero ? 2 : 1;
-		let fence = 0;
 
 		// THE CUT. Root children in order: esm stays at the root; an h2 opens a
 		// section; everything else belongs to the open one.
@@ -173,49 +279,41 @@ export function rehypePostSections() {
 
 		// THE DRESS, per block of a section's body.
 		const dress = (node: RootContent, no: string, count: { code: number }): RootContent => {
-			const img = soleImage(node);
-			if (img) {
-				const alt = typeof img.properties.alt === "string" ? img.properties.alt : "";
+			const image = soleImage(node);
+			if (image) {
+				const { alt } = image.img.properties;
 				const n = pad2(figure++);
+				const label = typeof alt === "string" && alt ? `fig. ${n} / ${alt}` : `fig. ${n}`;
 				return el("figure", { className: ["ds-prose-figure"] }, [
-					img,
-					el("figcaption", {}, [mono(alt ? `fig. ${n} / ${alt}` : `fig. ${n}`)]),
+					image.content,
+					el("figcaption", {}, [mono(label)]),
 				]);
 			}
 			if (!isElement(node)) return node;
 			if (node.tagName === "pre") {
-				const meta = fences[fence++] ?? { lang: null, title: null };
+				const { dataLanguage, dataTitle } = node.properties;
+				delete node.properties.dataTitle;
 				const lang =
-					(typeof node.properties.dataLanguage === "string" && node.properties.dataLanguage) ||
-					meta.lang ||
-					"text";
+					typeof dataLanguage === "string" && dataLanguage && dataLanguage !== "plaintext"
+						? dataLanguage
+						: "text";
+				const title = typeof dataTitle === "string" && dataTitle ? dataTitle : null;
 				const n = `${no}.${++count.code}`;
 				return el("figure", { className: ["ds-prose-code"] }, [
 					el("div", { className: ["ds-prose-code__head"] }, [
-						mono(meta.title ? `${n} / ${meta.title}` : n, "primary"),
+						mono(title ? `${n} / ${title}` : n, "primary"),
 						mono(lang),
 					]),
 					node,
 				]);
 			}
 			if (node.tagName === "blockquote") {
-				const kids = node.children.filter((c) => !isBlank(c));
-				const last: ElementContent | undefined = kids.at(-1);
-				if (
-					kids.length > 1 &&
-					last?.type === "element" &&
-					last.tagName === "p" &&
-					DASH.test(text(last))
-				) {
-					const first = last.children.find((c) => c.type === "text");
-					if (first?.type === "text") first.value = first.value.replace(DASH, "");
-					node.children[node.children.lastIndexOf(last)] = el(
-						"footer",
-						{ className: ["ds-mono", "ds-mono--variant-caps", "ds-caps"] },
-						last.children,
-					);
-				}
-				return node;
+				const attribution = takeAttribution(node);
+				if (!attribution) return node;
+				return el("figure", { className: ["ds-prose-quote"] }, [
+					node,
+					el("figcaption", { className: MONO }, attribution),
+				]);
 			}
 			return node;
 		};
@@ -225,11 +323,11 @@ export function rehypePostSections() {
 			...sections.map((section, i) => {
 				const no = pad2(i);
 				const count = { code: 0 };
-				const heading =
-					(section.heading as Element | null) ??
-					el("h2", {}, [{ type: "text", value: "Intro" }]);
 				return el("section", { className: ["ds-prose-section"], dataSection: no }, [
-					el("header", { className: ["ds-prose-section__head"] }, [mono(no), heading]),
+					el("header", { className: ["ds-prose-section__head"] }, [
+						mono(no),
+						section.heading ?? introLabel(),
+					]),
 					el(
 						"div",
 						{ className: ["ds-prose-section__body"] },

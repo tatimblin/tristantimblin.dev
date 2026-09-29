@@ -183,7 +183,8 @@
 	gap: var(--space-2);
 	min-inline-size: 0;
 }
-.ds-prose-section__head > h2 {
+.ds-prose-section__head > h2,
+.ds-prose-section__head > .ds-prose-section__title {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -223,7 +224,8 @@
 .ds-prose-figure {
 	margin: 0;
 }
-.ds-prose-figure > img {
+.ds-prose-figure > img,
+.ds-prose-figure > a > img {
 	border: 1px solid var(--hairline);
 	border-radius: 0;
 }
@@ -236,6 +238,18 @@
 .ds-prose-figure > figcaption > * {
 	white-space: normal;
 	line-height: var(--line-height-ui);
+}
+
+/* A quote with an attribution: the blockquote, then the attribution as the
+   figure's caption, outside the quoted words, in the caps mono a step under
+   them and on their indent (the pull bar's 2px and its --space-4 inset). */
+.ds-prose-quote {
+	margin: 0;
+}
+.ds-prose-quote > figcaption {
+	display: block;
+	margin-block-start: var(--space-3);
+	padding-inline-start: calc(2px + var(--space-4));
 }
 
 /* A fenced block: no box, no fill, no corner — a hairline above and below,

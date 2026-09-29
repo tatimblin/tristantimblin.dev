@@ -312,8 +312,10 @@ instrument UI it is this site's own, so its CSS may be edited freely.
   there: no fill or corner, a 2px bar of `--accent` down the left edge, the
   words a step up — the body role's size and leading retuned in scope to
   `--font-size-5` / `--line-height-ui`, the primary ink — and an attribution
-  as a `footer` in the caps mono (`<Mono as="footer">`, or a quote's last
-  line starting with a dash, which the plugin turns into one).
+  as a `footer` in the caps mono (`<Mono as="footer">`). In a post, a
+  quote's last line starting with a dash is the attribution, and the plugin
+  moves it OUT of the quote: `figure.ds-prose-quote` holds the blockquote and
+  a caps-mono `figcaption`, on the words' indent.
 
 ```astro
 <PostList aria-label="Posts by year">

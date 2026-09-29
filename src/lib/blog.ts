@@ -16,6 +16,11 @@
  */
 import type { IconName } from "@whois/design-system/icons";
 
+/** Where the /txt posts live, relative to the project root: the content
+ *  collection's glob base, and the folder the markdown plugins
+ *  (src/lib/mdx/post-sections.ts) scope themselves to. */
+export const TXT_BASE = "./src/content/txt";
+
 export const BLOG_TITLE = "Writing";
 export const BLOG_DESCRIPTION = "Writing by Tristan Timblin.";
 

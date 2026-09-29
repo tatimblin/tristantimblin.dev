@@ -1,2 +1,8 @@
 [install]
 registry = "https://registry.npmjs.org/"
+
+# `bun test` is the unit tests under src/ (*.test.ts). The Playwright specs in
+# tests/ are *.spec.ts too, which bun would otherwise collect and fail to run;
+# they go through `bun run test` (playwright test).
+[test]
+root = "./src"

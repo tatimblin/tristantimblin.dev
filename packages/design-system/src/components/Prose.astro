@@ -24,7 +24,7 @@
 //   <section class="ds-prose-section">
 //     <header class="ds-prose-section__head">
 //       <span class="ds-mono ds-mono--variant-caps ds-caps">00</span>   (Mono, caps)
-//       <h2>Intro</h2>                                                  (the mapped H2)
+//       <h2>Old world</h2>                                              (the mapped H2)
 //     </header>
 //     <div class="ds-prose-section__body">…the blocks…</div>
 //   </section>
@@ -33,7 +33,10 @@
 // and a `figcaption` holding a caps Mono, `Fig. 02 / <alt>`), a figure per
 // fenced block (`figure.ds-prose-code` — a `.ds-prose-code__head` row with the
 // number and title on the left and the language on the right, then the pre)
-// and, in a Blockquote, a `footer` for the attribution. The variant draws all
+// and, for a quote with an attribution, `figure.ds-prose-quote` — the
+// blockquote, then a caps Mono `figcaption`. Section 00, before the first h2,
+// is labelled by a `span.ds-prose-section__title` set like the h2s but not a
+// heading. The variant draws all
 // of it: images on a hairline, no radius; code between two hairlines with no
 // box; links in the ink with a 1px underline; inline code on the first wash.
 import { cx } from "../lib/cx";

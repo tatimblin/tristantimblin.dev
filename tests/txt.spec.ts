@@ -298,14 +298,19 @@ test.describe("/txt/<slug> — the post page", () => {
 			"02",
 			"03",
 		]);
-		await expect(sections.locator(".ds-prose-section__head > h2")).toHaveText([
+		// 00's label is set like the heads but is not a heading: the outline is
+		// the author's h2s alone.
+		await expect(sections.first().locator(".ds-prose-section__head > .ds-prose-section__title")).toHaveText(
 			"Intro",
+		);
+		await expect(page.locator("#intro")).toHaveCount(0);
+		await expect(sections.locator(".ds-prose-section__head > h2")).toHaveText([
 			"Old world, new world",
 			"Where it breaks down",
 			"Let the agent decide",
 		]);
 		// The heads are the page's h2s, in the UI face at the semibold, 24px.
-		const h2 = sections.locator("h2").nth(1);
+		const h2 = sections.locator("h2").first();
 		await expect(h2).toHaveCSS("font-size", "24px");
 		expect(await h2.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/Neue Montreal/);
 
@@ -344,7 +349,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		const sections = page.locator(".ds-prose--variant-ruled > .ds-prose-section");
 		await expect(sections).toHaveCount(1);
 		await expect(sections).toHaveAttribute("data-section", "00");
-		await expect(sections.locator(".ds-prose-section__head > h2")).toHaveText("Intro");
+		await expect(sections.locator(".ds-prose-section__head > .ds-prose-section__title")).toHaveText("Intro");
+		await expect(page.locator(".post__prose h2")).toHaveCount(0);
 		expect(await page.locator(".ds-prose-section__body > .ds-body").count()).toBeGreaterThan(3);
 
 		// THE FIX: the text column is the same width, and the same two columns,
@@ -419,7 +425,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(quote).toHaveCSS("background-color", TRANSPARENT);
 		await expect(quote).toHaveCSS("border-left-width", "2px");
 		await expect(quote.locator("> p").first()).toHaveCSS("font-size", "20px");
-		await expect(quote.locator("> footer")).toHaveText(/brace sproul \/ langchain/i);
+		// The attribution is outside the quoted words: the figure's caption.
+		await expect(quote.locator("footer")).toHaveCount(0);
+		await expect(
+			body.locator("figure.ds-prose-quote:has(> blockquote.ds-blockquote--variant-pull) > figcaption"),
+		).toHaveText(/brace sproul \/ langchain/i);
 		expect(await quote.locator("> p").first().textContent()).not.toMatch(/^\s*—/);
 	});
 

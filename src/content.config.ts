@@ -1,6 +1,6 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
-import { categoryIds } from "./lib/blog";
+import { categoryIds, TXT_BASE } from "./lib/blog";
 
 const gallery = defineCollection({
 	loader: glob({ pattern: "**/*.yaml", base: "./src/content/gallery" }),
@@ -15,7 +15,7 @@ const gallery = defineCollection({
 });
 
 const txt = defineCollection({
-	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/txt" }),
+	loader: glob({ pattern: "**/*.{md,mdx}", base: TXT_BASE }),
 	schema: z.object({
 		title: z.string(),
 		date: z.coerce.date(),
