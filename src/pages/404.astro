@@ -1,0 +1,37 @@
+---
+// 404 — the page for any URL the site does not have. Astro emits it as
+// dist/404.html, which Cloudflare Pages serves with a 404 status; without one,
+// Pages treats the deploy as a single-page app and answers every miss with the
+// homepage and a 200.
+//
+// On BlogLayout's plain shell: the site header, the mono caps kicker over the
+// h1, and a lede with the two ways back. noindex, so a crawler that follows a
+// dead link does not file the page.
+import BlogLayout from "../layouts/BlogLayout.astro";
+import Pill from "@whois/design-system/Pill";
+---
+
+<BlogLayout
+	title="Not found — Tristan Timblin"
+	description="There is nothing at this address."
+	noindex
+	kicker="404 /"
+	heading="Nothing here"
+>
+	<Fragment slot="lede">
+		This address doesn't lead anywhere, or it used to and no longer does.
+		<span class="not-found__links">
+			<Pill as="a" href="/" variant="outline">home</Pill>
+			<Pill as="a" href="/txt" variant="outline">writing</Pill>
+		</span>
+	</Fragment>
+</BlogLayout>
+
+<style>
+	.not-found__links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin-block-start: var(--space-5);
+	}
+</style>
