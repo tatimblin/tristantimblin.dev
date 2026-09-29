@@ -66,7 +66,7 @@ const clean = (svg) =>
 		.trim();
 
 const THEMES = ["maximeheckel-dark", "maximeheckel-light"];
-const cell = (svg, w) => `<div class="ds-art" style="inline-size:${w}px">${svg}</div>`;
+const cell = (svg, w) => `<div class="ds-art-frame" style="inline-size:${w}px">${svg}</div>`;
 const label = (t) => `<p>${t.replace("maximeheckel-", "")}</p>`;
 
 function rows() {
@@ -99,13 +99,13 @@ body{margin:0;padding:24px;font:14px/1.4 ui-monospace,monospace;background:#1010
 figure{margin:0;display:flex;flex-direction:column;gap:6px}figcaption{font-size:12px}
 h2{font-size:14px;font-weight:400}p{margin:0}button{position:fixed;top:12px;right:12px;font:inherit}
 </style></head><body>
-<button onclick="document.querySelectorAll('.ds-art').forEach(e=>e.toggleAttribute('data-art-play'))">play / pause</button>
+<button onclick="document.querySelectorAll('.ds-art-frame').forEach(e=>e.toggleAttribute('data-art-play'))">play / pause</button>
 ${sheet ? contactSheet() : rows()}</body></html>`;
 }
 
 // What the motion group is doing, read from the first frame that has one.
 const probe = () => {
-	const g = document.querySelector(".ds-art [data-motion]");
+	const g = document.querySelector(".ds-art-frame [data-motion]");
 	if (!g) return null;
 	const s = getComputedStyle(g);
 	const dashed = g.querySelector("[stroke-dasharray]");
@@ -135,7 +135,7 @@ async function screenshot(out) {
 			console.log("motion: this file has no data-motion group");
 			return;
 		}
-		await tab.evaluate(() => document.querySelectorAll(".ds-art").forEach((e) => e.setAttribute("data-art-play", "")));
+		await tab.evaluate(() => document.querySelectorAll(".ds-art-frame").forEach((e) => e.setAttribute("data-art-play", "")));
 		// Sample while it plays: a blink can land on lit, so look more than once.
 		const samples = [];
 		for (let i = 0; i < 6; i++) {

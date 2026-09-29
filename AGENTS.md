@@ -5,7 +5,10 @@ Guidance for AI agents working in this repo.
 ## Repo layout
 
 - **`src/`** — the Astro site (static output). Pages in `src/pages/`, shared
-  shell in `src/layouts/Layout.astro`, global CSS in `src/styles/global.css`.
+  shell in `src/layouts/Layout.astro` (the blog's in `BlogLayout` /
+  `PostLayout`), global CSS in `src/styles/global.css`, the homepage's tiles in
+  `src/widgets/`, posts as `src/content/txt/<slug>.mdx` with their art
+  (`<slug>.svg`) and images (`images/`) beside them.
 - **`packages/*`** — workspace packages (Bun workspaces, consumed as `@whois/*`,
   source exports, no build step):
   - `@whois/design-system` — the design system (tokens + Astro/CSS components).
@@ -13,6 +16,8 @@ Guidance for AI agents working in this repo.
     `stories-heading`, `wobble-text`.
   - Two exceptions with real build steps: `fleet-extension` and
     `vscode-fleet-demo` — see below.
+- **`tests/`** — Playwright, against the built site (`bun run test`); `bun test`
+  runs the unit tests beside the code (`src/lib/**/*.test.ts`).
 - Run the dev server with **`bunx astro dev`** (Node). Do **not** use
   `bunx --bun astro dev` — it crashes the HMR WebSocket.
 
@@ -35,14 +40,14 @@ source-export rule above, in both of its packages, because it has to:
 vscode-fleet-demo `build`. The root `build` runs it before `astro build`, and
 so does Playwright's `webServer` — a bare `astro build` ships the post with no
 embed in it. `build:site` is that bare `astro build`, kept as an escape hatch
-for copy edits and the other 29 pages (seconds, vs. minutes for the monaco
+for copy edits and every other page (seconds, vs. minutes for the monaco
 build on a cold cache) — but `public/fleet-demo/` is gitignored, so on a clean
 checkout it silently ships the post with a dead embed. Ship with `build`.
 
 **Three dev loops:**
 
 - *Extension:* `build` (or leave `watch` running), then F5 in
-  `packages/fleet-extension`; or `vscode-test-web` against `dist/web`.
+  `packages/fleet-extension`; or `bunx @vscode/test-web` against `dist/web`.
 - *Embed:* the extension's `build:web` first (the demo imports its built bundle
   `?raw`), then `bun run --cwd packages/vscode-fleet-demo dev`.
 - *In the post:* `bun run build:fleet-demo`, then `bunx astro dev`.
@@ -66,8 +71,8 @@ ad-hoc.
 
 **The gate (work top-down, stop at the first match):**
 
-1. Maps to a component (text/heading, layout, button, card, callout, pill, link,
-   list, inline code, icon)? → **use the DS component.**
+1. Maps to a component (text/heading, layout, button, card, pill, chip, link,
+   list, icon, figure, index table, hit area)? → **use the DS component.**
 2. Bespoke layout/visual with no matching component? → **write your own CSS but
    consume DS tokens** (`var(--space-*)`, `var(--font-size-*)`, colors, radii).
    Never hardcode a value a token exists for.
@@ -82,6 +87,11 @@ ad-hoc.
 **Full guide:** [`packages/design-system/CONVENTIONS.md`](packages/design-system/CONVENTIONS.md)
 — usage, the gate in detail, when to edit which token file, and authoring
 conventions for extending the package.
+
+**Fonts:** by role, never by family — `--font-heading` / `--font-ui` Mondwest,
+`--font-body` Neue Montreal, `--font-hero` Migra, `--font-code` the system mono.
+Self-hosted from `public/fonts` (`tools/fonts/build.sh`), @font-face'd in
+`src/styles/fonts.css`; a role names its weight too (see CONVENTIONS).
 
 **Live catalogue:** run the dev server and open `/design-system`
 (`src/pages/design-system.astro`) — every component in every variant/state. It's

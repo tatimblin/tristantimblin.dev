@@ -43,7 +43,9 @@ Your job is one small, sparse, off-centre SVG that reads as the post's idea at
 1. **`references/language.md`**: the spec, including the tokens, geometry,
    motion kinds and file rules. Do not draw from memory of it.
 2. **The reference image**, `.playwright-mcp/refs/illustration-style.jpg`. Open
-   it and look, because the language is the look, not only the rules.
+   it and look, because the language is the look, not only the rules. The
+   folder is gitignored, so a fresh checkout lacks it; then the shipped art on
+   `/design-system/art` is the reference.
 3. **`references/motifs.md`**: seventeen valid snippets to copy and adapt: iso
    box, cylinder, chip, pill, node-and-trace, cursor, checkbox, failed
    checkbox, concentric rings, fan of flow lines, dashed path, dot field,
@@ -226,7 +228,7 @@ size, in both themes, still and moving. Screenshot, then **read the PNG**.
   element count and motion, and a "play all" toggle. Run `bunx astro dev`
   (never `bunx --bun`), then screenshot the entry at 1440 and 390 viewport
   widths.
-- **In the quilt** at `/txt`, once the quilt exists (Phase 3). The tile should
+- **In the quilt** at `/txt`. The tile should
   read at 230px next to its neighbours, and the motion should run on hover.
 - **On the post** at `/txt/<slug>`, where the art is the MARK beside the
   title: ~270px wide, no plate, the page's ink, playing. With no plate

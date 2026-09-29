@@ -77,7 +77,7 @@ such rules off DS elements (`h2:where(:not(.ds-heading))`, global.css).
 every artwork on both pages. Open it instead of guessing a prop; this doc
 deliberately does not duplicate per-component API tables.
 
-**Components available (58):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (60):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Pill`, `Chip`, `Anchor`, `List`, `ListItem`, `Icon`,
 `VisuallyHidden`, `WidgetGrid`, `Widget`, `WidgetEmpty`, `HitArea` — the
@@ -390,8 +390,9 @@ rows and the body's sections fall on the same lines — under the site header:
    scope; the LEAD — the excerpt, `Text` at size 5 in the primary ink — in
    the second and third; the art as a MARK (`ArtFrame variant="mark" play`)
    in the fourth, resting on the lead's last line;
-4. the HERO, when the frontmatter has one (`hero: { src, alt, caption? }`): a
-   ruled `Fig no="01"`;
+4. the HERO, when the frontmatter has one (`hero: { src, alt, caption? }`,
+   `src` an image beside the post through the schema's `image()`): a ruled
+   `Fig no="01"` around a `<Picture>`;
 5. the SECTIONS — `Prose variant="ruled"` around the mapped body, which the
    plugin has cut at each h2 (`00 / Intro` for what comes first; a post with
    no h2s is one section, its text at the same measure as any other);
@@ -509,7 +510,7 @@ via a `scroll-state` container query).
 
 Every post has its own hand-drawn SVG, and the quilt on `/txt` pads the grid
 with fillers, all in one language taken from the reference tile sheet
-(`.playwright-mcp/refs/illustration-style.jpg`): **white 1px line work and flat
+(`.playwright-mcp/refs/illustration-style.jpg`, gitignored — local only): **white 1px line work and flat
 fills in four colours on a near-black landscape plate** — circuits with
 right-angle bends and terminal dots, isometric solids, concentric rings, flow
 lines, dashed paths, dot fields; systems metaphors, no text, compositions that
@@ -692,7 +693,8 @@ orange/pink-*` scales, `--hyperlink`, the `--token-*` code palette, and
 `--shadow-color`; plus the instrument tokens (previous section: `--lit`,
 `--wash-*`, `--tone-*`, `--hairline*`, `--bar-width`, `--tick-pitch`,
 `--ticks-image*`, `--focus-ring*`, `--playhead-dot`, `--shadow-1..3`, the
-voices, the durations and `--ease-reveal`), `--tracking-hero` (the hero
+voices, the durations, `--ease-reveal` and the reveal's
+`--reveal-rise` / `--reveal-stagger`), `--tracking-hero` (the hero
 face's display tracking, the lockup's) and the two measures, `--measure-prose`
 (the reading column, 44rem) and `--measure-note` (a note's line, 68ch). The `--color-*` names in `bridge.css`
 are for the packages that read a colour where a class cannot reach (a canvas,
@@ -721,10 +723,11 @@ with metric-matched fallbacks in `src/styles/fonts.css`):
 
 Migra and Mondwest are ONE family each with discrete cuts (Migra 500/700;
 Mondwest 200/300/400/700), so a role that uses one names the family AND the
-weight — set only the family and the browser picks the cut. `font-synthesis` is
-off site-wide: a weight lands on a real cut or it is not drawn. `Text`'s
-`family` values are these roles: `ui | body | hero | code`. Live specimens are in
-the catalogue's first section.
+weight — set only the family and the browser picks the cut. Neue Montreal
+ships 400/600. `font-synthesis-weight` is off site-wide (global.css): a weight
+lands on a real cut or it is not drawn. `Text`'s `family` values are these
+roles — `ui | heading | body | hero | code`, and `default`, which inherits.
+Live specimens are in the catalogue's first section.
 
 **Do not invent tokens.** If a value has no token, it is a literal in a rule-3
 visual or a new token in `tokens.overrides.css` with its reason.

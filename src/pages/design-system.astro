@@ -367,7 +367,6 @@ const instrumentTokens = [
 	["--accent-hover", "the accent under the pointer"],
 	["--on-accent", "type on the accent — the ink, both themes"],
 	["--lit", "a step that is on (accent dark / ink light)"],
-	["--emphasis", "the accent at a tint"],
 	["--wash-1", "unlit tile · subtle pill"],
 	["--wash-2", "ink, 2nd strength"],
 	["--wash-3", "ink, 3rd strength · outline"],
@@ -665,7 +664,7 @@ const faces = [
 				Three leadings, because there are three jobs. <code>--line-height-heading</code>
 				(1.15) holds a heading's lines together as one object; body leading on display
 				type makes a two-line heading read as two unrelated lines.
-				<code>--line-height-body</code> (1.7) gives running text room to find the next
+				<code>--line-height-body</code> (1.6) gives running text room to find the next
 				line. <code>--line-height-ui</code> (1.3) sits between them for label type, which
 				wants to be tighter than prose without being display-tight.
 				<code>--tracking-heading</code> is none: a bitmap face's letters sit on a grid,
@@ -2012,7 +2011,7 @@ assertions:
 		}
 
 		// The art demo: the checkbox sets data-art-play on every demo frame, the
-		// attribute the post page sets on its hero.
+		// attribute the post page sets on its mark.
 		function initArtDemo() {
 			const toggle = document.querySelector<HTMLInputElement>("[data-art-play-toggle]");
 			const frames = document.querySelectorAll<HTMLElement>("[data-art-demo]");
