@@ -265,7 +265,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(img).toHaveCSS("border-top-left-radius", "0px");
 		// It is not in the body any more: the body's first figure is Fig. 02.
 		await expect(page.locator(".ds-prose img[src='/blog-images/aptitude-pass.webp']")).toHaveCount(0);
-		await expect(page.locator(".ds-fig figcaption").first()).toHaveText(/^fig\. 02 \//i);
+		await expect(page.locator(".ds-prose .ds-fig figcaption").first()).toHaveText(/^fig\. 02 \//i);
 
 		await page.goto(NO_HERO);
 		await expect(page.locator("[data-post-hero]")).toHaveCount(0);
@@ -306,7 +306,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		// The heads are the page's h2s, in the UI face at the semibold, 24px.
 		const h2 = sections.locator("h2").first();
 		await expect(h2).toHaveCSS("font-size", "24px");
-		expect(await h2.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/Neue Montreal/);
+		expect(await h2.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/Mondwest/);
 
 		const head = page.locator(".ds-prose-section__head").nth(1);
 		await expect(head).toHaveCSS("position", "sticky");
@@ -357,7 +357,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(Math.abs(without.width - text)).toBeLessThanOrEqual(1);
 
 		// Its figures count on from the hero.
-		await expect(page.locator(".ds-fig figcaption")).toHaveText([
+		await expect(page.locator(".ds-prose .ds-fig figcaption")).toHaveText([
 			/^fig\. 02 \//i,
 			/^fig\. 03 \//i,
 			/^fig\. 04 \//i,

@@ -183,7 +183,7 @@ const neighbourRows = [
 				</Grid>
 
 				{hero && (
-					<Fig no="01" caption={hero.caption ?? hero.alt} layout="ruled" class="post__fig" data-post-hero>
+					<Fig no="01" caption={hero.caption ?? hero.alt} layout="ruled" class="post__fig" data-post-hero="">
 						<Img src={hero.src} alt={hero.alt} priority />
 					</Fig>
 				)}
@@ -192,7 +192,7 @@ const neighbourRows = [
 					<slot />
 				</Prose>
 
-				<Index class="post__index" aria-label="Index" data-post-index>
+				<Index class="post__index" aria-label="Index" data-post-index="">
 					<IndexRow head>
 						<Mono>index</Mono>
 						<Mono>no.</Mono>
