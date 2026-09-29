@@ -57,18 +57,22 @@
 /* THE INSTRUMENT — /txt (BlogLayout `bar`): the site header, then <main>
    in the site container, holding three rows straight on the page — the bar
    (the layout's), the board and the timeline (the page's). Nothing carries a
-   surface: the bar is one hairline box, the quilt is ruled, the card sits on
-   the page — so the rows are set apart by space, not cut by a gutter.
+   surface: the bar is one hairline box, the quilt is art on the page, the
+   card sits on the page — so the rows are set apart by space, not cut by a
+   gutter.
 
    The container is padded by --container-inset (global.css), the same inset
    the header pads by and the homepage's rows take, so the header's brand and
    nav sit on the rows' outer edges exactly as they sit on the homepage's.
 
-   The rows stack at their own height, a step apart — the bar, the quilt a
-   --space-6 under it, the timeline a --space-6 under that — and the page
-   ends after the timeline with one container gutter, the site footer
-   following. Nothing fills or centres to the viewport: the quilt keeps its
-   tiles' aspect, so spare height would only open dead space round it. */
+   The rows stack at their own height: the quilt starts right under the bar
+   (a --space-3 step), grows with the posts and scrolls with the page; the
+   timeline follows it, DOCKED — sticky to the window's bottom edge, so it
+   stays in reach while the quilt scrolls under it and comes to rest in its
+   own place after the quilt at the end. Its containing block is the
+   instrument, so it never leaves it: it cannot cover the quilt's last row
+   at rest, nor reach the site footer, which follows the page's one
+   container gutter. Nothing fills or centres to the viewport. */
 .blog.blog--instrument {
 	min-height: 0;
 }
@@ -83,7 +87,38 @@
 .blog__instrument {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-6);
+	gap: var(--space-3);
+}
+
+/* THE DOCK. The page colour behind it so no tile shows through, padded a
+   step top and bottom so its ticks and years sit off the window's edge.
+   Stacked above the tiles (it is later in the page, and positioned) but
+   below the quilt's panel (z-index 1), should the two ever meet. While it
+   is stuck — and only then — a hairline on its top edge marks it as a bar
+   over the scrolling quilt; at rest after the quilt it draws nothing, so no
+   line runs under the grid. */
+.blog__timeline {
+	position: sticky;
+	inset-block-end: 0;
+	z-index: 0;
+	padding-block: var(--space-4);
+	background: var(--background);
+	container-type: scroll-state;
+}
+.blog__timeline::before {
+	content: "";
+	position: absolute;
+	inset-inline: 0;
+	inset-block-start: 0;
+	block-size: 1px;
+	background: var(--hairline);
+	opacity: 0;
+	transition: opacity var(--duration-swap) var(--ease-reveal);
+}
+@container scroll-state(stuck: block-end) {
+	.blog__timeline::before {
+		opacity: 1;
+	}
 }
 
 /* The bar row: the h1 is for a reader, not drawn; the form is the bar,
@@ -107,8 +142,9 @@
 		margin-block-end: var(--space-6);
 	}
 	/* Phone: the bar wraps its chips onto their own row (the package's
-	   rule); the timeline is its compact rendering. */
-	.blog__instrument {
-		gap: var(--space-5);
+	   rule); the timeline is its compact rendering, docked all the same on
+	   a tighter pad. */
+	.blog__timeline {
+		padding-block: var(--space-3);
 	}
 }

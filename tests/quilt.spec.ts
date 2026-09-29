@@ -12,7 +12,7 @@ import { test, expect, type Page } from "@playwright/test";
  * ?q=) reach the engine.
  *
  *   rest        every cell lit, one link per post, fillers aria-hidden and
- *               drawn faint; the ruled grid with no text on a tile; the
+ *               drawn faint; tiles cut by a gap, no ruling, no text on a tile; the
  *               instrument in the site container, under the site header,
  *               its edges on the header's brand and nav
  *   hover/focus the tile lit, the rest faint or gone on a stagger, the card
@@ -36,7 +36,8 @@ import { test, expect, type Page } from "@playwright/test";
  *               a step holds while the pointer is elsewhere; Escape clears
  *   timeline    one tick per month, a named link per post, the playhead on
  *               the post in focus (at rest the latest), dim ticks under a
- *               filter, a click pins
+ *               filter, a click pins; docked to the window's bottom edge while
+ *               the quilt scrolls under it, at rest after it before the footer
  *   card        the ruled card's fields and its stat strip; one size at 1440 and 1920
  *   count       the live region a reader hears; no number on screen
  *   layouts     the rows, nothing filled, the header as the homepage's; the
@@ -209,7 +210,7 @@ test.describe("quilt — rest", () => {
 			expect(f.state).toBe("lit");
 			expect(f.opacity).toBeCloseTo(faint, 2);
 			expect(f.filter).toBe("grayscale(1)");
-			// The cell itself — the ruling — is never faded.
+			// The cell itself — which draws the active outline — is never faded.
 			expect(f.cell).toEqual({ opacity: 1, filter: "none" });
 		}
 		for (const p of await look('[data-cell="post"]')) {
@@ -218,7 +219,7 @@ test.describe("quilt — rest", () => {
 		}
 	});
 
-	test("a ruled grid: hairlines between the cells and round them, the art inset, no text on a tile", async ({
+	test("no ruling: tiles on the page cut by a gap token, the art filling each, no text on a tile", async ({
 		page,
 	}) => {
 		await page.goto("/txt");
@@ -227,19 +228,21 @@ test.describe("quilt — rest", () => {
 			const gs = getComputedStyle(grid);
 			const cells = [...document.querySelectorAll<HTMLElement>("[data-cell]")].filter((c) => c.checkVisibility());
 			const step = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--space-2"));
+			const borders = (cs: CSSStyleDeclaration) =>
+				[cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth, cs.borderLeftWidth];
 			return {
-				gap: gs.gap,
-				left: gs.borderLeftWidth,
-				top: gs.borderTopWidth,
+				rowGap: parseFloat(gs.rowGap),
+				colGap: parseFloat(gs.columnGap),
+				grid: borders(gs),
 				cells: cells.map((c) => {
 					const cs = getComputedStyle(c);
 					const art = c.querySelector(".ds-art")!.getBoundingClientRect();
 					const box = c.getBoundingClientRect();
 					return {
-						right: cs.borderRightWidth,
-						bottom: cs.borderBottomWidth,
-						radius: cs.borderTopLeftRadius,
-						inset: [art.left - box.left, art.top - box.top, box.right - art.right - 1, box.bottom - art.bottom - 1],
+						borders: borders(cs),
+						padding: cs.padding,
+						box: box.toJSON(),
+						art: art.toJSON(),
 						text: c.innerText.trim(),
 						caption: c.querySelector(".ds-quilt-cell__caption")?.checkVisibility() ?? false,
 					};
@@ -247,51 +250,45 @@ test.describe("quilt — rest", () => {
 				step,
 			};
 		});
-		expect(m.gap).toBe("0px");
-		expect(m.left).toBe("1px");
-		expect(m.top).toBe("1px");
+		// The gap is the desktop token, both ways; no line round the grid.
+		expect(m.rowGap).toBeCloseTo(m.step, 1);
+		expect(m.colGap).toBeCloseTo(m.step, 1);
+		expect(m.grid).toEqual(["0px", "0px", "0px", "0px"]);
 		expect(m.cells).toHaveLength(15);
 		for (const c of m.cells) {
-			expect(c.right).toBe("1px");
-			expect(c.bottom).toBe("1px");
-			expect(c.radius).toBe("0px");
-			// The art a step in from the ruling on every side.
-			for (const d of c.inset) expect(d).toBeCloseTo(m.step, 0);
+			// No line on a cell; the art fills it.
+			expect(c.borders).toEqual(["0px", "0px", "0px", "0px"]);
+			expect(c.padding).toBe("0px");
+			for (const k of ["left", "top", "right", "bottom"] as const) expect(c.art[k]).toBeCloseTo(c.box[k], 0);
 			// Art only: nothing is written on a tile.
 			expect(c.text).toBe("");
 			expect(c.caption).toBe(false);
 		}
+		// Neighbours sit a gap apart, on both axes (DOM order is not grid
+		// order, so find the top-left cell's neighbours by position).
+		const boxes = m.cells.map((c) => c.box).sort((p, q) => p.top - q.top || p.left - q.left);
+		const a = boxes[0];
+		const right = boxes.filter((c) => Math.abs(c.top - a.top) < 1 && c.left > a.left).sort((p, q) => p.left - q.left)[0];
+		const below = boxes.filter((c) => Math.abs(c.left - a.left) < 1 && c.top > a.top).sort((p, q) => p.top - q.top)[0];
+		expect(right.left - a.right).toBeCloseTo(m.step, 0);
+		expect(below.top - a.bottom).toBeCloseTo(m.step, 0);
 	});
 
-	test("the ruling is constant: a filler's and a gone cell's lines are a lit post's", async ({ page }) => {
+	test("no ruling in any state: a filler, a faint and a gone cell draw no line either", async ({ page }) => {
 		await page.goto("/txt");
-		const ruling = (sel: string) =>
+		const lines = (sel: string) =>
 			page.locator(sel).first().evaluate((el) => {
 				const cs = getComputedStyle(el);
-				return {
-					right: cs.borderRightColor,
-					bottom: cs.borderBottomColor,
-					width: cs.borderRightWidth,
-					opacity: cs.opacity,
-					filter: cs.filter,
-				};
+				return [cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth, cs.borderLeftWidth, cs.outlineStyle];
 			});
-		const lit = await ruling('[data-cell="post"][data-state="lit"]');
-		expect(lit.width).toBe("1px");
-		expect(lit.opacity).toBe("1");
-		// At rest a filler's art is faint, its lines are not.
-		expect(await ruling('[data-cell="filler"]:not([hidden])')).toEqual(lit);
-		// Scattered: a gone cell's art vanishes; its lines stay, and settle
-		// at the same strength (nothing on the cell transitions).
+		const none = ["0px", "0px", "0px", "0px", "none"];
+		expect(await lines('[data-cell="post"][data-state="lit"]')).toEqual(none);
+		expect(await lines('[data-cell="filler"]:not([hidden])')).toEqual(none);
 		await page.locator(`${post("003")} a`).hover();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
-		const gone = '[data-cell][data-state="gone"]';
-		expect(await page.locator(gone).count()).toBeGreaterThan(0);
-		await expect
-			.poll(() => page.locator(gone).first().evaluate((el) => getComputedStyle(el.firstElementChild!).opacity))
-			.toBe("0");
-		expect(await ruling(gone)).toEqual(lit);
-		expect(await ruling('[data-cell][data-state="faint"]')).toEqual(lit);
+		expect(await page.locator('[data-cell][data-state="gone"]').count()).toBeGreaterThan(0);
+		expect(await lines('[data-cell][data-state="gone"]')).toEqual(none);
+		expect(await lines('[data-cell][data-state="faint"]')).toEqual(none);
 	});
 
 	test("one instrument: three rows on the page in the site container, under the site header, on its brand and nav", async ({
@@ -310,7 +307,7 @@ test.describe("quilt — rest", () => {
 			return {
 				container,
 				vw: document.documentElement.clientWidth,
-				space8: parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--space-8")),
+				space3: parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--space-3")),
 				scroll: document.documentElement.scrollWidth,
 				frame: frame.getBoundingClientRect().toJSON(),
 				rows: [...document.querySelectorAll("[data-instrument] > .blog__row")].map((r) =>
@@ -341,16 +338,13 @@ test.describe("quilt — rest", () => {
 			expect(r.left).toBeCloseTo(m.frame.left, 0);
 			expect(r.right).toBeCloseTo(m.frame.right, 0);
 		}
+		// No dead space: the rows stack a --space-3 apart — the quilt right
+		// under the bar, the timeline's row right under the quilt — rather
+		// than filling the viewport and centring the board.
 		for (let i = 1; i < m.rows.length; i++) {
-			expect(m.rows[i].top - m.rows[i - 1].bottom, `row ${i}`).toBeGreaterThanOrEqual(16);
+			expect(m.rows[i].top - m.rows[i - 1].bottom, `row ${i}`).toBeCloseTo(m.space3, 0);
 		}
-		// No dead space: the rows stack a step apart — the quilt within
-		// --space-8 of the bar, the timeline within --space-8 of the quilt —
-		// rather than filling the viewport and centring the board.
-		for (let i = 1; i < m.rows.length; i++) {
-			expect(m.rows[i].top - m.rows[i - 1].bottom, `row ${i}`).toBeLessThanOrEqual(m.space8 + 1);
-		}
-		expect(m.quilt.top - m.bar.bottom).toBeLessThanOrEqual(m.space8 + 1);
+		expect(m.quilt.top - m.bar.bottom).toBeCloseTo(m.space3, 0);
 		// The bar is the first row, spanning the container; the quilt is the
 		// second, spanning it edge to edge.
 		expect(m.bar.left).toBeCloseTo(m.frame.left, 0);
@@ -376,8 +370,16 @@ test.describe("quilt — rest", () => {
 					inst,
 					document.querySelector("main")!,
 					bar,
-					...document.querySelectorAll("[data-instrument] > .blog__row, [data-quilt], [data-cell]"),
+					...document.querySelectorAll("[data-instrument] > .blog__row:not(.blog__timeline), [data-quilt], [data-cell]"),
 				].map((el) => ({ cls: el.className, clear: clear(bg(el)) }));
+				// The docked timeline alone carries a colour: the page's own, so
+				// the tiles scrolling under it do not show through.
+				const probe = document.createElement("div");
+				probe.style.background = "var(--background)";
+				document.body.append(probe);
+				const page = bg(probe);
+				probe.remove();
+				const dock = { bg: bg(document.querySelector(".blog__timeline")!), page };
 				const chips = [...document.querySelectorAll<HTMLElement>("[data-search-chips] [data-chip]")].map((c) => ({
 					q: c.dataset.chip,
 					current: c.hasAttribute("aria-current"),
@@ -387,11 +389,13 @@ test.describe("quilt — rest", () => {
 				}));
 				return {
 					bare,
+					dock,
 					chips,
 					bar: { border: bs.borderTopWidth, radius: bs.borderTopLeftRadius, style: bs.borderTopStyle },
 				};
 			});
 			for (const b of m.bare) expect(b.clear, b.cls).toBe(true);
+			expect(m.dock.bg).toBe(m.dock.page);
 			// The bar: one hairline box, square.
 			expect(m.bar.border).toBe("1px");
 			expect(m.bar.style).toBe("solid");
@@ -732,7 +736,7 @@ test.describe("quilt — search", () => {
 			await expect(page.locator(`#${optId(1 - k)}`)).toHaveAttribute("aria-selected", "false");
 			await expect(page.locator("[data-cell][data-active]")).toHaveCount(1);
 			await expect(page.locator(post(no))).toHaveAttribute("data-active", "");
-			// The outline is drawn: a 1px accent line on the active cell's ruling.
+			// The outline is drawn: a 1px accent line round the active tile.
 			await expect.poll(() => ring(page, no)).toMatch(/inset/);
 			expect(await ring(page, "005")).toBeNull();
 		};
@@ -867,7 +871,7 @@ test.describe("quilt — reduced motion", () => {
 		expect(await scattered.count()).toBeGreaterThan(0);
 		const timing = await scattered.evaluateAll((els) =>
 			els.map((el) => {
-				// The state is drawn on the cell's contents; the ruling is constant.
+				// The state is drawn on the cell's contents, never the cell.
 				const s = getComputedStyle(el.firstElementChild!);
 				return `${s.transitionDuration}|${s.transitionDelay}`;
 			}),
@@ -928,9 +932,9 @@ test.describe("quilt — phone (390px)", () => {
 			.evaluate((q) => getComputedStyle(q).gridTemplateColumns.split(" ").length);
 		expect(tracks).toBe(2);
 		await expect(page.locator(`${post("003")} .ds-quilt-cell__caption`)).toBeVisible();
-		await expect(page.locator(`${post("003")} .ds-quilt-cell__caption`)).toContainText(
-			"The Mega Desk",
-		);
+		// The title alone: the date and the category are the card's.
+		await expect(page.locator(`${post("003")} .ds-quilt-cell__caption`)).toHaveText("The Mega Desk");
+		await expect(page.locator(".ds-quilt-cell__meta")).toHaveCount(0);
 		for (const f of await page.locator('[data-cell="filler"]').all()) await expect(f).toBeHidden();
 		await expect(page.locator(PANEL)).toBeHidden();
 
@@ -1154,6 +1158,52 @@ test.describe("instrument — the stepper", () => {
 });
 
 test.describe("instrument — the timeline", () => {
+	for (const [width, height] of [
+		[1440, 600],
+		[390, 700],
+	]) {
+		test(`docked at ${width}×${height}: sticky to the window's bottom while the quilt scrolls under it, at rest after the quilt, before the footer`, async ({
+			page,
+		}) => {
+			await page.setViewportSize({ width, height });
+			await page.goto("/txt");
+			const geo = () =>
+				page.evaluate(() => {
+					const dock = document.querySelector(".blog__timeline")!;
+					return {
+						vh: document.documentElement.clientHeight,
+						max: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+						dock: dock.getBoundingClientRect().toJSON(),
+						quilt: document.querySelector("[data-quilt]")!.getBoundingClientRect().toJSON(),
+						footer: document.querySelector('footer, [role="contentinfo"]')!.getBoundingClientRect().toJSON(),
+						position: getComputedStyle(dock).position,
+						z: getComputedStyle(dock).zIndex,
+						panelZ: getComputedStyle(document.querySelector("[data-quilt-panel]")!).zIndex,
+					};
+				});
+			const start = await geo();
+			expect(start.position).toBe("sticky");
+			// Above the tiles, below the panel.
+			expect(Number(start.z)).toBeLessThan(Number(start.panelZ));
+			// The page scrolls, and at the top the quilt runs on under the dock.
+			expect(start.max).toBeGreaterThan(0);
+			expect(start.dock.bottom).toBeCloseTo(start.vh, 0);
+			expect(start.quilt.bottom).toBeGreaterThan(start.dock.top);
+
+			// Partway: still docked to the window's bottom edge.
+			await page.evaluate(() => window.scrollTo(0, 16));
+			await expect.poll(async () => (await geo()).dock.bottom).toBeCloseTo(start.vh, 0);
+
+			// At the end: at rest in its own place after the quilt, clear of the
+			// last row, and above the footer.
+			await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+			await expect.poll(async () => (await geo()).dock.top).toBeGreaterThanOrEqual((await geo()).quilt.bottom);
+			const end = await geo();
+			expect(end.dock.top).toBeGreaterThanOrEqual(end.quilt.bottom);
+			expect(end.dock.bottom).toBeLessThanOrEqual(end.footer.top);
+		});
+	}
+
 	test("a tick per month over whole years, a named link per post in its month, the playhead on the latest", async ({
 		page,
 	}) => {
@@ -1466,8 +1516,10 @@ test.describe("instrument — layouts", () => {
 		expect(b.chipsScroll.scrollable).toBe(true);
 		expect(Math.abs(b.older.y + b.older.height / 2 - (b.input.y + b.input.height / 2))).toBeLessThanOrEqual(2);
 		expect(b.older.x).toBeGreaterThanOrEqual(b.input.x + b.input.width - 1);
-		// A tap-list needs its titles: the phone tiles keep a small caption.
+		// A tap-list needs its titles: the phone tiles keep a small caption,
+		// the title and nothing else.
 		await expect(page.locator(`${post("003")} .ds-quilt-cell__caption`)).toBeVisible();
+		await expect(page.locator(`${post("003")} .ds-quilt-cell__caption`)).toHaveText("The Mega Desk");
 		// The timeline is drawn shorter than on a desktop, with its years.
 		const strip = (await page.locator(`${RULER} .ds-time-ruler__strip`).boundingBox())!;
 		expect(strip.height).toBeLessThan(48);

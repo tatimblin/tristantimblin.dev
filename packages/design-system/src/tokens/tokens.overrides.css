@@ -255,8 +255,8 @@
 	--hairline: var(--border-color);
 	/* The STRONG hairline: the ink at the third wash, for the one edge on a
 	   ruled screen that must read over the others — the search bar's frame,
-	   the card's border, a chip's box. The plain hairline is the ruling
-	   between cells; this is the outline of the thing on it. */
+	   the card's border, a chip's box. The plain hairline cuts the rows
+	   inside them; this is the outline of the thing itself. */
 	--hairline-strong: var(--wash-3);
 	--hairline-fade: linear-gradient(
 		to right,

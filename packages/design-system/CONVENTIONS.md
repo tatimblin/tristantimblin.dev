@@ -139,7 +139,7 @@ glass, caps mono labels), and the components below have no upstream at all.
 | `--lit` | a step/tile/key that is ON — the accent on dark, the **ink** on light. Use for binary on/off; use `--accent` for things that must be orange in both themes. |
 | `--wash-1/2/3` | the ink at 7 / 16 / 30 % — unlit tile & subtle pill fill; two stronger steps. |
 | `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
-| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour; the STRONG edge (the ink at `--wash-3`) for the one outline on a ruled screen that must read over the ruling — the search bar's box, the card's border, a chip under the pointer; the divider gradient that fades at both ends. |
+| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour; the STRONG edge (the ink at `--wash-3`) for the one outline on a ruled screen that must read over the plain hairlines inside it — the search bar's box, the card's border, a chip under the pointer; the divider gradient that fades at both ends. |
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px), `--tracking-mono` (0.05em) | the steps below the generated scales. |
 | `--ticks-image` | the tick ruler as a gradient (hairlines on `--tick-pitch`, in currentColor) for any box that should read as a ruler — TickRuler's segments, the player's progress bar. |
 | `--focus-ring`, `--focus-ring-offset` | the focus ring for anything focusable that is not a native control: `outline: var(--focus-ring); outline-offset: var(--focus-ring-offset)`. |
@@ -309,9 +309,9 @@ instrument UI it is this site's own, so its CSS may be edited freely.
 
 ### Quilt — the index as a grid of art tiles
 
-`/txt` is a **quilt**: a RULED grid of landscape art tiles — cells cut by
-hairlines, the art inset a step on its plate in each, no text on a tile —
-one per post, padded with fillers, under one ruled search bar. Hovering or
+`/txt` is a **quilt**: a grid of landscape art tiles on the page, cut by an
+even gap token and no lines — the art filling each cell, no text on a tile
+— one per post, padded with fillers, under one ruled search bar. Hovering or
 focusing a post scatters the others and the ruled card takes a freed 3×2
 block; typing filters the same grid; a chip in the bar is a search
 shortcut. The package holds the **markup, the geometry and the state
@@ -332,7 +332,6 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
   <QuiltCell col={3} row={1} colMd={2} rowMd={1} href="/txt/mega-desk"
              label="The Mega Desk" no="003">
     <ArtFrame svg={raw} decorative />
-    <Fragment slot="caption">APR 2025 · PROJECTS</Fragment>   <!-- phones only -->
   </QuiltCell>
   <QuiltCell col={1} row={1} colMd={1} rowMd={2} filler><ArtFrame svg={filler} decorative /></QuiltCell>
   <QuiltPanel id="quilt-panel" mode="hidden" col={3} row={2}
@@ -340,18 +339,19 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
 </Quilt>
 ```
 
-- `Quilt` — the ruled grid: `cols`/`rows` for ≥ 1024, `colsMd`/`rowsMd` for
+- `Quilt` — the grid: `cols`/`rows` for ≥ 1024, `colsMd`/`rowsMd` for
   640–1023 (`rows` = max(3, ceil(posts / cols)), explicit so the block always
-  has lines). The grid draws the left and top hairline, each cell its right
-  and bottom one, so every line is 1px. The ruling is constant: a state
-  fades the cell's contents (the art, a phone tile's caption), never the
-  cell, so every line stays a full hairline in every state. `position: relative`, `role="group"`, `data-quilt`. Under
-  640 it is two columns of captioned tiles in DOM order, still ruled.
-- `QuiltCell` — a post (`href`, `label` = the link's accessible name, `no`,
-  a decorative `ArtFrame` in the slot inset `--quilt-inset` (a step) from
-  the ruling, the meta line in `caption` — drawn on a phone only; above 640 a
-  tile carries no text) or a `filler` (aria-hidden, its art faint and grey
-  at every state; its ruling full like every cell's). Placement is `col`/`row` and `colMd`/`rowMd`, set inline as
+  has lines). The cells sit `--quilt-gap` apart — `--space-2` on the desktop
+  board, `--space-3` below 1024 — with no line between or round them. A
+  state fades the cell's contents (the art, a phone tile's caption), never
+  the cell, so the active outline holds. `position: relative`,
+  `role="group"`, `data-quilt`. Under 640 it is two columns of tiles
+  captioned with their titles, in DOM order.
+- `QuiltCell` — a post (`href`, `label` = the link's accessible name and,
+  on a phone only, the caption under the art — the title alone, no date or
+  category; `no`; a decorative `ArtFrame` in the slot, filling the cell;
+  above 640 a tile carries no text) or a `filler` (aria-hidden, its art
+  faint and grey at every state). Placement is `col`/`row` and `colMd`/`rowMd`, set inline as
   `--cell-col`/`--cell-row`/`--cell-col-md`/`--cell-row-md` — the stylesheet
   picks the pair per viewport; a filler with no tablet slot is dropped
   there, and every filler is dropped on a phone. Renders `data-cell="post |
@@ -396,9 +396,9 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
 
 | On | Attribute / property | Meaning |
 | --- | --- | --- |
-| a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. Every state is drawn on the cell's **contents**, not the cell: the ruling never fades. A **filler is never brighter than faint**: its art is drawn faint and greyscale at every state but `gone`, so the posts are the only tiles at full strength. |
+| a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. Every state is drawn on the cell's **contents**, not the cell, so the active outline never fades. A **filler is never brighter than faint**: its art is drawn faint and greyscale at every state but `gone`, so the posts are the only tiles at full strength. |
 | a cell | `--scatter-delay` (ms) | the stagger into faint/gone (0–240); the return to lit has none |
-| a post cell | `data-active` | the 1px accent outline on the cell's ruling — the search result the arrows are on, the stepped post |
+| a post cell | `data-active` | the 1px accent outline round the tile (the cell's `::after`, over the art's edge) — the search result the arrows are on, the stepped post |
 | a chip | `aria-current="page"` | the chip whose word is the query (ALL when it is empty); none for any other query |
 | the panel | `data-mode="card \| browse \| results \| none \| hidden"` | which face shows; the others are `visibility: hidden` (out of the a11y tree and tab order), so no per-face `aria-hidden` |
 | the panel | `--panel-col`, `--panel-row` | the block's top-left cell, 1-based; the block is `--panel-cols` × `--panel-rows` (3 × 2). On the tablet grid the block is every column, so only the row matters |
@@ -421,19 +421,24 @@ and the excerpt to `--font-size-3`.
 straight on the page, in the site container (padded by the site's
 `--container-inset`, as the site header and the homepage's rows are, so
 the quilt's edges fall on the header's brand and nav) under the site
-header. The rows stack at their own height — the quilt `--space-6` under
-the bar, the timeline `--space-6` under the quilt — and nothing fills or
-centres to the viewport; the board is a plain row, no surface and no inset.
-The
-cells have no gap — the ruling is the seam — and the art is inset
-`--quilt-inset` (`--space-2`) in each. The cell sizes below are the board's
-at each width.
+header. The rows stack at their own height, `--space-3` apart — the quilt
+right under the bar, growing with the posts while the page scrolls — and
+nothing fills or centres to the viewport; the board is a plain row, no
+surface and no inset. The timeline is DOCKED: `position: sticky` to the
+window's bottom edge on the page colour (a hairline on its top edge only
+while it is stuck, via a `scroll-state` container query), above the tiles
+and below the panel, so the quilt scrolls under it; its containing block is
+the instrument, so at the end it rests in its own place after the quilt and
+never reaches the footer. The cells sit `--quilt-gap` apart and the art
+fills each. The panel's 3×2 block spans three cells and the two gaps
+between them, so its edges fall on the block's outer cells' edges. The
+cell sizes below are the board's at each width.
 
 | Viewport | Columns | Cell | Block | Mode |
 | --- | --- | --- | --- | --- |
-| ≥ 1024 | `cols` (5) | ~227×135 at 1440 and wider (the container caps it); the art 16:9 inside | 3×2 ≈ 681×270 | hover quilt |
-| 640–1023 | `colsMd` (3) | ~235×148 at 768 | full width × 2 rows | hover quilt |
-| < 640 | 2 | ~179×117 at 390, plus the caption | none — the panel is in flow above the tiles | captioned list, a tap navigates |
+| ≥ 1024 | `cols` (5) | ~221×124 at 1440 and wider (the container caps it) | 3×2 ≈ 679×256 | hover quilt |
+| 640–1023 | `colsMd` (3) | ~228×128 at 768 | full width × 2 rows | hover quilt |
+| < 640 | 2 | ~173×97 at 390, plus the title | none — the panel is in flow above the tiles | captioned list, a tap navigates |
 
 ---
 

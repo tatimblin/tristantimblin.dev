@@ -41,7 +41,7 @@
 @import "./blockquote.css";
 /* The art: the frame every artwork renders through. */
 @import "./art-frame.css";
-/* The quilt: the ruled grid of art tiles, its panel, and the ruled bar above it. */
+/* The quilt: the grid of art tiles, its panel, and the ruled bar above it. */
 @import "./quilt.css";
 @import "./quilt-panel.css";
 @import "./search-bar.css";

@@ -9,7 +9,6 @@
 //   <Quilt cols={5} rows={3} aria-label="Posts">
 //     <QuiltCell col={3} row={1} href="/txt/mega-desk" label="The Mega Desk" no="003">
 //       <ArtFrame svg={raw} decorative />
-//       <Fragment slot="caption">APR 2025 · PROJECTS</Fragment>
 //     </QuiltCell>
 //     <QuiltCell col={1} row={1} filler><ArtFrame svg={filler} decorative /></QuiltCell>
 //     <QuiltPanel id="quilt-panel" mode="hidden" col={3} row={2} … />
@@ -18,7 +17,7 @@
 // THREE MODES BY VIEWPORT, all in the stylesheet: ≥ 1024 the hover quilt at
 // `cols` (5); 640–1023 the hover quilt at `colsMd` (3), where a cell takes
 // its `colMd`/`rowMd` slot and a filler without one drops out; < 640 two
-// columns of CAPTIONED tiles in DOM order, no fillers, the panel in flow above
+// columns of tiles captioned with their titles, in DOM order, no fillers, the panel in flow above
 // the tiles. Rows are explicit (`rows`, `rowsMd`; the engine's
 // max(3, ceil(posts / cols))) so the panel's block always has lines to sit on.
 //

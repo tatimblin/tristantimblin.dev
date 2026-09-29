@@ -1430,18 +1430,19 @@ const faces = [
 		<section class="ds-demo__section" id="quilt">
 			<h2 class="ds-demo__h">Quilt · QuiltCell — the grid of art tiles and its states</h2>
 			<p class="ds-demo__note">
-				<code>&lt;Quilt cols rows colsMd rowsMd&gt;</code> is the RULED grid (quilt.css):
-				cells cut by hairlines with a hairline round the whole, the art inset a step
-				on its plate in each — five across at ≥ 1024, three at 640–1023 (a cell takes
-				its <code>colMd</code>/<code>rowMd</code> slot; a filler without one drops), and
-				on a phone two columns of captioned tiles in DOM order with no fillers. A tile
-				above 640 carries no text. <code>&lt;QuiltCell col row href label no&gt;</code>
-				is a post — a link named by its title around a decorative
-				<code>ArtFrame</code>, its <code>caption</code> slot the meta line under the
-				title on phones; <code>filler</code> is aria-hidden art, drawn faint and grey.
+				<code>&lt;Quilt cols rows colsMd rowsMd&gt;</code> is the grid (quilt.css): art
+				tiles on the page cut by the <code>--quilt-gap</code> token
+				(<code>--space-2</code> at ≥ 1024, <code>--space-3</code> below), no lines between
+				or round them, the art filling each cell — five across at ≥ 1024, three at
+				640–1023 (a cell takes its <code>colMd</code>/<code>rowMd</code> slot; a filler
+				without one drops), and on a phone two columns of tiles captioned with their
+				titles alone, in DOM order with no fillers. A tile above 640 carries no text.
+				<code>&lt;QuiltCell col row href label no&gt;</code> is a post — a link named by
+				its title around a decorative <code>ArtFrame</code>, the title drawn under the
+				art on phones; <code>filler</code> is aria-hidden art, drawn faint and grey.
 				The script's contract on a cell: <code>data-state="lit | faint | gone"</code>,
-				<code>--scatter-delay</code>, <code>data-active</code> (the 1px accent outline on
-				the cell's ruling). Every state below is set by hand;
+				<code>--scatter-delay</code>, <code>data-active</code> (the 1px accent outline
+				round the tile). Every state below is set by hand;
 				<code>src/lib/quilt/engine.ts</code> decides them on the page. Resize to 768 and
 				390 for the other two grids.
 			</p>
@@ -1485,7 +1486,6 @@ const faces = [
 									active={d.active === p.slug}
 								>
 									<ArtFrame svg={artOf(p.slug)} decorative />
-									<Fragment slot="caption">{metaOf(p)}</Fragment>
 								</QuiltCell>
 							);
 						})}

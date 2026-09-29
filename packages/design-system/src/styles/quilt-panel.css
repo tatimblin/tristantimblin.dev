@@ -8,7 +8,8 @@
  * The cells under it are `gone` (quilt.css), so the freed block is clear,
  * and the FACE draws the surface: the page colour inside the STRONG
  * hairline, square, no fill — the ruled screen's card — filling the block
- * to its cells' ruling, which its own edge sits on.
+ * edge to edge: its outer edges sit on the block's cells' outer edges, and
+ * the gaps inside the block are covered.
  *
  * FOUR FACES, ONE ATTRIBUTE. Every face is rendered in the same grid cell
  * and data-mode on the root says which shows; the rest are visibility:
@@ -27,10 +28,7 @@
 	--panel-rows: 2;
 
 	position: absolute;
-	/* One pixel out on the left and top, onto the ruling the block's first
-	   cells' neighbours drew, so the card's edge is the grid's line there
-	   and not a second one beside it. */
-	inset: -1px 0 0 -1px;
+	inset: 0;
 	grid-column: var(--panel-col, 1) / span var(--panel-cols);
 	grid-row: var(--panel-row, 1) / span var(--panel-rows);
 	z-index: 1;

@@ -2,10 +2,12 @@
 // /txt — the blog's front page as an INSTRUMENT: three rows straight on the
 // page, in the site container. The BAR is the layout's: one ruled search
 // bar — the search, the quick-filter chips (each a query on the quilt), the
-// − / + that step through the matching posts. Then the BOARD: the quilt, a
-// ruled grid of every post's art padded out with fillers, no text on a
-// tile, and the panel that takes a freed block of it when a tile is hovered
-// or stepped to or the bar is used. Then the TIMELINE: one tick per month,
+// − / + that step through the matching posts. Then the BOARD, right under
+// it: the quilt, a grid of every post's art padded out with fillers, no text
+// on a tile above a phone (a phone's tiles carry their titles), and the
+// panel that takes a freed block of it when a tile is hovered or stepped to
+// or the bar is used. Then the TIMELINE, docked to the
+// window's bottom edge while the quilt scrolls under it: one tick per month,
 // the posts as the tall ones, an accent playhead on the post in focus. The
 // page computes the index at build (numbers, slots, reading time) and
 // renders the design system's contract; src/lib/quilt/index.ts drives it on
@@ -150,7 +152,6 @@ const card = first
 			href: first.href,
 		}
 	: undefined;
-const captionOf = (p: QuiltPost) => `${p.month} ${p.year}${p.category ? ` · ${p.category}` : ""}`;
 
 // The timeline: one tick per month from January of the first post's year
 // through December of the current year (or of the newest post's, if a post
@@ -194,7 +195,6 @@ const timeline = {
 					no={padNo(p.no)}
 				>
 					{art.get(p.id) && <ArtFrame svg={art.get(p.id)!} decorative />}
-					<Fragment slot="caption">{captionOf(p)}</Fragment>
 				</QuiltCell>
 			))}
 			{fillers.map((f) => (

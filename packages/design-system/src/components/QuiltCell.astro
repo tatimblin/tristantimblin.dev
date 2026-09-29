@@ -1,14 +1,13 @@
 ---
-// QuiltCell — one cell of a Quilt's ruled grid (styles/quilt.css): a post,
+// QuiltCell — one cell of a Quilt's grid (styles/quilt.css): a post,
 // which is a link around its art with the post's title as the link's name
 // (the art is decorative; the frame inside is `<ArtFrame decorative />`), or
-// a filler, which is aria-hidden art and nothing else. The cell draws the
-// hairline on its right and bottom edges and insets the art a step; above
-// 640 it carries no text.
+// a filler, which is aria-hidden art and nothing else. The art fills the
+// cell; above 640 it carries no text, and on a phone the title alone comes
+// back under the art.
 //
 //   <QuiltCell col={3} row={1} href="/txt/mega-desk" label="The Mega Desk" no="003">
 //     <ArtFrame svg={raw} decorative />
-//     <Fragment slot="caption">APR 2025 · PROJECTS</Fragment>   the meta line under the title, phones only
 //   </QuiltCell>
 //   <QuiltCell col={1} row={1} filler><ArtFrame svg={filler} decorative /></QuiltCell>
 //
@@ -20,8 +19,8 @@
 //                                     focusable so Tab still reaches it.
 //   --scatter-delay                   the cell's stagger (0–240ms) into faint
 //                                     or gone; the return to lit has none.
-//   data-active                       the 1px accent outline on the cell's
-//                                     ruling — the active search result, the
+//   data-active                       the 1px accent outline round the
+//                                     tile — the active search result, the
 //                                     stepped post.
 // Placement: `col`/`row` for the ≥ 1024 grid and `colMd`/`rowMd` for the
 // 640–1023 one, as custom properties the stylesheet reads per viewport (an
@@ -32,7 +31,6 @@
 // carries the post's number for a script that keys on it. `class` merges; the
 // rest passes to the cell.
 import { cx } from "../lib/cx";
-import Mono from "./Mono.astro";
 
 type State = "lit" | "faint" | "gone";
 
@@ -43,7 +41,7 @@ interface Props {
 	rowMd?: number;
 	/** A post: the link. */
 	href?: string;
-	/** The post's title — the link's accessible name, and the phone caption's first line. */
+	/** The post's title — the link's accessible name, and the phone caption. */
 	label?: string;
 	/** The post's chronological number, zero-padded ("003"). */
 	no?: string | number;
@@ -90,8 +88,6 @@ const vars = [
 ]
 	.filter(Boolean)
 	.join(";");
-
-const hasCaption = Astro.slots.has("caption");
 ---
 
 {
@@ -123,11 +119,6 @@ const hasCaption = Astro.slots.has("caption");
 				<slot />
 				<span class="ds-quilt-cell__caption">
 					<span class="ds-quilt-cell__title">{label}</span>
-					{hasCaption && (
-						<Mono class="ds-quilt-cell__meta">
-							<slot name="caption" />
-						</Mono>
-					)}
 				</span>
 			</a>
 		</div>
