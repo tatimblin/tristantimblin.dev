@@ -79,7 +79,7 @@ const inner = body.replace(
 	`<svg aria-hidden="true" focusable="false"${fit}`,
 );
 
-const cls = cx("ds-art", variant !== "frame" && `ds-art--variant-${variant}`, className);
+const cls = cx("ds-art-frame", variant !== "frame" && `ds-art-frame--variant-${variant}`, className);
 
 const a11y = label && !decorative
 	? { role: "img", "aria-label": label }

@@ -15,25 +15,25 @@
  * Levels: 0 is unlit, 1–2 the ink at two strengths (ordinary days), 3–4 the
  * accent (the few hits you'd look for). `data-lit` is the binary case — a
  * step that is on — and follows the theme. */
-.ds-tiles-box {
+.ds-tile-grid-box {
 	flex: 1 1 auto;
 	min-block-size: 0;
 	container-type: size;
 	overflow: hidden;
 }
-.ds-tiles {
+.ds-tile-grid {
 	display: grid;
 	/* The gap scales with the cell when inside a widget; a hair under the
 	   smallest space step otherwise, since tiles are small. */
 	--tile-gap: clamp(2px, calc(var(--widget-cell, 300px) * 0.01), var(--space-1));
 	gap: var(--tile-gap);
-	grid-template-columns: repeat(var(--tiles-cols, 8), minmax(0, 1fr));
+	grid-template-columns: repeat(var(--tile-grid-cols, 8), minmax(0, 1fr));
 }
-.ds-tiles--fit-height {
+.ds-tile-grid--fit-height {
 	block-size: 100%;
-	--tile: calc((100cqb - var(--tile-gap) * (var(--tiles-rows, 7) - 1)) / var(--tiles-rows, 7));
-	grid-template-columns: repeat(var(--tiles-cols, 8), var(--tile));
-	grid-template-rows: repeat(var(--tiles-rows, 7), var(--tile));
+	--tile: calc((100cqb - var(--tile-gap) * (var(--tile-grid-rows, 7) - 1)) / var(--tile-grid-rows, 7));
+	grid-template-columns: repeat(var(--tile-grid-cols, 8), var(--tile));
+	grid-template-rows: repeat(var(--tile-grid-rows, 7), var(--tile));
 	justify-content: end;
 	align-content: end;
 }
@@ -43,7 +43,7 @@
 	border-radius: var(--border-radius-tile);
 	background: var(--wash-1);
 }
-.ds-tiles--fit-width .ds-tile {
+.ds-tile-grid--fit-width .ds-tile {
 	aspect-ratio: 1;
 }
 .ds-tile[data-level="1"] {

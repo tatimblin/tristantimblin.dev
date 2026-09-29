@@ -982,15 +982,15 @@ const faces = [
 			<h2 class="ds-demo__h">BarGraph</h2>
 			<p class="ds-demo__note">
 				Vertical hairlines with data heights, scaled to <code>max</code> (default: the
-				largest value); <code>lit</code> draws one bar in the accent — by INDEX (or
+				largest value); <code>mark</code> draws one bar in the accent — by INDEX (or
 				<code>"last"</code> / <code>"max"</code>), where Tile's <code>lit</code> is a
 				boolean. <code>label</code> names it as an image; without one it is
 				<code>aria-hidden</code>.
 			</p>
 			<Flex gap={6} wrap="wrap" alignItems="end">
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} /></div>
-				<div style="inline-size: 240px;"><BarGraph values={graphValues} lit="last" /></div>
-				<div style="inline-size: 240px;"><BarGraph values={graphValues} max={40} lit={7} height="var(--space-8)" label="Sixteen readings, rising" /></div>
+				<div style="inline-size: 240px;"><BarGraph values={graphValues} mark="last" /></div>
+				<div style="inline-size: 240px;"><BarGraph values={graphValues} max={40} mark={7} height="var(--space-8)" label="Sixteen readings, rising" /></div>
 			</Flex>
 		</section>
 
@@ -1092,7 +1092,7 @@ const faces = [
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Faces — a stack of alternatives, one showing</h2>
 			<p class="ds-demo__note">
-				Every face is rendered in the same grid cell; a <code>hidden</code> face is
+				Every face is rendered in the same grid cell; an <code>inactive</code> face is
 				<code>aria-hidden</code>, which is what the cross-fade keys on, so a script swaps
 				faces by moving that attribute. Without <code>fill</code> the stack holds its
 				tallest face's height whichever is showing (the seasons); with it the stack takes
@@ -1107,7 +1107,7 @@ const faces = [
 							<Figure unit="bpm">120</Figure>
 							<TickRuler />
 						</Face>
-						<Face hidden>
+						<Face inactive>
 							<TickRuler segments={[{ share: 46 }, { share: 29 }, { share: 25 }]} />
 							<Legend items={[{ label: "rust", value: "46%" }, { label: "typescript", value: "29%" }, { label: "other", value: "25%" }]} />
 						</Face>

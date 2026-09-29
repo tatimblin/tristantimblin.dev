@@ -2,8 +2,8 @@
 // BarGraph — vertical hairlines with data heights (styles/bar-graph.css).
 //
 //   <BarGraph values={[3, 5, 8, 13, 21]} />               scaled to the max
-//   <BarGraph values={hours} max={24} lit="last" />       one bar in the accent
-//   <BarGraph values={v} lit={2} height="var(--space-8)" />
+//   <BarGraph values={hours} max={24} mark="last" />      one bar in the accent
+//   <BarGraph values={v} mark={2} height="var(--space-8)" />
 //   <BarGraph values={v} label="Visitors per day, last month" />
 //
 // Accessibility: with a `label` the graph is an
@@ -18,8 +18,9 @@ interface Props {
 	values: number[];
 	/** The value that fills the height; defaults to the largest value. */
 	max?: number;
-	/** Index of the bar to draw in the accent, or "last" / "max". */
-	lit?: number | "last" | "max";
+	/** Index of the bar to draw in the accent (the MARK — the peak, the
+	 *  latest), or "last" / "max". */
+	mark?: number | "last" | "max";
 	/** CSS length: the graph's height (default --space-10). */
 	height?: string;
 	/** Accessible name; without one the graph is aria-hidden. */
@@ -33,7 +34,7 @@ const {
 	as = "div",
 	values = [],
 	max,
-	lit,
+	mark,
 	height,
 	label,
 	class: className,
@@ -43,20 +44,20 @@ const {
 
 const Tag = as as any;
 const top = max ?? Math.max(0, ...values);
-const litIndex =
-	lit === "last"
+const markIndex =
+	mark === "last"
 		? values.length - 1
-		: lit === "max"
+		: mark === "max"
 			? values.indexOf(Math.max(...values))
-			: typeof lit === "number"
-				? lit
+			: typeof mark === "number"
+				? mark
 				: -1;
 
-const vars = [height && `--bars-height:${height}`, style].filter(Boolean).join(";");
+const vars = [height && `--bar-graph-height:${height}`, style].filter(Boolean).join(";");
 ---
 
 <Tag
-	class={cx("ds-bars", className)}
+	class={cx("ds-bar-graph", className)}
 	style={vars || undefined}
 	role={label ? "img" : undefined}
 	aria-label={label}
@@ -66,9 +67,9 @@ const vars = [height && `--bars-height:${height}`, style].filter(Boolean).join("
 	{
 		values.map((v: number, i: number) => (
 			<span
-				class="ds-bars__bar"
+				class="ds-bar-graph__bar"
 				style={`--bar-value:${top > 0 ? Math.min(Math.max(v / top, 0), 1) : 0}`}
-				data-lit={i === litIndex ? "" : undefined}
+				data-mark={i === markIndex ? "" : undefined}
 			/>
 		))
 	}

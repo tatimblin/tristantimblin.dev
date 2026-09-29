@@ -41,15 +41,15 @@ const {
 } = Astro.props;
 
 const Tag = as as any;
-const vars = [`--tiles-cols:${cols}`, rows && `--tiles-rows:${rows}`, style]
+const vars = [`--tile-grid-cols:${cols}`, rows && `--tile-grid-rows:${rows}`, style]
 	.filter(Boolean)
 	.join(";");
-const cls = cx("ds-tiles", `ds-tiles--fit-${fit}`, className);
+const cls = cx("ds-tile-grid", `ds-tile-grid--fit-${fit}`, className);
 ---
 
 {
 	fit === "height" ? (
-		<div class="ds-tiles-box">
+		<div class="ds-tile-grid-box">
 			<Tag class={cls} style={vars} {...rest}>
 				{cells?.map((c: Cell) => <Tile level={c.level} lit={c.lit} title={c.title} />)}
 				<slot />

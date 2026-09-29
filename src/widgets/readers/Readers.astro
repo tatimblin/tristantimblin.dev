@@ -121,7 +121,7 @@ const readings = (view: (typeof views)[number]) =>
 				{views.map((view, i) => (
 					<Face
 						class="wx-rd-face"
-						hidden={i !== 0}
+						inactive={i !== 0}
 						data-face={view.key}
 						data-readings={readings(view)}
 						data-peak={view.peakIndex}
@@ -150,7 +150,7 @@ const readings = (view: (typeof views)[number]) =>
 						<BarGraph
 							class="wx-rd-bars"
 							values={view.points.map((p) => p.value)}
-							lit={view.peakIndex}
+							mark={view.peakIndex}
 							title={sampledNote || undefined}
 						/>
 
@@ -193,7 +193,7 @@ const readings = (view: (typeof views)[number]) =>
 
 	function bindGraph(face: HTMLElement): () => void {
 		const graph = face.querySelector<HTMLElement>(".wx-rd-bars");
-		const bars = [...(graph?.querySelectorAll<HTMLElement>(".ds-bars__bar") ?? [])];
+		const bars = [...(graph?.querySelectorAll<HTMLElement>(".ds-bar-graph__bar") ?? [])];
 		const tag = face.querySelector<HTMLElement>(".wx-rd-read-tag");
 		const value = face.querySelector<HTMLElement>(".wx-rd-read-value");
 		const span = face.querySelector<HTMLElement>(".wx-rd-read-span");
@@ -215,7 +215,7 @@ const readings = (view: (typeof views)[number]) =>
 		// slider's value text).
 		const show = (i: number) => {
 			at = Math.min(Math.max(i, 0), last);
-			bars.forEach((bar, j) => bar.toggleAttribute("data-lit", j === at));
+			bars.forEach((bar, j) => bar.toggleAttribute("data-mark", j === at));
 			const r = readings[at];
 			if (tag) tag.hidden = at !== peak;
 			if (value) value.textContent = String(r.v);

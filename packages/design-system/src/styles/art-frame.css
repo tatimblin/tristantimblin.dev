@@ -8,7 +8,7 @@
  * language expects shapes to run out of frame, and a hero that asks for a
  * different `ratio` crops the same drawing rather than letterboxing it — the
  * component sets preserveAspectRatio to slice on the root for that. */
-.ds-art {
+.ds-art-frame {
 	position: relative;
 	display: block;
 	inline-size: 100%;
@@ -28,7 +28,7 @@
  * its var()s where it is declared, so the theme's --art-ink-2 would not). The
  * fills keep their colours: coral is the accent, the rest hold on the page as
  * they hold on the plate. Still a 16:9 box that clips, still moving. */
-.ds-art--variant-mark {
+.ds-art-frame--variant-mark {
 	--art-ink: var(--text-primary);
 	--art-ink-2: color-mix(in oklab, var(--art-ink) 45%, transparent);
 	background: none;
@@ -36,7 +36,7 @@
 	border-radius: 0;
 	color: var(--art-ink);
 }
-.ds-art > svg {
+.ds-art-frame > svg {
 	display: block;
 	inline-size: 100%;
 	block-size: 100%;
@@ -50,10 +50,10 @@
 /* LINE WEIGHTS. The two the language has, as classes so the file names its
  * intent rather than a number: .art-line is the line (the inherited default,
  * spelled out), .art-line--2 the one emphasis outline a tile may carry. */
-.ds-art .art-line {
+.ds-art-frame .art-line {
 	stroke-width: 1;
 }
-.ds-art .art-line--2 {
+.ds-art-frame .art-line--2 {
 	stroke-width: 1.5;
 }
 
@@ -77,7 +77,7 @@
  * and back; a slide moves a group repeating every 40 units by exactly 40; a
  * blink returns to lit; a dash advances by one 8-unit period (the language's
  * dash patterns, 4 4 and 2 6, both sum to 8). */
-.ds-art [data-motion] {
+.ds-art-frame [data-motion] {
 	transform-box: fill-box;
 	transform-origin: center;
 	animation-duration: calc(
@@ -87,39 +87,39 @@
 	animation-iteration-count: infinite;
 	animation-play-state: paused;
 }
-.ds-art [data-speed="0.5"] {
+.ds-art-frame [data-speed="0.5"] {
 	--art-speed: 0.5;
 }
-.ds-art [data-speed="2"] {
+.ds-art-frame [data-speed="2"] {
 	--art-speed: 2;
 }
-.ds-art [data-motion="spin"] {
+.ds-art-frame [data-motion="spin"] {
 	animation-name: ds-art-spin;
 }
-.ds-art [data-motion="drift"] {
+.ds-art-frame [data-motion="drift"] {
 	animation-name: ds-art-drift;
 	animation-direction: alternate;
 	animation-timing-function: ease-in-out;
 	--art-cycle: 0.5;
 }
-.ds-art [data-motion="slide"] {
+.ds-art-frame [data-motion="slide"] {
 	animation-name: ds-art-slide;
 }
-.ds-art [data-motion="blink"] {
+.ds-art-frame [data-motion="blink"] {
 	animation-name: ds-art-blink;
 	animation-timing-function: steps(1, end);
 	--art-cycle: 0.25;
 }
-.ds-art [data-motion="dash"] {
+.ds-art-frame [data-motion="dash"] {
 	animation-name: ds-art-dash;
 	--art-cycle: calc(1 / 6);
 }
 
-.ds-art:hover [data-motion],
-.ds-art:focus-within [data-motion],
-.ds-art[data-art-play] [data-motion],
-a:hover .ds-art [data-motion],
-a:focus-visible .ds-art [data-motion] {
+.ds-art-frame:hover [data-motion],
+.ds-art-frame:focus-within [data-motion],
+.ds-art-frame[data-art-play] [data-motion],
+a:hover .ds-art-frame [data-motion],
+a:focus-visible .ds-art-frame [data-motion] {
 	animation-play-state: running;
 }
 

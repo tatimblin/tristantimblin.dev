@@ -24,13 +24,7 @@ interface Props {
 
 const { size = "1x1", title, class: className, ...rest } = Astro.props;
 
-const [w, h] = size.split("x").map(Number);
-const cls = cx(
-	"ds-widget",
-	w === 2 && "ds-widget--w2",
-	h === 2 && "ds-widget--h2",
-	className,
-);
+const cls = cx("ds-widget", `ds-widget--size-${size}`, className);
 
 // See Card.astro: forwarded only when filled.
 const hasTitle = Astro.slots.has("title");

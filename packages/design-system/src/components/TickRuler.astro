@@ -31,10 +31,10 @@ const segStyle = (s: Segment, i: number) =>
 	[`--tick-share:${s.share}`, `color:${s.color ?? `var(--tone-${Math.min(i + 1, 5)})`}`].join(";");
 ---
 
-<Tag class={cx("ds-ticks", className)} aria-hidden="true" {...rest}>
+<Tag class={cx("ds-tick-ruler", className)} aria-hidden="true" {...rest}>
 	{
 		segs.map((s, i) => (
-			<span class="ds-ticks__seg" style={segments?.length ? segStyle(s, i) : undefined} />
+			<span class="ds-tick-ruler__seg" style={segments?.length ? segStyle(s, i) : undefined} />
 		))
 	}
 </Tag>

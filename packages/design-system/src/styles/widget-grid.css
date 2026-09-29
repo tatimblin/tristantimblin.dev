@@ -66,7 +66,7 @@
 	--voice-figure-size: var(--widget-font-figure);
 }
 
-/* Base cell: 1×1, square. Size modifiers extend the span and aspect.
+/* Base cell: 1×1, square. The size class extends the span and the box.
    A column, so a header + body stack and the body takes the rest of the cell;
    and set in the UI face, because a widget is chrome — labels, figures, small
    print — not prose. The instrument voices (Mono, Figure, Stat) set their own
@@ -118,10 +118,13 @@
 	}
 }
 
-.ds-widget--w2 {
+/* The size classes (Widget.astro): the span, and the box below. */
+.ds-widget--size-2x1,
+.ds-widget--size-2x2 {
 	grid-column: span 2;
 }
-.ds-widget--h2 {
+.ds-widget--size-1x2,
+.ds-widget--size-2x2 {
 	grid-row: span 2;
 }
 
@@ -135,17 +138,17 @@
 :where(.ds-widget) {
 	aspect-ratio: 1 / 1;
 }
-:where(.ds-widget--w2.ds-widget--h2) {
+:where(.ds-widget--size-2x2) {
 	aspect-ratio: 1 / 1;
-} /* 2×2 square */
-:where(.ds-widget--w2:not(.ds-widget--h2)) {
+}
+:where(.ds-widget--size-2x1) {
 	aspect-ratio: auto;
 	block-size: var(--widget-cell);
-} /* wide 2×1 */
-:where(.ds-widget:not(.ds-widget--w2).ds-widget--h2) {
+}
+:where(.ds-widget--size-1x2) {
 	aspect-ratio: auto;
 	block-size: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
-} /* tall 1×2 */
+}
 
 /* THE COMPACT STEP: 4 → 2 columns at and below 900px, held at 2 on a phone.
    The one breakpoint of the site's own (the rest are the DS's: 640 / 768 /

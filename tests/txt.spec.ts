@@ -223,7 +223,7 @@ test.describe("/txt/<slug> — the post page", () => {
 
 		// A mark: no plate, edge or corner, named by the title, its motion running.
 		const art = page.locator(
-			'.post__mark.ds-art--variant-mark[role="img"][aria-label="Asserting on Agent Behavior"][data-art-play]',
+			'.post__mark.ds-art-frame--variant-mark[role="img"][aria-label="Asserting on Agent Behavior"][data-art-play]',
 		);
 		await expect(art).toHaveCount(1);
 		await expect(art).toHaveCSS("background-color", TRANSPARENT);

@@ -1,20 +1,21 @@
 ---
 // Face — one alternative in a <Faces> stack: a flex column with the widget
-// gap. `hidden` renders it aria-hidden, which is the attribute faces.css fades
-// on and the one a script toggles to swap faces.
+// gap. `inactive` renders it aria-hidden, which is the attribute faces.css
+// fades on and the one a script toggles to swap faces (lib/faces.ts's
+// showFace). Not `hidden`: that is the HTML attribute, which means gone.
 import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
-	hidden?: boolean;
+	inactive?: boolean;
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "div", hidden, class: className, ...rest } = Astro.props;
+const { as = "div", inactive = false, class: className, ...rest } = Astro.props;
 const Tag = as as any;
 ---
 
-<Tag class={cx("ds-face", className)} aria-hidden={hidden ? "true" : undefined} {...rest}>
+<Tag class={cx("ds-face", className)} aria-hidden={inactive ? "true" : undefined} {...rest}>
 	<slot />
 </Tag>

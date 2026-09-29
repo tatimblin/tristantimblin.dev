@@ -35,18 +35,17 @@
 .home__widgets .wx-videos {
 	grid-column: var(--widget-cols, 4) / span 1;
 	grid-row: 1 / span 2;
-	/* Explicit 2-row span sets the height; drop the ds-widget--h2 1/2 aspect so it
+	/* Explicit 2-row span sets the height; release the DS 1×2 box so it
 	   doesn't fight the row span. SIZE CONTAINMENT so it never sets the span either:
 	   without it the carousel's content (a 1:2 box off its column width) sized the
 	   two rows, stretching them past the square 1×1 cards — the row gap read wider
 	   than the column gap and the carousel's foot missed the cards' foot. Contained,
 	   the rows are the cards' and the carousel just stretches to fill them. */
 	contain: size;
-	/* No aspect-ratio: the DS gives a 1×2 widget `aspect-ratio: 1 / 2`, but a 1×2
-	   cell is two cells PLUS the row gap, so that box always fell one gap short of
-	   the row below. Stretched to its span instead (contained above, so it can't
-	   size the rows). */
+	/* Stretched to its span (contained above, so it can't size the rows);
+	   the DS 1×2 box (two cells and the gap) would come to the same. */
 	aspect-ratio: auto;
+	block-size: auto;
 
 	/* TRAVEL: how far the carousel is raised above its real cell during the
 	   entrance (and thus the parallax distance it closes as it docks). Read by the

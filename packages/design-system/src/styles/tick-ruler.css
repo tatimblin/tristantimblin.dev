@@ -5,7 +5,7 @@
  * segment) or a share bar (several, flex-grown by share). The ticks are a
  * background gradient in currentColor, so a segment is coloured by `color`
  * and any box becomes a stretch of ruler. */
-.ds-ticks {
+.ds-tick-ruler {
 	position: relative;
 	display: flex;
 	gap: var(--space-1);
@@ -14,7 +14,7 @@
 	color: var(--text-tertiary);
 }
 
-.ds-ticks__seg {
+.ds-tick-ruler__seg {
 	flex: var(--tick-share, 1) 1 0;
 	min-inline-size: 1px;
 	block-size: 100%;

@@ -176,7 +176,7 @@
 
 /* THE LINK. The whole cell's inside, named by aria-label (the art is
    decorative); a `ds-control`, so the focus ring is control.css's, outside
-   it. The frame's own hover rule (art-frame.css, `a:hover .ds-art`) runs
+   it. The frame's own hover rule (art-frame.css, `a:hover .ds-art-frame`) runs
    the art's motion under the pointer; nothing to add here. */
 .ds-quilt-cell__link {
 	display: flex;

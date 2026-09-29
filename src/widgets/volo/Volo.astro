@@ -232,7 +232,7 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 						<Face
 							as="section"
 							class="wx-vl-panel"
-							hidden={i !== current}
+							inactive={i !== current}
 							data-volo-panel={i}
 							data-heading={seasonHeading(season)}
 							data-team={season.team.name}

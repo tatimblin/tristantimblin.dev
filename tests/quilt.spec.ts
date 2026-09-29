@@ -236,7 +236,7 @@ test.describe("quilt — rest", () => {
 				grid: borders(gs),
 				cells: cells.map((c) => {
 					const cs = getComputedStyle(c);
-					const art = c.querySelector(".ds-art")!.getBoundingClientRect();
+					const art = c.querySelector(".ds-art-frame")!.getBoundingClientRect();
 					const box = c.getBoundingClientRect();
 					return {
 						borders: borders(cs),
