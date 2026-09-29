@@ -1,9 +1,9 @@
 /* Heading — the shared headingCSS the DS Heading merges for every size
    (1-4 are identical in the source). In the DS the css prop wins over variant
    rules (font-weight, line-height, letter-spacing all override Text variants /
-   spaced), so use a doubled selector to guarantee the win regardless of
-   stylesheet import order. */
-.ds-heading.ds-heading {
+   spaced); here the ROLES layer (styles/index.css) wins over Text's variants
+   by layer order, so one class is enough. */
+.ds-heading {
 	/* The site's heading face. Family and weight travel as a pair: Migra is one
 	   family with a 500 and a 700 cut, so a family set without a weight lands on
 	   whichever the browser considers nearest. This is the single place H1-H3 pick

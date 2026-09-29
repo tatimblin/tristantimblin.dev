@@ -14,15 +14,16 @@
  *   .ds-caps            small uppercase labels — kickers, section marks, widget
  *                       headers, meta rows.
  *
- * Doubled selector for the same reason as .ds-heading / .ds-body: this renders
- * through Text, whose `spaced` variant sets a letter-spacing of its own, and one
- * class each way is a tie decided by import order.
+ * In the ROLES layer (styles/index.css), so it wins over Text's `spaced`
+ * letter-spacing on the same element by layer order. A caps label that wants
+ * the tighter mono tracking (a phone tile, a column of readouts) retunes
+ * --tracking-caps in scope rather than overriding this rule.
  *
  * Deliberately NOT here: font-size and font-family. A caps label appears in the
  * UI face at --font-size-1 most of the time but not always (the homepage's
  * scrubber label is --font-subheading), and the role that matters — the thing
  * that is wrong when it is missing — is the tracking. */
-.ds-caps.ds-caps {
+.ds-caps {
 	text-transform: uppercase;
 	letter-spacing: var(--tracking-caps, 0.14em);
 	/* Tracking adds space AFTER each letter, including the last one, which leaves

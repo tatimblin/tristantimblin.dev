@@ -114,16 +114,17 @@ p {
   margin: 0;
 }
 
-/* Bare headings take the heading face. Family and weight travel together: Migra
+/* BARE headings take the heading face. Family and weight travel together: Migra
    is one family with two cuts, so a family without a weight lands on whichever
-   the browser guesses. The DS Heading components set the same pair at higher
-   specificity (packages/design-system/src/styles/heading.css). */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+   the browser guesses. A DS Heading sets its own (heading.css) — and since the
+   package's CSS sits in cascade layers under this file, an unlayered element
+   rule here would beat it at any specificity, so these are kept off it. */
+h1:where(:not(.ds-heading)),
+h2:where(:not(.ds-heading)),
+h3:where(:not(.ds-heading)),
+h4:where(:not(.ds-heading)),
+h5:where(:not(.ds-heading)),
+h6:where(:not(.ds-heading)) {
   font-family: var(--font-heading);
   font-weight: var(--font-heading-weight);
   /* Display leading and display tracking on ALL six, not just the two that used
@@ -137,11 +138,11 @@ h6 {
   letter-spacing: var(--tracking-heading, -0.02em);
 }
 
-h1 {
+h1:where(:not(.ds-heading)) {
   font-size: var(--font-size-3xl);
 }
 
-h2 {
+h2:where(:not(.ds-heading)) {
   font-size: var(--font-size-2xl);
 }
 

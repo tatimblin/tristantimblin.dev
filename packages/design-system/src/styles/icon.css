@@ -56,9 +56,9 @@
 	fill: var(--warning-emphasis);
 }
 
-/* outline boolean → fill: none !important */
+/* outline boolean → fill: none (later than the variants, so it wins). */
 .ds-icon--outline-true {
-	fill: none !important;
+	fill: none;
 }
 
 /* size → width/height. Size 4 is a hardcoded 20px in the DS source; the rest map

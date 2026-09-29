@@ -1,8 +1,5 @@
-/* Label — the hardcoded css the DS Label passes to Text.
-   In the DS the css prop wins over variant rules; letter-spacing here overrides
-   Text's spaced=true (0.3px), so use a doubled selector to guarantee the win
-   regardless of stylesheet import order. */
-.ds-label.ds-label {
+/* Label — the hardcoded css the DS Label passes to Text. */
+.ds-label {
 	display: inline-block;
 	cursor: pointer;
 	user-select: none;

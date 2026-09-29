@@ -95,12 +95,12 @@
 }
 /* A caps label in the panel wraps: the browse face's runs to 45
    characters, which is a phone's width. Not in a strip, which is one line
-   whatever its width: its labels ellipsise instead (the doubled class
-   out-ranks the wrap rule). */
+   whatever its width: its labels ellipsise instead (the later rule, at the
+   same specificity). */
 .ds-quilt-panel .ds-caps {
 	white-space: normal;
 }
-.ds-quilt-panel__strip > .ds-mono.ds-mono {
+.ds-quilt-panel .ds-quilt-panel__strip > .ds-mono {
 	min-inline-size: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -151,13 +151,13 @@
 	color: var(--text-primary);
 }
 /* One line each, at the mono tracking (the full caps tracking would make
-   the column a third wider); three classes to out-rank the panel's wrap
-   rule and the doubled .ds-caps. */
-.ds-quilt-panel .ds-quilt-panel__readouts.ds-caps {
+   the column a third wider) — the caps role's token retuned in scope. Two
+   classes to out-rank the panel's wrap rule. */
+.ds-quilt-panel .ds-quilt-panel__readouts {
+	--tracking-caps: var(--tracking-mono);
 	display: grid;
 	gap: var(--space-1);
 	line-height: var(--line-height-ui);
-	letter-spacing: var(--tracking-mono);
 	white-space: nowrap;
 }
 .ds-quilt-panel__card-main {

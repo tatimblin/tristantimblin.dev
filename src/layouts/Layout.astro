@@ -10,6 +10,9 @@ import "../styles/fonts.css";
 // Design-system token cascade (generated DS tokens → site overrides → legacy
 // name bridge). Imported after global.css so its custom properties win.
 import "@whois/design-system/tokens.css";
+// The component styles, once for the whole site: two cascade layers under the
+// unlayered site CSS (see packages/design-system/src/styles/index.css).
+import "@whois/design-system/styles.css";
 import SiteFooter from "../components/SiteFooter.astro";
 import Seo from "../components/Seo.astro";
 

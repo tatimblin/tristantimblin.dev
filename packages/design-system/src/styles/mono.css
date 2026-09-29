@@ -75,13 +75,3 @@ a.ds-mono:hover,
 a.ds-mono:focus-visible {
 	color: var(--text-primary);
 }
-
-/* Phone tiles (the grid's 2-column mode, ~160px cells): the full caps tracking
-   costs a word a line, so tighten it rather than wrap or clip. Three classes
-   deep to out-rank the doubled .ds-caps.ds-caps selector it is overriding. */
-@media (max-width: 900px) {
-	.ds-widget .ds-mono.ds-caps {
-		letter-spacing: var(--tracking-mono);
-		margin-inline-end: calc(-1 * var(--tracking-mono));
-	}
-}

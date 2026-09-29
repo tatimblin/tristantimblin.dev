@@ -11,12 +11,10 @@
  * spelled out so the class still lands somewhere sane if it is ever used without
  * the site's token layer.
  *
- * DOUBLED SELECTOR, on the same reasoning as .ds-heading: Body renders through
- * Text, whose `spaced` variant (on by default) sets its own line-height and
- * letter-spacing, and whose size variant sets font-size. One class each way is a
- * tie decided by import order; two guarantees the role wins wherever the
- * stylesheets land. */
-.ds-body.ds-body {
+ * Body renders through Text, whose size variant sets font-size and whose
+ * `spaced` variant sets line-height and letter-spacing; the role wins over
+ * both by sitting in the ROLES layer (styles/index.css), not by specificity. */
+.ds-body {
 	/* Family and weight travel together, as with every role on this site — a face
 	   asked for without its weight lands on whichever cut the browser guesses is
 	   nearest. PP Mondwest now ships three (200/300/400), so this pairing is load-

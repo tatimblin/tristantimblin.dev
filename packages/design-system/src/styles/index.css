@@ -1,47 +1,65 @@
-/* Aggregate component styles for @whois/design-system.
- * Import this once per page that uses DS components (or globally in Layout). */
-@import "./box.css";
-@import "./flex.css";
-@import "./grid.css";
-@import "./widget-grid.css";
-@import "./text.css";
-@import "./heading.css";
-@import "./body.css";
-@import "./caps.css";
-@import "./numeric.css";
+/* Aggregate component styles for @whois/design-system. Imported ONCE, in
+ * src/layouts/Layout.astro, after the tokens.
+ *
+ * TWO CASCADE LAYERS, so nothing in here needs a doubled selector or an
+ * !important to win, and nothing outside it has to fight it:
+ *
+ *   ds.components   every component's own rules.
+ *   ds.roles        the type ROLES that compose on Text — heading, body, caps,
+ *                   numeric. A role is a class on the same element as Text's
+ *                   size/spaced/weight variants, so it must beat them at equal
+ *                   specificity; a later layer does that by construction.
+ *
+ * The tokens (tokens.css) are unlayered custom properties and stay so. Site
+ * CSS is unlayered too, which means it ALWAYS wins over a package rule at any
+ * specificity — a page that sets a property on a DS element gets it, no
+ * chaining required. The one thing to watch: a bare element rule on the site
+ * (`h2 { font-size }`) also beats a DS class now, so the site keeps such
+ * rules off DS elements (`:not(.ds-heading)`). */
+@layer ds.components, ds.roles;
+
+@import "./box.css" layer(ds.components);
+@import "./flex.css" layer(ds.components);
+@import "./grid.css" layer(ds.components);
+@import "./widget-grid.css" layer(ds.components);
+@import "./text.css" layer(ds.components);
+@import "./heading.css" layer(ds.roles);
+@import "./body.css" layer(ds.roles);
+@import "./caps.css" layer(ds.roles);
+@import "./numeric.css" layer(ds.roles);
 /* The instrument voices (after caps.css, which mono.css composes). */
-@import "./mono.css";
-@import "./figure.css";
-@import "./stat.css";
-@import "./stat-strip.css";
-@import "./label.css";
-@import "./button.css";
-@import "./icon-button.css";
-@import "./card.css";
-@import "./faces.css";
-@import "./callout.css";
-@import "./pill.css";
-@import "./chip.css";
-@import "./anchor.css";
-@import "./list.css";
-@import "./inline-code.css";
-@import "./icon.css";
-@import "./visually-hidden.css";
+@import "./mono.css" layer(ds.components);
+@import "./figure.css" layer(ds.components);
+@import "./stat.css" layer(ds.components);
+@import "./stat-strip.css" layer(ds.components);
+@import "./label.css" layer(ds.components);
+@import "./button.css" layer(ds.components);
+@import "./icon-button.css" layer(ds.components);
+@import "./card.css" layer(ds.components);
+@import "./faces.css" layer(ds.components);
+@import "./callout.css" layer(ds.components);
+@import "./pill.css" layer(ds.components);
+@import "./chip.css" layer(ds.components);
+@import "./anchor.css" layer(ds.components);
+@import "./list.css" layer(ds.components);
+@import "./inline-code.css" layer(ds.components);
+@import "./icon.css" layer(ds.components);
+@import "./visually-hidden.css" layer(ds.components);
 /* Hairline graphics. */
-@import "./hairline.css";
-@import "./tick-ruler.css";
-@import "./bar-graph.css";
-@import "./ring-gauge.css";
-@import "./legend.css";
-@import "./tile-grid.css";
-@import "./time-ruler.css";
+@import "./hairline.css" layer(ds.components);
+@import "./tick-ruler.css" layer(ds.components);
+@import "./bar-graph.css" layer(ds.components);
+@import "./ring-gauge.css" layer(ds.components);
+@import "./legend.css" layer(ds.components);
+@import "./tile-grid.css" layer(ds.components);
+@import "./time-ruler.css" layer(ds.components);
 /* The reading UI: the archive and the reading column. */
-@import "./post-list.css";
-@import "./prose.css";
-@import "./blockquote.css";
+@import "./post-list.css" layer(ds.components);
+@import "./prose.css" layer(ds.components);
+@import "./blockquote.css" layer(ds.components);
 /* The art: the frame every artwork renders through. */
-@import "./art-frame.css";
+@import "./art-frame.css" layer(ds.components);
 /* The quilt: the grid of art tiles, its panel, and the ruled bar above it. */
-@import "./quilt.css";
-@import "./quilt-panel.css";
-@import "./search-bar.css";
+@import "./quilt.css" layer(ds.components);
+@import "./quilt-panel.css" layer(ds.components);
+@import "./search-bar.css" layer(ds.components);

@@ -86,9 +86,13 @@
 	padding-block-start: var(--space-3);
 }
 /* Phone tiles (~160px): the header row closes up a step, since every pixel
-   of a 160px cell that the header takes is one the body's graphic loses. (The
-   title's tracking tightens too — that is Mono's own phone rule, mono.css.) */
+   of a 160px cell that the header takes is one the body's graphic loses, and
+   the caps tighten to the mono tracking — the full caps tracking costs a word
+   a line — by retuning the token the caps role reads, in scope. */
 @media (max-width: 900px) {
+	.ds-widget {
+		--tracking-caps: var(--tracking-mono);
+	}
 	.ds-widget > .ds-card-header {
 		padding-block: var(--space-3) var(--space-2);
 	}
