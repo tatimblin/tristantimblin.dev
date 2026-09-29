@@ -34,7 +34,7 @@
  * number, or the query — so the same hover scatters the same way on every
  * load, and a test can pin it.
  *
- * STEPPING. The instrument's − / + buttons and the timeline's ticks PIN a
+ * STEPPING. The instrument's − / + buttons and the timeline's bars PIN a
  * post: `stepped` is a focus that behaves like a hover — the tile lit, the
  * rest scattered by that post's seed, the card in a block that dodges it —
  * but it also takes the accent ring (it was chosen, not passed over) and it

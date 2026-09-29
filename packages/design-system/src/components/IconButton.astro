@@ -7,7 +7,6 @@
 //            button that fits a card header's meta slot, xl the one big
 //            control a screen has)
 //   rounded: boolean     the round button
-//   square:  boolean     no corner at all
 // The single icon child is wrapped in .ds-icon-button__content, as the DS's
 // IconButton.tsx wraps it in a Flex. A `ds-control` (control.css).
 //
@@ -16,8 +15,9 @@
 // gives the button its name (`aria-label="Next post"`).
 //
 // `variant="outline"` is a hairline with no fill (the wash comes up under the
-// pointer), and `square` drops the corner: together they are the ruled
-// screen's small square button, the stepper in the /txt search bar.
+// pointer): with `rounded` it is the ruled screen's CIRCLED control, the
+// − / + stepper on /txt (the search bar's ring is the same drawing, not a
+// button).
 import { cx } from "../lib/cx";
 
 interface Props {
@@ -25,8 +25,6 @@ interface Props {
 	variant?: "secondary" | "outline";
 	size?: "xs" | "sm" | "lg" | "xl";
 	rounded?: boolean;
-	/** No corner: the ruled screen's square button. */
-	square?: boolean;
 	/** A character in place of an icon (`−`, `+`); aria-hidden. */
 	glyph?: string;
 	class?: string;
@@ -38,7 +36,6 @@ const {
 	variant = "secondary",
 	size = "lg",
 	rounded,
-	square,
 	glyph,
 	class: className,
 	...rest
@@ -52,7 +49,6 @@ const cls = cx(
 	`ds-icon-button--variant-${variant}`,
 	`ds-icon-button--size-${size}`,
 	rounded && "ds-icon-button--rounded-true",
-	square && "ds-icon-button--square-true",
 	className,
 );
 ---

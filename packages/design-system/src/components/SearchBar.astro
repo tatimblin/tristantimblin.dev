@@ -2,17 +2,14 @@
 // SearchBar — the open bar over the quilt (styles/search-bar.css): no box.
 // Two rows. The INPUT ROW, left to right: the search icon in a round
 // outlined RING, the input on a single hairline UNDERLINE (the accent while
-// it has focus), the visible READOUT (`05`, `1 / 5`), the key hint, and —
-// after a divider — the CONTROLS (the stepper). Under it the TABS row: the
-// quick filters. The label is for a reader (visually hidden); the ring
-// stands in for it on screen.
+// it has focus), the visible READOUT (`05`, `1 / 5`) and the key hint.
+// Under it the TABS row: the quick filters. The label is for a reader
+// (visually hidden); the ring stands in for it on screen.
 //
 //   <SearchBar id="quilt-search" label="Search" placeholder="Search a title, a topic, a year…"
 //              count="5 posts" readout="05" hint="/" controls="quilt-panel-results">
 //     <Chip slot="chips" variant="tab" as="a" href="/txt" data-chip="" aria-current="page" count={5}>all</Chip>
 //     <Chip slot="chips" variant="tab" as="a" href="/txt?q=projects" data-chip="projects" count={1}>projects</Chip>
-//     <IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
-//     <IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />
 //   </SearchBar>
 //
 // The input is a combobox over the panel's results listbox (aria-controls
@@ -28,14 +25,15 @@
 // data-search-chips; each chip is the caller's — a text tab (`Chip
 // variant="tab"`), a real link to `?q=<word>` with `data-chip="<word>"`, so
 // a chip is a SEARCH SHORTCUT that works with scripting off and a script
-// upgrades to set the query in place and mark the current one. The
-// `controls` slot is the stepper; a divider is drawn before it. Hooks:
-// data-search-bar on the root, data-search-input on the input. `name`
-// defaults to `q` so the bar inside a GET form lands on `?q=` with
-// scripting off. `expanded` and `value` render a state statically. `class`
-// merges; everything else passes to the ROOT. Under 1024 the tabs scroll
-// sideways under a fade at the right edge; under 640 the input is set at
-// 16px, so iOS does not zoom the page on focus (the stylesheet).
+// upgrades to set the query in place and mark the current one. The − / +
+// stepper is not the bar's: it sits with the in-focus readout (the /txt
+// foot and its phone dock). Hooks: data-search-bar on the root,
+// data-search-input on the input. `name` defaults to `q` so the bar inside
+// a GET form lands on `?q=` with scripting off. `expanded` and `value`
+// render a state statically. `class` merges; everything else passes to the
+// ROOT. Under 1024 the tabs scroll sideways under a fade at the right edge;
+// under 640 the input is set at 16px, so iOS does not zoom the page on
+// focus (the stylesheet).
 import { cx } from "../lib/cx";
 import Chip from "./Chip.astro";
 import Icon from "./Icon.astro";
@@ -80,7 +78,6 @@ const {
 } = Astro.props;
 
 const hasChips = Astro.slots.has("chips");
-const hasControls = Astro.slots.has("controls");
 ---
 
 <div class={cx("ds-search-bar", className)} role="search" data-search-bar {...rest}>
@@ -109,14 +106,6 @@ const hasControls = Astro.slots.has("controls");
 		)}
 		{hint && (
 			<Chip size="sm" class="ds-search-bar__hint" aria-hidden="true">{hint}</Chip>
-		)}
-		{hasControls && (
-			<Fragment>
-				<span class="ds-search-bar__divider" aria-hidden="true" />
-				<div class="ds-search-bar__controls">
-					<slot name="controls" />
-				</div>
-			</Fragment>
 		)}
 	</div>
 	{hasChips && (

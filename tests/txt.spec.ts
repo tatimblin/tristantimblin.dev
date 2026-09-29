@@ -6,9 +6,9 @@ import { test, expect, type Page } from "@playwright/test";
  * The index is the INSTRUMENT — one screen whose board is the quilt, a grid
  * of art tiles, one link per post, newest first in DOM order, with fillers
  * that are aria-hidden and carry no link, under the open search bar with
- * its category chips and stepper, and over the timeline (the interaction
- * contract — hover, search, keys, the stepper, the ruler — is pinned in its
- * own spec).
+ * its category chips, and over the foot — the topic key, the bar timeline,
+ * the post in focus with the stepper (the interaction contract — hover,
+ * search, keys, the stepper, the ruler — is pinned in its own spec).
  * The tag pages are still the year-grouped list, and the older
  * /txt/tag/<tag> URLs still resolve. Categories are a closed set and only
  * queries on the quilt (/txt?q=<id>): /txt/category/<id> is simply gone (404),
@@ -80,8 +80,8 @@ test.describe("/txt/", () => {
 		await page.goto("/txt/tag/diy/");
 		await page.locator('.site-header a[href="/txt/"]').click();
 		await expect(page).toHaveURL(/\/txt\/?$/);
-		// The sheet's last row sits under the docked timeline in a short
-		// window until it scrolls clear; a reader scrolls, so does this.
+		// The sheet's last row sits under the docked foot in a short window
+		// until it scrolls clear; a reader scrolls, so does this.
 		const tile = page.locator('[data-cell="post"] a[href="/txt/mega-desk/"]');
 		await tile.evaluate((el) => el.scrollIntoView({ block: "center" }));
 		await tile.click();
@@ -90,7 +90,7 @@ test.describe("/txt/", () => {
 		await context.close();
 	});
 
-	test("the bar's chips and the timeline ticks are plain links with scripting off", async ({
+	test("the bar's chips, the topic key and the timeline bars are plain links with scripting off", async ({
 		browser,
 	}) => {
 		const context = await browser.newContext({ javaScriptEnabled: false });
@@ -101,6 +101,9 @@ test.describe("/txt/", () => {
 		await expect(page.locator("[data-quilt-ruler] [data-mark]")).toHaveCount(5);
 		await page.locator('[data-search-chips] [data-chip="thoughts"]').click();
 		await expect(page).toHaveURL(/\/txt\/?\?q=thoughts$/);
+		await expect(page.locator("[data-quilt-key] a")).toHaveCount(4);
+		await page.locator('[data-quilt-key] a[href="/txt/?q=projects"]').click();
+		await expect(page).toHaveURL(/\/txt\/?\?q=projects$/);
 		await page.locator('[data-quilt-ruler] [data-mark][data-no="002"]').click();
 		await expect(page).toHaveURL(/\/txt\/why-i-joined-fisker\/?$/);
 		await expect(page.locator("h1")).toHaveText(/Your Car Knows You.re Getting Sick/);

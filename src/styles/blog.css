@@ -59,13 +59,14 @@
 	padding-block: 0 var(--space-13);
 }
 
-/* THE INSTRUMENT — /txt (BlogLayout `bar`): the site header (in the site
-   container), then <main> across the full page, holding three rows straight
-   on the page — the bar
-   (the layout's), the board and the timeline (the page's). Nothing carries a
-   surface: the bar is an underline and a row of tabs, the quilt is art on the page, the
-   card sits on the page — so the rows are set apart by space, not cut by a
-   gutter.
+/* THE INSTRUMENT — /txt (BlogLayout `bar` and `foot`): the site header (in
+   the site container), then <main> across the full page, holding three
+   rows straight on the page — the bar (the layout's), the board (the
+   page's) and the FOOT (the layout's: the topic key, the bar timeline, the
+   post in focus with its stepper, and the corner marks). Nothing carries a
+   surface: the bar is an underline and a row of tabs, the quilt is art on
+   the page, the foot is labels over rules and a chart on a baseline — so
+   the rows are set apart by space, not cut by a gutter.
 
    The header keeps the container (--container-inset, global.css) so it sits
    where it sits on every other page; the rows below take the whole page,
@@ -75,20 +76,23 @@
 
    The rows stack at their own height: the quilt starts right under the bar
    (a --space-3 step), grows with the posts and scrolls with the page; the
-   timeline follows it, DOCKED — sticky to the window's bottom edge, so it
-   stays in reach while the quilt scrolls under it and comes to rest in its
-   own place after the quilt at the end. Its containing block is the
-   instrument, so it never leaves it: it cannot cover the quilt's last row
-   at rest, nor reach the site footer, which follows the page's one
-   container gutter. Nothing fills or centres to the viewport. */
+   foot follows it. On a desktop the foot is DOCKED — sticky to the window's
+   bottom edge, so the timeline and the stepper stay in reach while the
+   quilt scrolls under it and it comes to rest in its own place after the
+   quilt at the end. Its containing block is the instrument, so it never
+   leaves it: it cannot cover the quilt's last row at rest, nor reach the
+   site footer, which follows the page's one container gutter. Below 1024
+   the foot stacks to two rows and is too tall to dock, so it sits in the
+   flow; on a phone the stepper alone is docked, in a thin bar (below).
+   Nothing fills or centres to the viewport. */
 .blog--instrument {
 	min-height: 0;
 }
 .blog__main--instrument {
 	/* The full width of the page (its auto margins would otherwise shrink it
-	   to fit its content in the column): the bar, the quilt and the timeline
-	   run to the page's gutters, not the site container. Only the site
-	   header above keeps the container. */
+	   to fit its content in the column): the bar, the quilt and the foot run
+	   to the page's gutters, not the site container. Only the site header
+	   above keeps the container. */
 	inline-size: 100%;
 	max-width: none;
 	padding-inline: var(--container-pad);
@@ -100,34 +104,188 @@
 	gap: var(--space-3);
 }
 
-/* THE DOCK. The page colour behind it so no tile shows through, padded a
-   step top and bottom so its ticks and years sit off the window's edge.
-   Stacked above the tiles (it is later in the page, and positioned) but
-   below the quilt's panel (z-index 1), should the two ever meet. While it
-   is stuck — and only then — a hairline on its top edge marks it as a bar
-   over the scrolling quilt; at rest after the quilt it draws nothing, so no
-   line runs under the grid. */
-.blog__timeline {
-	position: sticky;
-	inset-block-end: 0;
-	z-index: 0;
+/* THE FOOT. One grid, three widths, the parts placed by area:
+     desktop   key | timeline | focus, the corner marks under them — the
+               progress bar under the key, the code under the focus;
+     tablet    key and focus side by side, the timeline full width under
+               them, then the corners;
+     phone     the timeline, the focus (no stepper — the dock's), the code;
+               the key and the progress go (the tabs are the key, the
+               dock's line is the progress).
+   The columns are the mockup's shares (1 : 2.4 : 1.6): the timeline takes
+   the most, the focus room for a three-line title beside the numeral. */
+.blog__foot {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr) minmax(0, 1.6fr);
+	grid-template-areas:
+		"key timeline focus"
+		"progress . code";
+	gap: var(--space-4) var(--space-6);
+	align-items: start;
 	padding-block: var(--space-4);
-	background: var(--background);
-	container-type: scroll-state;
 }
-.blog__timeline::before {
+.blog__key {
+	grid-area: key;
+}
+.blog__timeline {
+	grid-area: timeline;
+	min-inline-size: 0;
+}
+.blog__focus {
+	grid-area: focus;
+	min-inline-size: 0;
+}
+.blog__progress {
+	grid-area: progress;
+	align-self: center;
+}
+.blog__code {
+	grid-area: code;
+	justify-self: end;
+	align-self: center;
+}
+/* The key's rows a step under their label. */
+.blog__key > * + *,
+.blog__focus > * + * {
+	margin-block-start: var(--space-3);
+}
+
+/* THE DOCKED FOOT (a desktop). The page colour behind it so no tile shows
+   through. Stacked above the tiles (it is later in the page, and
+   positioned) but below the quilt's panel (z-index 1), should the two ever
+   meet. While it is stuck — and only then — a hairline on its top edge
+   marks it as a bar over the scrolling quilt; at rest after the quilt it
+   draws nothing, so no line runs under the grid. */
+@media (min-width: 1024px) {
+	.blog__foot {
+		position: sticky;
+		inset-block-end: 0;
+		z-index: 0;
+		background: var(--background);
+		container-type: scroll-state;
+	}
+	.blog__foot::before {
+		content: "";
+		position: absolute;
+		inset-inline: 0;
+		inset-block-start: 0;
+		block-size: 1px;
+		background: var(--hairline);
+		opacity: 0;
+		transition: opacity var(--duration-swap) var(--ease-reveal);
+	}
+	@container scroll-state(stuck: block-end) {
+		.blog__foot::before {
+			opacity: 1;
+		}
+	}
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+	.blog__foot {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-areas:
+			"key focus"
+			"timeline timeline"
+			"progress code";
+		gap: var(--space-5);
+	}
+}
+
+/* THE POST IN FOCUS: the numeral with the title and its meta beside it,
+   the stepper at the row's end. The title is the ink; the meta a step
+   back, in the caps voice both (the Stat's label). */
+.blog__focus-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+.blog__focus-stat {
+	min-inline-size: 0;
+}
+.blog__focus-title {
+	color: var(--text-primary);
+}
+.blog__focus-meta {
+	color: var(--text-tertiary);
+}
+.blog__stepper {
+	display: flex;
+	flex: none;
+	gap: var(--space-2);
+}
+
+/* THE PROGRESS BAR: a --bar-width track in the hairline, the elapsed
+   share in the ink — the post in focus's place among the posts (5 / 5 is
+   full), --progress a fraction the script sets; it glides on a step. */
+.blog__progress {
+	position: relative;
+	display: block;
+	overflow: hidden;
+	block-size: var(--bar-width);
+	background: var(--hairline);
+}
+.blog__progress::after {
 	content: "";
 	position: absolute;
-	inset-inline: 0;
-	inset-block-start: 0;
-	block-size: 1px;
-	background: var(--hairline);
-	opacity: 0;
-	transition: opacity var(--duration-swap) var(--ease-reveal);
+	inset: 0;
+	background: var(--text-primary);
+	transform-origin: left;
+	transform: scaleX(var(--progress, 0));
+	transition: transform var(--duration-settle) var(--ease-reveal);
 }
-@container scroll-state(stuck: block-end) {
-	.blog__timeline::before {
-		opacity: 1;
+
+/* THE DOCK (a phone): the progress line across its top, then − · the post
+   in focus on one line · +. Stuck to the window's bottom edge inside the
+   instrument, so it rests after the foot at the end and never reaches the
+   site footer; the page colour behind it; padded a step, and the safe
+   area's inset under that on a phone with a home bar. Not drawn above
+   639px, where the foot carries the stepper. */
+.blog__dock {
+	display: none;
+}
+@media (max-width: 639px) {
+	.blog__foot {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"timeline"
+			"focus"
+			"code";
+		gap: var(--space-5);
+		padding-block: var(--space-2) 0;
+	}
+	.blog__key,
+	.blog__foot > .blog__progress,
+	.blog__stepper {
+		display: none;
+	}
+	.blog__code {
+		justify-self: start;
+	}
+	.blog__dock {
+		position: sticky;
+		inset-block-end: 0;
+		z-index: 1;
+		display: block;
+		/* Out to the page's edges, so the progress line runs across the
+		   window; the row inside keeps the gutter. */
+		margin-inline: calc(-1 * var(--container-pad));
+		padding-block-end: max(var(--space-3), env(safe-area-inset-bottom));
+		background: var(--background);
+	}
+	.blog__dock-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		padding: var(--space-2) var(--container-pad) 0;
+	}
+	.blog__dock-now {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		color: var(--text-primary);
+	}
+	.blog__dock-no {
+		color: var(--accent);
 	}
 }
 
@@ -156,10 +314,5 @@
 	.blog__header,
 	.blog__main--wide .blog__header {
 		margin-block-end: var(--space-6);
-	}
-	/* Phone: the timeline is its compact rendering, docked all the same on
-	   a tighter pad. */
-	.blog__timeline {
-		padding-block: var(--space-3);
 	}
 }

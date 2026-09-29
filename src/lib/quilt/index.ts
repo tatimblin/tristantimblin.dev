@@ -2,8 +2,9 @@
  * THE INSTRUMENT'S WIRING — the DOM side of /txt.
  *
  * The page renders the design system's contract (Quilt, QuiltCell,
- * QuiltPanel, SearchBar with its chips and the stepper, TimeRuler) and
- * embeds its index as JSON; this module reads both, keeps the one piece of
+ * QuiltPanel, SearchBar with its chips, the foot's Legend, TimeRuler and
+ * Stat, the stepper twice — the foot's and the phone dock's, one drawn per
+ * viewport) and embeds its index as JSON; this module reads both, keeps the one piece of
  * state — `{ query, focused, hovered, active, stepped }` — and on every
  * change asks the engine (./engine.ts, pure) what the grid should look
  * like, then PAINTS the answer:
@@ -14,10 +15,14 @@
  *   the chips    aria-current on the chip whose query is the query
  *   the count    the live region a reader hears (`5 posts`, `2 of 5 posts`)
  *                and the readout drawn beside the input (`05`, `2 / 5`)
- *   the stepper  disabled when nothing matches
- *   the ruler    --at (the playhead on the focused post's month, at rest on
- *                the newest matching post), data-dim on a mark out of the
- *                filter, the readout
+ *   the stepper  disabled when nothing matches (both copies)
+ *   the ruler    data-focus on the focused post's bar (at rest the newest
+ *                matching post's), --at on its month, data-dim on a mark
+ *                out of the filter
+ *   the focus    the readout beside the timeline and the dock's line —
+ *                the two-digit number, the title, `feb 2026 · 554 w`, the
+ *                post's place among the posts (`5 / 5`) and the progress
+ *                bar's --progress, every copy of each hook
  *
  * Nothing here decides anything: which cells scatter, where the block goes
  * and what the search found are the engine's, and are tested there.
@@ -33,13 +38,15 @@
  * tile takes the accent ring), Enter opens it, Escape clears the step, then
  * the query, then blurs. Links to `?q=` inside the panel (the browse chips,
  * the nothing face's suggestions) and the bar's CHIPS set the query in place
- * instead of reloading — a chip is a search shortcut, and ALL clears it. `?q=` on the URL is read on load and kept in step
- * with the input, debounced, through replaceState — so a search is a link.
+ * instead of reloading — a chip is a search shortcut, and ALL clears it —
+ * and so do the topic key's rows at the foot. `?q=` on the URL is read on
+ * load and kept in step with the input, debounced, through replaceState —
+ * so a search is a link.
  *
  * STEPPING. − and + PIN a post (`stepped`): the older / newer one among the
  * posts that match (chronological, newest first), from the one in focus, or
  * from rest the newest (−) or the oldest (+), wrapping. A click on a
- * timeline tick pins that post. A step holds until Escape, typing, focusing
+ * timeline bar pins that post. A step holds until Escape, typing, focusing
  * the bar or a chip; a hover on another tile only previews over it and the
  * step is back when the pointer leaves — the pointer being elsewhere never
  * clears it, which is what makes it the touch-friendly way through the
@@ -96,6 +103,8 @@ const LEAVE_MS = 100;
 const POST_CELL = '[data-cell="post"]';
 
 const pad = (no: number) => String(no).padStart(3, "0");
+/** The number as the sheet's labels draw it: `05`. */
+const numeral = (no: number) => String(no).padStart(2, "0");
 const isEditable = (el: Element | null) =>
 	!!el &&
 	((el as HTMLElement).isContentEditable || /^(input|textarea|select)$/i.test(el.tagName));
@@ -149,12 +158,24 @@ function wire(): (() => void) | null {
 	const count = document.querySelector<HTMLElement>("[data-search-count]");
 	const searchReadout = document.querySelector<HTMLElement>("[data-search-readout]");
 	const steppers = [...document.querySelectorAll<HTMLButtonElement>("[data-step]")];
+	const key = document.querySelector<HTMLElement>("[data-quilt-key]");
 	const ruler = document.querySelector<HTMLElement>("[data-quilt-ruler]");
-	const readout = ruler?.querySelector<HTMLElement>('[data-time-ruler="readout"]') ?? null;
 	const months = ruler ? [...ruler.querySelectorAll<HTMLElement>("[data-month]")] : [];
 	const monthAt = new Map(months.map((m, k) => [m.dataset.month!, k]));
 	const marks = ruler ? [...ruler.querySelectorAll<HTMLElement>("[data-mark]")] : [];
 	const postByNo = new Map(posts.map((p, i) => [p.no, i]));
+	// The in-focus readout: every copy of a hook (the foot's and the dock's).
+	const focusHooks = (name: string) => [...document.querySelectorAll<HTMLElement>(`[data-focus="${name}"]`)];
+	const focus = {
+		no: focusHooks("no"),
+		title: focusHooks("title"),
+		meta: focusHooks("meta"),
+		position: focusHooks("position"),
+		progress: focusHooks("progress"),
+	};
+	const write = (els: HTMLElement[], text: string) => {
+		for (const el of els) if (el.textContent !== text) el.textContent = text;
+	};
 
 	const mqLg = matchMedia("(min-width: 1024px)");
 	const mqPhone = matchMedia("(max-width: 639px)");
@@ -284,22 +305,22 @@ function wire(): (() => void) | null {
 		const order = orderOf(res);
 		for (const b of steppers) b.disabled = order.length === 0;
 
-		// The ruler: the playhead on the focused post's month, at rest on the
-		// newest matching post (the newest of all when nothing matches); marks
-		// outside the filter dim; the readout names the post in focus.
-		if (ruler) {
-			const at = res.focus ?? order[0] ?? 0;
-			const p = posts[at];
-			if (p) {
-				const k = monthAt.get(p.ym);
-				if (k !== undefined && months.length) {
-					ruler.style.setProperty("--at", `${(((k + 0.5) / months.length) * 100).toFixed(3)}%`);
-				}
-				if (readout) {
-					readout.textContent =
-						res.focus !== null ? `${p.month} ${p.year} · no. ${pad(p.no)}` : `latest · ${p.month} ${p.year}`;
-				}
+		// THE POST IN FOCUS: the focused post, at rest the newest matching one
+		// (the newest of all when nothing matches). Its bar on the ruler fills
+		// (data-focus) and --at sits on its month; marks outside the filter
+		// dim. The readout — the foot's and the dock's copies alike — takes its
+		// number, title and meta, and its place among the posts the stepper
+		// walks, oldest first (`5 / 5` is the newest of five), which is the
+		// progress bar's share too.
+		const at = res.focus ?? order[0] ?? 0;
+		const p = posts[at];
+		if (ruler && p) {
+			const k = monthAt.get(p.ym);
+			if (k !== undefined && months.length) {
+				ruler.style.setProperty("--at", `${(((k + 0.5) / months.length) * 100).toFixed(3)}%`);
 			}
+		}
+		if (ruler) {
 			const keep = new Set(res.matched);
 			for (const mark of marks) {
 				const i = postByNo.get(Number(mark.dataset.no));
@@ -307,7 +328,17 @@ function wire(): (() => void) | null {
 				mark.toggleAttribute("data-dim", dim);
 				if (dim) mark.setAttribute("aria-disabled", "true");
 				else mark.removeAttribute("aria-disabled");
+				mark.toggleAttribute("data-focus", i === at);
 			}
+		}
+		if (p) {
+			const n = order.length;
+			const rank = n ? n - order.indexOf(at) : 0;
+			write(focus.no, numeral(p.no));
+			write(focus.title, p.title);
+			write(focus.meta, `${p.month} ${p.year} · ${p.words} w`);
+			write(focus.position, `${rank} / ${n}`);
+			for (const bar of focus.progress) bar.style.setProperty("--progress", n ? String(rank / n) : "0");
 		}
 	}
 
@@ -599,14 +630,25 @@ function wire(): (() => void) | null {
 		setQuery(a.dataset.chip ?? "");
 	};
 
+	// A row of the topic key is a chip by another name: its `?q=` set in
+	// place, and the bar takes the focus so the results read.
+	const onKeyClick = (e: MouseEvent) => {
+		if (!plainClick(e)) return;
+		const a = (e.target as Element).closest("a");
+		if (!a || !key?.contains(a) || !isQueryLink(a)) return;
+		e.preventDefault();
+		setQuery(new URL(a.href, location.href).searchParams.get("q") ?? "");
+		input.focus();
+	};
+
 	const onStepClick = (e: MouseEvent) => {
 		const b = (e.currentTarget as HTMLButtonElement) ?? null;
 		if (!b || b.disabled) return;
 		step(b.dataset.step === "newer" ? -1 : 1);
 	};
 
-	// A lit tick pins its post; a dim one is not a control, and with the
-	// script off every tick is simply a link to its post.
+	// A lit bar pins its post; a dim one is not a control, and with the
+	// script off every bar is simply a link to its post.
 	const onRulerClick = (e: MouseEvent) => {
 		if (!plainClick(e)) return;
 		const a = (e.target as Element).closest<HTMLAnchorElement>("[data-mark]");
@@ -640,6 +682,7 @@ function wire(): (() => void) | null {
 	panel.addEventListener("click", onPanelClick);
 	list?.addEventListener("pointerover", onListOver);
 	chipsNav?.addEventListener("click", onChipClick);
+	key?.addEventListener("click", onKeyClick);
 	for (const b of steppers) b.addEventListener("click", onStepClick);
 	ruler?.addEventListener("click", onRulerClick);
 	document.addEventListener("keydown", onDocKey);

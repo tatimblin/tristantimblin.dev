@@ -11,14 +11,22 @@
 //             the header's brand and nav). Its rows sit straight on the page,
 //             spaced rather than cut: this layout's BAR row — the h1 visually
 //             hidden, and the open search bar spanning the container: the
-//             ringed icon, the underlined input, the drawn count, the `/`
-//             hint and the − / + stepper on one row, then the quick-filter
-//             tabs (the categories from the enum, each a real link to
-//             `?q=<category>` with its post count, ALL to /txt — a chip is a
-//             search shortcut) — then what the page slots in (the board,
-//             the timeline). Nothing
-//             carries a surface. The rows stack at their own height, a step
-//             apart, and the site footer (Layout's) follows.
+//             ringed icon, the underlined input, the drawn count and the `/`
+//             hint on one row, then the quick-filter tabs (the categories
+//             from the enum, each a real link to `?q=<category>` with its
+//             post count, ALL to /txt — a chip is a search shortcut) — then
+//             what the page slots in (the board) — then, with `foot`, the
+//             sheet's FOOT: the topic key (each category with its count, a
+//             link to its query) | the bar timeline (words per post) | the
+//             post IN FOCUS (its position, the big thin numeral with the
+//             title and a meta line, the circled − / + stepper), and the
+//             corner marks under them — a progress bar at the left, the
+//             sheet code at the right. On a phone the key goes, the stepper
+//             leaves the foot for a thin DOCK stuck to the window's bottom:
+//             the progress line, −, the post in focus on one line, +. One
+//             stepper is drawn per viewport; the other is display: none.
+//             Nothing carries a surface. The rows stack at their own
+//             height, a step apart, and the site footer (Layout's) follows.
 //
 // Pages stay thin: they fetch and group, this owns the shell. Wraps
 // Layout.astro (the only html/head).
@@ -29,7 +37,11 @@ import Mono from "@whois/design-system/Mono";
 import Body from "@whois/design-system/Body";
 import Chip from "@whois/design-system/Chip";
 import IconButton from "@whois/design-system/IconButton";
+import Legend from "@whois/design-system/Legend";
+import RuleLabel from "@whois/design-system/RuleLabel";
 import SearchBar from "@whois/design-system/SearchBar";
+import Stat from "@whois/design-system/Stat";
+import TimeRuler from "@whois/design-system/TimeRuler";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import "../styles/blog.css";
 import { blogNav } from "../lib/blog";
@@ -54,6 +66,44 @@ interface Bar {
 	readout: string;
 }
 
+interface Topic {
+	label: string;
+	/** Two digits (`02`). */
+	count: string;
+	/** A real link to the category's query. */
+	href: string;
+}
+
+interface TimelineMark {
+	month: string;
+	label: string;
+	href: string;
+	no: string;
+	/** The post's words: the bar's height. */
+	value: number;
+	focus?: boolean;
+}
+
+interface Focus {
+	/** Two digits, as the quilt labels draw it (`05`). */
+	no: string;
+	title: string;
+	/** `feb 2026 · 554 w` (drawn in caps). */
+	meta: string;
+	/** `5 / 5`: the post's place among the posts. */
+	position: string;
+	/** The same, as a fraction for the progress bar. */
+	progress: number;
+}
+
+interface Foot {
+	topics: Topic[];
+	timeline: { from: string; to: string; max: number; label: string; marks: TimelineMark[] };
+	focus: Focus;
+	/** The sheet code at the corner (`TXT-A/01`). */
+	code: string;
+}
+
 interface Props {
 	/** The document title. */
 	title: string;
@@ -63,13 +113,16 @@ interface Props {
 	heading: string;
 	/** A small caps label above the h1 ("Category", "Tag"). */
 	kicker?: string;
-	/** The instrument's bar row — the search with its chips and stepper;
-	 *  with this the page is the instrument in the site container and the
-	 *  slot is its remaining rows. */
+	/** The instrument's bar row — the search with its chips; with this the
+	 *  page is the instrument in the site container and the slot is its
+	 *  board. */
 	bar?: Bar;
+	/** The instrument's foot: the topic key, the bar timeline, the post in
+	 *  focus with the stepper, the corner marks; and the phone's dock. */
+	foot?: Foot;
 }
 
-const { title, description, noindex, heading, kicker, bar } = Astro.props;
+const { title, description, noindex, heading, kicker, bar, foot } = Astro.props;
 const hasLede = Astro.slots.has("lede");
 ---
 
@@ -108,30 +161,65 @@ const hasLede = Astro.slots.has("lede");
 											{c.label}
 										</Chip>
 									))}
-									<IconButton
-										slot="controls"
-										variant="outline"
-										square
-										size="sm"
-										glyph="−"
-										aria-label="Previous post"
-										data-step="older"
-										type="button"
-									/>
-									<IconButton
-										slot="controls"
-										variant="outline"
-										square
-										size="sm"
-										glyph="+"
-										aria-label="Next post"
-										data-step="newer"
-										type="button"
-									/>
 								</SearchBar>
 							</form>
 						</div>
 						<slot />
+						{foot && (
+							<Fragment>
+								<div class="blog__row blog__foot" data-quilt-foot>
+									<section class="blog__key" aria-label="Topic key">
+										<RuleLabel>Topic key</RuleLabel>
+										<Legend variant="leaders" items={foot.topics.map((t) => ({ label: t.label, value: t.count, href: t.href }))} data-quilt-key />
+									</section>
+									<div class="blog__timeline">
+										<TimeRuler
+											variant="bars"
+											from={foot.timeline.from}
+											to={foot.timeline.to}
+											max={foot.timeline.max}
+											marks={foot.timeline.marks}
+											label={foot.timeline.label}
+											data-quilt-ruler
+										/>
+									</div>
+									<section class="blog__focus" aria-label="In focus">
+										<RuleLabel>
+											In focus
+											<span slot="meta" data-focus="position">{foot.focus.position}</span>
+										</RuleLabel>
+										<div class="blog__focus-row">
+											<Stat variant="numeral" class="blog__focus-stat">
+												<span data-focus="no">{foot.focus.no}</span>
+												<Fragment slot="label">
+													<span class="blog__focus-title" data-focus="title">{foot.focus.title}</span>
+													<br />
+													<span class="blog__focus-meta" data-focus="meta">{foot.focus.meta}</span>
+												</Fragment>
+											</Stat>
+											<div class="blog__stepper">
+												<IconButton variant="outline" rounded size="sm" glyph="−" aria-label="Previous post" data-step="older" type="button" />
+												<IconButton variant="outline" rounded size="sm" glyph="+" aria-label="Next post" data-step="newer" type="button" />
+											</div>
+										</div>
+									</section>
+									<span class="blog__progress" data-focus="progress" style={`--progress:${foot.focus.progress}`} aria-hidden="true" />
+									<Mono tone="tertiary" class="blog__code">{foot.code}</Mono>
+								</div>
+								<div class="blog__dock" data-quilt-dock>
+									<span class="blog__progress" data-focus="progress" style={`--progress:${foot.focus.progress}`} aria-hidden="true" />
+									<div class="blog__dock-row">
+										<IconButton variant="outline" rounded size="sm" glyph="−" aria-label="Previous post" data-step="older" type="button" />
+										<Mono class="blog__dock-now" truncate>
+											<span class="blog__dock-no" data-focus="no">{foot.focus.no}</span>
+											{" · "}
+											<span data-focus="title">{foot.focus.title}</span>
+										</Mono>
+										<IconButton variant="outline" rounded size="sm" glyph="+" aria-label="Next post" data-step="newer" type="button" />
+									</div>
+								</div>
+							</Fragment>
+						)}
 					</div>
 				</main>
 			</div>

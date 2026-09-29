@@ -36,12 +36,21 @@ import { test, expect, type Page } from "@playwright/test";
  *               rest, on the category's chip for its query, on none for any
  *               other query; ?q= on load
  *   stepper     − older / + newer through the matching posts, newest
- *               first, wrapping; the card, the ring and the playhead follow;
- *               a step holds while the pointer is elsewhere; Escape clears
- *   timeline    one tick per month, a named link per post, the playhead on
- *               the post in focus (at rest the latest), dim ticks under a
- *               filter, a click pins; docked to the window's bottom edge while
- *               the quilt scrolls under it, at rest after it before the footer
+ *               first, wrapping; the card, the ring and the focused bar
+ *               follow; a step holds while the pointer is elsewhere; Escape
+ *               clears. Circled, beside the in-focus readout at the foot —
+ *               and on a phone in the dock instead; one drawn per viewport
+ *   timeline    one slot per month, a bar per post its words tall (a named
+ *               link), the post in focus filled with the accent (at rest
+ *               the latest), dim bars under a filter, a click pins
+ *   foot        the topic key (a link per category, set in place), the
+ *               timeline, the in-focus readout (the two-digit number, the
+ *               title, the month and words, the post's place among the
+ *               posts, the progress bar); docked to the window's bottom edge
+ *               on a desktop while the quilt scrolls under it, at rest after
+ *               it before the footer; in the flow below 1024; the phone's
+ *               DOCK (the progress line, −, the post in focus, +) stuck to
+ *               the window's bottom instead
  *   card        the ruled card's fields and its stat strip; one size at 1440 and 1920
  *   count       the live region a reader hears, in full; the readout drawn
  *               beside the input, short (`05`, `2 / 5`)
@@ -140,7 +149,17 @@ const atOf = (page: Page, ym: string) =>
 		const k = ms.findIndex((m) => (m as HTMLElement).dataset.month === ym);
 		return ((k + 0.5) / ms.length) * 100;
 	}, ym);
-const readout = (page: Page) => page.locator(`${RULER} [data-time-ruler="readout"]`);
+const FOOT = "[data-quilt-foot]";
+const DOCK = "[data-quilt-dock]";
+/** The in-focus readout's hook, in the foot. */
+const focus = (page: Page, hook: string) => page.locator(`${FOOT} [data-focus="${hook}"]`);
+/** The readout names the post in focus: `05`, the title, `feb 2026 · 554 w`. */
+const expectFocus = async (page: Page, no: string, title: string, meta?: RegExp) => {
+	await expect(focus(page, "no")).toHaveText(no);
+	await expect(focus(page, "title")).toHaveText(title);
+	if (meta) await expect(focus(page, "meta")).toHaveText(meta);
+};
+/** The one visible stepper: getByRole leaves out the display: none copy. */
 const older = (page: Page) => page.getByRole("button", { name: "Previous post" });
 const newer = (page: Page) => page.getByRole("button", { name: "Next post" });
 const overflow = (page: Page) =>
@@ -469,6 +488,9 @@ test.describe("quilt — rest", () => {
 		page,
 	}) => {
 		await page.goto("/txt/");
+		// At the end of the page: the foot is docked on a desktop, and at
+		// rest in its own row only once the quilt has scrolled past.
+		await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
 		const m = await page.evaluate(() => {
 			const rect = (sel: string) => document.querySelector(sel)!.getBoundingClientRect().toJSON();
 			const probe = document.createElement("div");
@@ -506,16 +528,16 @@ test.describe("quilt — rest", () => {
 		expect(m.frame.top).toBeGreaterThanOrEqual(m.header.bottom - 1);
 		expect(m.brand.left).toBeCloseTo(inset, 0);
 		expect(m.nav.right).toBeCloseTo(m.vw - inset, 0);
-		// The bar, the board, the timeline: each the page's width, under
-		// the last, set apart by space rather than a hairline gutter.
+		// The bar, the board, the foot: each the page's width, under the
+		// last, set apart by space rather than a hairline gutter.
 		expect(m.rows).toHaveLength(3);
 		for (const r of m.rows) {
 			expect(r.left).toBeCloseTo(m.frame.left, 0);
 			expect(r.right).toBeCloseTo(m.frame.right, 0);
 		}
 		// No dead space: the rows stack a --space-3 apart — the quilt right
-		// under the bar, the timeline's row right under the quilt — rather
-		// than filling the viewport and centring the board.
+		// under the bar, the foot's row right under the quilt — rather than
+		// filling the viewport and centring the board.
 		for (let i = 1; i < m.rows.length; i++) {
 			expect(m.rows[i].top - m.rows[i - 1].bottom, `row ${i}`).toBeCloseTo(m.space3, 0);
 		}
@@ -545,16 +567,16 @@ test.describe("quilt — rest", () => {
 					inst,
 					document.querySelector("main")!,
 					bar,
-					...document.querySelectorAll("[data-instrument] > .blog__row:not(.blog__timeline), [data-quilt], [data-cell]"),
+					...document.querySelectorAll("[data-instrument] > .blog__row:not(.blog__foot), [data-quilt], [data-cell]"),
 				].map((el) => ({ cls: el.className, clear: clear(bg(el)) }));
-				// The docked timeline alone carries a colour: the page's own, so
-				// the tiles scrolling under it do not show through.
+				// The docked foot alone carries a colour: the page's own, so the
+				// tiles scrolling under it do not show through.
 				const probe = document.createElement("div");
 				probe.style.background = "var(--background)";
 				document.body.append(probe);
 				const page = bg(probe);
 				probe.remove();
-				const dock = { bg: bg(document.querySelector(".blog__timeline")!), page };
+				const dock = { bg: bg(document.querySelector(".blog__foot")!), page };
 				const accentProbe = document.createElement("div");
 				accentProbe.style.color = "var(--accent)";
 				document.body.append(accentProbe);
@@ -650,12 +672,16 @@ test.describe("quilt — rest", () => {
 		expect((await h1.boundingBox())!.width).toBeLessThanOrEqual(1);
 		// Beside the hidden h1 the row holds the bar's form alone.
 		expect(await page.locator(".blog__bar > :not(h1, form)").count()).toBe(0);
-		// The bar: the search landmark holding the quick-filter chips nav and the stepper.
+		// The bar: the search landmark holding the quick-filter chips nav; the
+		// stepper is not in it — it sits in main, at the foot, in the region
+		// named "In focus".
 		const bar = main.getByRole("search");
 		await expect(bar).toHaveCount(1);
 		await expect(bar.getByRole("navigation", { name: "Quick filters" })).toHaveCount(1);
-		await expect(bar.getByRole("button", { name: "Previous post" })).toBeVisible();
-		await expect(bar.getByRole("button", { name: "Next post" })).toBeVisible();
+		expect(await bar.locator("[data-step]").count()).toBe(0);
+		await expect(main.getByRole("region", { name: "In focus" }).getByRole("button", { name: "Previous post" })).toBeVisible();
+		await expect(main.getByRole("region", { name: "In focus" }).getByRole("button", { name: "Next post" })).toBeVisible();
+		await expect(main.getByRole("region", { name: "Topic key" })).toHaveCount(1);
 		// The count twice: in full, a live region for a reader (visually
 		// hidden), and short, drawn beside the input and hidden from a reader.
 		await expect(bar.locator(COUNT)).toHaveClass(/ds-visually-hidden/);
@@ -785,7 +811,7 @@ test.describe("quilt — hover and focus", () => {
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 
 		// Keyboard: from the last tile, Tab lands on READ and the card stays;
-		// Tab on, out of the quilt (into the timeline), and it lets go.
+		// Tab on, out of the quilt (into the foot), and it lets go.
 		await page.locator(`${post("001")} a`).focus();
 		await expect(card(page, "title")).toHaveText("No Honey, We Have a Dashboard at Home");
 		await page.keyboard.press("Tab");
@@ -793,8 +819,8 @@ test.describe("quilt — hover and focus", () => {
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		await expect(read).toHaveAttribute("href", "/txt/no-honey-we-have-a-dashboard-at-home/");
 		await page.keyboard.press("Tab");
-		// The next stop is the timeline's first tick, so the card goes.
-		await expect(page.locator(`${RULER} [data-mark]`).first()).toBeFocused();
+		// The next stop is the topic key's first row, so the card goes.
+		await expect(page.locator("[data-quilt-key] a").first()).toBeFocused();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 	});
 
@@ -1016,7 +1042,7 @@ test.describe("quilt — keys", () => {
 	test("/ and ⌘K/Ctrl-K focus the search from the page", async ({ page }) => {
 		await page.goto("/txt/");
 		const input = page.locator(SEARCH);
-		await page.locator(`${RULER} .ds-time-ruler__head`).click();
+		await page.locator(`${RULER} .ds-time-ruler__label`).click();
 		await page.keyboard.press("/");
 		await expect(input).toBeFocused();
 		await expect(input).toHaveValue(""); // the slash is not typed
@@ -1313,7 +1339,7 @@ test.describe("instrument — the chips", () => {
 });
 
 test.describe("instrument — the stepper", () => {
-	const expectStep = async (page: Page, no: string, title: string, line: RegExp) => {
+	const expectStep = async (page: Page, no: string, title: string, meta: RegExp) => {
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		await expect(card(page, "no")).toHaveText(no);
 		await expect(card(page, "title")).toHaveText(title);
@@ -1321,7 +1347,8 @@ test.describe("instrument — the stepper", () => {
 		await expect(page.locator(post(no))).toHaveAttribute("data-active", "");
 		await expect.poll(() => ring(page, no)).toMatch(/inset/);
 		await expect(page.locator(post(no))).toHaveAttribute("data-state", "lit");
-		await expect(readout(page)).toHaveText(line);
+		await expectFocus(page, no.slice(1), title, meta);
+		await expect(page.locator(mark(no))).toHaveAttribute("data-focus", "");
 		expect(under(await block(page), ...(await cellOf(page, no)))).toBe(false);
 	};
 
@@ -1330,23 +1357,23 @@ test.describe("instrument — the stepper", () => {
 	}) => {
 		await page.goto("/txt/");
 		await older(page).click();
-		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · no\. 005/);
+		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · \d+ w/);
 		await older(page).click();
-		await expectStep(page, "004", "Tahoe Mountain Hair", /jun 2025 · no\. 004/);
+		await expectStep(page, "004", "Tahoe Mountain Hair", /jun 2025 · \d+ w/);
 		await newer(page).click();
-		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · no\. 005/);
+		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · \d+ w/);
 		await newer(page).click(); // past the newest: round to the oldest
-		await expectStep(page, "001", "No Honey, We Have a Dashboard at Home", /may 2023 · no\. 001/);
+		await expectStep(page, "001", "No Honey, We Have a Dashboard at Home", /may 2023 · \d+ w/);
 		await older(page).click(); // past the oldest: round to the newest
-		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · no\. 005/);
-		// The playhead followed the step to May 2023 and back.
+		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · \d+ w/);
+		// The focus followed the step to May 2023 and back.
 		await expect.poll(() => rulerAt(page)).toBeCloseTo(await atOf(page, "2026-02"), 1);
 	});
 
 	test("a step holds while the pointer is elsewhere; Escape lets it go", async ({ page }) => {
 		await page.goto("/txt/");
 		await newer(page).click();
-		await expectStep(page, "001", "No Honey, We Have a Dashboard at Home", /may 2023 · no\. 001/);
+		await expectStep(page, "001", "No Honey, We Have a Dashboard at Home", /may 2023 · \d+ w/);
 		await page.mouse.move(1, 1, { steps: 4 });
 		await page.waitForTimeout(250);
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
@@ -1356,7 +1383,7 @@ test.describe("instrument — the stepper", () => {
 		await page.keyboard.press("Escape");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 		expect((await cells(page)).every((c) => c.state === "lit" && !c.active)).toBe(true);
-		await expect(readout(page)).toHaveText(/latest · feb 2026/);
+		await expectFocus(page, "05", "Asserting on Agent Behavior");
 		await expect.poll(() => rulerAt(page)).toBeCloseTo(await atOf(page, "2026-02"), 1);
 	});
 
@@ -1365,17 +1392,17 @@ test.describe("instrument — the stepper", () => {
 	}) => {
 		await page.goto("/txt/");
 		await older(page).click();
-		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · no\. 005/);
+		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · \d+ w/);
 		// 001 is faint under the lead's step (a gone tile — under the block,
 		// or rolled so — takes no pointer, and 003 sits under the block here).
 		await expect(page.locator(post("001"))).toHaveAttribute("data-state", "faint");
 		await page.locator(`${post("001")} a`).hover();
 		await expect(card(page, "title")).toHaveText("No Honey, We Have a Dashboard at Home");
-		await expect(readout(page)).toHaveText(/may 2023 · no\. 001/);
+		await expectFocus(page, "01", "No Honey, We Have a Dashboard at Home");
 		// A preview, not a step: no ring on the hovered tile.
 		await expect(page.locator("[data-cell][data-active]")).toHaveCount(0);
 		await page.mouse.move(1, 1, { steps: 4 });
-		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · no\. 005/);
+		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · \d+ w/);
 		await page.locator(SEARCH).fill("home");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "results");
 		await expect(page.locator("[data-cell][data-active]")).toHaveCount(1);
@@ -1390,12 +1417,12 @@ test.describe("instrument — the stepper", () => {
 		// The first result (005) is already the focus, so − is the older match:
 		// 001 — 004, 003 and 002 are not programming.
 		await older(page).click();
-		await expectStep(page, "001", "No Honey, We Have a Dashboard at Home", /may 2023 · no\. 001/);
+		await expectStep(page, "001", "No Honey, We Have a Dashboard at Home", /may 2023 · \d+ w/);
 		await expect(card(page, "why")).toHaveText("MATCHED CATEGORY · PROGRAMMING");
 		await newer(page).click();
-		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · no\. 005/);
+		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · \d+ w/);
 		await newer(page).click(); // round to the oldest match
-		await expectStep(page, "001", "No Honey, We Have a Dashboard at Home", /may 2023 · no\. 001/);
+		await expectStep(page, "001", "No Honey, We Have a Dashboard at Home", /may 2023 · \d+ w/);
 		// Both matches stay lit; the rest are scattered.
 		await expect(page.locator(post("005"))).toHaveAttribute("data-state", "lit");
 		await expect(page.locator(post("003"))).not.toHaveAttribute("data-state", "lit");
@@ -1416,18 +1443,20 @@ test.describe("instrument — the stepper", () => {
 });
 
 test.describe("instrument — the timeline", () => {
-	for (const [width, height] of [
-		[1440, 600],
-		[390, 700],
-	]) {
-		test(`docked at ${width}×${height}: sticky to the window's bottom while the quilt scrolls under it, at rest after the quilt, before the footer`, async ({
+	// The foot docks on a desktop; on a phone the foot is in the flow and
+	// the dock (the stepper's thin bar) is what sticks.
+	for (const [width, height, sel] of [
+		[1440, 600, ".blog__foot"],
+		[390, 700, ".blog__dock"],
+	] as const) {
+		test(`docked at ${width}×${height} (${sel}): sticky to the window's bottom while the quilt scrolls under it, at rest after the quilt, before the footer`, async ({
 			page,
 		}) => {
 			await page.setViewportSize({ width, height });
 			await page.goto("/txt/");
 			const geo = () =>
-				page.evaluate(() => {
-					const dock = document.querySelector(".blog__timeline")!;
+				page.evaluate((sel) => {
+					const dock = document.querySelector(sel)!;
 					return {
 						vh: document.documentElement.clientHeight,
 						max: document.documentElement.scrollHeight - document.documentElement.clientHeight,
@@ -1438,11 +1467,11 @@ test.describe("instrument — the timeline", () => {
 						z: getComputedStyle(dock).zIndex,
 						panelZ: getComputedStyle(document.querySelector("[data-quilt-panel]")!).zIndex,
 					};
-				});
+				}, sel);
 			const start = await geo();
 			expect(start.position).toBe("sticky");
-			// Above the tiles, below the panel.
-			expect(Number(start.z)).toBeLessThan(Number(start.panelZ));
+			// Above the tiles, below the panel (which is in flow on a phone).
+			if (width >= 1024) expect(Number(start.z)).toBeLessThan(Number(start.panelZ));
 			// The page scrolls, and at the top the quilt runs on under the dock.
 			expect(start.max).toBeGreaterThan(0);
 			expect(start.dock.bottom).toBeCloseTo(start.vh, 0);
@@ -1462,7 +1491,7 @@ test.describe("instrument — the timeline", () => {
 		});
 	}
 
-	test("a tick per month over whole years, a named link per post in its month, the playhead on the latest", async ({
+	test("a slot per month over whole years, a named link per post in its month, a bar its words tall, the latest filled", async ({
 		page,
 	}) => {
 		await page.goto("/txt/");
@@ -1496,7 +1525,7 @@ test.describe("instrument — the timeline", () => {
 			["/txt/asserting-on-agent-behavior/", "Asserting on Agent Behavior, Feb 2026", "2026-02"],
 		]);
 		for (const a of await marks.all()) await expect(a).not.toHaveAttribute("data-dim");
-		// A mark is taller than a plain tick, and the year labels sit under the Januaries.
+		// A bar is taller than a plain tick, and the year labels sit under the Januaries.
 		const bar = (sel: string) =>
 			page.locator(sel).first().evaluate((el) => parseFloat(getComputedStyle(el, "::after").height));
 		const tick = (sel: string) =>
@@ -1511,33 +1540,94 @@ test.describe("instrument — the timeline", () => {
 			"2025",
 			"2026",
 		]);
-		// At rest: the playhead on the latest post's month, and the readout says so.
+		// THE BARS: each post's is as tall as its words say, against the
+		// scale at the right — so the bars rank as the word counts in the
+		// page's index do, and the tallest reaches the scale's top only if
+		// it is the max.
+		const bars = await page.evaluate(() => {
+			const { posts } = JSON.parse(document.querySelector("script[data-quilt-index]")!.textContent!) as {
+				posts: { no: number; words: number }[];
+			};
+			const words = new Map(posts.map((p) => [String(p.no).padStart(3, "0"), p.words]));
+			const strip = document.querySelector("[data-quilt-ruler] .ds-time-ruler__strip")!.getBoundingClientRect();
+			const scale = [...document.querySelectorAll("[data-quilt-ruler] .ds-time-ruler__scale .ds-mono")].map(
+				(m) => m.textContent!.trim(),
+			);
+			return {
+				scale,
+				strip: strip.height,
+				marks: [...document.querySelectorAll<HTMLElement>("[data-quilt-ruler] [data-mark]")].map((a) => {
+					const after = getComputedStyle(a, "::after");
+					return {
+						no: a.dataset.no!,
+						words: words.get(a.dataset.no!)!,
+						height: parseFloat(after.height),
+						fill: after.backgroundColor,
+						border: after.borderTopWidth,
+						focus: a.hasAttribute("data-focus"),
+					};
+				}),
+			};
+		});
+		const max = Number(bars.scale[0]);
+		expect(bars.scale[1]).toBe("0");
+		expect(max % 100).toBe(0);
+		expect(max).toBeGreaterThanOrEqual(Math.max(...bars.marks.map((m) => m.words)));
+		expect(max - 100).toBeLessThan(Math.max(...bars.marks.map((m) => m.words)));
+		const byWords = [...bars.marks].sort((a, b) => b.words - a.words);
+		const byHeight = [...bars.marks].sort((a, b) => b.height - a.height);
+		expect(byHeight.map((m) => m.no)).toEqual(byWords.map((m) => m.no));
+		for (const m of bars.marks) {
+			expect(m.height / bars.strip, m.no).toBeCloseTo(m.words / max, 1);
+			expect(m.border).toBe("1px");
+		}
+		// The latest post is in focus at rest: its bar alone is filled, with
+		// the accent; the others are outlines.
+		const accent = await page.evaluate(() => {
+			const probe = document.createElement("div");
+			probe.style.color = "var(--accent)";
+			document.body.append(probe);
+			const c = getComputedStyle(probe).color;
+			probe.remove();
+			return c;
+		});
+		expect(bars.marks.filter((m) => m.focus).map((m) => m.no)).toEqual(["005"]);
+		for (const m of bars.marks) {
+			if (m.focus) expect(m.fill).toBe(accent);
+			else expect(m.fill).toBe("rgba(0, 0, 0, 0)");
+		}
 		await expect.poll(() => rulerAt(page)).toBeCloseTo(await atOf(page, "2026-02"), 1);
-		await expect(readout(page)).toHaveText(/latest · feb 2026/);
+		await expectFocus(page, "05", "Asserting on Agent Behavior", /feb 2026 · \d+ w/);
 	});
 
-	test("the playhead glides to the post in focus: a hover, the active result, a step", async ({ page }) => {
+	test("the focus moves to the post in focus: a hover, the active result, a step — the bar fills, the readout follows", async ({ page }) => {
 		await page.goto("/txt/");
 		await page.locator(`${post("003")} a`).hover();
+		await expect(page.locator(mark("003"))).toHaveAttribute("data-focus", "");
+		await expect(page.locator(mark("005"))).not.toHaveAttribute("data-focus");
+		await expect(page.locator(`${RULER} [data-mark][data-focus]`)).toHaveCount(1);
 		await expect.poll(() => rulerAt(page)).toBeCloseTo(await atOf(page, "2025-04"), 1);
-		await expect(readout(page)).toHaveText(/apr 2025 · no\. 003/);
+		await expectFocus(page, "03", "The Mega Desk", /apr 2025 · \d+ w/);
 		await page.mouse.move(1, 1, { steps: 4 });
+		await expect(page.locator(mark("005"))).toHaveAttribute("data-focus", "");
 		await expect.poll(() => rulerAt(page)).toBeCloseTo(await atOf(page, "2026-02"), 1);
-		await expect(readout(page)).toHaveText(/latest · feb 2026/);
-		// It moves, not cuts: the position is transitioned.
+		await expectFocus(page, "05", "Asserting on Agent Behavior", /feb 2026 · \d+ w/);
+		// The fill fades in, not cuts: the bar's colour is transitioned.
 		const transition = await page
-			.locator(`${RULER} .ds-time-ruler__playhead`)
-			.evaluate((el) => getComputedStyle(el).transitionProperty);
-		expect(transition).toMatch(/inset-inline-start|left/);
+			.locator(mark("005"))
+			.evaluate((el) => getComputedStyle(el, "::after").transitionProperty);
+		expect(transition).toMatch(/background-color/);
 
 		await page.locator(SEARCH).fill("home");
+		await expect(page.locator(mark("001"))).toHaveAttribute("data-focus", "");
 		await expect.poll(() => rulerAt(page)).toBeCloseTo(await atOf(page, "2023-05"), 1);
 		await page.locator(SEARCH).press("ArrowDown");
+		await expect(page.locator(mark("003"))).toHaveAttribute("data-focus", "");
 		await expect.poll(() => rulerAt(page)).toBeCloseTo(await atOf(page, "2025-04"), 1);
-		await expect(readout(page)).toHaveText(/apr 2025 · no\. 003/);
+		await expectFocus(page, "03", "The Mega Desk", /apr 2025 · \d+ w/);
 	});
 
-	test("clicking a lit tick pins its post; under a filter the others dim and are not controls", async ({
+	test("clicking a lit bar pins its post; under a filter the others dim and are not controls", async ({
 		page,
 	}) => {
 		await page.goto("/txt/");
@@ -1546,7 +1636,7 @@ test.describe("instrument — the timeline", () => {
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		await expect(card(page, "title")).toHaveText("Your Car Knows You're Getting Sick");
 		await expect(page.locator(post("002"))).toHaveAttribute("data-active", "");
-		await expect(readout(page)).toHaveText(/jul 2024 · no\. 002/);
+		await expectFocus(page, "02", "Your Car Knows You're Getting Sick", /jul 2024 · \d+ w/);
 		await expect.poll(() => rulerAt(page)).toBeCloseTo(await atOf(page, "2024-07"), 1);
 
 		await page.locator(SEARCH).fill("programming");
@@ -1561,12 +1651,12 @@ test.describe("instrument — the timeline", () => {
 			expect(await a.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
 		}
 		await expect(page.locator(mark("005"))).not.toHaveAttribute("data-dim");
-		// A lit tick pins its post over the list.
+		// A lit bar pins its post over the list.
 		await page.locator(mark("001")).click();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		await expect(card(page, "no")).toHaveText("001");
 		await expect(page.locator(post("001"))).toHaveAttribute("data-active", "");
-		// Clearing the filter lights every tick again.
+		// Clearing the filter lights every bar again.
 		await page.locator(SEARCH).fill("");
 		await expect(dim).toHaveCount(0);
 	});
@@ -1723,37 +1813,89 @@ test.describe("instrument — layouts", () => {
 				ring: box(".ds-search-bar__ring"),
 				readout: box("[data-search-readout]"),
 				chips: box("[data-search-chips]"),
-				older: box('[data-step="older"]'),
-				newer: box('[data-step="newer"]'),
 				chipsScroll: (() => {
 					const n = document.querySelector<HTMLElement>("[data-search-chips]")!;
 					return { overflowX: getComputedStyle(n).overflowX, scrollable: n.scrollWidth > n.clientWidth + 1 };
 				})(),
 			};
 		});
+	/** The foot's parts, as boxes; a hidden part is null. */
+	const footBoxes = (page: Page) =>
+		page.evaluate(() => {
+			const box = (sel: string) => {
+				const el = document.querySelector<HTMLElement>(sel);
+				return el && el.checkVisibility() ? el.getBoundingClientRect().toJSON() : null;
+			};
+			return {
+				foot: box("[data-quilt-foot]")!,
+				key: box(".blog__key"),
+				timeline: box("[data-quilt-ruler]")!,
+				focus: box(".blog__focus")!,
+				numeral: box('.blog__focus [data-focus="no"]')!,
+				older: box('.blog__focus [data-step="older"]'),
+				newer: box('.blog__focus [data-step="newer"]'),
+				progress: box('.blog__foot > [data-focus="progress"]'),
+				code: box(".blog__code")!,
+				dock: box("[data-quilt-dock]"),
+				dockOlder: box('[data-quilt-dock] [data-step="older"]'),
+				dockNewer: box('[data-quilt-dock] [data-step="newer"]'),
+			};
+		});
+	const mid = (r: DOMRect) => r.y + r.height / 2;
 
-	test("desktop (1440): the input row — the ring, the input, the readout, the hint, the stepper — then the tabs row", async ({ page }) => {
+	test("desktop (1440): the input row — the ring, the input, the readout, the hint — then the tabs row; the foot in three: key | timeline | focus with the stepper", async ({ page }) => {
 		await page.goto("/txt/");
 		const b = await barBoxes(page);
-		const mid = (r: DOMRect) => r.y + r.height / 2;
-		for (const r of [b.ring, b.readout, b.older]) expect(Math.abs(mid(r) - mid(b.input))).toBeLessThanOrEqual(2);
+		for (const r of [b.ring, b.readout]) expect(Math.abs(mid(r) - mid(b.input))).toBeLessThanOrEqual(2);
 		expect(b.input.x).toBeGreaterThanOrEqual(b.ring.x + b.ring.width - 1);
 		expect(b.readout.x).toBeGreaterThanOrEqual(b.input.x + b.input.width - 1);
-		expect(b.older.x).toBeGreaterThanOrEqual(b.readout.x + b.readout.width - 1);
-		expect(b.newer.x).toBeGreaterThan(b.older.x);
 		// The tabs on their own row under the input, from the ring's edge, on one line.
 		expect(b.chips.y).toBeGreaterThanOrEqual(b.input.y + b.input.height - 1);
 		expect(b.chips.x).toBeCloseTo(b.ring.x, 0);
 		expect(b.chips.height).toBeLessThan(b.input.height);
-		// The ring is the stepper's size.
-		expect(b.ring.width).toBeCloseTo(b.older.width, 0);
-		// The input keeps most of the bar.
-		expect(b.input.width).toBeGreaterThan(b.bar.width / 3);
+		// The input keeps most of the bar: no stepper in the row.
+		expect(b.input.width).toBeGreaterThan(b.bar.width / 2);
+		expect(await page.locator(`${BAR} [data-step]`).count()).toBe(0);
 		await expect(page.locator(`${BAR} .ds-search-bar__hint`)).toBeVisible();
 		await expect(page.locator(`${BAR} .ds-search-bar__hint`)).toHaveText("/");
+
+		// The foot: the key, the timeline and the focus on one row, left to
+		// right; the circled stepper at the focus cell's right edge, the
+		// ring's size (round); the corner marks under — the progress bar at
+		// the left, the code at the right.
+		const f = await footBoxes(page);
+		expect(f.key).not.toBeNull();
+		expect(Math.abs(f.key!.y - f.timeline.y)).toBeLessThanOrEqual(8);
+		expect(Math.abs(f.focus.y - f.timeline.y)).toBeLessThanOrEqual(8);
+		expect(f.timeline.x).toBeGreaterThan(f.key!.x + f.key!.width);
+		expect(f.focus.x).toBeGreaterThan(f.timeline.x + f.timeline.width);
+		expect(f.timeline.width).toBeGreaterThan(f.key!.width);
+		expect(f.timeline.width).toBeGreaterThan(f.focus.width);
+		expect(f.older).not.toBeNull();
+		expect(f.older!.x).toBeGreaterThan(f.numeral.x + f.numeral.width);
+		expect(f.newer!.x).toBeGreaterThan(f.older!.x);
+		expect(f.newer!.x + f.newer!.width).toBeCloseTo(f.foot.x + f.foot.width, 0);
+		expect(f.older!.width).toBeCloseTo(b.ring.width, 0);
+		expect(
+			await page.locator('.blog__focus [data-step="older"]').evaluate((el) => getComputedStyle(el).borderTopLeftRadius),
+		).toMatch(/^(9999px|50%)$/);
+		expect(f.progress).not.toBeNull();
+		expect(f.progress!.y).toBeGreaterThan(f.key!.y + f.key!.height);
+		expect(f.progress!.x).toBeCloseTo(f.key!.x, 0);
+		// (The caps voice pulls its phantom tracking back past the edge by a px or so.)
+		expect(Math.abs(f.code.x + f.code.width - (f.foot.x + f.foot.width))).toBeLessThanOrEqual(2);
+		expect(f.code.y).toBeGreaterThan(f.focus.y + f.focus.height - 1);
+		await expect(page.locator(".blog__code")).toHaveText("TXT-A/01");
+		// The dock is a phone's: not drawn here, and its stepper out of the
+		// tree — one visible stepper.
+		expect(f.dock).toBeNull();
+		expect(await page.locator("[data-quilt-dock]").evaluate((el) => getComputedStyle(el).display)).toBe("none");
+		await expect(older(page)).toHaveCount(1);
+		await expect(newer(page)).toHaveCount(1);
+		expect(await page.locator('[data-step="older"]').count()).toBe(2);
 	});
 
-	test("tablet (900): three columns, every entry labelled; the chips on their own row under the input, the stepper beside it", async ({
+	test("tablet (900): three columns, every entry labelled; the chips on their own row under the input; the foot's key and focus side by side over the timeline", async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 900, height: 1100 });
@@ -1775,20 +1917,33 @@ test.describe("instrument — layouts", () => {
 		// Out to the bar's right edge (and a focus ring's step past its left).
 		expect(b.chips.x + b.chips.width).toBeCloseTo(b.bar.x + b.bar.width, 0);
 		expect(b.chips.width).toBeGreaterThanOrEqual(b.bar.width - 1);
-		expect(Math.abs(b.older.y + b.older.height / 2 - (b.input.y + b.input.height / 2))).toBeLessThanOrEqual(2);
 		expect(b.input.width).toBeGreaterThan(b.bar.width / 2);
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
+		// The foot in two rows: the key and the focus (with the stepper) side
+		// by side, the timeline the full width under them; in the flow, not
+		// docked. One visible stepper, the foot's.
+		const f = await footBoxes(page);
+		expect(f.key).not.toBeNull();
+		expect(Math.abs(f.key!.y - f.focus.y)).toBeLessThanOrEqual(8);
+		expect(f.focus.x).toBeGreaterThan(f.key!.x + f.key!.width);
+		expect(f.timeline.y).toBeGreaterThan(Math.max(f.key!.y + f.key!.height, f.focus.y + f.focus.height) - 1);
+		expect(f.timeline.width).toBeCloseTo(f.foot.width, 0);
+		expect(f.older).not.toBeNull();
+		expect(f.dock).toBeNull();
+		await expect(older(page)).toHaveCount(1);
+		expect(await page.locator("[data-quilt-foot]").evaluate((el) => getComputedStyle(el).position)).not.toBe("sticky");
 		await page.locator(`${post("003")} a`).hover();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		await expect(card(page, "link")).toBeVisible();
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
 	});
 
-	test("phone (390): the chips scroll sideways under the input, the stepper beside it, labels on the entries, the timeline compact", async ({
+	test("phone (390): the chips scroll sideways under the input, the whole placeholder in the input, labels on the entries, the timeline compact, the stepper in the dock alone", async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 390, height: 1000 });
 		await page.goto("/txt/");
+		await page.evaluate(() => document.fonts.ready);
 		const b = await barBoxes(page);
 		expect(b.chips.y).toBeGreaterThanOrEqual(b.input.y + b.input.height - 1);
 		expect(b.chipsScroll.overflowX).toBe("auto");
@@ -1802,33 +1957,63 @@ test.describe("instrument — layouts", () => {
 		).toContain("linear-gradient");
 		// The input is set at 16px so iOS does not zoom the page on focus.
 		expect(await page.locator(SEARCH).evaluate((i) => getComputedStyle(i).fontSize)).toBe("16px");
-		expect(Math.abs(b.older.y + b.older.height / 2 - (b.input.y + b.input.height / 2))).toBeLessThanOrEqual(2);
-		expect(b.older.x).toBeGreaterThanOrEqual(b.input.x + b.input.width - 1);
+		// With the stepper out of the row the input has its width back: the
+		// placeholder fits whole (measured in the input's own font).
+		const fit = await page.locator(SEARCH).evaluate((i: HTMLInputElement) => {
+			const ctx = document.createElement("canvas").getContext("2d")!;
+			ctx.font = getComputedStyle(i).font;
+			return { text: ctx.measureText(i.placeholder).width, room: i.clientWidth };
+		});
+		expect(fit.text).toBeLessThan(fit.room);
+		expect(b.input.width).toBeGreaterThan(b.bar.width * 0.7);
 		// A tap-list needs its titles: the label row, the number and the
 		// title and nothing else, on every entry.
 		await expect(page.locator(`${post("003")} .ds-quilt-cell__label`)).toBeVisible();
 		await expect(page.locator(`${post("003")} .ds-quilt-cell__label`)).toHaveText(/03\s*The Mega Desk/);
-		// The timeline is drawn shorter than on a desktop, with its years.
+		// The timeline is drawn shorter than on a desktop, with its years and
+		// its scale.
 		const strip = (await page.locator(`${RULER} .ds-time-ruler__strip`).boundingBox())!;
-		expect(strip.height).toBeLessThan(48);
+		expect(strip.height).toBeLessThanOrEqual(49);
 		await expect(page.locator(`${RULER} .ds-time-ruler__year`).first()).toBeVisible();
-		// The head's label and readout never collide: on a phone the readout
-		// takes its own line under the label.
-		const head = await page.locator(`${RULER} .ds-time-ruler__head`).evaluate((h) => {
-			const [label, readout] = [...h.children].map((c) => c.getBoundingClientRect());
-			return { labelBottom: label.bottom, readoutTop: readout.top, readoutRight: readout.right, right: h.getBoundingClientRect().right };
-		});
-		expect(head.readoutTop).toBeGreaterThanOrEqual(head.labelBottom - 1);
-		expect(head.readoutRight).toBeLessThanOrEqual(head.right + 1);
+		await expect(page.locator(`${RULER} .ds-time-ruler__scale`)).toBeVisible();
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
 
-		// A step shows the card in flow above the list, the stepped tile outlined.
+		// The foot in the flow: the timeline over the readout, no key, no
+		// stepper (display: none, out of the tab order) — and the DOCK: the
+		// progress line, −, the post in focus on one line, +, drawn at the
+		// window's bottom edge. The one visible stepper is the dock's.
+		const f = await footBoxes(page);
+		expect(f.key).toBeNull();
+		expect(f.older).toBeNull();
+		expect(f.progress).toBeNull();
+		expect(f.focus.y).toBeGreaterThan(f.timeline.y + f.timeline.height - 1);
+		expect(await page.locator(".blog__stepper").evaluate((el) => getComputedStyle(el).display)).toBe("none");
+		expect(f.dock).not.toBeNull();
+		expect(f.dock!.bottom).toBeCloseTo(1000, 0);
+		expect(f.dock!.height).toBeLessThan(80);
+		expect(f.dockOlder).not.toBeNull();
+		expect(f.dockNewer!.x).toBeGreaterThan(f.dockOlder!.x + f.dockOlder!.width);
+		await expect(older(page)).toHaveCount(1);
+		await expect(page.locator(`${DOCK} [data-step="older"]`)).toBeVisible();
+		const now = page.locator(`${DOCK} .blog__dock-now`);
+		await expect(now).toHaveText(/^05 · Asserting on Agent Behavior$/);
+		expect((await now.boundingBox())!.x).toBeGreaterThan(f.dockOlder!.x + f.dockOlder!.width);
+		expect((await now.boundingBox())!.x + (await now.boundingBox())!.width).toBeLessThanOrEqual(f.dockNewer!.x);
+		expect(await now.evaluate((el) => getComputedStyle(el).textOverflow)).toBe("ellipsis");
+		expect(await page.locator(`${DOCK} [data-focus="progress"]`).evaluate((el) => el.style.getPropertyValue("--progress"))).toBe("1");
+
+		// A step from the dock shows the card in flow above the list, the
+		// stepped tile outlined; the dock's line and the foot's readout follow.
 		await newer(page).click();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		await expect(page.locator(PANEL)).toBeVisible();
 		await expect(card(page, "no")).toHaveText("001");
 		await expect(page.locator(post("001"))).toHaveAttribute("data-active", "");
 		await expect(card(page, "link")).toBeVisible();
+		await expect(now).toHaveText(/^01 · No Honey, We Have a Dashboard at Home$/);
+		await expectFocus(page, "01", "No Honey, We Have a Dashboard at Home", /may 2023 · \d+ w/);
+		await expect(focus(page, "position")).toHaveText("1 / 5");
+		expect(await page.locator(`${DOCK} [data-focus="progress"]`).evaluate((el) => el.style.getPropertyValue("--progress"))).toBe("0.2");
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
 	});
 
@@ -1840,6 +2025,127 @@ test.describe("instrument — layouts", () => {
 			await older(page).click();
 			await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 			expect(await overflow(page), `${width} stepped`).toBeLessThanOrEqual(0);
+		}
+	});
+});
+
+test.describe("instrument — the foot", () => {
+	test("the topic key: every category with its two-digit count, a link to its query; a click sets the query in place", async ({
+		page,
+	}) => {
+		await page.goto("/txt/");
+		const rows = page.locator("[data-quilt-key] a");
+		expect(
+			await rows.evaluateAll((as) =>
+				as.map((a) => [a.getAttribute("href"), (a as HTMLElement).innerText.replace(/\s+/g, " ").trim()]),
+			),
+		).toEqual([
+			["/txt/?q=programming", "PROGRAMMING 02"],
+			["/txt/?q=projects", "PROJECTS 01"],
+			["/txt/?q=thoughts", "THOUGHTS 01"],
+			["/txt/?q=personal", "PERSONAL 01"],
+		]);
+		// The rows lead: a dotted line from the label to the count.
+		expect(
+			await rows.first().locator(".ds-legend__label").evaluate((el) => getComputedStyle(el, "::after").borderBottomStyle),
+		).toBe("dotted");
+		await rows.first().click();
+		await expect(page).toHaveURL(/\/txt\/?\?q=programming$/);
+		await expect(page.locator(SEARCH)).toHaveValue("programming");
+		await expect(page.locator(chip("programming"))).toHaveAttribute("aria-current", "page");
+		await expectCount(page, "2 of 5 posts");
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "results");
+	});
+
+	test("the in-focus readout: the number as the labels draw it, the title, the month and words; the position and the progress follow a step and count the matches under a filter", async ({
+		page,
+	}) => {
+		await page.goto("/txt/");
+		const progress = () =>
+			page.locator(`${FOOT} [data-focus="progress"]`).evaluate((el) => el.style.getPropertyValue("--progress"));
+		await expectFocus(page, "05", "Asserting on Agent Behavior", /^feb 2026 · \d+ w$/);
+		await expect(focus(page, "position")).toHaveText("5 / 5");
+		expect(await progress()).toBe("1");
+		// The number is the big thin numeral, the title the ink, the meta a step back.
+		const inks = await page.evaluate(() => {
+			const ink = (sel: string) => getComputedStyle(document.querySelector(sel)!).color;
+			const numeral = getComputedStyle(document.querySelector('[data-quilt-foot] [data-focus="no"]')!.closest(".ds-stat__numeral")!);
+			const probe = (v: string) => {
+				const p = document.createElement("div");
+				p.style.color = `var(${v})`;
+				document.body.append(p);
+				const c = getComputedStyle(p).color;
+				p.remove();
+				return c;
+			};
+			return {
+				title: ink('[data-quilt-foot] [data-focus="title"]'),
+				meta: ink('[data-quilt-foot] [data-focus="meta"]'),
+				primary: probe("--text-primary"),
+				tertiary: probe("--text-tertiary"),
+				numeral: { size: parseFloat(numeral.fontSize), weight: numeral.fontWeight },
+			};
+		});
+		expect(inks.title).toBe(inks.primary);
+		expect(inks.meta).toBe(inks.tertiary);
+		expect(inks.numeral.size).toBeGreaterThanOrEqual(40);
+		expect(Number(inks.numeral.weight)).toBeLessThanOrEqual(300);
+
+		await newer(page).click(); // from rest + takes the oldest
+		await expectFocus(page, "01", "No Honey, We Have a Dashboard at Home", /^may 2023 · \d+ w$/);
+		await expect(focus(page, "position")).toHaveText("1 / 5");
+		expect(await progress()).toBe("0.2");
+		await newer(page).click();
+		await expectFocus(page, "02", "Your Car Knows You're Getting Sick", /^jul 2024 · \d+ w$/);
+		await expect(focus(page, "position")).toHaveText("2 / 5");
+		expect(await progress()).toBe("0.4");
+		// The dock's copy says the same (hidden here, but written all the same).
+		await expect(page.locator(`${DOCK} [data-focus="no"]`)).toHaveText("02");
+
+		// Under a filter the place is among the matches.
+		await page.locator(SEARCH).fill("programming");
+		await expect(focus(page, "position")).toHaveText("2 / 2");
+		await expectFocus(page, "05", "Asserting on Agent Behavior");
+		expect(await progress()).toBe("1");
+		await older(page).click();
+		await expectFocus(page, "01", "No Honey, We Have a Dashboard at Home");
+		await expect(focus(page, "position")).toHaveText("1 / 2");
+		expect(await progress()).toBe("0.5");
+		// Nothing matches: nothing to place, the newest post still named.
+		await page.locator(SEARCH).fill("zzz");
+		await expect(focus(page, "position")).toHaveText("0 / 0");
+		expect(await progress()).toBe("0");
+	});
+
+	test("one stepper per viewport: the foot's on a desktop and a tablet, the dock's on a phone; the other is display: none", async ({
+		page,
+	}) => {
+		const visible = () =>
+			page.evaluate(() =>
+				[...document.querySelectorAll<HTMLElement>('[data-step="older"]')].map((b) => ({
+					where: b.closest("[data-quilt-dock]") ? "dock" : "foot",
+					// The copy that is not drawn is display: none with its box
+					// (the dock, or the foot's stepper row), not merely unseen.
+					display: getComputedStyle(b.closest("[data-quilt-dock], .blog__stepper")!).display,
+					shown: b.checkVisibility(),
+				})),
+			);
+		for (const [width, where] of [
+			[1440, "foot"],
+			[900, "foot"],
+			[390, "dock"],
+		] as const) {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto("/txt/");
+			const v = await visible();
+			expect(v, String(width)).toHaveLength(2);
+			expect(v.filter((b) => b.shown).map((b) => b.where), String(width)).toEqual([where]);
+			expect(v.find((b) => !b.shown)!.display, String(width)).toBe("none");
+			await expect(older(page)).toHaveCount(1);
+			// Tab never lands on the hidden one: from the foot's numeral
+			// onwards the next buttons are the shown copy.
+			await older(page).focus();
+			await expect(older(page)).toBeFocused();
 		}
 	});
 });

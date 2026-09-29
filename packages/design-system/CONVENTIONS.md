@@ -159,7 +159,7 @@ noted):
 | `--wash-1/2/3` | the ink at 7 / 16 / 30 % — unlit tile & subtle pill fill; two stronger steps. |
 | `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
 | `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour; the STRONG edge (the ink at `--wash-3`) for the one outline on a ruled screen that must read over the plain hairlines inside it — the search bar's underline and ring, the card's border, a chip under the pointer; the divider gradient that fades at both ends. The package reads `--hairline`, never `--border-color`. |
-| `--bar-width` (`:root`, 2px) | every solid edge bar: the pull quote's, a post's mark on the timeline, the active result's. |
+| `--bar-width` (`:root`, 2px) | every solid edge bar: the pull quote's, a post's mark on the tick timeline, the active result's, the /txt progress bar. |
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px) — `:root` | the steps below the generated scales. |
 | `--ticks-image`, `--ticks-image-ink` | the tick ruler as a gradient (hairlines on `--tick-pitch`) in currentColor, and in the ink — for a box that should read as a ruler and cannot take the classes (the player's progress bar). TickRuler draws its own on the same pitch. |
 | `--focus-ring`, `--focus-ring-offset`, `--focus-ring-inset` | the focus ring for everything focusable that is not a native control, drawn by `control.css` for every `ds-control`; the offset, and the inset form of it for a control that rings inside its box (set `--control-ring-offset: var(--focus-ring-inset)` in scope). |
@@ -252,9 +252,11 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
   = pill button; `start-icon`/`end-icon` slots. `IconButton` — `secondary`
   (default, a wash in a hairline) / `outline` (the hairline alone),
-  `size="xs|sm|lg|xl"`, `rounded` = round button, `square` = no corner,
-  `glyph="−"` a text character in place of an icon (aria-hidden; give the
-  button an `aria-label`).
+  `size="xs|sm|lg|xl"`, `rounded` = round button, `glyph="−"` a text
+  character in place of an icon (aria-hidden; give the button an
+  `aria-label`). `variant="outline" rounded size="sm"` is the ruled screen's
+  CIRCLED control — the − / + stepper at the foot of /txt, the size of the
+  search bar's ring.
 
 **Hairline graphics.**
 - `Hairline` — a 1px rule fading at both ends; an `hr`, or `as="span"`.
@@ -271,17 +273,23 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   when it heads the section it spans.
 - `TickRuler` — `segments=[{share, color?}]` (colours default to `--tone-N` by
   order): a share bar, or a plain stretch.
-- `TimeRuler` — ticks on a time scale: `from`/`to` (`YYYY-MM`, inclusive),
-  one tick per month, a taller one on each January with the year under it
+- `TimeRuler` — a ruler on a time scale: `from`/`to` (`YYYY-MM`,
+  inclusive), one slot per month, the year under each January
   (`--k`/`--months` position the labels), and `marks=[{month, label, href,
-  no?, dim?}]` — a tall lit tick per post (a `--bar-width` bar) that is a real
-  `<a>` to it, named by `label`, filling its month's column so the column is
-  the hit area. `playhead="YYYY-MM"` draws the `.ds-playhead` (accent line and
-  dot); `label` (default `timeline`) and `readout` are the line above. The
-  contract a script drives: `--at` on the root (the playhead glides),
-  `data-month` on every column, `data-mark`/`data-no` on a mark and
-  `data-dim` + `aria-disabled` on one outside the filter,
-  `data-time-ruler="readout"`.
+  no?, dim?, value?, focus?}]` — one per post, a real `<a>` to it, named by
+  `label`, filling its month's column so the column is the hit area. Two
+  drawings: TICKS (the default) — a tick per month, a taller lit one per
+  mark (a `--bar-width` bar), `playhead="YYYY-MM"` the `.ds-playhead`
+  (accent line and dot), `label` (default `timeline`) the caps line above;
+  BARS (`variant="bars"`, the spec sheet's chart) — a mark is an OUTLINED
+  bar its `value` tall against `max` (words per post), the mark in `focus`
+  filled with the accent (the playhead's job here; no line is drawn), an
+  empty month a tiny tick, a hairline baseline, a SCALE at the right edge
+  (`max` … 0), and `label` on a `DimensionLabel` above. The contract a
+  script drives: `--at` on the root (the playhead glides), `data-month` on
+  every column, `data-mark`/`data-no` on a mark, `data-dim` +
+  `aria-disabled` on one outside the filter, `data-focus` on the one in
+  focus (bars), `--time-ruler-value` on a mark (bars, its fraction).
 - `BarGraph` — `values`, `max`, `mark={i|"last"|"max"}` (the one bar in the
   accent, `data-mark`; an index, where Tile's `lit` is a boolean), `height`,
   `label` (its accessible name; without one it is `aria-hidden`);
@@ -290,9 +298,13 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   (and its name and tabindex; without the script it stays a picture), and
   leaves vertical touch drags to the page. The script moves the accent with
   `markBar(graph, i)` from `lib/bar-graph` and never selects the bar class.
-- `Legend` — `items=[{label, value?, color?, swatch?}]` or `LegendItem` children
-  (`label`, `value` prop or slot, `color`, `swatch="dot|line|dashed"` for a
-  series drawn as one); dots take `--tone-N` by position.
+- `Legend` — `items=[{label, value?, color?, swatch?, href?}]` or `LegendItem`
+  children (`label`, `value` prop or slot, `color`, `swatch="dot|line|dashed"`
+  for a series drawn as one, `href` — the row as a link, a `ds-control`
+  filling it); dots take `--tone-N` by position. `variant="leaders"` is the
+  spec sheet's KEY: no dot, the label joined to its value by a dotted
+  leader (the strong hairline) — the /txt topic key, each category a link
+  to its query.
 - `TileGrid` — `cols`, `rows`, `fit="width|height"`, `cells=[{level?, lit?,
   title?}]` or `Tile` children (`level={0..4}`, `lit`, any attribute — e.g.
   `style="grid-column:…"` to place).
@@ -445,8 +457,6 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
            count="5 posts" readout="05" hint="/" controls="quilt-panel-results">
   <Chip slot="chips" variant="tab" count={5} as="a" href="/txt" data-chip="" aria-current="page">all</Chip>
   <Chip slot="chips" variant="tab" count={1} as="a" href="/txt?q=projects" data-chip="projects">projects</Chip>
-  <IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
-  <IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />
 </SearchBar>
 <Quilt cols={5} rows={3} colsMd={3} rowsMd={4} aria-label="Posts">
   <QuiltCell col={1} row={1} colMd={1} rowMd={1} span={[2, 2]} href="/txt/asserting-on-agent-behavior"
@@ -513,8 +523,9 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
   under 640 (iOS zooms a smaller field on focus); the `readout` — the count
   as DRAWN, `05` / `2 / 5`, a small value `Mono` at the row's right
   (`data-search-readout`, aria-hidden); `hint` as a small `Chip`, not drawn
-  without a keyboard; a divider and the `controls` slot (the stepper). Under
-  that row the `chips` slot, a `<nav>` named `chipsLabel` (hook
+  without a keyboard. No stepper: the − / + sit with the in-focus readout
+  at the foot (below). Under that row the `chips` slot, a `<nav>` named
+  `chipsLabel` (hook
   `data-search-chips`) of the caller's `Chip variant="tab"` links, each with
   its `count`; under 1024 it holds one line, scrolls sideways (no
   scrollbar) and fades at its right edge. `count` is the live region a
@@ -542,11 +553,31 @@ positioned grid item**, a size query container, and the card fits its block
 (the container queries in `quilt-panel.css`) rather than clip.
 
 **Geometry.** On `/txt` the quilt is the board row of the instrument
-(`BlogLayout` with `bar`): the search bar, the board and the timeline
-straight on the page under the site header, the rows stacked `--space-3`
-apart. The timeline is DOCKED: `position: sticky` to the window's bottom
-edge on the page colour (a hairline on its top edge only while it is stuck,
-via a `scroll-state` container query).
+(`BlogLayout` with `bar` and `foot`): the search bar, the board and the
+FOOT straight on the page under the site header, the rows stacked
+`--space-3` apart. The foot (`src/styles/blog.css`, the layout's — the
+page only computes and passes its data) is one grid in three parts: the
+TOPIC KEY (a `RuleLabel` over a `Legend variant="leaders"` of links to
+`?q=<category>`, hook `data-quilt-key`; the script sets the query in place
+as it does for a chip) | the TIMELINE (`TimeRuler variant="bars"`, words
+per post, hook `data-quilt-ruler`) | IN FOCUS (a `RuleLabel` with the
+post's place among the posts in its `meta` — `5 / 5` — over a `Stat
+variant="numeral"`: the two-digit number, the title in the ink and `feb
+2026 · 554 w` a step back in its label, and the circled − / + `IconButton`s,
+`data-step="older|newer"`); under them the corner marks — a `--bar-width`
+PROGRESS BAR at the left (`--progress`, the place as a fraction) and the
+sheet code at the right. Every readout hook is `data-focus="no | title |
+meta | position | progress"`, and the script writes every copy of each. On
+a desktop (≥ 1024) the foot is DOCKED: `position: sticky` to the window's
+bottom edge on the page colour (a hairline on its top edge only while it is
+stuck, via a `scroll-state` container query). On a tablet it stacks — the
+key and the focus side by side, the timeline full width under — and sits
+in the flow. On a phone the key and the progress go, the focus keeps its
+readout but not its stepper (`display: none`, out of the tab order), and a
+DOCK (`data-quilt-dock`) sticks to the window's bottom instead: the
+progress line, −, the post in focus on one line (`05 · Title`, ellipsised),
++. The stepper is rendered twice; one copy is drawn per viewport, and the
+script binds both.
 
 ---
 
@@ -800,7 +831,7 @@ visual or a new token in `tokens.overrides.css` with its reason.
 | `PostGroup` / `PostRow` | default; `label` / `meta` |
 | `Fig` | default (the image), `caption` |
 | `Knobs` | default, `meta`, `note`, `actions` |
-| `SearchBar` | `chips`, `controls` |
+| `SearchBar` | `chips` |
 | `DimensionLabel`, `TileGrid`, `Faces`, `Index`, `IndexRow`, `Prose`, `Blockquote`, `HitArea`, `ThemePage`, `Quilt`, `QuiltCell` | default |
 
 ### After adding a component

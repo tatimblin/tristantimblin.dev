@@ -1,7 +1,6 @@
 /* SearchBar — the open bar over the quilt: no box, no fill. The input row —
  * the search icon in a round outlined ring, the input on one hairline
- * underline, the readout, the key hint, a divider, the stepper — over the
- * tabs row. The underline takes the accent while the input has focus — the
+ * underline, the readout, the key hint — over the tabs row. The underline takes the accent while the input has focus — the
  * one accent on the row besides the current tab's — and the caret is the
  * accent too. */
 .ds-search-bar {
@@ -20,14 +19,13 @@
 }
 .ds-search-bar__ring,
 .ds-search-bar__readout,
-.ds-search-bar__divider,
-.ds-search-bar__controls,
 .ds-search-bar__hint {
 	flex: none;
 }
 
 /* The ring: the icon in a round outline at the stepper's size (IconButton
-   `sm`), not a control — the label is the input's. */
+   `sm`, the circled − / + at the foot), not a control — the label is the
+   input's. */
 .ds-search-bar__ring {
 	display: grid;
 	place-items: center;
@@ -86,17 +84,6 @@
 .ds-search-bar__readout {
 	letter-spacing: var(--tracking-mono);
 	white-space: nowrap;
-}
-
-.ds-search-bar__divider {
-	inline-size: 1px;
-	block-size: var(--space-5);
-	background: var(--hairline);
-}
-.ds-search-bar__controls {
-	display: flex;
-	align-items: center;
-	gap: var(--space-2);
 }
 
 /* The tabs: a row of text tabs, a step apart, the first one's letters on
