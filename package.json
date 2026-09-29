@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "bunx --bun astro dev",
+    "dev": "bunx astro dev",
     "build": "bun run build:fleet-demo && bunx --bun astro build",
     "build:fleet-demo": "bun run --cwd packages/fleet-extension build:web && bun run --cwd packages/vscode-fleet-demo build",
     "build:site": "bunx --bun astro build",
