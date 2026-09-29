@@ -24,3 +24,19 @@
 .ds-bar-graph__bar[data-mark] {
 	background: var(--accent);
 }
+
+/* interactive — a script reads the bars back (lib/bar-graph.ts). The ring
+   is `ds-control`'s; here only what the picture needs to be pointed at: a
+   crosshair once the script has made it a slider (and not before — without
+   the script it is decoration and takes the default cursor), and the
+   horizontal drags, so a vertical one still scrolls the page. */
+.ds-bar-graph--interactive-true {
+	touch-action: pan-y;
+	border-radius: var(--border-radius-1);
+}
+.ds-bar-graph--interactive-true:not([role="slider"]) {
+	cursor: default;
+}
+.ds-bar-graph--interactive-true[role="slider"] {
+	cursor: crosshair;
+}

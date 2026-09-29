@@ -987,10 +987,14 @@ const faces = [
 				largest value); <code>mark</code> draws one bar in the accent — by INDEX (or
 				<code>"last"</code> / <code>"max"</code>), where Tile's <code>lit</code> is a
 				boolean. <code>label</code> names it as an image; without one it is
-				<code>aria-hidden</code>.
+				<code>aria-hidden</code>. <code>interactive</code> is for a graph a script
+				reads back (the visitors tile): it composes <code>ds-control</code> for the
+				ring, takes a crosshair once the script has made it a slider, and its bars
+				are moved with <code>markBar()</code> from <code>lib/bar-graph</code>.
 			</p>
 			<Flex gap={6} wrap="wrap" alignItems="end">
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} /></div>
+				<div style="inline-size: 240px;"><BarGraph values={graphValues} mark={9} interactive label="An interactive graph, marked at nine" /></div>
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} mark="last" /></div>
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} max={40} mark={7} height="var(--space-8)" label="Sixteen readings, rising" /></div>
 			</Flex>

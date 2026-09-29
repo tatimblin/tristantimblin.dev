@@ -233,28 +233,40 @@ import "@whois/wobble-text/styles.css";
 	     packing, which grid-auto-flow: dense makes differ from DOM order: the 1×2
 	     video cell is authored first but lands in the last column, so it reveals
 	     last. data-reveal-order exists for exactly this mismatch.
-	     Each widget's own <Widget> forwards data-* through Card → Box, so no wrapper
-	     element is needed (which would also disturb the dense packing). */}
+	     Each widget spreads its props onto its <Widget>, which forwards data-*
+	     through Card → Box, so no wrapper element is needed (which would also
+	     disturb the dense packing) and the choreography is written here, on the
+	     page that owns the row.
+
+	     The videos card is its OWN reveal group, deliberately not the row's. A
+	     group waits for every member to be in view before it fades any of them
+	     in, and this card paints ~90vh above its slot (the dock lift) while its
+	     row-mates sit at their real grid position — so grouping it with them held
+	     it invisible until the ROW arrived, by which point it had already climbed
+	     most of the way up the page and the parallax played out unseen. On its
+	     own — and with `data-reveal-eager`, which trips the observer just BEFORE
+	     it reaches the viewport — it is already opaque when it crosses the fold,
+	     which is where its entrance is choreographed to start. */}
 	<div class="fh-row home__widgets">
 		<WidgetGrid cols={4}>
-			<Videos />
+			<Videos data-reveal data-reveal-group="videos" data-reveal-eager />
 
-			<NowPlaying />
+			<NowPlaying data-reveal data-reveal-group="widgets" data-reveal-order="0" />
 
-			<BikeStats />
+			<BikeStats data-reveal data-reveal-group="widgets" data-reveal-order="1" />
 
 			{/* 1×1 in column 3 alongside the 1×2 video cell. */}
-			<Github />
+			<Github data-reveal data-reveal-group="widgets" data-reveal-order="2" />
 
 			{/* 2×2, and the first item that fits columns 1–2 of row 2 once the
 			     three 1×1s have filled row 1 — so it lands bottom-left with no
 			     explicit placement, purely from size + DOM order. */}
-			<Volo />
+			<Volo data-reveal data-reveal-group="widgets" data-reveal-order="3" />
 
 			{/* 1×1, and the only cell left once Volo has taken columns 1–2 of row
 			     2 — so it lands beside it with no explicit placement, from size and
 			     DOM order alone. */}
-			<Readers />
+			<Readers data-reveal data-reveal-group="widgets" data-reveal-order="4" />
 		</WidgetGrid>
 	</div>
 

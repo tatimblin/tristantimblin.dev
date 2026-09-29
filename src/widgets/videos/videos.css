@@ -122,10 +122,11 @@
 	aspect-ratio: auto;
 }
 
-/* MOBILE (≤900px, where the grid collapses to 2 cols) --------------------------
-   The carousel is promoted into the HERO scene at this breakpoint (see
-   src/pages/index.astro → .hero-carousel), so the footer copy is hidden here to
-   avoid showing it twice. Drop the reserved ruler gutter too. */
+/* THE COMPACT STEP (the grid's own, widget-grid.css; WIDGET_COMPACT_MQ for a
+   script): at two columns the carousel is promoted into the HERO scene (see
+   src/pages/index.astro → .hero-carousel), so the footer copy is hidden here
+   to avoid showing it twice. Drop the reserved ruler gutter too. A viewport
+   query, as the grid's is — this follows the column count, not the cell. */
 @media (max-width: 900px) {
 	.ds-widget-grid:has(.wx-videos) {
 		padding-inline-end: 0;

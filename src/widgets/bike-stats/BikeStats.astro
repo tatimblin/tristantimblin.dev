@@ -2,17 +2,33 @@
 // Bike Stats (Bay Wheels) — a 1×1 card in the instrument UI, built from the
 // design system's pieces (packages/design-system/CONVENTIONS.md → Instrument
 // UI). The header names the service and dates the reading; the body is the
-// miles ridden as the big figure with rides / hours as stat pairs down the left,
-// and the Lyft e-bike drawn in ink on the right, cropped off the card's edge
-// like the posters' cropped type. Everything is read at build time from
-// bike-stats.csv (see ./bike-stats.ts), which the baywheels-stats GitHub
-// Action appends to daily; the only client-side code is the bike's slide-in.
+// rides / hours as stat pairs at the top with the miles ridden as the big
+// figure at the foot (where every widget's headline figure sits — Github's
+// total, the visitors' — so the row reads on one line), and the Lyft e-bike
+// drawn in ink on the right, cropped off the card's edge like the posters'
+// cropped type. Everything is read at build time from bike-stats.csv (see
+// ./bike-stats.ts), which the baywheels-stats GitHub Action appends to daily;
+// the only client-side code is the date's tooltip. The bike's slide-in rides
+// the page's reveal (src/lib/reveal.ts): the coordinator marks the card
+// `data-reveal-state="in"` when its row fades in, and the bike's CSS keys on
+// that, so there is no second observer here and nothing to re-arm.
+//
+// Props pass through to the <Widget> (a class, the page's data-reveal
+// choreography): the page owns where the card sits and when it fades in.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Mono from "@whois/design-system/Mono";
 import Figure from "@whois/design-system/Figure";
 import Stat from "@whois/design-system/Stat";
+import Flex from "@whois/design-system/Flex";
 import { getBikeStats } from "./bike-stats";
+
+interface Props {
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { class: className, ...rest } = Astro.props;
 
 const bike = getBikeStats();
 
@@ -29,17 +45,14 @@ const monthDay = (date: string) =>
 ---
 
 <script>
-	// Slide the bike in from the right the first time the widget scrolls into
-	// view; one-shot. Bound per page-load and torn down before a view-transition
-	// swap (the lifecycle idiom of the other widgets): ClientRouter replaces the
-	// DOM on every navigation, so an observer bound once at module scope would
-	// watch a detached node while the fresh card never got .is-in — and its
-	// resting state is opacity 0. tests/reveal.spec.ts test 7 guards this.
-	//
 	// The date's tooltip says how long ago the reading was ("Today", "3 days
 	// ago"), computed here against the visitor's today rather than at build,
 	// where it would go stale. Both days are UTC calendar days, as the label's
-	// monthDay() is.
+	// monthDay() is. onPage runs it on every page load, since ClientRouter
+	// replaces the DOM on each navigation (tests/reveal.spec.ts test 7 guards
+	// the bike's own reveal across that round trip).
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+
 	function ago(date: string): string {
 		const then = Date.parse(`${date}T00:00:00Z`);
 		if (Number.isNaN(then)) return "";
@@ -51,42 +64,14 @@ const monthDay = (date: string) =>
 		return `${diff} days ago`;
 	}
 
-	function bind() {
-		const bw = document.querySelector<HTMLElement>(".wx-baywheels");
-		if (!bw) return () => {};
-		const time = bw.querySelector<HTMLTimeElement>("time[datetime]");
+	onPage(() => {
+		const time = document.querySelector<HTMLTimeElement>(".wx-baywheels time[datetime]");
 		if (time) time.title = ago(time.dateTime);
-		const io = new IntersectionObserver(
-			(entries) => {
-				if (!entries.some((entry) => entry.isIntersecting)) return;
-				bw.classList.add("is-in");
-				io.disconnect();
-			},
-			{ threshold: 0.35 },
-		);
-		io.observe(bw);
-		return () => io.disconnect();
-	}
-
-	let teardown: (() => void) | null = null;
-	document.addEventListener("astro:page-load", () => {
-		teardown = bind();
-	});
-	document.addEventListener("astro:before-swap", () => {
-		teardown?.();
-		teardown = null;
 	});
 </script>
 
 {bike && (
-	<Widget
-		size="1x1"
-		title="bay wheels"
-		class="wx-baywheels"
-		data-reveal
-		data-reveal-group="widgets"
-		data-reveal-order="1"
-	>
+	<Widget size="1x1" title="bay wheels" class:list={["wx-baywheels", className]} {...rest}>
 		<Mono
 			slot="meta"
 			as="time"
@@ -97,11 +82,11 @@ const monthDay = (date: string) =>
 		</Mono>
 
 		<CardBody class="wx-bw-body">
-			<Figure unit="miles">{fmt(bike.miles)}</Figure>
-			<div class="wx-bw-stats">
+			<Flex direction="column" alignItems="flex-start" gap={2}>
 				<Stat value={fmt(bike.rides)} label="rides" />
 				<Stat value={fmt(bike.hours)} label="hours" />
-			</div>
+			</Flex>
+			<Figure unit="miles">{fmt(bike.miles)}</Figure>
 			{/* Decoration: the figures above carry the content. A masked box, not an
 			     <img>, so the drawing takes its colour from the ink token. */}
 			<div class="wx-bw-bike" aria-hidden="true"></div>
@@ -115,15 +100,10 @@ const monthDay = (date: string) =>
 	   Scoped: the DS spreads the scope attribute onto each component's root,
 	   and its CSS sits in a layer under this. */
 
-	/* The figure at the top, the stat pairs at the bottom: a left column of
+	/* The stat pairs at the top, the figure at the foot: a left column of
 	   readings, with the bike filling the space to their right. */
 	.wx-bw-body {
 		justify-content: space-between;
-	}
-	.wx-bw-stats {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
 	}
 
 	/* The Lyft e-bike, drawn in ink. /images/lyft-ebike-ink.png is an alpha mask
@@ -132,8 +112,8 @@ const monthDay = (date: string) =>
 	   traced edges, cropped to the bike, floor shadow removed. As a mask it has
 	   no colour of its own; the box's fill gives it one, so it is the ink token
 	   in either theme (dark on bone, light on the dark card) with no blend-mode
-	   guesswork. It sits on the body's bottom padding line, level with the last
-	   stat, and runs off the card's right edge: the front wheel, basket and bars
+	   guesswork. It sits on the body's bottom padding line, level with the
+	   figure, and runs off the card's right edge: the front wheel, basket and bars
 	   stay in view and the rear wheel is cropped, like the posters' cropped
 	   type. It is absolutely positioned so it never takes layout space from the
 	   readings; the left inset keeps it clear of the stat column. */
@@ -146,27 +126,21 @@ const monthDay = (date: string) =>
 		background: var(--text-secondary);
 		mask: url("/images/lyft-ebike-ink.png") no-repeat left bottom / contain;
 		pointer-events: none;
-
-		/* Hidden and offset at rest. The script above adds .is-in to the card
-		   on first scroll-into-view, which rolls the bike in from the right and
-		   fades it up. */
-		opacity: 0;
-		transform: translateX(var(--space-8));
 		transition:
 			transform var(--duration-reveal) var(--ease-reveal),
 			opacity var(--duration-reveal) var(--ease-reveal);
 	}
-	.wx-baywheels.is-in .wx-bw-bike {
-		opacity: 1;
-		transform: none;
-	}
-	/* Reduced motion: simply present, not waiting on the scroll-into-view. (The
-	   transition itself needs no rule here — --duration-reveal is 0s under the
-	   preference, tokens.overrides.css.) */
-	@media (prefers-reduced-motion: reduce) {
-		.wx-bw-bike {
-			transform: none;
-			opacity: 1;
+	/* THE SLIDE-IN rides the page's reveal (src/styles/reveal.css, the same
+	   two conditions): hidden and offset only while the document is ARMED
+	   and the card has not been marked in. The coordinator sets
+	   data-reveal-state="in" on the card as its row fades up, and the bike
+	   rolls in from the right with it. Every failure path lands on visible —
+	   no JS never arms, a broken bundle disarms on the head script's backstop,
+	   reduced motion never arms (and the durations are 0s there anyway). */
+	@media (prefers-reduced-motion: no-preference) {
+		:global(html.reveal-armed) .wx-baywheels:not([data-reveal-state="in"]) .wx-bw-bike {
+			opacity: 0;
+			transform: translateX(var(--space-8));
 		}
 	}
 </style>

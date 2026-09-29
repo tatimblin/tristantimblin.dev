@@ -370,7 +370,7 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 	   (not the caption). On mobile this row collapses and the ruler drops below the
 	   card as a horizontal strip (see styles.css + the orientation logic in JS). */}
 	<div class="vc__main">
-		<div class="vc__ruler" data-vc-ruler aria-label="Select clip by date">
+		<div class="vc__ruler" role="group" data-vc-ruler aria-label="Select clip by date">
 			{
 				clips.map((clip, i) => (
 					<button
@@ -389,7 +389,9 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 			}
 		</div>
 
-		<div class="vc__stage" data-vc-stage>
+		{/* A <figure>: the clip with its <figcaption> below, so the caption is
+		   the clip's caption to assistive tech and not a stray element. */}
+		<figure class="vc__stage" data-vc-stage>
 			{/* The intro wipe (when a consumer opts in) runs ONCE, on the first clip —
 			   the element latches it, so stepping to the next clip swaps the source
 			   without re-developing the frame. That is what makes it usable here: an
@@ -445,6 +447,6 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 					</span>
 				</span>
 			</figcaption>
-		</div>
+		</figure>
 	</div>
 </video-carousel>

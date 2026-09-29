@@ -140,12 +140,13 @@
 	border-radius: 0;
 }
 
-/* Phone tiles (~160px, the grid's 2-column mode): the header can't hold the
-   title and the pill, and the text and ruler leave the cover no height. So
-   the pill goes (the timestamps still say whether the track moves), and the
-   cover becomes a small tile beside the title and artist instead of over
-   them — the art stays, at the size of the two lines it sits next to. */
-@media (max-width: 900px) {
+/* Compact tiles (the grid's compact-cell query, widget-grid.css): the header
+   can't hold the title and the pill, and the text and ruler leave the cover
+   no height. So the pill goes (the timestamps still say whether the track
+   moves), and the cover becomes a small tile beside the title and artist
+   instead of over them — the art stays, at the size of the two lines it sits
+   next to. A rule about the CELL, so a container query, not a viewport one. */
+@container widget (max-width: 624px) {
 	.wx-nowplaying .wx-np-state {
 		display: none;
 	}

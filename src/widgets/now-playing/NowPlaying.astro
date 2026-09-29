@@ -8,25 +8,28 @@
 // --ssp-* properties and ::part()s (now-playing.css): the cover as a flat
 // tile, the title in the figure voice, the artist in dim mono, and the
 // progress bar redrawn as a hairline tick ruler with the accent playhead.
+//
+// Props pass through to the <Widget> (a class, the page's data-reveal
+// choreography): the page owns where the card sits and when it fades in.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Pill from "@whois/design-system/Pill";
 import { SPOTIFY_SSE_URL } from "./config";
 import "./now-playing.css";
+
+interface Props {
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { class: className, ...rest } = Astro.props;
 ---
 
 <script>
 	import "@tristimb/spotify-stream-player";
 </script>
 
-<Widget
-	size="1x1"
-	title="now playing"
-	class="wx-nowplaying"
-	data-reveal
-	data-reveal-group="widgets"
-	data-reveal-order="0"
->
+<Widget size="1x1" title="now playing" class:list={["wx-nowplaying", className]} {...rest}>
 	{/* Hidden until the player has told us which state it is in (the script
 	     below); the placeholder text only reserves the pill's width. */}
 	<Pill slot="meta" class="wx-np-state">paused</Pill>
@@ -41,8 +44,10 @@ import "./now-playing.css";
 	// so a timestamp that changed within the last couple of seconds means LIVE
 	// and one that sat still that long means PAUSED.
 	// Its shadow root is open, so a MutationObserver can watch that text without
-	// forking the package. Bound per page-load and torn down before a
+	// forking the package. onPage binds per page-load and tears down before a
 	// view-transition swap, like the other widgets' scripts.
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+
 	const STALE_MS = 2500;
 
 	function bind() {
@@ -89,23 +94,20 @@ import "./now-playing.css";
 		};
 	}
 
-	let teardown: (() => void) | null = null;
 	// The shadow root exists once the element is upgraded, so the bind waits on
 	// whenDefined() — which can resolve AFTER the page has been swapped away.
-	// `alive` is the page-load that is current; a bind for a stale one is dropped
-	// rather than left observing a detached tree.
-	let alive = false;
-	document.addEventListener("astro:page-load", () => {
-		alive = true;
+	// `alive` is this page-load; a bind for a stale one is dropped rather than
+	// left observing a detached tree.
+	onPage(() => {
+		let alive = true;
+		let teardown: (() => void) | null = null;
 		void customElements.whenDefined("spotify-player").then(() => {
 			if (!alive) return;
-			teardown?.();
 			teardown = bind();
 		});
-	});
-	document.addEventListener("astro:before-swap", () => {
-		alive = false;
-		teardown?.();
-		teardown = null;
+		return () => {
+			alive = false;
+			teardown?.();
+		};
 	});
 </script>

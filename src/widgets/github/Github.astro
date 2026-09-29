@@ -8,6 +8,9 @@
 // the grid, the ruler and the legend into one control's name — with a fixed
 // accessible name and aria-pressed carrying the state. Data is read at build
 // time from github.json (see ./github.ts); only the flip is client-side.
+//
+// Props pass through to the <Widget> (a class, the page's data-reveal
+// choreography): the page owns where the card sits and when it fades in.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
@@ -18,7 +21,15 @@ import TileGrid from "@whois/design-system/TileGrid";
 import Tile from "@whois/design-system/Tile";
 import TickRuler from "@whois/design-system/TickRuler";
 import Legend from "@whois/design-system/Legend";
+import HitArea from "@whois/design-system/HitArea";
 import { getGithubStats } from "./github";
+
+interface Props {
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { class: className, ...rest } = Astro.props;
 
 const gh = getGithubStats();
 
@@ -45,21 +56,14 @@ const total = gh.totalContributions.toLocaleString("en-US");
 // being told a colour. Whole percents: decimals cost width a phone lacks.
 const NAMED = 4;
 const named = gh.languages.slice(0, NAMED);
-const rest = gh.languages.slice(NAMED).reduce((sum, l) => sum + l.percent, 0);
+const remainder = gh.languages.slice(NAMED).reduce((sum, l) => sum + l.percent, 0);
 const langs = [
 	...named.map((l) => ({ name: l.name, percent: l.percent })),
-	...(rest > 0 ? [{ name: "other", percent: rest }] : []),
+	...(remainder > 0 ? [{ name: "other", percent: remainder }] : []),
 ];
 ---
 
-<Widget
-	size="1x1"
-	title="github"
-	class="wx-github"
-	data-reveal
-	data-reveal-group="widgets"
-	data-reveal-order="2"
->
+<Widget size="1x1" title="github" class:list={["wx-github", className]} {...rest}>
 	{/* The handle, in the header's meta slot: outside the body the toggle
 	     covers, so tapping it never flips. */}
 	<Mono
@@ -75,10 +79,10 @@ const langs = [
 	</Mono>
 
 	<CardBody class="wx-gh-body">
-		<Faces fill>
+		<Faces fill data-gh-faces>
 		{/* Face A: the contribution grid as tiles — ordinary days the ink at two
 		     strengths, the big days lit in the accent — over the yearly total. */}
-		<Face class="wx-gh-face--grid">
+		<Face data-face="grid">
 			<TileGrid cols={weeks.length} rows={7} fit="height">
 				{
 					weeks.map((week, wi) =>
@@ -96,7 +100,7 @@ const langs = [
 
 		{/* Face B: language breakdown — a tick ruler split by share over the
 		     legend, both ranked (see `langs`). */}
-		<Face class="wx-gh-face--langs" inactive>
+		<Face class="wx-gh-face--langs" data-face="langs" inactive>
 			<TickRuler
 				class="wx-gh-ruler"
 				segments={langs.map((l) => ({ share: l.percent }))}
@@ -110,84 +114,47 @@ const langs = [
 		</Face>
 		</Faces>
 
-		{/* The flip surface: a transparent <button> over the whole body, last in
-		     the DOM so the faces read before the control that swaps them. One name
-		     for both states — it always offers the languages; aria-pressed says
-		     whether they are showing. */}
-		<button
-			class="wx-gh-flip"
-			type="button"
-			aria-pressed="false"
-			aria-label="Show language breakdown"
-		></button>
+		{/* The flip surface: a DS HitArea — a transparent <button> over the whole
+		     body, ringed inside the clipping card — last in the DOM so the faces
+		     read before the control that swaps them. One name for both states —
+		     it always offers the languages; aria-pressed says whether they are
+		     showing. */}
+		<HitArea data-gh-flip aria-pressed="false" aria-label="Show language breakdown" />
 	</CardBody>
 </Widget>
 
 <script>
 	// Flip the card between the contribution grid and the language breakdown:
-	// aria-hidden moves from one face to the other (which is what Faces fades
-	// on) — no network, no persisted state. Bound per page-load and torn down
-	// before a view-transition swap so handlers don't accumulate (the same
-	// lifecycle idiom as videos/Videos.astro).
-	function bind() {
-		const widget = document.querySelector<HTMLElement>(".wx-github");
-		const button = widget?.querySelector<HTMLButtonElement>(".wx-gh-flip");
-		if (!widget || !button) return () => {};
+	// showFace moves aria-hidden from one face to the other (which is what
+	// Faces fades on) — no network, no persisted state. onPage binds per
+	// page-load and tears down before a view-transition swap.
+	import { showFace } from "@whois/design-system/lib/faces";
+	import { onPage } from "@whois/design-system/lib/lifecycle";
 
-		const gridFace = widget.querySelector(".wx-gh-face--grid");
-		const langFace = widget.querySelector(".wx-gh-face--langs");
+	onPage(() => {
+		const widget = document.querySelector<HTMLElement>(".wx-github");
+		const button = widget?.querySelector<HTMLButtonElement>("[data-gh-flip]");
+		const stack = widget?.querySelector<HTMLElement>("[data-gh-faces]");
+		if (!widget || !button || !stack) return;
 
 		let flipped = false;
 		const onClick = () => {
 			flipped = !flipped;
 			button.setAttribute("aria-pressed", String(flipped));
-			gridFace?.setAttribute("aria-hidden", String(flipped));
-			langFace?.setAttribute("aria-hidden", String(!flipped));
+			showFace(stack, flipped ? "langs" : "grid");
 		};
 
 		button.addEventListener("click", onClick);
 		return () => button.removeEventListener("click", onClick);
-	}
-
-	let teardown: (() => void) | null = null;
-	document.addEventListener("astro:page-load", () => {
-		teardown = bind();
-	});
-	document.addEventListener("astro:before-swap", () => {
-		teardown?.();
-		teardown = null;
 	});
 </script>
 
 <style>
 	/* The card chrome, the header, the two faces and their cross-fade, the
-	   tiles, the figure, the ruler and the legend are all design-system
-	   components; only the flip surface and the faces' own layout are here.
-	   Scoped: nothing reaches into a DS element's insides (the DS spreads the
-	   scope attribute onto each component's root), and the package's CSS sits
-	   in a cascade layer under this, so a plain class here always wins. */
-
-	/* The flip surface: a transparent <button> laid over the whole body (the DS
-	   body is the containing block), above the faces, so a tap anywhere on the
-	   card interior flips it and the faces stay ordinary flow content in the
-	   accessibility tree. */
-	.wx-gh-flip {
-		position: absolute;
-		inset: 0;
-		z-index: 1;
-		appearance: none;
-		margin: 0;
-		padding: 0;
-		border: 0;
-		background: none;
-		cursor: pointer;
-	}
-	/* Inside, since the card clips: an inset ring instead of an outset one. */
-	.wx-gh-flip:focus-visible {
-		outline: var(--focus-ring);
-		outline-offset: var(--focus-ring-inset);
-		border-radius: var(--border-radius-1);
-	}
+	   tiles, the figure, the ruler, the legend and the flip surface are all
+	   design-system components; only the faces' own layout is here. Scoped:
+	   the DS spreads the scope attribute onto each component's root, and its
+	   CSS sits in a cascade layer under this, so a plain class here wins. */
 
 	/* The languages face: the ruler at the top, the legend at the foot. */
 	.wx-gh-face--langs {

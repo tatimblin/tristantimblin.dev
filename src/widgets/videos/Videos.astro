@@ -6,30 +6,25 @@
 // dock here as the grid scrolls into view. On mobile it goes full width and the
 // lift is disabled. The generic carousel lives in ../../components; this module
 // owns only its grid placement + docking behaviour.
+//
+// Props pass through to the <Widget> (a class, the page's data-reveal
+// choreography — see index.astro for why this card reveals on its own). NB
+// the reveal writes `translate` while the dock lift below writes `transform`
+// — two independent properties, so they compose instead of overwriting each
+// other.
 import Widget from "@whois/design-system/Widget";
 import VideoCarousel from "../../components/VideoCarousel.astro";
 import "./videos.css";
+
+interface Props {
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { class: className, ...rest } = Astro.props;
 ---
 
-{/* Its OWN reveal group, deliberately not the row's "widgets" one. A group waits
-     for every member to be in view before it fades any of them in, and this card
-     paints ~90vh above its slot (the dock lift) while its row-mates sit at their
-     real grid position — so grouping it with them held it invisible until the ROW
-     arrived, by which point it had already climbed most of the way up the page and
-     the parallax played out unseen. On its own — and with `data-reveal-eager`, which
-     trips the observer just BEFORE it reaches the viewport — it is already opaque
-     when it crosses the fold, which is where its entrance is choreographed to start.
-     NB the reveal writes `translate` while the dock lift below writes `transform`
-     — two independent properties, so they compose instead of overwriting each
-     other. */}
-<Widget
-	size="1x2"
-	class="wx-videos"
-	chrome={false}
-	data-reveal
-	data-reveal-group="videos"
-	data-reveal-eager
->
+<Widget size="1x2" class:list={["wx-videos", className]} chrome={false} {...rest}>
 	{/* Clip changes get the threshold transition here too, so the carousel behaves the
 	    same wherever it appears. No `intro` though: this cell is mid-page behind a
 	    scroll-driven dock, so a develop-in entrance would play unseen. */}
@@ -99,6 +94,9 @@ import "./videos.css";
 	// `travel` (the raise / parallax distance) is set in CSS via --vc-travel on the
 	// widget (default 55vh); larger = enters higher + more parallax. DOCK_VH is how
 	// far down the viewport the cell is when it finishes settling into the grid.
+	import { WIDGET_COMPACT_MQ } from "@whois/design-system/lib/breakpoints";
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+
 	const TRAVEL_FALLBACK = 0.55; // --vc-travel fallback, fraction of viewport height
 	const DOCK_VH = 0.3; // cell's viewport-top (vh) when fully docked
 	const SELECTOR = ".wx-videos";
@@ -119,7 +117,9 @@ import "./videos.css";
 		private el: HTMLElement;
 		private lift = 0;
 		private rafId: number | null = null;
-		private mobileMQ = window.matchMedia("(max-width: 900px)");
+		// The grid's compact step (two columns), where the card is hidden and the
+		// carousel is the hero scene instead — no lift there.
+		private mobileMQ = window.matchMedia(WIDGET_COMPACT_MQ);
 		private reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 		private offs: Array<() => void> = [];
 
@@ -186,18 +186,12 @@ import "./videos.css";
 		}
 	}
 
-	// Bind on every page load (initial + after each ClientRouter view transition),
-	// and tear down before a swap so listeners don't accumulate across navigations.
-	let instance: DockLift | null = null;
-	function init() {
+	// Bound on every page load (initial + after each ClientRouter view
+	// transition), torn down before a swap so listeners don't accumulate.
+	onPage(() => {
 		const el = document.querySelector<HTMLElement>(SELECTOR);
-		if (!el || instance) return;
-		instance = new DockLift(el);
-	}
-	function teardown() {
-		instance?.destroy();
-		instance = null;
-	}
-	document.addEventListener("astro:page-load", init);
-	document.addEventListener("astro:before-swap", teardown);
+		if (!el) return;
+		const lift = new DockLift(el);
+		return () => lift.destroy();
+	});
 </script>

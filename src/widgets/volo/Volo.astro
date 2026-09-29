@@ -19,6 +19,9 @@
 // volo-seasons Action regenerates daily. Every season is rendered server-side
 // as its own panel in a DS Faces stack and cross-faded by aria-hidden — the
 // same face-swap Github.astro uses, and the reason the arrows fetch nothing.
+//
+// Props pass through to the <Widget> (a class, the page's data-reveal
+// choreography): the page owns where the card sits and when it fades in.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
@@ -29,6 +32,10 @@ import IconButton from "@whois/design-system/IconButton";
 import Hairline from "@whois/design-system/Hairline";
 import Icon from "@whois/design-system/Icon";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
+import WidgetEmpty from "@whois/design-system/WidgetEmpty";
+import HitArea from "@whois/design-system/HitArea";
+import Legend from "@whois/design-system/Legend";
+import LegendItem from "@whois/design-system/LegendItem";
 import {
 	currentSeasonIndex,
 	formatGameDate,
@@ -45,6 +52,13 @@ import {
 	rankSeries,
 } from "./volo";
 import "./volo.css";
+
+interface Props {
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { class: className, ...rest } = Astro.props;
 
 const seasons = getVoloSeasons();
 const current = currentSeasonIndex(seasons);
@@ -147,12 +161,10 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 
 <Widget
 	size="2x2"
-	class="wx-volo"
+	class:list={["wx-volo", className]}
 	squeeze="title"
 	headerClass="wx-vl-head"
-	data-reveal
-	data-reveal-group="widgets"
-	data-reveal-order="3"
+	{...rest}
 >
 	{/* The header is WHEN and WHAT: the sport and the season's month on the
 	    left, in the header's caps voice — in the title SLOT, on an element of
@@ -168,14 +180,15 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 	<span slot="title" data-volo-heading>{opening ? seasonHeading(opening) : "volo"}</span>
 	{opening && (
 		<span slot="meta" class="wx-vl-meta">
-			<Mono class="wx-vl-team" tone="tertiary" data-volo-team>{opening.team.name}</Mono>
+			<Mono class="wx-vl-team" tone="tertiary" truncate data-volo-team>{opening.team.name}</Mono>
 			<Pill class="wx-vl-standing" data-volo-standing>
 				<span
 					class="wx-vl-dot"
 					data-volo-dot
 					style={opening.team.color ? `background:${opening.team.color}` : undefined}
 				/>
-				<span class="wx-vl-star" data-volo-star hidden={!opening.champion} title="Won the league">★</span>
+				{/* Decoration: the panel's hidden text says "League champions". */}
+				<span class="wx-vl-star" data-volo-star hidden={!opening.champion} title="Won the league" aria-hidden="true">★</span>
 				{/* One flex item, so the spaces round the · are ordinary text. The
 				    placing is its own span so a narrow header can drop it. */}
 				<span>
@@ -219,7 +232,7 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 			/* The data file is generated, and the fetch script refuses to write an
 			   empty one — but a widget that renders nothing beats a build that dies
 			   if that ever changes. */
-			<Mono variant="text" class="wx-vl-empty">No seasons yet.</Mono>
+			<WidgetEmpty>No seasons yet.</WidgetEmpty>
 		) : (
 			<>
 				{/* Not `fill`: the stack holds the tallest season's height whichever
@@ -264,26 +277,30 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 										    sits above. */}
 										{game.playoff && (
 											<Mono
+												tone="tertiary"
 												class="wx-vl-round"
 												style={`--vl-i:${gameIndex}`}
 											>
 												{formatRound(game.round) ?? "PLAYOFF"}
 											</Mono>
 										)}
-										<Mono variant="value" class="wx-vl-date" title={game.playoff ? "Playoff game" : undefined}>
+										<Mono variant="value" tone="tertiary" class="wx-vl-date" title={game.playoff ? "Playoff game" : undefined}>
 											{formatGameDate(game.startTime, season.timezone)}
 										</Mono>
 										<Mono variant="value" class="wx-vl-opp">
-											{/* Inner span so the name has a block container to
-											    ellipsize against — these run to 44 characters. */}
-											<span class="wx-vl-opp-name">{game.opponent}</span>
+											{/* Its own box (Mono's truncate) so the name has something
+										    to ellipsise against — these run to 44 characters. */}
+										<Mono as="span" variant="value" truncate class="wx-vl-opp-name">{game.opponent}</Mono>
 											{/* Their standing, set small after the name. A bracket
 											    game names their SEED; anything else names where they
 											    finished, which is a fact from after the fact. */}
 											{(() => {
 												const standing = opponentStanding(game);
 												return standing ? (
-													<span
+													<Mono
+														as="span"
+														variant="value"
+														tone="tertiary"
 														class="wx-vl-rank"
 														title={
 															standing.kind === "seed"
@@ -292,18 +309,18 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 														}
 													>
 														{standing.value}
-													</span>
+													</Mono>
 												) : null;
 											})()}
 										</Mono>
 										{/* Always rendered, even when empty: the rows are
 										    `display: contents` over one shared grid, so a row that
 										    skipped a cell would shift every column after it. */}
-										<Mono class="wx-vl-result">{game.result}</Mono>
+										<Mono tone="tertiary" class="wx-vl-result">{game.result}</Mono>
 										{game.result ? (
 											game.forfeit && !game.for && !game.against ? (
 												/* A forfeit recorded as 0–0 is not a 0–0 game. */
-												<Mono class="wx-vl-score wx-vl-score--ff">FF</Mono>
+												<Mono tone="tertiary" class="wx-vl-score wx-vl-score--ff">FF</Mono>
 											) : (
 												<Mono
 													variant="value"
@@ -317,7 +334,7 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 												</Mono>
 											)
 										) : (
-											<Mono variant="value" class="wx-vl-time">
+											<Mono variant="value" tone="secondary" class="wx-vl-time">
 												{formatGameTime(game.startTime, season.timezone)}
 											</Mono>
 										)}
@@ -335,10 +352,12 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 					<Hairline as="span" />
 					<figcaption class="wx-vl-career-cap">
 						<Mono class="wx-vl-career-label">Rank by season</Mono>
-						<span class="wx-vl-legend">
-							<Mono class="wx-vl-key wx-vl-key--seed">Seed</Mono>
-							<Mono class="wx-vl-key wx-vl-key--finish">Finish</Mono>
-						</span>
+						{/* The key, as a DS Legend: the same strokes the plot draws — the
+						    seed a dashed hairline in the dim ink, the finish solid ink. */}
+						<Legend class="wx-vl-legend" aria-label="Key">
+							<LegendItem label="Seed" swatch="dashed" color="var(--text-tertiary)" />
+							<LegendItem label="Finish" swatch="line" color="var(--text-primary)" />
+						</Legend>
 						<Mono variant="value" class="wx-vl-career-stats">
 							{rank.record.wins}–{rank.record.losses}
 							{rank.record.ties > 0 && <>–{rank.record.ties}</>}
@@ -348,8 +367,8 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 
 					<div class="wx-vl-chart">
 						<div class="wx-vl-axis">
-							<Mono>1st</Mono>
-							<Mono>Last</Mono>
+							<Mono tone="tertiary">1st</Mono>
+							<Mono tone="tertiary">Last</Mono>
 						</div>
 
 						<div class="wx-vl-plotwrap">
@@ -388,20 +407,20 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 							/>
 						)}
 
-						{/* One hit area per season, laid over the plot at exactly the span
-						    that season's steps occupy — same x maths, expressed as a
-						    percentage so it tracks the SVG however wide it stretches.
-						    RENDERED DISABLED: bind() enables them, and only above 900px
-						    (see syncBands() for why they stay off on a phone). */}
+						{/* One hit area per season (a DS HitArea, washed while current),
+						    laid over the plot at exactly the span that season's steps
+						    occupy — same x maths, expressed as a percentage so it tracks
+						    the SVG however wide it stretches. RENDERED DISABLED: bind()
+						    enables them, and only above the grid's compact step (see
+						    syncBands() for why they stay off on a phone). */}
 						<div class="wx-vl-hits">
 							{rank.points.map((point, i) => (
-								<button
-									type="button"
-									class:list={["wx-vl-hit", i === current && "is-active"]}
+								<HitArea
+									wash
 									data-volo-jump={i}
 									disabled
 									aria-current={i === current ? "true" : undefined}
-									style={`left:${(spans[i].x0 / PLOT.w) * 100}%;width:${((spans[i].x1 - spans[i].x0) / PLOT.w) * 100}%`}
+									style={`inset-inline-start:${(spans[i].x0 / PLOT.w) * 100}%;inline-size:${((spans[i].x1 - spans[i].x0) / PLOT.w) * 100}%`}
 								>
 									<VisuallyHidden as="span">
 										{point.label}:{" "}
@@ -409,14 +428,14 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 											? `finished ${ordinal(point.rank)} of ${point.teams}`
 											: "still playing"}
 									</VisuallyHidden>
-								</button>
+								</HitArea>
 							))}
 						</div>
 						</div>
 
 						<ol class="wx-vl-years" style={`--vl-cols:${years.length}`}>
 							{years.map((year) => (
-								<li class="wx-vl-year"><Mono>'{year.slice(2)}</Mono></li>
+								<li class="wx-vl-year"><Mono tone="tertiary">'{year.slice(2)}</Mono></li>
 							))}
 						</ol>
 					</div>
@@ -428,16 +447,20 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 </Widget>
 
 <script>
-	// Step between season panels: aria-hidden moves from one face to the next
-	// (which is what Faces fades on), over markup that is already in the DOM —
-	// no network, no persisted state. Bound per page-load and torn down before
-	// a view-transition swap so handlers don't accumulate (the same lifecycle
-	// idiom as github/Github.astro and videos/Videos.astro).
-	function bind() {
+	// Step between season panels: showFace moves aria-hidden from one face to
+	// the next (which is what Faces fades on), over markup that is already in
+	// the DOM — no network, no persisted state. onPage binds per page-load and
+	// tears down before a view-transition swap.
+	import { showFace, shownFace } from "@whois/design-system/lib/faces";
+	import { stepFromKey } from "@whois/design-system/lib/keys";
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+	import { WIDGET_WIDE_MQ } from "@whois/design-system/lib/breakpoints";
+
+	onPage(() => {
 		const widget = document.querySelector<HTMLElement>(".wx-volo");
 		const nav = widget?.querySelector<HTMLElement>(".wx-vl-nav");
 		const stack = widget?.querySelector<HTMLElement>("[data-volo-panels]");
-		if (!widget || !nav || !stack) return () => {};
+		if (!widget || !nav || !stack) return;
 
 		const panels = Array.from(
 			stack.querySelectorAll<HTMLElement>("[data-volo-panel]"),
@@ -455,18 +478,16 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 		const tally = widget.querySelector<HTMLElement>("[data-volo-tally]");
 		const prev = nav.querySelector<HTMLButtonElement>("[data-volo-prev]");
 		const next = nav.querySelector<HTMLButtonElement>("[data-volo-next]");
-		if (panels.length === 0 || !prev || !next) return () => {};
+		if (panels.length === 0 || !prev || !next) return;
 
-		let index = panels.findIndex((p) => p.getAttribute("aria-hidden") !== "true");
+		let index = shownFace(stack);
 		if (index < 0) index = panels.length - 1;
 
 		const select = (to: number) => {
 			const clamped = Math.min(panels.length - 1, Math.max(0, to));
 			if (clamped === index) return;
 			index = clamped;
-			panels.forEach((panel, i) => {
-				panel.setAttribute("aria-hidden", String(i !== index));
-			});
+			showFace(stack, index);
 			const { heading, team, color, place: placing, tally: wl, champion } = panels[index].dataset;
 			if (title && heading) title.textContent = heading;
 			if (teamName && team) teamName.textContent = team;
@@ -474,8 +495,8 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 			if (star) star.hidden = champion !== "true";
 			if (place) place.textContent = placing ?? "";
 			if (tally && wl) tally.textContent = wl;
+			// The wash follows aria-current (HitArea's own rule).
 			hits.forEach((hit, i) => {
-				hit.classList.toggle("is-active", i === index);
 				if (i === index) hit.setAttribute("aria-current", "true");
 				else hit.removeAttribute("aria-current");
 			});
@@ -496,12 +517,7 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 		// while one is focused never reaches it — the shortcuts were unreachable
 		// for exactly the reader who needs them.
 		const onKey = (event: KeyboardEvent) => {
-			const step =
-				event.key === "ArrowLeft" || event.key === "ArrowUp" ? index - 1
-				: event.key === "ArrowRight" || event.key === "ArrowDown" ? index + 1
-				: event.key === "Home" ? 0
-				: event.key === "End" ? panels.length - 1
-				: null;
+			const step = stepFromKey(event, index, panels.length - 1);
 			if (step === null) return;
 			event.preventDefault();
 			select(step);
@@ -512,14 +528,14 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 			if (target !== undefined) select(Number(target));
 		};
 
-		// The bands are a DESKTOP affordance. Below 900px the grid drops to two
-		// columns and a year with four seasons divides its slot four ways, which
-		// leaves the narrowest band about 11px — well under any touch target. So
-		// they stay disabled at that size: no tap target that cannot be hit
-		// reliably, no tab stop that does nothing useful, and no pointer cursor
-		// promising something. The arrows are the control there. The breakpoint
-		// matches the one in volo.css; keep them in step.
-		const wide = window.matchMedia("(min-width: 901px)");
+		// The bands are a DESKTOP affordance. At the grid's compact step it drops
+		// to two columns and a year with four seasons divides its slot four ways,
+		// which leaves the narrowest band about 11px — well under any touch
+		// target. So they stay disabled at that size: no tap target that cannot
+		// be hit reliably, no tab stop that does nothing useful, and no pointer
+		// cursor promising something. The arrows are the control there. The step
+		// is the grid's own (lib/breakpoints), the same one volo.css follows.
+		const wide = window.matchMedia(WIDGET_WIDE_MQ);
 		const syncBands = () => {
 			for (const hit of hits) hit.disabled = !wide.matches;
 		};
@@ -546,14 +562,5 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 				hit.disabled = true;
 			}
 		};
-	}
-
-	let teardown: (() => void) | null = null;
-	document.addEventListener("astro:page-load", () => {
-		teardown = bind();
-	});
-	document.addEventListener("astro:before-swap", () => {
-		teardown?.();
-		teardown = null;
 	});
 </script>

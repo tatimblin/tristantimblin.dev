@@ -5,12 +5,21 @@
 //   <BarGraph values={hours} max={24} mark="last" />      one bar in the accent
 //   <BarGraph values={v} mark={2} height="var(--space-8)" />
 //   <BarGraph values={v} label="Visitors per day, last month" />
+//   <BarGraph values={v} mark={peak} interactive />       a script reads it back
 //
 // Accessibility: with a `label` the graph is an
 // image with that name; without one it is decoration and hidden from the
 // tree (a caller that upgrades it into a control — a slider over the bars —
 // removes aria-hidden and sets its own role and name; both come after the
 // defaults, so pass-through attributes win).
+//
+// `interactive` is for that caller: the graph composes `ds-control` (the
+// focus ring, once — the caller's script gives it the role, the name and
+// the tabindex, so a graph the script never reached stays a picture), takes
+// a crosshair once it is a slider, and leaves vertical touch drags to the
+// page. The bars are moved with `markBar(graph, i)` from `lib/bar-graph`,
+// which owns the `data-mark` contract (bar-graph.css) — a script never
+// selects the package's bar class itself.
 import { cx } from "../lib/cx";
 
 interface Props {
@@ -25,6 +34,8 @@ interface Props {
 	height?: string;
 	/** Accessible name; without one the graph is aria-hidden. */
 	label?: string;
+	/** A script will read it back (lib/bar-graph): the ring, the crosshair. */
+	interactive?: boolean;
 	class?: string;
 	style?: string;
 	[key: string]: unknown;
@@ -37,6 +48,7 @@ const {
 	mark,
 	height,
 	label,
+	interactive = false,
 	class: className,
 	style,
 	...rest
@@ -57,7 +69,12 @@ const vars = [height && `--bar-graph-height:${height}`, style].filter(Boolean).j
 ---
 
 <Tag
-	class={cx("ds-bar-graph", className)}
+	class={cx(
+		"ds-bar-graph",
+		interactive && "ds-bar-graph--interactive-true",
+		interactive && "ds-control",
+		className,
+	)}
 	style={vars || undefined}
 	role={label ? "img" : undefined}
 	aria-label={label}

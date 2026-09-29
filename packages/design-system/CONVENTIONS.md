@@ -91,8 +91,8 @@ instrument UI (next section): `Mono`, `Figure`, `Stat`, `StatStrip`,
 
 **Client helpers** (`@whois/design-system/lib/*`, plain TS, no DOM at import):
 `breakpoints` (`WIDGET_COMPACT_MQ`, `WIDGET_WIDE_MQ`), `faces` (`showFace`,
-`shownFace`), `keys` (`stepFromKey`), `lifecycle` (`onPage`). See *Widget grid*
-below.
+`shownFace`), `keys` (`stepFromKey`), `lifecycle` (`onPage`), `bar-graph`
+(`markBar`, `barsOf`). See *Widget grid* below.
 
 ## The decision gate
 
@@ -265,7 +265,12 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   `data-time-ruler="readout"`.
 - `BarGraph` — `values`, `max`, `mark={i|"last"|"max"}` (the one bar in the
   accent, `data-mark`; an index, where Tile's `lit` is a boolean), `height`,
-  `label` (its accessible name; without one it is `aria-hidden`).
+  `label` (its accessible name; without one it is `aria-hidden`);
+  `interactive` for a graph a script reads back — it composes `ds-control`
+  (the ring), takes a crosshair once the script has given it `role="slider"`
+  (and its name and tabindex; without the script it stays a picture), and
+  leaves vertical touch drags to the page. The script moves the accent with
+  `markBar(graph, i)` from `lib/bar-graph` and never selects the bar class.
 - `Legend` — `items=[{label, value?, color?, swatch?}]` or `LegendItem` children
   (`label`, `value` prop or slot, `color`, `swatch="dot|line|dashed"` for a
   series drawn as one); dots take `--tone-N` by position.
@@ -288,6 +293,20 @@ queries — cells below the reference — not viewport ones. A widget's script
 binds with `onPage(bind)` from `lib/lifecycle` (bind on `astro:page-load`,
 tear down on `astro:before-swap`) and reads the arrow keys with
 `stepFromKey(event, at, last)` from `lib/keys`.
+
+**A widget's shape** (`src/widgets/*`): a typed `Props` of `class` and a
+pass-through, spread onto its `<Widget>`, so the PAGE writes the row's
+choreography (`data-reveal`, the group, the order — `src/pages/index.astro`)
+and the widget knows nothing of it; a widget that must react to the page's
+reveal keys its CSS on `data-reveal-state="in"` (the bike's slide-in) rather
+than observing on its own. The HEADLINE FIGURE sits at the FOOT of the body
+(the contributions total, the visitors, the miles), with the graphic or the
+stat pairs above it, so a row of tiles reads its figures on one line. A
+widget's own rules go in a scoped `<style>` unless one has to reach a DS
+element the widget does not render (Volo's header container) or a shadow
+DOM (`::part`); the DS spreads the scope attribute onto each component's
+root, so a plain class applies, and its CSS sits in a layer under the
+site's, so no prefix or doubled selector is ever needed to win.
 
 The catalogue (`/design-system`) shows every one of these, and a "Widget — the
 pieces together" section with three sample widgets.
