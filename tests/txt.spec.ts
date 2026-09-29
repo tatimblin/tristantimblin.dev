@@ -544,9 +544,19 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(article.x).toBeGreaterThanOrEqual(16);
 		expect(article.x + article.width).toBeLessThanOrEqual(375 - 16 + 1);
 
-		// The title steps down; the lead and the mark stack under it, the mark
-		// at a modest width; the hero and the index take the whole column.
-		await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveCSS("font-size", "44px");
+		// The title steps down twice on a phone (72 → 44 → 32) and the lead
+		// once (20 → 18); the strip sits right under the header, number and
+		// date on its first line; the lead and the mark stack under the title,
+		// the mark at a modest width; the hero and the index take the whole
+		// column.
+		await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveCSS("font-size", "32px");
+		await expect(page.locator(".post__lead")).toHaveCSS("font-size", "18px");
+		const header = await box(page, ".site-header");
+		const strip = await box(page, "[data-post-strip]");
+		expect(strip.y - (header.y + header.height)).toBeLessThanOrEqual(40);
+		const no = await box(page, ".post__no");
+		const date = await box(page, ".post__date");
+		expect(date.y).toBeCloseTo(no.y, 0);
 		const title = await box(page, ".post__title");
 		const lead = await box(page, ".post__lead");
 		const mark = await box(page, ".post__mark");
