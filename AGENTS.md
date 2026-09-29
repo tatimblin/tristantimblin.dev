@@ -10,7 +10,7 @@ Guidance for AI agents working in this repo.
   source exports, no build step):
   - `@whois/design-system` — the design system (tokens + Astro/CSS components).
   - Web Components (custom elements): `dotted-grid`, `video-carousel`,
-    `gallery-carousel`, `sticky-heading`, `stories-heading`, `wobble-text`.
+    `stories-heading`, `wobble-text`.
   - Two exceptions with real build steps: `fleet-extension` and
     `vscode-fleet-demo` — see below.
 - Run the dev server with **`bunx astro dev`** (Node). Do **not** use

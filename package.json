@@ -21,8 +21,6 @@
     "@tristimb/spotify-stream-player": "^0.5.2",
     "@whois/design-system": "workspace:*",
     "@whois/dotted-grid": "workspace:*",
-    "@whois/gallery-carousel": "workspace:*",
-    "@whois/sticky-heading": "workspace:*",
     "@whois/stories-heading": "workspace:*",
     "@whois/video-carousel": "workspace:*",
     "@whois/wobble-text": "workspace:*",

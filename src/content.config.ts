@@ -2,18 +2,6 @@ import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 import { categoryIds, TXT_BASE } from "./lib/blog";
 
-const gallery = defineCollection({
-	loader: glob({ pattern: "**/*.yaml", base: "./src/content/gallery" }),
-	schema: z.object({
-		title: z.string(),
-		date: z.coerce.date(),
-		media: z.string(),
-		type: z.enum(["image", "video"]),
-		poster: z.string().optional(),
-		alt: z.string(),
-	}),
-});
-
 const txt = defineCollection({
 	loader: glob({ pattern: "**/*.{md,mdx}", base: TXT_BASE }),
 	schema: z.object({
@@ -49,4 +37,4 @@ const txt = defineCollection({
 	}),
 });
 
-export const collections = { gallery, txt };
+export const collections = { txt };

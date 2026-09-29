@@ -10,8 +10,6 @@
         "@tristimb/spotify-stream-player": "^0.5.2",
         "@whois/design-system": "workspace:*",
         "@whois/dotted-grid": "workspace:*",
-        "@whois/gallery-carousel": "workspace:*",
-        "@whois/sticky-heading": "workspace:*",
         "@whois/stories-heading": "workspace:*",
         "@whois/video-carousel": "workspace:*",
         "@whois/wobble-text": "workspace:*",
@@ -46,14 +44,6 @@
         "esbuild": "^0.28.2",
         "typescript": "^6.0.3",
       },
-    },
-    "packages/gallery-carousel": {
-      "name": "@whois/gallery-carousel",
-      "version": "0.0.1",
-    },
-    "packages/sticky-heading": {
-      "name": "@whois/sticky-heading",
-      "version": "0.0.1",
     },
     "packages/stories-heading": {
       "name": "@whois/stories-heading",
@@ -550,10 +540,6 @@
     "@whois/design-system": ["@whois/design-system@workspace:packages/design-system"],
 
     "@whois/dotted-grid": ["@whois/dotted-grid@workspace:packages/dotted-grid"],
-
-    "@whois/gallery-carousel": ["@whois/gallery-carousel@workspace:packages/gallery-carousel"],
-
-    "@whois/sticky-heading": ["@whois/sticky-heading@workspace:packages/sticky-heading"],
 
     "@whois/stories-heading": ["@whois/stories-heading@workspace:packages/stories-heading"],
 

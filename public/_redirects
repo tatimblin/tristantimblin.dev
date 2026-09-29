@@ -3,3 +3,7 @@
 # /txt/categories was the old categories index; categories are now queries on
 # the /txt quilt (/txt?q=<category>), and /txt/category/<id> stays as a list.
 /txt/categories /txt 301
+
+# The gallery is gone; its pages go home.
+/gallery / 301
+/gallery/* / 301

@@ -3,15 +3,14 @@
  *
  * Emitting `width`/`height` on an `<img>` lets the browser reserve the right box
  * before the bytes arrive, so a decoding image doesn't reflow the page (a real CLS
- * cost — measured on the /txt posts and the gallery masonry). This reads the header
+ * cost — measured on the /txt posts). This reads the header
  * straight off the file with no image library and no build step beyond what Astro
  * already runs in frontmatter (Node), so it's cheap enough to call per image.
  *
  * Returns null when the source isn't a local `public/` path or the format isn't
  * recognised — callers then simply omit the attributes rather than guess an aspect.
  *
- * Extracted from src/components/mdx/Img.astro so the gallery grid can reuse the
- * exact same reader instead of re-implementing it.
+ * Used by src/components/mdx/Img.astro.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

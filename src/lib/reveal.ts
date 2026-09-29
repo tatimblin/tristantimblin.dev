@@ -1,7 +1,7 @@
 /**
  * The asset-arrival reveal coordinator.
  *
- * THE PROBLEM. Content that carries an asset — a post image, a gallery thumb —
+ * THE PROBLEM. Content that carries an asset — a post image, a widget's media —
  * snaps in at full strength the instant that asset decodes, in whatever order the
  * network finishes. Nothing on this site had a mount-time entrance, so the page
  * assembled visibly rather than arriving.
