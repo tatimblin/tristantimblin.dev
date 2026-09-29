@@ -59,16 +59,18 @@
 	padding-block: 0 var(--space-13);
 }
 
-/* THE INSTRUMENT — /txt (BlogLayout `bar`): the site header, then <main>
-   in the site container, holding three rows straight on the page — the bar
+/* THE INSTRUMENT — /txt (BlogLayout `bar`): the site header (in the site
+   container), then <main> across the full page, holding three rows straight
+   on the page — the bar
    (the layout's), the board and the timeline (the page's). Nothing carries a
    surface: the bar is one hairline box, the quilt is art on the page, the
    card sits on the page — so the rows are set apart by space, not cut by a
    gutter.
 
-   The container is padded by --container-inset (global.css), the same inset
-   the header pads by and the homepage's rows take, so the header's brand and
-   nav sit on the rows' outer edges exactly as they sit on the homepage's.
+   The header keeps the container (--container-inset, global.css) so it sits
+   where it sits on every other page; the rows below take the whole page,
+   padded only by the container's gutter (--container-pad), so the quilt reads
+   as an art board edge to edge.
 
    The rows stack at their own height: the quilt starts right under the bar
    (a --space-3 step), grows with the posts and scrolls with the page; the
@@ -82,11 +84,13 @@
 	min-height: 0;
 }
 .blog__main.blog__main--instrument {
-	/* The full width (its auto margins would otherwise shrink it to fit its
-	   content in the column), the container made by the inset. */
+	/* The full width of the page (its auto margins would otherwise shrink it
+	   to fit its content in the column): the bar, the quilt and the timeline
+	   run to the page's gutters, not the site container. Only the site
+	   header above keeps the container. */
 	inline-size: 100%;
 	max-width: none;
-	padding-inline: var(--container-inset);
+	padding-inline: var(--container-pad);
 	padding-block: 0 var(--container-pad);
 }
 .blog__instrument {

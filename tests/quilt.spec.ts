@@ -13,8 +13,8 @@ import { test, expect, type Page } from "@playwright/test";
  *
  *   rest        every cell lit, one link per post, fillers aria-hidden and
  *               drawn faint; tiles cut by a gap, no ruling, no text on a tile; the
- *               instrument in the site container, under the site header,
- *               its edges on the header's brand and nav
+ *               instrument across the full page (to the container's
+ *               gutter), under the site header, which keeps the container
  *   hover/focus the tile lit, the rest faint or gone on a stagger, the card
  *               in a block that dodges it; leaving the tile restores (the
  *               panel holds it, tile to tile never passes rest); deterministic
@@ -291,7 +291,7 @@ test.describe("quilt — rest", () => {
 		expect(await lines('[data-cell][data-state="faint"]')).toEqual(none);
 	});
 
-	test("one instrument: three rows on the page in the site container, under the site header, on its brand and nav", async ({
+	test("one instrument: three rows across the full page, under the site header, which keeps the container", async ({
 		page,
 	}) => {
 		await page.goto("/txt/");
@@ -322,16 +322,17 @@ test.describe("quilt — rest", () => {
 			};
 		});
 		expect(m.scroll).toBe(m.vw);
-		// The site's container: --container-max, centred, inside --container-pad.
+		// The rows: the full page, inside only the container's gutter.
+		expect(m.frame.left).toBeCloseTo(m.container.pad, 0);
+		expect(m.frame.right).toBeCloseTo(m.vw - m.container.pad, 0);
+		// The main nav, once, above the rows, still in the site's container:
+		// --container-max, centred, inside --container-pad.
 		const inset = Math.max(m.container.pad, (m.vw - m.container.max) / 2 + m.container.pad);
-		expect(m.frame.left).toBeCloseTo(inset, 0);
-		expect(m.frame.right).toBeCloseTo(m.vw - inset, 0);
-		// The main nav, once, above the rows; its brand and nav on the rows' edges.
 		expect(m.siteHeaders).toBe(1);
 		expect(m.frame.top).toBeGreaterThanOrEqual(m.header.bottom - 1);
-		expect(m.brand.left).toBeCloseTo(m.frame.left, 0);
-		expect(m.nav.right).toBeCloseTo(m.frame.right, 0);
-		// The bar, the board, the timeline: each the container's width, under
+		expect(m.brand.left).toBeCloseTo(inset, 0);
+		expect(m.nav.right).toBeCloseTo(m.vw - inset, 0);
+		// The bar, the board, the timeline: each the page's width, under
 		// the last, set apart by space rather than a hairline gutter.
 		expect(m.rows).toHaveLength(3);
 		for (const r of m.rows) {
@@ -1405,7 +1406,7 @@ test.describe("instrument — the card", () => {
 		await expect(card(page, "year")).toHaveText("2026");
 	});
 
-	test("the block is the container's: the same card at 1440 and at 1920", async ({ page }) => {
+	test("the block is the board's: the card keeps its share of the board at 1440 and at 1920", async ({ page }) => {
 		const measure = async (width: number, height: number) => {
 			await page.setViewportSize({ width, height });
 			await page.goto("/txt/");
@@ -1413,19 +1414,23 @@ test.describe("instrument — the card", () => {
 			await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 			return page.locator(PANEL).evaluate((p) => {
 				const r = p.getBoundingClientRect();
+				const board = document.querySelector("[data-quilt]")!.getBoundingClientRect();
 				const t = p.querySelector('[data-card="title"]')!;
-				return { w: r.width, h: r.height, title: parseFloat(getComputedStyle(t).fontSize) };
+				return { w: r.width, h: r.height, board: board.width, title: parseFloat(getComputedStyle(t).fontSize) };
 			});
 		};
 		const a = await measure(1440, 1000);
 		const b = await measure(1920, 1100);
-		// 3×2 cells of the capped board: ~678×256 at either width.
+		// The board runs the full page, so the card grows with it: the same
+		// 3x2 cells, the same share of the board, its type stepping up (never
+		// down) with the block.
 		expect(a.w).toBeGreaterThan(600);
 		expect(a.h).toBeGreaterThan(230);
-		expect(b.w).toBeCloseTo(a.w, 0);
-		expect(b.h).toBeCloseTo(a.h, 0);
-		expect(b.title).toBe(a.title);
+		expect(b.w).toBeGreaterThan(a.w);
+		expect(b.w / b.board).toBeCloseTo(a.w / a.board, 2);
+		expect(b.title).toBeGreaterThanOrEqual(a.title);
 	});
+
 });
 
 test.describe("instrument — the count", () => {
