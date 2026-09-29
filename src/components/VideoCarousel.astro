@@ -8,6 +8,8 @@
 // it degrades gracefully; the <video-carousel> custom element upgrades it into
 // the interactive scrubber. See packages/video-carousel.
 import Mono from "@whois/design-system/Mono";
+import clipsData from "../data/video-clips.json";
+
 interface Clip {
 	src: string;
 	description: string;
@@ -20,8 +22,15 @@ interface Props {
 	clips?: Clip[];
 	/** Which side the date ruler sits on relative to the video card. */
 	rulerSide?: "left" | "right";
-	/** Pin the ruler axis (bypasses the ≤640px auto-flip). Omit for responsive. */
+		/** Pin the ruler axis (bypasses the ≤640px auto-flip). Omit for responsive. */
 	orientation?: "vertical" | "horizontal";
+	/**
+	 * The host has been given a box (a grid cell with a definite height) and the
+	 * clip fills it: the stage takes the whole host and the grid cover-maps into
+	 * it; with `rulerSide="right"` the ruler overhangs the host's edge (the
+	 * element's `fill` attribute; see the package's styles.css).
+	 */
+	fill?: boolean;
 	/** Extra class(es) forwarded to the <video-carousel> host. */
 	class?: string;
 	/**
@@ -122,15 +131,20 @@ interface Props {
 	captionOverlay?: boolean;
 }
 
-// Real footage prepared by tools/dotgrid/prepare-video.sh into
+// The default clips are DATA, in src/data/video-clips.json: real footage
+// prepared by tools/dotgrid/prepare-video.sh into
 // /public/videos/website-carousel/web (960px, audio-stripped, faststart H.264;
 // iPhone HLG sources tonemapped + brightness-normalized for the halftone look).
 // Location + date come from each clip's embedded capture metadata (GPS reverse-
 // geocoded); descriptions are read from the footage. Ordered oldest→newest so
-// autoplay steps forward in time along the date ruler.
+// autoplay steps forward in time along the date ruler. Typed here, so a row
+// missing a field fails the build rather than rendering an empty caption.
+const defaultClips: Clip[] = clipsData;
+
 const {
 	rulerSide = "left",
 	orientation,
+	fill = false,
 	class: className,
 	intro,
 	introDelay,
@@ -150,204 +164,7 @@ const {
 	denoise,
 	crosshatch,
 	light = {},
-	clips = [
-		{
-			src: "/videos/website-carousel/web/fisker-top-down.web.mp4",
-			description: "Joined Fisker",
-			location: "San Francisco, CA",
-			date: "April 2023",
-			alt: "Halftone clip — started at Fisker",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0689.web.mp4",
-			description: "Bikeshare",
-			location: "San Francisco, CA",
-			date: "June 2023",
-			alt: "Halftone clip — San Francisco",
-		},
-		{
-			src: "/videos/website-carousel/web/fisker-close.web.mp4",
-			description: "Fisker Ocean release",
-			location: "Los Angeles, CA",
-			date: "June 2023",
-			alt: "Halftone clip — Fisker Ocean release",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_1922.web.mp4",
-			description: "Coffee run",
-			location: "Noe Valley, SF",
-			date: "April 2024",
-			alt: "Halftone clip — coffee run",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_2102.web.mp4",
-			description: "Sonoma coast",
-			location: "Sonoma County, CA",
-			date: "June 2024",
-			alt: "Halftone clip — Sonoma coast",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_2347.web.mp4",
-			description: "Polaroids",
-			location: "Rehoboth Beach, DE",
-			date: "Sept 2024",
-			alt: "Halftone clip — Rehoboth Beach",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0068.web.mp4",
-			description: "Sigma Derby",
-			location: "Las Vegas, NV",
-			date: "April 2025",
-			alt: "Halftone clip — Las Vegas",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0073.web.mp4",
-			description: "Beach bonfire",
-			location: "Ocean Beach, SF",
-			date: "April 2025",
-			alt: "Halftone clip — Ocean Beach",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0081.web.mp4",
-			description: "Backyard maple",
-			location: "Alameda, CA",
-			date: "April 2025",
-			alt: "Halftone clip — Alameda",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0157.web.mp4",
-			description: "Tide pools",
-			location: "Cabo San Lucas, MX",
-			date: "April 2025",
-			alt: "Halftone clip — Cabo San Lucas",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0339.web.mp4",
-			description: "Community orchestra",
-			location: "Mission District, SF",
-			date: "May 2025",
-			alt: "Halftone clip — Mission District",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0360.web.mp4",
-			description: "Redwoods",
-			location: "Mount Tamalpais, CA",
-			date: "May 2025",
-			alt: "Halftone clip — Mount Tamalpais",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0416.web.mp4",
-			description: "Live show",
-			location: "San Francisco, CA",
-			date: "June 2025",
-			alt: "Halftone clip — San Francisco",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0563.web.mp4",
-			description: "Lakeside",
-			location: "Lake Tahoe, CA",
-			date: "Aug 2025",
-			alt: "Halftone clip — Lake Tahoe",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0567.web.mp4",
-			description: "Riverside table",
-			location: "Lake Tahoe, CA",
-			date: "Aug 2025",
-			alt: "Halftone clip — Lake Tahoe",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0623.web.mp4",
-			description: "Outside Lands",
-			location: "Golden Gate Park, SF",
-			date: "Aug 2025",
-			alt: "Halftone clip — Outside Lands",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0706.web.mp4",
-			description: "Jungle overlook",
-			location: "Road to Hana, Maui",
-			date: "Sept 2025",
-			alt: "Halftone clip — Road to Hana",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0722.web.mp4",
-			description: "Banyan tree",
-			location: "Maui, HI",
-			date: "Sept 2025",
-			alt: "Halftone clip — Maui",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0730.web.mp4",
-			description: "Sunset swim",
-			location: "Wailea, Maui",
-			date: "Sept 2025",
-			alt: "Halftone clip — Wailea",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0809.web.mp4",
-			description: "Coast trail",
-			location: "Devil's Slide, CA",
-			date: "Oct 2025",
-			alt: "Halftone clip — Devil's Slide",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0880.web.mp4",
-			description: "Snoqualmie Falls",
-			location: "Snoqualmie, WA",
-			date: "Nov 2025",
-			alt: "Halftone clip — Snoqualmie Falls",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_0884.web.mp4",
-			description: "Birthday",
-			location: "",
-			date: "Nov 2025",
-			alt: "Halftone clip — birthday",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_1212.web.mp4",
-			description: "Zoox robotaxi",
-			location: "San Francisco, CA",
-			date: "Feb 2026",
-			alt: "Halftone clip — Zoox robotaxi",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_1296.web.mp4",
-			description: "Bring Your Own Bigwheel",
-			location: "San Francisco, CA",
-			date: "April 2026",
-			alt: "Halftone clip — Bring Your Own Bigwheel",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_2465.web.mp4",
-			description: "Sidewalk garden",
-			location: "San Francisco, CA",
-			date: "June 2026",
-			alt: "Halftone clip — San Francisco",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_7644.web.mp4",
-			description: "Golf links",
-			location: "Half Moon Bay, CA",
-			date: "July 2026",
-			alt: "Halftone clip — Half Moon Bay",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_1499.web.mp4",
-			description: "Courtyard fountain",
-			location: "Moss Beach, CA",
-			date: "July 2026",
-			alt: "Halftone clip — Moss Beach",
-		},
-		{
-			src: "/videos/website-carousel/web/IMG_1514.web.mp4",
-			description: "Harbor seals",
-			location: "Moss Beach, CA",
-			date: "July 2026",
-			alt: "Halftone clip — Moss Beach",
-		},
-	],
+	clips = defaultClips,
 } = Astro.props;
 
 const first = clips[0];
@@ -362,8 +179,9 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 <video-carousel
 	class:list={["vc", className]}
 	tick-src="/audio/tick_004.ogg"
-	ruler-side={rulerSide}
+		ruler-side={rulerSide}
 	orientation={orientation}
+	fill={fill ? "" : undefined}
 	caption-overlay={captionOverlay ? "" : undefined}
 >
 	{/* Ruler + video share a row so the ruler's height tracks the VIDEO box only

@@ -692,8 +692,10 @@ orange/pink-*` scales, `--hyperlink`, the `--token-*` code palette, and
 `--shadow-color`; plus the instrument tokens (previous section: `--lit`,
 `--wash-*`, `--tone-*`, `--hairline*`, `--bar-width`, `--tick-pitch`,
 `--ticks-image*`, `--focus-ring*`, `--playhead-dot`, `--shadow-1..3`, the
-voices, the durations and `--ease-reveal`). Legacy site aliases live in
-`bridge.css` (`--color-fg`, `--color-bg`, `--font-serif`, …).
+voices, the durations and `--ease-reveal`), and `--tracking-hero` (the hero
+face's display tracking, the lockup's). The `--color-*` names in `bridge.css`
+are for the packages that read a colour where a class cannot reach (a canvas,
+a knockout); site code reaches for the DS token.
 
 **Breakpoints.** The DS's, from Stitches media: `xs 480 / sm 640 / md 768 / lg
 1024 / xl 1280`; and the site's one of its own, the widget grid's **compact

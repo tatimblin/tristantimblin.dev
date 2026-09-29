@@ -2,30 +2,32 @@
  * edge, ruler protruding into the page gutter, with a scroll-driven parallax
  * lift.
  *
- * Plain CSS (not an Astro scoped <style>) so the .vc__* selectors reaching into
- * the video-carousel's light DOM survive verbatim. The .wx-videos prefix keeps
- * everything contained to this widget; the grid rule below keys on the grid
- * that HOLDS it (:has), so the page needs no class of its own for it. */
+ * Plain CSS (not an Astro scoped <style>): the host is rendered by
+ * VideoCarousel.astro, and the light theme's dot-colour rule reaches the
+ * <dotted-grid> inside it. Nothing here selects a .vc__* internal any more —
+ * the package's `fill` attribute and --vc-stage-radius do that job. The
+ * .wx-videos prefix keeps everything contained to this widget; the grid rule
+ * below keys on the grid that HOLDS it (:has), so the page needs no class of
+ * its own for it. */
 
-/* SINGLE SOURCE OF TRUTH for the ruler's protrusion width. Mirrors the package's
-   --vc-ruler-w formula (date gutter + longest tick + end pad). Defined on the
-   grid so it inherits down to .vc__main; the grid reserves this much space to its
-   right (plus the ruler↔card gap) so the ruler overhangs into the page gutter
-   rather than stealing a content column. Keep in sync with
-   packages/video-carousel/src/styles.css → --vc-ruler-w.
+/* THE RULER'S ROOM. The carousel is `fill` with `ruler-side="right"`, so its
+   ruler and the gap before it OVERHANG the cell by --vc-ruler-w + --vc-main-gap
+   — the package's own geometry, declared at the root (video-carousel/styles.css)
+   so the grid can read the same number the ruler is drawn with, rather than
+   restating it. The grid reserves that much to its right so the ruler lands in
+   the page gutter rather than a content column.
    The page is contained (FullHeroLayout caps --hero-inset at --container-max), so
    on wide screens the margin outside the container already holds the ruler: only
    the part it can't absorb is reserved, and once the margin is wide enough the
    grid — and the card's right edge — runs to the container edge like every other
    row. */
 .ds-widget-grid:has(.wx-videos) {
-	--vc-ruler-gutter: calc(4.5rem + 32px + 0.5rem);
 	--vc-outer-margin: calc(
 		var(--hero-inset, var(--container-pad)) - var(--container-pad)
 	);
 	padding-inline-end: max(
 		0px,
-		var(--vc-ruler-gutter) + var(--space-4) - var(--vc-outer-margin)
+		var(--vc-ruler-w) + var(--vc-main-gap) - var(--vc-outer-margin)
 	);
 }
 
@@ -84,42 +86,19 @@
 	--color-fg: color-mix(in oklab, var(--text-primary) 50%, var(--text-secondary));
 }
 
-/* FILL THE CELL. The clip IS the widget, so the dot grid takes the whole 1×2
-   cell rather than a 9:16 box at its top. The clips are 9:16 portrait (360×640);
-   the cell is two square rows plus a gap, ~1:2 — a little narrower. Sizing the grid
-   by width (as it was, aspect-ratio 960/1706) left a dead band under it — ~60px at
-   1440 wide, where the caption used to sit; sizing it by height would overhang the
-   column. So the grid takes the cell's box and <dotted-grid> cover-maps the clip
-   into it (its shader's coverUv: scale to fill, never stretch): true proportions,
-   the tallest edge exactly matched, and only the sides trimmed — ~11% of the clip's
-   width at 1440, split evenly, where there is nothing a portrait phone clip frames.
-   The ruler stretches with the stage, so it spans the cell's full height too. */
+/* FILL THE CELL. The clip IS the widget, so the carousel is `fill` (its own
+   attribute, video-carousel/styles.css): the stage takes the whole 1×2 cell
+   rather than a 9:16 box at its top, and the grid cover-maps the clip into it.
+   The clips are 9:16 portrait (360×640); the cell is two square rows plus a
+   gap, ~1:2 — a little narrower, so only the sides are trimmed (~11% of the
+   clip's width at 1440, split evenly, where there is nothing a portrait phone
+   clip frames). The ruler stretches with the stage, so it spans the cell's
+   full height too. This rule only gives the host the cell's height and rounds
+   the stage to the card corner the tiles beside it wear. */
 .wx-videos video-carousel {
 	flex: 1 1 auto;
 	min-height: 0;
-}
-
-/* Widen the ruler+stage row beyond the cell so the STAGE fills the full cell width
-   (its right edge aligns with the grid's right column edge) and the ruler + its
-   gap overhang into the reserved gutter. stage is flex:1 → takes the 100%; the
-   fixed-width ruler takes the overflow. */
-.wx-videos .vc__main {
-	flex: 1 1 auto;
-	min-height: 0;
-	width: calc(100% + var(--vc-ruler-gutter) + var(--space-4));
-}
-
-/* The stage fills the cell (overriding the height-cap-derived max-width), and the
-   grid fills the stage: drop its 9:16 box and let the shader cover-map instead. */
-.wx-videos .vc__stage {
-	max-width: none;
-	width: 100%;
-	border-radius: var(--border-radius-2);
-}
-.wx-videos .vc__grid {
-	flex: 1 1 auto;
-	min-height: 0;
-	aspect-ratio: auto;
+	--vc-stage-radius: var(--border-radius-2);
 }
 
 /* THE COMPACT STEP (the grid's own, widget-grid.css; WIDGET_COMPACT_MQ for a

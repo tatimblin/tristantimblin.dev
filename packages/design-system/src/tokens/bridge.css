@@ -1,9 +1,13 @@
 /* Legacy-name bridge.
  *
- * The site's original CSS and the Web Components in packages/* reference a small
- * set of custom properties (--color-*, a serif/decorative font) that the design
- * system does not define. This layer maps those legacy names onto DS tokens so
- * the existing markup keeps resolving after the DS token layer takes over.
+ * The Web Components in packages/* reference a small set of custom properties
+ * (--color-*) that the design system does not define, and read them where a
+ * class cannot reach: <dotted-grid> samples --color-fg / --color-bg into a
+ * canvas, <stories-heading> and <video-carousel> paint --color-bg behind their
+ * knockouts, and the fleet demo's element.css asks for --color-accent /
+ * --color-border / --color-muted. This layer maps those names onto DS tokens.
+ * Site code reaches for the DS token itself (--text-primary, --background,
+ * --accent, --hairline …); nothing in src/ reads a --color-* name.
  *
  * Imported LAST (after generated + overrides). The theme classes live on <html>
  * (which is also :root), so var(--text-primary) etc. resolve here.
@@ -16,25 +20,16 @@
  *   the foreground keeps ONE colour across the whole lockup: the "tristan"
  *   wordmark + "&" fill with --text-primary, and "other stories" + the dotted
  *   grids + body text all resolve --color-fg to the same token.
- * - --font-serif is not a DS token. It predates the role tokens and is still what
- *   <stories-heading> and the DS Text family="serif" variant read, so it aliases
- *   --font-hero: the wordmark lockup picks up Migra with no component edit.
- *   Prefer --font-hero / --font-heading in new code; this stays for the existing
- *   callers.
- * - --font-decorative is gone. It named Quintessential, a face the site no longer
- *   loads, and its only caller (Section.astro) now reaches for the real role
- *   tokens. An alias that no longer describes anything is worse than no alias.
+ * - --font-serif and --font-decorative are gone: the lockup reads --font-hero
+ *   itself, and nothing else named a face by what it is rather than by its
+ *   role. An alias that no longer describes anything is worse than no alias.
  */
 
 :root {
-	/* Colors — map site names to DS semantic tokens. */
+	/* Colors — map the packages' names to DS semantic tokens. */
 	--color-bg: var(--gray-100);
 	--color-fg: var(--text-primary);
 	--color-muted: var(--text-tertiary);
 	--color-border: var(--border-color);
 	--color-accent: var(--accent);
-
-	/* Legacy face alias → the hero role. The four role tokens (--font-hero,
-	   --font-heading, --font-ui, --font-body) live in tokens.overrides.css. */
-	--font-serif: var(--font-hero);
 }

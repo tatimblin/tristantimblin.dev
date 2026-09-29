@@ -107,10 +107,11 @@
 	/* Display tracking. A text face wants its letters pulled together as the
 	 * type grows; a BITMAP face does not — its letters sit on a pixel grid,
 	 * and a negative tracking at 72px closes the gaps the grid drew. So the
-	 * heading face's display tracking is none. (The hero lockup, Migra, keeps
-	 * its own -0.02em in its stylesheet.) In em, so a retune tracks the size
-	 * it is set at. */
+	 * heading face's display tracking is none; the hero face, Migra, is a text
+	 * serif and pulls in at display size — the lockup's tracking. In em, so a
+	 * retune tracks the size it is set at. */
 	--tracking-heading: 0;
+	--tracking-hero: -0.02em;
 
 	/* TRACKING ---------------------------------------------------------------
 	 * Uppercase is set in letterforms that were drawn to sit next to LOWERCASE.

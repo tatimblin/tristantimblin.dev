@@ -35,22 +35,16 @@
 	   short of the top.
 	   The track IS the DS tick ruler (--ticks-image, TickRuler's own hairlines
 	   on --tick-pitch), coloured by the bar's `color` (the part rule below).
-	   The elapsed stretch cannot take the same token: it paints on the bar's
+	   	   The elapsed stretch cannot take the same token: it paints on the bar's
 	   value pseudo-element, whose currentColor is the bar's and cannot be set
 	   apart from it (verified — `color` on ::-webkit-progress-value is
-	   ignored), and a custom property cannot be re-coloured after :root
-	   substitutes its var()s. So that one is spelled out with the ink named,
-	   on the same pitch as the token. */
+	   ignored). So that one is the ruler IN THE INK, --ticks-image-ink — the
+	   same pitch, the ink named (tokens.overrides.css). */
 	--ssp-progress-height: var(--space-5);
 	--ssp-track: var(--ticks-image) left bottom / 100% 65% no-repeat;
 	--ssp-accent: linear-gradient(var(--accent), var(--accent)) right / 1px 100%
 			no-repeat,
-		repeating-linear-gradient(
-			to right,
-			var(--text-primary) 0 1px,
-			transparent 1px var(--tick-pitch)
-		)
-		left bottom / 100% 65% no-repeat;
+		var(--ticks-image-ink) left bottom / 100% 65% no-repeat;
 }
 
 .wx-nowplaying spotify-player::part(root) {
@@ -73,27 +67,29 @@
 	display: none;
 }
 
-/* Title in the figure voice (the numeric face at regular weight, as Figure
-   sets it), artist in the dim label voice of Mono's text variant. Both stay
-   on a single line so a long name can't wrap and steal height from the cover
-   (which would resize it on every track change); the component watches for
-   the overflow and scrolls such a line as a car-radio marquee instead. */
+/* Title in the FIGURE voice (the --voice-figure-* tokens: what Figure reads,
+   at the cell's md step rather than the figure's own — a title is words, not a
+   numeral), artist in the LABEL voice (--voice-mono-*, Mono's text variant) in
+   the dim ink. Both stay on a single line so a long name can't wrap and steal
+   height from the cover (which would resize it on every track change); the
+   component watches for the overflow and scrolls such a line as a car-radio
+   marquee instead. */
 .wx-nowplaying spotify-player::part(title),
 .wx-nowplaying spotify-player::part(artist) {
 	white-space: nowrap;
 	line-height: var(--line-height-ui);
 }
 .wx-nowplaying spotify-player::part(title) {
-	font-family: var(--font-numeric);
+	font-family: var(--voice-figure-family);
 	font-size: var(--widget-font-md);
-	font-weight: var(--font-weight-400);
-	letter-spacing: var(--tracking-heading);
+	font-weight: var(--voice-figure-weight);
+	letter-spacing: var(--voice-figure-tracking);
 	color: var(--text-primary);
 }
 .wx-nowplaying spotify-player::part(artist) {
 	font-family: var(--voice-mono-family);
-	font-size: var(--widget-font-xs);
-	letter-spacing: var(--tracking-mono);
+	font-size: var(--voice-mono-size);
+	letter-spacing: var(--voice-mono-tracking);
 	color: var(--text-tertiary);
 	opacity: 1;
 }
@@ -119,7 +115,8 @@
 	grid-row: 2;
 	padding: 0;
 	font-family: var(--voice-mono-family);
-	font-size: var(--widget-font-xs);
+	font-size: var(--voice-mono-size);
+	letter-spacing: var(--voice-mono-tracking);
 	line-height: 1;
 	color: var(--text-tertiary);
 	opacity: 1;

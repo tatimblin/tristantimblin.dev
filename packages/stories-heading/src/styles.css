@@ -120,7 +120,7 @@ stories-heading {
 }
 
 .sh__wordmark-text {
-	font-family: var(--font-serif, ui-serif, Georgia, serif);
+	font-family: var(--font-hero, ui-serif, Georgia, serif);
 	/* Migra MEDIUM, deliberately lighter than the rest of the lockup. The wordmark
 	   is set enormous, and at that size the bold cut's stroke contrast turns heavy
 	   and closes up the counters; the medium keeps the high-contrast serif reading
@@ -132,8 +132,8 @@ stories-heading {
 	   Changing this moves the wordmark's ink metrics, which JS measures into
 	   --sh-group-h and thence the whole hero fold — re-run tests/hero-fold.spec.ts
 	   after any change here. */
-	font-weight: 500;
-	letter-spacing: -0.02em;
+		font-weight: var(--font-weight-500, 500);
+	letter-spacing: var(--tracking-hero, -0.02em);
 	fill: var(--text-primary, #ededed);
 	/* SVG user units; the viewBox is resized to the real glyph bbox in JS, so
 	   this only sets the internal proportions, not the on-screen size. */
@@ -171,11 +171,11 @@ stories-heading {
 	z-index: 4;
 	top: var(--sh-amp-top, 0);
 	left: var(--sh-amp-indent);
-	font-family: var(--font-serif, ui-serif, Georgia, serif);
+	font-family: var(--font-hero, ui-serif, Georgia, serif);
 	font-size: var(--sh-amp-size);
-	font-weight: var(--font-hero-weight, 700);
+		font-weight: var(--font-hero-weight, 700);
 	line-height: 1;
-	letter-spacing: -0.02em;
+	letter-spacing: var(--tracking-hero, -0.02em);
 	color: var(--color-bg, #0a0a0a);
 	-webkit-text-stroke: var(--sh-amp-stroke) var(--text-primary, #ededed);
 	white-space: nowrap;
@@ -250,9 +250,10 @@ stories-heading {
 	   two, which is what keeps the clip-path from shaving either one. */
 	font-weight: var(--font-hero-weight, 700);
 	line-height: 0.85;
-	/* Named so the solid layer can ADD its registration tracking to it rather than
-	   restate the value and drift from it. */
-	--sh-tracking: -0.01em;
+		/* The hero face's display tracking (the site's token), named so the solid
+	   layer can ADD its registration tracking to it rather than restate the
+	   value and drift from it. */
+	--sh-tracking: var(--tracking-hero, -0.02em);
 	letter-spacing: var(--sh-tracking);
 	white-space: nowrap;
 	/* fit-content sizes the box to the text ADVANCE width, but a serif glyph's ink
@@ -394,7 +395,7 @@ stories-heading {
 .sh__outline {
 	font-family: var(
 		--sh-outline-font,
-		var(--font-serif, ui-serif, Georgia, serif)
+		var(--font-hero, ui-serif, Georgia, serif)
 	);
 	font-weight: var(--font-hero-weight, 700);
 	color: var(--color-bg, #0a0a0a);

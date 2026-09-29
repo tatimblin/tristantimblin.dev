@@ -36,7 +36,8 @@ const { class: className, ...rest } = Astro.props;
 	    reads as mostly black. */}
 	{/* No card chrome: the halftone sits straight on the page, filling the cell,
 	    with its caption laid over the clip's corner as a TV caption. */}
-	<VideoCarousel
+		<VideoCarousel
+		fill
 		rulerSide="right"
 		captionOverlay
 		xfade={1600}
