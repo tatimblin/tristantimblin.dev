@@ -15,6 +15,15 @@
 // a script sets the attribute a reader needs and the fill follows; there is
 // no `selected` prop to fall out of step with it. As an <a> or <button> it
 // is a chip BUTTON: pointer, the strong hairline on hover, the focus ring.
+//
+// `variant="tab"` is the same caps voice with NO box: a text tab, the
+// tertiary ink at rest, the ink under the pointer, and selected (the same
+// ARIA) an accent underline instead of the fill — the /txt search bar's
+// quick filters. `count` sets a small superscript figure after the label
+// (the posts in a category; ALL's is the total).
+//
+//   <Chip variant="tab" as="a" href="/txt?q=projects" count={1}>projects</Chip>
+//
 // `class` merges; everything else passes through.
 import { cx } from "../lib/cx";
 
@@ -22,11 +31,15 @@ interface Props {
 	as?: string;
 	/** md (default) is the control step, --space-5 tall; sm is the key hint's. */
 	size?: "sm" | "md";
+	/** box (default): the hairline box; tab: no box, an accent underline when selected. */
+	variant?: "box" | "tab";
+	/** A small superscript figure after the label. */
+	count?: string | number;
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "span", size = "md", class: className, ...rest } = Astro.props;
+const { as = "span", size = "md", variant = "box", count, class: className, ...rest } = Astro.props;
 const Tag = as as any;
 ---
 
@@ -38,6 +51,7 @@ const Tag = as as any;
 		// As a button or a link it is a control (control.css).
 		(as === "button" || as === "a") && "ds-control",
 		size !== "md" && `ds-chip--size-${size}`,
+		variant !== "box" && `ds-chip--variant-${variant}`,
 		className,
 	)}
-	{...rest}><slot /></Tag>
+	{...rest}><slot />{count != null && <sup class="ds-chip__count">{count}</sup>}</Tag>

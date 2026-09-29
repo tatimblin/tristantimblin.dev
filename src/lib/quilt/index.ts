@@ -13,6 +13,7 @@
  *   the input    aria-expanded, aria-activedescendant
  *   the chips    aria-current on the chip whose query is the query
  *   the count    the live region a reader hears (`5 posts`, `2 of 5 posts`)
+ *                and the readout drawn beside the input (`05`, `2 / 5`)
  *   the stepper  disabled when nothing matches
  *   the ruler    --at (the playhead on the focused post's month, at rest on
  *                the newest matching post), data-dim on a mark out of the
@@ -146,6 +147,7 @@ function wire(): (() => void) | null {
 	const chips = [...document.querySelectorAll<HTMLAnchorElement>("[data-chip]")];
 	const chipsNav = document.querySelector<HTMLElement>("[data-search-chips]");
 	const count = document.querySelector<HTMLElement>("[data-search-count]");
+	const searchReadout = document.querySelector<HTMLElement>("[data-search-readout]");
 	const steppers = [...document.querySelectorAll<HTMLButtonElement>("[data-step]")];
 	const ruler = document.querySelector<HTMLElement>("[data-quilt-ruler]");
 	const readout = ruler?.querySelector<HTMLElement>('[data-time-ruler="readout"]') ?? null;
@@ -266,11 +268,16 @@ function wire(): (() => void) | null {
 			else chip.removeAttribute("aria-current");
 		}
 
-		// The count, for a reader.
+		// The count: in full for a reader, short on screen.
 		if (count) {
 			count.textContent = res.result
 				? `${res.result.hits.length} of ${posts.length} posts`
 				: `${posts.length} posts`;
+		}
+		if (searchReadout) {
+			searchReadout.textContent = res.result
+				? `${res.result.hits.length} / ${posts.length}`
+				: String(posts.length).padStart(2, "0");
 		}
 
 		// The stepper: nothing to step through when nothing matches.

@@ -1,37 +1,44 @@
 ---
-// SearchBar — the ruled bar over the quilt (styles/search-bar.css): one
-// full-width box in the strong hairline, square, no fill, and in it, left
-// to right: the search glyph, the input, the quick-filter CHIPS, a divider,
-// the CONTROLS (the stepper), and the key hint. The label is for a reader
-// (visually hidden); the glyph stands in for it on screen.
+// SearchBar — the open bar over the quilt (styles/search-bar.css): no box.
+// Two rows. The INPUT ROW, left to right: the search icon in a round
+// outlined RING, the input on a single hairline UNDERLINE (the accent while
+// it has focus), the visible READOUT (`05`, `1 / 5`), the key hint, and —
+// after a divider — the CONTROLS (the stepper). Under it the TABS row: the
+// quick filters. The label is for a reader (visually hidden); the ring
+// stands in for it on screen.
 //
 //   <SearchBar id="quilt-search" label="Search" placeholder="Search a title, a topic, a year…"
-//              count="5 posts" hint="/" controls="quilt-panel-results">
-//     <Chip slot="chips" as="a" href="/txt" data-chip="" aria-current="page">all</Chip>
-//     <Chip slot="chips" as="a" href="/txt?q=projects" data-chip="projects">projects</Chip>
+//              count="5 posts" readout="05" hint="/" controls="quilt-panel-results">
+//     <Chip slot="chips" variant="tab" as="a" href="/txt" data-chip="" aria-current="page" count={5}>all</Chip>
+//     <Chip slot="chips" variant="tab" as="a" href="/txt?q=projects" data-chip="projects" count={1}>projects</Chip>
 //     <IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
 //     <IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />
 //   </SearchBar>
 //
 // The input is a combobox over the panel's results listbox (aria-controls
 // names it); a script keeps aria-expanded in step with whether the panel
-// shows and moves aria-activedescendant to the active option's id. The
-// COUNT is a live region for a reader only (visually hidden,
-// aria-live="polite", data-search-count): `2 of 5 posts` while a query is
-// typed, `5 posts` otherwise — the bar shows no number. Without a `count`
-// none is rendered. The `chips` slot is a <nav> named `chipsLabel` (Quick
-// filters), hook data-search-chips; each chip is the caller's — a real link
-// to `?q=<word>` with `data-chip="<word>"`, so a chip is a SEARCH SHORTCUT
-// that works with scripting off and a script upgrades to set the query in
-// place and mark the current one. The `controls` slot is the stepper; a
-// divider is drawn before it. Hooks: data-search-bar on the root,
-// data-search-input on the input. `name` defaults to `q` so the bar inside
-// a GET form lands on `?q=` with scripting off. `expanded` and `value`
-// render a state statically. `class` merges; everything else passes to the
-// ROOT. Under 1024 the chips take a row of their own under the input and
-// scroll sideways (the stylesheet).
+// shows and moves aria-activedescendant to the active option's id. Two
+// counts, one job each: `count` is the LIVE REGION a reader hears
+// (visually hidden, aria-live="polite", data-search-count) — `2 of 5
+// posts` while a query is typed, `5 posts` otherwise; `readout` is the
+// short figure DRAWN at the input row's right in the small mono
+// (aria-hidden, data-search-readout) — `05` at rest, `2 / 5` while
+// filtering. A script writes both; without either prop none is rendered.
+// The `chips` slot is a <nav> named `chipsLabel` (Quick filters), hook
+// data-search-chips; each chip is the caller's — a text tab (`Chip
+// variant="tab"`), a real link to `?q=<word>` with `data-chip="<word>"`, so
+// a chip is a SEARCH SHORTCUT that works with scripting off and a script
+// upgrades to set the query in place and mark the current one. The
+// `controls` slot is the stepper; a divider is drawn before it. Hooks:
+// data-search-bar on the root, data-search-input on the input. `name`
+// defaults to `q` so the bar inside a GET form lands on `?q=` with
+// scripting off. `expanded` and `value` render a state statically. `class`
+// merges; everything else passes to the ROOT. Under 1024 the tabs scroll
+// sideways under a fade at the right edge; under 640 the input is set at
+// 16px, so iOS does not zoom the page on focus (the stylesheet).
 import { cx } from "../lib/cx";
 import Chip from "./Chip.astro";
+import Icon from "./Icon.astro";
 import Mono from "./Mono.astro";
 import VisuallyHidden from "./VisuallyHidden.astro";
 
@@ -41,6 +48,8 @@ interface Props {
 	placeholder?: string;
 	/** The live count, for a reader: `5 posts`, `2 of 5 posts`. */
 	count?: string;
+	/** The count as drawn, short: `05`, `2 / 5`. */
+	readout?: string;
 	/** The key that focuses the bar, shown as a small chip; none hides it. */
 	hint?: string;
 	/** The id of the listbox the combobox controls (the panel's `<id>-results`). */
@@ -59,6 +68,7 @@ const {
 	label = "search",
 	placeholder = "Search a title, a topic, a year…",
 	count,
+	readout,
 	hint,
 	controls,
 	chipsLabel = "Quick filters",
@@ -75,39 +85,44 @@ const hasControls = Astro.slots.has("controls");
 
 <div class={cx("ds-search-bar", className)} role="search" data-search-bar {...rest}>
 	<VisuallyHidden as="label" for={id}>{label}</VisuallyHidden>
-	<Mono variant="value" size={1} tone="tertiary" class="ds-search-bar__glyph" aria-hidden="true">⌕</Mono>
-	<input
-		class="ds-search-bar__input ds-mono ds-mono--size-1"
-		id={id}
-		name={name}
-		type="search"
-		role="combobox"
-		aria-autocomplete="list"
-		aria-expanded={expanded ? "true" : "false"}
-		aria-controls={controls}
-		autocomplete="off"
-		autocapitalize="off"
-		autocorrect="off"
-		spellcheck="false"
-		placeholder={placeholder}
-		value={value}
-		data-search-input
-	/>
+	<div class="ds-search-bar__row">
+		<span class="ds-search-bar__ring" aria-hidden="true"><Icon name="search" size={3} /></span>
+		<input
+			class="ds-search-bar__input ds-mono ds-mono--size-1"
+			id={id}
+			name={name}
+			type="search"
+			role="combobox"
+			aria-autocomplete="list"
+			aria-expanded={expanded ? "true" : "false"}
+			aria-controls={controls}
+			autocomplete="off"
+			autocapitalize="off"
+			autocorrect="off"
+			spellcheck="false"
+			placeholder={placeholder}
+			value={value}
+			data-search-input
+		/>
+		{readout !== undefined && (
+			<Mono variant="value" tone="secondary" class="ds-search-bar__readout" aria-hidden="true" data-search-readout>{readout}</Mono>
+		)}
+		{hint && (
+			<Chip size="sm" class="ds-search-bar__hint" aria-hidden="true">{hint}</Chip>
+		)}
+		{hasControls && (
+			<Fragment>
+				<span class="ds-search-bar__divider" aria-hidden="true" />
+				<div class="ds-search-bar__controls">
+					<slot name="controls" />
+				</div>
+			</Fragment>
+		)}
+	</div>
 	{hasChips && (
 		<nav class="ds-search-bar__chips" aria-label={chipsLabel} data-search-chips>
 			<slot name="chips" />
 		</nav>
-	)}
-	{hasControls && (
-		<Fragment>
-			<span class="ds-search-bar__divider" aria-hidden="true" />
-			<div class="ds-search-bar__controls">
-				<slot name="controls" />
-			</div>
-		</Fragment>
-	)}
-	{hint && (
-		<Chip size="sm" class="ds-search-bar__hint" aria-hidden="true">{hint}</Chip>
 	)}
 	{count !== undefined && (
 		<VisuallyHidden as="span" aria-live="polite" data-search-count>{count}</VisuallyHidden>

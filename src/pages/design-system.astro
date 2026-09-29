@@ -143,8 +143,8 @@ const cardOf = (p: QuiltPost, why?: string) => ({
 });
 // The bar's quick filters: ALL and the four categories, each a link to ?q=.
 const chipsDemo = [
-	{ label: "all", query: "", href: "/txt/" },
-	...["programming", "projects", "thoughts", "personal"].map((c) => ({ label: c, query: c, href: `/txt/?q=${c}` })),
+	{ label: "all", query: "", href: "/txt/", count: 5 },
+	...([["programming", 2], ["projects", 1], ["thoughts", 1], ["personal", 1]] as const).map(([c, n]) => ({ label: c, query: c, href: `/txt/?q=${c}`, count: n })),
 ];
 // The timeline demo: one tick per month over the posts' years, the five as marks.
 const monthNo: Record<string, string> = { jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06", jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12" };
@@ -197,7 +197,7 @@ interface QuiltDemo {
 	id: string;
 	title: string;
 	note: string;
-	search: { value?: string; count: string; expanded?: boolean };
+	search: { value?: string; count: string; readout: string; expanded?: boolean };
 	panel: { mode: "hidden" | "card" | "browse" | "results" | "none"; col: number; row: number };
 	/** Posts that stay lit; everything else scatters. Unset: nothing scatters. */
 	lit?: string[];
@@ -211,14 +211,14 @@ const quiltDemos: QuiltDemo[] = [
 		id: "rest",
 		title: "Rest — every cell lit, the panel hidden",
 		note: "Five posts — the newest the 2×2 lead — and seven fillers; data-state=\"lit\" on every cell and data-mode=\"hidden\" on the panel, which still holds its block (3 / 2 here) so nothing moves when it opens.",
-		search: { count: "5 posts" },
+		search: { count: "5 posts", readout: "05" },
 		panel: { mode: "hidden", col: 3, row: 2 },
 	},
 	{
 		id: "hover",
 		title: "Hovered — one post lit, the rest scattered, the card in the freed block",
 		note: "Pointer (or focus) on the post at 1 / 3: the block that avoids it and sits farthest away is 3 / 1, its cells go gone, every other cell rolls faint or gone with its own --scatter-delay, and the panel shows the card face.",
-		search: { count: "5 posts" },
+		search: { count: "5 posts", readout: "05" },
 		panel: { mode: "card", col: 3, row: 1 },
 		lit: ["why-i-joined-fisker"],
 		card: quiltPosts[3],
@@ -227,7 +227,7 @@ const quiltDemos: QuiltDemo[] = [
 		id: "browse",
 		title: "Browse — the bar focused and empty",
 		note: "Posts stay lit, fillers go faint, and the block farthest from the bar's left end (3 / 2) opens on the browse face: categories with counts, years, the latest post — each a real link to ?q=.",
-		search: { count: "5 posts", expanded: true },
+		search: { count: "5 posts", readout: "05", expanded: true },
 		panel: { mode: "browse", col: 3, row: 2 },
 		lit: quiltPosts.map((p) => p.slug),
 		fillersFaint: true,
@@ -236,7 +236,7 @@ const quiltDemos: QuiltDemo[] = [
 		id: "results",
 		title: "Results — two hits, the active one ringed",
 		note: "“home” matches two posts. The block hiding the fewest matches that avoids the active post (4 / 3) is 1 / 1, which covers the lead — a block over any of a spanned post's cells takes the whole of it out; the active tile carries data-active, the accent ring; the list marks the query and says why the other matched.",
-		search: { value: "home", count: "2 of 5", expanded: true },
+		search: { value: "home", count: "2 of 5 posts", readout: "2 / 5", expanded: true },
 		panel: { mode: "results", col: 1, row: 1 },
 		lit: ["no-honey-we-have-a-dashboard-at-home", "mega-desk"],
 		active: "no-honey-we-have-a-dashboard-at-home",
@@ -982,7 +982,7 @@ const faces = [
 				Caps mono in a capsule. <code>subtle</code> (the default) is the header pill,
 				<code>outline</code> the quiet link or toggle (its edge is the Chip's). As a
 				<code>button</code> or <code>a</code> it is a pill button. (The /txt index's
-				filters are the ruled bar's <code>Chip</code>s, next section.)
+				filters are the search bar's tab <code>Chip</code>s, next section.)
 			</p>
 			<Flex gap={2} wrap="wrap" alignItems="center">
 				<Pill><Icon name="check" />low risk</Pill>
@@ -1004,6 +1004,10 @@ const faces = [
 				<code>aria-current</code> on a link, <code>aria-pressed="true"</code> on a toggle
 				— and fills it with the ink, so what a reader is told and what is drawn cannot
 				fall out of step. <code>size="sm"</code> is the key hint's step.
+				<code>variant="tab"</code> is the same caps with no box — a text tab, the
+				tertiary ink at rest, selected the ink over an accent underline — and
+				<code>count</code> a small superscript figure after the label: the search
+				bar's quick filters.
 			</p>
 			<Flex gap={2} wrap="wrap" alignItems="center">
 				<Chip>projects</Chip>
@@ -1015,6 +1019,13 @@ const faces = [
 				<Chip as="button" type="button" disabled>disabled</Chip>
 				<Chip as="a" href="#">programming <Mono variant="value">2</Mono></Chip>
 				<Chip size="sm" aria-hidden="true">/</Chip>
+			</Flex>
+			<Flex gap={4} wrap="wrap" alignItems="center">
+				{chipsDemo.map((c) => (
+					<Chip variant="tab" as="a" href="#" count={c.count} aria-current={c.query === "" ? "page" : undefined}>{c.label}</Chip>
+				))}
+				<Chip variant="tab" as="button" type="button" aria-pressed="true">on</Chip>
+				<Chip variant="tab" as="button" type="button">off</Chip>
 			</Flex>
 		</section>
 
@@ -1636,13 +1647,14 @@ assertions:
 						id={`quilt-${d.id}-search`}
 						label="search"
 						count={d.search.count}
+						readout={d.search.readout}
 						value={d.search.value}
 						expanded={d.search.expanded}
 						hint="/"
 						controls={`quilt-${d.id}-panel-results`}
 					>
 						{chipsDemo.map((c) => (
-							<Chip slot="chips" as="a" href={c.href} data-chip={c.query} aria-current={(d.search.value ?? "") === c.query ? "page" : undefined}>
+							<Chip slot="chips" variant="tab" count={c.count} as="a" href={c.href} data-chip={c.query} aria-current={(d.search.value ?? "") === c.query ? "page" : undefined}>
 								{c.label}
 							</Chip>
 						))}
@@ -1740,33 +1752,36 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section" id="search-bar">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">SearchBar — the ruled bar</Heading>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">SearchBar — the open bar</Heading>
 			<p class="ds-demo__note">
-				<code>&lt;SearchBar id label placeholder count hint controls&gt;</code>: one box in
-				the strong hairline, square, no fill — the glyph, a native
+				<code>&lt;SearchBar id label placeholder count readout hint controls&gt;</code>: no
+				box. The input row — the search icon in a round outlined ring, a native
 				<code>type="search"</code> input (a combobox over the panel's results listbox,
-				in the mono), the <code>chips</code> slot (a nav of quick filters: each a
-				<code>Chip</code> link to <code>?q=</code> with <code>data-chip</code>, so it is a
-				SEARCH SHORTCUT with scripting off and the script sets the query in place and
-				marks the current one <code>aria-current</code>), a divider, the
-				<code>controls</code> slot (the stepper), and the key hint (not drawn without a
-				keyboard). The count is a live region for a reader only
-				(<code>aria-live="polite"</code>, <code>data-search-count</code>, visually
-				hidden). The box takes the accent while the input has focus — click into a bar.
-				<code>value</code> and <code>expanded</code> render a state statically. Under 1024
-				the chips take a row of their own under the input and scroll sideways.
+				in the mono) on one hairline underline that takes the accent on focus (click
+				into a bar), the <code>readout</code> (the count as drawn: <code>05</code>,
+				<code>2 / 5</code>; <code>data-search-readout</code>, aria-hidden), the key hint
+				(not drawn without a keyboard), a divider and the <code>controls</code> slot
+				(the stepper) — over the <code>chips</code> slot, a nav of quick filters: each a
+				<code>Chip variant="tab"</code> link to <code>?q=</code> with
+				<code>data-chip</code> and its <code>count</code>, so it is a SEARCH SHORTCUT
+				with scripting off and the script sets the query in place and marks the
+				current one <code>aria-current</code> (the accent underline). <code>count</code>
+				is the live region a reader hears, in full (<code>aria-live="polite"</code>,
+				<code>data-search-count</code>, visually hidden). <code>value</code> and
+				<code>expanded</code> render a state statically. Under 1024 the tabs scroll
+				sideways under a fade at the right edge; under 640 the input is 16px.
 			</p>
-			<Flex direction="column" gap={4} alignItems="stretch">
-				<SearchBar id="search-rest" count="5 posts" hint="/">
+			<Flex direction="column" gap={6} alignItems="stretch">
+				<SearchBar id="search-rest" count="5 posts" readout="05" hint="/">
 					{chipsDemo.map((c) => (
-						<Chip slot="chips" as="a" href={c.href} data-chip={c.query} aria-current={c.query === "" ? "page" : undefined}>{c.label}</Chip>
+						<Chip slot="chips" variant="tab" count={c.count} as="a" href={c.href} data-chip={c.query} aria-current={c.query === "" ? "page" : undefined}>{c.label}</Chip>
 					))}
 					<IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
 					<IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />
 				</SearchBar>
-				<SearchBar id="search-typed" value="projects" count="1 of 5 posts" hint="/" expanded>
+				<SearchBar id="search-typed" value="projects" count="1 of 5 posts" readout="1 / 5" hint="/" expanded>
 					{chipsDemo.map((c) => (
-						<Chip slot="chips" as="a" href={c.href} data-chip={c.query} aria-current={c.query === "projects" ? "page" : undefined}>{c.label}</Chip>
+						<Chip slot="chips" variant="tab" count={c.count} as="a" href={c.href} data-chip={c.query} aria-current={c.query === "projects" ? "page" : undefined}>{c.label}</Chip>
 					))}
 					<IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
 					<IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />

@@ -1,37 +1,50 @@
-/* SearchBar — the ruled bar over the quilt. One box in the strong hairline,
- * square-cornered, no fill, at the big control's height; in it the glyph,
- * the input in the mono, the chips, a divider, the stepper, the key hint.
- * The box takes the accent while the input has focus — the one accent on
- * the bar — and the caret is the accent too. */
+/* SearchBar — the open bar over the quilt: no box, no fill. The input row —
+ * the search icon in a round outlined ring, the input on one hairline
+ * underline, the readout, the key hint, a divider, the stepper — over the
+ * tabs row. The underline takes the accent while the input has focus — the
+ * one accent on the row besides the current tab's — and the caret is the
+ * accent too. */
 .ds-search-bar {
 	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var(--space-3);
-	box-sizing: border-box;
-	min-block-size: var(--space-8);
-	padding-inline: var(--space-4) var(--space-3);
-	background: none;
-	border: 1px solid var(--hairline-strong);
-	border-radius: 0;
+	flex-direction: column;
+	gap: var(--space-2);
+	min-inline-size: 0;
 	font-family: var(--font-ui);
-	transition: border-color var(--duration-swap) var(--ease-reveal);
-}
-.ds-search-bar:focus-within {
-	border-color: var(--accent);
 }
 
-.ds-search-bar__glyph,
+.ds-search-bar__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	min-inline-size: 0;
+}
+.ds-search-bar__ring,
+.ds-search-bar__readout,
 .ds-search-bar__divider,
 .ds-search-bar__controls,
 .ds-search-bar__hint {
 	flex: none;
 }
 
-/* The input, stripped: no border, fill or ring of its own (the bar's edge
-   is the focus indication), and none of WebKit's search-field chrome. In
-   the mono at the label's next step — the Mono classes on the element — so
-   a query reads as a readout; the ink and the mono tracking are its own. */
+/* The ring: the icon in a round outline at the stepper's size (IconButton
+   `sm`), not a control — the label is the input's. */
+.ds-search-bar__ring {
+	display: grid;
+	place-items: center;
+	box-sizing: border-box;
+	inline-size: var(--space-6);
+	block-size: var(--space-6);
+	border: 1px solid var(--hairline-strong);
+	border-radius: var(--border-radius-pill);
+	color: var(--text-primary);
+}
+
+/* The input, stripped of the field chrome — no box, fill or ring of its
+   own, none of WebKit's search-field chrome — and drawn on a single
+   underline in the strong hairline, the accent on focus (the focus
+   indication). In the mono at the label's next step — the Mono classes on
+   the element — so a query reads as a readout; the ink and the mono
+   tracking are its own. */
 .ds-search-bar__input {
 	flex: 1 1 auto;
 	/* Zero, then grow: an input's intrinsic width (its `size`) would
@@ -39,16 +52,23 @@
 	   track or a flex row the bar sits in past its container. */
 	inline-size: 0;
 	min-inline-size: 0;
-	align-self: stretch;
+	box-sizing: border-box;
+	min-block-size: var(--space-6);
 	margin: 0;
 	padding: 0;
 	border: 0;
+	border-block-end: 1px solid var(--hairline-strong);
+	border-radius: 0;
 	background: none;
 	outline: none;
 	appearance: none;
 	letter-spacing: var(--tracking-mono);
 	color: var(--text-primary);
 	caret-color: var(--accent);
+	transition: border-color var(--duration-swap) var(--ease-reveal);
+}
+.ds-search-bar__input:focus {
+	border-block-end-color: var(--accent);
 }
 .ds-search-bar__input::placeholder {
 	color: var(--text-tertiary);
@@ -61,14 +81,13 @@
 	display: none;
 }
 
-/* The chips: a row of them, a step apart. */
-.ds-search-bar__chips {
-	display: flex;
-	align-items: center;
-	gap: var(--space-2);
-	flex: none;
-	min-inline-size: 0;
+/* The readout: the count as drawn, in the small mono, a tabular figure
+   that does not shift as it changes. */
+.ds-search-bar__readout {
+	letter-spacing: var(--tracking-mono);
+	white-space: nowrap;
 }
+
 .ds-search-bar__divider {
 	inline-size: 1px;
 	block-size: var(--space-5);
@@ -80,6 +99,16 @@
 	gap: var(--space-2);
 }
 
+/* The tabs: a row of text tabs, a step apart, the first one's letters on
+   the row's left edge (under the ring). */
+.ds-search-bar__chips {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-1) var(--space-4);
+	min-inline-size: 0;
+}
+
 /* The key hint means nothing without a keyboard. */
 @media (hover: none) {
 	.ds-search-bar__hint {
@@ -87,30 +116,30 @@
 	}
 }
 
-/* Under 1024 — a tablet, a phone — the chips take a row of their own under
-   the input, scrolling sideways past the bar's edge rather than wrapping
-   (the scrollbar is not drawn), cut from the input's row by a hairline; the
-   stepper and the hint stay beside the input, which keeps a line's worth
-   of room for the query. */
+/* Under 1024 — a tablet, a phone — the tabs hold one line and scroll
+   sideways rather than wrap (the scrollbar is not drawn); the row fades out
+   at its right edge, so a tab cut there reads as more to come. A scroller
+   clips, and the focus ring is drawn a step outside a tab, so the row pads
+   that step on every side but the faded one and gives it back in the
+   margin: the tabs stay where they were and the ring is whole. */
 @media (max-width: 1023px) {
-	.ds-search-bar {
-		gap: var(--space-2) var(--space-3);
-		padding-inline: var(--space-3) var(--space-2);
-	}
 	.ds-search-bar__chips {
-		order: 1;
-		flex: 1 0 100%;
-		/* Out to the bar's edges, so the row scrolls under its frame. */
-		margin-inline: calc(-1 * var(--space-3)) calc(-1 * var(--space-2));
-		padding: var(--space-2) var(--space-3);
-		border-block-start: 1px solid var(--hairline);
+		flex-wrap: nowrap;
 		overflow-x: auto;
 		scrollbar-width: none;
+		margin: calc(-1 * var(--space-1)) 0 calc(-1 * var(--space-1)) calc(-1 * var(--space-1));
+		padding: var(--space-1) var(--space-6) var(--space-1) var(--space-1);
+		mask-image: linear-gradient(to left, transparent, #000 var(--space-6));
 	}
 	.ds-search-bar__chips::-webkit-scrollbar {
 		display: none;
 	}
+}
+
+/* Under 640 the input is set at 16px: iOS zooms the page into any field
+   set smaller when it takes focus. */
+@media (max-width: 639px) {
 	.ds-search-bar__input {
-		min-block-size: var(--space-7);
+		font-size: var(--font-size-3);
 	}
 }

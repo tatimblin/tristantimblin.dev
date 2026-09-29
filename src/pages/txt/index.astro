@@ -1,8 +1,9 @@
 ---
 // /txt — the blog's front page as an INSTRUMENT: three rows straight on the
-// page, in the site container. The BAR is the layout's: one ruled search
-// bar — the search, the quick-filter chips (each a query on the quilt), the
-// − / + that step through the matching posts. Then the BOARD, right under
+// page, in the site container. The BAR is the layout's: one open search
+// bar — the search with its count drawn at the right, the quick-filter
+// tabs with their counts (each a query on the quilt), the − / + that step
+// through the matching posts. Then the BOARD, right under
 // it: the quilt, the spec sheet's grid — every post an entry, a numbered
 // caps label over a dotted rule with its art bare under it, the newest post
 // the 2×2 LEAD with its excerpt, the leftover cells fillers tagged `F_NN` —
@@ -108,20 +109,27 @@ const fillers = Array.from({ length: fillerCount }, (_, k) => {
 	};
 });
 
+const catCounts = new Map<string, number>();
+for (const p of index) if (p.category) catCounts.set(p.category, (catCounts.get(p.category) ?? 0) + 1);
+
 // The bar's chips: a category is a query, so each is a real link to ?q=<id>
 // (and ALL to /txt/) — a search shortcut; the script upgrades them and keeps
-// aria-current in step with the query. The page is static, so at build ALL
-// is current; the script corrects it from ?q= on load.
+// aria-current in step with the query. Each carries its post count (ALL the
+// total). The page is static, so at build ALL is current; the script
+// corrects it from ?q= on load.
 const chips = [
-	{ label: "all", href: TXT_HREF, query: "", active: true },
-	...categoryIds.map((id) => ({ label: categories[id].label.toLowerCase(), href: queryHref(id), query: id })),
+	{ label: "all", href: TXT_HREF, query: "", count: index.length, active: true },
+	...categoryIds.map((id) => ({
+		label: categories[id].label.toLowerCase(),
+		href: queryHref(id),
+		query: id,
+		count: catCounts.get(id) ?? 0,
+	})),
 ];
 
 // The panel's build-time faces. The card is the latest post (the script
 // refills it); browse and nothing are real links to ?q=, so they work with
 // scripting off.
-const catCounts = new Map<string, number>();
-for (const p of index) if (p.category) catCounts.set(p.category, (catCounts.get(p.category) ?? 0) + 1);
 const browse = {
 	categories: [...catCounts].map(([id, count]) => ({
 		label: categories[id as keyof typeof categories].label.toLowerCase(),
@@ -186,7 +194,7 @@ const timeline = {
 	title={`${BLOG_TITLE} — Tristan Timblin`}
 	description={BLOG_DESCRIPTION}
 	heading={BLOG_TITLE}
-	bar={{ chips, count: `${index.length} posts` }}
+	bar={{ chips, count: `${index.length} posts`, readout: numeral(index.length) }}
 >
 	<div class="blog__row">
 		<Quilt cols={COLS} rows={lg.rows} colsMd={COLS_MD} rowsMd={md.rows} aria-label="Posts">

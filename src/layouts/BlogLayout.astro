@@ -10,11 +10,13 @@
 //             homepage's rows and the header are, so the rows' edges fall on
 //             the header's brand and nav). Its rows sit straight on the page,
 //             spaced rather than cut: this layout's BAR row — the h1 visually
-//             hidden, and the one ruled search bar spanning the container:
-//             the search, the quick-filter chips (the categories from the
-//             enum, each a real link to `?q=<category>`, ALL to /txt — a chip
-//             is a search shortcut), the − / + stepper and the `/` hint —
-//             then what the page slots in (the board, the timeline). Nothing
+//             hidden, and the open search bar spanning the container: the
+//             ringed icon, the underlined input, the drawn count, the `/`
+//             hint and the − / + stepper on one row, then the quick-filter
+//             tabs (the categories from the enum, each a real link to
+//             `?q=<category>` with its post count, ALL to /txt — a chip is a
+//             search shortcut) — then what the page slots in (the board,
+//             the timeline). Nothing
 //             carries a surface. The rows stack at their own height, a step
 //             apart, and the site footer (Layout's) follows.
 //
@@ -38,14 +40,18 @@ interface ChipLink {
 	href: string;
 	/** The query the chip stands for; "" is all. The script keys on it. */
 	query: string;
+	/** The posts it finds, drawn small after the label (ALL: every post). */
+	count?: number;
 	active?: boolean;
 }
 
 interface Bar {
 	/** The quick filters: ALL and the categories. */
 	chips: ChipLink[];
-	/** The live count's first reading (`5 posts`). */
+	/** The live count's first reading, for a reader (`5 posts`). */
 	count: string;
+	/** The drawn count's first reading (`05`). */
+	readout: string;
 }
 
 interface Props {
@@ -84,6 +90,7 @@ const hasLede = Astro.slots.has("lede");
 									label="Search"
 									placeholder="Search a title, a topic, a year…"
 									count={bar.count}
+									readout={bar.readout}
 									hint="/"
 									controls="quilt-panel-results"
 									chipsLabel="Quick filters"
@@ -91,6 +98,8 @@ const hasLede = Astro.slots.has("lede");
 									{bar.chips.map((c) => (
 										<Chip
 											slot="chips"
+											variant="tab"
+											count={c.count}
 											as="a"
 											href={c.href}
 											data-chip={c.query}

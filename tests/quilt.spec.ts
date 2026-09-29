@@ -32,7 +32,7 @@ import { test, expect, type Page } from "@playwright/test";
  * And the INSTRUMENT around the board (the "instrument —" describes):
  *
  *   chips       search shortcuts in the bar: real links to ?q=<category>,
- *               set in place; aria-current (the filled chip) on ALL at
+ *               set in place; aria-current (the accent-underlined tab) on ALL at
  *               rest, on the category's chip for its query, on none for any
  *               other query; ?q= on load
  *   stepper     − older / + newer through the matching posts, newest
@@ -43,7 +43,8 @@ import { test, expect, type Page } from "@playwright/test";
  *               filter, a click pins; docked to the window's bottom edge while
  *               the quilt scrolls under it, at rest after it before the footer
  *   card        the ruled card's fields and its stat strip; one size at 1440 and 1920
- *   count       the live region a reader hears; no number on screen
+ *   count       the live region a reader hears, in full; the readout drawn
+ *               beside the input, short (`05`, `2 / 5`)
  *   layouts     the rows, nothing filled, the header as the homepage's; the
  *               bar at tablet and phone; no horizontal overflow
  *
@@ -110,6 +111,10 @@ const COUNT = "[data-search-count]";
 /** The live count a reader hears: `2 of 5 posts`. */
 const count = (page: Page) => page.locator(COUNT).evaluate((el) => el.textContent!.trim());
 const expectCount = (page: Page, text: string) => expect.poll(() => count(page)).toBe(text);
+const READOUT = "[data-search-readout]";
+/** The count as drawn, beside the input: `05`, `2 / 5`. */
+const expectReadout = (page: Page, text: string) =>
+	expect.poll(() => page.locator(READOUT).evaluate((el) => el.textContent!.trim())).toBe(text);
 const BAR = "[data-search-bar]";
 const chip = (q: string) => `[data-search-chips] [data-chip="${q}"]`;
 /** The active outline: the art box's ::after box-shadow, or null when it is transparent. */
@@ -527,7 +532,7 @@ test.describe("quilt — rest", () => {
 	});
 
 	for (const theme of ["dark", "light"] as const) {
-		test(`nothing is filled but the current chip: the rows, the bar and the grid are the page (${theme})`, async ({ page }) => {
+		test(`nothing is filled: the rows, the open bar, its tabs and the grid are the page (${theme})`, async ({ page }) => {
 			await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
 			await page.goto("/txt/");
 			const m = await page.evaluate(() => {
@@ -550,32 +555,57 @@ test.describe("quilt — rest", () => {
 				const page = bg(probe);
 				probe.remove();
 				const dock = { bg: bg(document.querySelector(".blog__timeline")!), page };
-				const chips = [...document.querySelectorAll<HTMLElement>("[data-search-chips] [data-chip]")].map((c) => ({
-					q: c.dataset.chip,
-					current: c.hasAttribute("aria-current"),
-					filled: !clear(bg(c)),
-					radius: getComputedStyle(c).borderTopLeftRadius,
-					border: getComputedStyle(c).borderTopWidth,
-				}));
+				const accentProbe = document.createElement("div");
+				accentProbe.style.color = "var(--accent)";
+				document.body.append(accentProbe);
+				const accent = getComputedStyle(accentProbe).color;
+				accentProbe.remove();
+				const chips = [...document.querySelectorAll<HTMLElement>("[data-search-chips] [data-chip]")].map((c) => {
+					const cs = getComputedStyle(c);
+					return {
+						q: c.dataset.chip,
+						current: c.hasAttribute("aria-current"),
+						filled: !clear(bg(c)),
+						top: cs.borderTopWidth,
+						side: cs.borderLeftWidth,
+						under: cs.borderBottomWidth,
+						underColor: cs.borderBottomColor,
+						count: c.querySelector("sup")?.textContent,
+					};
+				});
+				const input = getComputedStyle(document.querySelector("[data-search-input]")!);
+				const ring = getComputedStyle(document.querySelector(".ds-search-bar__ring")!);
 				return {
 					bare,
 					dock,
 					chips,
-					bar: { border: bs.borderTopWidth, radius: bs.borderTopLeftRadius, style: bs.borderTopStyle },
+					accent,
+					bar: { border: bs.borderTopWidth, bottom: bs.borderBottomWidth },
+					input: { top: input.borderTopWidth, under: input.borderBottomWidth, style: input.borderBottomStyle },
+					ring: { border: ring.borderTopWidth, radius: ring.borderTopLeftRadius, width: ring.width, clear: clear(ring.backgroundColor) },
 				};
 			});
 			for (const b of m.bare) expect(b.clear, b.cls).toBe(true);
 			expect(m.dock.bg).toBe(m.dock.page);
-			// The bar: one hairline box, square.
-			expect(m.bar.border).toBe("1px");
-			expect(m.bar.style).toBe("solid");
-			expect(m.bar.radius).toBe("0px");
-			// The chips: square hairline boxes; ALL alone is filled, being current.
+			// The bar: no box. The input sits on a single underline; the icon
+			// in an outlined ring, unfilled.
+			expect(m.bar.border).toBe("0px");
+			expect(m.bar.bottom).toBe("0px");
+			expect(m.input.top).toBe("0px");
+			expect(m.input.under).toBe("1px");
+			expect(m.input.style).toBe("solid");
+			expect(m.ring.border).toBe("1px");
+			expect(m.ring.clear).toBe(true);
+			expect(parseFloat(m.ring.radius)).toBeGreaterThanOrEqual(parseFloat(m.ring.width) / 2);
+			// The chips: text tabs, no box and no fill, each with its count
+			// (ALL the total); ALL alone, being current, underlined in the accent.
 			expect(m.chips.map((c) => c.q)).toEqual(["", "programming", "projects", "thoughts", "personal"]);
+			expect(m.chips.map((c) => c.count)).toEqual(["5", "2", "1", "1", "1"]);
 			for (const c of m.chips) {
-				expect(c.radius).toBe("0px");
-				expect(c.border).toBe("1px");
-				expect(c.filled, `chip ${c.q}`).toBe(c.current);
+				expect(c.filled, `chip ${c.q}`).toBe(false);
+				expect(c.top, `chip ${c.q}`).toBe("0px");
+				expect(c.side, `chip ${c.q}`).toBe("0px");
+				expect(c.under === "1px" && c.underColor === m.accent, `chip ${c.q} underline`).toBe(c.current);
 			}
 			expect(m.chips.filter((c) => c.current).map((c) => c.q)).toEqual([""]);
 		});
@@ -626,9 +656,13 @@ test.describe("quilt — rest", () => {
 		await expect(bar.getByRole("navigation", { name: "Quick filters" })).toHaveCount(1);
 		await expect(bar.getByRole("button", { name: "Previous post" })).toBeVisible();
 		await expect(bar.getByRole("button", { name: "Next post" })).toBeVisible();
-		// No number is drawn: the count is a live region for a reader.
+		// The count twice: in full, a live region for a reader (visually
+		// hidden), and short, drawn beside the input and hidden from a reader.
 		await expect(bar.locator(COUNT)).toHaveClass(/ds-visually-hidden/);
 		expect((await bar.locator(COUNT).boundingBox())!.width).toBeLessThanOrEqual(1);
+		await expect(bar.locator(READOUT)).toBeVisible();
+		await expect(bar.locator(READOUT)).toHaveText("05");
+		await expect(bar.locator(READOUT)).toHaveAttribute("aria-hidden", "true");
 		await expect(page.locator("[data-instrument]")).toHaveCount(1);
 		expect(await main.locator("[data-instrument]").count()).toBe(1);
 		// No tab row, no count cell, no control panels.
@@ -793,9 +827,9 @@ test.describe("quilt — hover and focus", () => {
 		page,
 	}) => {
 		await page.goto("/txt/");
-		// The board follows the bar in the tab order: from its last control,
-		// Tab lands on the first tile.
-		await newer(page).focus();
+		// The board follows the bar in the tab order: from its last control
+		// (the last tab, under the input row), Tab lands on the first tile.
+		await page.locator(chip("personal")).focus();
 		await page.keyboard.press("Tab");
 		const link = page.locator(`${post("005")} a`);
 		await expect(link).toBeFocused();
@@ -845,13 +879,16 @@ test.describe("quilt — search", () => {
 	}) => {
 		await page.goto("/txt/");
 		const before = await page.evaluate(() => history.length);
+		await expectReadout(page, "05");
 		await page.locator(SEARCH).fill("home");
 		await expectCount(page, "2 of 5 posts");
+		await expectReadout(page, "2 / 5");
 		await expect(page).toHaveURL(/\/txt\/?\?q=home$/);
 		expect(await page.evaluate(() => history.length)).toBe(before);
 
 		await page.locator(SEARCH).fill("");
 		await expectCount(page, "5 posts");
+		await expectReadout(page, "05");
 		await expect(page).toHaveURL(/\/txt\/?$/);
 	});
 
@@ -1222,7 +1259,7 @@ test.describe("instrument — the chips", () => {
 		await expect(page.locator("[data-search-chips] [aria-current]")).toHaveCount(1);
 
 		// A chip writes its category into the search, in place: no navigation,
-		// ?q= through replaceState, and it is the one chip filled.
+		// ?q= through replaceState, and it is the one chip underlined.
 		const before = await page.evaluate(() => history.length);
 		await page.locator(chip("programming")).click();
 		await expect(page.locator(SEARCH)).toHaveValue("programming");
@@ -1230,12 +1267,19 @@ test.describe("instrument — the chips", () => {
 		expect(await page.evaluate(() => history.length)).toBe(before);
 		await expect(page.locator(chip("programming"))).toHaveAttribute("aria-current", "page");
 		await expect(page.locator(chip(""))).not.toHaveAttribute("aria-current");
-		// The fill follows (it fades over --duration-swap, so poll).
+		// The accent underline follows (it fades over --duration-quick, so poll).
 		await expect
 			.poll(() =>
-				chips.evaluateAll((as) =>
-					as.filter((a) => getComputedStyle(a).backgroundColor !== "rgba(0, 0, 0, 0)").map((a) => (a as HTMLElement).dataset.chip),
-				),
+				chips.evaluateAll((as) => {
+					const probe = document.createElement("div");
+					probe.style.color = "var(--accent)";
+					document.body.append(probe);
+					const accent = getComputedStyle(probe).color;
+					probe.remove();
+					return as
+						.filter((a) => getComputedStyle(a).borderBottomColor === accent)
+						.map((a) => (a as HTMLElement).dataset.chip);
+				}),
 			)
 			.toEqual(["programming"]);
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "results");
@@ -1664,6 +1708,7 @@ test.describe("instrument — the count", () => {
 		await expectCount(page, "0 of 5 posts");
 		await page.locator(SEARCH).fill("");
 		await expectCount(page, "5 posts");
+		await expectReadout(page, "05");
 	});
 });
 
@@ -1675,6 +1720,8 @@ test.describe("instrument — layouts", () => {
 			return {
 				bar: box("[data-search-bar]"),
 				input: box("[data-search-input]"),
+				ring: box(".ds-search-bar__ring"),
+				readout: box("[data-search-readout]"),
 				chips: box("[data-search-chips]"),
 				older: box('[data-step="older"]'),
 				newer: box('[data-step="newer"]'),
@@ -1685,15 +1732,21 @@ test.describe("instrument — layouts", () => {
 			};
 		});
 
-	test("desktop (1440): one line — the input, the chips, the stepper and the hint side by side", async ({ page }) => {
+	test("desktop (1440): the input row — the ring, the input, the readout, the hint, the stepper — then the tabs row", async ({ page }) => {
 		await page.goto("/txt/");
 		const b = await barBoxes(page);
 		const mid = (r: DOMRect) => r.y + r.height / 2;
-		expect(Math.abs(mid(b.chips) - mid(b.input))).toBeLessThanOrEqual(2);
-		expect(Math.abs(mid(b.older) - mid(b.input))).toBeLessThanOrEqual(2);
-		expect(b.chips.x).toBeGreaterThanOrEqual(b.input.x + b.input.width - 1);
-		expect(b.older.x).toBeGreaterThanOrEqual(b.chips.x + b.chips.width - 1);
+		for (const r of [b.ring, b.readout, b.older]) expect(Math.abs(mid(r) - mid(b.input))).toBeLessThanOrEqual(2);
+		expect(b.input.x).toBeGreaterThanOrEqual(b.ring.x + b.ring.width - 1);
+		expect(b.readout.x).toBeGreaterThanOrEqual(b.input.x + b.input.width - 1);
+		expect(b.older.x).toBeGreaterThanOrEqual(b.readout.x + b.readout.width - 1);
 		expect(b.newer.x).toBeGreaterThan(b.older.x);
+		// The tabs on their own row under the input, from the ring's edge, on one line.
+		expect(b.chips.y).toBeGreaterThanOrEqual(b.input.y + b.input.height - 1);
+		expect(b.chips.x).toBeCloseTo(b.ring.x, 0);
+		expect(b.chips.height).toBeLessThan(b.input.height);
+		// The ring is the stepper's size.
+		expect(b.ring.width).toBeCloseTo(b.older.width, 0);
 		// The input keeps most of the bar.
 		expect(b.input.width).toBeGreaterThan(b.bar.width / 3);
 		await expect(page.locator(`${BAR} .ds-search-bar__hint`)).toBeVisible();
@@ -1719,7 +1772,9 @@ test.describe("instrument — layouts", () => {
 		expect(texts.filter((t) => /^F_\d{2}$/.test(t))).toHaveLength(4);
 		const b = await barBoxes(page);
 		expect(b.chips.y).toBeGreaterThanOrEqual(b.input.y + b.input.height - 1);
-		expect(Math.abs(b.chips.width - b.bar.width)).toBeLessThanOrEqual(2);
+		// Out to the bar's right edge (and a focus ring's step past its left).
+		expect(b.chips.x + b.chips.width).toBeCloseTo(b.bar.x + b.bar.width, 0);
+		expect(b.chips.width).toBeGreaterThanOrEqual(b.bar.width - 1);
 		expect(Math.abs(b.older.y + b.older.height / 2 - (b.input.y + b.input.height / 2))).toBeLessThanOrEqual(2);
 		expect(b.input.width).toBeGreaterThan(b.bar.width / 2);
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
@@ -1738,6 +1793,15 @@ test.describe("instrument — layouts", () => {
 		expect(b.chips.y).toBeGreaterThanOrEqual(b.input.y + b.input.height - 1);
 		expect(b.chipsScroll.overflowX).toBe("auto");
 		expect(b.chipsScroll.scrollable).toBe(true);
+		// The row fades out at its right edge: more tabs past it.
+		expect(
+			await page.locator("[data-search-chips]").evaluate((n) => {
+				const cs = getComputedStyle(n);
+				return cs.maskImage || cs.webkitMaskImage;
+			}),
+		).toContain("linear-gradient");
+		// The input is set at 16px so iOS does not zoom the page on focus.
+		expect(await page.locator(SEARCH).evaluate((i) => getComputedStyle(i).fontSize)).toBe("16px");
 		expect(Math.abs(b.older.y + b.older.height / 2 - (b.input.y + b.input.height / 2))).toBeLessThanOrEqual(2);
 		expect(b.older.x).toBeGreaterThanOrEqual(b.input.x + b.input.width - 1);
 		// A tap-list needs its titles: the label row, the number and the

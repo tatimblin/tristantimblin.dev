@@ -5,7 +5,7 @@ import { test, expect, type Page } from "@playwright/test";
  *
  * The index is the INSTRUMENT — one screen whose board is the quilt, a grid
  * of art tiles, one link per post, newest first in DOM order, with fillers
- * that are aria-hidden and carry no link, under the ruled search bar with
+ * that are aria-hidden and carry no link, under the open search bar with
  * its category chips and stepper, and over the timeline (the interaction
  * contract — hover, search, keys, the stepper, the ruler — is pinned in its
  * own spec).

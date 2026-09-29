@@ -158,7 +158,7 @@ noted):
 | `--lit` | a step/tile/key that is ON — the accent on dark, the **ink** on light. Use for binary on/off; use `--accent` for things that must be orange in both themes. |
 | `--wash-1/2/3` | the ink at 7 / 16 / 30 % — unlit tile & subtle pill fill; two stronger steps. |
 | `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
-| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour; the STRONG edge (the ink at `--wash-3`) for the one outline on a ruled screen that must read over the plain hairlines inside it — the search bar's box, the card's border, a chip under the pointer; the divider gradient that fades at both ends. The package reads `--hairline`, never `--border-color`. |
+| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour; the STRONG edge (the ink at `--wash-3`) for the one outline on a ruled screen that must read over the plain hairlines inside it — the search bar's underline and ring, the card's border, a chip under the pointer; the divider gradient that fades at both ends. The package reads `--hairline`, never `--border-color`. |
 | `--bar-width` (`:root`, 2px) | every solid edge bar: the pull quote's, a post's mark on the timeline, the active result's. |
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px) — `:root` | the steps below the generated scales. |
 | `--ticks-image`, `--ticks-image-ink` | the tick ruler as a gradient (hairlines on `--tick-pitch`) in currentColor, and in the ink — for a box that should read as a ruler and cannot take the classes (the player's progress bar). TickRuler draws its own on the same pitch. |
@@ -245,7 +245,10 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
 - `Chip` — the BOXED chip of the ruled screen: caps in a square hairline box,
   no fill. `as="a"|"button"` makes it a chip button; `size="sm"` is the key
   hint's step. SELECTED is read off the chip's own ARIA — `aria-current` or
-  `aria-pressed="true"` — and fills it with the ink.
+  `aria-pressed="true"` — and fills it with the ink. `variant="tab"` is the
+  same caps with NO box — a text tab, the tertiary ink at rest, selected the
+  ink over a 1px accent underline — and `count` a small superscript figure
+  after the label (the search bar's quick filters).
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
   = pill button; `start-icon`/`end-icon` slots. `IconButton` — `secondary`
   (default, a wash in a hairline) / `outline` (the hairline alone),
@@ -428,7 +431,7 @@ gap tokens and no lines — each a caps LABEL over a dotted rule (the post's
 number in the accent, its title) with its art BARE under it (no plate, edge
 or corner; the crop is the only edge) — one per post, the newest the 2×2
 LEAD at the top-left with its excerpt, the leftover cells fillers tagged
-`F_NN`, under one ruled search bar. Hovering or focusing a post scatters
+`F_NN`, under the open search bar. Hovering or focusing a post scatters
 the others and the ruled card takes a freed 3×2 block; typing filters the
 same grid; a chip in the bar is a search shortcut. The package holds the
 **markup, the geometry and the state contract** (`styles/quilt.css`,
@@ -439,9 +442,9 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
 
 ```astro
 <SearchBar id="quilt-search" label="Search" placeholder="Search a title, a topic, a year…"
-           count="5 posts" hint="/" controls="quilt-panel-results">
-  <Chip slot="chips" as="a" href="/txt" data-chip="" aria-current="page">all</Chip>
-  <Chip slot="chips" as="a" href="/txt?q=projects" data-chip="projects">projects</Chip>
+           count="5 posts" readout="05" hint="/" controls="quilt-panel-results">
+  <Chip slot="chips" variant="tab" count={5} as="a" href="/txt" data-chip="" aria-current="page">all</Chip>
+  <Chip slot="chips" variant="tab" count={1} as="a" href="/txt?q=projects" data-chip="projects">projects</Chip>
   <IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
   <IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />
 </SearchBar>
@@ -501,17 +504,22 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
   `data-results="label | list"`, `data-none="query | suggestions"`, and a
   `<template data-result-template>`. `flow` renders it in flow (the phone
   rendering) anywhere.
-- `SearchBar` — the RULED BAR: one box in the strong hairline, square, no
-  fill; `role="search"`; the label visually hidden and the `⌕` glyph (a Mono)
-  in its place; the input `type="search" role="combobox" aria-autocomplete="list"
-  aria-controls={controls}` in the label voice (`name` defaults to `q`); the
-  `chips` slot, a `<nav>` named `chipsLabel` (hook `data-search-chips`) of the
-  caller's `Chip` links; a divider and the `controls` slot (the stepper);
-  `hint` as a small `Chip`, not drawn without a keyboard; the `count` a
-  visually hidden live region (`aria-live="polite"`, `data-search-count`).
-  `:focus-within` turns the box to the accent. `value` and `expanded` render a
-  state statically. Under 1024 the chips take a row of their own under the
-  input and scroll sideways.
+- `SearchBar` — the OPEN BAR: no box, no fill; `role="search"`; the label
+  visually hidden and the search `Icon` in a round outlined RING (the
+  stepper's size, `--hairline-strong`, not a control) in its place; the input
+  `type="search" role="combobox" aria-autocomplete="list"
+  aria-controls={controls}` in the label voice (`name` defaults to `q`) on
+  one `--hairline-strong` UNDERLINE that takes the accent on focus, 16px
+  under 640 (iOS zooms a smaller field on focus); the `readout` — the count
+  as DRAWN, `05` / `2 / 5`, a small value `Mono` at the row's right
+  (`data-search-readout`, aria-hidden); `hint` as a small `Chip`, not drawn
+  without a keyboard; a divider and the `controls` slot (the stepper). Under
+  that row the `chips` slot, a `<nav>` named `chipsLabel` (hook
+  `data-search-chips`) of the caller's `Chip variant="tab"` links, each with
+  its `count`; under 1024 it holds one line, scrolls sideways (no
+  scrollbar) and fades at its right edge. `count` is the live region a
+  reader hears in full (`aria-live="polite"`, `data-search-count`, visually
+  hidden). `value` and `expanded` render a state statically.
 
 **The state contract** — what the script sets, and all it sets:
 
@@ -525,6 +533,8 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
 | the panel | `--panel-col`, `--panel-row` | the block's top-left cell, 1-based; the block is `--panel-cols` × `--panel-rows` (3 × 2) |
 | a result row | `aria-selected="true"` | the active row (accent bar + `--wash-1`); mirror it as `aria-activedescendant` on the input |
 | the input | `aria-expanded`, `aria-activedescendant` | whether the panel shows; the active option's id |
+| the count | `data-search-count` text | the live region, in full: `5 posts`, `2 of 5 posts` |
+| the readout | `data-search-readout` text | the count as drawn: `05` at rest, `2 / 5` while a query filters |
 
 Transitions run on `--duration-settle` (the scatter) and `--duration-swap`
 (faces), both `0s` under reduced motion. The panel is an **absolutely
@@ -532,7 +542,7 @@ positioned grid item**, a size query container, and the card fits its block
 (the container queries in `quilt-panel.css`) rather than clip.
 
 **Geometry.** On `/txt` the quilt is the board row of the instrument
-(`BlogLayout` with `bar`): the ruled bar, the board and the timeline
+(`BlogLayout` with `bar`): the search bar, the board and the timeline
 straight on the page under the site header, the rows stacked `--space-3`
 apart. The timeline is DOCKED: `position: sticky` to the window's bottom
 edge on the page colour (a hairline on its top edge only while it is stuck,

@@ -63,7 +63,7 @@
    container), then <main> across the full page, holding three rows straight
    on the page — the bar
    (the layout's), the board and the timeline (the page's). Nothing carries a
-   surface: the bar is one hairline box, the quilt is art on the page, the
+   surface: the bar is an underline and a row of tabs, the quilt is art on the page, the
    card sits on the page — so the rows are set apart by space, not cut by a
    gutter.
 
@@ -157,8 +157,7 @@
 	.blog__main--wide .blog__header {
 		margin-block-end: var(--space-6);
 	}
-	/* Phone: the bar wraps its chips onto their own row (the package's
-	   rule); the timeline is its compact rendering, docked all the same on
+	/* Phone: the timeline is its compact rendering, docked all the same on
 	   a tighter pad. */
 	.blog__timeline {
 		padding-block: var(--space-3);

@@ -55,3 +55,40 @@
 	--chip-border: var(--hairline-strong);
 	--chip-color: var(--text-primary);
 }
+
+/* variant: tab — the caps voice with no box: a text tab. The tertiary ink at
+   rest, the ink under the pointer; selected is the ink over a 1px ACCENT
+   underline, where the box fills. The underline is the box's bottom edge,
+   so a row of tabs holds one height whichever is current. */
+.ds-chip--variant-tab {
+	--chip-border: transparent;
+	--chip-color: var(--text-tertiary);
+	min-block-size: 0;
+	padding: var(--space-1) 0 var(--space-2);
+	border-width: 0 0 1px;
+}
+.ds-chip--variant-tab[aria-current],
+.ds-chip--variant-tab[aria-pressed="true"] {
+	--chip-background: transparent;
+	--chip-color: var(--text-primary);
+	--chip-border: var(--accent);
+}
+:is(button, a).ds-chip--variant-tab:not([aria-current], [aria-pressed="true"]):hover:not(:disabled),
+:is(button, a).ds-chip--variant-tab:not([aria-current], [aria-pressed="true"]):focus-visible {
+	--chip-border: transparent;
+	--chip-color: var(--text-primary);
+}
+
+/* The count: a small figure at the top of the caps (a flex item, so
+   align-self raises it where vertical-align would not), in the tertiary ink
+   whichever state the tab is in, half the chip's gap from the label. The
+   label step is the smallest on the scale, so the figure is that step
+   scaled down. */
+.ds-chip__count {
+	align-self: flex-start;
+	margin-inline-start: calc(var(--space-1) / -2);
+	font-size: 0.75em;
+	line-height: 1;
+	letter-spacing: 0;
+	color: var(--text-tertiary);
+}
