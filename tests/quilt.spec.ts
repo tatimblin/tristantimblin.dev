@@ -171,17 +171,24 @@ test.describe("quilt — rest", () => {
 		await expectCount(page, "5 posts");
 	});
 
-	test("fillers are faint and greyscale at rest; the posts are at full strength", async ({
+	test("fillers' art is faint and greyscale at rest; the posts are at full strength", async ({
 		page,
 	}) => {
 		await page.goto("/txt");
+		// The state is painted on the cell's contents (its art), not the cell.
 		const look = (sel: string) =>
 			page.locator(sel).evaluateAll((els) =>
 				els
 					.filter((e) => e.checkVisibility())
 					.map((e) => {
-						const s = getComputedStyle(e);
-						return { state: (e as HTMLElement).dataset.state, opacity: Number(s.opacity), filter: s.filter };
+						const s = getComputedStyle(e.firstElementChild!);
+						const cell = getComputedStyle(e);
+						return {
+							state: (e as HTMLElement).dataset.state,
+							opacity: Number(s.opacity),
+							filter: s.filter,
+							cell: { opacity: Number(cell.opacity), filter: cell.filter },
+						};
 					}),
 			);
 		const faint = await page
@@ -202,6 +209,8 @@ test.describe("quilt — rest", () => {
 			expect(f.state).toBe("lit");
 			expect(f.opacity).toBeCloseTo(faint, 2);
 			expect(f.filter).toBe("grayscale(1)");
+			// The cell itself — the ruling — is never faded.
+			expect(f.cell).toEqual({ opacity: 1, filter: "none" });
 		}
 		for (const p of await look('[data-cell="post"]')) {
 			expect(p.opacity).toBe(1);
@@ -254,6 +263,37 @@ test.describe("quilt — rest", () => {
 		}
 	});
 
+	test("the ruling is constant: a filler's and a gone cell's lines are a lit post's", async ({ page }) => {
+		await page.goto("/txt");
+		const ruling = (sel: string) =>
+			page.locator(sel).first().evaluate((el) => {
+				const cs = getComputedStyle(el);
+				return {
+					right: cs.borderRightColor,
+					bottom: cs.borderBottomColor,
+					width: cs.borderRightWidth,
+					opacity: cs.opacity,
+					filter: cs.filter,
+				};
+			});
+		const lit = await ruling('[data-cell="post"][data-state="lit"]');
+		expect(lit.width).toBe("1px");
+		expect(lit.opacity).toBe("1");
+		// At rest a filler's art is faint, its lines are not.
+		expect(await ruling('[data-cell="filler"]:not([hidden])')).toEqual(lit);
+		// Scattered: a gone cell's art vanishes; its lines stay, and settle
+		// at the same strength (nothing on the cell transitions).
+		await page.locator(`${post("003")} a`).hover();
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
+		const gone = '[data-cell][data-state="gone"]';
+		expect(await page.locator(gone).count()).toBeGreaterThan(0);
+		await expect
+			.poll(() => page.locator(gone).first().evaluate((el) => getComputedStyle(el.firstElementChild!).opacity))
+			.toBe("0");
+		expect(await ruling(gone)).toEqual(lit);
+		expect(await ruling('[data-cell][data-state="faint"]')).toEqual(lit);
+	});
+
 	test("one instrument: three rows on the page in the site container, under the site header, on its brand and nav", async ({
 		page,
 	}) => {
@@ -270,7 +310,7 @@ test.describe("quilt — rest", () => {
 			return {
 				container,
 				vw: document.documentElement.clientWidth,
-				vh: window.innerHeight,
+				space8: parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--space-8")),
 				scroll: document.documentElement.scrollWidth,
 				frame: frame.getBoundingClientRect().toJSON(),
 				rows: [...document.querySelectorAll("[data-instrument] > .blog__row")].map((r) =>
@@ -304,8 +344,13 @@ test.describe("quilt — rest", () => {
 		for (let i = 1; i < m.rows.length; i++) {
 			expect(m.rows[i].top - m.rows[i - 1].bottom, `row ${i}`).toBeGreaterThanOrEqual(16);
 		}
-		// The board takes the spare height: the timeline rests one gutter off the floor.
-		expect(m.rows[2].bottom).toBeCloseTo(m.vh - m.container.pad, 0);
+		// No dead space: the rows stack a step apart — the quilt within
+		// --space-8 of the bar, the timeline within --space-8 of the quilt —
+		// rather than filling the viewport and centring the board.
+		for (let i = 1; i < m.rows.length; i++) {
+			expect(m.rows[i].top - m.rows[i - 1].bottom, `row ${i}`).toBeLessThanOrEqual(m.space8 + 1);
+		}
+		expect(m.quilt.top - m.bar.bottom).toBeLessThanOrEqual(m.space8 + 1);
 		// The bar is the first row, spanning the container; the quilt is the
 		// second, spanning it edge to edge.
 		expect(m.bar.left).toBeCloseTo(m.frame.left, 0);
@@ -440,7 +485,7 @@ test.describe("quilt — hover and focus", () => {
 		const computedDelay = await page
 			.locator('[data-cell][data-state="gone"]')
 			.first()
-			.evaluate((el) => getComputedStyle(el).transitionDelay);
+			.evaluate((el) => getComputedStyle(el.firstElementChild!).transitionDelay);
 		expect(computedDelay.split(",").some((d) => parseFloat(d) > 0)).toBe(true);
 
 		// The block dodges the hovered tile.
@@ -822,7 +867,8 @@ test.describe("quilt — reduced motion", () => {
 		expect(await scattered.count()).toBeGreaterThan(0);
 		const timing = await scattered.evaluateAll((els) =>
 			els.map((el) => {
-				const s = getComputedStyle(el);
+				// The state is drawn on the cell's contents; the ruling is constant.
+				const s = getComputedStyle(el.firstElementChild!);
 				return `${s.transitionDuration}|${s.transitionDelay}`;
 			}),
 		);
@@ -1426,6 +1472,14 @@ test.describe("instrument — layouts", () => {
 		const strip = (await page.locator(`${RULER} .ds-time-ruler__strip`).boundingBox())!;
 		expect(strip.height).toBeLessThan(48);
 		await expect(page.locator(`${RULER} .ds-time-ruler__year`).first()).toBeVisible();
+		// The head's label and readout never collide: on a phone the readout
+		// takes its own line under the label.
+		const head = await page.locator(`${RULER} .ds-time-ruler__head`).evaluate((h) => {
+			const [label, readout] = [...h.children].map((c) => c.getBoundingClientRect());
+			return { labelBottom: label.bottom, readoutTop: readout.top, readoutRight: readout.right, right: h.getBoundingClientRect().right };
+		});
+		expect(head.readoutTop).toBeGreaterThanOrEqual(head.labelBottom - 1);
+		expect(head.readoutRight).toBeLessThanOrEqual(head.right + 1);
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
 
 		// A step shows the card in flow above the list, the stepped tile outlined.

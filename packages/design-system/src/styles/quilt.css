@@ -20,8 +20,11 @@
  *
  * THE RULING is drawn by the cells: each carries the hairline on its right
  * and bottom edges and the grid draws the left and top ones, so every line
- * is 1px and a cell that scatters takes its lines with it — the freed block
- * is clear page under the card, and a faint cell's ruling is faint. The
+ * is 1px. The ruling is CONSTANT: a state fades the cell's contents (its
+ * art, and a phone tile's caption), never the cell, so the lines stay at
+ * full hairline strength round a filler, a ghost and a gone cell alike —
+ * only the art steps back. Under the card the panel's own page-colour
+ * block covers the lines it sits on. The
  * rows are explicit, so the panel's block always has grid lines to sit on,
  * and the grid is position: relative for the panel, an absolutely
  * positioned grid item whose containing block is the area its placement
@@ -78,6 +81,11 @@
 	border-inline-end: 1px solid var(--hairline);
 	border-block-end: 1px solid var(--hairline);
 	--art-ratio: var(--quilt-aspect);
+}
+/* THE CONTENTS — what a state fades: a post's link (its art, and its
+   caption on a phone) or a filler's frame. The cell, which draws the
+   ruling, is never faded. */
+.ds-quilt-cell > * {
 	transition:
 		opacity var(--duration-settle) var(--ease-reveal),
 		filter var(--duration-settle) var(--ease-reveal);
@@ -109,7 +117,8 @@
 	}
 }
 
-/* THE SCATTER. Three states, one attribute. Into faint or gone a cell waits
+/* THE SCATTER. Three states, one attribute, each drawn on the cell's
+   contents so the ruling holds. Into faint or gone a cell waits
    its own --scatter-delay (the engine's 0–240ms stagger, set inline by the
    script); back to lit, everything returns at once. Under reduced motion
    --duration-settle is 0s and the scatter is a cut.
@@ -120,46 +129,50 @@
    pointer but a post stays FOCUSABLE — Tab must still reach every tile
    while a hovered one has scattered the rest, and focusing a gone tile is
    what lights it. */
-.ds-quilt-cell[data-state="faint"],
-.ds-quilt-cell[data-state="gone"] {
+.ds-quilt-cell[data-state="faint"] > *,
+.ds-quilt-cell[data-state="gone"] > * {
 	transition-delay: var(--scatter-delay, 0ms);
 }
 /* A cut with a stagger is still a stagger: under reduced motion every cell
    changes at once. */
 @media (prefers-reduced-motion: reduce) {
-	.ds-quilt-cell[data-state="faint"],
-	.ds-quilt-cell[data-state="gone"] {
+	.ds-quilt-cell[data-state="faint"] > *,
+	.ds-quilt-cell[data-state="gone"] > * {
 		transition-delay: 0ms;
 	}
 }
-.ds-quilt-cell[data-state="faint"] {
+.ds-quilt-cell[data-state="faint"] > * {
 	opacity: var(--quilt-faint);
 }
-/* A FILLER IS NEVER BRIGHTER THAN FAINT. It links nothing, so it is drawn as
-   the ghost at rest too — the whole cell, its ruling with its art, so the
-   posts are the only tiles at full strength and the lines round them the
-   only full lines. gone (below, same specificity, later) still takes it out
-   in a scatter. The greyscale is not gated like the ghost's: a filler's
-   filter never changes, so there is no transition for a tablet to pay for. */
-.ds-quilt-cell[data-cell="filler"] {
+/* A FILLER IS NEVER BRIGHTER THAN FAINT. It links nothing, so its art is
+   drawn as the ghost at rest too, so the posts are the only tiles at full
+   strength — its ruling stays a full hairline like every cell's. gone
+   (below, same specificity, later) still takes the art out in a scatter.
+   The greyscale is not gated like the ghost's: a filler's filter never
+   changes, so there is no transition for a tablet to pay for. */
+.ds-quilt-cell[data-cell="filler"] > * {
 	opacity: var(--quilt-faint);
 	filter: grayscale(1);
 }
 @media (hover: hover) and (min-width: 1024px) {
-	.ds-quilt-cell[data-state="faint"] {
+	.ds-quilt-cell[data-state="faint"] > * {
 		filter: grayscale(1);
 	}
 }
 .ds-quilt-cell[data-state="gone"] {
-	opacity: 0;
 	pointer-events: none;
+}
+.ds-quilt-cell[data-state="gone"] > * {
+	opacity: 0;
 }
 /* A phone's tiles are the page: nothing there vanishes, so the list never
    shows holes — a gone cell renders as faint. */
 @media (max-width: 639px) {
 	.ds-quilt-cell[data-state="gone"] {
-		opacity: var(--quilt-faint);
 		pointer-events: auto;
+	}
+	.ds-quilt-cell[data-state="gone"] > * {
+		opacity: var(--quilt-faint);
 	}
 }
 

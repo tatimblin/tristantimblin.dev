@@ -64,23 +64,15 @@
    the header pads by and the homepage's rows take, so the header's brand and
    nav sit on the rows' outer edges exactly as they sit on the homepage's.
 
-   Below the header the screen fills the viewport (the small viewport on a
-   phone, so the browser's bars coming and going do not resize it) with one
-   container gutter under it, and the BOARD takes whatever height is left,
-   so at rest the timeline rests near the bottom of the screen. The quilt
-   keeps its tiles' aspect, so the board centres it in the spare height
-   rather than stretch it. When the content is taller than the screen the
-   page scrolls as any other, and the site footer follows. */
-.blog--instrument {
-	display: flex;
-	flex-direction: column;
-	min-block-size: 100vh;
-	min-block-size: 100svh;
+   The rows stack at their own height, a step apart — the bar, the quilt a
+   --space-6 under it, the timeline a --space-6 under that — and the page
+   ends after the timeline with one container gutter, the site footer
+   following. Nothing fills or centres to the viewport: the quilt keeps its
+   tiles' aspect, so spare height would only open dead space round it. */
+.blog.blog--instrument {
+	min-height: 0;
 }
 .blog__main.blog__main--instrument {
-	display: flex;
-	flex-direction: column;
-	flex: 1 0 auto;
 	/* The full width (its auto margins would otherwise shrink it to fit its
 	   content in the column), the container made by the inset. */
 	inline-size: 100%;
@@ -89,16 +81,9 @@
 	padding-block: 0 var(--container-pad);
 }
 .blog__instrument {
-	flex: 1 0 auto;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-6);
-}
-.blog__board {
-	flex: 1 0 auto;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
 }
 
 /* The bar row: the h1 is for a reader, not drawn; the form is the bar,
@@ -121,12 +106,8 @@
 	.blog__main--wide .blog__header {
 		margin-block-end: var(--space-6);
 	}
-	/* Phone: the board is a list here, so it reads from the top; the spare
-	   height falls under the last tile. The bar wraps its chips onto their
-	   own row (the package's rule); the timeline is its compact rendering. */
-	.blog__board {
-		justify-content: flex-start;
-	}
+	/* Phone: the bar wraps its chips onto their own row (the package's
+	   rule); the timeline is its compact rendering. */
 	.blog__instrument {
 		gap: var(--space-5);
 	}

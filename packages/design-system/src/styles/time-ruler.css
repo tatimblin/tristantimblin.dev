@@ -28,9 +28,12 @@
 }
 .ds-time-ruler__head {
 	display: flex;
+	/* A narrow ruler (a phone) wraps the readout under the label rather than
+	   run the two lines into each other. */
+	flex-wrap: wrap;
 	justify-content: space-between;
 	align-items: baseline;
-	gap: var(--space-4);
+	gap: var(--space-1) var(--space-4);
 }
 .ds-time-ruler__readout {
 	min-inline-size: 0;
@@ -159,5 +162,14 @@
 	}
 	.ds-time-ruler__strip {
 		margin-block-start: var(--space-3);
+	}
+	/* Two lines on a phone: the label, the readout under it — the two never
+	   share a line so narrow that they read as one. */
+	.ds-time-ruler__head {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.ds-time-ruler__readout {
+		max-inline-size: 100%;
 	}
 }

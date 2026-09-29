@@ -343,14 +343,15 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
 - `Quilt` — the ruled grid: `cols`/`rows` for ≥ 1024, `colsMd`/`rowsMd` for
   640–1023 (`rows` = max(3, ceil(posts / cols)), explicit so the block always
   has lines). The grid draws the left and top hairline, each cell its right
-  and bottom one, so every line is 1px and a cell that scatters takes its
-  ruling with it. `position: relative`, `role="group"`, `data-quilt`. Under
+  and bottom one, so every line is 1px. The ruling is constant: a state
+  fades the cell's contents (the art, a phone tile's caption), never the
+  cell, so every line stays a full hairline in every state. `position: relative`, `role="group"`, `data-quilt`. Under
   640 it is two columns of captioned tiles in DOM order, still ruled.
 - `QuiltCell` — a post (`href`, `label` = the link's accessible name, `no`,
   a decorative `ArtFrame` in the slot inset `--quilt-inset` (a step) from
   the ruling, the meta line in `caption` — drawn on a phone only; above 640 a
-  tile carries no text) or a `filler` (aria-hidden, faint and grey at every
-  state). Placement is `col`/`row` and `colMd`/`rowMd`, set inline as
+  tile carries no text) or a `filler` (aria-hidden, its art faint and grey
+  at every state; its ruling full like every cell's). Placement is `col`/`row` and `colMd`/`rowMd`, set inline as
   `--cell-col`/`--cell-row`/`--cell-col-md`/`--cell-row-md` — the stylesheet
   picks the pair per viewport; a filler with no tablet slot is dropped
   there, and every filler is dropped on a phone. Renders `data-cell="post |
@@ -395,7 +396,7 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
 
 | On | Attribute / property | Meaning |
 | --- | --- | --- |
-| a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. A **filler is never brighter than faint**: it is drawn faint and greyscale at every state but `gone`, so the posts are the only tiles at full strength. |
+| a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. Every state is drawn on the cell's **contents**, not the cell: the ruling never fades. A **filler is never brighter than faint**: its art is drawn faint and greyscale at every state but `gone`, so the posts are the only tiles at full strength. |
 | a cell | `--scatter-delay` (ms) | the stagger into faint/gone (0–240); the return to lit has none |
 | a post cell | `data-active` | the 1px accent outline on the cell's ruling — the search result the arrows are on, the stepped post |
 | a chip | `aria-current="page"` | the chip whose word is the query (ALL when it is empty); none for any other query |
@@ -420,8 +421,10 @@ and the excerpt to `--font-size-3`.
 straight on the page, in the site container (padded by the site's
 `--container-inset`, as the site header and the homepage's rows are, so
 the quilt's edges fall on the header's brand and nav) under the site
-header, filling the viewport below it; the board is a plain row, no surface
-and no inset, that takes the spare height and centres the quilt in it. The
+header. The rows stack at their own height — the quilt `--space-6` under
+the bar, the timeline `--space-6` under the quilt — and nothing fills or
+centres to the viewport; the board is a plain row, no surface and no inset.
+The
 cells have no gap — the ruling is the seam — and the art is inset
 `--quilt-inset` (`--space-2`) in each. The cell sizes below are the board's
 at each width.
