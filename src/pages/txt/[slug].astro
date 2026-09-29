@@ -41,7 +41,8 @@ export const getStaticPaths = (async () => {
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { post, no, total, prev, next } = Astro.props;
-const { title, excerpt, category, tags, date, modified, image, canonical, hero } = post.data;
+const { title, excerpt, category, tags, date, modified, image, imageAlt, canonical, hero } =
+	post.data;
 const { Content } = await render(post);
 ---
 
@@ -53,6 +54,7 @@ const { Content } = await render(post);
 	date={date}
 	modified={modified}
 	image={image ?? hero?.src ?? undefined}
+	imageAlt={imageAlt ?? (image ? undefined : hero?.alt)}
 	canonical={canonical ?? undefined}
 	no={no}
 	total={total}

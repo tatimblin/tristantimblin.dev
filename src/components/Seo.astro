@@ -9,8 +9,13 @@ import type { BlogPosting, Person, WithContext } from "schema-dts";
 interface Props {
 	title?: string;
 	description?: string;
-	/** Path or absolute URL to the social card; defaults to /og.jpg. */
+	/** Path or absolute URL to the social card; defaults to /og-small.jpg.
+	 *  A page that passes one gets the large card. */
 	image?: string;
+	/** What the social card shows, for og:image:alt / twitter:image:alt.
+	 *  Falls back to the page title for a custom card, the site name for
+	 *  the default. */
+	imageAlt?: string;
 	noindex?: boolean;
 	/** "article" switches OG type and emits BlogPosting JSON-LD. */
 	type?: "website" | "article";
@@ -30,6 +35,7 @@ const {
 	title = SITE_NAME,
 	description = DEFAULT_DESCRIPTION,
 	image,
+	imageAlt,
 	noindex = false,
 	type = "website",
 	canonical: canonicalOverride,
@@ -48,6 +54,10 @@ const ogImage = new URL(image ?? "/og-small.jpg", Astro.site).href;
 // Declared so consumers size the preview without downloading the image first.
 // Only trustworthy for the default card; a custom `image` may differ, so omit.
 const ogImageIsDefault = !image;
+// A custom card (a post's image or hero) is a real picture worth the large
+// preview; the default is the small square.
+const twitterCard = ogImageIsDefault ? "summary" : "summary_large_image";
+const ogImageAlt = imageAlt ?? (ogImageIsDefault ? SITE_NAME : title);
 
 const person: WithContext<Person> = {
 	"@context": "https://schema.org",
@@ -91,10 +101,18 @@ const blogPosting: WithContext<BlogPosting> | null =
 		basic: { title, type: type === "article" ? "article" : "website", image: ogImage, url: canonical },
 		optional: { description, siteName: SITE_NAME },
 		image: ogImageIsDefault
-			? { alt: SITE_NAME, width: 300, height: 300 }
-			: { alt: SITE_NAME },
+			? { alt: ogImageAlt, width: 300, height: 300 }
+			: { alt: ogImageAlt },
+		...(type === "article" && {
+			article: {
+				...(publishDate && { publishedTime: publishDate.toISOString() }),
+				...(modifiedDate && { modifiedTime: modifiedDate.toISOString() }),
+				authors: [person.url as string],
+				...(tags?.length && { tags }),
+			},
+		}),
 	}}
-	twitter={{ card: "summary", title, description, image: ogImage }}
+	twitter={{ card: twitterCard, title, description, image: ogImage, imageAlt: ogImageAlt }}
 />
 
 <script type="application/ld+json" set:html={JSON.stringify(person)} is:inline />

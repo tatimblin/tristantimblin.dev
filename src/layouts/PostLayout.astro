@@ -80,8 +80,9 @@ interface Props {
 	tags?: string[];
 	date: Date;
 	modified?: Date | null;
-	/** The social card. Not shown on the page. */
+	/** The social card, and what it shows. Not shown on the page. */
 	image?: string;
+	imageAlt?: string;
 	canonical?: string;
 	/** The post's chronological number, and how many there are. */
 	no: number;
@@ -102,6 +103,7 @@ const {
 	date,
 	modified,
 	image,
+	imageAlt,
 	canonical,
 	no,
 	stats,
@@ -125,6 +127,7 @@ const neighbourRows = [
 	title={title}
 	description={description}
 	image={image}
+	imageAlt={imageAlt}
 	canonical={canonical}
 	publishDate={date}
 	modifiedDate={modified}

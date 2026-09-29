@@ -16,8 +16,10 @@ import Seo from "../components/Seo.astro";
 interface Props {
 	title?: string;
 	description?: string;
-	/** Path or absolute URL to the social card; defaults to /og.png. */
+	/** Path or absolute URL to the social card; defaults to /og-small.jpg. */
 	image?: string;
+	/** What the social card shows (og:image:alt). */
+	imageAlt?: string;
 	/** Ask crawlers to skip this page (e.g. scratch/experiments pages). */
 	noindex?: boolean;
 	/** Article SEO surface, forwarded to <Seo />. Defaults keep pages as "website". */
@@ -43,6 +45,7 @@ const {
 	title,
 	description,
 	image,
+	imageAlt,
 	noindex,
 	type,
 	canonical,
@@ -144,6 +147,7 @@ const {
 			title={title}
 			description={description}
 			image={image}
+			imageAlt={imageAlt}
 			noindex={noindex}
 			type={type}
 			canonical={canonical}

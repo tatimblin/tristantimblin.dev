@@ -8,8 +8,10 @@ import Layout from "./Layout.astro";
 interface Props {
 	title?: string;
 	description?: string;
-	/** Path or absolute URL to the social card; falls back to /og.jpg. */
+	/** Path or absolute URL to the social card; falls back to /og-small.jpg. */
 	image?: string;
+	/** What the social card shows (og:image:alt). */
+	imageAlt?: string;
 	canonical?: string;
 	publishDate?: Date;
 	modifiedDate?: Date | null;
@@ -17,7 +19,7 @@ interface Props {
 	noindex?: boolean;
 }
 
-const { title, description, image, canonical, publishDate, modifiedDate, tags, noindex } =
+const { title, description, image, imageAlt, canonical, publishDate, modifiedDate, tags, noindex } =
 	Astro.props;
 ---
 
@@ -25,6 +27,7 @@ const { title, description, image, canonical, publishDate, modifiedDate, tags, n
 	title={title}
 	description={description}
 	image={image}
+	imageAlt={imageAlt}
 	canonical={canonical}
 	publishDate={publishDate}
 	modifiedDate={modifiedDate}
