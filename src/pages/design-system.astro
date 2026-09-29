@@ -62,6 +62,9 @@ import QuiltPanel from "@whois/design-system/QuiltPanel";
 import SearchBar from "@whois/design-system/SearchBar";
 // The new primitives.
 import Fig from "@whois/design-system/Fig";
+import Img from "../components/mdx/Img.astro";
+import aptitudePass from "../content/txt/images/aptitude-pass.webp";
+import aptitudeFail from "../content/txt/images/aptitude-fail.webp";
 import Index from "@whois/design-system/Index";
 import IndexRow from "@whois/design-system/IndexRow";
 import HitArea from "@whois/design-system/HitArea";
@@ -1255,7 +1258,7 @@ assertions:
 							<Mono as="footer">Brace Sproul / LangChain</Mono>
 						</Blockquote>
 						<Fig no="02" caption="Aptitude CLI failing">
-							<img src="/blog-images/aptitude-fail.webp" alt="Aptitude CLI failing" width="1400" height="875" loading="lazy" />
+							<Img src={aptitudeFail} alt="Aptitude CLI failing" />
 						</Fig>
 						<Body>Ask the agent to do something it shouldn't, assert that it didn't. Pass or fail.</Body>
 					</div>
@@ -1291,7 +1294,7 @@ assertions:
 			</p>
 			<div style="--ruled-columns: repeat(4, minmax(0, 1fr)); display: grid; gap: var(--space-6);">
 				<Fig no="01" caption="Aptitude, passing — the read-order test" layout="ruled">
-					<img src="/blog-images/aptitude-pass.webp" alt="Aptitude CLI passing" width="1400" height="875" loading="lazy" />
+					<Img src={aptitudePass} alt="Aptitude CLI passing" />
 				</Fig>
 				<div style="max-inline-size: var(--measure-prose);">
 					<Fig no="02" caption="Aptitude CLI failing">

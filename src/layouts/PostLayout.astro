@@ -34,6 +34,7 @@
 // The body arrives via <slot /> already sectioned and mapped to DS
 // components (src/components/mdx-components.ts, applied at the <Content>
 // render site in txt/[slug].astro). `image` is the social card only.
+import type { ImageMetadata } from "astro";
 import ArticleLayout from "./ArticleLayout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import Img from "../components/mdx/Img.astro";
@@ -69,9 +70,11 @@ export interface Neighbour {
 	no: number;
 }
 
-/** The post's hero image, from its frontmatter. */
+/** The post's hero image, from its frontmatter: the collection resolves the
+ *  path to the import (width, height, format), which the page hands to
+ *  <Picture>. */
 export interface Hero {
-	src: string;
+	src: ImageMetadata;
 	alt: string;
 	caption?: string;
 }

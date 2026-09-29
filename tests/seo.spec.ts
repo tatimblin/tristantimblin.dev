@@ -18,6 +18,11 @@ test("a post with a hero: article meta, the large card, the hero's alt", async (
 	);
 	await expect(meta(page, "article:tag")).toHaveCount(4);
 	await expect(meta(page, "twitter:card")).toHaveAttribute("content", "summary_large_image");
+	// The hero, built as one JPEG (the format every crawler reads), absolute.
+	await expect(meta(page, "og:image")).toHaveAttribute(
+		"content",
+		/^https:\/\/tristantimblin\.dev\/_astro\/aptitude-pass\..*\.jpg$/,
+	);
 	await expect(meta(page, "og:image:alt")).toHaveAttribute("content", /^Aptitude in the terminal/);
 	await expect(meta(page, "twitter:image:alt")).toHaveAttribute("content", /^Aptitude in the terminal/);
 	// The canonical is the URL the site links to.

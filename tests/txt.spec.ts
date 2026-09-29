@@ -249,7 +249,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(hero).toHaveCount(1);
 		await expect(hero.locator(".ds-fig__no")).toHaveText(/fig\. 01 \//i);
 		const img = hero.locator("img");
-		await expect(img).toHaveAttribute("src", "/blog-images/aptitude-pass.webp");
+		// A built asset: the file moved beside the post and content-addressed.
+		await expect(img).toHaveAttribute("src", /^\/_astro\/aptitude-pass\..*\.webp$/);
 		await expect(img).toHaveAttribute("alt", /read-order test/);
 		await expect(img).toHaveAttribute("width", /^\d+$/);
 		// The page's largest paint: fetched first, and never held back by the
@@ -264,7 +265,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(img).toHaveCSS("border-top-width", "1px");
 		await expect(img).toHaveCSS("border-top-left-radius", "0px");
 		// It is not in the body any more: the body's first figure is Fig. 02.
-		await expect(page.locator(".ds-prose img[src='/blog-images/aptitude-pass.webp']")).toHaveCount(0);
+		await expect(page.locator('.ds-prose img[src*="/aptitude-pass."]')).toHaveCount(0);
 		await expect(page.locator(".ds-prose .ds-fig figcaption").first()).toHaveText(/^fig\. 02 \//i);
 
 		await page.goto(NO_HERO);
@@ -409,7 +410,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		// The image: a figure on a hairline with its numbered caption.
 		const figure = body.locator("figure.ds-fig");
 		await expect(figure).toHaveCount(1);
-		await expect(figure.locator("img")).toHaveAttribute("src", "/blog-images/aptitude-fail.webp");
+		await expect(figure.locator("img")).toHaveAttribute("src", /^\/_astro\/aptitude-fail\..*\.webp$/);
 		await expect(figure.locator("img")).toHaveCSS("border-top-width", "1px");
 		await expect(figure.locator("figcaption")).toHaveText(/^fig\. 02 \/ aptitude, failing/i);
 

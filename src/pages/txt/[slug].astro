@@ -6,6 +6,7 @@
 // in astro.config, src/lib/mdx/post-sections.ts) and mapped onto DS
 // components at the <Content> below.
 import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import { getImage } from "astro:assets";
 import { render } from "astro:content";
 import PostLayout, { type Neighbour } from "../../layouts/PostLayout.astro";
 import { mdxComponents } from "../../components/mdx-components";
@@ -44,6 +45,13 @@ const { post, no, total, prev, next } = Astro.props;
 const { title, excerpt, category, tags, date, modified, image, imageAlt, canonical, hero } =
 	post.data;
 const { Content } = await render(post);
+
+// THE SOCIAL CARD: `image` when the post names one, else the hero. Both are
+// local assets now, so the URL the meta needs is minted here — one JPEG at
+// the source's size, the format every crawler reads — and Seo makes it
+// absolute. A post with neither gets the site's default card (public/).
+const card = image ?? hero?.src ?? null;
+const ogImage = card ? (await getImage({ src: card, format: "jpg" })).src : undefined;
 ---
 
 <PostLayout
@@ -53,7 +61,7 @@ const { Content } = await render(post);
 	tags={tags}
 	date={date}
 	modified={modified}
-	image={image ?? hero?.src ?? undefined}
+	image={ogImage}
 	imageAlt={imageAlt ?? (image ? undefined : hero?.alt)}
 	canonical={canonical ?? undefined}
 	no={no}

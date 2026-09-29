@@ -1,14 +1,16 @@
 ---
-// Post image. Mapped from MDX `img` so every image in a /txt post gets three
-// things a bare markdown image cannot express:
+// Post image. Mapped from MDX `img`, and the hero's (PostLayout). Astro hands
+// every relative image in a post to this component as its IMPORT — an
+// ImageMetadata with the file's real width/height/format, checked at build
+// time — so every image in a /txt post gets three things a bare markdown
+// image cannot express:
 //
-//   1. INTRINSIC DIMENSIONS, read from the actual file at build time. Markdown
-//      has no syntax for width/height, so these images shipped without them and
-//      the page reflowed as each one decoded (a real CLS cost on 680KB of photos).
-//      Measured here rather than hardcoded in each post so re-exporting an image
-//      can't silently desynchronise the numbers. The CSS still drives the rendered
-//      size (`inline-size: 100%; block-size: auto` in the DS Prose) — these attributes only
-//      publish the ASPECT so the browser can reserve the right box up front.
+//   1. INTRINSIC DIMENSIONS, from the import. Markdown has no syntax for
+//      width/height, so these images shipped without them and the page
+//      reflowed as each one decoded (a real CLS cost on 680KB of photos). The
+//      CSS still drives the rendered size (`inline-size: 100%; block-size:
+//      auto` in the DS Prose) — these attributes only publish the ASPECT so
+//      the browser can reserve the right box up front.
 //   2. Lazy loading + async decode, so a long post doesn't fetch every photo at once.
 //   3. data-reveal, so each image eases in as it is scrolled to instead of
 //      snapping in on decode (see src/lib/reveal.ts).
@@ -16,13 +18,10 @@
 // `priority` is for the one image that is the page's largest paint (a post's
 // hero, PostLayout): no reveal — which holds an armed page's image at opacity 0
 // until the coordinator's module runs — and fetched eagerly at high priority.
-//
-// Dimensions are read straight from the file header — no image library, and no
-// build step beyond what Astro already runs in frontmatter (Node).
-import { intrinsicSize } from "../../lib/intrinsicSize";
+import type { ImageMetadata } from "astro";
 
 interface Props {
-	src: string;
+	src: ImageMetadata;
 	alt?: string;
 	title?: string;
 	/** The page's LCP image: eager, fetchpriority high, no reveal. */
@@ -31,18 +30,16 @@ interface Props {
 }
 
 const { src, alt = "", priority = false, ...rest } = Astro.props;
-
-const size = intrinsicSize(src);
 ---
 
 <img
-	src={src}
+	src={src.src}
 	alt={alt}
 	loading={priority ? "eager" : "lazy"}
 	decoding={priority ? undefined : "async"}
 	fetchpriority={priority ? "high" : undefined}
-	width={size?.w}
-	height={size?.h}
+	width={src.width}
+	height={src.height}
 	data-reveal={priority ? undefined : ""}
 	{...rest}
 />
