@@ -73,7 +73,7 @@ describe("post sections", () => {
 	test("an image inside a link becomes a figure, the link kept", async () => {
 		const { html } = await render("[![A desk](/desk.webp)](https://example.com)\n");
 		expect(html).toMatch(
-			/<figure class="ds-prose-figure"><a href="https:\/\/example\.com"><img src="\/desk\.webp" alt="A desk"[^>]*><\/a><figcaption><span[^>]*>fig\. 01 \/ A desk<\/span><\/figcaption><\/figure>/,
+			/<figure class="ds-fig"><a href="https:\/\/example\.com"><img src="\/desk\.webp" alt="A desk"[^>]*><\/a><figcaption class="ds-fig__cap"><span[^>]*>fig\. 01 \/ A desk<\/span><\/figcaption><\/figure>/,
 		);
 	});
 

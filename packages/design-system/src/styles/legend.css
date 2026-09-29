@@ -53,10 +53,26 @@
 	margin-inline-start: auto;
 }
 
-/* Phone tiles: five rows over a chart don't fit ~130px of body at the desktop
-   rhythm, so the rows close up. */
-@media (max-width: 900px) {
-	.ds-widget .ds-legend {
+/* swatch — the key's mark: a dot (the default), or a LINE for a series
+   drawn as one (a chart's finish), or a DASHED line (its seed). A line is
+   the swatch's colour as a hairline the width of a step. */
+.ds-legend__item--swatch-line .ds-legend__dot,
+.ds-legend__item--swatch-dashed .ds-legend__dot {
+	inline-size: var(--space-3);
+	block-size: 0;
+	border-radius: 0;
+	background: none;
+	border-block-start: 1px solid var(--legend-color, var(--tone-2));
+}
+.ds-legend__item--swatch-dashed .ds-legend__dot {
+	border-block-start-style: dashed;
+}
+
+/* Compact tiles: five rows over a chart don't fit ~130px of body at the
+   desktop rhythm, so the rows close up (the grid's compact-cell query,
+   widget-grid.css). */
+@container widget (max-width: 624px) {
+	.ds-legend {
 		gap: var(--space-1);
 	}
 }

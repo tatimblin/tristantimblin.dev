@@ -284,9 +284,10 @@ export function rehypePostSections() {
 				const { alt } = image.img.properties;
 				const n = pad2(figure++);
 				const label = typeof alt === "string" && alt ? `fig. ${n} / ${alt}` : `fig. ${n}`;
-				return el("figure", { className: ["ds-prose-figure"] }, [
+				// Fig's flow markup (packages/design-system/src/components/Fig.astro).
+				return el("figure", { className: ["ds-fig"] }, [
 					image.content,
-					el("figcaption", {}, [mono(label)]),
+					el("figcaption", { className: ["ds-fig__cap"] }, [mono(label)]),
 				]);
 			}
 			if (!isElement(node)) return node;

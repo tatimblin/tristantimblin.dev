@@ -1,0 +1,26 @@
+/* HitArea — a transparent control over something. Fills its positioned
+ * parent by default (inset: 0); a caller places a band with its own inset or
+ * width. No chrome: the thing under it is the picture. The ring is inside
+ * the box, since that box is usually a clipping card; `ds-control` draws it
+ * (control.css). */
+.ds-hit-area {
+	--control-ring-offset: var(--focus-ring-inset);
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	border-radius: var(--border-radius-tile);
+	transition: background var(--duration-swap) var(--ease-reveal);
+}
+.ds-hit-area:disabled {
+	cursor: default;
+	opacity: 1;
+}
+/* wash: lit under the pointer, and while it says it is current or on. */
+.ds-hit-area--wash-true:hover:not(:disabled),
+.ds-hit-area--wash-true[aria-current],
+.ds-hit-area--wash-true[aria-pressed="true"] {
+	background: var(--wash-1);
+}

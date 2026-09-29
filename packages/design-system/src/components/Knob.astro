@@ -1,0 +1,47 @@
+---
+// Knob — one row of a Knobs panel (styles/knobs.css): a label, and a native
+// control the page's script reads — a range with its live `output`, a colour
+// picker, a checkbox, a text field. The label wraps the control, so the row
+// is the hit area.
+//
+//   <Knob label="gamma" type="range" min="0.2" max="3" step="0.05" value="0.8" out="gamma" data-attr="gamma" />
+//   <Knob label="invert" type="checkbox" data-attr="invert" />
+//   <Knob label="accent" type="color"><input type="color" … /><input type="text" … /></Knob>
+//
+// `out` renders `<output data-out={out}>` beside the label (the script fills
+// it). The default slot REPLACES the control for a row that holds its own —
+// a picker paired with a text field. Every other prop passes to the input.
+import { cx } from "../lib/cx";
+
+type Type = "range" | "color" | "checkbox" | "text";
+
+interface Props {
+	label: string;
+	type?: Type;
+	/** The `data-out` name of a live readout beside the label. */
+	out?: string;
+	/** The output's initial text. */
+	value?: string | number;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { label, type = "range", out, class: className, ...rest } = Astro.props;
+const hasField = Astro.slots.has("default");
+const cls = cx("ds-knob", `ds-knob--type-${type}`, className);
+---
+
+<label class={cls}>
+	{type !== "checkbox" && (
+		<span class="ds-knob__label">
+			<span>{label}</span>
+			{out && <output data-out={out}>{rest.value}</output>}
+		</span>
+	)}
+	{hasField ? (
+		<span class="ds-knob__field"><slot /></span>
+	) : (
+		<input type={type} {...rest} />
+	)}
+	{type === "checkbox" && <span class="ds-knob__label"><span>{label}</span></span>}
+</label>

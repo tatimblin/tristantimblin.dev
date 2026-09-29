@@ -1,0 +1,28 @@
+---
+// ThemePage — a piece of one theme's page inside the other's (styles/
+// theme-page.css): a box carrying the theme class, the page colour, the
+// primary ink and a hairline, labelled with the theme's name. The catalogue
+// shows the same specimen on both pages side by side with two of these;
+// every themed token — the art palette, the washes, the accent — re-resolves
+// in scope under the wrapper's class (which is why the instrument tokens sit
+// on the theme classes rather than :root).
+//
+//   <ThemePage theme="light"><ArtFrame svg={raw} label="…" /></ThemePage>
+import { cx } from "../lib/cx";
+import Mono from "./Mono.astro";
+
+interface Props {
+	theme: "light" | "dark";
+	/** The label; none hides it. Default `<theme> page`. */
+	label?: string | false;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { theme, label = `${theme} page`, class: className, ...rest } = Astro.props;
+---
+
+<div class={cx(`maximeheckel-${theme}`, "ds-theme-page", className)} {...rest}>
+	{label && <Mono>{label}</Mono>}
+	<slot />
+</div>

@@ -1,0 +1,66 @@
+---
+// Fig — a numbered figure of the ruled page (styles/fig.css): the image on a
+// hairline, square, with the `Fig. 0N /` label and a caption in the caps mono.
+//
+//   <Fig no="02" caption={alt}><img … /></Fig>
+//       FLOW (the default): the image, then one caption line under it —
+//       `fig. 02 / <caption>`. The shape the post-sections plugin emits for
+//       every image in a post body (src/lib/mdx/post-sections.ts), so a
+//       figure in the reading column and one placed by hand are the same
+//       markup.
+//   <Fig no="01" caption={hero.caption} layout="ruled"><Img … /></Fig>
+//       RULED: a row on the page's four columns (`--ruled-columns` /
+//       `--ruled-gap`, the tokens Prose reads too) — the label bottom-aligned
+//       in the first column, the image across the other three, the caption
+//       under the image. The post's hero. Below 1024 it stacks, full width.
+//
+// `caption` is a prop or the `caption` slot; `no` is the zero-padded number
+// (the label reads `fig. 01 /`). `class` merges; everything else passes to
+// the figure.
+import { cx } from "../lib/cx";
+import Mono from "./Mono.astro";
+
+interface Props {
+	/** The figure's number, zero-padded (`01`). */
+	no?: string;
+	caption?: string;
+	/** `flow` (default): the caption line under the image. `ruled`: a row on
+	 *  the page's columns, the label in the first. */
+	layout?: "flow" | "ruled";
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { no, caption, layout = "flow", class: className, ...rest } = Astro.props;
+const hasCaption = Boolean(caption) || Astro.slots.has("caption");
+const cls = cx("ds-fig", layout !== "flow" && `ds-fig--layout-${layout}`, className);
+---
+
+{
+	layout === "ruled" ? (
+		<figure class={cls} {...rest}>
+			{no && <Mono class="ds-fig__no">fig. {no} /</Mono>}
+			<div class="ds-fig__media">
+				<slot />
+			</div>
+			{hasCaption && (
+				<Mono as="figcaption" class="ds-fig__cap">
+					{caption}
+					<slot name="caption" />
+				</Mono>
+			)}
+		</figure>
+	) : (
+		<figure class={cls} {...rest}>
+			<slot />
+			{(no || hasCaption) && (
+				<figcaption class="ds-fig__cap">
+					<Mono>
+						{no && `fig. ${no} /`}{no && hasCaption && " "}{caption}
+						<slot name="caption" />
+					</Mono>
+				</figcaption>
+			)}
+		</figure>
+	)
+}

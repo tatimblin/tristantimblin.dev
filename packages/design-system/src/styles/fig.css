@@ -1,0 +1,64 @@
+/* Fig — the numbered figure of the ruled page: the image on a hairline,
+ * square (no corner — the ruled screen's window, not the card's), the label
+ * and the caption in the caps mono. Two layouts (Fig.astro):
+ *
+ *   flow    the image, then the caption line under it — the post body's
+ *           figures, which the sections plugin emits in this shape.
+ *   ruled   a row on the page's columns: the label bottom-aligned in the
+ *           first, the image and the caption across the other three — the
+ *           post's hero. Below 1024 it stacks. */
+.ds-fig {
+	margin: 0;
+	min-inline-size: 0;
+}
+.ds-fig img {
+	display: block;
+	inline-size: 100%;
+	block-size: auto;
+	border: 1px solid var(--hairline);
+	border-radius: 0;
+}
+/* The caption row: the label (and anything else it holds) pushed apart,
+   wrapping rather than clipping, on the UI leading. */
+.ds-fig__cap {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--space-4);
+	margin-block-start: var(--space-2);
+}
+.ds-fig__cap,
+.ds-fig__cap > * {
+	white-space: normal;
+	line-height: var(--line-height-ui);
+}
+
+/* RULED: the page's columns. */
+.ds-fig--layout-ruled {
+	display: grid;
+	grid-template-columns: var(--ruled-columns, repeat(4, minmax(0, 1fr)));
+	column-gap: var(--ruled-gap, var(--space-4));
+}
+.ds-fig__no {
+	grid-column: 1;
+	align-self: end;
+}
+.ds-fig__media {
+	grid-column: 2 / span 3;
+	min-inline-size: 0;
+}
+.ds-fig--layout-ruled > .ds-fig__cap {
+	grid-column: 2 / span 3;
+	display: block;
+}
+@media (max-width: 1023px) {
+	.ds-fig--layout-ruled {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.ds-fig__no {
+		margin-block-end: var(--space-2);
+	}
+	.ds-fig__media,
+	.ds-fig--layout-ruled > .ds-fig__cap {
+		grid-column: 1;
+	}
+}

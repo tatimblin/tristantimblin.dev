@@ -247,7 +247,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		const { article, col, gap } = await columns(page);
 		const hero = page.locator("[data-post-hero]");
 		await expect(hero).toHaveCount(1);
-		await expect(hero.locator(".post__fig-label")).toHaveText(/fig\. 01 \//i);
+		await expect(hero.locator(".ds-fig__no")).toHaveText(/fig\. 01 \//i);
 		const img = hero.locator("img");
 		await expect(img).toHaveAttribute("src", "/blog-images/aptitude-pass.webp");
 		await expect(img).toHaveAttribute("alt", /read-order test/);
@@ -265,11 +265,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(img).toHaveCSS("border-top-left-radius", "0px");
 		// It is not in the body any more: the body's first figure is Fig. 02.
 		await expect(page.locator(".ds-prose img[src='/blog-images/aptitude-pass.webp']")).toHaveCount(0);
-		await expect(page.locator(".ds-prose-figure figcaption").first()).toHaveText(/^fig\. 02 \//i);
+		await expect(page.locator(".ds-fig figcaption").first()).toHaveText(/^fig\. 02 \//i);
 
 		await page.goto(NO_HERO);
 		await expect(page.locator("[data-post-hero]")).toHaveCount(0);
-		await expect(page.locator(".post__fig-label")).toHaveCount(0);
+		await expect(page.locator(".ds-fig__no")).toHaveCount(0);
 		// Nothing but the sections between the lead and the index.
 		const lead = await box(page, ".post__lead");
 		const first = await box(page, ".ds-prose-section");
@@ -357,7 +357,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(Math.abs(without.width - text)).toBeLessThanOrEqual(1);
 
 		// Its figures count on from the hero.
-		await expect(page.locator(".ds-prose-figure figcaption")).toHaveText([
+		await expect(page.locator(".ds-fig figcaption")).toHaveText([
 			/^fig\. 02 \//i,
 			/^fig\. 03 \//i,
 			/^fig\. 04 \//i,
@@ -407,7 +407,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(inks.length).toBeGreaterThan(1);
 
 		// The image: a figure on a hairline with its numbered caption.
-		const figure = body.locator("figure.ds-prose-figure");
+		const figure = body.locator("figure.ds-fig");
 		await expect(figure).toHaveCount(1);
 		await expect(figure.locator("img")).toHaveAttribute("src", "/blog-images/aptitude-fail.webp");
 		await expect(figure.locator("img")).toHaveCSS("border-top-width", "1px");
@@ -433,7 +433,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		await page.goto(NEWEST);
 		const index = page.getByRole("navigation", { name: "Index" });
 		await expect(index).toHaveAttribute("data-post-index", "");
-		await expect(index.locator(".post__row--head > .ds-mono")).toHaveText([
+		await expect(index.locator(".ds-index__row--head > .ds-mono")).toHaveText([
 			/index/i,
 			/no\./i,
 			/title/i,
@@ -441,9 +441,9 @@ test.describe("/txt/<slug> — the post page", () => {
 		]);
 		// The header row is the ink with the page colour on it — the fill on the
 		// row, so no gap between cells shows the page.
-		expect(await luminance(page, ".post__row--head")).toBeGreaterThan(0.8);
-		expect(await luminance(page, ".post__row--head > .ds-mono", "color")).toBeLessThan(0.1);
-		const rowBox = await box(page, ".post__row--head");
+		expect(await luminance(page, ".ds-index__row--head")).toBeGreaterThan(0.8);
+		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeLessThan(0.1);
+		const rowBox = await box(page, ".ds-index__row--head");
 		const { article } = await columns(page);
 		expect(Math.abs(rowBox.width - article.width)).toBeLessThanOrEqual(1);
 
@@ -460,7 +460,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(prev).toHaveCSS("border-bottom-width", "1px");
 
 		const next = index.locator('[data-index-row="next"]');
-		await expect(next).toHaveClass(/post__row--dim/);
+		await expect(next).toHaveClass(/ds-index__row--dim/);
 		await expect(next).toHaveText(/next →\s*—\s*Nothing newer\s*—/);
 		await expect(next.locator("a")).toHaveCount(0);
 
@@ -483,8 +483,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator("html")).toHaveClass(/maximeheckel-light/);
 		await expect(page.locator(".post__mark")).toHaveCSS("background-color", TRANSPARENT);
 		expect(await luminance(page, ".post__mark", "color")).toBeLessThan(0.05);
-		expect(await luminance(page, ".post__row--head")).toBeLessThan(0.05);
-		expect(await luminance(page, ".post__row--head > .ds-mono", "color")).toBeGreaterThan(0.85);
+		expect(await luminance(page, ".ds-index__row--head")).toBeLessThan(0.05);
+		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeGreaterThan(0.85);
 	});
 
 	test("dark theme: the mark is the light ink, the header row the light fill", async ({ page }) => {
@@ -494,7 +494,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		// The PAGE's ink, not the art's near-white: the mark is drawn in the
 		// title's colour, which on the dark theme is the light grey primary text.
 		expect(await luminance(page, ".post__mark", "color")).toBeGreaterThan(0.7);
-		expect(await luminance(page, ".post__row--head")).toBeGreaterThan(0.7);
+		expect(await luminance(page, ".ds-index__row--head")).toBeGreaterThan(0.7);
 	});
 
 	test("under reduced motion the mark holds its still frame", async ({ browser }) => {
@@ -566,7 +566,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(Math.abs(headBox.x - bodyBox.x)).toBeLessThanOrEqual(1);
 		expect(Math.abs(bodyBox.width - article.width)).toBeLessThanOrEqual(1);
 		// The fence and the quote fit the column.
-		for (const sel of ["figure.ds-prose-code", "blockquote", ".ds-prose-figure img"]) {
+		for (const sel of ["figure.ds-prose-code", "blockquote", ".ds-fig img"]) {
 			const b = await box(page, sel);
 			expect(b.x + b.width).toBeLessThanOrEqual(article.x + article.width + 1);
 		}
@@ -575,10 +575,10 @@ test.describe("/txt/<slug> — the post page", () => {
 		const row = await box(page, '[data-index-row="prev"]');
 		expect(Math.abs(row.width - article.width)).toBeLessThanOrEqual(1);
 		const link = await box(page, 'a[data-neighbour="prev"]');
-		const filed = await box(page, '[data-index-row="prev"] .post__filed');
+		const filed = await box(page, '[data-index-row="prev"] .ds-index__fold');
 		expect(link.x + link.width).toBeLessThanOrEqual(article.x + article.width + 1);
 		expect(filed.y).toBeGreaterThanOrEqual(link.y + link.height - 1);
-		await expect(page.locator(".post__row--head > .post__filed")).toBeHidden();
+		await expect(page.locator(".ds-index__row--head > .ds-index__fold")).toBeHidden();
 	});
 
 	test("with scripting off the post reads: the sections, the figures and the index are static markup", async ({

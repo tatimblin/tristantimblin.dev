@@ -7,10 +7,13 @@
     "./tokens.css": "./src/tokens/index.css",
     "./styles.css": "./src/styles/index.css",
     "./icons": "./src/icons/icons.ts",
+    "./lib/*": "./src/lib/*.ts",
     "./art/*": "./src/art/*",
     "./*": "./src/components/*.astro"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "gen-tokens": "bun scripts/gen-tokens.mjs"
   },

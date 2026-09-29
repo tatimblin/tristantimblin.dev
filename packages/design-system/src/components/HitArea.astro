@@ -1,0 +1,34 @@
+---
+// HitArea — a transparent control laid OVER something (styles/hit-area.css):
+// the tap surface that flips a card, the band over a season on a chart. A
+// real <button> (focusable, operable, named by the caller) with no chrome of
+// its own, filling its positioned parent, its focus ring drawn inside the
+// box it fills (`--focus-ring-inset`) since that box is usually a clipping
+// card. Laid over, not around: a button AROUND the content would flatten
+// everything inside it into one control's name.
+//
+//   <CardBody>
+//     …the faces…
+//     <HitArea aria-pressed="false" aria-label="Show language breakdown" />
+//   </CardBody>
+//   <HitArea wash style="left: 20%; width: 10%" aria-current="true" …/>   a band, lit while current
+//
+// `wash` draws the first wash under the pointer and while the control says
+// it is current (`aria-current`) or on (`aria-pressed="true"`). `as="a"` for
+// a link. `class` merges; everything else passes to the element.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	/** A wash under the pointer and while current / pressed. */
+	wash?: boolean;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "button", wash = false, class: className, ...rest } = Astro.props;
+const Tag = as as any;
+const cls = cx("ds-hit-area", "ds-control", wash && "ds-hit-area--wash-true", className);
+---
+
+<Tag class={cls} type={as === "button" ? "button" : undefined} {...rest}><slot /></Tag>

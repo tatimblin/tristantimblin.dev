@@ -13,13 +13,14 @@
 	color: var(--text-primary);
 }
 .ds-figure__num {
-	/* The .ds-numeric role (numeric.css): the numeric face with tabular figures,
-	   so a live value updates without its digits shifting. Display tracking,
-	   because the space between letters grows with the type. */
-	font-family: var(--font-numeric);
+	/* The figure voice, from its tokens (--voice-figure-*): the UI face with
+	   tabular figures, so a live value updates without its digits shifting;
+	   display tracking, because the space between letters grows with the
+	   type. A shadow-DOM consumer reads the same tokens. */
+	font-family: var(--voice-figure-family);
 	font-variant-numeric: tabular-nums;
-	font-weight: var(--font-weight-400);
-	letter-spacing: var(--tracking-heading);
+	font-weight: var(--voice-figure-weight);
+	letter-spacing: var(--voice-figure-tracking);
 }
 
 /* size. Inside a WidgetGrid each step follows the cell through the widget
@@ -30,7 +31,7 @@
 	font-size: var(--widget-font-lg, var(--font-size-6));
 }
 .ds-figure--size-lg .ds-figure__num {
-	font-size: var(--widget-font-figure, var(--font-size-7));
+	font-size: var(--voice-figure-size);
 }
 .ds-figure--size-xl .ds-figure__num {
 	font-size: var(--widget-font-xl, var(--font-size-8));

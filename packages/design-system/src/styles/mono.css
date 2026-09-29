@@ -12,10 +12,12 @@
  * Tabular figures on all three, since a mono label is as likely to hold a
  * count as a word and a count that changes should not shift. Sizes come from
  * the widget's fluid scale when inside a WidgetGrid and from the type tokens
- * anywhere else — the var() fallback is the whole mechanism. */
+ * anywhere else. The voice is its tokens (--voice-mono-*,
+ * tokens.overrides.css; the grid redefines the size), so a shadow-DOM
+ * consumer reads the same. */
 .ds-mono {
-	font-family: var(--font-mono);
-	font-size: var(--widget-font-xs, var(--font-size-0));
+	font-family: var(--voice-mono-family);
+	font-size: var(--voice-mono-size);
 	font-weight: var(--font-weight-400);
 	font-variant-numeric: tabular-nums;
 	line-height: 1;
@@ -33,7 +35,7 @@
    context (a card header) must not be shouted with it. */
 .ds-mono--variant-text {
 	text-transform: none;
-	letter-spacing: var(--tracking-mono);
+	letter-spacing: var(--voice-mono-tracking);
 	line-height: var(--line-height-ui);
 	color: var(--text-tertiary);
 }

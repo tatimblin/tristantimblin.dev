@@ -13,10 +13,15 @@ import { getIconString, type ArrowPosition } from "../lib/anchor-icons";
 interface Props {
 	as?: string;
 	href?: string;
+	/** `ink`: the primary ink at rest, the accent under the pointer or focus,
+	 *  no underline — a link that reads as text until it is pointed at (the
+	 *  index's titles and tags, a handle). Default: the hyperlink colour. */
+	variant?: "default" | "ink";
 	/** Renders an arrow to the left or the right of the text */
 	arrow?: ArrowPosition;
-	/** Renders an underline only visible on hover */
-	underline?: boolean;
+	/** An underline visible on hover; `"always"` draws it at rest too, in
+	 *  the text's own colour (the accent under the pointer). */
+	underline?: boolean | "always";
 	/** Renders a favicon for the domain in href (Twitter, Github, Bluesky) */
 	favicon?: boolean;
 	/** Colors the Anchor typography tertiary to blend with the corpus */
@@ -31,6 +36,7 @@ interface Props {
 const {
 	as = "a",
 	href,
+	variant = "default",
 	arrow,
 	underline,
 	favicon,
@@ -47,12 +53,16 @@ const icon = href && getIconString(href, { arrow, external, favicon });
 
 const cls = cx(
 	"ds-anchor",
+	// A link is a control (control.css): the pointer, the focus ring.
+	"ds-control",
+	variant !== "default" && `ds-anchor--variant-${variant}`,
 	discreet && "ds-anchor--discreet-true",
 	// external emits a rule only for the `true` case (the `false` key is empty).
 	external && "ds-anchor--external-true",
 	arrow && `ds-anchor--arrow-${arrow}`,
 	favicon && "ds-anchor--favicon-true",
 	underline && "ds-anchor--underline-true",
+	underline === "always" && "ds-anchor--underline-always",
 	className,
 );
 

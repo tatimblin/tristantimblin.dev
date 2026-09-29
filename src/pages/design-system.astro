@@ -64,6 +64,16 @@ import Quilt from "@whois/design-system/Quilt";
 import QuiltCell from "@whois/design-system/QuiltCell";
 import QuiltPanel from "@whois/design-system/QuiltPanel";
 import SearchBar from "@whois/design-system/SearchBar";
+// The new primitives.
+import Fig from "@whois/design-system/Fig";
+import Index from "@whois/design-system/Index";
+import IndexRow from "@whois/design-system/IndexRow";
+import HitArea from "@whois/design-system/HitArea";
+import WidgetEmpty from "@whois/design-system/WidgetEmpty";
+import Knobs from "@whois/design-system/Knobs";
+import KnobGroup from "@whois/design-system/KnobGroup";
+import Knob from "@whois/design-system/Knob";
+import ThemePage from "@whois/design-system/ThemePage";
 
 // THE QUILT DEMOS. The five posts' real art and ten fillers on the 5×3 grid,
 // in the states the site's script drives (each set by hand here: the
@@ -355,6 +365,7 @@ const artMotions: Array<[string, string, string]> = [
 // Instrument tokens, for the swatch row: name → what it is for.
 const instrumentTokens = [
 	["--accent", "the one accent"],
+	["--accent-hover", "the accent under the pointer"],
 	["--on-accent", "type on the accent — the ink, both themes"],
 	["--lit", "a step that is on (accent dark / ink light)"],
 	["--emphasis", "the accent at a tint"],
@@ -367,7 +378,10 @@ const instrumentTokens = [
 	["--tone-4", "rank 4"],
 	["--tone-5", "rank 5 / other"],
 	["--hairline", "edges and dividers"],
-	["--focus-ring", "the focus ring, at --focus-ring-offset"],
+	["--hairline-strong", "the one outline that must read over the hairlines inside it"],
+	["--focus-ring", "the focus ring, at --focus-ring-offset (or --focus-ring-inset)"],
+	["--bar-width", "every solid edge bar: the pull quote's, a timeline mark, the active result"],
+	["--shadow-3", "the deep shadow, for the few things that float (a control panel)"],
 	["--card-background", "card surface"],
 	["--background", "page"],
 ] as const;
@@ -551,63 +565,43 @@ const faces = [
 	description="A living catalogue of the @whois design-system components, rendered in every variant, size, and state with a live token editor."
 	noindex
 >
-	{/* Live token editor. Sliders/pickers write inline custom properties onto
-	     <html> (which beats the class-scoped stylesheet), so every component in
-	     the catalogue re-renders instantly. "Copy config" exports the changed
-	     tokens as JSON for the agent to apply to tokens.overrides.css. */}
-	<aside class="ds-controls" data-token-controls aria-label="design token controls">
-		<header class="ds-controls__top">
-			<h2 class="ds-controls__title">tokens</h2>
-			<span class="ds-controls__theme" data-theme-name></span>
-		</header>
-		<p class="ds-controls__note">
+	{/* Live token editor — a Knobs panel. Sliders/pickers write inline custom
+	     properties onto <html> (which beats the class-scoped stylesheet), so
+	     every component in the catalogue re-renders instantly. "Copy config"
+	     exports the changed tokens as JSON for the agent to apply to
+	     tokens.overrides.css. */}
+	<Knobs title="tokens" class="ds-demo__knobs" data-token-controls aria-label="design token controls">
+		<Mono slot="meta" tone="accent" data-theme-name />
+		<Fragment slot="note">
 			Color edits apply to the current theme. Drag to preview; Copy config
 			exports changed tokens as JSON.
-		</p>
-		<div class="ds-controls__body">
-			{TOKEN_GROUPS.map((group) => (
-				<fieldset class="ds-controls__group" data-scope={group.scope}>
-					<legend>{group.title}</legend>
-					{group.controls.map((c) =>
-						c.type === "color" ? (
-							<label class="ds-controls__row ds-controls__row--color">
-								<span class="ds-controls__label">{c.label}</span>
-								<span class="ds-controls__colorwrap">
-									<input type="color" data-var={c.var} data-role="swatch" />
-									<input
-										type="text"
-										class="ds-controls__text"
-										data-var={c.var}
-										data-role="value"
-										spellcheck="false"
-									/>
-								</span>
-							</label>
-						) : (
-							<label class="ds-controls__row">
-								<span class="ds-controls__label">
-									{c.label}
-									<output data-out={c.var}></output>
-								</span>
-								<input
-									type="range"
-									data-var={c.var}
-									data-unit={c.unit ?? ""}
-									min={c.min}
-									max={c.max}
-									step={c.step}
-								/>
-							</label>
-						)
-					)}
-				</fieldset>
-			))}
-		</div>
-		<footer class="ds-controls__actions">
-			<button type="button" data-copy>Copy config</button>
-			<button type="button" data-reset>Reset</button>
-		</footer>
-	</aside>
+		</Fragment>
+		{TOKEN_GROUPS.map((group) => (
+			<KnobGroup legend={group.title} data-scope={group.scope}>
+				{group.controls.map((c) =>
+					c.type === "color" ? (
+						<Knob label={c.label} type="color">
+							<input type="color" data-var={c.var} data-role="swatch" />
+							<input type="text" data-var={c.var} data-role="value" spellcheck="false" />
+						</Knob>
+					) : (
+						<Knob
+							label={c.label}
+							type="range"
+							out={c.var}
+							data-var={c.var}
+							data-unit={c.unit ?? ""}
+							min={c.min}
+							max={c.max}
+							step={c.step}
+						/>
+					)
+				)}
+			</KnobGroup>
+		))}
+		<Button slot="actions" variant="primary" type="button" data-copy>Copy config</Button>
+		<Button slot="actions" variant="tertiary" type="button" data-reset>Reset</Button>
+	</Knobs>
 
 	<main class="ds-demo">
 		<h1 class="ds-demo__title">@whois/design-system — component catalogue</h1>
@@ -753,6 +747,10 @@ const faces = [
 							<span class="ds-demo__swatch ds-demo__swatch--on" style="background: var(--accent); color: var(--on-accent)">Aa</span>
 						) : name === "--focus-ring" ? (
 							<span class="ds-demo__swatch" style="outline: var(--focus-ring); outline-offset: var(--focus-ring-offset)" />
+						) : name === "--bar-width" ? (
+							<span class="ds-demo__swatch" style="border-inline-start: var(--bar-width) solid var(--accent)" />
+						) : name === "--shadow-3" ? (
+							<span class="ds-demo__swatch" style="box-shadow: var(--shadow-3); background: var(--card-background)" />
 						) : (
 							<span class="ds-demo__swatch" style={`background: var(${name})`} />
 						)}
@@ -1350,10 +1348,9 @@ assertions:
 							<Body>"I typically make everything agentic, as that's what will scale better. The majority of tasks are best solved by AI."</Body>
 							<Mono as="footer">Brace Sproul / LangChain</Mono>
 						</Blockquote>
-						<figure class="ds-prose-figure">
+						<Fig no="02" caption="Aptitude CLI failing">
 							<img src="/blog-images/aptitude-fail.webp" alt="Aptitude CLI failing" width="1400" height="875" loading="lazy" />
-							<figcaption><Mono>Fig. 02 / Aptitude CLI failing</Mono></figcaption>
-						</figure>
+						</Fig>
 						<Body>Ask the agent to do something it shouldn't, assert that it didn't. Pass or fail.</Body>
 					</div>
 				</section>
@@ -1377,6 +1374,130 @@ assertions:
 				<Body>"I typically make everything agentic, as that's what will scale better. The majority of tasks are best solved by AI."</Body>
 				<Mono as="footer">Brace Sproul / LangChain</Mono>
 			</Blockquote>
+		</section>
+
+		<section class="ds-demo__section" id="fig">
+			<h2 class="ds-demo__h">Fig — the numbered figure</h2>
+			<p class="ds-demo__note">
+				The image on a hairline, square, with the <code>Fig. 0N /</code> label and a
+				caption in the caps mono. <code>layout="flow"</code> (the default) is one
+				caption line under the image — the shape the sections plugin emits for every
+				image in a post body. <code>layout="ruled"</code> is a row on the page's
+				columns (<code>--ruled-columns</code>): the label bottom-aligned in the first,
+				the image and the caption across the other three — the post's hero; it
+				stacks below 1024.
+			</p>
+			<div style="--ruled-columns: repeat(4, minmax(0, 1fr)); display: grid; gap: var(--space-6);">
+				<Fig no="01" caption="Aptitude, passing — the read-order test" layout="ruled">
+					<img src="/blog-images/aptitude-pass.webp" alt="Aptitude CLI passing" width="1400" height="875" loading="lazy" />
+				</Fig>
+				<div style="max-inline-size: 44rem;">
+					<Fig no="02" caption="Aptitude CLI failing">
+						<img src="/blog-images/aptitude-fail.webp" alt="Aptitude CLI failing" width="1400" height="875" loading="lazy" />
+					</Fig>
+				</div>
+			</div>
+		</section>
+
+		<section class="ds-demo__section" id="index">
+			<h2 class="ds-demo__h">Index · IndexRow — the table at the foot</h2>
+			<p class="ds-demo__note">
+				Rows on the page's column template, cut by hairlines, opened by an inverted
+				<code>head</code> row; a <code>dim</code> row is an end with nothing beyond it.
+				Three cell classes: <code>ds-index__title</code> (the reading-size cell),
+				<code>ds-index__span</code> (takes the rest of the row),
+				<code>ds-index__fold</code> (the fourth column, which folds under the title
+				below 1024). The links are <code>Anchor variant="ink"</code>.
+			</p>
+			<Index aria-label="Sample index" style="--ruled-columns: repeat(4, minmax(0, 1fr));">
+				<IndexRow head>
+					<Mono>index</Mono><Mono>no.</Mono><Mono>title</Mono><Mono class="ds-index__fold">filed</Mono>
+				</IndexRow>
+				<IndexRow>
+					<Mono>tags</Mono><Mono tone="primary">005</Mono>
+					<Mono tone="primary" class="ds-index__span">
+						<Anchor variant="ink" href="#">ai</Anchor> · <Anchor variant="ink" href="#">testing</Anchor> · <Anchor variant="ink" href="#">agents</Anchor>
+					</Mono>
+				</IndexRow>
+				<IndexRow>
+					<Mono>← previous</Mono><Mono tone="primary">004</Mono>
+					<Anchor variant="ink" href="#" class="ds-index__title">Tahoe Mountain Hair</Anchor>
+					<Mono class="ds-index__fold">jun 2025</Mono>
+				</IndexRow>
+				<IndexRow dim>
+					<Mono>next →</Mono><Mono>—</Mono>
+					<Text as="span" size={3} variant="tertiary" class="ds-index__title">Nothing newer</Text>
+					<Mono class="ds-index__fold">—</Mono>
+				</IndexRow>
+			</Index>
+		</section>
+
+		<section class="ds-demo__section" id="hit-area">
+			<h2 class="ds-demo__h">HitArea · WidgetEmpty · Legend swatches</h2>
+			<p class="ds-demo__note">
+				<code>HitArea</code> is a transparent control laid OVER something — a real
+				button, no chrome, its focus ring inside the box it fills; <code>wash</code>
+				lights it under the pointer and while it says it is current or pressed. Tab to
+				the card: the ring is inside it. <code>WidgetEmpty</code> is a tile's empty
+				state, centred in the body's room. A <code>LegendItem</code>'s
+				<code>swatch</code> is a dot, a <code>line</code> or a <code>dashed</code> line.
+			</p>
+			<WidgetGrid cols={3}>
+				<Widget size="1x1" title="flip">
+					<CardBody>
+						<Figure unit="bpm">120</Figure>
+						<TickRuler segments={[{ share: 46 }, { share: 29 }, { share: 25 }]} />
+						<HitArea aria-pressed="false" aria-label="Show the other face" />
+					</CardBody>
+				</Widget>
+				<Widget size="1x1" title="visitors">
+					<CardBody><WidgetEmpty>No visitors yet.</WidgetEmpty></CardBody>
+				</Widget>
+				<Widget size="1x1" title="rank by season">
+					<CardBody>
+						<Legend items={[
+							{ label: "finish", swatch: "line", color: "var(--text-primary)" },
+							{ label: "seed", swatch: "dashed", color: "var(--text-tertiary)" },
+							{ label: "now", value: "1st" },
+						]} />
+						<div style="position: relative; flex: 1 1 auto; min-block-size: var(--space-8);">
+							<HitArea wash aria-current="true" aria-label="2026" style="inset-inline: 60% 0" />
+							<HitArea wash aria-label="2025" style="inset-inline: 30% 40%" />
+							<HitArea wash aria-label="2024" style="inset-inline: 0 70%" />
+						</div>
+					</CardBody>
+				</Widget>
+			</WidgetGrid>
+		</section>
+
+		<section class="ds-demo__section" id="knobs">
+			<h2 class="ds-demo__h">Knobs · KnobGroup · Knob — the control panel</h2>
+			<p class="ds-demo__note">
+				The playground's panel — the token editor on this page is one, /dotgrid's is
+				another. A <code>Knob</code> is a label over a native control the page's
+				script reads: a range with its live <code>output</code> (<code>out</code>), a
+				colour picker, a checkbox, a text field; the default slot replaces the
+				control for a row that holds its own. Groups are fieldsets under a caps
+				legend; the <code>actions</code> slot takes DS Buttons. Where it sits is the
+				page's decision.
+			</p>
+			<Knobs title="sample" aria-label="sample controls" style="max-inline-size: 264px;">
+				<Mono slot="meta" tone="accent">live</Mono>
+				<Fragment slot="note">Nothing here is wired; it shows the rows.</Fragment>
+				<KnobGroup legend="halftone">
+					<Knob label="cell-size" type="range" out="demo-cell" min="2" max="24" step="1" value="6" />
+					<Knob label="gamma" type="range" out="demo-gamma" min="0.2" max="3" step="0.05" value="0.8" />
+				</KnobGroup>
+				<KnobGroup legend="colour">
+					<Knob label="accent" type="color">
+						<input type="color" value="#e05a3a" />
+						<input type="text" value="oklch(62% 0.19 35)" spellcheck="false" />
+					</Knob>
+					<Knob label="invert" type="checkbox" />
+				</KnobGroup>
+				<Button slot="actions" variant="primary" type="button">Copy</Button>
+				<Button slot="actions" variant="tertiary" type="button">Reset</Button>
+			</Knobs>
 		</section>
 
 		{/* ART ------------------------------------------------------------ */}
@@ -1429,13 +1550,16 @@ assertions:
 				<ArtFrame svg={artTemplate} label="_template.svg at hero size" />
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Both themes — the plate is fixed</h2>
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Both themes — the plate follows the page</h2>
+			<p class="ds-demo__note">
+				The same file on each theme's page (<code>ThemePage</code>): the near-black
+				plate and white line on the dark page, bone and the dark ink on the light one.
+			</p>
 			<div class="ds-demo__art-themes">
 				{(["light", "dark"] as const).map((t) => (
-					<div class={`maximeheckel-${t} ds-demo__art-page`}>
-						<Mono>{t} page</Mono>
+					<ThemePage theme={t}>
 						<ArtFrame svg={artTemplate} label={`_template.svg on the ${t} theme`} />
-					</div>
+					</ThemePage>
 				))}
 			</div>
 
@@ -1503,10 +1627,9 @@ assertions:
 			</p>
 			<div class="ds-demo__art-themes">
 				{(["light", "dark"] as const).map((t) => (
-					<div class={`maximeheckel-${t} ds-demo__art-page`}>
-						<Mono>{t} page</Mono>
+					<ThemePage theme={t}>
 						<ArtFrame svg={artTemplate} label={`_template.svg as a mark on the ${t} page`} variant="mark" style="max-inline-size: 272px" />
-					</div>
+					</ThemePage>
 				))}
 			</div>
 		</section>
@@ -1682,6 +1805,8 @@ assertions:
 			<Flex direction="column" gap={2} alignItems="start">
 				<Anchor href="#">plain anchor</Anchor>
 				<Anchor href="#" underline>underline</Anchor>
+				<Anchor href="#" underline="always">underline always</Anchor>
+				<Anchor href="#" variant="ink">ink — the primary ink, the accent under the pointer</Anchor>
 				<Anchor href="#" discreet>discreet</Anchor>
 				<Anchor href="#" arrow="right">arrow right</Anchor>
 				<Anchor href="#" arrow="left">arrow left</Anchor>
@@ -2049,142 +2174,18 @@ assertions:
 		}
 	}
 
-	/* ── Token control panel ─────────────────────────────────────────────── */
-	.ds-controls {
+	/* THE TOKEN PANEL (a Knobs): fixed to the top-right corner on a wide
+	   screen; docked to the bottom as a scrollable sheet on a narrow one. */
+	.ds-demo__knobs {
 		position: fixed;
 		top: var(--space-4);
 		right: var(--space-4);
 		z-index: 20;
 		width: 264px;
 		max-height: calc(100vh - var(--space-8));
-		display: flex;
-		flex-direction: column;
-		padding: var(--space-4);
-		background: var(--card-background);
-		border: 1px solid var(--border-color);
-		border-radius: var(--border-radius-2);
-		box-shadow: 0 8px 30px oklch(0% 0 0 / 35%);
-		color: var(--text-primary);
-		font-family: var(--font-mono);
-		font-size: var(--font-size-1);
 	}
-	.ds-controls__top {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: var(--space-2);
-	}
-	.ds-controls__title {
-		margin: 0;
-		font-size: var(--font-size-3);
-		font-family: var(--font-mono);
-	}
-	.ds-controls__theme {
-		font-size: var(--font-size-1);
-		color: var(--accent);
-	}
-	.ds-controls__note {
-		margin: var(--space-1) 0 var(--space-2);
-		font-family: var(--font-body);
-		font-size: 0.72rem;
-		line-height: 1.35;
-		color: var(--text-tertiary);
-	}
-	.ds-controls__body {
-		flex: 1;
-		overflow-y: auto;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-3);
-		padding-right: var(--space-1);
-	}
-	.ds-controls__group {
-		margin: 0;
-		padding: var(--space-2) 0 0;
-		border: none;
-		border-top: 1px solid var(--border-color);
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-	.ds-controls__group legend {
-		padding: 0;
-		font-size: 0.72rem;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		color: var(--text-secondary);
-	}
-	.ds-controls__row {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
-	.ds-controls__label {
-		display: flex;
-		justify-content: space-between;
-		gap: var(--space-2);
-		color: var(--text-secondary);
-	}
-	.ds-controls__label output {
-		font-variant-numeric: tabular-nums;
-		color: var(--text-tertiary);
-	}
-	.ds-controls__row input[type="range"] {
-		width: 100%;
-		accent-color: var(--accent);
-	}
-	.ds-controls__colorwrap {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-	}
-	.ds-controls__colorwrap input[type="color"] {
-		width: 28px;
-		height: 24px;
-		flex: none;
-		padding: 0;
-		border: 1px solid var(--border-color);
-		border-radius: var(--border-radius-0);
-		background: none;
-		cursor: pointer;
-	}
-	.ds-controls__text {
-		flex: 1;
-		min-width: 0;
-		padding: 0.25rem 0.4rem;
-		border: 1px solid var(--input-border);
-		border-radius: var(--border-radius-0);
-		background: var(--input-background);
-		color: var(--text-primary);
-		font-family: var(--font-mono);
-		font-size: 0.72rem;
-	}
-	.ds-controls__actions {
-		display: flex;
-		gap: var(--space-2);
-		margin-top: var(--space-3);
-		padding-top: var(--space-3);
-		border-top: 1px solid var(--border-color);
-	}
-	.ds-controls__actions button {
-		flex: 1;
-		padding: 0.4rem 0.5rem;
-		border: 1px solid var(--border-color);
-		border-radius: var(--border-radius-1);
-		background: var(--accent);
-		color: var(--on-accent);
-		font: inherit;
-		font-size: 0.78rem;
-		cursor: pointer;
-	}
-	.ds-controls__actions button[data-reset] {
-		background: transparent;
-		color: var(--text-secondary);
-	}
-
-	/* On narrow screens: dock to a scrollable bottom sheet, don't cover content. */
 	@media (max-width: 900px) {
-		.ds-controls {
+		.ds-demo__knobs {
 			top: auto;
 			bottom: 0;
 			left: 0;
@@ -2266,21 +2267,11 @@ assertions:
 		gap: var(--space-4);
 		align-items: start;
 	}
-	/* The template on each theme's page, side by side: the wrapper's theme
-	   class re-resolves every token in scope. */
+	/* The template on each theme's page (ThemePage), side by side. */
 	.ds-demo__art-themes {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 		gap: var(--space-4);
-	}
-	.ds-demo__art-page {
-		display: grid;
-		gap: var(--space-3);
-		padding: var(--space-4);
-		background: var(--background);
-		color: var(--text-primary);
-		border: 1px solid var(--hairline);
-		border-radius: var(--border-radius-1);
 	}
 	.ds-demo__art-toggle {
 		display: inline-flex;

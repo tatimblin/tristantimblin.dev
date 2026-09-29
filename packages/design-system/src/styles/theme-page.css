@@ -1,0 +1,13 @@
+/* ThemePage — a piece of a theme's page in a hairline box: the page colour,
+ * the primary ink, the surface radius. The theme class on the same element
+ * re-resolves every themed token inside. */
+.ds-theme-page {
+	display: grid;
+	gap: var(--space-3);
+	align-content: start;
+	padding: var(--space-4);
+	background: var(--background);
+	color: var(--text-primary);
+	border: 1px solid var(--hairline);
+	border-radius: var(--border-radius-1);
+}

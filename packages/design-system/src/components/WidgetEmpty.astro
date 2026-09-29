@@ -1,0 +1,20 @@
+---
+// WidgetEmpty — a widget's empty state (styles/widget-empty.css): one line
+// in the quiet mono, centred in whatever room the card body has. For the
+// tile whose data file has nothing in it yet — no visitors, no seasons — so
+// the card says so rather than draw a row of empty bars.
+//
+//   <CardBody><WidgetEmpty>No visitors yet.</WidgetEmpty></CardBody>
+import { cx } from "../lib/cx";
+import Mono from "./Mono.astro";
+
+interface Props {
+	as?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "p", class: className, ...rest } = Astro.props;
+---
+
+<Mono as={as} variant="text" class={cx("ds-widget-empty", className)} {...rest}><slot /></Mono>

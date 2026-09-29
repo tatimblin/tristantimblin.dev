@@ -1,5 +1,6 @@
 ---
-// LegendItem — one row of a Legend: dot, caps label, value at the end
+// LegendItem — one row of a Legend: the swatch (a dot; `swatch="line"` or
+// `"dashed"` for a series drawn as one), caps label, value at the end
 // (styles/legend.css). `color` overrides the dot's ranked tone; the `value`
 // slot replaces the value prop when it needs markup.
 import { cx } from "../lib/cx";
@@ -10,6 +11,8 @@ interface Props {
 	label?: string;
 	value?: string | number;
 	color?: string;
+	/** The key's mark: a dot, or a line / dashed line for a series drawn as one. */
+	swatch?: "dot" | "line" | "dashed";
 	class?: string;
 	style?: string;
 	[key: string]: unknown;
@@ -20,6 +23,7 @@ const {
 	label,
 	value,
 	color,
+	swatch = "dot",
 	class: className,
 	style,
 	...rest
@@ -30,7 +34,7 @@ const hasValueSlot = Astro.slots.has("value");
 const vars = [color && `--legend-color:${color}`, style].filter(Boolean).join(";");
 ---
 
-<Tag class={cx("ds-legend__item", className)} style={vars || undefined} {...rest}>
+<Tag class={cx("ds-legend__item", swatch !== "dot" && `ds-legend__item--swatch-${swatch}`, className)} style={vars || undefined} {...rest}>
 	<span class="ds-legend__dot" aria-hidden="true"></span>
 	<Mono class="ds-legend__label">{label ?? <slot />}</Mono>
 	{

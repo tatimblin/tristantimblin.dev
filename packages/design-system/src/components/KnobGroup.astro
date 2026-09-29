@@ -1,0 +1,19 @@
+---
+// KnobGroup — a fieldset of Knobs under a caps legend, cut off from the
+// group before it by a hairline (styles/knobs.css).
+import { cx } from "../lib/cx";
+import Mono from "./Mono.astro";
+
+interface Props {
+	legend?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { legend, class: className, ...rest } = Astro.props;
+---
+
+<fieldset class={cx("ds-knob-group", className)} {...rest}>
+	{legend && <Mono as="legend" tone="tertiary" class="ds-knob-group__legend">{legend}</Mono>}
+	<slot />
+</fieldset>

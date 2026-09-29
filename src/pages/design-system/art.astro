@@ -15,6 +15,7 @@ import H1 from "@whois/design-system/H1";
 import H2 from "@whois/design-system/H2";
 import Mono from "@whois/design-system/Mono";
 import Anchor from "@whois/design-system/Anchor";
+import ThemePage from "@whois/design-system/ThemePage";
 import InlineCode from "@whois/design-system/InlineCode";
 
 const postFiles = import.meta.glob<string>("../../content/txt/*.svg", {
@@ -162,8 +163,7 @@ const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 							</header>
 							<div class="art-cat__themes">
 								{themes.map((t) => (
-									<div class={`maximeheckel-${t} art-cat__page`}>
-										<Mono>{t} page</Mono>
+									<ThemePage theme={t}>
 										<ArtFrame svg={p.svg} label={`${p.slug} on the ${t} page, hero size`} data-art-entry />
 										<ArtFrame
 											svg={p.svg}
@@ -171,7 +171,7 @@ const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 											class="art-cat__tile"
 											data-art-entry
 										/>
-									</div>
+									</ThemePage>
 								))}
 							</div>
 						</article>
@@ -293,24 +293,13 @@ const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 		flex-wrap: wrap;
 		gap: var(--space-1) var(--space-4);
 	}
-	/* The two theme pages side by side: each wrapper's theme class
-	   re-resolves the ART block (and every other themed token) in scope. */
+	/* The two theme pages (ThemePage) side by side. */
 	.art-cat__themes {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 		gap: var(--space-4);
 	}
-	.art-cat__page {
-		display: grid;
-		gap: var(--space-3);
-		align-content: start;
-		padding: var(--space-4);
-		background: var(--background);
-		color: var(--text-primary);
-		border: 1px solid var(--hairline);
-		border-radius: var(--border-radius-1);
-	}
-	.art-cat__page :global(.art-cat__tile) {
+	.art-cat__themes :global(.art-cat__tile) {
 		width: 230px;
 		max-width: 100%;
 	}

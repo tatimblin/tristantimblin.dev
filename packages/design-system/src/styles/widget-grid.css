@@ -11,7 +11,9 @@
 	   and knocked every cell off the shared --widget-cell size. */
 	grid-template-columns: repeat(var(--widget-cols, 4), minmax(0, 1fr));
 	grid-auto-rows: auto;
-	gap: var(--space-5); /* 24px, matches the home grid column-gap */
+	/* The gap, as a token the spans below and a widget's own maths read. */
+	--widget-grid-gap: var(--space-5);
+	gap: var(--widget-grid-gap);
 	grid-auto-flow: dense; /* reflow: fill holes when a later item fits */
 
 	/* FLUID SCALING (container queries) ------------------------------------
@@ -33,7 +35,7 @@
 	--widget-cols-eff: var(--widget-cols, 4);
 	/* One 1×1 cell's inline size = (grid width − total gaps) ÷ columns. */
 	--widget-cell: calc(
-		(100cqi - (var(--widget-cols-eff) - 1) * var(--space-5)) /
+		(100cqi - (var(--widget-cols-eff) - 1) * var(--widget-grid-gap)) /
 			var(--widget-cols-eff)
 	);
 
@@ -58,6 +60,10 @@
 		min(var(--widget-font-xl), calc(var(--widget-cell) * 0.13))
 	);
 	--widget-icon: clamp(20px, calc(var(--widget-cell) * 0.067), 30px);
+	/* The voices' sizes, on the scale (tokens.overrides.css defines them on
+	   :root at the type steps; Mono and Figure read them). */
+	--voice-mono-size: var(--widget-font-xs);
+	--voice-figure-size: var(--widget-font-figure);
 }
 
 /* Base cell: 1×1, square. Size modifiers extend the span and aspect.
@@ -92,11 +98,15 @@
 .ds-widget > .ds-card-header + .ds-card-body {
 	padding-block-start: var(--space-3);
 }
-/* Phone tiles (~160px): the header row closes up a step, since every pixel
-   of a 160px cell that the header takes is one the body's graphic loses, and
-   the caps tighten to the mono tracking — the full caps tracking costs a word
-   a line — by retuning the token the caps role reads, in scope. */
-@media (max-width: 900px) {
+/* COMPACT TILES: the header row closes up a step, since every pixel of a
+   small cell that the header takes is one the body's graphic loses, and the
+   caps tighten to the mono tracking — the full caps tracking costs a word a
+   line — by retuning the token the caps role reads, in scope. These are
+   rules about the CELL, so they are a container query on the grid: the
+   fluid scale above is keyed to a 300px reference cell, and a two-column
+   grid narrower than two of those (2 × 300 + the gap) has cells below it.
+   (Legend's row gap closes up on the same query, legend.css.) */
+@container widget (max-width: 624px) {
 	.ds-widget {
 		--tracking-caps: var(--tracking-mono);
 	}
@@ -115,10 +125,13 @@
 	grid-row: span 2;
 }
 
-/* Aspect per size so cells read as clean N×M blocks regardless of track width.
-   In :where(), so they carry no specificity: a widget that must release its
-   aspect (a 1×2 stretched to its rows, a 2×2 that grows on a phone) says
-   `aspect-ratio: auto` in its own rule and wins, without doubling classes. */
+/* THE SPANS' SIZES. A 1×1 is square by aspect ratio; a span is sized from
+   the CELL and the GAP — a 2×1 is one cell tall, a 1×2 two cells and the gap
+   between them — rather than by an aspect ratio, which knows nothing of the
+   gap (2 / 1 on a box two cells and a gap wide came out half a gap taller
+   than its row). In :where(), so they carry no specificity: a widget that
+   must release its size (a 2×2 that grows on a phone) says `aspect-ratio:
+   auto` or `block-size: auto` in its own rule and wins. */
 :where(.ds-widget) {
 	aspect-ratio: 1 / 1;
 }
@@ -126,15 +139,21 @@
 	aspect-ratio: 1 / 1;
 } /* 2×2 square */
 :where(.ds-widget--w2:not(.ds-widget--h2)) {
-	aspect-ratio: 2 / 1;
+	aspect-ratio: auto;
+	block-size: var(--widget-cell);
 } /* wide 2×1 */
 :where(.ds-widget:not(.ds-widget--w2).ds-widget--h2) {
-	aspect-ratio: 1 / 2;
+	aspect-ratio: auto;
+	block-size: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
 } /* tall 1×2 */
 
-/* Responsive: 4 → 2 cols at/below tablet, held at 2 on phone. Override
-   grid-template-columns directly (not the --widget-cols var) so it beats the
-   inline `--widget-cols:N` that the `cols` prop sets on the element. */
+/* THE COMPACT STEP: 4 → 2 columns at and below 900px, held at 2 on a phone.
+   The one breakpoint of the site's own (the rest are the DS's: 640 / 768 /
+   1024 / 1280), written here and exported for scripts as WIDGET_COMPACT_MQ
+   (src/lib/breakpoints.ts) — a widget's own stylesheet or script that must
+   step with the grid reads it from there. Override grid-template-columns
+   directly (not the --widget-cols var) so it beats the inline
+   `--widget-cols:N` that the `cols` prop sets on the element. */
 @media (max-width: 900px) {
 	.ds-widget-grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));

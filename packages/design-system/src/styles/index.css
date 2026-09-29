@@ -40,6 +40,8 @@
 @import "./icon-button.css" layer(ds.components);
 @import "./card.css" layer(ds.components);
 @import "./faces.css" layer(ds.components);
+@import "./widget-empty.css" layer(ds.components);
+@import "./hit-area.css" layer(ds.components);
 @import "./callout.css" layer(ds.components);
 @import "./pill.css" layer(ds.components);
 @import "./chip.css" layer(ds.components);
@@ -60,9 +62,14 @@
 @import "./post-list.css" layer(ds.components);
 @import "./prose.css" layer(ds.components);
 @import "./blockquote.css" layer(ds.components);
+@import "./fig.css" layer(ds.components);
+@import "./index-table.css" layer(ds.components);
 /* The art: the frame every artwork renders through. */
 @import "./art-frame.css" layer(ds.components);
 /* The quilt: the grid of art tiles, its panel, and the ruled bar above it. */
 @import "./quilt.css" layer(ds.components);
 @import "./quilt-panel.css" layer(ds.components);
 @import "./search-bar.css" layer(ds.components);
+/* The catalogue's and the playgrounds' tooling. */
+@import "./knobs.css" layer(ds.components);
+@import "./theme-page.css" layer(ds.components);

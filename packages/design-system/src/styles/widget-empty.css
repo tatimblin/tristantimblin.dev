@@ -1,0 +1,7 @@
+/* WidgetEmpty — centred in the card body's room, both ways: the body is a
+ * flex column, so auto margins take the slack. */
+.ds-widget-empty {
+	margin: auto;
+	text-align: center;
+	white-space: normal;
+}

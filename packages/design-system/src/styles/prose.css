@@ -220,25 +220,7 @@
 	font-size: 0.85em;
 }
 
-/* A figure: the image on a hairline, square; the caption row under it. */
-.ds-prose-figure {
-	margin: 0;
-}
-.ds-prose-figure > img,
-.ds-prose-figure > a > img {
-	border: 1px solid var(--hairline);
-	border-radius: 0;
-}
-.ds-prose-figure > figcaption {
-	display: flex;
-	justify-content: space-between;
-	gap: var(--space-4);
-	margin-block-start: var(--space-2);
-}
-.ds-prose-figure > figcaption > * {
-	white-space: normal;
-	line-height: var(--line-height-ui);
-}
+/* A figure is a Fig (fig.css): the plugin emits its markup. */
 
 /* A quote with an attribution: the blockquote, then the attribution as the
    figure's caption, outside the quoted words, in the caps mono a step under

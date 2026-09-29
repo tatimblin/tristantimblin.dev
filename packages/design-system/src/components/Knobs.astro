@@ -1,0 +1,49 @@
+---
+// Knobs — a control panel (styles/knobs.css): the lil-gui-style box of
+// sliders, pickers and switches that drives a playground — /dotgrid's, the
+// catalogue's token editor. A card surface in the hairline with a shadow (it
+// floats over a page), the UI face at the small step; a title row, a note,
+// a scrolling body of Knob rows (grouped with KnobGroup), and an actions
+// footer of DS Buttons. Where it sits (fixed to a corner, docked to the
+// bottom on a phone) is the page's decision.
+//
+//   <Knobs title="tokens" aria-label="design token controls" class="page__knobs">
+//     <Mono slot="meta" tone="accent">dark</Mono>
+//     <Fragment slot="note">Drag to preview.</Fragment>
+//     <KnobGroup legend="Spacing">
+//       <Knob label="space-4" type="range" min="0" max="64" step="1" value="16" out="--space-4" data-var="--space-4" />
+//     </KnobGroup>
+//     <Button slot="actions" variant="primary">Copy config</Button>
+//   </Knobs>
+import { cx } from "../lib/cx";
+import Mono from "./Mono.astro";
+
+interface Props {
+	as?: string;
+	title?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "aside", title, class: className, ...rest } = Astro.props;
+const Tag = as as any;
+const hasMeta = Astro.slots.has("meta");
+const hasNote = Astro.slots.has("note");
+const hasActions = Astro.slots.has("actions");
+---
+
+<Tag class={cx("ds-knobs", className)} {...rest}>
+	{(title || hasMeta) && (
+		<header class="ds-knobs__head">
+			{title && <Mono tone="primary" class="ds-knobs__title">{title}</Mono>}
+			{hasMeta && <slot name="meta" />}
+		</header>
+	)}
+	{hasNote && (
+		<Mono as="p" variant="text" class="ds-knobs__note"><slot name="note" /></Mono>
+	)}
+	<div class="ds-knobs__body"><slot /></div>
+	{hasActions && (
+		<footer class="ds-knobs__actions"><slot name="actions" /></footer>
+	)}
+</Tag>

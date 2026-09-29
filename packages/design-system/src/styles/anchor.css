@@ -7,7 +7,6 @@
 	font-weight: inherit;
 	word-break: break-word;
 	text-decoration: none;
-	outline: none;
 	transition:
 		border-color var(--duration-swap) var(--ease-reveal),
 		color var(--duration-swap) var(--ease-reveal);
@@ -25,6 +24,12 @@
 		--anchor-color: var(--anchor-hover-color, var(--accent));
 		--anchor-arrow-shift: var(--anchor-arrow-translation, 0);
 	}
+}
+
+/* ink — the primary ink at rest, the accent under the pointer or focus. */
+.ds-anchor--variant-ink {
+	--anchor-color: var(--text-primary);
+	--anchor-hover-color: var(--accent);
 }
 
 /* discreet */
@@ -125,4 +130,9 @@
 	.ds-anchor--underline-true:hover {
 		--anchor-border-color: var(--accent);
 	}
+}
+/* underline="always": drawn at rest, in the text's own colour; the accent
+   still takes it under the pointer (the rules above). */
+.ds-anchor--underline-always {
+	--anchor-border-color: currentColor;
 }

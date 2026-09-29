@@ -201,6 +201,9 @@
 	--duration-reveal: 900ms;
 	--duration-settle: 420ms;
 	--duration-swap: 260ms;
+	/*   quick  — a micro-transition on a small control (a footer toggle's edge
+	 *            tinting, a hit area's wash): felt, not watched. */
+	--duration-quick: 120ms;
 	/*   loop   — one cycle of an art animation (art-frame.css): a reel's turn, a
 	 *            tape's period, a dot field's drift out and back. Slow, because
 	 *            the art only moves under the pointer and should feel like an
@@ -235,6 +238,7 @@
 		--duration-reveal: 0s;
 		--duration-settle: 0s;
 		--duration-swap: 0s;
+		--duration-quick: 0s;
 		--duration-loop: 0s;
 	}
 }
@@ -297,6 +301,20 @@
 	/* The playhead's dot (playhead.css): small — a marker, not a control —
 	 * and sized off the ruler's headroom (--space-2) so the two agree. */
 	--playhead-dot: calc(var(--space-2) * 0.75);
+
+	/* THE VOICES, as custom properties, for a consumer that cannot take the
+	 * classes — a web component's shadow DOM styled through ::part(), a
+	 * canvas: the mono (Mono's caps/text voice) and the figure (Figure's
+	 * numeral). The sizes follow the widget scale inside a WidgetGrid, which
+	 * redefines them there (widget-grid.css); the components read these too,
+	 * so a voice IS its tokens. */
+	--voice-mono-family: var(--font-mono);
+	--voice-mono-size: var(--font-size-0);
+	--voice-mono-tracking: var(--tracking-mono);
+	--voice-figure-family: var(--font-ui);
+	--voice-figure-weight: var(--font-weight-400);
+	--voice-figure-tracking: var(--tracking-heading);
+	--voice-figure-size: var(--font-size-7);
 }
 
 .maximeheckel-light,
@@ -340,6 +358,31 @@
 	 * a pill or a button, a graph that became a slider, a flip surface. One
 	 * width and colour, so focus looks the same on every card. */
 	--focus-ring: 2px solid var(--accent);
+
+	/* The tick ruler in the INK — the elapsed stretch of the player's
+	 * progress bar, which paints on a pseudo-element whose currentColor
+	 * cannot be set apart from the bar's, so --ticks-image cannot be
+	 * recoloured for it. The same pitch, the ink named. */
+	--ticks-image-ink: repeating-linear-gradient(
+		to right,
+		var(--text-primary) 0 1px,
+		transparent 1px var(--tick-pitch)
+	);
+
+	/* SHADOWS, the upstream scale (tokens/shadows.ts, Shadows[1..3]) on the
+	 * theme's --shadow-color, for the few things that float over the page
+	 * — a control panel, a sheet. The cards are flat and take none. */
+	--shadow-1: 0.5px 1px 1px hsl(var(--shadow-color) / 0.333);
+	--shadow-2:
+		1px 2px 2px hsl(var(--shadow-color) / 0.333),
+		2px 4px 4px hsl(var(--shadow-color) / 0.333),
+		3px 6px 6px hsl(var(--shadow-color) / 0.333);
+	--shadow-3:
+		1px 2px 2px hsl(var(--shadow-color) / 0.2),
+		2px 4px 4px hsl(var(--shadow-color) / 0.2),
+		4px 8px 8px hsl(var(--shadow-color) / 0.2),
+		8px 16px 16px hsl(var(--shadow-color) / 0.2),
+		16px 32px 32px hsl(var(--shadow-color) / 0.2);
 }
 
 /* THE ACCENT. Orange-red, and one per card. The DS red alone is crimson and

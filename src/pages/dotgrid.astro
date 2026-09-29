@@ -1,5 +1,13 @@
 ---
+// /dotgrid — the playground for the <dotted-grid> web component: the hero
+// grid full-viewport, driven live by a Knobs panel (the design system's
+// control panel) fixed to the corner.
 import Layout from "../layouts/Layout.astro";
+import Knobs from "@whois/design-system/Knobs";
+import KnobGroup from "@whois/design-system/KnobGroup";
+import Knob from "@whois/design-system/Knob";
+import Chip from "@whois/design-system/Chip";
+import Button from "@whois/design-system/Button";
 import "@whois/dotted-grid/styles.css";
 
 const SOURCES = [
@@ -12,6 +20,26 @@ const SOURCES = [
 ];
 const SRC = SOURCES[0].src;
 const SRC_WEBM = SOURCES[0].webm;
+
+// The knobs: an attribute each, a range over it. `zeroOff` marks the
+// "absent = off" attributes (0 removes the attribute rather than setting it).
+const knobs = [
+	{ attr: "cell-size", min: 2, max: 24, step: 1, value: 6 },
+	{ attr: "dot-scale", min: 0.2, max: 1.5, step: 0.05, value: 1 },
+	{ attr: "levels", min: 1, max: 12, step: 1, value: 5 },
+	{ attr: "cutoff", min: 0, max: 1, step: 0.05, value: 0, zeroOff: true },
+	{ attr: "feather", min: 0, max: 1, step: 0.05, value: 0, zeroOff: true },
+	{ attr: "denoise", min: 0, max: 1, step: 0.05, value: 0, zeroOff: true },
+	{ attr: "gamma", min: 0.2, max: 3, step: 0.05, value: 0.8 },
+	{ attr: "contrast", min: 0.2, max: 3, step: 0.05, value: 1.1 },
+	{ attr: "color-reveal", min: 0, max: 300, step: 10, value: 0, zeroOff: true },
+	{ attr: "shimmer", label: "shimmer %", min: 0, max: 100, step: 1, value: 0, zeroOff: true },
+	{ attr: "reveal-boost", min: 0, max: 1, step: 0.05, value: 1 },
+	{ attr: "dot-shape", label: "dot-shape (0 sq / 1 circle / 2 morph)", min: 0, max: 2, step: 1, value: 2 },
+	{ attr: "bloom", min: 0, max: 1, step: 0.05, value: 0.55, zeroOff: true },
+	{ attr: "crosshatch", min: 0, max: 1, step: 0.05, value: 0.35, zeroOff: true },
+	{ attr: "intro-jitter", min: 0, max: 0.5, step: 0.02, value: 0.16 },
+];
 ---
 
 <Layout
@@ -23,109 +51,47 @@ const SRC_WEBM = SOURCES[0].webm;
 		{/* Full-viewport hero preview, driven live by the control panel. */}
 		<dotted-grid data-hero src={SRC} src-webm={SRC_WEBM}></dotted-grid>
 
-		<aside class="controls" data-controls aria-label="dotted-grid controls">
-			<h2>&lt;dotted-grid&gt;</h2>
-			<div class="sources">
+		<Knobs title="<dotted-grid>" class="dotgrid-demo__knobs" data-controls aria-label="dotted-grid controls">
+			<KnobGroup legend="source" class="dotgrid-demo__sources">
 				{SOURCES.map((s, i) => (
-					<button type="button" data-src={s.src} data-webm={s.webm} class={i === 0 ? "is-active" : ""}>
+					<Chip as="button" type="button" data-src={s.src} data-webm={s.webm} aria-pressed={i === 0 ? "true" : "false"}>
 						{s.label}
-					</button>
+					</Chip>
 				))}
-			</div>
-			<label>
-				<span>cell-size <output data-out="cell-size"></output></span>
-				<input type="range" data-attr="cell-size" min="2" max="24" step="1" value="6" />
-			</label>
-			<label>
-				<span>dot-scale <output data-out="dot-scale"></output></span>
-				<input type="range" data-attr="dot-scale" min="0.2" max="1.5" step="0.05" value="1" />
-			</label>
-			<label>
-				<span>levels <output data-out="levels"></output></span>
-				<input type="range" data-attr="levels" min="1" max="12" step="1" value="5" />
-			</label>
-			<label>
-				<span>cutoff <output data-out="cutoff"></output></span>
-				<input type="range" data-attr="cutoff" data-zero-off min="0" max="1" step="0.05" value="0" />
-			</label>
-			<label>
-				<span>feather <output data-out="feather"></output></span>
-				<input type="range" data-attr="feather" data-zero-off min="0" max="1" step="0.05" value="0" />
-			</label>
-			<label>
-				<span>denoise <output data-out="denoise"></output></span>
-				<input type="range" data-attr="denoise" data-zero-off min="0" max="1" step="0.05" value="0" />
-			</label>
-			<label>
-				<span>gamma <output data-out="gamma"></output></span>
-				<input type="range" data-attr="gamma" min="0.2" max="3" step="0.05" value="0.8" />
-			</label>
-			<label>
-				<span>contrast <output data-out="contrast"></output></span>
-				<input type="range" data-attr="contrast" min="0.2" max="3" step="0.05" value="1.1" />
-			</label>
-			<label>
-				<span>color-reveal <output data-out="color-reveal"></output></span>
-				<input type="range" data-attr="color-reveal" data-zero-off min="0" max="300" step="10" value="0" />
-			</label>
-			<label>
-				<span>shimmer % <output data-out="shimmer"></output></span>
-				<input type="range" data-attr="shimmer" data-zero-off min="0" max="100" step="1" value="0" />
-			</label>
-			<label>
-				<span>reveal-boost <output data-out="reveal-boost"></output></span>
-				<input type="range" data-attr="reveal-boost" min="0" max="1" step="0.05" value="1" />
-			</label>
-			<label>
-				<span>dot-shape (0 sq / 1 circle / 2 morph) <output data-out="dot-shape"></output></span>
-				<input type="range" data-attr="dot-shape" min="0" max="2" step="1" value="2" />
-			</label>
-			<label>
-				<span>bloom <output data-out="bloom"></output></span>
-				<input type="range" data-attr="bloom" data-zero-off min="0" max="1" step="0.05" value="0.55" />
-			</label>
-			<label>
-				<span>crosshatch <output data-out="crosshatch"></output></span>
-				<input type="range" data-attr="crosshatch" data-zero-off min="0" max="1" step="0.05" value="0.35" />
-			</label>
-			<label>
-				<span>intro-jitter <output data-out="intro-jitter"></output></span>
-				<input type="range" data-attr="intro-jitter" min="0" max="0.5" step="0.02" value="0.16" />
-			</label>
-			{/* The intro wipe is a one-shot ENTRANCE, so it can't be driven by a live
-			     slider like the other knobs: it runs once per element and latches. These
-			     two feed the replay button, which re-runs it on a fresh element at the
-			     chosen delay + duration (see the handler in the page script). */}
-			<label>
-				<span>intro delay ms <output data-out="intro-delay-ms">600</output></span>
-				<input type="range" data-intro-delay-ms min="0" max="3000" step="100" value="600" />
-			</label>
-			<label>
-				<span>intro ms <output data-out="intro-ms">3200</output></span>
-				<input type="range" data-intro-ms min="300" max="8000" step="100" value="3200" />
-			</label>
-			<button type="button" data-replay-intro>replay intro ▶</button>
-			<div class="row">
-				<label class="color">
-					<span>color</span>
-					<input type="color" data-attr="color" value="#ededed" />
-				</label>
-				<label class="color">
-					<span>background</span>
-					<input type="color" data-attr="background" value="#000000" />
-				</label>
-			</div>
-			<div class="row">
-				<label class="check">
-					<input type="checkbox" data-attr="invert" />
-					<span>invert</span>
-				</label>
-				<label class="check">
-					<input type="checkbox" data-attr="paused" />
-					<span>paused</span>
-				</label>
-			</div>
-		</aside>
+			</KnobGroup>
+			<KnobGroup legend="halftone">
+				{knobs.map((k) => (
+					<Knob
+						label={k.label ?? k.attr}
+						type="range"
+						out={k.attr}
+						data-attr={k.attr}
+						data-zero-off={k.zeroOff ? "" : undefined}
+						min={k.min}
+						max={k.max}
+						step={k.step}
+						value={k.value}
+					/>
+				))}
+			</KnobGroup>
+			<KnobGroup legend="intro">
+				{/* The intro wipe is a one-shot ENTRANCE, so it can't be driven by a live
+				     slider like the other knobs: it runs once per element and latches. These
+				     two feed the replay button, which re-runs it on a fresh element at the
+				     chosen delay + duration (see the handler in the page script). */}
+				<Knob label="intro delay ms" type="range" out="intro-delay-ms" data-intro-delay-ms min="0" max="3000" step="100" value="600" />
+				<Knob label="intro ms" type="range" out="intro-ms" data-intro-ms min="300" max="8000" step="100" value="3200" />
+				<Button variant="secondary" type="button" data-replay-intro>replay intro ▶</Button>
+			</KnobGroup>
+			<KnobGroup legend="colour" class="dotgrid-demo__row">
+				<Knob label="color" type="color" data-attr="color" value="#ededed" />
+				<Knob label="background" type="color" data-attr="background" value="#000000" />
+			</KnobGroup>
+			<KnobGroup legend="switches" class="dotgrid-demo__row">
+				<Knob label="invert" type="checkbox" data-attr="invert" />
+				<Knob label="paused" type="checkbox" data-attr="paused" />
+			</KnobGroup>
+		</Knobs>
 	</main>
 	<script>
 		import "@whois/dotted-grid";
@@ -197,7 +163,8 @@ const SRC_WEBM = SOURCES[0].webm;
 				current.replaceWith(fresh);
 			});
 
-			// Source switcher: swap the video the effect samples.
+			// Source switcher: swap the video the effect samples. The chips are
+			// toggles; the pressed one is the source playing.
 			panel.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((btn) => {
 				btn.addEventListener("click", () => {
 					// Set src-webm before src: the element reads src-webm fresh when the
@@ -209,7 +176,7 @@ const SRC_WEBM = SOURCES[0].webm;
 					el.setAttribute("src", btn.dataset.src!);
 					panel
 						.querySelectorAll("[data-src]")
-						.forEach((b) => b.classList.toggle("is-active", b === btn));
+						.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
 				});
 			});
 		}
@@ -230,103 +197,39 @@ const SRC_WEBM = SOURCES[0].webm;
 		--dotted-grid-height: 100vh;
 	}
 
-	.controls {
+	/* The panel: fixed to the top-right corner, as tall as the viewport lets
+	   it be (the Knobs body scrolls); on a phone across the bottom instead. */
+	.dotgrid-demo__knobs {
 		position: fixed;
-		top: var(--space-4, 1.5rem);
-		right: var(--space-4, 1.5rem);
+		top: var(--space-4);
+		right: var(--space-4);
 		z-index: 10;
-		width: 240px;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-3, 0.75rem);
-		padding: var(--space-4, 1.5rem);
-		background: rgba(10, 10, 12, 0.72);
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: var(--radius, 12px);
-		font-family: var(--font-sans);
-		font-size: 0.8rem;
+		width: 264px;
+		max-height: calc(100vh - var(--space-8));
 	}
-
-	.controls h2 {
-		margin: 0 0 var(--space-1, 0.25rem);
-		font-size: 0.95rem;
-		font-family: ui-monospace, monospace;
-	}
-
-	.controls .sources {
-		display: flex;
-		gap: 0.4rem;
-	}
-
-	.controls .sources button {
-		flex: 1;
-		padding: 0.35rem 0.5rem;
-		border: 1px solid rgba(255, 255, 255, 0.18);
-		border-radius: 8px;
-		background: transparent;
-		color: inherit;
-		font: inherit;
-		font-size: 0.78rem;
-		cursor: pointer;
-	}
-
-	.controls .sources button.is-active {
-		background: #7fd4ff;
-		border-color: #7fd4ff;
-		color: #03060d;
-		font-weight: 600;
-	}
-
-	.controls label {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-	}
-
-	.controls label span {
-		display: flex;
-		justify-content: space-between;
-		opacity: 0.85;
-	}
-
-	.controls output {
-		font-variant-numeric: tabular-nums;
-		opacity: 0.6;
-	}
-
-	.controls input[type="range"] {
-		width: 100%;
-		accent-color: #7fd4ff;
-	}
-
-	.controls .row {
-		display: flex;
-		gap: var(--space-3, 0.75rem);
-	}
-
-	.controls .color {
-		flex: 1;
-	}
-
-	.controls .color input {
-		width: 100%;
-		height: 28px;
-		padding: 0;
-		border: none;
-		background: none;
-	}
-
-	.controls .check {
+	.dotgrid-demo__sources,
+	.dotgrid-demo__row {
 		flex-direction: row;
-		align-items: center;
-		gap: 0.4rem;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+	.dotgrid-demo__sources > :global(legend),
+	.dotgrid-demo__row > :global(legend) {
+		flex-basis: 100%;
+	}
+	.dotgrid-demo__row > :global(.ds-knob) {
+		flex: 1 1 0;
 	}
 
 	@media (max-width: 640px) {
-		.controls {
-			left: var(--space-4, 1.5rem);
+		.dotgrid-demo__knobs {
+			top: auto;
+			bottom: 0;
+			left: 0;
+			right: 0;
 			width: auto;
+			max-height: 45vh;
+			border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
 		}
 	}
 </style>

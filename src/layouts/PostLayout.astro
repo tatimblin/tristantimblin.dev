@@ -11,18 +11,18 @@
 //      (the excerpt) in the second and third, and the post's art as a MARK in
 //      the fourth — no plate, the page's ink — resting on the lead's last
 //      line, playing (the one page where the art moves without a pointer).
-//   4. The HERO, when the frontmatter names one: `Fig. 01 /` in the first
-//      column, the image on a hairline across the other three, its caption
-//      under it. The body's figures count on from it.
+//   4. The HERO, when the frontmatter names one: a ruled `Fig` — `Fig. 01 /`
+//      in the first column, the image on a hairline across the other three,
+//      its caption under it. The body's figures count on from it.
 //   5. The SECTIONS: the body, cut at each h2 by the rehype plugin and drawn
 //      by Prose `ruled` — each a row under a hairline, its number and heading
 //      sticky in the first column, its text in the next two, the fourth air.
 //      A post with no h2s is one section, `00 / Intro`, its text at the same
 //      measure as any other.
-//   6. The INDEX: a table at the foot, its header row the ink with the page
+//   6. The INDEX: an `Index` at the foot, its head row the ink with the page
 //      colour on it — `INDEX · NO. · TITLE · FILED` — then the tags, the
 //      previous (older) post and the next (newer) as hairline-cut rows; an
-//      end with nothing beyond it is a dimmed row saying so.
+//      end with nothing beyond it is a dim row saying so.
 //
 // The grid is `--ruled-columns` / `--ruled-gap` on the article, the tokens
 // the ruled Prose reads too, so the page's rows and the body's sections fall
@@ -38,8 +38,12 @@ import ArticleLayout from "./ArticleLayout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import Img from "../components/mdx/Img.astro";
 import ArtFrame from "@whois/design-system/ArtFrame";
+import Anchor from "@whois/design-system/Anchor";
+import Fig from "@whois/design-system/Fig";
 import Grid from "@whois/design-system/Grid";
 import Heading from "@whois/design-system/Heading";
+import Index from "@whois/design-system/Index";
+import IndexRow from "@whois/design-system/IndexRow";
 import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
 import Prose from "@whois/design-system/Prose";
@@ -179,83 +183,60 @@ const neighbourRows = [
 				</Grid>
 
 				{hero && (
-					<Grid as="figure" templateColumns={COLUMNS} gapX={4} class="post__fig" data-post-hero>
-						<Mono class="post__fig-label">fig. 01 /</Mono>
-						<div class="post__hero">
-							<Img src={hero.src} alt={hero.alt} priority />
-						</div>
-						<Mono as="figcaption" class="post__figcap">{hero.caption ?? hero.alt}</Mono>
-					</Grid>
+					<Fig no="01" caption={hero.caption ?? hero.alt} layout="ruled" class="post__fig" data-post-hero>
+						<Img src={hero.src} alt={hero.alt} priority />
+					</Fig>
 				)}
 
 				<Prose variant="ruled" class="post__prose">
 					<slot />
 				</Prose>
 
-				<nav class="post__index" aria-label="Index" data-post-index>
-					<Grid templateColumns={COLUMNS} gapX={4} class="post__row post__row--head">
+				<Index class="post__index" aria-label="Index" data-post-index>
+					<IndexRow head>
 						<Mono>index</Mono>
 						<Mono>no.</Mono>
 						<Mono>title</Mono>
-						<Mono class="post__filed">filed</Mono>
-					</Grid>
-					<Grid templateColumns={COLUMNS} gapX={4} class="post__row" data-index-row="tags">
+						<Mono class="ds-index__fold">filed</Mono>
+					</IndexRow>
+					<IndexRow data-index-row="tags">
 						<Mono>tags</Mono>
 						<Mono tone="primary">{padNo(no)}</Mono>
-						<Mono tone="primary" class="post__span post__tags">
+						<Mono tone="primary" class="ds-index__span">
 							{tags.length > 0
 								? tags.map((tag, i) => (
 										<Fragment>
 											{i > 0 && " · "}
-											<a href={tagHref(tag)}>{tag.replace(/[-_]+/g, " ")}</a>
+											<Anchor variant="ink" href={tagHref(tag)}>{tag.replace(/[-_]+/g, " ")}</Anchor>
 										</Fragment>
 									))
 								: "—"}
 						</Mono>
-					</Grid>
+					</IndexRow>
 					{neighbourRows.map(({ key, label, post, none }) =>
 						post ? (
-							<Grid
-								templateColumns={COLUMNS}
-								gapX={4}
-								align="baseline"
-								class="post__row"
-								data-index-row={key}
-							>
+							<IndexRow data-index-row={key}>
 								<Mono>{label}</Mono>
 								<Mono tone="primary">{padNo(post.no)}</Mono>
-								<Text
-									as="a"
-									size={3}
-									variant="primary"
-									href={post.href}
-									class="post__index-title"
-									data-neighbour={key}
-								>
+								<Anchor variant="ink" href={post.href} class="ds-index__title" data-neighbour={key}>
 									{post.title}
-								</Text>
-								<Mono class="post__filed">
+								</Anchor>
+								<Mono class="ds-index__fold">
 									<time datetime={isoDate(post.date)}>{filedDate(post.date)}</time>
 								</Mono>
-							</Grid>
+							</IndexRow>
 						) : (
-							<Grid
-								templateColumns={COLUMNS}
-								gapX={4}
-								align="baseline"
-								class="post__row post__row--dim"
-								data-index-row={key}
-							>
+							<IndexRow dim data-index-row={key}>
 								<Mono>{label}</Mono>
 								<Mono>—</Mono>
-								<Text as="span" size={3} variant="tertiary" class="post__index-title">
+								<Text as="span" size={3} variant="tertiary" class="ds-index__title">
 									{none}
 								</Text>
-								<Mono class="post__filed">—</Mono>
-							</Grid>
+								<Mono class="ds-index__fold">—</Mono>
+							</IndexRow>
 						),
 					)}
-				</nav>
+				</Index>
 			</article>
 		</main>
 	</div>
@@ -321,82 +302,13 @@ const neighbourRows = [
 		margin-block-end: var(--space-1);
 	}
 
-	/* THE HERO. The label sits on the image's bottom line; the image on a
-	   hairline across the last three columns; the caption row under it. */
+	/* THE HERO (a ruled Fig) and THE INDEX (an Index): their rows are the
+	   components'; the page places them. */
 	.post__fig {
 		margin: var(--space-11) 0 0;
 	}
-	.post__fig-label {
-		align-self: end;
-	}
-	.post__hero {
-		grid-column: 2 / span 3;
-		min-inline-size: 0;
-	}
-	.post__hero :global(img) {
-		display: block;
-		inline-size: 100%;
-		block-size: auto;
-		border: 1px solid var(--hairline);
-	}
-	.post__figcap {
-		grid-column: 2 / span 3;
-		margin-block-start: var(--space-2);
-		white-space: normal;
-		line-height: var(--line-height-ui);
-	}
-
-	/* THE INDEX. The header row is the ink with the page colour on it — the
-	   fill on the row, so the gaps between its cells carry it too — and its
-	   Monos take the page colour through the token they read. Every other
-	   row is cut off by a hairline, on the row for the same reason. Cells are
-	   padded a step in, so the text sits off the column lines. */
 	.post__index {
 		margin-block-start: var(--space-12);
-	}
-	.post__row {
-		border-block-end: 1px solid var(--hairline);
-	}
-	.post__row > :global(*) {
-		padding: var(--space-3);
-		min-inline-size: 0;
-	}
-	.post__row--head {
-		--text-secondary: var(--background);
-		background: var(--text-primary);
-		color: var(--background);
-		border: 0;
-	}
-	.post__row--head > :global(*) {
-		padding-block: var(--space-2);
-	}
-	.post__span {
-		grid-column: 3 / -1;
-		white-space: normal;
-		line-height: var(--line-height-ui);
-	}
-	.post__tags a {
-		color: inherit;
-		text-decoration: none;
-		transition: color var(--duration-swap) var(--ease-reveal);
-	}
-	.post__tags a:hover,
-	.post__tags a:focus-visible,
-	a.post__index-title:hover,
-	a.post__index-title:focus-visible {
-		color: var(--accent);
-	}
-	.post__index-title {
-		line-height: var(--line-height-ui);
-		text-decoration: none;
-		transition: color var(--duration-swap) var(--ease-reveal);
-	}
-	.post__filed {
-		white-space: nowrap;
-	}
-	a:focus-visible {
-		outline: var(--focus-ring);
-		outline-offset: var(--focus-ring-offset);
 	}
 
 	/* ONE COLUMN, below the desktop step: the strip two by two (the date
@@ -432,27 +344,6 @@ const neighbourRows = [
 		}
 		.post__fig {
 			margin-block-start: var(--space-9);
-		}
-		.post__fig-label {
-			margin-block-end: var(--space-2);
-		}
-		.post__hero,
-		.post__figcap {
-			grid-column: 1;
-		}
-		.post__row {
-			--ruled-columns: auto auto minmax(0, 1fr);
-		}
-		.post__row > :global(*) {
-			padding: var(--space-3) var(--space-2);
-		}
-		.post__row--head > .post__filed,
-		.post__row--dim > .post__filed {
-			display: none;
-		}
-		.post__row:not(.post__row--head) > .post__filed {
-			grid-column: 3;
-			padding-block-start: 0;
 		}
 	}
 </style>
