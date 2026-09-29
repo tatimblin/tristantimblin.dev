@@ -351,7 +351,8 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
   on a phone only, the caption under the art — the title alone, no date or
   category; `no`; a decorative `ArtFrame` in the slot, filling the cell;
   above 640 a tile carries no text) or a `filler` (aria-hidden, its art
-  faint and grey at every state). Placement is `col`/`row` and `colMd`/`rowMd`, set inline as
+  faint and grey at every state — on the light theme's bone plate that is a
+  quiet light ghost, with no rule of its own). Placement is `col`/`row` and `colMd`/`rowMd`, set inline as
   `--cell-col`/`--cell-row`/`--cell-col-md`/`--cell-row-md` — the stylesheet
   picks the pair per viewport; a filler with no tablet slot is dropped
   there, and every filler is dropped on a phone. Renders `data-cell="post |
@@ -455,19 +456,30 @@ its drawing: the **tokens** name every colour, the **frame** owns the plate and
 the motion, a **validator** holds the rules, and the `post-art` skill
 (`.claude/skills/post-art/`) is how an AI session draws one.
 
-**Tokens** (`tokens.overrides.css` → ART, on the theme classes, the same values
-in both themes — the plate is a fixed dark, so a light page shows dark windows
-on bone; "ink on bone" is a one-block retune later):
+**Tokens** (`tokens.overrides.css` → ART, on the theme classes). **The plate
+follows the theme.** The values below are the dark palette the language was
+sampled on; the light theme overrides them in the next block, so a light page
+shows ink on bone rather than black windows: the same drawing, inverted. White
+line work and white faces become dark (the light metronome reference, with its
+black lit tiles), and the fills go a step deeper so they hold on a light
+plate:
 
-| Token | Value | Use |
-| --- | --- | --- |
-| `--art-plate` | `oklch(17% 0.008 280)` | the tile fill |
-| `--art-edge` | `oklch(34% 0.006 280)` | the tile's 1px edge |
-| `--art-ink` | `oklch(97% 0 0)` | line work and white fills |
-| `--art-ink-2` | the ink at 45% | secondary lines: grids, dashed paths, ghost outlines — the one dimming |
-| `--art-lavender` `--art-coral` `--art-cyan` `--art-green` | `#bda3ea` · `var(--accent)` · `#54b4cb` · `#4a9c63` | the fills; coral IS the site accent |
-| `--art-radius` | `var(--border-radius-1)` | the frame's corner |
-| `--duration-loop` | `6s` (MOTION; `0s` under reduced motion) | one cycle of an art animation |
+| Token | Dark | Light | Use |
+| --- | --- | --- | --- |
+| `--art-plate` | `oklch(17% 0.008 280)` | `var(--gray-300)` | the tile fill |
+| `--art-edge` | `oklch(34% 0.006 280)` | `var(--gray-500)` | the tile's 1px edge |
+| `--art-ink` | `oklch(97% 0 0)` | `var(--gray-1200)` | line work and "white" fills — dark on light |
+| `--art-ink-2` | the ink at 45% | the same mix of the light ink | secondary lines: grids, dashed paths, ghost outlines — the one dimming |
+| `--art-lavender` `--art-cyan` `--art-green` | `#bda3ea` · `#54b4cb` · `#4a9c63` | each by relative colour from the dark value, hue kept, lightness down and chroma up | the fills |
+| `--art-coral` | `var(--accent)` | `var(--accent)` (the light theme's own) | coral IS the site accent |
+| `--art-radius` | `var(--border-radius-1)` | — | the frame's corner |
+| `--duration-loop` | `6s` (MOTION; `0s` under reduced motion) | — | one cycle of an art animation |
+
+Draw for both: **`--art-ink` is dark on a light page**, so never rely on a
+"white" face being white or on a dark cut being dark. A white face is an ink
+face (dark on light), and a cut shows the plate (light on light). What must
+hold is the contrast between ink, plate and fill, which the palette keeps in
+both themes; check a new file in both columns of `/design-system/art`.
 
 A file's every `fill`/`stroke` is `none`, `currentColor` (the ink) or one of
 these — never a literal, never an `opacity` attribute. The ink plus at most
@@ -504,8 +516,8 @@ and the aspect ratio; it strips the file's prolog and comments and puts
 
 A frame with no `label` is aria-hidden whether or not it says `decorative`;
 the art is decorative inside a link, and the **link** carries the title.
-`chrome={false}` leaves the ink on whatever is behind it, so on a light page
-it wants a dark surface of its own.
+`chrome={false}` leaves the ink on whatever is behind it; the ink follows the
+theme, so it reads on the theme's own page colour.
 
 **Motion contract.** A file marks at most one group `<g data-motion="spin |
 drift | slide | blink | dash" data-speed="0.5 | 1 | 2">`; the frame owns the

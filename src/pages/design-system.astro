@@ -245,9 +245,9 @@ const cellState = (d: QuiltDemo, c: number, r: number, slug?: string): { state: 
 
 // Art tokens, for the swatch row: name → what it is for.
 const artTokens = [
-	["--art-plate", "the tile fill, both themes"],
+	["--art-plate", "the tile fill — near-black on dark, bone (--gray-300) on light"],
 	["--art-edge", "the tile's 1px edge"],
-	["--art-ink", "line work and white fills"],
+	["--art-ink", "line work and white fills — near-white on dark, dark (--gray-1200) on light"],
 	["--art-ink-2", "the ink at 45% — grids, dashed paths, ghost outlines"],
 	["--art-lavender", "fill"],
 	["--art-coral", "fill — the site accent"],
@@ -1319,8 +1319,10 @@ const faces = [
 			<p class="ds-demo__note">
 				The illustration language the post art is drawn in (tokens.overrides.css →
 				ART; <code>ArtFrame</code>; art-frame.css): white 1px line work and flat fills
-				in four colours on a near-black landscape plate — the same plate in both
-				themes. A file names no colour but these tokens, and the frame owns the
+				in four colours on a near-black landscape plate. The plate follows the
+				theme: on the light page it is bone (<code>--gray-300</code>) and the ink is
+				dark, so the same drawing reads as ink on bone, with the white faces dark and
+				the fills a step deeper. A file names no colour but these tokens, and the frame owns the
 				plate, the edge, the corner, the line weights and the motion, so the whole
 				language retunes in one place. Every file starts from
 				<code>packages/design-system/src/art/_template.svg</code>.

@@ -4,7 +4,8 @@ description: >
   Draw the illustration for a blog post, or a quilt filler tile, in this site's
   art language: white 1px line work (circuit traces, grids, isometric
   wireframes, cylinders, concentric rings, flow lines, dashed paths) and flat
-  lavender, coral, cyan and green fills on a near-black landscape plate, cropped
+  lavender, coral, cyan and green fills on a near-black landscape plate (the
+  plate follows the theme: bone, with dark ink, on the light page), cropped
   off the edges, with no text. It writes one hand-authored SVG
   (src/content/txt/<slug>.svg, or packages/design-system/src/art/filler-NN.svg)
   that passes `bun run validate:art` the first time, with an optional single
@@ -24,6 +25,12 @@ drawing**:
 - the **frame** (`ArtFrame`) draws the plate, the edge and the corner, and owns
   the motion;
 - the **validator** holds every rule.
+
+You draw on the dark palette, but **the plate follows the theme**: on the
+light page it is bone and `--art-ink` is dark, so the same file renders as
+ink on bone. White line work and white faces become dark, and the fills go a
+step deeper. Don't rely on a white face being white or on a cut being dark.
+The drawing has to hold in both, so always check both columns.
 
 Your job is one small, sparse, off-centre SVG that reads as the post's idea at
 230px wide.
@@ -225,6 +232,8 @@ What to check:
 - **At 720px** it isn't empty, and nothing looks accidental.
 - **Something crops an edge.**
 - **The plate shows through** where you meant it to.
+- **The light column reads as the same drawing**, inverted: no line lost, no
+  fill sinking into the bone plate, and the dark faces reading as faces.
 - **The motion** loops without a jump and is paused at rest.
 - **It looks like it belongs** on the reference sheet.
 

@@ -51,9 +51,23 @@ Some tiles on the sheet, as a vocabulary:
 ## Tokens
 
 The tokens live in `tokens.overrides.css`, in the ART block on the theme
-classes, with the same values in both themes.
+classes. **The plate follows the theme.** The table gives the dark values,
+sampled from the sheet. The light theme overrides them in the block after:
 
-| Token | Value (sampled from the sheet) | Use | In a file? |
+- `--art-plate` is `--gray-300`, bone a step below the page;
+- `--art-edge` is `--gray-500`;
+- `--art-ink` is `--gray-1200`, a near-black, and `--art-ink-2` is the same
+  45% mix of it;
+- lavender, cyan and green are the same hues, darker and a touch more
+  saturated;
+- coral stays the accent.
+
+So a light page shows the same drawing as ink on bone. **`--art-ink` is dark on
+a light page:** a "white" face is a dark face there, and a cut to the plate
+is light, not dark. Draw with contrast between ink, plate and fill, not with
+"white" and "black", and it holds in both.
+
+| Token | Value (dark; sampled from the sheet) | Use | In a file? |
 | --- | --- | --- | --- |
 | `--art-plate` | `oklch(17% 0.008 280)` (≈ #18181f) | the tile fill | **never**: the frame draws it |
 | `--art-edge` | `oklch(34% 0.006 280)` (≈ #3d3d42) | the tile's 1px border | **never** |
@@ -82,7 +96,8 @@ prefer to name the token. There is no `opacity`, `fill-opacity`,
 colours, and one colour dominates. Two colours is usually better than three.
 
 **The plate is not a paint.** A dark detail on a fill (a chip's hole, a check
-on a white box) is the plate **showing through**. Cut it with
+on a white box) is the plate **showing through**. On the light page that
+detail is light and the box is dark, which still reads. Cut it with
 `fill-rule="evenodd"`: draw the outer shape and the hole as subpaths of one
 path. A back object hidden behind a front one is drawn as **only its visible
 edges**. You never paint something plate-coloured to hide something else.
