@@ -1,23 +1,30 @@
 ---
 // IconButton — the flat icon button (styles/icon-button.css); `rounded` for
 // the round buttons of the instrument UI.
-//   variant: primary | secondary | tertiary   (default: secondary)
+//   variant: primary | secondary | tertiary | outline   (default: secondary)
 //   size:    xs | small | large | xl           (default: large; xs is the
 //            pill-height button that fits a card header's meta slot)
-//   rounded: boolean
+//   rounded: boolean     the round button
+//   square:  boolean     no corner at all
 // The single icon child is wrapped in .ds-icon-button__content, as the DS's
 // IconButton.tsx wraps it in a Flex.
 //
-// `glyph` draws a text character instead of an icon — the metronome's − and
-// + — in the UI face, sized to the button and aria-hidden; the caller gives
-// the button its name (`aria-label="Next post"`).
+// `glyph` draws a text character instead of an icon — the /txt stepper's −
+// and + — in the UI face, sized to the button and aria-hidden; the caller
+// gives the button its name (`aria-label="Next post"`).
+//
+// `variant="outline"` is a hairline with no fill (the wash comes up under the
+// pointer), and `square` drops the corner: together they are the ruled
+// screen's small square button, the stepper in the /txt search bar.
 import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
-	variant?: "primary" | "secondary" | "tertiary";
+	variant?: "primary" | "secondary" | "tertiary" | "outline";
 	size?: "xs" | "small" | "large" | "xl";
 	rounded?: boolean;
+	/** No corner: the ruled screen's square button. */
+	square?: boolean;
 	/** A character in place of an icon (`−`, `+`); aria-hidden. */
 	glyph?: string;
 	class?: string;
@@ -29,6 +36,7 @@ const {
 	variant = "secondary",
 	size = "large",
 	rounded,
+	square,
 	glyph,
 	class: className,
 	...rest
@@ -41,6 +49,7 @@ const cls = cx(
 	`ds-icon-button--variant-${variant}`,
 	`ds-icon-button--size-${size}`,
 	rounded && "ds-icon-button--rounded-true",
+	square && "ds-icon-button--square-true",
 	className,
 );
 ---

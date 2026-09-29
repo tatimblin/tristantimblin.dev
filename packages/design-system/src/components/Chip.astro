@@ -1,0 +1,33 @@
+---
+// Chip — the boxed chip of the ruled screen (styles/chip.css): a small square
+// box of caps mono, a hairline round it and no fill, where a Pill is a round
+// capsule with a wash. The /txt search bar's quick filters, the card's
+// category tag, the browse and none faces' links, the `/` key hint.
+//
+//   <Chip>projects</Chip>                                   a tag
+//   <Chip as="a" href="/txt?q=projects">projects</Chip>     a chip link
+//   <Chip as="a" href="/txt" aria-current="page">all</Chip> selected: the ink, filled
+//   <Chip as="button" type="button" aria-pressed="true">…</Chip>
+//   <Chip size="sm" aria-hidden="true">/</Chip>              the key hint, a step smaller
+//
+// SELECTED is a state the chip reads off its own ARIA — `aria-current` (a
+// link that is the current filter) or `aria-pressed="true"` (a toggle) — so
+// a script sets the attribute a reader needs and the fill follows; there is
+// no `selected` prop to fall out of step with it. As an <a> or <button> it
+// is a chip BUTTON: pointer, the strong hairline on hover, the focus ring.
+// `class` merges; everything else passes through.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	/** md (default) is the control step, --space-5 tall; sm is the key hint's. */
+	size?: "sm" | "md";
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "span", size = "md", class: className, ...rest } = Astro.props;
+const Tag = as as any;
+---
+
+<Tag class={cx("ds-chip", size !== "md" && `ds-chip--size-${size}`, className)} {...rest}><slot /></Tag>

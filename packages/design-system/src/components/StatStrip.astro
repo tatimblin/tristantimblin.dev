@@ -1,0 +1,35 @@
+---
+// StatStrip — a row of hairline-divided stat cells, with an optional action
+// cell at the end filled with the accent (styles/stat-strip.css). The bottom
+// strip of the /txt card: `3 MIN / read · 541 / words · FEB 2026 / published
+// · READ →`.
+//
+//   <StatStrip>
+//     <Stat size="sm" value="3 min" label="read" />
+//     <Stat size="sm" value="541" label="words" />
+//     <Stat size="sm" value="feb 2026" label="published" />
+//     <a slot="action" href="/txt/mega-desk">read <span aria-hidden="true">→</span></a>
+//   </StatStrip>
+//
+// Every child in the default slot is a cell: it shares the row's width with
+// the others and carries a hairline on its right edge; a hairline runs along
+// the strip's top. The `action` slot is the last cell — a fixed width, the
+// accent behind it and --on-accent on it; give it the link. `class` merges;
+// the rest passes to the root.
+import { cx } from "../lib/cx";
+
+interface Props {
+	as?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "div", class: className, ...rest } = Astro.props;
+const Tag = as as any;
+const hasAction = Astro.slots.has("action");
+---
+
+<Tag class={cx("ds-stat-strip", className)} {...rest}>
+	<slot />
+	{hasAction && <div class="ds-stat-strip__action"><slot name="action" /></div>}
+</Tag>

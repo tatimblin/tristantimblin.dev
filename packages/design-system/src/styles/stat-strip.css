@@ -1,0 +1,83 @@
+/* StatStrip — a row of stat cells cut by hairlines, the accent action cell
+ * at the end. The children are the cells: each takes an equal share of the
+ * row, a hairline on its right edge, a hairline over the whole strip. The
+ * action cell is the one filled thing: the accent, --on-accent on it, the
+ * caps mono, its label and arrow pushed to its two edges. */
+.ds-stat-strip {
+	display: flex;
+	flex: none;
+	min-inline-size: 0;
+	border-block-start: 1px solid var(--hairline);
+	font-family: var(--font-ui);
+}
+.ds-stat-strip > * {
+	flex: 1 1 0;
+	min-inline-size: 0;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: var(--space-1);
+	padding: var(--space-2) var(--space-3);
+	border-inline-end: 1px solid var(--hairline);
+}
+/* A Stat cell keeps its own two-line layout; the strip only sets the box. */
+.ds-stat-strip > .ds-stat {
+	gap: var(--space-1);
+}
+.ds-stat-strip > :last-child {
+	border-inline-end: 0;
+}
+
+/* The action cell. */
+.ds-stat-strip__action {
+	flex: none;
+	inline-size: var(--space-13);
+	padding: 0;
+	background: var(--accent);
+}
+.ds-stat-strip__action > a,
+.ds-stat-strip__action > button {
+	flex: 1 1 auto;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	box-sizing: border-box;
+	padding: 0 var(--space-4);
+	margin: 0;
+	border: 0;
+	background: none;
+	color: var(--on-accent);
+	font-family: var(--font-mono);
+	font-size: var(--font-size-0);
+	font-weight: var(--font-weight-400);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	text-decoration: none;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: background var(--duration-swap) var(--ease-reveal);
+}
+.ds-stat-strip__action > :is(a, button):hover,
+.ds-stat-strip__action > :is(a, button):focus-visible {
+	background: oklch(from var(--accent) calc(l + 0.05) c h);
+}
+.ds-stat-strip__action > :is(a, button):focus-visible {
+	outline: var(--focus-ring);
+	outline-offset: calc(-1 * var(--focus-ring-offset));
+}
+
+/* Narrow: the action cell gives up its fixed width and the cells tighten. */
+@media (max-width: 639px) {
+	.ds-stat-strip > * {
+		padding-inline: var(--space-2);
+	}
+	.ds-stat-strip__action {
+		inline-size: auto;
+	}
+	.ds-stat-strip__action > a,
+	.ds-stat-strip__action > button {
+		padding-inline: var(--space-3);
+	}
+}

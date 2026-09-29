@@ -72,14 +72,14 @@ prop; this doc deliberately does not duplicate per-component API tables.
 
 **Components available (55):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Label`, `Button`, `IconButton`, `Card`,
-`CardHeader`, `CardBody`, `Callout`, `Pill`, `Anchor`, `List`, `ListItem`,
-`InlineCode`, `Icon`, `VisuallyHidden`, `WidgetGrid`, `Widget` — the
-instrument UI (next section): `Mono`, `Figure`, `Stat`, `Hairline`, `TickRuler`,
-`TimeRuler`, `BarGraph`, `RingGauge`, `Legend`, `LegendItem`, `TileGrid`,
-`Tile`, `Faces`, `Face`, `Panels`, `Panel` — the reading UI (the section after
-it): `PostList`, `PostGroup`, `PostRow`, `Prose`, `Blockquote`, `Quilt`,
-`QuiltCell`, `QuiltPanel`, `SearchBar` — and the art (the section after that):
-`ArtFrame`.
+`CardHeader`, `CardBody`, `Callout`, `Pill`, `Chip`, `Anchor`, `List`,
+`ListItem`, `InlineCode`, `Icon`, `VisuallyHidden`, `WidgetGrid`, `Widget` —
+the instrument UI (next section): `Mono`, `Figure`, `Stat`, `StatStrip`,
+`Hairline`, `TickRuler`, `TimeRuler`, `BarGraph`, `RingGauge`, `Legend`,
+`LegendItem`, `TileGrid`, `Tile`, `Faces`, `Face` — the reading UI (the
+section after it): `PostList`, `PostGroup`, `PostRow`, `Prose`, `Blockquote`,
+`Quilt`, `QuiltCell`, `QuiltPanel`, `SearchBar` — and the art (the section
+after that): `ArtFrame`.
 
 ## The decision gate
 
@@ -139,9 +139,8 @@ glass, caps mono labels), and the components below have no upstream at all.
 | `--lit` | a step/tile/key that is ON — the accent on dark, the **ink** on light. Use for binary on/off; use `--accent` for things that must be orange in both themes. |
 | `--wash-1/2/3` | the ink at 7 / 16 / 30 % — unlit tile & subtle pill fill; two stronger steps. |
 | `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
-| `--hairline`, `--hairline-fade` | the edge colour; the divider gradient that fades at both ends. |
+| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour; the STRONG edge (the ink at `--wash-3`) for the one outline on a ruled screen that must read over the ruling — the search bar's box, the card's border, a chip under the pointer; the divider gradient that fades at both ends. |
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px), `--tracking-mono` (0.05em) | the steps below the generated scales. |
-| `--panel-gutter` (2px) | the hair of page between the flat panels of a `Panels` screen — the gutter IS a panel's edge. |
 | `--ticks-image` | the tick ruler as a gradient (hairlines on `--tick-pitch`, in currentColor) for any box that should read as a ruler — TickRuler's segments, the player's progress bar. |
 | `--focus-ring`, `--focus-ring-offset` | the focus ring for anything focusable that is not a native control: `outline: var(--focus-ring); outline-offset: var(--focus-ring-offset)`. |
 | `--duration-*` under `prefers-reduced-motion: reduce` | all 0s, so a transition timed by a token is a cut for that visitor and no component needs a reduced-motion block of its own. |
@@ -197,48 +196,37 @@ colour), passed as a CSS colour.
   `size="md|lg|xl"`.
 - `Stat` — `value` + `label` (props or default/`label` slots), `size="sm|md|lg"`
   (sm = mono at label size, the dashboard stat pair), `inline`.
+- `StatStrip` — a row of hairline-cut cells under a hairline: every child is
+  a cell (an equal share of the width, a hairline on its right edge — put
+  `Stat size="sm"` pairs in it), and the `action` slot is the last cell, a
+  fixed width filled with the accent and `--on-accent` on it: give it the
+  link. The bottom strip of the /txt card (`3 MIN / read · 541 / words · FEB
+  2026 / published · READ →`).
 - `Pill` — `variant="subtle"` (default) `| "outline" | "accent" | info | success
   | warning | danger`; `as="button"|"a"` makes it a pill button; an `Icon` in
   the default slot sits before the text. `size="lg"` is the tab step (the
   small button's height, more air inside) for a row of pill links that is a
-  page's control — the /txt category tabs — and `aria-current` on one draws
-  it as the selected tab (the subtle fill on an outline row).
+  page's control, and `aria-current` on one draws it as the selected tab
+  (the subtle fill on an outline row).
+- `Chip` — the BOXED chip of the ruled screen: caps mono in a square
+  hairline box, no fill, where Pill is the capsule with a wash. `as="a"|
+  "button"` makes it a chip button (the strong hairline under the pointer,
+  the focus ring); `size="sm"` is the key hint's step. SELECTED is read off
+  the chip's own ARIA — `aria-current` (a link that is the current filter)
+  or `aria-pressed="true"` (a toggle) — and fills it with the ink; there is
+  no `selected` prop to fall out of step with what a reader is told. The
+  /txt bar's quick filters, the card's category tag, the browse and none
+  faces' links.
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
   = pill button. `IconButton` — same variants, `size="xs|small|large|xl"`,
-  `rounded` = round button, `glyph="−"` a text character in place of an icon
-  (aria-hidden; give the button an `aria-label`). Upstream has only
-  `small|large`; `xs` (the pill's height, for a card header's meta slot) and
-  `xl` (the one big control a screen has) are this site's steps, an exception
-  to the parity rule.
-
-**The device screen.** `<Panels>` is the hardware metronome's display: one
-sheet cut into flat panels by a `--panel-gutter` of the page, rounded once at
-the outside (`frame={false}` for none — the square-cornered row of cells
-`/txt` sets on the page). A column of rows by default;
-`direction="row"` is a row of cells on a grid — `columns` gives the template
-inline, or set `--panels-columns` per breakpoint in your own CSS, since an
-inline value would out-rank a media query — and a Panels inside a Panels
-takes no frame of its own. `<Panel pad="none|sm|md|lg">` is one surface: the
-card colour, no edge, an inset step; lay its inside out in your own CSS. A
-Panel is a surface, so use one only where a surface is wanted: on the /txt
-index only the control row is a Panels (a frameless `direction="row"` of
-cells — the count, the search, − and +); the tabs, the board and the
-timeline sit straight on the page as plain layout rows, set apart by space
-tokens, since a gutter between unfilled rows draws nothing.
-
-```astro
-<Panels>
-  <Panel pad="sm">…tabs…</Panel>
-  <Panel>…the board…</Panel>
-  <Panels direction="row" columns="var(--space-14) minmax(0, 1fr) var(--space-12) var(--space-12)">
-    <Panel><Figure size="xl" unit="posts">5</Figure></Panel>
-    <Panel pad="none"><SearchBar variant="cell" … /></Panel>
-    <Panel pad="none"><IconButton rounded glyph="−" aria-label="Previous post" /></Panel>
-    <Panel pad="none"><IconButton rounded glyph="+" aria-label="Next post" /></Panel>
-  </Panels>
-  <Panel pad="lg"><TimeRuler … /></Panel>
-</Panels>
-```
+  `rounded` = round button, `square` = no corner, `glyph="−"` a text
+  character in place of an icon (aria-hidden; give the button an
+  `aria-label`); `variant="outline"` is a hairline and no fill (the wash
+  comes up under the pointer) — with `square`, the ruled screen's small
+  square button, the /txt stepper. Upstream has only `small|large`; `xs`
+  (the pill's height, for a card header's meta slot) and `xl` (the one big
+  control a screen has) are this site's steps, an exception to the parity
+  rule.
 
 **Hairline graphics.**
 - `Hairline` — `fade` (default true), `orientation="horizontal|vertical"`.
@@ -321,18 +309,25 @@ instrument UI it is this site's own, so its CSS may be edited freely.
 
 ### Quilt — the index as a grid of art tiles
 
-`/txt` is a **quilt**: a grid of landscape art tiles, one per post, padded
-with fillers, with a search bar above it. Hovering or focusing a post
-scatters the others and a text card takes a freed 3×2 block; typing filters
-the same grid. The package holds the **markup, the geometry and the state
+`/txt` is a **quilt**: a RULED grid of landscape art tiles — cells cut by
+hairlines, the art inset a step on its plate in each, no text on a tile —
+one per post, padded with fillers, under one ruled search bar. Hovering or
+focusing a post scatters the others and the ruled card takes a freed 3×2
+block; typing filters the same grid; a chip in the bar is a search
+shortcut. The package holds the **markup, the geometry and the state
 contract** (`styles/quilt.css`, `quilt-panel.css`, `search-bar.css`); every
 decision — which cells scatter, where the block goes, what the search found
 — is the site's (`src/lib/quilt/engine.ts`, pure; `src/lib/quilt/index.ts`,
 the DOM wiring), which paints the attributes below. Nothing here ships JS.
 
 ```astro
-<SearchBar id="quilt-search" label="Search" placeholder="a title, a topic, a year…"
-           count="5 posts" hint="/" controls="quilt-panel-results" />
+<SearchBar id="quilt-search" label="Search" placeholder="Search a title, a topic, a year…"
+           count="5 posts" hint="/" controls="quilt-panel-results">
+  <Chip slot="chips" as="a" href="/txt" data-chip="" aria-current="page">all</Chip>
+  <Chip slot="chips" as="a" href="/txt?q=projects" data-chip="projects">projects</Chip>
+  <IconButton slot="controls" variant="outline" square size="small" glyph="−" aria-label="Previous post" />
+  <IconButton slot="controls" variant="outline" square size="small" glyph="+" aria-label="Next post" />
+</SearchBar>
 <Quilt cols={5} rows={3} colsMd={3} aria-label="Posts">
   <QuiltCell col={3} row={1} colMd={2} rowMd={1} href="/txt/mega-desk"
              label="The Mega Desk" no="003">
@@ -345,46 +340,56 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
 </Quilt>
 ```
 
-- `Quilt` — the grid: `cols`/`rows` for ≥ 1024, `colsMd`/`rowsMd` for
+- `Quilt` — the ruled grid: `cols`/`rows` for ≥ 1024, `colsMd`/`rowsMd` for
   640–1023 (`rows` = max(3, ceil(posts / cols)), explicit so the block always
-  has lines). `position: relative`, `role="group"`, `data-quilt`. Under 640
-  it is two columns of captioned tiles in DOM order.
+  has lines). The grid draws the left and top hairline, each cell its right
+  and bottom one, so every line is 1px and a cell that scatters takes its
+  ruling with it. `position: relative`, `role="group"`, `data-quilt`. Under
+  640 it is two columns of captioned tiles in DOM order, still ruled.
 - `QuiltCell` — a post (`href`, `label` = the link's accessible name, `no`,
-  a decorative `ArtFrame` in the slot, the meta line in `caption`) or a
-  `filler` (aria-hidden). Placement is `col`/`row` and `colMd`/`rowMd`, set
-  inline as `--cell-col`/`--cell-row`/`--cell-col-md`/`--cell-row-md` — the
-  stylesheet picks the pair per viewport; a filler with no tablet slot is
-  dropped there, and every filler is dropped on a phone. Renders
-  `data-cell="post | filler"`, `data-no`, `data-lg` / `data-md` (has a
-  desktop / tablet slot — a filler without one is not drawn on that grid).
-- `QuiltPanel` — four faces, every one rendered, on a hairlined wash surface
-  that fills the block. `card` is the INFRA CARD: `{ kicker, category,
-  minutes, words, month, year, title, blurb, gauge: { value, caption,
-  label? }, why?, href }` — a header row (`NO. 005`, the category as a Pill)
-  over a `Hairline`, three `Stat size="sm"` pairs (`3 min / read`, `541 /
-  words`, `FEB / 2026`), the title and the excerpt, and at the right a
-  `RingGauge` of the post's minutes over the longest post's captioned `3 OF
-  5 MIN` with the `READ ▸` `Button` under it. `browse` (categories with
-  counts, years, the latest post — `Pill as="a"` and `Anchor` links to
-  `?q=`), `results` (`role="listbox"` id `<id>-results`, rows
-  `role="option"` id `<id>-opt-<n>`, the title with `<mark>` on the query,
-  meta and why), `nothing` (the sentence, coverage, suggestion pills). Props
-  fill them at build; hooks let a script refill in place: `data-card="kicker
-  | category | minutes | words | month | year | title | blurb | gauge |
-  gauge-caption | why | link"` (the gauge takes `--ring-value` and an
-  aria-label), `data-results="label | list"`, `data-none="query |
+  a decorative `ArtFrame` in the slot inset `--quilt-inset` (a step) from
+  the ruling, the meta line in `caption` — drawn on a phone only; above 640 a
+  tile carries no text) or a `filler` (aria-hidden, faint and grey at every
+  state). Placement is `col`/`row` and `colMd`/`rowMd`, set inline as
+  `--cell-col`/`--cell-row`/`--cell-col-md`/`--cell-row-md` — the stylesheet
+  picks the pair per viewport; a filler with no tablet slot is dropped
+  there, and every filler is dropped on a phone. Renders `data-cell="post |
+  filler"`, `data-no`, `data-lg` / `data-md` (has a desktop / tablet slot —
+  a filler without one is not drawn on that grid).
+- `QuiltPanel` — four faces, every one rendered, each the page colour inside
+  the strong hairline, square, no fill, filling the block. `card` is the
+  RULED CARD: `{ no, category, minutes, words, month, year, rate, title,
+  blurb, why?, href }` — a top strip (the category as a `Chip`, `[INDEX]
+  000005 · LOG_005.TXT`) over a hairline; the big mono number (`005`) with
+  three small mono readouts under it (`STATUS: PUBLISHED`, `NODE:
+  TXT/PROGRAMMING`, `RATE: 180 WPM` — words ÷ minutes) beside the title and
+  the excerpt; and a `StatStrip` on the bottom edge — `3 MIN / read`, `541 /
+  words`, `FEB 2026 / published` — ending in the accent `READ →` cell, the
+  link. `browse` (categories with counts, years, the latest post — `Chip
+  as="a"` and `Anchor` links to `?q=`), `results` (`role="listbox"` id
+  `<id>-results`, hairline-cut rows `role="option"` id `<id>-opt-<n>`, the
+  title with `<mark>` on the query, meta and why; the active row carries the
+  accent bar), `nothing` (the sentence, coverage, suggestion chips). Props
+  fill them at build; hooks let a script refill in place: `data-card="no |
+  index | category | node | rate | minutes | words | month | year | title |
+  blurb | why | link"`, `data-results="label | list"`, `data-none="query |
   suggestions"`, and a `<template data-result-template>` with one empty row
   (`data-result="title | meta | why"`) to clone. `flow` renders it in flow
   (the phone rendering) anywhere.
-- `SearchBar` — `role="search"`; a caps `Mono` label for the input; the
-  input is `type="search" role="combobox" aria-autocomplete="list"
-  aria-controls={controls}` (`name` defaults to `q`, so inside a GET form it
-  lands on `?q=` with scripting off); the count is `aria-live="polite"`
-  (`data-search-count`); `hint` is an outline `Pill`, not drawn without a
-  keyboard. `:focus-within` turns the hairline to the accent. `value` and
-  `expanded` render a state statically. `variant="cell"` is the bar with no
-  frame of its own — flush inside a `Panel` cell, focus an accent line along
-  the cell's bottom edge — the /txt instrument's search cell.
+- `SearchBar` — the RULED BAR: one box in the strong hairline, square, no
+  fill; `role="search"`; the label visually hidden and the `⌕` glyph in its
+  place; the input `type="search" role="combobox" aria-autocomplete="list"
+  aria-controls={controls}` in the mono (`name` defaults to `q`, so inside a
+  GET form it lands on `?q=` with scripting off); the `chips` slot, a `<nav>`
+  named `chipsLabel` (hook `data-search-chips`) of the caller's `Chip` links
+  — each a real link to `?q=<word>` with `data-chip="<word>"`, a search
+  shortcut that works with scripting off, and `aria-current` on the one whose
+  word is the query; a divider and the `controls` slot (the stepper); `hint`
+  as a small `Chip`, not drawn without a keyboard; the `count` a visually
+  hidden live region (`aria-live="polite"`, `data-search-count`) — the bar
+  shows no number. `:focus-within` turns the box to the accent. `value` and
+  `expanded` render a state statically. Under 1024 the chips take a row of
+  their own under the input and scroll sideways.
 
 **The state contract** — what the script sets, and all it sets:
 
@@ -392,7 +397,8 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
 | --- | --- | --- |
 | a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. A **filler is never brighter than faint**: it is drawn faint and greyscale at every state but `gone`, so the posts are the only tiles at full strength. |
 | a cell | `--scatter-delay` (ms) | the stagger into faint/gone (0–240); the return to lit has none |
-| a post cell | `data-active` | the accent ring on the art — the search result the arrows are on |
+| a post cell | `data-active` | the 1px accent outline on the cell's ruling — the search result the arrows are on, the stepped post |
+| a chip | `aria-current="page"` | the chip whose word is the query (ALL when it is empty); none for any other query |
 | the panel | `data-mode="card \| browse \| results \| none \| hidden"` | which face shows; the others are `visibility: hidden` (out of the a11y tree and tab order), so no per-face `aria-hidden` |
 | the panel | `--panel-col`, `--panel-row` | the block's top-left cell, 1-based; the block is `--panel-cols` × `--panel-rows` (3 × 2). On the tablet grid the block is every column, so only the row matters |
 | a result row | `aria-selected="true"` | the active row (accent bar + `--wash-1`); mirror it as `aria-activedescendant` on the input |
@@ -403,26 +409,28 @@ Transitions run on `--duration-settle` (the scatter) and `--duration-swap`
 **absolutely positioned grid item**, so its containing block is the grid
 area its placement names: it lands on cells by line number, and its content
 never sizes a row. It is a size query container, and the card fits its
-block — three excerpt lines at a 240px+ block, two, then one, then the
-title alone at the next step down as the block shrinks — rather than clip;
-on a big board (a block ≥ 360px tall and 900px wide) the title steps up to
-`--font-size-8` and the excerpt to `--font-size-5`.
+block — three excerpt lines at a 260px+ block; two at the next title step
+down; then the readouts go and the number steps down; then the excerpt;
+then the strip's stats (READ stays) — rather than clip; on a big board (a
+block ≥ 360px tall and 900px wide) the title steps up to `--font-size-8`
+and the excerpt to `--font-size-3`.
 
 **Geometry.** On `/txt` the quilt is the board row of the instrument
-(`BlogLayout` with `tabs`): rows straight on the page, in the site container
-(padded by the site's `--container-inset`, as the site header and the
-homepage's rows are, so the quilt's edges fall on the header's brand and
-nav) under the site header, filling the viewport below it; the board is a
-plain row, no surface and no inset, that takes the spare height and centres
-the quilt in it. At ≥ 1024 the gap tightens to `--space-2` so the tiles read as
-one sheet; below that it is `--space-3`. The cell sizes below are the
-board's at each width.
+(`BlogLayout` with `bar`): the ruled bar, the board and the timeline
+straight on the page, in the site container (padded by the site's
+`--container-inset`, as the site header and the homepage's rows are, so
+the quilt's edges fall on the header's brand and nav) under the site
+header, filling the viewport below it; the board is a plain row, no surface
+and no inset, that takes the spare height and centres the quilt in it. The
+cells have no gap — the ruling is the seam — and the art is inset
+`--quilt-inset` (`--space-2`) in each. The cell sizes below are the board's
+at each width.
 
 | Viewport | Columns | Cell | Block | Mode |
 | --- | --- | --- | --- | --- |
-| ≥ 1024 | `cols` (5) | ~221×124 at 1440 and wider (the container caps it); 16:9 | 3×2 ≈ 678×256 | hover quilt |
-| 640–1023 | `colsMd` (3) | ~228×128 at 768 | full width × 2 rows | hover quilt |
-| < 640 | 2 | ~173×97 at 390 | none — the panel is in flow above the tiles | captioned list, a tap navigates |
+| ≥ 1024 | `cols` (5) | ~227×135 at 1440 and wider (the container caps it); the art 16:9 inside | 3×2 ≈ 681×270 | hover quilt |
+| 640–1023 | `colsMd` (3) | ~235×148 at 768 | full width × 2 rows | hover quilt |
+| < 640 | 2 | ~179×117 at 390, plus the caption | none — the panel is in flow above the tiles | captioned list, a tap navigates |
 
 ---
 
@@ -597,8 +605,8 @@ spacing `--space-0..15`, radii `--border-radius-0..3`, type `--font-size-1..8`
 `--card-background`, `--border-color`, `--danger`/`--warning`/`--success`
 (+ `-emphasis`), the `--gray/blue/green/red/orange/pink-*` scales, `--white`, and
 `--hyperlink`; plus the instrument tokens (`--lit`, `--wash-*`, `--tone-*`,
-`--hairline`, `--hairline-fade`, `--border-radius-tile/-pill`, `--tick-pitch`,
-`--tracking-mono`). Legacy site aliases live in `bridge.css` (`--color-fg`,
+`--hairline`, `--hairline-strong`, `--hairline-fade`, `--border-radius-tile/-pill`,
+`--tick-pitch`, `--tracking-mono`). Legacy site aliases live in `bridge.css` (`--color-fg`,
 `--color-bg`, `--font-serif`, …). Breakpoints (from Stitches media):
 `xs 480 / sm 640 / md 768 / lg 1024 / xl 1280` → standard
 `@media (min-width: …)`.

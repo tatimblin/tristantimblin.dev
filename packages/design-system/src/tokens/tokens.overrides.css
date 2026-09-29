@@ -253,6 +253,11 @@
 	 * fades out at both ends — the reference dashboard's header rule — as a
 	 * gradient so any 1px box becomes one. */
 	--hairline: var(--border-color);
+	/* The STRONG hairline: the ink at the third wash, for the one edge on a
+	   ruled screen that must read over the others — the search bar's frame,
+	   the card's border, a chip's box. The plain hairline is the ruling
+	   between cells; this is the outline of the thing on it. */
+	--hairline-strong: var(--wash-3);
 	--hairline-fade: linear-gradient(
 		to right,
 		transparent,
@@ -284,12 +289,6 @@
 	 * its radius is larger than any height it will ever have. */
 	--border-radius-tile: 2px;
 	--border-radius-pill: 9999px;
-
-	/* The gutter of a Panels screen (panels.css): the hair of page showing
-	 * between the flat panels of one device display, so rows and cells read
-	 * as one instrument cut into parts rather than a stack of cards. Below the
-	 * space scale, like the tile radius, and the same width as it. */
-	--panel-gutter: 2px;
 
 	/* The pitch of a tick ruler's hairlines, and the ruler itself: hairlines on
 	 * that pitch in currentColor, as a gradient any box can take as its

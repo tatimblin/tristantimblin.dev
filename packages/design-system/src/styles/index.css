@@ -13,6 +13,7 @@
 @import "./mono.css";
 @import "./figure.css";
 @import "./stat.css";
+@import "./stat-strip.css";
 @import "./label.css";
 @import "./button.css";
 @import "./icon-button.css";
@@ -20,6 +21,7 @@
 @import "./faces.css";
 @import "./callout.css";
 @import "./pill.css";
+@import "./chip.css";
 @import "./anchor.css";
 @import "./list.css";
 @import "./inline-code.css";
@@ -33,15 +35,13 @@
 @import "./legend.css";
 @import "./tile-grid.css";
 @import "./time-ruler.css";
-/* The device screen: flat panels in one frame. */
-@import "./panels.css";
 /* The reading UI: the archive and the reading column. */
 @import "./post-list.css";
 @import "./prose.css";
 @import "./blockquote.css";
 /* The art: the frame every artwork renders through. */
 @import "./art-frame.css";
-/* The quilt: the grid of art tiles, its panel, and the search bar above it. */
+/* The quilt: the ruled grid of art tiles, its panel, and the ruled bar above it. */
 @import "./quilt.css";
 @import "./quilt-panel.css";
 @import "./search-bar.css";

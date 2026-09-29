@@ -1,32 +1,37 @@
-/* Quilt · QuiltCell — the grid of art tiles on /txt, and the scatter.
+/* Quilt · QuiltCell — the ruled grid of art tiles on /txt, and the scatter.
  *
- * A grid of landscape cells (the art's 16:9), a post or a filler in each,
- * and the panel over a 3×2 block of them. The stylesheet holds the GEOMETRY
- * for three viewports and the STATE CONTRACT a script drives; it decides
- * nothing itself.
+ * A RULED GRID: cells cut by 1px hairlines with a hairline round the whole,
+ * a post's or a filler's art in each, inset a step on its own dark plate,
+ * the cell itself the page. No text on a tile above 640: the link's name is
+ * its aria-label and the card tells the rest. The panel takes a 3×2 block
+ * of cells. The stylesheet holds the GEOMETRY for three viewports and the
+ * STATE CONTRACT a script drives; it decides nothing itself.
  *
- *   ≥ 1024      the hover quilt at --quilt-cols-lg (5) — a cell ~221×124 on
+ *   ≥ 1024      the hover quilt at --quilt-cols-lg (5) — a cell ~227×135 on
  *               /txt's board in the site container, at 1440 and wider.
  *   640–1023    the hover quilt at --quilt-cols-md (3), where a cell takes
  *               its tablet slot (--cell-col-md/--cell-row-md) and a filler
  *               without one drops out.
- *   < 640       two columns of CAPTIONED tiles in DOM order: a tile with no
- *               text in it cannot be hovered on a phone, so the title and
- *               the meta line come back under the art, the fillers go, and
- *               the panel (quilt-panel.css) is an in-flow block above the
- *               tiles. A tap navigates; nothing reveals.
+ *   < 640       two columns of CAPTIONED tiles in DOM order, still ruled: a
+ *               tile with no text in it cannot be hovered on a phone, so the
+ *               title and the meta line come back under the art, the
+ *               fillers go, and the panel (quilt-panel.css) is an in-flow
+ *               block above the tiles. A tap navigates; nothing reveals.
  *
- * The rows are explicit, so the panel's block always has grid lines to sit
- * on, and the grid is position: relative for the panel, an absolutely
+ * THE RULING is drawn by the cells: each carries the hairline on its right
+ * and bottom edges and the grid draws the left and top ones, so every line
+ * is 1px and a cell that scatters takes its lines with it — the freed block
+ * is clear page under the card, and a faint cell's ruling is faint. The
+ * rows are explicit, so the panel's block always has grid lines to sit on,
+ * and the grid is position: relative for the panel, an absolutely
  * positioned grid item whose containing block is the area its placement
  * names — so the panel lands on cells by line number, with no measured
  * pixels, and its content never sizes a row. */
 .ds-quilt {
 	/* The cell's shape — the art's, so a frame fills a cell exactly. */
 	--quilt-aspect: 16 / 9;
-	/* The gap: a step on a tablet, a hairline-tight --space-2 on the desktop
-	   board, so the tiles read as one sheet rather than a list of cards. */
-	--quilt-gap: var(--space-3);
+	/* The art's inset inside its cell. */
+	--quilt-inset: var(--space-2);
 	/* The ghost's opacity: a tile that has stepped back but is still there. */
 	--quilt-faint: 0.22;
 	--quilt-cols: var(--quilt-cols-lg, 5);
@@ -38,13 +43,10 @@
 	   widen its column (widget-grid.css has the same note). */
 	grid-template-columns: repeat(var(--quilt-cols), minmax(0, 1fr));
 	grid-template-rows: repeat(var(--quilt-rows), auto);
-	gap: var(--quilt-gap);
+	gap: 0;
+	border-inline-start: 1px solid var(--hairline);
+	border-block-start: 1px solid var(--hairline);
 	font-family: var(--font-ui);
-}
-@media (min-width: 1024px) {
-	.ds-quilt {
-		--quilt-gap: var(--space-2);
-	}
 }
 @media (min-width: 640px) and (max-width: 1023px) {
 	.ds-quilt {
@@ -62,12 +64,19 @@
 /* THE CELL. Placed by custom properties the component sets inline
    (--cell-col/--cell-row for the desktop grid, --cell-col-md/--cell-row-md
    for the tablet one); each viewport picks its pair below, and a cell
-   without one flows. The art inside takes the cell's shape through the
-   frame's own --art-ratio. */
+   without one flows. The art inside takes its own shape through the
+   frame's --art-ratio and sits a step in from the ruling. */
 .ds-quilt-cell {
+	position: relative;
 	grid-column: var(--quilt-cell-col, auto);
 	grid-row: var(--quilt-cell-row, auto);
 	min-inline-size: 0;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	padding: var(--quilt-inset);
+	border-inline-end: 1px solid var(--hairline);
+	border-block-end: 1px solid var(--hairline);
 	--art-ratio: var(--quilt-aspect);
 	transition:
 		opacity var(--duration-settle) var(--ease-reveal),
@@ -127,11 +136,11 @@
 	opacity: var(--quilt-faint);
 }
 /* A FILLER IS NEVER BRIGHTER THAN FAINT. It links nothing, so it is drawn as
-   the ghost at rest too — lit and faint look the same on it, and the posts
-   are the only tiles at full strength. gone (below, same specificity, later)
-   still takes it out in a scatter. The greyscale is not gated like the
-   ghost's: a filler's filter never changes, so there is no transition for a
-   tablet to pay for. */
+   the ghost at rest too — the whole cell, its ruling with its art, so the
+   posts are the only tiles at full strength and the lines round them the
+   only full lines. gone (below, same specificity, later) still takes it out
+   in a scatter. The greyscale is not gated like the ghost's: a filler's
+   filter never changes, so there is no transition for a tablet to pay for. */
 .ds-quilt-cell[data-cell="filler"] {
 	opacity: var(--quilt-faint);
 	filter: grayscale(1);
@@ -154,14 +163,15 @@
 	}
 }
 
-/* THE LINK. The whole cell, named by aria-label (the art is decorative);
-   the focus ring outside it, and the ACTIVE RING — the search result the
-   arrow keys are on — drawn on the frame as an inset outline, so it sits
-   over the art and follows the frame's corner. The frame's own hover rule
+/* THE LINK. The whole cell's inside, named by aria-label (the art is
+   decorative); the focus ring outside it. The frame's own hover rule
    (art-frame.css, `a:hover .ds-art`) runs the art's motion under the
    pointer; nothing to add here. */
 .ds-quilt-cell__link {
-	display: block;
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-inline-size: 0;
 	color: inherit;
 	text-decoration: none;
 	border-radius: var(--art-radius);
@@ -170,19 +180,26 @@
 	outline: var(--focus-ring);
 	outline-offset: var(--focus-ring-offset);
 }
-.ds-quilt-cell .ds-art {
-	transition: outline-color var(--duration-swap) var(--ease-reveal);
-	outline: var(--focus-ring);
-	outline-color: transparent;
-	outline-offset: calc(-1 * var(--focus-ring-offset));
+/* THE ACTIVE RING — the search result the arrow keys are on, the stepped
+   post: a 1px accent outline on the cell's own ruling, drawn by a
+   pseudo-element that reaches one pixel out to the four hairlines round the
+   cell and paints over them. */
+.ds-quilt-cell::after {
+	content: "";
+	position: absolute;
+	inset: -1px;
+	pointer-events: none;
+	box-shadow: inset 0 0 0 1px transparent;
+	transition: box-shadow var(--duration-swap) var(--ease-reveal);
 }
-.ds-quilt-cell[data-active] .ds-art {
-	outline-color: var(--accent);
+.ds-quilt-cell[data-active]::after {
+	box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 /* THE CAPTION. Under the art on a phone only: the title in the UI face at
    the small step, the meta line in the structure voice. Elsewhere the link's
-   name is its aria-label and this is not drawn. */
+   name is its aria-label and this is not drawn: a tile above 640 carries no
+   text. */
 .ds-quilt-cell__caption {
 	display: none;
 }

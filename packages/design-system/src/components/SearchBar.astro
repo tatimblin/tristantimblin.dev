@@ -1,41 +1,51 @@
 ---
-// SearchBar — the full-width bar above the quilt (styles/search-bar.css): a
-// caps Mono label, the native input in the UI face, a live count, and the
-// key hint as an outline Pill (hidden where there is no keyboard). The bar's
-// hairline takes the accent while the input has focus.
+// SearchBar — the ruled bar over the quilt (styles/search-bar.css): one
+// full-width box in the strong hairline, square, no fill, and in it, left
+// to right: the search glyph, the input, the quick-filter CHIPS, a divider,
+// the CONTROLS (the stepper), and the key hint. The label is for a reader
+// (visually hidden); the glyph stands in for it on screen.
 //
-//   <SearchBar id="quilt-search" label="Search" placeholder="a title, a topic, a year…"
-//              count="5 posts" hint="/" controls="quilt-panel-results" />
+//   <SearchBar id="quilt-search" label="Search" placeholder="Search a title, a topic, a year…"
+//              count="5 posts" hint="/" controls="quilt-panel-results">
+//     <Chip slot="chips" as="a" href="/txt" data-chip="" aria-current="page">all</Chip>
+//     <Chip slot="chips" as="a" href="/txt?q=projects" data-chip="projects">projects</Chip>
+//     <IconButton slot="controls" variant="outline" square size="small" glyph="−" aria-label="Previous post" />
+//     <IconButton slot="controls" variant="outline" square size="small" glyph="+" aria-label="Next post" />
+//   </SearchBar>
 //
 // The input is a combobox over the panel's results listbox (aria-controls
 // names it); a script keeps aria-expanded in step with whether the panel
-// shows, moves aria-activedescendant to the active option's id, and rewrites
-// the count (data-search-count, aria-live="polite") — `2 of 5` while a query
-// is typed, `5 posts` otherwise; without a `count` no count is rendered, for
-// a bar whose count lives elsewhere (the instrument's count cell, which
-// carries the live region instead). Hooks: data-search-bar on the root,
-// data-search-input on the input. `name` defaults to `q` so the bar inside a
-// GET form lands on `?q=` with scripting off. `expanded` and `value` render a
-// state statically. `class` merges; everything else passes to the ROOT.
-//
-// `variant="cell"` is the bar with no frame of its own — no edge, fill,
-// radius or height — for a bar that lives flush inside a Panel cell of an
-// instrument screen, where the cell is the frame; the focus indication
-// becomes an accent line along the cell's bottom edge. Same semantics.
+// shows and moves aria-activedescendant to the active option's id. The
+// COUNT is a live region for a reader only (visually hidden,
+// aria-live="polite", data-search-count): `2 of 5 posts` while a query is
+// typed, `5 posts` otherwise — the bar shows no number. Without a `count`
+// none is rendered. The `chips` slot is a <nav> named `chipsLabel` (Quick
+// filters), hook data-search-chips; each chip is the caller's — a real link
+// to `?q=<word>` with `data-chip="<word>"`, so a chip is a SEARCH SHORTCUT
+// that works with scripting off and a script upgrades to set the query in
+// place and mark the current one. The `controls` slot is the stepper; a
+// divider is drawn before it. Hooks: data-search-bar on the root,
+// data-search-input on the input. `name` defaults to `q` so the bar inside
+// a GET form lands on `?q=` with scripting off. `expanded` and `value`
+// render a state statically. `class` merges; everything else passes to the
+// ROOT. Under 1024 the chips take a row of their own under the input and
+// scroll sideways (the stylesheet).
 import { cx } from "../lib/cx";
-import Mono from "./Mono.astro";
-import Pill from "./Pill.astro";
+import Chip from "./Chip.astro";
+import VisuallyHidden from "./VisuallyHidden.astro";
 
 interface Props {
 	id?: string;
-	variant?: "bar" | "cell";
 	label?: string;
 	placeholder?: string;
+	/** The live count, for a reader: `5 posts`, `2 of 5 posts`. */
 	count?: string;
-	/** The key that focuses the bar, shown as a pill; none hides it. */
+	/** The key that focuses the bar, shown as a small chip; none hides it. */
 	hint?: string;
 	/** The id of the listbox the combobox controls (the panel's `<id>-results`). */
 	controls?: string;
+	/** The chips nav's accessible name. */
+	chipsLabel?: string;
 	name?: string;
 	value?: string;
 	expanded?: boolean;
@@ -45,27 +55,26 @@ interface Props {
 
 const {
 	id = "search",
-	variant = "bar",
 	label = "search",
-	placeholder = "a title, a topic, a year…",
+	placeholder = "Search a title, a topic, a year…",
 	count,
 	hint,
 	controls,
+	chipsLabel = "Quick filters",
 	name = "q",
 	value,
 	expanded = false,
 	class: className,
 	...rest
 } = Astro.props;
+
+const hasChips = Astro.slots.has("chips");
+const hasControls = Astro.slots.has("controls");
 ---
 
-<div
-	class={cx("ds-search-bar", variant === "cell" && "ds-search-bar--variant-cell", className)}
-	role="search"
-	data-search-bar
-	{...rest}
->
-	<Mono as="label" for={id} class="ds-search-bar__label">{label}</Mono>
+<div class={cx("ds-search-bar", className)} role="search" data-search-bar {...rest}>
+	<VisuallyHidden as="label" for={id}>{label}</VisuallyHidden>
+	<span class="ds-search-bar__glyph" aria-hidden="true">⌕</span>
 	<input
 		class="ds-search-bar__input"
 		id={id}
@@ -83,10 +92,23 @@ const {
 		value={value}
 		data-search-input
 	/>
-	{count !== undefined && (
-		<Mono class="ds-search-bar__count" aria-live="polite" data-search-count>{count}</Mono>
+	{hasChips && (
+		<nav class="ds-search-bar__chips" aria-label={chipsLabel} data-search-chips>
+			<slot name="chips" />
+		</nav>
+	)}
+	{hasControls && (
+		<Fragment>
+			<span class="ds-search-bar__divider" aria-hidden="true" />
+			<div class="ds-search-bar__controls">
+				<slot name="controls" />
+			</div>
+		</Fragment>
 	)}
 	{hint && (
-		<Pill variant="outline" class="ds-search-bar__hint" aria-hidden="true">{hint}</Pill>
+		<Chip size="sm" class="ds-search-bar__hint" aria-hidden="true">{hint}</Chip>
+	)}
+	{count !== undefined && (
+		<VisuallyHidden as="span" aria-live="polite" data-search-count>{count}</VisuallyHidden>
 	)}
 </div>

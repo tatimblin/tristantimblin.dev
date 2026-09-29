@@ -1,8 +1,10 @@
 ---
-// QuiltCell — one cell of a Quilt (styles/quilt.css): a post, which is a link
-// around its art with the post's title as the link's name (the art is
-// decorative; the frame inside is `<ArtFrame decorative />`), or a filler,
-// which is aria-hidden art and nothing else.
+// QuiltCell — one cell of a Quilt's ruled grid (styles/quilt.css): a post,
+// which is a link around its art with the post's title as the link's name
+// (the art is decorative; the frame inside is `<ArtFrame decorative />`), or
+// a filler, which is aria-hidden art and nothing else. The cell draws the
+// hairline on its right and bottom edges and insets the art a step; above
+// 640 it carries no text.
 //
 //   <QuiltCell col={3} row={1} href="/txt/mega-desk" label="The Mega Desk" no="003">
 //     <ArtFrame svg={raw} decorative />
@@ -18,8 +20,9 @@
 //                                     focusable so Tab still reaches it.
 //   --scatter-delay                   the cell's stagger (0–240ms) into faint
 //                                     or gone; the return to lit has none.
-//   data-active                       the accent ring on the art — the active
-//                                     search result.
+//   data-active                       the 1px accent outline on the cell's
+//                                     ruling — the active search result, the
+//                                     stepped post.
 // Placement: `col`/`row` for the ≥ 1024 grid and `colMd`/`rowMd` for the
 // 640–1023 one, as custom properties the stylesheet reads per viewport (an
 // inline style for a real API, like Grid's spans); under 640 every cell flows

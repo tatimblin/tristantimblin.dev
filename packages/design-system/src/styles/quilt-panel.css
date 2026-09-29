@@ -6,9 +6,9 @@
  * its top-left on a cell, the spans take the block, and inset: 0 fills it.
  * No measured pixels, and its content — however tall — never sizes a row.
  * The cells under it are `gone` (quilt.css), so the freed block is clear,
- * and the FACE draws the surface: the infra card of the reference dashboard
- * — an ink wash inside a hairline, the surface radius — filling the block
- * to its cells' edges, the grid gap keeping it off the tiles beside it.
+ * and the FACE draws the surface: the page colour inside the STRONG
+ * hairline, square, no fill — the ruled screen's card — filling the block
+ * to its cells' ruling, which its own edge sits on.
  *
  * FOUR FACES, ONE ATTRIBUTE. Every face is rendered in the same grid cell
  * and data-mode on the root says which shows; the rest are visibility:
@@ -27,7 +27,10 @@
 	--panel-rows: 2;
 
 	position: absolute;
-	inset: 0;
+	/* One pixel out on the left and top, onto the ruling the block's first
+	   cells' neighbours drew, so the card's edge is the grid's line there
+	   and not a second one beside it. */
+	inset: -1px 0 0 -1px;
 	grid-column: var(--panel-col, 1) / span var(--panel-cols);
 	grid-row: var(--panel-row, 1) / span var(--panel-rows);
 	z-index: 1;
@@ -36,8 +39,8 @@
 	grid-template-rows: minmax(0, 1fr);
 	/* A query container on BOTH axes: an absolutely positioned box with
 	   inset: 0 has a definite size, so the faces can fit themselves to the
-	   block they were given (a 3×2 block is ~310px tall on a 1440 board,
-	   ~420 at 1920, less on a narrower page) rather than clip. */
+	   block they were given (a 3×2 block is ~270px tall on a 1440 board,
+	   ~326 on a 900 tablet, less on a narrower page) rather than clip. */
 	container: panel / size;
 	font-family: var(--font-ui);
 	color: var(--text-primary);
@@ -54,11 +57,10 @@
 	transition-delay: 0s;
 }
 
-/* The faces: stacked in the one cell, a flex column each on the card
-   surface, clipped to the block (a card's excerpt clamps; a list's rows are
-   capped by the script). The wash, not the card colour: a wash is one
-   step off whatever it lands on in both themes — on /txt the page itself,
-   over the scattered tiles. */
+/* The faces: stacked in the one cell, a flex column each on the page colour
+   inside the strong hairline, clipped to the block (a card's excerpt
+   clamps; a list's rows are capped by the script). Every face opens with a
+   STRIP — a row at the top, its two ends pushed apart, a hairline under it. */
 .ds-quilt-panel__face {
 	grid-area: 1 / 1;
 	min-inline-size: 0;
@@ -66,11 +68,9 @@
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-3);
-	padding: var(--space-4) var(--space-5);
-	background: var(--wash-1);
-	border: 1px solid var(--hairline);
-	border-radius: var(--border-radius-2);
+	background: var(--background);
+	border: 1px solid var(--hairline-strong);
+	border-radius: 0;
 	overflow: hidden;
 	opacity: 0;
 	visibility: hidden;
@@ -85,76 +85,90 @@
 	opacity: 1;
 	visibility: visible;
 }
-/* The key hint sits on the block's bottom edge whatever the face holds, and
-   is not drawn where there is no keyboard to press. */
-.ds-quilt-panel__keys {
-	margin-block-start: auto;
+.ds-quilt-panel__strip {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	min-block-size: var(--space-6);
+	padding-inline: var(--space-3);
+	border-block-end: 1px solid var(--hairline);
 }
 /* A caps label in the panel wraps: the browse face's runs to 45
-   characters, which is a phone's width. */
+   characters, which is a phone's width. Not in a strip, which is one line
+   whatever its width: its labels ellipsise instead (the doubled class
+   out-ranks the wrap rule). */
 .ds-quilt-panel .ds-caps {
 	white-space: normal;
 }
+.ds-quilt-panel__strip > .ds-mono.ds-mono {
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+/* The key hint is not drawn where there is no keyboard to press. */
 @media (hover: none) {
 	.ds-quilt-panel__keys {
 		display: none;
 	}
 }
 
-/* THE CARD FACE — the infra card. A header row (the number, the category
-   pill) over a hairline; then two columns: the MAIN one stacks the three
-   stat pairs, the title and the excerpt, the SIDE one holds the ring gauge
-   with its caption at the top and the READ button on the bottom edge. The
+/* THE CARD FACE — the ruled card. The top strip holds the category chip
+   and the index line; the body is two columns — the SIDE one the big number
+   in the mono over its three readouts, the MAIN one the title and the
+   excerpt — and the StatStrip closes the block on its bottom edge. The
    title is the UI face at the big regular step (the blog sets titles
    regular; the heading face would shout here), with display leading and
-   tracking from the type tokens; the excerpt is Body at the small step —
-   the reference card's size, and what lets three lines and a two-line title
-   share a 1440 board's ~310px block — clamped to three lines. */
-.ds-quilt-panel__card {
-	gap: 0;
-}
-.ds-quilt-panel__card-head {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: var(--space-3);
-	flex: none;
-}
+   tracking from the type tokens; the excerpt is Body at the small step,
+   clamped to three lines. */
 .ds-quilt-panel__category:empty {
 	display: none;
 }
-.ds-quilt-panel__rule {
-	margin-block: var(--space-3) var(--space-4);
-}
 .ds-quilt-panel__card-body {
 	display: flex;
-	gap: var(--space-6);
+	gap: var(--space-5);
 	flex: 1 1 auto;
 	min-block-size: 0;
+	padding: var(--space-4) var(--space-4) var(--space-3);
+}
+.ds-quilt-panel__card-side {
+	flex: none;
+	/* As wide as its readouts: the longest one (`NODE: TXT/PROGRAMMING`) sets
+	   the column, never wrapping, and the words take the rest. */
+	inline-size: auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+.ds-quilt-panel__no {
+	font-family: var(--font-mono);
+	font-size: var(--font-size-8);
+	font-weight: var(--font-weight-400);
+	font-variant-numeric: tabular-nums;
+	line-height: 0.9;
+	letter-spacing: var(--tracking-heading);
+	color: var(--text-primary);
+}
+/* One line each, at the mono tracking (the full caps tracking would make
+   the column a third wider); three classes to out-rank the panel's wrap
+   rule and the doubled .ds-caps. */
+.ds-quilt-panel .ds-quilt-panel__readouts.ds-caps {
+	display: grid;
+	gap: var(--space-1);
+	line-height: var(--line-height-ui);
+	letter-spacing: var(--tracking-mono);
+	white-space: nowrap;
 }
 .ds-quilt-panel__card-main {
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	min-block-size: 0;
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-3);
-}
-.ds-quilt-panel__stats {
-	display: flex;
-	gap: var(--space-6);
-	flex: none;
-}
-/* The month reads as a date mark: capitals, tracked, in the value's mono. */
-.ds-quilt-panel__stat--caps .ds-stat__value {
-	text-transform: uppercase;
-	letter-spacing: var(--tracking-caps);
-}
-.ds-quilt-panel__body {
 	/* A block, not a grid: a grid item is blockified, and Chrome blockifies
 	   the excerpt's -webkit-box to flow-root, which drops the line clamp. */
 	display: block;
-	min-block-size: 0;
 }
 .ds-quilt-panel__title {
 	margin: 0;
@@ -166,7 +180,7 @@
 	color: var(--text-primary);
 	text-wrap: balance;
 }
-.ds-quilt-panel__body > .ds-quilt-panel__title {
+.ds-quilt-panel__card-main > .ds-quilt-panel__title {
 	margin-block-end: var(--space-3);
 }
 .ds-quilt-panel__blurb {
@@ -179,34 +193,28 @@
 .ds-quilt-panel__card .ds-quilt-panel__blurb {
 	--font-body-size: var(--font-size-1);
 }
+.ds-quilt-panel__why {
+	display: block;
+	margin-block-start: var(--space-3);
+}
 .ds-quilt-panel__why:empty {
 	display: none;
 }
-.ds-quilt-panel__card-side {
-	flex: none;
-	inline-size: var(--space-13);
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	align-items: flex-end;
-	gap: var(--space-3);
+.ds-quilt-panel__stats {
+	margin-block-start: auto;
 }
-.ds-quilt-panel__gauge {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: var(--space-2);
-}
-/* The caption is one line, whatever the panel's wrap rule for caps says. */
-.ds-quilt-panel__gauge .ds-caps {
+/* The month reads as a date mark: capitals, tracked, in the value's mono. */
+.ds-quilt-panel__stats .ds-stat__value {
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-mono);
 	white-space: nowrap;
 }
 /* The card fitted to its block: three excerpt lines under a title that may
-   wrap need a 280px block (a 1440 board's is ~304); a shorter block shows
-   two lines at the next title step down, then loses the stats and the gauge
-   (the READ button stays: it is the card's link), then the excerpt — the
-   card never clips mid-line. */
-@container panel (max-block-size: 279px) {
+   wrap need a 270px block (a 1440 board's); a shorter block shows two lines
+   at the next title step down, then loses the readouts, then the excerpt,
+   then the strip's stats (READ stays: it is the card's link) — the card
+   never clips mid-line. */
+@container panel (max-block-size: 259px) {
 	.ds-quilt-panel__blurb {
 		-webkit-line-clamp: 2;
 	}
@@ -214,14 +222,21 @@
 		font-size: var(--font-size-6);
 	}
 }
-@container panel (max-block-size: 239px) {
-	.ds-quilt-panel__stats,
-	.ds-quilt-panel__gauge {
+@container panel (max-block-size: 219px) {
+	.ds-quilt-panel__readouts {
+		display: none;
+	}
+	.ds-quilt-panel__no {
+		font-size: var(--font-size-7);
+	}
+}
+@container panel (max-block-size: 179px) {
+	.ds-quilt-panel__blurb {
 		display: none;
 	}
 }
-@container panel (max-block-size: 159px) {
-	.ds-quilt-panel__blurb {
+@container panel (max-block-size: 139px) {
+	.ds-quilt-panel__stats > .ds-stat {
 		display: none;
 	}
 }
@@ -237,9 +252,18 @@
 	}
 }
 
-/* THE BROWSE FACE. Each group is one row — its label, then its pill links,
-   wrapping — so the three groups, the lead and the keys fit the block; the
-   latest post is an anchor in the ink at the next step up. */
+/* THE BROWSE FACE. Each group is one row — its label, then its chip links,
+   wrapping — so the three groups fit the block under the strip; the latest
+   post is an anchor in the ink at the next step up; the keys sit on the
+   bottom edge. */
+.ds-quilt-panel__groups {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-3) var(--space-3);
+}
 .ds-quilt-panel__group {
 	display: flex;
 	flex-wrap: wrap;
@@ -250,7 +274,7 @@
 	flex: none;
 	min-inline-size: var(--space-12);
 }
-.ds-quilt-panel__pills {
+.ds-quilt-panel__chips {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--space-2);
@@ -260,14 +284,19 @@
 	font-size: var(--font-size-5);
 	line-height: var(--line-height-ui);
 }
+.ds-quilt-panel__browse > .ds-quilt-panel__keys {
+	flex: none;
+	padding: var(--space-2) var(--space-3);
+	border-block-start: 1px solid var(--hairline);
+}
 
-/* THE RESULTS FACE. A listbox of two-line rows — the title, then its meta
-   and why in the structure voice — close-set, so four fit a full-size
-   block under the label and over the keys (the script caps the list at
-   four). The active row (aria-selected) carries the accent bar on its left
-   edge and the first wash; the bar is the focus ring's width so the two
-   accents on the page agree. The marked query in a title sits on the
-   emphasis tint with the accent under it. */
+/* THE RESULTS FACE. A listbox of two-line rows cut by hairlines — the
+   title, then its meta and why in the structure voice — close-set, so four
+   fit a full-size block under the strip (the script caps the list at four).
+   The active row (aria-selected) carries the accent bar on its left edge —
+   the focus ring's width, so the two accents on the page agree — and a
+   pointed-at row the strong hairline there; no fills. The marked query in a
+   title is underlined with the accent. */
 .ds-quilt-panel__results {
 	list-style: none;
 	margin: 0;
@@ -276,22 +305,21 @@
 	min-block-size: 0;
 	overflow: hidden;
 }
+.ds-quilt-panel__result {
+	border-block-end: 1px solid var(--hairline);
+}
 .ds-quilt-panel__result-link {
 	display: grid;
 	gap: var(--space-1);
-	padding: var(--space-1) var(--space-3);
+	padding: var(--space-2) var(--space-3);
 	border-inline-start: var(--focus-ring);
 	border-inline-start-color: transparent;
-	border-radius: 0 var(--border-radius-0) var(--border-radius-0) 0;
 	color: inherit;
 	text-decoration: none;
-	transition:
-		background var(--duration-swap) var(--ease-reveal),
-		border-color var(--duration-swap) var(--ease-reveal);
+	transition: border-color var(--duration-swap) var(--ease-reveal);
 }
-.ds-quilt-panel__result[aria-selected="true"] .ds-quilt-panel__result-link,
 .ds-quilt-panel__result-link:hover {
-	background: var(--wash-1);
+	border-inline-start-color: var(--hairline-strong);
 }
 .ds-quilt-panel__result[aria-selected="true"] .ds-quilt-panel__result-link {
 	border-inline-start-color: var(--accent);
@@ -306,9 +334,8 @@
 	text-overflow: ellipsis;
 }
 .ds-quilt-panel__result-title mark {
-	background: var(--emphasis);
+	background: none;
 	color: inherit;
-	border-radius: var(--border-radius-tile);
 	box-shadow: 0 1px 0 var(--accent);
 }
 /* One mono line, `APR 2025 · PROJECTS · MATCHED TAG · HOME OFFICE`: the why
@@ -329,7 +356,18 @@
 }
 
 /* THE NONE FACE. The sentence at the title step, the coverage line, the
-   suggestions as pills. */
+   suggestions as chips. */
+.ds-quilt-panel__none-body {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4) var(--space-4) var(--space-3);
+}
+.ds-quilt-panel__none .ds-quilt-panel__title {
+	font-size: var(--font-size-6);
+}
 .ds-quilt-panel__none .ds-quilt-panel__blurb {
 	-webkit-line-clamp: 2;
 }
@@ -383,8 +421,8 @@
 	.ds-quilt-panel__result-title {
 		white-space: normal;
 	}
-	/* The card stacks: the side column becomes a row under the text, the
-	   gauge and its caption side by side at the left, READ at the right. */
+	/* The card's body stacks: the number and its readouts side by side on
+	   one row, the words under them. */
 	.ds-quilt-panel__card-body {
 		flex-direction: column;
 		gap: var(--space-4);
@@ -392,11 +430,11 @@
 	.ds-quilt-panel__card-side {
 		inline-size: auto;
 		flex-direction: row;
-		align-items: center;
+		align-items: flex-end;
+		gap: var(--space-4);
 	}
-	.ds-quilt-panel__gauge {
-		flex-direction: row;
-		gap: var(--space-3);
+	.ds-quilt-panel__no {
+		font-size: var(--font-size-7);
 	}
 }
 .ds-quilt-panel--flow-true {
