@@ -141,14 +141,12 @@
 	justify-content: space-between;
 	gap: var(--space-3);
 }
+/* The big number: Mono's value voice at the display step, its lines
+   almost touching, display tracking. */
 .ds-quilt-panel__no {
-	font-family: var(--font-mono);
 	font-size: var(--font-size-8);
-	font-weight: var(--font-weight-400);
-	font-variant-numeric: tabular-nums;
 	line-height: 0.9;
 	letter-spacing: var(--tracking-heading);
-	color: var(--text-primary);
 }
 /* One line each, at the mono tracking (the full caps tracking would make
    the column a third wider) — the caps role's token retuned in scope. Two

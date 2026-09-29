@@ -32,6 +32,7 @@
 // scroll sideways (the stylesheet).
 import { cx } from "../lib/cx";
 import Chip from "./Chip.astro";
+import Mono from "./Mono.astro";
 import VisuallyHidden from "./VisuallyHidden.astro";
 
 interface Props {
@@ -74,9 +75,9 @@ const hasControls = Astro.slots.has("controls");
 
 <div class={cx("ds-search-bar", className)} role="search" data-search-bar {...rest}>
 	<VisuallyHidden as="label" for={id}>{label}</VisuallyHidden>
-	<span class="ds-search-bar__glyph" aria-hidden="true">⌕</span>
+	<Mono variant="value" size={1} tone="tertiary" class="ds-search-bar__glyph" aria-hidden="true">⌕</Mono>
 	<input
-		class="ds-search-bar__input"
+		class="ds-search-bar__input ds-mono ds-mono--size-1"
 		id={id}
 		name={name}
 		type="search"

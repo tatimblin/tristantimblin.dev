@@ -29,7 +29,9 @@
 	border-inline-end: 0;
 }
 
-/* The action cell. */
+/* The action cell. StatStrip.astro gives it the caps mono classes, so the
+   slotted link inherits the voice and this file sets only the box and the
+   colour on it. */
 .ds-stat-strip__action {
 	flex: none;
 	inline-size: var(--space-13);
@@ -49,11 +51,9 @@
 	border: 0;
 	background: none;
 	color: var(--on-accent);
-	font-family: var(--font-mono);
-	font-size: var(--font-size-0);
-	font-weight: var(--font-weight-400);
-	letter-spacing: var(--tracking-caps);
-	text-transform: uppercase;
+	font: inherit;
+	letter-spacing: inherit;
+	text-transform: inherit;
 	text-decoration: none;
 	white-space: nowrap;
 	cursor: pointer;

@@ -26,8 +26,24 @@
 .ds-caps {
 	text-transform: uppercase;
 	letter-spacing: var(--tracking-caps, 0.14em);
-	/* Tracking adds space AFTER each letter, including the last one, which leaves
-	   a phantom indent at the end of the run. Visible whenever a caps label is
-	   centred, right-aligned, or sits inside a border/background. */
+}
+/* Tracking adds space AFTER each letter, including the last one, which leaves
+   a phantom indent at the end of the run — visible whenever a caps label is
+   centred, right-aligned, or sits inside a box. ONE fix: the element pulls
+   its own end margin back by that amount. On the element, not inside it: a
+   trailing pseudo-element with the negative margin would shrink the box's
+   max-content width instead, and a shrink-to-fit caps box (a flex item that
+   may wrap) then overflows by one tracking and breaks a word. */
+.ds-caps {
 	margin-inline-end: calc(-1 * var(--tracking-caps, 0.14em));
+}
+/* A BOX set in the voice — a pill, a chip, a button, the strip's action cell
+   (all of which compose these classes) — keeps the phantom inside its own
+   padding: no outer pull on its neighbours, and the same amount indented in
+   front of the letters so they centre between the two. */
+.ds-caps:is(.ds-pill, .ds-chip, .ds-button, .ds-stat-strip__action) {
+	margin-inline-end: 0;
+}
+.ds-caps:is(.ds-pill, .ds-chip, .ds-button) {
+	text-indent: var(--tracking-caps, 0.14em);
 }

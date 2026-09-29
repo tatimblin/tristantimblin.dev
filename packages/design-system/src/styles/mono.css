@@ -24,7 +24,8 @@
 
 /* variant. The caps variant composes .ds-caps (Mono.astro adds the class),
    which owns the uppercase + tracking + trailing-space fix; nothing repeated
-   here but the wrap rule. */
+   here but the wrap rule. Pill, Chip and Button compose the same two classes
+   and add only their box, so there is one caps mono on the site. */
 .ds-mono--variant-caps {
 	white-space: nowrap;
 }

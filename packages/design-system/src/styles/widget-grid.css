@@ -50,6 +50,13 @@
 	--widget-font-md: clamp(16px, calc(var(--widget-cell) * 0.053), 22px);
 	--widget-font-lg: clamp(20px, calc(var(--widget-cell) * 0.067), 28px);
 	--widget-font-xl: clamp(32px, calc(var(--widget-cell) * 0.107), 48px);
+	/* The Figure's step: --widget-font-xl, but allowed below its 32px floor
+	   on small (phone) tiles, down to --widget-font-lg, so a 4-digit figure
+	   doesn't eat half a 160px tile. Identical to xl from a ~250px cell up. */
+	--widget-font-figure: max(
+		var(--widget-font-lg),
+		min(var(--widget-font-xl), calc(var(--widget-cell) * 0.13))
+	);
 	--widget-icon: clamp(20px, calc(var(--widget-cell) * 0.067), 30px);
 }
 

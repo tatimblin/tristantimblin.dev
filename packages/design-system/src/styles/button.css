@@ -8,8 +8,10 @@
  *   tertiary   nothing until pointed at.
  *
  * Set in the structure voice (caps mono), because a button's label is a
- * label. The prop API — variant, inverted, rounded, the icon slots — is the
- * DS's, unchanged. */
+ * label: Button.astro composes the `ds-mono ds-caps` classes, so the face,
+ * size, weight, tracking and case are declared once (mono.css, caps.css)
+ * and this file is the box and the colour. The prop API — variant,
+ * inverted, rounded, the icon slots — is the DS's, unchanged. */
 
 .ds-button {
 	-webkit-appearance: none;
@@ -26,13 +28,6 @@
 	cursor: pointer;
 	border: 1px solid transparent;
 	margin: 0;
-	font: inherit;
-	font-family: var(--font-mono);
-	font-size: var(--font-size-0);
-	font-weight: var(--font-weight-400);
-	line-height: 1;
-	letter-spacing: var(--tracking-caps);
-	text-transform: uppercase;
 	white-space: nowrap;
 	text-decoration: none;
 	block-size: var(--space-6);

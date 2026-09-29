@@ -1,7 +1,7 @@
 /* Pill — a small capsule of caps mono: `LOW RISK` in a card header, `0/360°`
  * on the poster, `TAP` and `NEXT` on the metronome. A departure from the DS
  * port (which was a rounded rectangle at text size in the UI face): the pill
- * is now in the structure voice, fully round, and comes in three shapes of
+ * is in the structure voice, fully round, and comes in three shapes of
  * emphasis plus the four status tints the DS had:
  *
  *   subtle    (the default when no variant is given) an ink wash — the header
@@ -9,6 +9,11 @@
  *   outline   a hairline, no fill — the poster's badges, a quiet toggle.
  *   accent    filled with the accent — the ONE call to action on a card.
  *   info / success / warning / danger — the DS tints, kept, now in the voice.
+ *
+ * THE VOICE IS NOT HERE. Pill.astro composes the `ds-mono ds-caps` classes,
+ * which own the face, the size (fluid inside a widget), the weight, the
+ * tracking and the case; this file is the box and the colour. Same for Chip
+ * and Button: one caps mono, declared once (mono.css, caps.css).
  *
  * As a <button> or <a> it is a pill BUTTON: pointer, a hover step, the focus
  * ring. Nothing else changes, so a static pill and a pill button read the same. */
@@ -23,13 +28,6 @@
 	padding: var(--space-1) var(--space-3);
 	border: 1px solid transparent;
 	border-radius: var(--border-radius-pill);
-	font-family: var(--font-mono);
-	font-size: var(--widget-font-xs, var(--font-size-0));
-	font-weight: var(--font-weight-400);
-	font-variant-numeric: tabular-nums;
-	line-height: 1;
-	letter-spacing: var(--tracking-caps);
-	text-transform: uppercase;
 	white-space: nowrap;
 	text-decoration: none;
 	cursor: default;
@@ -41,13 +39,6 @@
 		background var(--duration-swap) var(--ease-reveal),
 		color var(--duration-swap) var(--ease-reveal),
 		border-color var(--duration-swap) var(--ease-reveal);
-}
-/* The tracking's phantom trailing space would sit the text off-centre. Not
-   on an icon (an svg or an aria-hidden glyph): when it is the last ELEMENT
-   the text is a bare node after it, and the pull would eat the gap. */
-.ds-pill > :last-child:not(svg, [aria-hidden="true"]),
-.ds-pill:not(:has(> *)) {
-	margin-inline-end: calc(-1 * var(--tracking-caps));
 }
 .ds-pill svg {
 	inline-size: 1em;
@@ -106,9 +97,6 @@ a.ds-pill {
 	cursor: pointer;
 	-webkit-appearance: none;
 	appearance: none;
-	font: inherit;
-	font-family: var(--font-mono);
-	font-size: var(--widget-font-xs, var(--font-size-0));
 }
 :is(button, a).ds-pill:hover:not(:disabled),
 :is(button, a).ds-pill:focus-visible {

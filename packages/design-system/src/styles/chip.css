@@ -2,7 +2,10 @@
  * The ruled screen's tag and its toggle, where Pill is the capsule with a
  * wash. Selected (aria-current, or aria-pressed="true") is the ink as a solid
  * fill with the page colour on it — the one filled thing on a ruled row, so
- * the current filter reads at a glance. */
+ * the current filter reads at a glance.
+ *
+ * The voice (face, size, tracking, case) is the `ds-mono ds-caps` classes
+ * Chip.astro composes; this file is the box and the colour. */
 .ds-chip {
 	display: inline-flex;
 	align-items: center;
@@ -14,13 +17,6 @@
 	padding: 0 var(--space-2);
 	border: 1px solid var(--chip-border, var(--hairline));
 	border-radius: 0;
-	font-family: var(--font-mono);
-	font-size: var(--font-size-0);
-	font-weight: var(--font-weight-400);
-	font-variant-numeric: tabular-nums;
-	line-height: 1;
-	letter-spacing: var(--tracking-caps);
-	text-transform: uppercase;
 	white-space: nowrap;
 	text-decoration: none;
 	cursor: default;
@@ -31,12 +27,6 @@
 		background var(--duration-swap) var(--ease-reveal),
 		color var(--duration-swap) var(--ease-reveal),
 		border-color var(--duration-swap) var(--ease-reveal);
-}
-/* The tracking's phantom trailing space would sit the text off-centre (the
-   pill's rule). */
-.ds-chip > :last-child:not(svg, [aria-hidden="true"]),
-.ds-chip:not(:has(> *)) {
-	margin-inline-end: calc(-1 * var(--tracking-caps));
 }
 
 /* size: sm — the key hint: no minimum height, a hair of padding. */
@@ -60,9 +50,6 @@ a.ds-chip {
 	cursor: pointer;
 	-webkit-appearance: none;
 	appearance: none;
-	font: inherit;
-	font-family: var(--font-mono);
-	font-size: var(--font-size-0);
 }
 :is(button, a).ds-chip:not([aria-current], [aria-pressed="true"]):hover:not(:disabled),
 :is(button, a).ds-chip:not([aria-current], [aria-pressed="true"]):focus-visible {

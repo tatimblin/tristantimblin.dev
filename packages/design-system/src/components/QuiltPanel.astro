@@ -164,7 +164,7 @@ const indexLine = (no: string) => `[index] 000${no} · log_${no}.txt`;
 		</div>
 		<div class="ds-quilt-panel__card-body">
 			<div class="ds-quilt-panel__card-side">
-				<span class="ds-quilt-panel__no" data-card="no">{card?.no}</span>
+				<Mono variant="value" class="ds-quilt-panel__no" data-card="no">{card?.no}</Mono>
 				<Mono tone="tertiary" class="ds-quilt-panel__readouts">
 					<span>status: published</span>
 					<span>node: txt/<span data-card="node">{card?.category}</span></span>

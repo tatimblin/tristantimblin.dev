@@ -130,7 +130,7 @@
 	height: 12px;
 }
 .ds-icon-button--size-xs .ds-icon-button__glyph {
-	font-size: var(--font-size-1);
+	font-size: var(--widget-font-sm, var(--font-size-1));
 }
 .ds-icon-button--size-small {
 	inline-size: var(--space-6);
@@ -141,7 +141,7 @@
 	height: 16px;
 }
 .ds-icon-button--size-small .ds-icon-button__glyph {
-	font-size: var(--font-size-3);
+	font-size: var(--widget-font-md, var(--font-size-3));
 }
 .ds-icon-button--size-large {
 	inline-size: var(--space-7);
@@ -152,7 +152,7 @@
 	height: 18px;
 }
 .ds-icon-button--size-large .ds-icon-button__glyph {
-	font-size: var(--font-size-5);
+	font-size: var(--widget-font-lg, var(--font-size-5));
 }
 .ds-icon-button--size-xl {
 	inline-size: var(--space-10);
@@ -163,5 +163,5 @@
 	height: 24px;
 }
 .ds-icon-button--size-xl .ds-icon-button__glyph {
-	font-size: var(--font-size-6);
+	font-size: var(--widget-font-xl, var(--font-size-6));
 }

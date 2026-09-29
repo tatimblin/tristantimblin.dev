@@ -27,16 +27,11 @@
 .ds-search-bar__hint {
 	flex: none;
 }
-.ds-search-bar__glyph {
-	font-family: var(--font-mono);
-	font-size: var(--font-size-1);
-	line-height: 1;
-	color: var(--text-tertiary);
-}
 
 /* The input, stripped: no border, fill or ring of its own (the bar's edge
    is the focus indication), and none of WebKit's search-field chrome. In
-   the mono, at the label's next step: a query reads as a readout. */
+   the mono at the label's next step — the Mono classes on the element — so
+   a query reads as a readout; the ink and the mono tracking are its own. */
 .ds-search-bar__input {
 	flex: 1 1 auto;
 	/* Zero, then grow: an input's intrinsic width (its `size`) would
@@ -51,9 +46,6 @@
 	background: none;
 	outline: none;
 	appearance: none;
-	font: inherit;
-	font-family: var(--font-mono);
-	font-size: var(--font-size-1);
 	letter-spacing: var(--tracking-mono);
 	color: var(--text-primary);
 	caret-color: var(--accent);

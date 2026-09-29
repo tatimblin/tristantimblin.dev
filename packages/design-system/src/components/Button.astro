@@ -57,6 +57,9 @@ const hasIcon = hasStart ? "startIcon" : hasEnd ? "endIcon" : "none";
 		<Tag
 			class={cx(
 				"ds-button",
+				// The voice: the caps mono, declared once (mono.css, caps.css).
+				"ds-mono",
+				"ds-caps",
 				`ds-button--variant-${variant}`,
 				`ds-button--has-icon-${hasIcon}`,
 				inverted && "ds-button--inverted-true",
