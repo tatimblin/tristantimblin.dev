@@ -20,8 +20,8 @@
  * --tracking-caps in scope rather than overriding this rule.
  *
  * Deliberately NOT here: font-size and font-family. A caps label appears in the
- * UI face at --font-size-1 most of the time but not always (the homepage's
- * scrubber label is --font-subheading), and the role that matters — the thing
+ * UI face at --font-size-0 most of the time but not always (the homepage's
+ * lede is the heading face), and the role that matters — the thing
  * that is wrong when it is missing — is the tracking. */
 .ds-caps {
 	text-transform: uppercase;

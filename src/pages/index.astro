@@ -590,18 +590,14 @@ import "@whois/wobble-text/styles.css";
 	.hero-intro__lede p {
 		margin: 0;
 		pointer-events: auto;
-		/* Uppercase statement line in the sub-heading face — a quieter, more graphic
-		   register than the hero face above it, still prominent at --text-secondary.
-		   FS Mondwest is normalised onto Migra's x-height in fonts.css, so the
-		   --font-size-1 step means the same here as anywhere else.
-		   The weight travels WITH the family, as every face on this site does:
-		   font-synthesis-weight is off globally (global.css) and FS Mondwest ships a
-		   single cut, so an unpaired family lands on whichever cut the browser guesses
-		   is nearest. 400 is that cut — it IS the bold, which is the same reasoning
-		   heading.css states for .ds-heading.ds-text--size-4, the DS's spelling of
-		   this exact role. */
-		font-family: var(--font-subheading);
-		font-weight: 400;
+		/* Uppercase statement line in the heading face at its Bold — a quieter,
+		   more graphic register than the hero face above it, still prominent at
+		   --text-secondary. Mondwest is normalised onto Migra's x-height in
+		   fonts.css, so the --font-size-1 step means the same here as anywhere
+		   else. The weight travels WITH the family, as every face on this site
+		   does (font-synthesis-weight is off globally). */
+		font-family: var(--font-heading);
+		font-weight: var(--font-heading-weight);
 		font-size: var(--font-size-1);
 		line-height: 1.5;
 		text-transform: uppercase;

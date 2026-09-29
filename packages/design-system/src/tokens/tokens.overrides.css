@@ -15,60 +15,59 @@
 	/* e.g. --accent: oklch(60% 0.2 240); */
 
 	/* TYPE --------------------------------------------------------------------
-	 * The site's four faces, named by the ROLE they play rather than by what they
-	 * are, so a face can be swapped in one place without every call site having to
-	 * know it changed. The @font-face rules are in src/styles/fonts.css; the files
-	 * are self-hosted under /fonts (nothing is fetched from Google Fonts).
+	 * The site's faces, named by the ROLE they play rather than by what they
+	 * are, so a face can be swapped in one place without every call site having
+	 * to know it changed. The @font-face rules are in src/styles/fonts.css; the
+	 * files are self-hosted under /fonts (nothing is fetched from Google Fonts).
 	 *
-	 * Each stack is: the web font → its metric-matched fallback (an adjusted system
-	 * face that holds the web font's exact box, so the swap doesn't reflow) → a
-	 * plain generic stack as the last resort.
+	 * Each stack is: the web font → its metric-matched fallback (an adjusted
+	 * system face that holds the web font's exact box, so the swap doesn't
+	 * reflow) → a plain generic stack as the last resort.
 	 *
-	 * Migra ships as two discrete cuts under one family, so a role that uses it
-	 * needs BOTH the family and the weight — hence the -weight companions. Reach
-	 * for the pair together; setting the family without the weight lands on
-	 * whichever cut the browser thinks is closest. */
+	 * Three faces, four roles:
+	 *   hero      Migra Bold — the hero lockup only ("& other stories"; the
+	 *             wordmark takes the Medium, and says so itself).
+	 *   heading   Mondwest Bold — every heading: the post title at 72px, the
+	 *             section heads, the catalogue's, a bare <h2>.
+	 *   ui        Mondwest Regular — the interface: widget chrome, labels, the
+	 *             caps voice, the figures, the blog's chrome, the search bar.
+	 *   body      Neue Montreal Regular — reading text.
+	 * Migra and Mondwest ship discrete cuts under one family, so a role that
+	 * uses them names the family AND the weight — hence the -weight companions.
+	 * Reach for the pair together; setting the family without the weight lands
+	 * on whichever cut the browser thinks is closest. */
 	--font-hero: "Migra", "Migra Fallback", ui-serif, Georgia, serif;
-	--font-hero-weight: 700;
-	--font-heading: var(--font-hero);
-	--font-heading-weight: 500;
-	--font-subheading: "FS Mondwest", "FS Mondwest Fallback", ui-monospace, Menlo,
-		monospace;
-	--font-body: "PP Mondwest", "PP Mondwest Fallback", ui-sans-serif, system-ui,
+	--font-hero-weight: var(--font-weight-700);
+	--font-ui: "Mondwest", "Mondwest Fallback", ui-sans-serif, system-ui, sans-serif;
+	--font-heading: var(--font-ui);
+	--font-heading-weight: var(--font-weight-700);
+	--font-body: "Neue Montreal", "Neue Montreal Fallback", ui-sans-serif, system-ui,
 		sans-serif;
+
+	/* The step ABOVE the generated weight scale, which stops at 600 (560): the
+	 * Bold cut Mondwest and Migra both ship. tokens.generated.css is re-emitted
+	 * from the upstream package, so it cannot be extended there without the next
+	 * regeneration dropping the addition. A request for 600 on a family with a
+	 * 400 and a 700 would land on the 700 anyway; naming it means the emphasis
+	 * asks for the cut it gets. (The generated 500/600 remain for a face that
+	 * has them — Neue Montreal's Semibold.) */
+	--font-weight-700: 700;
+
 	/* The BODY role's companions, named the same way --font-hero-weight names
 	 * Migra's cut. --font-body says which FACE reading text is set in; these say
 	 * how it is SET, so "body text" is one decision in one place instead of a size
 	 * and a line-height retyped at every call site. Consumed by .ds-body
 	 * (styles/body.css) — reach for the component, not these, at a call site.
 	 *
-	 * SIZE. 16px, down from the 18px posts used to run at. Mondwest carries a
-	 * size-adjust of 118.2% (fonts.css normalises it onto Migra's x-height), so it
-	 * paints about a fifth larger than its nominal size: 18px was landing near 21px
-	 * of apparent text, which is a sub-heading's weight on the page, not a
-	 * paragraph's. At 16px it reads as body and the 18px step goes back to being
-	 * what it always was — the smallest heading (the homepage lede still uses it).
-	 *
-	 * WEIGHT. 300 (Light). This token used to read 400 with a note that there was
-	 * nothing lighter to move to — PP Mondwest shipped a single cut, and since
-	 * global.css refuses font-synthesis, asking for 300 rendered the 400 file
-	 * unchanged. There are now three cuts (fonts.css), so the request is real and
-	 * this is the one line that was always meant to do it.
-	 *
-	 * Lighter matters more in a bitmap face than the number suggests. Weight here
-	 * is stem width in whole grid pixels, so Regular's 2 px stems are heavy at
-	 * reading size — and the usual remedy, dropping the size, is already spent at
-	 * 16px (see SIZE above). Light's 1.5 px stems remove about 14% of the ink at
-	 * the SAME size, which is the correction the body role actually wanted.
-	 *
-	 * NOT 200. The Thin cut is built and served, but its 1 px stems are a hairline
-	 * at 16px and the first thing a low-DPR screen drops. It is available for a
-	 * display-scale use that wants it; running text is not that use.
-	 *
-	 * Nothing above 300 changes. The cuts are metrically identical, so this is a
-	 * change of colour, not of line length — no page reflows. And the DS
-	 * components that ask for 500/560 still land on the 400 file exactly as
-	 * before, since 400 remains the heaviest cut the family ships. */
+	 * A grotesk at 16px, on its own leading: 1.6 — Neue Montreal's tall ascenders
+	 * already open the line, and a paragraph at 1.7 (the bitmap face's setting)
+	 * drifts. No tracking: the 0.3px the previous body face carried was a
+	 * correction for its tight counters, which a text grotesk does not need. */
+	--font-body-size: var(--font-size-3);
+	--font-body-weight: var(--font-weight-400);
+	--font-body-line-height: 1.6;
+	--font-body-letter-spacing: 0;
+
 	/* The step BELOW the generated scale, which stops at --font-size-1 (14px).
 	 * Real small print — a photo credit, a pull-quote attribution, a ruler's year
 	 * marks, a caption bar — sits under that floor, so every one of those had to
@@ -81,40 +80,22 @@
 
 	/* The step ABOVE the generated scale, which stops at --font-size-8 (44px).
 	 * A post's title on the ruled page is DISPLAY type: one or two lines set
-	 * across three of the four columns, at a size the UI face was drawn to hold
-	 * and 44px does not reach — the reference sits at 72, which is the next
+	 * across three of the four columns, at a size the heading face was drawn to
+	 * hold and 44px does not reach — the reference sits at 72, which is the next
 	 * step of the same progression (32 → 44 → 72, each about 1.4× the last)
 	 * rather than a number picked for one page. Named here for the same reason
 	 * as --font-size-0: the generated file cannot be extended, and a display
 	 * size typed as a literal is exactly what this file exists to prevent.
 	 * Pair it with --line-height-heading retuned below 1 (a two-line title at
-	 * this size wants its lines almost touching) and --tracking-heading. */
+	 * this size wants its lines almost touching). */
 	--font-size-9: 72px;
 
-	/* The step BELOW the generated weight scale, which starts at 400. Same
-	 * reason as --font-size-0 above: tokens.generated.css is re-emitted from the
-	 * upstream package, so it cannot be extended there without the next
-	 * regeneration dropping the addition. 300 is the real usWeightClass of the
-	 * Light cut (fonts.css), so a request lands on a file rather than being
-	 * resolved to the nearest one. (The Thin, 200, is served but holds no
-	 * role and has no token: a weight nothing asks for is not a step.) */
-	--font-weight-300: 300;
-
-	--font-body-size: var(--font-size-3);
-	--font-body-weight: var(--font-weight-300);
-	--font-body-line-height: 1.7;
-	/* Mondwest's counters are tight at reading size; the 0.3px the DS's `spaced`
-	 * Text variant adds is doing real work, so the role keeps it rather than
-	 * depending on that variant staying on. */
-	--font-body-letter-spacing: 0.3px;
 	/* LEADING ----------------------------------------------------------------
 	 * Headings and body want DIFFERENT leading, and the difference is the whole
 	 * point. Body text needs room between lines so the eye can find the next one;
 	 * a heading is one or two lines that must read as a single object, and giving
 	 * it body leading makes the lines drift apart instead of holding together.
-	 * ~1.15 for headings against 1.7 for body is that contrast made explicit.
-	 * (.ds-heading ran at 1.5 — body leading on display type — which is what made
-	 * every two-line heading look like two separate lines.) */
+	 * ~1.15 for headings against 1.6 for body is that contrast made explicit. */
 	--line-height-heading: 1.15;
 	--line-height-body: var(--font-body-line-height);
 	/* The third leading, for the UI face at label sizes — a post title, a meta
@@ -123,16 +104,13 @@
 	 * nothing to reach for and were hand-typing 1.2 / 1.25 / 1.3 / 1.35 / 1.45. */
 	--line-height-ui: 1.3;
 
-	/* Display type needs TIGHTER tracking than text type: the space between
-	 * letters grows with the type, so spacing that is right at 16px is visibly
-	 * loose at 44px. One token, in em so it tracks the size it is set at.
-	 *
-	 * This also settles a real disagreement. global.css tracked a bare <h1> at
-	 * -0.02em while .ds-heading tracked the component at -0.3px — an ABSOLUTE
-	 * value, which means the two matched at roughly 15px and diverged everywhere
-	 * else. At --font-size-7 (32px) that was -0.64px against -0.30px: a bare <h1>
-	 * and an <H1> were visibly differently tracked on the same page. */
-	--tracking-heading: -0.02em;
+	/* Display tracking. A text face wants its letters pulled together as the
+	 * type grows; a BITMAP face does not — its letters sit on a pixel grid,
+	 * and a negative tracking at 72px closes the gaps the grid drew. So the
+	 * heading face's display tracking is none. (The hero lockup, Migra, keeps
+	 * its own -0.02em in its stylesheet.) In em, so a retune tracks the size
+	 * it is set at. */
+	--tracking-heading: 0;
 
 	/* TRACKING ---------------------------------------------------------------
 	 * Uppercase is set in letterforms that were drawn to sit next to LOWERCASE.
@@ -143,41 +121,26 @@
 	 *   --tracking-caps          small uppercase labels — kickers, section marks,
 	 *                            widget headers, meta rows, pills.
 	 * Anything uppercase should reach for this rather than inventing a sixth
-	 * value. (A wider display step once existed for the old /txt masthead; it
-	 * went with the masthead.)
-	 *   --tracking-mono          the small tracking for MONO set in sentence case
-	 *                            (a handle, a stat's label) and for caps on a phone
-	 *                            tile, where the full caps tracking costs a word a
-	 *                            line. A monospace already spaces its letters on a
-	 *                            fixed advance, so it needs far less than a text face.
-	 * --tracking-caps was 0.1em; the instrument voice (see INSTRUMENT UI below)
-	 * tracks its labels wider, and the two jobs are the same job. */
-	--tracking-caps: 0.14em;
-	--tracking-mono: 0.05em;
+	 * value.
+	 *   --tracking-mono          the small tracking for the label voice set in
+	 *                            sentence case (a handle, a stat's label) and for
+	 *                            caps on a phone tile, where the full caps
+	 *                            tracking costs a word a line.
+	 * Mondwest's caps are pixel letters on a fixed grid, which already stand
+	 * apart; the caps step is a touch under what the grotesk took. */
+	--tracking-caps: 0.1em;
+	--tracking-mono: 0.04em;
 
-	/* UI text: the small, functional type that LABELS things rather than says them —
-	 * widget headers, stat figures and labels, the carousel ruler's year marks. The
-	 * other four faces all have a strong voice, which is right for a wordmark or a
-	 * paragraph and wrong for a number in a card; Neue Montreal recedes, so the
-	 * interface reads as interface. Two cuts, Regular (400) and Semibold (600) — set
-	 * the weight alongside the family for the heavier one, exactly as with Migra. */
-	--font-ui: "Neue Montreal", "Neue Montreal Fallback", ui-sans-serif, system-ui,
-		sans-serif;
-
-	/* The DS's own font tokens, retargeted onto those roles.
-	 *
-	 * --font-mono / --font-numeric were Fira Code and Space Grotesk, both from
-	 * Google Fonts. --font-mono stays on the system mono stack: code wants a real
-	 * monospace, that costs nothing to load, and it is what a reader's terminal
-	 * already looks like.
-	 * --font-numeric has moved off it. It had no face of its own — "Mondwest is not
-	 * monospaced" was the reason it borrowed the code stack — and widget figures are
-	 * not code, so they were set in a terminal face by default rather than by
-	 * intent. --font-ui is that missing face, and its figures are what this role
-	 * wanted all along.
-	 * --font-display (the DS's default face, Inter) has no consumer left: Text's
-	 * families are the site's roles, and a bare element inherits the body's. */
-	--font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	/* CODE. The one monospace left on the site, for code alone — fenced blocks
+	 * and inline code: the system mono stack, no file loaded, since code wants a
+	 * real monospace and what a reader's terminal already looks like. The label
+	 * voice (Mono, the caps) is the UI face now; --font-mono is this stack's
+	 * legacy name (the DS's own token, generated as Fira Code), kept so an
+	 * older stylesheet resolves to something sane — reach for --font-code. */
+	--font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	--font-mono: var(--font-code);
+	/* The DS's numeric face: the UI face, whose figures are what this role
+	 * wanted (it had borrowed the code stack for want of one). */
 	--font-numeric: var(--font-ui);
 
 	/* MOTION -----------------------------------------------------------------
@@ -304,11 +267,12 @@
 
 	/* THE VOICES, as custom properties, for a consumer that cannot take the
 	 * classes — a web component's shadow DOM styled through ::part(), a
-	 * canvas: the mono (Mono's caps/text voice) and the figure (Figure's
-	 * numeral). The sizes follow the widget scale inside a WidgetGrid, which
+	 * canvas: the LABEL voice (Mono's caps/text voice — the UI face, small;
+	 * "mono" is the name it had when it was set in a monospace) and the
+	 * figure (Figure's numeral). The sizes follow the widget scale inside a WidgetGrid, which
 	 * redefines them there (widget-grid.css); the components read these too,
 	 * so a voice IS its tokens. */
-	--voice-mono-family: var(--font-mono);
+	--voice-mono-family: var(--font-ui);
 	--voice-mono-size: var(--font-size-0);
 	--voice-mono-tracking: var(--tracking-mono);
 	--voice-figure-family: var(--font-ui);

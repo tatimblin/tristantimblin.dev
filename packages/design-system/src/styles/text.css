@@ -13,21 +13,22 @@
 }
 
 /* family — the site's faces by ROLE. A face on this site travels with its
-   weight where the family has more than one cut (Migra: two; FS Mondwest:
-   one, which IS the bold). The default is `inherit`, which needs no class. */
+   weight (Migra and Mondwest ship discrete cuts). The default is `inherit`,
+   which needs no class. */
 .ds-text--family-ui {
 	font-family: var(--font-ui);
-}
-.ds-text--family-subheading {
-	font-family: var(--font-subheading);
 	font-weight: var(--font-weight-400);
+}
+.ds-text--family-body {
+	font-family: var(--font-body);
+	font-weight: var(--font-body-weight);
 }
 .ds-text--family-hero {
 	font-family: var(--font-hero);
 	font-weight: var(--font-hero-weight);
 }
-.ds-text--family-mono {
-	font-family: var(--font-mono);
+.ds-text--family-code {
+	font-family: var(--font-code);
 }
 
 /* size → --font-size-N. No 2: the scale has no such token. */

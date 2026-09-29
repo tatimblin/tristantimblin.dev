@@ -107,7 +107,7 @@
 	background: var(--input-background);
 	color: var(--text-primary);
 	font: inherit;
-	font-family: var(--font-mono);
+	font-family: var(--font-code);
 }
 .ds-knob--type-checkbox {
 	flex-direction: row;

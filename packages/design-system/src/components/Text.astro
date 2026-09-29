@@ -6,9 +6,9 @@
 //   size     0–9, each `--font-size-N` (there is no 2: the generated scale
 //            has no such token, and the upstream quirk that mapped 2 onto 1
 //            is gone). Default 3, the reading size.
-//   family   default (inherit) | ui | subheading | hero | mono — the site's
-//            faces by ROLE (tokens.overrides.css). hero and subheading carry
-//            their weight, as a face on this site always does.
+//   family   default (inherit) | ui | body | hero | code — the site's faces
+//            by ROLE (tokens.overrides.css), each with its weight, as a face
+//            on this site always travels.
 //   variant  the ink: default (currentColor) | primary | secondary | tertiary.
 //   caps     the caps role (caps.css): uppercase, tracked, the trailing
 //            tracking pulled back.
@@ -22,7 +22,7 @@
 // asked for. No `outline`, and no status inks: nothing on the site sets them.
 import { cx } from "../lib/cx";
 
-type Family = "default" | "ui" | "subheading" | "hero" | "mono";
+type Family = "default" | "ui" | "body" | "hero" | "code";
 type Size = 0 | 1 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 type Variant = "default" | "primary" | "secondary" | "tertiary";
 

@@ -35,6 +35,6 @@
 	--color-accent: var(--accent);
 
 	/* Legacy face alias → the hero role. The four role tokens (--font-hero,
-	   --font-heading, --font-subheading, --font-body) live in tokens.overrides.css. */
+	   --font-heading, --font-ui, --font-body) live in tokens.overrides.css. */
 	--font-serif: var(--font-hero);
 }

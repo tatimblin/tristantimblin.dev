@@ -74,7 +74,7 @@
 }
 
 /* Title in the figure voice (the numeric face at regular weight, as Figure
-   and Stat set it), artist in the dim mono of Mono's text variant. Both stay
+   sets it), artist in the dim label voice of Mono's text variant. Both stay
    on a single line so a long name can't wrap and steal height from the cover
    (which would resize it on every track change); the component watches for
    the overflow and scrolls such a line as a car-radio marquee instead. */
@@ -91,7 +91,7 @@
 	color: var(--text-primary);
 }
 .home__widgets .wx-nowplaying spotify-player::part(artist) {
-	font-family: var(--font-mono);
+	font-family: var(--voice-mono-family);
 	font-size: var(--widget-font-xs);
 	letter-spacing: var(--tracking-mono);
 	color: var(--text-tertiary);
@@ -118,7 +118,7 @@
 .home__widgets .wx-nowplaying spotify-player::part(remaining) {
 	grid-row: 2;
 	padding: 0;
-	font-family: var(--font-mono);
+	font-family: var(--voice-mono-family);
 	font-size: var(--widget-font-xs);
 	line-height: 1;
 	color: var(--text-tertiary);

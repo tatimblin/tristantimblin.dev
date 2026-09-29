@@ -127,11 +127,12 @@ stories-heading {
 	   as a display face rather than a slab. The "&" and "other stories" stay on
 	   --font-hero-weight (700) — they are set far smaller and need the weight to
 	   hold up against the wordmark beside them.
-	   The token, not a literal 500, so "Migra Medium" is spelled in exactly one
-	   place. Changing this moves the wordmark's ink metrics, which JS measures into
+	   The lockup's own cut, not the heading role's (that is Mondwest now, and
+	   its Bold): Migra Medium is spelled here, in the one place it is used.
+	   Changing this moves the wordmark's ink metrics, which JS measures into
 	   --sh-group-h and thence the whole hero fold — re-run tests/hero-fold.spec.ts
 	   after any change here. */
-	font-weight: var(--font-heading-weight, 500);
+	font-weight: 500;
 	letter-spacing: -0.02em;
 	fill: var(--text-primary, #ededed);
 	/* SVG user units; the viewBox is resized to the real glyph bbox in JS, so
@@ -387,7 +388,7 @@ stories-heading {
 /* Outline (shown first): a light stroke of the outline face, FILLED with the
    background colour. --sh-outline-font selects the face; by default it is the same
    hero face as the solid layer so glyphs register exactly through the wipe. Point
-   it at another face (--font-subheading, say) to make the wipe a typeface swap as
+   it at another face (--font-heading, say) to make the wipe a typeface swap as
    well as a fill — but check the alignment, since a different face means different
    advance widths and the two layers will drift across the word. */
 .sh__outline {
@@ -400,19 +401,17 @@ stories-heading {
 	-webkit-text-stroke: 1px var(--color-fg, #ededed);
 }
 
-/* Solid (revealed): the pixel sub-heading face, on an opaque backdrop so the wipe
-   masks the outline beneath it. Hidden from the top by --sh-clip → fully shown at
-   --sh-clip 0.
+/* Solid (revealed): the pixel heading face at its Bold, on an opaque backdrop so
+   the wipe masks the outline beneath it. Hidden from the top by --sh-clip → fully
+   shown at --sh-clip 0.
    THE WIPE IS A TYPEFACE SWAP, not just a fill: the phrase resolves out of the
    hero serif's outline into Mondwest. The two faces therefore have DIFFERENT
    advance widths and do not register glyph-for-glyph — deliberate, and the reason
    measureHeadingWidth() in index.ts fits the box to the wider of the two layers
-   instead of to the in-flow outline alone.
-   Weight 400 because FS Mondwest ships a single cut; it IS the bold, and asking it
-   for the outline's 700 would only invite a synthesised one. */
+   instead of to the in-flow outline alone. */
 .sh__solid {
-	font-family: var(--font-subheading, ui-monospace, monospace);
-	font-weight: 400;
+	font-family: var(--font-heading, ui-monospace, monospace);
+	font-weight: var(--font-heading-weight, 700);
 	/* Registration onto the outline — four corrections, all measured per-face by
 	   alignHeadingLayers() in index.ts, none of them a hand-tuned nudge:
 	     scale  matches the painted ink height (Mondwest's ascenders run tall off the

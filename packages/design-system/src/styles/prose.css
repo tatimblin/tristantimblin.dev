@@ -7,13 +7,14 @@
  * the blocks, the section headings, and the raw tags. It never restyles a
  * mapped component — those own their own type. */
 .ds-prose {
-	/* Section headings in the UI face, at the Semibold. The heading components
-	   read their face and weight from these two tokens, so a reading column
-	   retunes them by scope rather than by overriding .ds-heading — the same
-	   mechanism a theme uses. --font-weight-600 resolves to 560, which lands on
-	   the Semibold cut. */
+	/* Section headings in the heading face at the Bold — which is the default
+	   now; restated here so a page that retunes the heading tokens for its own
+	   title (the blog's chrome sets them regular) still gets sections that read
+	   as sections. The heading components read their face and weight from these
+	   two tokens, so a reading column retunes them by scope rather than by
+	   overriding .ds-heading — the same mechanism a theme uses. */
 	--font-heading: var(--font-ui);
-	--font-heading-weight: var(--font-weight-600);
+	--font-heading-weight: var(--font-weight-700);
 	color: var(--text-secondary);
 }
 
@@ -60,7 +61,7 @@
 	background: var(--code-snippet-background);
 	border: 1px solid var(--hairline);
 	border-radius: var(--border-radius-2);
-	font-family: var(--font-mono);
+	font-family: var(--font-code);
 	font-size: var(--font-size-1);
 	line-height: 1.6;
 	tab-size: 2;
@@ -80,7 +81,7 @@
 	background: var(--code-snippet-background);
 	border: 1px solid var(--hairline);
 	border-radius: var(--border-radius-0);
-	font-family: var(--font-mono);
+	font-family: var(--font-code);
 	font-size: 0.9em;
 	color: var(--text-primary);
 }
@@ -111,7 +112,7 @@
 }
 .ds-prose th {
 	font-family: var(--font-ui);
-	font-weight: var(--font-weight-600);
+	font-weight: var(--font-weight-700);
 	color: var(--text-primary);
 	text-align: start;
 }

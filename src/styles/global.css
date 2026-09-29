@@ -13,8 +13,8 @@
   --section-3-fg: #143d1f;
 
   /* Legacy alias for the body face. The role tokens (--font-hero, --font-heading,
-     --font-subheading, --font-body) are defined in the DS token layer; this name
-     stays because a handful of pre-DS rules still reference it. */
+     --font-ui, --font-body) are defined in the DS token layer; this name stays
+     because a handful of pre-DS rules still reference it. */
   --font-sans: var(--font-body);
 
   /* Named font-size aliases still referenced by legacy components (DS uses a
@@ -79,16 +79,11 @@ body {
      anything on Windows or Linux, where grayscale AA is already the default. */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* PP Mondwest ships three cuts — Thin 200, Light 300, Regular 400 — and they all
-     run LIGHTER than the 500/560 the DS asks for in cards, buttons and widget
-     stats, so there is still nothing above 400 for those requests to land on.
+  /* Every face ships discrete cuts — Mondwest 200/300/400/700, Migra 500/700,
+     Neue Montreal 400/600 — and a request between them must land on a real one.
      Faux-bolding a bitmap face smears its pixel grid into mush, so refuse the
-     synthesis: those components already carry their emphasis in colour and size.
-     Real weight comes from Migra (two cuts) or from --font-subheading, which IS a
-     bold.
-     The guard now cuts the other way too, and that is the point. Body text is set
-     in the 300 cut; without this, a browser handed a 300 request could synthesise
-     a light from the 400 and undo the very thing the thinner cut was built for. */
+     synthesis: emphasis is a cut the family has (the roles name it) or it is
+     colour and size. */
   font-synthesis-weight: none;
   /* And refuse FAKE SMALL CAPS for the same reason. Verified against the files in
      public/fonts: not one of the four faces ships an `smcp` feature, so any

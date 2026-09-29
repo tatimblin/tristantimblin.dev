@@ -1,23 +1,24 @@
-/* FONT LOADING — the site's five faces, self-hosted, plus metric-matched fallbacks.
- * (Five FACES, eight files: Migra, PP Mondwest and Neue Montreal each ship more than
+/* FONT LOADING — the site's three faces, self-hosted, plus metric-matched fallbacks.
+ * (Three FACES, eight files: Migra, Mondwest and Neue Montreal each ship more than
  * one cut under a single family name, so the browser matches by weight.)
  *
  * The files are built by tools/fonts/build.sh (latin subsets of the vendor
  * originals) and served from /fonts with a one-year immutable cache (public/_headers).
  * Nothing is fetched from a third party; the roles they fill are named by the
- * --font-hero / --font-heading / --font-subheading / --font-body / --font-ui
- * tokens in the design system's tokens.overrides.css.
+ * --font-hero / --font-heading / --font-ui / --font-body tokens in the design
+ * system's tokens.overrides.css.
  *
  * TWO SEPARATE ADJUSTMENTS LIVE HERE. They look alike and do different jobs:
  *
  * 1. size-adjust on a REAL face — optical normalisation.
- *    Mondwest is a bitmap face whose glyphs sit small inside a generous em: FS
- *    Mondwest's x-height is 0.282/em and PP Mondwest's 0.440/em, against 0.530
- *    for Migra. Set at the same --font-size-* they would render around half and
- *    four-fifths the size of the type beside them, which makes the whole numeric
- *    scale mean something different per face. Scaling each face onto a common
- *    x-height restores the scale as the single source of truth, so a size-5
- *    heading and a size-5 label read as the same step whichever face they use.
+ *    Mondwest is a bitmap face whose glyphs sit small inside a generous em: the
+ *    Bold cut's x-height is 0.282/em and the other three's 0.440/em, against
+ *    0.530 for Migra. Set at the same --font-size-* they would render around half
+ *    and four-fifths the size of the type beside them, which makes the whole
+ *    numeric scale mean something different per face. Scaling each cut onto a
+ *    common x-height restores the scale as the single source of truth, so a
+ *    size-5 heading and a size-5 label read as the same step whichever face they
+ *    use.
  *
  * 2. The *Fallback* faces — anti-reflow.
  *    font-display: swap paints text immediately in a fallback and swaps when the
@@ -35,14 +36,15 @@
  *   line-gap-override= webfont.typoLineGap / upm / size-adjust
  * where "webfont.*" means the face's metrics AFTER its own size-adjust from (1).
  * Per-em metrics as measured:
- *   Migra        upm 1000  asc 0.7500  desc 0.2500  gap 0.1000  xHeight 0.5300
- *   FS Mondwest  upm 2048  asc 0.7256  desc 0.2954  gap 0       xHeight 0.2822
- *   PP Mondwest  upm 4096  asc 0.7598  desc 0.2400  gap 0.0200  xHeight 0.4400
- *   Neue Montrl  upm 1000  asc 0.9580  desc 0.2420  gap 0       xHeight 0.5100
- * (All three PP Mondwest cuts share those metrics EXACTLY — the thinned weights hold
- * upm, cap height, x-height and every advance width fixed — and all four Neue Montreal
- * cuts share theirs, Semibold's x-height differing by 0.001 em. So in both families one
- * size-adjust and one fallback cover the whole family.)
+ *   Migra          upm 1000  asc 0.7500  desc 0.2500  gap 0.1000  xHeight 0.5300
+ *   Mondwest 700   upm 2048  asc 0.7256  desc 0.2954  gap 0       xHeight 0.2822
+ *   Mondwest 2/3/4 upm 4096  asc 0.7598  desc 0.2400  gap 0.0200  xHeight 0.4400
+ *   Neue Montrl    upm 1000  asc 0.9580  desc 0.2420  gap 0       xHeight 0.5100
+ * (The three lighter Mondwest cuts share those metrics EXACTLY — the thinned
+ * weights hold upm, cap height, x-height and every advance width fixed — so one
+ * size-adjust and one fallback cut cover them; the Bold is a different drawing
+ * with its own. Both Neue Montreal cuts share theirs, Semibold's x-height
+ * differing by 0.001 em.)
  * Fallback x-heights: Georgia 0.4814, Arial 0.5186.
  * Re-run the same arithmetic if a face is ever swapped — or delete the fallback
  * faces and drop them from the stacks; the plain system fallback still works, it
@@ -50,10 +52,10 @@
 
 /* --- The real faces ---------------------------------------------------- */
 
-/* Migra — hero (700) and headings (500). ONE family with two weights rather than
-   two families, so the browser matches the cut by font-weight and never
-   synthesises: --font-hero-weight / --font-heading-weight name which is which.
-   Migra is the reference face; the Mondwests are normalised onto its x-height. */
+/* Migra — the hero lockup only: the wordmark (500) and "& other stories" (700).
+   ONE family with two weights rather than two families, so the browser matches
+   the cut by font-weight and never synthesises. Migra is the reference face; the
+   Mondwests are normalised onto its x-height. */
 @font-face {
 	font-family: "Migra";
 	font-style: normal;
@@ -70,41 +72,23 @@
 	src: url("/fonts/migra-bold.woff2") format("woff2");
 }
 
-/* FS Mondwest Bold — sub-headings (hero lede, page subtitles, DS H4). The
-   largest correction on the site: its glyphs fill barely a quarter of the em. */
+/* Mondwest — the interface and the headings: ONE family, four cuts, so a
+   request for a weight lands on a file and nothing is synthesised. The Regular
+   (400) is the UI face (--font-ui: labels, chrome, the caps voice, the widget
+   figures); the Bold (700, the former "FS Mondwest") is the heading face
+   (--font-heading) and the UI's emphasis. The Light (300) and Thin (200) are
+   thinned from the Regular in bitmap space — 2 px stems taken to 1.5 px and
+   1 px on the face's own 50-per-em grid, with cap height, x-height and every
+   advance width held fixed — and are served for a display use that wants them;
+   no role asks for them today.
+
+   TWO size-adjusts, because two drawings. The Regular, Light and Thin are one
+   drawing at three stem widths (identical metrics, verified), so one 118.2%
+   takes all three onto Migra's x-height. The Bold is a different drawing
+   whose glyphs fill barely a quarter of the em, the largest correction on the
+   site: 187.8%. The two fallback cuts below mirror the split. */
 @font-face {
-	font-family: "FS Mondwest";
-	font-style: normal;
-	font-weight: 400;
-	font-display: swap;
-	size-adjust: 187.8%;
-	src: url("/fonts/fs-mondwest-bold.woff2") format("woff2");
-}
-
-/* PP Mondwest — body. THREE cuts under one family, on the same reasoning as Migra
-   and Neue Montreal above: the browser matches by font-weight and never synthesises.
-   Light (300) is what reading text is set in (--font-body-weight); Thin (200) is
-   built and served but holds no role yet; Regular (400) is the original, and is what
-   anything asking for 400-or-heavier still lands on.
-
-   LIGHTER, NOT SMALLER — why the body face moved off its Regular. Mondwest is a
-   bitmap design: a stem is a whole number of pixels on a 50-per-em grid, so Regular's
-   2 px stems are genuinely heavy at reading size, and the usual fix (drop the size)
-   was already spent — body sits at 16px and going below it costs legibility, not
-   weight. Light's 1.5 px stems take about 14% of the ink out at the SAME size, which
-   is the adjustment that was actually wanted. Thin (1 px, 72% of the ink) goes a step
-   further than running text should: at 16px a 1 px stem is close to a hairline and
-   the first thing to disappear on a low-DPR screen, which is why it is available
-   rather than assigned.
-
-   ONE size-adjust FOR ALL THREE, and it is the same 118.2% the Regular always
-   carried. That is not an assumption — the cuts were thinned in bitmap space with cap
-   height, x-height, upm and every advance width held fixed (verified: identical
-   across all three), so the optical normalisation onto Migra's x-height is unchanged
-   by the weight. The single "PP Mondwest Fallback" below covers the family for the
-   same reason. */
-@font-face {
-	font-family: "PP Mondwest";
+	font-family: "Mondwest";
 	font-style: normal;
 	font-weight: 200;
 	font-display: swap;
@@ -113,7 +97,7 @@
 }
 
 @font-face {
-	font-family: "PP Mondwest";
+	font-family: "Mondwest";
 	font-style: normal;
 	font-weight: 300;
 	font-display: swap;
@@ -122,7 +106,7 @@
 }
 
 @font-face {
-	font-family: "PP Mondwest";
+	font-family: "Mondwest";
 	font-style: normal;
 	font-weight: 400;
 	font-display: swap;
@@ -130,18 +114,21 @@
 	src: url("/fonts/ppmondwest-regular.woff2") format("woff2");
 }
 
-/* PP Neue Montreal — UI text: the small, functional type that labels things rather
-   than says them. Widget headers, stat labels and figures, the ruler's year marks.
-   A neo-grotesque among three highly-voiced faces, chosen for exactly that: it
-   recedes, so the display faces keep the personality and the interface reads as
-   interface.
-   TWO CUTS UNDER ONE FAMILY, on the same reasoning as Migra above: the browser
-   matches by font-weight and never synthesises. Regular carries the labels, the
-   widget figures (the instrument UI's numeral is the thin one) and the blog's page
-   titles; Semibold is what the blog's post titles and section headings ask for
-   (the DS PostRow and Prose) and, until this cut existed, silently did not get
-   (global.css refuses faux-bolding, so the request rendered at the one weight
-   that had shipped).
+@font-face {
+	font-family: "Mondwest";
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	size-adjust: 187.8%;
+	src: url("/fonts/fs-mondwest-bold.woff2") format("woff2");
+}
+
+/* PP Neue Montreal — the body: reading text, at the Regular. A neo-grotesque
+   beside two highly-voiced faces, chosen for exactly that: it recedes, so the
+   display face keeps the personality and a paragraph reads as a paragraph.
+   TWO CUTS UNDER ONE FAMILY, on the same reasoning as Migra above; the Semibold
+   is served for a body emphasis that wants a real cut (the body face never
+   synthesises: global.css refuses it).
    The smallest correction on the site — the glyphs already sit close to Migra's
    x-height (0.510 vs 0.530), so 103.9% is a nudge rather than a rescue. It is the
    same on both cuts because their metrics are identical. */
@@ -177,15 +164,18 @@
 	line-gap-override: 9.08%;
 }
 
-/* PP Mondwest → Arial. Arial is the metric proxy for the system-ui stack that
-   follows it; -apple-system / Segoe / Roboto are all close to it. Body copy is
-   the bulk of every page, so this is the fallback that matters most.
-   No font-weight here, so this one face covers all THREE cuts — correct, since they
-   share their metrics exactly. A fallback is a box, not a colour: it is holding the
-   line length and line box steady across the swap, and the thinned weights set to
-   the same line length as the Regular by construction. */
+/* Mondwest → Arial, in two cuts that mirror the two drawings above, so a 700
+   request lands on the box the Bold will take and a lighter one on the box the
+   Regular will. A fallback is a box, not a colour: it holds the line length and
+   line box steady across the swap. The 100–400 face covers the Thin, Light and
+   Regular, which share their metrics exactly. The 133% ascent on the Bold's is
+   not a typo: that cut's vertical metrics are generous relative to its small
+   glyphs, and the 187.8% optical normalisation scales the whole box up with
+   them — matching it keeps the hero lede's line box stable across the swap,
+   which the hero fold measures. */
 @font-face {
-	font-family: "PP Mondwest Fallback";
+	font-family: "Mondwest Fallback";
+	font-weight: 100 400;
 	src: local("Arial");
 	size-adjust: 100.27%;
 	ascent-override: 89.56%;
@@ -193,28 +183,26 @@
 	line-gap-override: 2.36%;
 }
 
+@font-face {
+	font-family: "Mondwest Fallback";
+	font-weight: 700;
+	src: local("Arial");
+	size-adjust: 102.20%;
+	ascent-override: 133.33%;
+	descent-override: 54.28%;
+	line-gap-override: 0%;
+}
+
 /* Neue Montreal → Arial. Both are neo-grotesques, so this is the closest metric
    pairing on the page; the 97% ascent follows Neue Montreal's tall typo ascender
    (0.958/em), not an error. No font-weight here, so this one face covers BOTH cuts —
-   which is correct, since they share their metrics exactly. */
+   which is correct, since they share their metrics exactly. Body copy is the bulk
+   of every page, so this is the fallback that matters most. */
 @font-face {
 	font-family: "Neue Montreal Fallback";
 	src: local("Arial");
 	size-adjust: 102.20%;
 	ascent-override: 97.42%;
 	descent-override: 24.61%;
-	line-gap-override: 0%;
-}
-
-/* FS Mondwest → Arial. The 133% ascent is not a typo: FS Mondwest's vertical
-   metrics are generous relative to its small glyphs, and the 187.8% optical
-   normalisation above scales that whole box up with them. Matching it keeps the
-   hero lede's line box stable across the swap — which the hero fold measures. */
-@font-face {
-	font-family: "FS Mondwest Fallback";
-	src: local("Arial");
-	size-adjust: 102.20%;
-	ascent-override: 133.33%;
-	descent-override: 54.28%;
 	line-gap-override: 0%;
 }

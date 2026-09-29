@@ -2,9 +2,8 @@
  *
  * WHAT THIS IS FOR. Figures that are read as DATA rather than as words: widget
  * stat counts, percentages in a list, the ruler's years. --font-numeric already
- * names the face (Neue Montreal, whose figures are what this role wanted — see
- * tokens.overrides.css). This names the rest of the setting, because a face alone
- * does not decide how its numbers behave.
+ * names the face (the UI face — see tokens.overrides.css). This names the rest
+ * of the setting, because a face alone does not decide how its numbers behave.
  *
  * TABULAR FIGURES. A font's default figures are usually PROPORTIONAL: a "1" is
  * narrower than a "0", so 1034 and 1543 stacked on top of each other do not line

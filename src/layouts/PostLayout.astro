@@ -28,8 +28,8 @@
 // the ruled Prose reads too, so the page's rows and the body's sections fall
 // on the same lines. Below 1024 it is one column: the strip two by two, the
 // heads over their text, the mark after the lead at a modest width, the
-// hero and the table full width. The page's headings take the UI face at the
-// semibold by retuning the heading tokens in scope, as Prose does.
+// hero and the table full width. The page's headings take the heading face at
+// the Bold by retuning the heading tokens in scope, as Prose does.
 //
 // The body arrives via <slot /> already sectioned and mapped to DS
 // components (src/components/mdx-components.ts, applied at the <Content>
@@ -251,7 +251,7 @@ const neighbourRows = [
 		--ruled-columns: repeat(4, minmax(0, 1fr));
 		--ruled-gap: var(--space-4);
 		--font-heading: var(--font-ui);
-		--font-heading-weight: var(--font-weight-600);
+		--font-heading-weight: var(--font-weight-700);
 	}
 
 	/* THE STATUS STRIP. One row between the strong hairlines, the date on

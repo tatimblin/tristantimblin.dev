@@ -80,9 +80,10 @@ const {
 				<link rel="preload" href={m.href} as={m.as} type={m.type} />
 			))
 		}
-		{/* The two faces that paint above the fold on EVERY page: the body face
-		     (every paragraph) and the hero cut of Migra (the wordmark lockup). They
-		     are @font-face'd in src/styles/fonts.css, which the browser only
+		{/* The faces that paint above the fold on EVERY page: the body face
+		     (every paragraph), the UI face and its Bold (the header, the hero
+		     lede, every heading) and the hero cut of Migra (the wordmark lockup).
+		     They are @font-face'd in src/styles/fonts.css, which the browser only
 		     discovers after the stylesheet parses — preloading starts the fetch
 		     during HTML parse instead, so the swap happens before first scroll
 		     rather than after it.
@@ -95,26 +96,13 @@ const {
 		     is set in the medium and the "&" / "other stories" in the bold. Missing
 		     either one leaves half the lockup swapping late.
 
-		     BOTH PP Mondwest cuts are here, for the same reason and not by symmetry.
-		     Reading text moved to the Light (300) when the face gained thinned cuts,
-		     which on its own would argue for swapping this entry rather than adding
-		     to it — but the Regular did NOT stop painting early. The DS's Text
-		     component still defaults to 400, so every heading, label and meta line
-		     above the fold still asks for the Regular. Preloading only the body role
-		     would leave the cut that covers much of the first screen to late
-		     discovery — exactly the swap these tags exist to prevent. The Light costs
-		     11 KB, and it is the one every paragraph below the fold needs.
-
-		     The Thin (200) is NOT preloaded: it is served but holds no role, so
-		     nothing requests it and a preload would be a wasted fetch the browser
-		     warns about.
-
-		     fs-mondwest-bold is left to normal discovery — 7 KB, and it only sets
-		     small-type labels. Its metric-matched fallback holds the layout until it
-		     lands. */}
+		     Mondwest's Light and Thin are NOT preloaded: they are served but hold no
+		     role, so nothing requests them and a preload would be a wasted fetch
+		     the browser warns about. Neue Montreal's Semibold is left to normal
+		     discovery for the same reason. */}
 		<link
 			rel="preload"
-			href="/fonts/ppmondwest-light.woff2"
+			href="/fonts/neue-montreal-regular.woff2"
 			as="font"
 			type="font/woff2"
 			crossorigin
@@ -122,6 +110,13 @@ const {
 		<link
 			rel="preload"
 			href="/fonts/ppmondwest-regular.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
+		<link
+			rel="preload"
+			href="/fonts/fs-mondwest-bold.woff2"
 			as="font"
 			type="font/woff2"
 			crossorigin

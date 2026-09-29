@@ -69,9 +69,8 @@
 .ds-post-row__title {
 	grid-column: 1;
 	font-size: var(--font-size-3);
-	/* --font-weight-600 resolves to 560, which CSS font matching lands on the
-	   UI face's Semibold cut (its only cut above Regular). */
-	font-weight: var(--font-weight-600);
+	/* The UI face's emphasis: its Bold cut. */
+	font-weight: var(--font-weight-700);
 	line-height: var(--line-height-ui);
 	color: var(--text-primary);
 	transition: color var(--duration-swap) var(--ease-reveal);

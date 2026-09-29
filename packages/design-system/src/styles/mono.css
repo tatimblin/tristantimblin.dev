@@ -1,7 +1,9 @@
-/* Mono — the STRUCTURE voice of the instrument UI.
+/* Mono — the STRUCTURE voice of the instrument UI: the LABEL voice.
  *
  * Everything on a card that labels rather than says — the header, a unit, a
- * legend row, a pill, a stat's caption — is set small, in the mono face. Three
+ * legend row, a pill, a stat's caption — is set small, in the UI face (the
+ * name is from when this voice was a monospace; the classes and the component
+ * keep it, since the plugin, the tests and every widget speak it). Three
  * variants, which are the three jobs that voice does:
  *
  *   caps    uppercase, tracked out: the panel label. The default.

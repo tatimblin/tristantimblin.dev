@@ -609,7 +609,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	 *
 	 * Both corrections are published in em — they are proportional to font-size — so
 	 * they survive every step of the fit without re-measuring, and they are derived
-	 * from whatever faces the CSS resolves, so re-pointing --font-subheading
+	 * from whatever faces the CSS resolves, so re-pointing --font-heading
 	 * re-derives them rather than stranding a hardcoded nudge.
 	 *
 	 *   --sh-solid-shift  translateY putting the solid's bottom edge on the outline's.

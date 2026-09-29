@@ -4,35 +4,21 @@
    spaced); here the ROLES layer (styles/index.css) wins over Text's variants
    by layer order, so one class is enough. */
 .ds-heading {
-	/* The site's heading face. Family and weight travel as a pair: Migra is one
-	   family with a 500 and a 700 cut, so a family set without a weight lands on
-	   whichever the browser considers nearest. This is the single place H1-H3 pick
-	   up the face; the bare h1-h6 element rules in the site's global.css set the
-	   same pair one specificity step lower, for headings outside the component. */
+	/* The site's heading face. Family and weight travel as a pair: Mondwest is
+	   one family with four cuts, so a family set without a weight lands on
+	   whichever the browser considers nearest. This is the single place H1-H4
+	   pick up the face; the bare h1-h6 element rules in the site's global.css set
+	   the same pair, for headings outside the component. */
 	font-family: var(--font-heading);
-	font-weight: var(--font-heading-weight, var(--font-weight-600));
+	font-weight: var(--font-heading-weight, var(--font-weight-700));
 	/* Display leading, NOT body leading. A heading is one or two lines that have to
 	   read as a single object; at the 1.5 this used to carry, a two-line heading
 	   read as two unrelated lines drifting apart. The token is the one place to
 	   retune it — see the LEADING note in tokens.overrides.css. */
 	line-height: var(--line-height-heading, 1.15);
-	/* Was a flat -0.3px. An ABSOLUTE tracking value is right at exactly one size:
-	   it matched global.css's bare-h1 -0.02em at about 15px and drifted apart at
-	   every other step, so an <h1> and an <H1> on the same page were tracked
-	   differently. The token is in em, so it scales with the type the way display
-	   tracking is supposed to. */
-	letter-spacing: var(--tracking-heading, -0.02em);
-}
-
-/* DS size-1 headings (H4, and any <Heading size={1}>) are the site's SUB-HEADING
-   role and take FS Mondwest instead — the smallest heading step is a label, and
-   the bitmap face reads as one at that size where it would shout at H1.
-   Heading remaps DS size 1 → Text size 4, hence the class; pairing it with
-   .ds-heading keeps this off the size-4 body Text that MDX paragraphs use.
-   Weight 400 because FS Mondwest ships a single cut — it IS the bold. */
-.ds-heading.ds-text--size-4 {
-	font-family: var(--font-subheading);
-	font-weight: var(--font-weight-400);
+	/* The display tracking token (none, for a bitmap face), so an <h1> and an
+	   <H1> on the same page are tracked alike. */
+	letter-spacing: var(--tracking-heading, 0);
 }
 
 /* THE RESPONSIVE STEP. Display type is sized to its column: a `responsive`

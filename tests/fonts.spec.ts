@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * THE FIVE SELF-HOSTED FACES, AND THE ROLES THEY FILL.
+ * THE THREE SELF-HOSTED FACES, AND THE ROLES THEY FILL.
  *
  * A broken font stack is SILENT. getComputedStyle still reports the family you
  * asked for even when the woff2 404s, when the @font-face never parsed, or when a
@@ -29,13 +29,11 @@ import { test, expect } from "@playwright/test";
 const ROLES: Array<[string, string, string, number]> = [
 	["wordmark (hero)", ".sh__wordmark-text", "Migra", 500],
 	["heading (other stories)", ".sh__outline", "Migra", 700],
-	["hero lede", ".hero-intro__lede p", "FS Mondwest", 400],
-	["body copy", ".home__copy p", "PP Mondwest", 300],
-	["widget UI", ".home__widgets .ds-widget", "Neue Montreal", 400],
-	["widget figure", ".ds-figure__num", "Neue Montreal", 400],
-	// Not here: the carousel ruler's year marks. They moved to the instrument UI's
-	// mono voice (--font-mono, the SYSTEM mono stack — no @font-face), and per the
-	// trap above a role on an undeclared family passes while proving nothing.
+	["hero lede", ".hero-intro__lede p", "Mondwest", 700],
+	["body copy", ".home__copy p", "Neue Montreal", 400],
+	["widget UI", ".home__widgets .ds-widget", "Mondwest", 400],
+	["widget figure", ".ds-figure__num", "Mondwest", 400],
+	["label voice", ".home__widgets .ds-mono", "Mondwest", 400],
 ];
 
 const FILES = [
@@ -96,30 +94,21 @@ test("each built woff2 is served", async ({ request }) => {
 	}
 });
 
-test("body copy gets the REAL Light cut, not the Regular standing in for it", async ({
+test("body copy gets Neue Montreal's Regular, and every Mondwest cut is declared and loads", async ({
 	page,
 }) => {
-	// The failure this exists for is invisible. --font-body-weight is 300 and
-	// font-synthesis-weight is none, so if ppmondwest-light.woff2 fails to build,
-	// ship or parse, the 300 request resolves to the 400 file and body copy renders a
-	// shade heavier — with the computed font-weight still reporting 300 and every
-	// other assertion in this file still passing.
+	// The failure this exists for is invisible. font-synthesis-weight is none, so
+	// if a cut fails to build, ship or parse, a request for it resolves to the
+	// nearest cut that did — with the computed font-weight still reporting what
+	// was asked and every other assertion in this file still passing.
 	//
-	// AND document.fonts.check() DOES NOT CATCH IT. That is a sharper version of the
-	// trap in this file's header: check() asks "can 300 be rendered?", and with the
-	// Light missing the answer is still yes, because CSS font matching falls back to
-	// the Regular within the same family. Verified by deleting the woff2 and
-	// re-running — check('300 16px "PP Mondwest"') stayed true.
-	//
-	// Nor can this be measured off the page. The cuts were thinned with every advance
-	// width held fixed precisely so they are interchangeable in layout, so the Light
-	// and the Regular set to identical boxes; there is no width or height to compare.
-	// What separates them is which FILE a face loaded from, so the assertion goes to
-	// the FontFace objects themselves: find the declared 300 face and require that it
-	// reached status "loaded" rather than "error" or "unloaded".
-	//
-	// The 200 is checked the same way. It has no role yet, which is exactly why
-	// nothing else would notice it going missing.
+	// AND document.fonts.check() DOES NOT CATCH IT: check() asks "can this weight
+	// be rendered?", and with a cut missing the answer is still yes, because CSS
+	// font matching falls back within the family. What separates the cuts is which
+	// FILE a face loaded from, so the assertion goes to the FontFace objects
+	// themselves: find each declared Mondwest face and require that it reached
+	// status "loaded" rather than "error" or "unloaded". The 200 and 300 hold no
+	// role, which is exactly why nothing else would notice them going missing.
 	await page.goto("/");
 	await page.waitForFunction(() => document.fonts.status === "loaded", undefined, {
 		timeout: 15_000,
@@ -128,50 +117,41 @@ test("body copy gets the REAL Light cut, not the Regular standing in for it", as
 		const el = document.querySelector<HTMLElement>(".home__copy p");
 		const cuts: Record<string, string> = {};
 		for (const f of Array.from(document.fonts as unknown as Set<FontFace>)) {
-			if (f.family.replace(/^["']|["']$/g, "") !== "PP Mondwest") continue;
+			if (f.family.replace(/^["']|["']$/g, "") !== "Mondwest") continue;
 			// A face is only fetched when something on the page uses it, so ask for the
-			// ones no element happens to exercise (the 200) before reading status.
+			// ones no element happens to exercise before reading status.
 			if (f.status === "unloaded") await f.load().catch(() => {});
 			cuts[f.weight] = f.status;
 		}
 		return { weight: el ? getComputedStyle(el).fontWeight : null, cuts };
 	});
-	expect(state.weight, "body copy is not asking for the Light cut").toBe("300");
+	expect(state.weight, "body copy is not asking for the Regular").toBe("400");
 	// Each cut is declared exactly once, so a missing key means the @font-face rule
 	// itself went away — a different bug from the file failing to load, and worth
 	// telling apart in the failure message.
-	expect(Object.keys(state.cuts).sort(), "the three PP Mondwest cuts are not all declared").toEqual([
+	expect(Object.keys(state.cuts).sort(), "the four Mondwest cuts are not all declared").toEqual([
 		"200",
 		"300",
 		"400",
+		"700",
 	]);
-	expect(state.cuts["300"], 'the Light cut did not load — body copy is rendering in another cut').toBe("loaded");
-	expect(state.cuts["200"], "the Thin cut did not load").toBe("loaded");
-	expect(state.cuts["400"], "the Regular cut did not load").toBe("loaded");
+	for (const w of ["200", "300", "400", "700"]) {
+		expect(state.cuts[w], `the ${w} cut did not load`).toBe("loaded");
+	}
 });
 
-test("a post title gets a REAL semibold, not a synthesised one", async ({
-	page,
-}) => {
+test("a section heading gets the REAL Bold, not a synthesised one", async ({ page }) => {
 	// Two things, and the second is why this test is not just the one above.
 	//
-	// font-synthesis-weight: none is a site-wide guard (see global.css): PP Mondwest
-	// is a bitmap face and faux-bolding smears its pixel grid. Losing it would degrade
-	// type across the site without any other test noticing.
+	// font-synthesis-weight: none is a site-wide guard (see global.css): Mondwest
+	// is a bitmap face and faux-bolding smears its pixel grid. Losing it would
+	// degrade type across the site without any other test noticing.
 	//
 	// But that guard also means a weight request with no matching cut renders at
 	// whatever DID ship — silently, and looking merely "a bit light". So also assert
-	// the 600 cut is really loaded where it is asked for: together, the two say the
-	// emphasis is drawn, not faked, and not quietly absent.
-	//
-	// ON A POST, NOT THE HOMEPAGE OR THE INDEX. The widget figures used to be the
-	// Semibold's user; they are now set at the regular weight (the instrument UI's
-	// thin numeral), so nothing on the homepage requests 600 any more and the cut
-	// is never fetched there — check() would answer false for a face that is
-	// perfectly healthy. The index moved on too: the quilt has no text titles
-	// (the art carries them; the card sets its title regular). A post's section
-	// headings (Prose retunes h2–h4 onto the UI face at the Semibold) are the
-	// role that wants the cut, so that is the page to ask on — one with an h2.
+	// the 700 cut is really loaded where it is asked for: together, the two say the
+	// emphasis is drawn, not faked, and not quietly absent. A post's section
+	// headings are the heading role at its Bold, so that is the page to ask on.
 	await page.goto("/txt/asserting-on-agent-behavior/");
 	await page.waitForFunction(() => document.fonts.status === "loaded", undefined, {
 		timeout: 15_000,
@@ -185,16 +165,14 @@ test("a post title gets a REAL semibold, not a synthesised one", async ({
 				: null,
 			weight: el ? Number(getComputedStyle(el).fontWeight) : null,
 			synthesis: getComputedStyle(document.body).fontSynthesisWeight,
-			semiboldLoaded: document.fonts.check('600 16px "Neue Montreal"'),
-			regularLoaded: document.fonts.check('400 16px "Neue Montreal"'),
+			boldLoaded: document.fonts.check('700 16px "Mondwest"'),
+			regularLoaded: document.fonts.check('400 16px "Mondwest"'),
 		};
 	});
 	expect(state.found, "no section heading found — has the Prose markup changed?").toBe(true);
-	expect(state.family).toBe("Neue Montreal");
-	// --font-weight-600 resolves to 560, which CSS font matching lands on the
-	// Semibold; anything under 500 would have fallen back to the Regular.
-	expect(state.weight).toBeGreaterThanOrEqual(500);
+	expect(state.family).toBe("Mondwest");
+	expect(state.weight).toBe(700);
 	expect(state.synthesis).toBe("none");
 	expect(state.regularLoaded).toBe(true);
-	expect(state.semiboldLoaded).toBe(true);
+	expect(state.boldLoaded).toBe(true);
 });
