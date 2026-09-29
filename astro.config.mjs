@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import mdx from '@astrojs/mdx';
+import { unified } from '@astrojs/markdown-remark';
 import { rehypePostSections, remarkPostCode } from './src/lib/mdx/post-sections.ts';
 
 // https://astro.build/config
@@ -13,13 +14,18 @@ export default defineConfig({
 		// The --astro-code-* variables are mapped to DS --token-* / surface tokens
 		// in the design system's prose styles.
 		shikiConfig: { theme: 'css-variables' },
-		// The /txt posts are read on a ruled grid, cut into sections at each h2
-		// (src/lib/mdx/post-sections.ts). Both halves run on every markdown file
-		// and do nothing outside src/content/txt; the remark half only records
-		// each fence's title before Shiki drops it, the rehype half (after Shiki,
-		// before the tag → component mapping) makes the cut.
-		remarkPlugins: [remarkPostCode],
-		rehypePlugins: [rehypePostSections],
+		// The unified processor, which MDX inherits, carrying the two plugins
+		// that cut a /txt post into sections at each h2 for the ruled page
+		// (src/lib/mdx/post-sections.ts). Both do nothing outside
+		// src/content/txt. The remark half only records each fence's title
+		// before Shiki drops it; the rehype half runs after Shiki and before
+		// the tag → component mapping, and makes the cut. (Astro 7's
+		// `markdown.remarkPlugins` / `rehypePlugins` and the same options on
+		// `mdx({...})` are deprecated in favour of this.)
+		processor: unified({
+			remarkPlugins: [remarkPostCode],
+			rehypePlugins: [rehypePostSections],
+		}),
 	},
 	integrations: [
 		// MDX for the /txt posts: lets each post map markdown elements (p, h2,
