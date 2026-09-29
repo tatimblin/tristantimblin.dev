@@ -6,15 +6,18 @@
 //             (kicker, h1, lede) over whatever the page puts in the slot — a
 //             PostIndex. `width="wide"` opens the column to the site
 //             container with a compact header row.
-//   `tabs`    THE INSTRUMENT: the site header as on every page, then <main> in
+//   `bar`     THE INSTRUMENT: the site header as on every page, then <main> in
 //             the site's container (padded by --container-inset, as the
 //             homepage's rows and the header are, so the rows' edges fall on
 //             the header's brand and nav). Its rows sit straight on the page,
-//             spaced rather than cut: this layout's tab row (the category
-//             tabs as pill links to `?q=`, the h1 visually hidden), then what
-//             the page slots in (the board, the controls, the timeline). Only
-//             the controls carry a surface. The screen fills the viewport
-//             below the header and the site footer (Layout's) follows.
+//             spaced rather than cut: this layout's BAR row — the h1 visually
+//             hidden, and the one ruled search bar spanning the container:
+//             the search, the quick-filter chips (the categories from the
+//             enum, each a real link to `?q=<category>`, ALL to /txt — a chip
+//             is a search shortcut), the − / + stepper and the `/` hint —
+//             then what the page slots in (the board, the timeline). Nothing
+//             carries a surface. The screen fills the viewport below the
+//             header and the site footer (Layout's) follows.
 //
 // Pages stay thin: they fetch and group, this owns the shell. Wraps
 // Layout.astro (the only html/head).
@@ -23,7 +26,9 @@ import SiteHeader from "../components/SiteHeader.astro";
 import Heading from "@whois/design-system/Heading";
 import Mono from "@whois/design-system/Mono";
 import Body from "@whois/design-system/Body";
-import Pill from "@whois/design-system/Pill";
+import Chip from "@whois/design-system/Chip";
+import IconButton from "@whois/design-system/IconButton";
+import SearchBar from "@whois/design-system/SearchBar";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 // DS component styles are not global — once per page, and a layout's import
 // counts for everything it slots.
@@ -31,13 +36,20 @@ import "@whois/design-system/styles.css";
 import "../styles/blog.css";
 import { blogNav } from "../lib/blog";
 
-interface Tab {
+interface ChipLink {
 	label: string;
 	/** A real link: `/txt?q=<category>`, or `/txt` for all. */
 	href: string;
-	/** The query the tab stands for; "" is all. The script keys on it. */
+	/** The query the chip stands for; "" is all. The script keys on it. */
 	query: string;
 	active?: boolean;
+}
+
+interface Bar {
+	/** The quick filters: ALL and the categories. */
+	chips: ChipLink[];
+	/** The live count's first reading (`5 posts`). */
+	count: string;
 }
 
 interface Props {
@@ -50,43 +62,70 @@ interface Props {
 	/** A small caps label above the h1 ("Category", "Tag"). */
 	kicker?: string;
 	/** The column: the reading measure (the lists), or the site's container
-	 *  with a compact header row. Not read with `tabs`. */
+	 *  with a compact header row. Not read with `bar`. */
 	width?: "measure" | "wide";
-	/** The instrument's tab row — the category tabs; with these the page is
-	 *  the instrument in the site container and the slot is its remaining
-	 *  rows. */
-	tabs?: Tab[];
+	/** The instrument's bar row — the search with its chips and stepper;
+	 *  with this the page is the instrument in the site container and the
+	 *  slot is its remaining rows. */
+	bar?: Bar;
 }
 
-const { title, description, noindex, heading, kicker, width = "measure", tabs } = Astro.props;
+const { title, description, noindex, heading, kicker, width = "measure", bar } = Astro.props;
 const hasLede = Astro.slots.has("lede");
 ---
 
 <Layout title={title} description={description} noindex={noindex}>
 	{
-		tabs ? (
+		bar ? (
 			<div class="blog blog--instrument">
 				<SiteHeader variant="flow" links={blogNav} />
 				<main class="blog__main blog__main--instrument">
 					<div class="blog__instrument" data-instrument>
-						<div class="blog__row blog__tabrow">
+						<div class="blog__row blog__bar">
 							<VisuallyHidden as="h1">{heading}</VisuallyHidden>
-							<nav class="blog__tabs" aria-label="Categories" data-tabs>
-								{tabs.map((t) => (
-									<Pill
-										as="a"
-										size="lg"
+							<form class="blog__search" action="/txt" method="get" data-quilt-form>
+								<SearchBar
+									id="quilt-search"
+									label="Search"
+									placeholder="Search a title, a topic, a year…"
+									count={bar.count}
+									hint="/"
+									controls="quilt-panel-results"
+									chipsLabel="Quick filters"
+								>
+									{bar.chips.map((c) => (
+										<Chip
+											slot="chips"
+											as="a"
+											href={c.href}
+											data-chip={c.query}
+											aria-current={c.active ? "page" : undefined}
+										>
+											{c.label}
+										</Chip>
+									))}
+									<IconButton
+										slot="controls"
 										variant="outline"
-										href={t.href}
-										class="blog__tab"
-										data-tab={t.query}
-										aria-current={t.active ? "page" : undefined}
-									>
-										{t.query === "" && <span class="blog__tab-glyph" aria-hidden="true" />}
-										{t.label}
-									</Pill>
-								))}
-							</nav>
+										square
+										size="small"
+										glyph="−"
+										aria-label="Previous post"
+										data-step="older"
+										type="button"
+									/>
+									<IconButton
+										slot="controls"
+										variant="outline"
+										square
+										size="small"
+										glyph="+"
+										aria-label="Next post"
+										data-step="newer"
+										type="button"
+									/>
+								</SearchBar>
+							</form>
 						</div>
 						<slot />
 					</div>

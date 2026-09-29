@@ -1,19 +1,18 @@
 /**
  * THE INSTRUMENT'S WIRING — the DOM side of /txt.
  *
- * The page renders the design system's contract (Panels, Quilt, QuiltCell,
- * QuiltPanel, SearchBar, the tabs, the stepper, TimeRuler) and embeds its
- * index as JSON; this module reads both, keeps the one piece of state —
- * `{ query, focused, hovered, active, stepped }` — and on every change asks
- * the engine (./engine.ts, pure) what the grid should look like, then
- * PAINTS the answer:
+ * The page renders the design system's contract (Quilt, QuiltCell,
+ * QuiltPanel, SearchBar with its chips and the stepper, TimeRuler) and
+ * embeds its index as JSON; this module reads both, keeps the one piece of
+ * state — `{ query, focused, hovered, active, stepped }` — and on every
+ * change asks the engine (./engine.ts, pure) what the grid should look
+ * like, then PAINTS the answer:
  *
  *   a cell       data-state="lit | faint | gone", --scatter-delay, data-active
- *   the panel    data-mode, --panel-col / --panel-row, the card's fields,
- *                the gauge's --ring-value
+ *   the panel    data-mode, --panel-col / --panel-row, the card's fields
  *   the input    aria-expanded, aria-activedescendant
- *   the tabs     aria-current on the tab whose query is the query
- *   the count    the figure and its label (`5 posts`, `2 of 5 posts`)
+ *   the chips    aria-current on the chip whose query is the query
+ *   the count    the live region a reader hears (`5 posts`, `2 of 5 posts`)
  *   the stepper  disabled when nothing matches
  *   the ruler    --at (the playhead on the focused post's month, at rest on
  *                the newest matching post), data-dim on a mark out of the
@@ -31,16 +30,16 @@
  * quilt flashing back to rest in between. `/` and ⌘K focus the bar from
  * anywhere that is not editable. In the bar: ↑↓ move the active result (its
  * tile takes the accent ring), Enter opens it, Escape clears the step, then
- * the query, then blurs. Links to `?q=` inside the panel (the browse pills,
- * the nothing face's suggestions) and the TABS set the query in place
- * instead of reloading. `?q=` on the URL is read on load and kept in step
+ * the query, then blurs. Links to `?q=` inside the panel (the browse chips,
+ * the nothing face's suggestions) and the bar's CHIPS set the query in place
+ * instead of reloading — a chip is a search shortcut, and ALL clears it. `?q=` on the URL is read on load and kept in step
  * with the input, debounced, through replaceState — so a search is a link.
  *
  * STEPPING. − and + PIN a post (`stepped`): the older / newer one among the
  * posts that match (chronological, newest first), from the one in focus, or
  * from rest the newest (−) or the oldest (+), wrapping. A click on a
  * timeline tick pins that post. A step holds until Escape, typing, focusing
- * the bar or a tab; a hover on another tile only previews over it and the
+ * the bar or a chip; a hover on another tile only previews over it and the
  * step is back when the pointer leaves — the pointer being elsewhere never
  * clears it, which is what makes it the touch-friendly way through the
  * quilt.
@@ -109,7 +108,6 @@ function wire(): (() => void) | null {
 
 	const { posts, grid } = JSON.parse(data.textContent || "{}") as QuiltIndex;
 	const postsMd = posts.map((p) => ({ ...p, col: p.colMd, row: p.rowMd }));
-	const maxMinutes = Math.max(1, ...posts.map((p) => p.minutes));
 
 	// The DOM, once. Post cells are in DOM order, which is the index's order.
 	const form = input.closest("form");
@@ -119,16 +117,17 @@ function wire(): (() => void) | null {
 	const hook = <T extends HTMLElement = HTMLElement>(sel: string) =>
 		panel.querySelector<T>(sel);
 	const card = {
-		kicker: hook('[data-card="kicker"]'),
+		no: hook('[data-card="no"]'),
+		index: hook('[data-card="index"]'),
 		category: hook('[data-card="category"]'),
+		node: hook('[data-card="node"]'),
+		rate: hook('[data-card="rate"]'),
 		minutes: hook('[data-card="minutes"]'),
 		words: hook('[data-card="words"]'),
 		month: hook('[data-card="month"]'),
 		year: hook('[data-card="year"]'),
 		title: hook('[data-card="title"]'),
 		blurb: hook('[data-card="blurb"]'),
-		gauge: hook('[data-card="gauge"]'),
-		gaugeCaption: hook('[data-card="gauge-caption"]'),
 		why: hook('[data-card="why"]'),
 		link: hook<HTMLAnchorElement>('[data-card="link"]'),
 	};
@@ -137,10 +136,9 @@ function wire(): (() => void) | null {
 	const rowTemplate = hook<HTMLTemplateElement>("template[data-result-template]");
 	const noneQuery = hook('[data-none="query"]');
 	// The instrument around the board.
-	const tabs = [...document.querySelectorAll<HTMLAnchorElement>("[data-tab]")];
-	const tabsNav = document.querySelector<HTMLElement>("[data-tabs]");
-	const countFigure = document.querySelector<HTMLElement>('[data-count="figure"]');
-	const countLabel = document.querySelector<HTMLElement>('[data-count="label"]');
+	const chips = [...document.querySelectorAll<HTMLAnchorElement>("[data-chip]")];
+	const chipsNav = document.querySelector<HTMLElement>("[data-search-chips]");
+	const count = document.querySelector<HTMLElement>("[data-search-count]");
 	const steppers = [...document.querySelectorAll<HTMLButtonElement>("[data-step]")];
 	const ruler = document.querySelector<HTMLElement>("[data-quilt-ruler]");
 	const readout = ruler?.querySelector<HTMLElement>('[data-time-ruler="readout"]') ?? null;
@@ -252,22 +250,18 @@ function wire(): (() => void) | null {
 			input.removeAttribute("aria-activedescendant");
 		}
 
-		// The tabs: current when the query IS a category (or empty, for all).
+		// The chips: current when the query IS a category (or empty, for all).
 		const q = state.query.trim().toLowerCase();
-		for (const tab of tabs) {
-			if ((tab.dataset.tab ?? "") === q) tab.setAttribute("aria-current", "page");
-			else tab.removeAttribute("aria-current");
+		for (const chip of chips) {
+			if ((chip.dataset.chip ?? "") === q) chip.setAttribute("aria-current", "page");
+			else chip.removeAttribute("aria-current");
 		}
 
-		// The count.
-		if (countFigure && countLabel) {
-			if (res.result) {
-				countFigure.textContent = String(res.result.hits.length);
-				countLabel.textContent = `of ${posts.length} posts`;
-			} else {
-				countFigure.textContent = String(posts.length);
-				countLabel.textContent = "posts";
-			}
+		// The count, for a reader.
+		if (count) {
+			count.textContent = res.result
+				? `${res.result.hits.length} of ${posts.length} posts`
+				: `${posts.length} posts`;
 		}
 
 		// The stepper: nothing to step through when nothing matches.
@@ -318,19 +312,18 @@ function wire(): (() => void) | null {
 	const metaOf = (p: IndexedPost) => `${p.month} ${p.year}${p.category ? ` · ${p.category}` : ""}`;
 
 	function fillCard(p: QuiltPost, why: string | null) {
-		if (card.kicker) card.kicker.textContent = `NO. ${pad(p.no)}`;
+		const no = pad(p.no);
+		if (card.no) card.no.textContent = no;
+		if (card.index) card.index.textContent = `[index] 000${no} · log_${no}.txt`;
 		if (card.category) card.category.textContent = p.category ?? "";
+		if (card.node) card.node.textContent = p.category ?? "";
+		if (card.rate) card.rate.textContent = String(Math.round(p.words / Math.max(1, p.minutes)));
 		if (card.minutes) card.minutes.textContent = String(p.minutes);
 		if (card.words) card.words.textContent = String(p.words);
 		if (card.month) card.month.textContent = p.month;
 		if (card.year) card.year.textContent = p.year;
 		if (card.title) card.title.textContent = p.title;
 		if (card.blurb) card.blurb.textContent = p.excerpt;
-		if (card.gauge) {
-			card.gauge.style.setProperty("--ring-value", String(Math.round((p.minutes / maxMinutes) * 100)));
-			card.gauge.setAttribute("aria-label", `${p.minutes} of ${maxMinutes} minutes`);
-		}
-		if (card.gaugeCaption) card.gaugeCaption.textContent = `${p.minutes} of ${maxMinutes} min`;
 		if (card.why) card.why.textContent = why ? `MATCHED ${why}` : "";
 		if (card.link) card.link.href = p.href;
 	}
@@ -581,13 +574,13 @@ function wire(): (() => void) | null {
 		input.focus();
 	};
 
-	// A tab is a query, set in place; the focus stays on the tab.
-	const onTabClick = (e: MouseEvent) => {
+	// A chip is a query, set in place; the focus stays on the chip.
+	const onChipClick = (e: MouseEvent) => {
 		if (!plainClick(e)) return;
-		const a = (e.target as Element).closest<HTMLAnchorElement>("[data-tab]");
+		const a = (e.target as Element).closest<HTMLAnchorElement>("[data-chip]");
 		if (!a) return;
 		e.preventDefault();
-		setQuery(a.dataset.tab ?? "");
+		setQuery(a.dataset.chip ?? "");
 	};
 
 	const onStepClick = (e: MouseEvent) => {
@@ -630,7 +623,7 @@ function wire(): (() => void) | null {
 	panel.addEventListener("pointerdown", onPanelDown);
 	panel.addEventListener("click", onPanelClick);
 	list?.addEventListener("pointerover", onListOver);
-	tabsNav?.addEventListener("click", onTabClick);
+	chipsNav?.addEventListener("click", onChipClick);
 	for (const b of steppers) b.addEventListener("click", onStepClick);
 	ruler?.addEventListener("click", onRulerClick);
 	document.addEventListener("keydown", onDocKey);

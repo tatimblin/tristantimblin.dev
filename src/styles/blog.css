@@ -54,12 +54,11 @@
 	margin-block-end: var(--space-7);
 }
 
-/* THE INSTRUMENT — /txt (BlogLayout `tabs`): the site header, then <main>
-   in the site container, holding four rows straight on the page — the tab
-   row (the layout's), the board, the controls and the timeline (the
-   page's). Only the controls carry a surface (a frameless Panels row of
-   cells); the rest is the page itself, so the rows are set apart by space,
-   not cut by a gutter.
+/* THE INSTRUMENT — /txt (BlogLayout `bar`): the site header, then <main>
+   in the site container, holding three rows straight on the page — the bar
+   (the layout's), the board and the timeline (the page's). Nothing carries a
+   surface: the bar is one hairline box, the quilt is ruled, the card sits on
+   the page — so the rows are set apart by space, not cut by a gutter.
 
    The container is padded by --container-inset (global.css), the same inset
    the header pads by and the homepage's rows take, so the header's brand and
@@ -102,71 +101,16 @@
 	justify-content: center;
 }
 
-/* The tab row: the tabs alone (the h1 is for a reader, not drawn), their
-   first pill on the container's edge. */
-.blog__tabrow {
+/* The bar row: the h1 is for a reader, not drawn; the form is the bar,
+   spanning the container. */
+.blog__bar {
 	display: flex;
-	align-items: center;
-}
-/* The tabs scroll sideways on a narrow row rather than wrap: one line of
-   pills is the control; the scrollbar is not drawn. */
-.blog__tabs {
-	display: flex;
-	gap: var(--space-2);
-	flex: 1 1 auto;
-	min-inline-size: 0;
-	overflow-x: auto;
-	scrollbar-width: none;
-	padding-block: var(--space-2);
-}
-.blog__tabs::-webkit-scrollbar {
-	display: none;
-}
-/* ALL carries a small square, the prototype's mark for "everything", a step
-   clear of its label. */
-.blog__tabs .blog__tab {
-	gap: var(--space-2);
-}
-.blog__tab-glyph {
-	flex: none;
-	inline-size: var(--space-2);
-	block-size: var(--space-2);
-	border-radius: var(--border-radius-tile);
-	background: currentColor;
-}
-/* The control row: the count, the search, − and +. The count cell is a
-   fixed width (two space steps) so the figure does not push the search
-   about as its label changes; the search takes the rest. */
-.blog__controls {
-	--panels-columns: calc(var(--space-13) + var(--space-11)) minmax(0, 1fr) var(--space-12) var(--space-12);
-	min-block-size: var(--space-12);
-}
-.blog__cell {
-	display: flex;
-	align-items: center;
-}
-.blog__cell--count {
-	padding-inline: var(--space-6);
+	flex-direction: column;
 }
 .blog__search {
 	flex: 1 1 auto;
 	min-inline-size: 0;
-	block-size: 100%;
 	margin: 0;
-}
-.blog__cell--step {
-	justify-content: center;
-}
-
-/* Tablet: the same rows; the count cell gives up its fixed width and the
-   steppers narrow, so the search keeps a line's worth of room. */
-@media (max-width: 1023px) {
-	.blog__controls {
-		--panels-columns: auto minmax(0, 1fr) var(--space-11) var(--space-11);
-	}
-	.blog__cell--count {
-		padding-inline: var(--space-5);
-	}
 }
 
 @media (max-width: 639px) {
@@ -177,32 +121,13 @@
 	.blog__main--wide .blog__header {
 		margin-block-end: var(--space-6);
 	}
-	/* Phone: the tabs scroll in their row; the controls become the count
-	   and the stepper on one line with the search full width under them;
-	   the timeline is the package's compact rendering. */
-	/* The board is a list here, so it reads from the top; the spare height
-	   falls under the last tile. */
+	/* Phone: the board is a list here, so it reads from the top; the spare
+	   height falls under the last tile. The bar wraps its chips onto their
+	   own row (the package's rule); the timeline is its compact rendering. */
 	.blog__board {
 		justify-content: flex-start;
 	}
 	.blog__instrument {
 		gap: var(--space-5);
-	}
-	.blog__controls {
-		--panels-columns: minmax(0, 1fr) var(--space-11) var(--space-11);
-		grid-auto-flow: row;
-	}
-	.blog__cell--count,
-	.blog__cell--step {
-		grid-row: 1;
-		min-block-size: var(--space-11);
-	}
-	.blog__cell--count {
-		padding-inline: var(--space-4);
-	}
-	.blog__cell--search {
-		grid-column: 1 / -1;
-		grid-row: 2;
-		min-block-size: var(--space-9);
 	}
 }

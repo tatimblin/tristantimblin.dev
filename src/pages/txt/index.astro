@@ -1,28 +1,23 @@
 ---
-// /txt — the blog's front page as an INSTRUMENT: four rows straight on the
-// page, in the site container. The tab row is the layout's (the category
-// tabs — each a query on the quilt). Then the BOARD: the quilt, a grid of
-// every post's art padded out with fillers, and the panel that takes a freed
-// block of it when a tile is hovered or stepped to or the bar is used. Then
-// the CONTROLS, the one row with a surface: the count, the search, and the
-// − / + that step through the matching posts. Then the TIMELINE: one tick
-// per month, the posts as the tall ones, an accent playhead on the post in
-// focus. The page computes the index at build (numbers, slots, reading
-// time) and renders the design system's contract; src/lib/quilt/index.ts
-// drives it on the client from the JSON embedded below. With scripting off
-// it is the full quilt, every tile, tab and tick a link, and the bar submits
-// to ?q= (which the script reads on load).
+// /txt — the blog's front page as an INSTRUMENT: three rows straight on the
+// page, in the site container. The BAR is the layout's: one ruled search
+// bar — the search, the quick-filter chips (each a query on the quilt), the
+// − / + that step through the matching posts. Then the BOARD: the quilt, a
+// ruled grid of every post's art padded out with fillers, no text on a
+// tile, and the panel that takes a freed block of it when a tile is hovered
+// or stepped to or the bar is used. Then the TIMELINE: one tick per month,
+// the posts as the tall ones, an accent playhead on the post in focus. The
+// page computes the index at build (numbers, slots, reading time) and
+// renders the design system's contract; src/lib/quilt/index.ts drives it on
+// the client from the JSON embedded below. With scripting off it is the
+// full quilt, every tile, chip and tick a link, and the bar submits to ?q=
+// (which the script reads on load).
 import { getCollection } from "astro:content";
 import BlogLayout from "../../layouts/BlogLayout.astro";
-import Panels from "@whois/design-system/Panels";
-import Panel from "@whois/design-system/Panel";
 import Quilt from "@whois/design-system/Quilt";
 import QuiltCell from "@whois/design-system/QuiltCell";
 import QuiltPanel from "@whois/design-system/QuiltPanel";
-import SearchBar from "@whois/design-system/SearchBar";
 import ArtFrame from "@whois/design-system/ArtFrame";
-import Figure from "@whois/design-system/Figure";
-import IconButton from "@whois/design-system/IconButton";
 import TimeRuler from "@whois/design-system/TimeRuler";
 import {
 	BLOG_DESCRIPTION,
@@ -84,7 +79,6 @@ const index: QuiltPost[] = posts.map((post) => {
 	};
 });
 const art = new Map(posts.map((post) => [post.id, artFor(post.id)]));
-const maxMinutes = Math.max(1, ...index.map((p) => p.minutes));
 
 // Fillers: every cell the posts leave on the desktop grid, and the first
 // (tablet cells − posts) of them also get a tablet slot. Should the tablet
@@ -105,12 +99,12 @@ const fillers = Array.from({ length: fillerCount }, (_, k) => {
 	};
 });
 
-// The tabs: a category is a query, so each is a real link to ?q=<id> (and
-// ALL to /txt); the script upgrades them and keeps aria-current in step with
-// the query. The page is static, so at build ALL is current; the script
-// corrects it from ?q= on load.
+// The bar's chips: a category is a query, so each is a real link to ?q=<id>
+// (and ALL to /txt) — a search shortcut; the script upgrades them and keeps
+// aria-current in step with the query. The page is static, so at build ALL
+// is current; the script corrects it from ?q= on load.
 const q = (word: string) => `/txt?q=${encodeURIComponent(word)}`;
-const tabs = [
+const chips = [
 	{ label: "all", href: "/txt", query: "", active: true },
 	...categoryIds.map((id) => ({ label: categories[id].label.toLowerCase(), href: q(id), query: id })),
 ];
@@ -144,19 +138,15 @@ const nothing = {
 const first = index[0];
 const card = first
 	? {
-			kicker: `NO. ${padNo(first.no)}`,
+			no: padNo(first.no),
 			category: first.category,
 			minutes: first.minutes,
 			words: first.words,
 			month: first.month,
 			year: first.year,
+			rate: Math.round(first.words / first.minutes),
 			title: first.title,
 			blurb: first.excerpt,
-			gauge: {
-				value: first.minutes / maxMinutes,
-				caption: `${first.minutes} of ${maxMinutes} min`,
-				label: `${first.minutes} of ${maxMinutes} minutes`,
-			},
 			href: first.href,
 		}
 	: undefined;
@@ -173,6 +163,7 @@ const lastYear = Math.max(new Date().getUTCFullYear(), ...years);
 const timeline = {
 	from: `${firstYear}-01`,
 	to: `${lastYear}-12`,
+	label: `timeline // ${firstYear}—${lastYear}`,
 	marks: index.map((p) => ({
 		month: p.ym,
 		label: `${p.title}, ${cap(p.month)} ${p.year}`,
@@ -188,7 +179,7 @@ const timeline = {
 	title={`${BLOG_TITLE} — Tristan Timblin`}
 	description={BLOG_DESCRIPTION}
 	heading={BLOG_TITLE}
-	tabs={tabs}
+	bar={{ chips, count: `${index.length} posts` }}
 >
 	<div class="blog__row blog__board">
 		<Quilt cols={COLS} rows={lg.rows} colsMd={COLS_MD} rowsMd={md.rows} aria-label="Posts">
@@ -232,33 +223,6 @@ const timeline = {
 		</Quilt>
 	</div>
 
-	<Panels direction="row" frame={false} class="blog__row blog__controls" data-controls>
-		<Panel pad="none" class="blog__cell blog__cell--count">
-			<Figure size="xl" data-search-count aria-live="polite">
-				<span data-count="figure">{index.length}</span>
-				<Fragment slot="unit"><span data-count="label">posts</span></Fragment>
-			</Figure>
-		</Panel>
-		<Panel pad="none" class="blog__cell blog__cell--search">
-			<form class="blog__search" action="/txt" method="get" data-quilt-form>
-				<SearchBar
-					variant="cell"
-					id="quilt-search"
-					label="search"
-					placeholder="a title, a topic, a year…"
-					hint="/"
-					controls="quilt-panel-results"
-				/>
-			</form>
-		</Panel>
-		<Panel pad="none" class="blog__cell blog__cell--step">
-			<IconButton variant="secondary" size="large" rounded glyph="−" aria-label="Previous post" data-step="older" type="button" />
-		</Panel>
-		<Panel pad="none" class="blog__cell blog__cell--step">
-			<IconButton variant="secondary" size="large" rounded glyph="+" aria-label="Next post" data-step="newer" type="button" />
-		</Panel>
-	</Panels>
-
 	<div class="blog__row blog__timeline">
 		<TimeRuler
 			from={timeline.from}
@@ -266,7 +230,7 @@ const timeline = {
 			marks={timeline.marks}
 			playhead={timeline.playhead}
 			readout={timeline.readout}
-			label="timeline"
+			label={timeline.label}
 			data-quilt-ruler
 		/>
 	</div>
