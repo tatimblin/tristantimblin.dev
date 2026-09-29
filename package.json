@@ -10,6 +10,7 @@
     "build:site": "bunx --bun astro build",
     "preview": "bunx --bun astro preview",
     "astro": "bunx --bun astro",
+    "check": "astro check",
     "test": "playwright test",
     "validate:art": "bun packages/design-system/scripts/validate-art.mjs"
   },
@@ -30,11 +31,13 @@
     "lenis": "^1.3.25"
   },
   "devDependencies": {
-    "@astrojs/markdown-remark": "^7.2.2",
+    "@astrojs/check": "0.9.10",
+    "@astrojs/markdown-remark": "7.2.2",
     "@maximeheckel/design-system": "4.2.3",
     "@playwright/test": "^1.62.1",
     "react": "^19",
     "react-dom": "^19",
-    "schema-dts": "^2.0.0"
+    "schema-dts": "^2.0.0",
+    "typescript": "5.9.3"
   }
 }

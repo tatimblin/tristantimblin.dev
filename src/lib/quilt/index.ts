@@ -101,9 +101,13 @@ const plainClick = (e: MouseEvent) =>
 function wire(): (() => void) | null {
 	const root = document.querySelector<HTMLElement>("[data-quilt]");
 	const data = document.querySelector<HTMLScriptElement>("script[data-quilt-index]");
-	const input = document.querySelector<HTMLInputElement>("[data-search-input]");
-	const panel = root?.querySelector<HTMLElement>("[data-quilt-panel]");
-	if (!root || !data || !input || !panel || root.dataset.quiltWired) return null;
+	const inputEl = document.querySelector<HTMLInputElement>("[data-search-input]");
+	const panelEl = root?.querySelector<HTMLElement>("[data-quilt-panel]");
+	if (!root || !data || !inputEl || !panelEl || root.dataset.quiltWired) return null;
+	// Rebound after the guard so the non-null narrowing reaches the hoisted
+	// function declarations below, which TypeScript does not narrow into.
+	const input = inputEl;
+	const panel = panelEl;
 	root.dataset.quiltWired = "true";
 
 	const { posts, grid } = JSON.parse(data.textContent || "{}") as QuiltIndex;

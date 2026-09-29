@@ -1832,8 +1832,10 @@ assertions:
 		// updates instantly. "Copy config" exports only the changed tokens as JSON,
 		// split into root/themed so the agent can drop them into tokens.overrides.css.
 		function initTokenControls() {
-			const panel = document.querySelector<HTMLElement>("[data-token-controls]");
-			if (!panel || panel.dataset.bound === "true") return;
+			const panelEl = document.querySelector<HTMLElement>("[data-token-controls]");
+			if (!panelEl || panelEl.dataset.bound === "true") return;
+			// Rebound so the narrowing reaches the nested function declarations.
+			const panel = panelEl;
 			panel.dataset.bound = "true";
 
 			const root = document.documentElement;
