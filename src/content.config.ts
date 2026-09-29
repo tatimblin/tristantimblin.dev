@@ -10,7 +10,9 @@ const txt = defineCollection({
 		// ONE category from the closed set in src/lib/blog.ts — the label and icon
 		// the index shows beside the title. Tags stay free-form and plural.
 		category: z.enum(categoryIds).optional(),
-		tags: z.array(z.string()).default([]),
+		// Lowercase, digits and hyphens: a tag is a URL segment (/txt/tag/<tag>/)
+		// and printed with its hyphens as spaces.
+		tags: z.array(z.string().regex(/^[a-z0-9-]+$/)).default([]),
 		excerpt: z.string(),
 		// THE HERO: a real image (a screenshot, a photo) under the title, drawn as
 		// `Fig. 01` on the post page; the body's figures count on from it. A post
@@ -24,17 +26,21 @@ const txt = defineCollection({
 				alt: z.string(),
 				caption: z.string().optional(),
 			})
+			.strict()
 			.optional(),
-		// Social card override; falls back to the site default when null.
+		// Social card override; falls back to the hero, then the site default,
+		// when null. imageAlt describes it (og:image:alt); the hero's alt
+		// stands in when the card IS the hero.
 		image: z.string().nullable().default(null),
 		imageAlt: z.string().nullable().default(null),
-		canonical: z.string().nullable().default(null),
+		// A syndicated post's origin, absolute.
+		canonical: z.url().nullable().default(null),
 		modified: z.coerce.date().nullable().default(null),
 		draft: z.boolean().default(false),
-		// Reserved hook for the two-layer goal: name an alternate themed layout
-		// later. Unused for now (all posts use the default PostLayout).
-		layout: z.string().optional(),
-	}),
+	})
+	// Strict: a misspelt key (`heor:`, `excrept:`) fails the build instead of
+	// being dropped without a word.
+	.strict(),
 });
 
 export const collections = { txt };
