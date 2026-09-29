@@ -22,17 +22,14 @@
 /* PULL (variant="pull") — the quote on the ruled page. No fill and no
  * corner; a 2px bar of the accent down the left edge — the one place the
  * accent appears in a post's text — and the words a step up from the
- * paragraph: the UI face at --font-size-5, the primary ink, on the UI
- * leading. The Body inside reads the body role's tokens, so the retune is
- * those tokens in scope, the way Prose retunes its headings. The attribution
- * is a `footer` in the caps mono (Mono's classes, emitted by the plugin or
- * written as `<Mono as="footer">`), a step under the words. */
+ * paragraph: the body face still, at --font-size-5 on the UI leading, in
+ * the primary ink. The Body inside reads the body role's tokens, so the
+ * retune is those tokens in scope, the way Prose retunes its headings. The
+ * attribution is a `footer` in the caps mono (Mono's classes, emitted by the
+ * plugin or written as `<Mono as="footer">`), a step under the words. */
 .ds-blockquote--variant-pull {
-	--font-body: var(--font-ui);
-	--font-body-weight: var(--font-weight-400);
 	--font-body-size: var(--font-size-5);
 	--font-body-line-height: var(--line-height-ui);
-	--font-body-letter-spacing: 0;
 	padding: 0 0 0 var(--space-4);
 	background: none;
 	border-inline-start: 2px solid var(--accent);

@@ -11,10 +11,11 @@
 //     fenced-block `<pre><code>`. Inline + block code are handled in CSS.
 //   - `pre`, `hr`, `del`, `table`: no clean 1:1 DS component.
 //
-// `blockquote` IS mapped, to the DS Blockquote — a quiet filled box with a bar
-// down its left edge. Not Callout, which is an ATTENTION box with a badge; a
+// `blockquote` IS mapped, to the DS Blockquote in its PULL variant (via
+// ./mdx/Blockquote.astro) — no fill, a bar of the accent down its left edge,
+// the words a step up. Not Callout, which is an ATTENTION box with a badge; a
 // pulled quote is the opposite gesture. The <p> inside is mapped too, so the
-// quote is set in the Body role.
+// quote is set through the Body role (the variant retunes its tokens).
 //
 // `img` IS mapped (to ./mdx/Img.astro) — not for a DS component, but because
 // markdown cannot express width/height, lazy loading, or a reveal hook, and the
@@ -25,13 +26,13 @@ import H4 from "@whois/design-system/H4";
 import ListItem from "@whois/design-system/ListItem";
 import EM from "@whois/design-system/EM";
 import Strong from "@whois/design-system/Strong";
-import Blockquote from "@whois/design-system/Blockquote";
 
 import P from "./mdx/P.astro";
 import A from "./mdx/A.astro";
 import Ul from "./mdx/Ul.astro";
 import Ol from "./mdx/Ol.astro";
 import Img from "./mdx/Img.astro";
+import Blockquote from "./mdx/Blockquote.astro";
 
 export const mdxComponents = {
 	p: P,

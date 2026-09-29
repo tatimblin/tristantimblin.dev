@@ -132,3 +132,16 @@ export const kickerDate = (d: Date) => {
 	const month = date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
 	return `${day} ${month} ${date.getUTCFullYear()}`;
 };
+
+/** The ruled post page's status-strip date: `02.02.2026` — day, month, year,
+ *  each padded, dotted; UTC like the rest. */
+export const dottedDate = (d: Date) => {
+	const date = new Date(d);
+	const day = String(date.getUTCDate()).padStart(2, "0");
+	const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+	return `${day}.${month}.${date.getUTCFullYear()}`;
+};
+
+/** The index table's FILED column: `jun 2025` (the caps voice uppercases it). */
+export const filedDate = (d: Date) =>
+	`${monthOf(d).short} ${new Date(d).getUTCFullYear()}`;

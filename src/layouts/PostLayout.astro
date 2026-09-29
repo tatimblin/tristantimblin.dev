@@ -1,64 +1,75 @@
 ---
-// PostLayout — the reading page for a /txt post, on the instrument UI. Wraps
-// ArticleLayout (which owns the article SEO) and composes the chrome from the
-// design system, top to bottom:
+// PostLayout — the reading page for a /txt post, RULED: the site header, then
+// one four-column grid in the site container that every row of the page is
+// laid on, top to bottom:
 //
-//   1. A strip — `← TXT` and `005 / 005` in the structure voice — over a
-//      TickRuler that is the READING RULER: its playhead (and the lit stretch
-//      behind it) is the share of the page read, moved by the script below.
-//   2. The hero: the post's art in its frame (playing — the one page where the
-//      art moves without a pointer) beside the kicker `TXT · 005 · 02 FEB 2026`,
-//      the title in the big regular grotesk, the excerpt, the stat pairs
-//      (`3 min / read`, `582 / words`) and the category and tag pills.
-//   3. A hairline, then the body: a contents rail built from the h2s (sticky
-//      beside the prose on a desktop, a compact list above it below that; the
-//      current section lit by the same script) and the Prose column, whose h2s
-//      are numbered to match the rail.
-//   4. A hairline, then the neighbours: the previous and next posts as their
-//      art, or a line saying there is none.
+//   1. The STATUS STRIP — one line between two strong hairlines, in the
+//      structure voice: `TXT / 005` · the category · `3 MIN · 541 WORDS` ·
+//      the date, `02.02.2026`, on the right edge.
+//   2. The column numbers, `01 02 03 04`, tiny over the columns.
+//   3. The TITLE across the first three columns at the display step, the LEAD
+//      (the excerpt) in the second and third, and the post's art as a MARK in
+//      the fourth — no plate, the page's ink — resting on the lead's last
+//      line, playing (the one page where the art moves without a pointer).
+//   4. The HERO, when the frontmatter names one: `Fig. 01 /` in the first
+//      column, the image on a hairline across the other three, its caption
+//      under it. The body's figures count on from it.
+//   5. The SECTIONS: the body, cut at each h2 by the rehype plugin and drawn
+//      by Prose `ruled` — each a row under a hairline, its number and heading
+//      sticky in the first column, its text in the next two, the fourth air.
+//      A post with no h2s is one section, `00 / Intro`, its text at the same
+//      measure as any other.
+//   6. The INDEX: a table at the foot, its header row the ink with the page
+//      colour on it — `INDEX · NO. · TITLE · FILED` — then the tags, the
+//      previous (older) post and the next (newer) as hairline-cut rows; an
+//      end with nothing beyond it is a dimmed row saying so.
 //
-// The hero and the body share one grid — a 22rem column for the art and the
-// rail, the rest for the words — so the title, the excerpt and the prose all
-// start on the same line. Under 1024 everything stacks. The art is framed
-// (the plate, both themes): a frame without its chrome leaves white ink on a
-// light page, so this one keeps it.
+// The grid is `--ruled-columns` / `--ruled-gap` on the article, the tokens
+// the ruled Prose reads too, so the page's rows and the body's sections fall
+// on the same lines. Below 1024 it is one column: the strip two by two, the
+// heads over their text, the mark after the lead at a modest width, the
+// hero and the table full width. The page's headings take the UI face at the
+// semibold by retuning the heading tokens in scope, as Prose does.
 //
-// The body arrives via <slot /> already mapped to DS components
-// (src/components/mdx-components.ts, applied at the <Content> render site in
-// txt/[slug].astro). `image` is the social card only; the art is the hero.
+// The body arrives via <slot /> already sectioned and mapped to DS
+// components (src/components/mdx-components.ts, applied at the <Content>
+// render site in txt/[slug].astro). `image` is the social card only.
 import ArticleLayout from "./ArticleLayout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import Img from "../components/mdx/Img.astro";
 import ArtFrame from "@whois/design-system/ArtFrame";
+import Grid from "@whois/design-system/Grid";
 import Heading from "@whois/design-system/Heading";
-import Body from "@whois/design-system/Body";
+import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
-import Stat from "@whois/design-system/Stat";
-import Pill from "@whois/design-system/Pill";
-import Icon from "@whois/design-system/Icon";
-import Hairline from "@whois/design-system/Hairline";
-import TickRuler from "@whois/design-system/TickRuler";
 import Prose from "@whois/design-system/Prose";
 import "@whois/design-system/styles.css";
 import "../styles/blog.css";
 import {
 	blogNav,
 	categories,
+	dottedDate,
+	filedDate,
 	isoDate,
-	kickerDate,
-	monthOf,
 	padNo,
 	tagHref,
 	type CategoryId,
 } from "../lib/blog";
 
-/** A neighbouring post, as the foot of the page shows it. */
+/** A neighbouring post, as the index at the foot lists it. */
 export interface Neighbour {
 	title: string;
 	href: string;
 	date: Date;
-	minutes: number;
-	/** Its raw art, or null when it has none. */
-	art: string | null;
+	/** Its chronological number. */
+	no: number;
+}
+
+/** The post's hero image, from its frontmatter. */
+export interface Hero {
+	src: string;
+	alt: string;
+	caption?: string;
 }
 
 interface Props {
@@ -68,7 +79,7 @@ interface Props {
 	tags?: string[];
 	date: Date;
 	modified?: Date | null;
-	/** The social card. Not shown on the page: the art is the hero. */
+	/** The social card. Not shown on the page. */
 	image?: string;
 	canonical?: string;
 	/** The post's chronological number, and how many there are. */
@@ -77,8 +88,7 @@ interface Props {
 	stats: { words: number; minutes: number };
 	/** The post's raw art (src/content/txt/<slug>.svg), or null. */
 	art?: string | null;
-	/** The h2s, for the contents rail. */
-	headings?: Array<{ slug: string; text: string }>;
+	hero?: Hero | null;
 	prev?: Neighbour | null;
 	next?: Neighbour | null;
 }
@@ -93,18 +103,21 @@ const {
 	image,
 	canonical,
 	no,
-	total,
 	stats,
 	art = null,
-	headings = [],
+	hero = null,
 	prev = null,
 	next = null,
 } = Astro.props;
 
 const cat = category ? categories[category] : null;
-const pad2 = (n: number) => String(n).padStart(2, "0");
-const neighbourMeta = (n: Neighbour) =>
-	`${monthOf(n.date).short} ${new Date(n.date).getUTCFullYear()} · ${n.minutes} min`;
+const COLUMNS = "var(--ruled-columns)";
+
+/** The two neighbour rows of the index: the older post, then the newer. */
+const neighbourRows = [
+	{ key: "prev", label: "← previous", post: prev, none: "Nothing older" },
+	{ key: "next", label: "next →", post: next, none: "Nothing newer" },
+] as const;
 ---
 
 <ArticleLayout
@@ -118,110 +131,127 @@ const neighbourMeta = (n: Neighbour) =>
 >
 	<div class="blog">
 		<SiteHeader variant="flow" links={blogNav} />
-		<main class="blog__main blog__main--wide">
+		<main class="blog__main blog__main--wide blog__main--post">
 			<article class="post" data-post>
-				<div class="post__strip">
-					<Mono as="a" href="/txt" class="post__back">← txt</Mono>
-					<Mono class="post__count">{padNo(no)} / {padNo(total)}</Mono>
-				</div>
-				<TickRuler
-					playhead={0}
-					lit
-					height="var(--space-4)"
-					class="post__ruler"
-					data-post-ruler
-				/>
-
-				<header class="post__hero">
-					{art && <ArtFrame svg={art} label={title} play class="post__art" />}
-					<div class="post__lead">
-						<Mono class="post__kicker post__date">
-							txt · {padNo(no)} · <time datetime={isoDate(date)}>{kickerDate(date)}</time>
-							{modified && (
-								<Fragment>
-									{" "}· updated <time datetime={isoDate(modified)}>{kickerDate(modified)}</time>
-								</Fragment>
-							)}
+				<Grid templateColumns={COLUMNS} gapX={4} class="post__strip" data-post-strip>
+					<Mono tone="primary" class="post__cell post__no">txt / {padNo(no)}</Mono>
+					{cat && category ? (
+						<Mono
+							as="a"
+							href={`/txt?q=${encodeURIComponent(category)}`}
+							class="post__cell post__category"
+						>
+							{cat.label}
 						</Mono>
-						<Heading as="h1" size={4} class="post__title">{title}</Heading>
-						{description && <Body class="post__excerpt">{description}</Body>}
-						<div class="post__meta">
-							<Stat size="sm" value={`${stats.minutes} min`} label="read" />
-							<Stat size="sm" value={stats.words.toLocaleString("en-US")} label="words" />
-							{(cat || tags.length > 0) && (
-								<div class="post__tags">
-									{cat && category && (
-										<Pill
-											as="a"
-											href={`/txt?q=${encodeURIComponent(category)}`}
-											class="post__category"
-										>
-											<Icon name={cat.icon} />{cat.label}
-										</Pill>
-									)}
-									{tags.map((tag) => (
-										<Pill as="a" variant="outline" href={tagHref(tag)} class="post__tag">
-											{tag.replace(/[-_]+/g, " ")}
-										</Pill>
-									))}
-								</div>
-							)}
+					) : (
+						<span class="post__cell" />
+					)}
+					<Mono class="post__cell post__stats">
+						{stats.minutes} min · {stats.words.toLocaleString("en-US")} words
+					</Mono>
+					<Mono
+						as="time"
+						tone="primary"
+						datetime={isoDate(date)}
+						class="post__cell post__cell--end post__date"
+					>
+						{dottedDate(date)}
+					</Mono>
+				</Grid>
+
+				<Grid templateColumns={COLUMNS} gapX={4} class="post__colnos" aria-hidden="true">
+					{["01", "02", "03", "04"].map((n) => (
+						<Mono>{n}</Mono>
+					))}
+				</Grid>
+
+				<Grid as="header" templateColumns={COLUMNS} gapX={4} class="post__head">
+					<Heading as="h1" size={4} class="post__title">{title}</Heading>
+					{description && (
+						<Text as="p" size={5} variant="primary" spaced={false} class="post__lead">
+							{description}
+						</Text>
+					)}
+					{art && <ArtFrame svg={art} label={title} variant="mark" play class="post__mark" />}
+				</Grid>
+
+				{hero && (
+					<Grid as="figure" templateColumns={COLUMNS} gapX={4} class="post__fig" data-post-hero>
+						<Mono class="post__fig-label">fig. 01 /</Mono>
+						<div class="post__hero">
+							<Img src={hero.src} alt={hero.alt} loading="eager" />
 						</div>
-					</div>
-				</header>
+						<Mono as="figcaption" class="post__figcap">{hero.caption ?? hero.alt}</Mono>
+					</Grid>
+				)}
 
-				<Hairline class="post__rule" />
+				<Prose variant="ruled" class="post__prose">
+					<slot />
+				</Prose>
 
-				<div class="post__body">
-					{headings.length > 0 && (
-						<nav class="post__rail" aria-label="Contents" data-post-rail>
-							<Mono class="post__rail-label">Contents</Mono>
-							<ol class="post__rail-list">
-								{headings.map((h, i) => (
-									<li>
-										<Mono as="a" href={`#${h.slug}`} tone="tertiary" class="post__rail-link">
-											{pad2(i + 1)} — {h.text}
-										</Mono>
-									</li>
-								))}
-							</ol>
-						</nav>
-					)}
-					<Prose numbered class="post__prose">
-						<slot />
-					</Prose>
-				</div>
-
-				<Hairline class="post__rule" />
-
-				<nav class="post__neighbours" aria-label="Previous and next posts">
-					{prev ? (
-						<a class="post__neighbour" href={prev.href} data-neighbour="prev">
-							{prev.art && <ArtFrame svg={prev.art} decorative class="post__neighbour-art" />}
-							<span class="post__neighbour-text">
-								<Mono tone="tertiary">← previous</Mono>
-								<Heading as="span" size={2} class="post__neighbour-title">{prev.title}</Heading>
-								<Mono>{neighbourMeta(prev)}</Mono>
-							</span>
-						</a>
-					) : (
-						<Mono tone="tertiary" class="post__neighbour post__neighbour--none">
-							first post — nothing older
+				<nav class="post__index" aria-label="Index" data-post-index>
+					<Grid templateColumns={COLUMNS} gapX={4} class="post__row post__row--head">
+						<Mono>index</Mono>
+						<Mono>no.</Mono>
+						<Mono>title</Mono>
+						<Mono class="post__filed">filed</Mono>
+					</Grid>
+					<Grid templateColumns={COLUMNS} gapX={4} class="post__row" data-index-row="tags">
+						<Mono>tags</Mono>
+						<Mono tone="primary">{padNo(no)}</Mono>
+						<Mono tone="primary" class="post__span post__tags">
+							{tags.length > 0
+								? tags.map((tag, i) => (
+										<Fragment>
+											{i > 0 && " · "}
+											<a href={tagHref(tag)}>{tag.replace(/[-_]+/g, " ")}</a>
+										</Fragment>
+									))
+								: "—"}
 						</Mono>
-					)}
-					{next ? (
-						<a class="post__neighbour post__neighbour--next" href={next.href} data-neighbour="next">
-							{next.art && <ArtFrame svg={next.art} decorative class="post__neighbour-art" />}
-							<span class="post__neighbour-text">
-								<Mono tone="tertiary">next →</Mono>
-								<Heading as="span" size={2} class="post__neighbour-title">{next.title}</Heading>
-								<Mono>{neighbourMeta(next)}</Mono>
-							</span>
-						</a>
-					) : (
-						<Mono tone="tertiary" class="post__neighbour post__neighbour--none post__neighbour--next">
-							latest post — nothing newer
-						</Mono>
+					</Grid>
+					{neighbourRows.map(({ key, label, post, none }) =>
+						post ? (
+							<Grid
+								templateColumns={COLUMNS}
+								gapX={4}
+								align="baseline"
+								class="post__row"
+								data-index-row={key}
+							>
+								<Mono>{label}</Mono>
+								<Mono tone="primary">{padNo(post.no)}</Mono>
+								<Text
+									as="a"
+									size={3}
+									variant="primary"
+									spaced={false}
+									href={post.href}
+									class="post__index-title"
+									data-neighbour={key}
+								>
+									{post.title}
+								</Text>
+								<Mono class="post__filed">
+									<time datetime={isoDate(post.date)}>{filedDate(post.date)}</time>
+								</Mono>
+							</Grid>
+						) : (
+							<Grid
+								templateColumns={COLUMNS}
+								gapX={4}
+								align="baseline"
+								class="post__row post__row--dim"
+								data-index-row={key}
+							>
+								<Mono>{label}</Mono>
+								<Mono>—</Mono>
+								<Text as="span" size={3} variant="tertiary" spaced={false} class="post__index-title">
+									{none}
+								</Text>
+								<Mono class="post__filed">—</Mono>
+							</Grid>
+						),
 					)}
 				</nav>
 			</article>
@@ -229,245 +259,199 @@ const neighbourMeta = (n: Neighbour) =>
 	</div>
 </ArticleLayout>
 
-<script>
-	// THE READING RULER AND THE RAIL. One rAF-throttled scroll handler does
-	// both: the share of the document scrolled becomes --at on the ruler (the
-	// playhead and its lit stretch follow, per TickRuler's contract), and the
-	// rail's current entry is the last h2 whose top has passed the reading
-	// line, a third of the way down the viewport — at the very end of the
-	// page the last section is current whether or not its heading got there.
-	// No transitions anywhere: a position that tracks the scroll 1:1 is state,
-	// not motion, so it is the same cut under prefers-reduced-motion.
-	//
-	// Wired on astro:page-load, guarded by data-post-wired on the article; the
-	// window listeners are dropped on astro:before-swap.
-	function wire() {
-		const article = document.querySelector<HTMLElement>("[data-post]");
-		if (!article || article.dataset.postWired) return;
-		article.dataset.postWired = "true";
-
-		const ruler = article.querySelector<HTMLElement>("[data-post-ruler]");
-		const links = [
-			...article.querySelectorAll<HTMLAnchorElement>('[data-post-rail] a[href^="#"]'),
-		];
-		const headings = links.map((a) =>
-			document.getElementById(decodeURIComponent(a.hash.slice(1))),
-		);
-
-		let queued = false;
-		const paint = () => {
-			queued = false;
-			const max = document.documentElement.scrollHeight - window.innerHeight;
-			const at = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 1;
-			ruler?.style.setProperty("--at", `${(at * 100).toFixed(2)}%`);
-
-			if (!links.length) return;
-			const line = window.innerHeight * 0.3;
-			let current = -1;
-			headings.forEach((h, i) => {
-				if (h && h.getBoundingClientRect().top <= line) current = i;
-			});
-			if (at >= 0.999) current = headings.length - 1;
-			links.forEach((a, i) => {
-				if (i === current) a.setAttribute("aria-current", "true");
-				else a.removeAttribute("aria-current");
-			});
-		};
-		const schedule = () => {
-			if (queued) return;
-			queued = true;
-			requestAnimationFrame(paint);
-		};
-
-		window.addEventListener("scroll", schedule, { passive: true });
-		window.addEventListener("resize", schedule, { passive: true });
-		paint();
-
-		document.addEventListener(
-			"astro:before-swap",
-			() => {
-				window.removeEventListener("scroll", schedule);
-				window.removeEventListener("resize", schedule);
-			},
-			{ once: true },
-		);
-	}
-
-	document.addEventListener("astro:page-load", wire);
-</script>
-
 <style>
-	/* THE STRIP AND THE RULER. The way back and the count on one line, the
-	   ruler close under it. */
+	/* THE GRID. Four columns a step apart, the tokens the ruled Prose reads
+	   too, so the page's rows and the sections fall on the same lines. The
+	   page's headings — the title here, the section heads through Prose — on
+	   the UI face at the semibold, by the heading tokens in scope. */
+	.post {
+		--ruled-columns: repeat(4, minmax(0, 1fr));
+		--ruled-gap: var(--space-4);
+		--font-heading: var(--font-ui);
+		--font-heading-weight: var(--font-weight-600);
+	}
+
+	/* THE STATUS STRIP. One row between the strong hairlines, the date on
+	   the right edge. The category is a link to its query on the quilt, in
+	   the same voice (Mono's link reset). */
 	.post__strip {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-4);
-		margin-block-end: var(--space-4);
-	}
-
-	/* THE SHARED GRID. The hero and the body split the same way at ≥ 1024:
-	   the art's column (a 22rem frame is ~200px tall at 16:9, the reference
-	   hero's scale) and the words. Below that, one column: art, then text;
-	   rail, then prose. --post-gap is the gutter between the two. */
-	.post__hero,
-	.post__body {
-		--post-gap: var(--space-10);
-		display: grid;
-		grid-template-columns: minmax(0, 1fr);
-		gap: var(--space-7) var(--post-gap);
-	}
-	@media (min-width: 1024px) {
-		.post__hero,
-		.post__body {
-			grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
-		}
-	}
-
-	/* THE HERO. The art sits on the row's bottom line with the stats, the
-	   lead column stacks down to it. */
-	.post__hero {
-		align-items: end;
 		margin-block-start: var(--space-10);
+		border-block: 1px solid var(--hairline-strong);
 	}
-	.post__art {
-		inline-size: 100%;
-	}
-	.post__lead {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-5);
+	.post__cell {
+		padding-block: var(--space-2);
 		min-inline-size: 0;
 	}
-	/* The kicker may carry an "updated" clause; let it wrap on a phone. */
-	.post__kicker {
-		white-space: normal;
-		line-height: var(--line-height-ui);
-	}
-	/* The big regular grotesk: the top of the scale, Regular through the
-	   .blog scope's heading weight. Wraps early rather than running the full
-	   column, and balanced so two lines share the words. */
-	.post__title {
-		font-size: var(--font-size-8);
-		max-inline-size: 18ch;
-		text-wrap: balance;
-	}
-	.post__excerpt {
-		max-inline-size: var(--blog-measure);
-	}
-	/* The stat pairs, and the pills at the far right of the same line. */
-	.post__meta {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: flex-end;
-		gap: var(--space-5) var(--space-8);
-		margin-block-start: var(--space-2);
-	}
-	.post__tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-2);
-		margin-inline-start: auto;
-	}
-
-	.post__rule {
-		margin-block: var(--space-10);
-	}
-
-	/* THE BODY. The rail is sticky beside the prose on a desktop; below that
-	   it is a compact list above the prose, its entries wrapping in a row. */
-	.post__body {
-		align-items: start;
-	}
-	.post__rail {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-4);
-	}
-	.post__rail-list {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-3) var(--space-5);
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-	.post__rail-link {
-		display: inline-block;
-		white-space: normal;
-		line-height: var(--line-height-ui);
-	}
-	.post__rail-link[aria-current] {
-		color: var(--text-primary);
-	}
-	@media (min-width: 1024px) {
-		.post__rail {
-			position: sticky;
-			top: var(--space-8);
-		}
-		.post__rail-list {
-			flex-direction: column;
-			gap: var(--space-3);
-		}
-	}
-	.post__prose {
-		max-inline-size: var(--blog-measure);
-		min-inline-size: 0;
-	}
-
-	/* THE NEIGHBOURS. Two cards, the older one left, the newer one right and
-	   ending at the right edge; each the art at 7rem beside three lines. A
-	   missing side is one line of the structure voice in the same place. */
-	.post__neighbours {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr);
-		gap: var(--space-6);
-	}
-	@media (min-width: 640px) {
-		.post__neighbours {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-	.post__neighbour {
-		display: flex;
-		align-items: center;
-		gap: var(--space-5);
-		min-inline-size: 0;
-		color: inherit;
-		text-decoration: none;
-	}
-	.post__neighbour--next {
-		justify-content: flex-end;
+	.post__cell--end {
 		text-align: end;
 	}
-	/* The newer post reads art-last, mirroring the older one. */
-	a.post__neighbour--next {
-		flex-direction: row-reverse;
+
+	/* THE COLUMN NUMBERS: tiny, over the columns, a step under the strip. */
+	.post__colnos {
+		margin-block-start: var(--space-8);
 	}
-	.post__neighbour--none {
-		align-self: center;
+
+	/* THE TITLE, THE LEAD AND THE MARK. The title at the display step across
+	   three columns, its lines almost touching (the heading leading retuned
+	   below 1 in scope), balanced so two lines share the words; the lead a
+	   step down in the second and third; the mark in the fourth, spanning
+	   both rows and resting on the lead's last line. */
+	.post__title {
+		grid-column: 1 / span 3;
+		grid-row: 1;
+		margin-block-start: var(--space-5);
+		font-size: var(--font-size-9);
+		--line-height-heading: 0.95;
+		text-wrap: balance;
+		overflow-wrap: anywhere;
 	}
-	.post__neighbour-art {
-		flex: none;
-		inline-size: 7rem;
+	.post__lead {
+		grid-column: 2 / span 2;
+		grid-row: 2;
+		margin-block-start: var(--space-8);
+		font-family: var(--font-ui);
+		line-height: var(--line-height-ui);
 	}
-	.post__neighbour-text {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
+	.post__mark {
+		grid-column: 4;
+		grid-row: 1 / span 2;
+		align-self: end;
+		margin-block-end: var(--space-1);
+	}
+
+	/* THE HERO. The label sits on the image's bottom line; the image on a
+	   hairline across the last three columns; the caption row under it. */
+	.post__fig {
+		margin: var(--space-11) 0 0;
+	}
+	.post__fig-label {
+		align-self: end;
+	}
+	.post__hero {
+		grid-column: 2 / span 3;
 		min-inline-size: 0;
 	}
-	.post__neighbour-title {
+	.post__hero :global(img) {
+		display: block;
+		inline-size: 100%;
+		block-size: auto;
+		border: 1px solid var(--hairline);
+	}
+	.post__figcap {
+		grid-column: 2 / span 3;
+		margin-block-start: var(--space-2);
+		white-space: normal;
+		line-height: var(--line-height-ui);
+	}
+
+	/* THE INDEX. The header row is the ink with the page colour on it — the
+	   fill on the row, so the gaps between its cells carry it too — and its
+	   Monos take the page colour through the token they read. Every other
+	   row is cut off by a hairline, on the row for the same reason. Cells are
+	   padded a step in, so the text sits off the column lines. */
+	.post__index {
+		margin-block-start: var(--space-12);
+	}
+	.post__row {
+		border-block-end: 1px solid var(--hairline);
+	}
+	.post__row > :global(*) {
+		padding: var(--space-3);
+		min-inline-size: 0;
+	}
+	.post__row--head {
+		--text-secondary: var(--background);
+		background: var(--text-primary);
+		color: var(--background);
+		border: 0;
+	}
+	.post__row--head > :global(*) {
+		padding-block: var(--space-2);
+	}
+	.post__span {
+		grid-column: 3 / -1;
+		white-space: normal;
+		line-height: var(--line-height-ui);
+	}
+	.post__tags a {
+		color: inherit;
+		text-decoration: none;
 		transition: color var(--duration-swap) var(--ease-reveal);
 	}
-	.post__neighbour:hover .post__neighbour-title,
-	.post__neighbour:focus-visible .post__neighbour-title {
+	.post__tags a:hover,
+	.post__tags a:focus-visible,
+	a.post__index-title:hover,
+	a.post__index-title:focus-visible {
 		color: var(--accent);
 	}
-	a.post__neighbour:focus-visible {
+	.post__index-title {
+		line-height: var(--line-height-ui);
+		text-decoration: none;
+		transition: color var(--duration-swap) var(--ease-reveal);
+	}
+	.post__filed {
+		white-space: nowrap;
+	}
+	a:focus-visible {
 		outline: var(--focus-ring);
 		outline-offset: var(--focus-ring-offset);
-		border-radius: var(--art-radius);
+	}
+
+	/* ONE COLUMN, below the desktop step: the strip two by two (the date
+	   still on the right edge), no column numbers, the title a step down,
+	   the mark after the lead at a modest width, the hero and the table full
+	   width. The table keeps three columns — label, number, title — and the
+	   FILED cell drops under the title (the header's is not drawn). */
+	@media (max-width: 1023px) {
+		.post {
+			--ruled-columns: minmax(0, 1fr);
+		}
+		.post__strip {
+			--ruled-columns: repeat(2, minmax(0, 1fr));
+		}
+		.post__colnos {
+			display: none;
+		}
+		.post__title {
+			grid-column: 1;
+			grid-row: auto;
+			font-size: var(--font-size-8);
+		}
+		.post__lead {
+			grid-column: 1;
+			grid-row: auto;
+			margin-block-start: var(--space-5);
+		}
+		.post__mark {
+			grid-column: 1;
+			grid-row: auto;
+			align-self: start;
+			max-inline-size: 16rem;
+			margin-block: var(--space-6) 0;
+		}
+		.post__fig {
+			margin-block-start: var(--space-9);
+		}
+		.post__fig-label {
+			margin-block-end: var(--space-2);
+		}
+		.post__hero,
+		.post__figcap {
+			grid-column: 1;
+		}
+		.post__row {
+			--ruled-columns: auto auto minmax(0, 1fr);
+		}
+		.post__row > :global(*) {
+			padding: var(--space-3) var(--space-2);
+		}
+		.post__row--head > .post__filed,
+		.post__row--dim > .post__filed {
+			display: none;
+		}
+		.post__row:not(.post__row--head) > .post__filed {
+			grid-column: 3;
+			padding-block-start: 0;
+		}
 	}
 </style>

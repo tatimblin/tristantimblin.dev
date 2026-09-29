@@ -5,7 +5,7 @@
 // The element (packages/vscode-fleet-demo) owns the whole lifecycle — poster →
 // prefetch-on-approach → launch → iframe → ready. It launches at any width. This
 // file supplies only the two things a package cannot know: the light-DOM markup
-// it enhances, and how the frame sits in a 68ch reading column.
+// it enhances, and how the frame sits on the ruled post page.
 //
 // element.css already dresses the poster, button, caption, progress bar and
 // error note. The scoped rules below deliberately do NOT restate any of that;
@@ -13,7 +13,7 @@
 import "@whois/vscode-fleet-demo/element.css";
 ---
 
-<fleet-demo class="fleet-demo">
+<fleet-demo class="fleet-demo" data-prose-bleed>
 	{/* [data-poster] is the OVERLAY, not the image: element.css lays it out as a
 	    centered flex column stacked over the (later) iframe, with the screenshot
 	    absolutely filling it and the button/caption riding on top. */}
@@ -55,32 +55,18 @@ import "@whois/vscode-fleet-demo/element.css";
 		   grey on a near-black image. The caption gets a fixed light value. */
 		--color-muted: rgba(235, 238, 245, 0.86);
 
-		/* BREAKOUT. The post column is 68ch; a workbench needs far more than that,
-		   so the frame escapes its container and re-centers on the VIEWPORT.
-
-		   Width first: as wide as the viewport allows minus a gutter on each side,
-		   capped at the poster's intrinsic 1400px so it never upscales.
-
-		   Then the offset. A margin-inline percentage resolves against the
-		   CONTAINING BLOCK, so `50% - W/2` moves the left edge from the column's
-		   centre out to where a W-wide box centred on that same centre begins —
-		   and because .txt-post is itself `margin-inline: auto`, the column's
-		   centre IS the viewport's centre. One expression, no ultrawide special
-		   case: the familiar `width: 100vw; margin-inline: calc(50% - 50vw)`
-		   trick pins the left edge to x=0 and stops re-centring the moment a
-		   max-width caps the box, which is exactly what breaks it past 1400px. */
-		--fleet-demo-gutter: var(--container-pad, clamp(1rem, 4vw, 2rem));
-		--fleet-demo-width: min(100vw - 2 * var(--fleet-demo-gutter), 1400px);
-		width: var(--fleet-demo-width);
-		margin-inline: calc(50% - var(--fleet-demo-width) / 2);
-
-		/* The gutter lives in the width rather than in padding because the
+		/* THE ROW. The post's text sits in two of the page's four columns; a
+		   workbench needs more than that, so the element says data-prose-bleed
+		   and the ruled Prose gives it the whole row to the right edge — three
+		   columns, ~850px at 1440, on the page's own lines. So it is simply as
+		   wide as its cell, no viewport arithmetic: the grid places it. The
 		   element's own children (poster, iframe) are `position: absolute;
-		   inset: 0` — padding on the host would simply be painted through. */
-
-		/* A touch more air than the prose rhythm (.ds-prose > * + *): this is a
-		   figure, not another paragraph. */
-		margin-block: var(--space-7, 40px);
+		   inset: 0`, so the box IS the frame. Square, on the hairline, like every
+		   other figure on the ruled page. */
+		width: 100%;
+		margin: 0;
+		border-radius: 0;
+		border-color: var(--hairline, var(--color-border));
 	}
 
 	/* Prose dresses every image in the column — `inline-size: 100%; block-size:

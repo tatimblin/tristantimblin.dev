@@ -1,0 +1,12 @@
+---
+// MDX `blockquote` → DS Blockquote, the PULL variant: no fill, the accent bar,
+// the words up a step in the UI face. The post page is ruled, and its quote is
+// the one place the accent appears in the text. The paragraphs inside arrive
+// as Body (the mapped `p`) and read the retuned body tokens; an attribution
+// (a last line starting with a dash) arrives as a `footer` in the caps mono,
+// made by the sections plugin (src/lib/mdx/post-sections.ts).
+import Blockquote from "@whois/design-system/Blockquote";
+const props = Astro.props;
+---
+
+<Blockquote {...props} variant="pull"><slot /></Blockquote>

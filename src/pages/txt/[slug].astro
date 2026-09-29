@@ -1,7 +1,10 @@
 ---
 // /txt/<slug> — one post. Thin: the collection entry, the numbers the layout
-// prints (its chronological number of the total, reading time), its art and
-// its neighbours' — everything computed here, rendered by PostLayout.
+// prints (its chronological number of the total, reading time), its art, its
+// hero and its neighbours' — everything computed here, rendered by
+// PostLayout. The body arrives already cut into sections (the rehype plugin
+// in astro.config, src/lib/mdx/post-sections.ts) and mapped onto DS
+// components at the <Content> below.
 import type { GetStaticPaths } from "astro";
 import { getCollection, render } from "astro:content";
 import PostLayout, { type Neighbour } from "../../layouts/PostLayout.astro";
@@ -19,8 +22,7 @@ export const getStaticPaths = (async () => {
 			title: p.data.title,
 			href: postHref(p.id),
 			date: p.data.date,
-			minutes: readingStats(p.body).minutes,
-			art: artFor(p.id),
+			no: numbers.get(p.id)!,
 		};
 	return posts.map((post) => {
 		const { prev, next } = neighbours(posts, post.id);
@@ -38,8 +40,8 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { post, no, total, prev, next } = Astro.props;
-const { title, excerpt, category, tags, date, modified, image, canonical } = post.data;
-const { Content, headings } = await render(post);
+const { title, excerpt, category, tags, date, modified, image, canonical, hero } = post.data;
+const { Content } = await render(post);
 ---
 
 <PostLayout
@@ -49,13 +51,13 @@ const { Content, headings } = await render(post);
 	tags={tags}
 	date={date}
 	modified={modified}
-	image={image ?? undefined}
+	image={image ?? hero?.src ?? undefined}
 	canonical={canonical ?? undefined}
 	no={no}
 	total={total}
 	stats={readingStats(post.body)}
 	art={artFor(post.id)}
-	headings={headings.filter((h) => h.depth === 2).map(({ slug, text }) => ({ slug, text }))}
+	hero={hero}
 	prev={prev}
 	next={next}
 >

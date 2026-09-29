@@ -53,6 +53,12 @@
 .blog__main--wide .blog__header {
 	margin-block-end: var(--space-7);
 }
+/* THE POST (PostLayout): the same container; the page's first row (the
+   status strip) carries its own distance from the header, and the foot keeps
+   the index table off the footer. */
+.blog__main--post {
+	padding-block: 0 var(--space-13);
+}
 
 /* THE INSTRUMENT — /txt (BlogLayout `bar`): the site header, then <main>
    in the site container, holding three rows straight on the page — the bar
