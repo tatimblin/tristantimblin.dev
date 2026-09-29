@@ -36,9 +36,27 @@ const monthDay = (date: string) =>
 	// DOM on every navigation, so an observer bound once at module scope would
 	// watch a detached node while the fresh card never got .is-in — and its
 	// resting state is opacity 0. tests/reveal.spec.ts test 7 guards this.
+	//
+	// The date's tooltip says how long ago the reading was ("Today", "3 days
+	// ago"), computed here against the visitor's today rather than at build,
+	// where it would go stale. Both days are UTC calendar days, as the label's
+	// monthDay() is.
+	function ago(date: string): string {
+		const then = Date.parse(`${date}T00:00:00Z`);
+		if (Number.isNaN(then)) return "";
+		const now = new Date();
+		const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+		const diff = Math.round((today - then) / 86_400_000);
+		if (diff <= 0) return "Today";
+		if (diff === 1) return "Yesterday";
+		return `${diff} days ago`;
+	}
+
 	function bind() {
 		const bw = document.querySelector<HTMLElement>(".wx-baywheels");
 		if (!bw) return () => {};
+		const time = bw.querySelector<HTMLTimeElement>("time[datetime]");
+		if (time) time.title = ago(time.dateTime);
 		const io = new IntersectionObserver(
 			(entries) => {
 				if (!entries.some((entry) => entry.isIntersecting)) return;
@@ -61,32 +79,33 @@ const monthDay = (date: string) =>
 	});
 </script>
 
-<Widget
-	size="1x1"
-	title="bay wheels"
-	class="wx-baywheels"
-	data-reveal
-	data-reveal-group="widgets"
-	data-reveal-order="1"
->
-	<Mono
-		slot="meta"
-		as="time"
-		variant="text"
-		datetime={bike.date}
-		title={bike.relativeDate}
+{bike && (
+	<Widget
+		size="1x1"
+		title="bay wheels"
+		class="wx-baywheels"
+		data-reveal
+		data-reveal-group="widgets"
+		data-reveal-order="1"
 	>
-		{monthDay(bike.date)}
-	</Mono>
+		<Mono
+			slot="meta"
+			as="time"
+			variant="text"
+			datetime={bike.date}
+		>
+			{monthDay(bike.date)}
+		</Mono>
 
-	<CardBody class="wx-bw-body">
-		<Figure unit="miles">{fmt(bike.miles)}</Figure>
-		<div class="wx-bw-stats">
-			<Stat size="sm" value={fmt(bike.rides)} label="rides" />
-			<Stat size="sm" value={fmt(bike.hours)} label="hours" />
-		</div>
-		{/* Decoration: the figures above carry the content. A masked box, not an
-		     <img>, so the drawing takes its colour from the ink token. */}
-		<div class="wx-bw-bike" aria-hidden="true"></div>
-	</CardBody>
-</Widget>
+		<CardBody class="wx-bw-body">
+			<Figure unit="miles">{fmt(bike.miles)}</Figure>
+			<div class="wx-bw-stats">
+				<Stat size="sm" value={fmt(bike.rides)} label="rides" />
+				<Stat size="sm" value={fmt(bike.hours)} label="hours" />
+			</div>
+			{/* Decoration: the figures above carry the content. A masked box, not an
+			     <img>, so the drawing takes its colour from the ink token. */}
+			<div class="wx-bw-bike" aria-hidden="true"></div>
+		</CardBody>
+	</Widget>
+)}

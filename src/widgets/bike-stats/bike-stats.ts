@@ -23,9 +23,10 @@ export interface BikeStats {
 	rides: number;
 	miles: number;
 	hours: number;
+	/** The newest row's day, YYYY-MM-DD (a UTC calendar day). How long ago
+	 *  that was is worked out in the browser, against the visitor's today —
+	 *  a build-time "Today" would be wrong by the next morning. */
 	date: string;
-	relativeDate: string; // "Today" | "Yesterday" | "N days ago"
-	freshness: "green" | "yellow" | "red" | "gray";
 }
 
 // Minimal CSV parse — the file is a flat numeric table with a header row, so a
@@ -46,48 +47,22 @@ function parse(csv: string): Row[] {
 		.filter((r) => r.date !== "" && Number.isFinite(r.rides));
 }
 
-// Whole days between the ride date and today, both floored to local midnight.
-function dayDiff(dateStr: string): number | null {
-	if (!dateStr) return null;
-	const today = new Date();
-	today.setHours(0, 0, 0, 0);
-	const rideDate = new Date(dateStr);
-	if (Number.isNaN(rideDate.getTime())) return null;
-	rideDate.setHours(0, 0, 0, 0);
-	return Math.floor((today.getTime() - rideDate.getTime()) / 86_400_000);
-}
-
-function relativeDate(diff: number | null): string {
-	if (diff === null) return "";
-	if (diff <= 0) return "Today";
-	if (diff === 1) return "Yesterday";
-	return `${diff} days ago`;
-}
-
-function freshness(diff: number | null): BikeStats["freshness"] {
-	if (diff === null) return "gray";
-	if (diff <= 1) return "green";
-	if (diff <= 7) return "yellow";
-	return "red";
-}
-
-export function getBikeStats(): BikeStats {
+/** The newest reading, or null when the CSV has no rows (a fresh or
+ *  truncated file must not fail the build; the widget is left out). */
+export function getBikeStats(): BikeStats | null {
 	const rows = parse(csv);
+	if (rows.length === 0) return null;
 
-	// Pick the newest row by date. The writer now upserts one sorted row per
-	// date, so the last line is already the newest — but max-date is kept as a
-	// cheap safeguard against any stray ordering regression in the write path.
-	const latest = rows.reduce((max, r) =>
-		new Date(r.date) > new Date(max.date) ? r : max,
-	);
+	// Pick the newest row by date. The writer upserts one sorted row per date,
+	// so the last line is already the newest — but max-date is kept as a cheap
+	// safeguard against any stray ordering regression in the write path. The
+	// dates are YYYY-MM-DD, so they compare as strings.
+	const latest = rows.reduce((max, r) => (r.date > max.date ? r : max), rows[0]);
 
-	const diff = dayDiff(latest.date);
 	return {
 		rides: latest.rides,
 		miles: Math.floor(latest.distance),
 		hours: Math.floor(latest.duration / 3600),
 		date: latest.date,
-		relativeDate: relativeDate(diff),
-		freshness: freshness(diff),
 	};
 }
