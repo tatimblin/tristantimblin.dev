@@ -2,26 +2,69 @@
 // Prose — the reading container (styles/prose.css). Wrap rendered markdown in
 // it: it sets the rhythm between blocks, gives section headings the UI face
 // with a hairline under the h2s, and styles the tags markdown leaves as raw
-// HTML — fenced code, inline code, images, rules, tables, strikethrough. The
-// mapped elements (p, lists, links, blockquotes) style themselves through their
-// own DS components; this only spaces them.
+// HTML — fenced code, inline code, images, rules, tables. The mapped elements
+// (p, lists, links, blockquotes) style themselves through their own DS
+// components; this only spaces them.
 //
 //   <Prose><Content components={mdxComponents} /></Prose>
 //   <Prose numbered>…</Prose>     each h2 carries its index (01, 02 …) in the
 //                                 structure voice — for a page with a contents
 //                                 rail that numbers the same sections
+//   <Prose variant="ruled">…</Prose>
+//
+// RULED is the reading column on a four-column grid, cut into SECTIONS at each
+// h2: every section a grid row under a hairline, its number and heading in
+// the first column (sticky, on a desktop) and its text in the next two, at the
+// body role with a gap between blocks; the fourth column is air, unless a
+// block says `data-prose-bleed` and takes the whole row. The columns come from
+// `--ruled-columns` / `--ruled-gap` (four, `--space-4`) so a page lays its own
+// rows on the same lines. It expects its content already sectioned — the site's
+// rehype plugin (src/lib/mdx/post-sections.ts) cuts a markdown body into this:
+//
+//   <section class="ds-prose-section">
+//     <header class="ds-prose-section__head">
+//       <span class="ds-mono ds-mono--variant-caps ds-caps">00</span>   (Mono, caps)
+//       <h2>Intro</h2>                                                  (the mapped H2)
+//     </header>
+//     <div class="ds-prose-section__body">…the blocks…</div>
+//   </section>
+//
+// and, inside a body, a figure per image (`figure.ds-prose-figure` — the img
+// and a `figcaption` holding a caps Mono, `Fig. 02 / <alt>`), a figure per
+// fenced block (`figure.ds-prose-code` — a `.ds-prose-code__head` row with the
+// number and title on the left and the language on the right, then the pre)
+// and, in a Blockquote, a `footer` for the attribution. The variant draws all
+// of it: images on a hairline, no radius; code between two hairlines with no
+// box; links in the ink with a 1px underline; inline code on the first wash.
 import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
 	/** Number the h2s (01, 02 …) with a CSS counter, so a contents rail can match. */
 	numbered?: boolean;
+	/** `column` (default): one reading column. `ruled`: sections on the
+	 *  four-column grid, each under a hairline with its number and heading in
+	 *  the first column — content pre-cut into `.ds-prose-section`s. */
+	variant?: "column" | "ruled";
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "div", numbered = false, class: className, ...rest } = Astro.props;
+const {
+	as = "div",
+	numbered = false,
+	variant = "column",
+	class: className,
+	...rest
+} = Astro.props;
 const Tag = as as any;
+
+const cls = cx(
+	"ds-prose",
+	numbered && "ds-prose--numbered-true",
+	variant !== "column" && `ds-prose--variant-${variant}`,
+	className,
+);
 ---
 
-<Tag class={cx("ds-prose", numbered && "ds-prose--numbered-true", className)} {...rest}><slot /></Tag>
+<Tag class={cls} {...rest}><slot /></Tag>

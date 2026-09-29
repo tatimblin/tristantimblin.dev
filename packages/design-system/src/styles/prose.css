@@ -145,3 +145,141 @@
 	border-block-end: 1px solid var(--hairline);
 	vertical-align: top;
 }
+
+/* RULED (variant="ruled") — the reading column on the four-column grid, cut
+   into sections at each h2. Every section is a grid row on the page's lines
+   (`--ruled-columns` / `--ruled-gap`, four columns a --space-4 apart unless
+   the page says otherwise), opened by a hairline: the first column holds the
+   section's number and its heading and STICKS while the text scrolls past;
+   the next two hold the text — a subgrid, so a block that says
+   `data-prose-bleed` can take every column to the right edge — and the
+   fourth is air. The sectioned markup comes from the site's rehype plugin
+   (see Prose.astro for the shape); the mono voice inside it (the numbers,
+   the captions, a code block's header, a quote's attribution) is the
+   package's own Mono classes, emitted by the plugin, so it needs no rule
+   here. Below 1024 the head stacks over its text and nothing sticks. */
+.ds-prose--variant-ruled {
+	/* Links in the ink with a 1px underline at rest (Anchor's `underline`
+	   border, coloured here; the accent still takes it under the pointer),
+	   by the tokens Anchor reads rather than a rule against .ds-anchor. */
+	--hyperlink: var(--text-primary);
+	--anchor-border-color: currentColor;
+}
+.ds-prose--variant-ruled > .ds-prose-section {
+	display: grid;
+	grid-template-columns: var(--ruled-columns, repeat(4, minmax(0, 1fr)));
+	column-gap: var(--ruled-gap, var(--space-4));
+	align-items: start;
+	margin-block-start: var(--space-11);
+	padding-block-start: var(--space-3);
+	border-block-start: 1px solid var(--hairline);
+}
+.ds-prose-section__head {
+	grid-column: 1;
+	position: sticky;
+	top: var(--space-5);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	min-inline-size: 0;
+}
+.ds-prose-section__head > h2 {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+}
+.ds-prose-section__body {
+	grid-column: 2 / span 3;
+	display: grid;
+	grid-template-columns: subgrid;
+	row-gap: var(--space-5);
+	min-inline-size: 0;
+}
+.ds-prose-section__body > * {
+	grid-column: 1 / span 2;
+	min-inline-size: 0;
+}
+.ds-prose-section__body > [data-prose-bleed] {
+	grid-column: 1 / -1;
+}
+/* A sub-heading holds onto what it introduces: more room before, less after. */
+.ds-prose-section__body > :is(h3, h4) {
+	margin-block-start: var(--space-3);
+	margin-block-end: calc(-1 * var(--space-2));
+}
+
+/* Inline code on the first wash, no box. */
+.ds-prose--variant-ruled :not(pre) > code {
+	padding: 0 0.3em;
+	background: var(--wash-1);
+	border: 0;
+	border-radius: 0;
+	font-size: 0.85em;
+}
+
+/* A figure: the image on a hairline, square; the caption row under it. */
+.ds-prose-figure {
+	margin: 0;
+}
+.ds-prose-figure > img {
+	border: 1px solid var(--hairline);
+	border-radius: 0;
+}
+.ds-prose-figure > figcaption {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--space-4);
+	margin-block-start: var(--space-2);
+}
+.ds-prose-figure > figcaption > * {
+	white-space: normal;
+	line-height: var(--line-height-ui);
+}
+
+/* A fenced block: no box, no fill, no corner — a hairline above and below,
+   a header row (number and title left, the language right) cut off by a
+   hairline, then the code. The surface Shiki paints inline comes from
+   --astro-code-background, so that is what goes transparent. */
+.ds-prose-code {
+	margin: 0;
+	border-block: 1px solid var(--hairline);
+}
+.ds-prose-code__head {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--space-4);
+	padding-block: var(--space-2);
+	border-block-end: 1px solid var(--hairline);
+}
+.ds-prose-code__head > * {
+	white-space: normal;
+	line-height: var(--line-height-ui);
+}
+.ds-prose--variant-ruled pre.astro-code {
+	--astro-code-background: transparent;
+}
+.ds-prose--variant-ruled pre {
+	padding: var(--space-4) 0;
+	background: none;
+	border: 0;
+	border-radius: 0;
+}
+
+@media (max-width: 1023px) {
+	.ds-prose--variant-ruled > .ds-prose-section {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: var(--space-5);
+	}
+	.ds-prose-section__head {
+		position: static;
+	}
+	.ds-prose-section__body {
+		grid-column: 1;
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.ds-prose-section__body > * {
+		grid-column: 1 / -1;
+	}
+}

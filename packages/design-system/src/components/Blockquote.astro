@@ -7,14 +7,32 @@
 //
 //   <Blockquote><Body>…</Body></Blockquote>
 //   <Blockquote cite="https://…">…</Blockquote>
+//   <Blockquote variant="pull">
+//     <Body>…</Body>
+//     <Mono as="footer">Brace Sproul / LangChain</Mono>     the attribution
+//   </Blockquote>
+//
+// `variant="pull"` is the quote on the ruled page: no fill, a 2px bar of the
+// accent down the left edge, and the words a step up — the UI face at
+// --font-size-5 in the primary ink, set by retuning the body role's tokens in
+// scope (the Body inside reads them), not by restyling .ds-body. An
+// attribution, when there is one, is a `footer` in the caps mono after it.
 import { cx } from "../lib/cx";
 
 interface Props {
+	/** `quiet` (default): the filled box. `pull`: the accent bar, the words up a step. */
+	variant?: "quiet" | "pull";
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { class: className, ...rest } = Astro.props;
+const { variant = "quiet", class: className, ...rest } = Astro.props;
+
+const cls = cx(
+	"ds-blockquote",
+	variant !== "quiet" && `ds-blockquote--variant-${variant}`,
+	className,
+);
 ---
 
-<blockquote class={cx("ds-blockquote", className)} {...rest}><slot /></blockquote>
+<blockquote class={cls} {...rest}><slot /></blockquote>
