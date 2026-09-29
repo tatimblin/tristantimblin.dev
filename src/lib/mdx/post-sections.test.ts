@@ -4,7 +4,9 @@
  */
 import { describe, expect, test } from "bun:test";
 import { createMarkdownProcessor } from "@astrojs/markdown-remark";
+import type { Element, Root } from "hast";
 import { pathToFileURL } from "node:url";
+import { VFile } from "vfile";
 import { rehypePostSections, remarkPostCode, shikiPostCode } from "./post-sections";
 
 const processor = await createMarkdownProcessor({
@@ -78,8 +80,99 @@ describe("post sections", () => {
 	});
 
 	test("figures count on from the hero", async () => {
-		const { html } = await render("![A desk](/desk.webp)\n", { hero: { src: "/h.webp", alt: "h" } });
+		const { html } = await render("![A desk](./images/desk.webp)\n", {
+			hero: { src: "./images/h.webp", alt: "h" },
+		});
 		expect(html).toContain("fig. 02 / A desk");
+	});
+
+	test("a relative image is a figure, and Astro's rewrite to an import lands inside it", async () => {
+		// The markdown pipeline folds a relative image's props into
+		// `__ASTRO_IMAGE_` after the site's plugins run, so the figure is cut
+		// first, from the plain img, and the rewrite finds the img in it.
+		const { html } = await render("![A desk](./images/desk.webp)\n");
+		expect(html).toMatch(
+			/<figure class="ds-fig"><img __ASTRO_IMAGE_="[^"]*desk\.webp[^"]*"><figcaption class="ds-fig__cap"><span[^>]*>fig\. 01 \/ A desk<\/span><\/figcaption><\/figure>/,
+		);
+	});
+
+	// The rewritten shapes, in case the order of the plugins ever flips: the
+	// transformer is run by hand on a tree the rewrite has already visited
+	// (a JSX node has no HTML, so these read the tree, not a rendering).
+	const file = () => {
+		const f = new VFile({ path: `${process.cwd()}/src/content/txt/post.mdx` });
+		f.data = { astro: { frontmatter: {} } };
+		return f;
+	};
+	const paragraph = (child: unknown): Root => ({
+		type: "root",
+		children: [{ type: "element", tagName: "p", properties: {}, children: [child as never] }],
+	});
+	const textOf = (node: unknown): string => {
+		const n = node as { type: string; value?: string; children?: unknown[] };
+		return n.type === "text" ? (n.value ?? "") : (n.children ?? []).map(textOf).join("");
+	};
+	/** The one figure in section 00's body: its first child and its caption. */
+	const figureOf = (tree: Root) => {
+		rehypePostSections()(tree, file());
+		const section = tree.children[0] as Element;
+		const body = section.children[1] as Element;
+		expect(body.children).toHaveLength(1);
+		const figure = body.children[0] as Element;
+		expect(figure.tagName).toBe("figure");
+		expect(figure.properties.className).toEqual(["ds-fig"]);
+		const [first, caption] = figure.children as Element[];
+		expect(caption.tagName).toBe("figcaption");
+		return { first: first as unknown as { type: string; name?: string; tagName?: string }, caption: textOf(caption) };
+	};
+
+	test("the MDX rewrite's astro-image node is a figure, its alt the caption", () => {
+		const { first, caption } = figureOf(
+			paragraph({
+				type: "mdxJsxFlowElement",
+				name: "astro-image",
+				attributes: [
+					{ type: "mdxJsxAttribute", name: "alt", value: "A desk" },
+					{ type: "mdxJsxAttribute", name: "src", value: { type: "mdxJsxAttributeValueExpression" } },
+				],
+				children: [],
+			}),
+		);
+		expect(first).toMatchObject({ type: "mdxJsxFlowElement", name: "astro-image" });
+		expect(caption).toBe("fig. 01 / A desk");
+	});
+
+	test("the markdown rewrite's folded img is a figure, its alt read out of the fold", () => {
+		const { first, caption } = figureOf(
+			paragraph({
+				type: "element",
+				tagName: "img",
+				properties: { __ASTRO_IMAGE_: JSON.stringify({ src: "./images/desk.webp", alt: "A desk", index: 0 }) },
+				children: [],
+			}),
+		);
+		expect(first).toMatchObject({ type: "element", tagName: "img" });
+		expect(caption).toBe("fig. 01 / A desk");
+	});
+
+	test("a rewritten image inside a link keeps the link", () => {
+		const { first, caption } = figureOf(
+			paragraph({
+				type: "element",
+				tagName: "a",
+				properties: { href: "https://example.com" },
+				children: [
+					{
+						type: "mdxJsxTextElement",
+						name: "astro-image",
+						attributes: [{ type: "mdxJsxAttribute", name: "alt", value: "A desk" }],
+						children: [],
+					},
+				],
+			}),
+		);
+		expect(first).toMatchObject({ type: "element", tagName: "a" });
+		expect(caption).toBe("fig. 01 / A desk");
 	});
 
 	test("an attribution in its own paragraph leaves the quote as a figcaption", async () => {

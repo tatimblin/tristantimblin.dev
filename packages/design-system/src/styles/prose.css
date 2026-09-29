@@ -86,7 +86,12 @@
 	color: var(--text-primary);
 }
 
-/* Images fill the measure and take the surface radius. */
+/* Images fill the measure and take the surface radius. A <picture> wrapper
+   (the built post's images) contributes no box: the img lays out as the
+   direct child, as a bare one did. */
+.ds-prose picture {
+	display: contents;
+}
 .ds-prose img {
 	display: block;
 	inline-size: 100%;

@@ -49,6 +49,13 @@
  * blockquote) are the same tags afterwards, so the mapping still lands; the
  * wrappers are plain elements no mapping names. `mdxjsEsm` nodes (a post's
  * `import`s) stay at the root, where MDX needs them.
+ *
+ * THE IMAGES ARE IMPORTS. A post's pictures are files beside it
+ * (`./images/x.webp`), and Astro's own rewrite — the relative `img` into an
+ * `astro-image` JSX node whose `src` is the import, which the `img` mapping
+ * (src/components/mdx/Img.astro) then draws as a <Picture> — runs after the
+ * site's plugins, so it lands inside the figure this makes. `imageOf` takes
+ * the rewritten shapes too, so the order is not load-bearing.
  */
 import type { Element, ElementContent, Root, RootContent, Text } from "hast";
 import type { Code, Root as MdRoot } from "mdast";
@@ -167,18 +174,66 @@ const introLabel = (): Element =>
 		[{ type: "text", value: "Intro" }],
 	);
 
+/** An MDX JSX node, as @astrojs/mdx rewrites a relative image: an
+ *  `astro-image` element whose `src` is the file's import. hast's types do
+ *  not know it without an augmentation import. */
+interface JsxImage {
+	type: "mdxJsxFlowElement" | "mdxJsxTextElement";
+	name: string | null;
+	attributes: { type: string; name?: string; value?: unknown }[];
+}
+
+const JSX_IMAGE = /^(?:img|astro-image)$/;
+
+/** An image, in any of the shapes Astro's pipeline gives one, with its alt:
+ *  the markdown `img` (as this plugin normally sees it — Astro's own rewrite
+ *  of a relative path to its import runs after the site's plugins, in the
+ *  markdown and the MDX pipelines both, and lands inside the figure this
+ *  makes), the same `img` after the markdown rewrite (its props folded into
+ *  `__ASTRO_IMAGE_`), or the MDX rewrite's `astro-image` JSX node. Taking
+ *  all three keeps the order of the plugins from being load-bearing. */
+function imageOf(node: unknown): { alt: string } | null {
+	if (isElement(node)) {
+		if (node.tagName !== "img") return null;
+		const { alt, __ASTRO_IMAGE_: folded } = node.properties;
+		if (typeof alt === "string") return { alt };
+		if (typeof folded === "string") {
+			try {
+				const props = JSON.parse(folded) as { alt?: unknown };
+				return { alt: typeof props.alt === "string" ? props.alt : "" };
+			} catch {
+				return { alt: "" };
+			}
+		}
+		return { alt: "" };
+	}
+	const jsx = node as JsxImage | null;
+	if (
+		typeof jsx !== "object" ||
+		jsx === null ||
+		(jsx.type !== "mdxJsxFlowElement" && jsx.type !== "mdxJsxTextElement") ||
+		!jsx.name ||
+		!JSX_IMAGE.test(jsx.name)
+	) {
+		return null;
+	}
+	const alt = jsx.attributes.find((a) => a.type === "mdxJsxAttribute" && a.name === "alt")?.value;
+	return { alt: typeof alt === "string" ? alt : "" };
+}
+
 /** A paragraph that is only an image, or only a link around one: the
- *  paragraph's one child (the img, or the a) and the img, or null. */
-function soleImage(node: RootContent): { content: Element; img: Element } | null {
+ *  paragraph's one child (the image, or the a) and the image's alt, or null. */
+function soleImage(node: RootContent): { content: ElementContent; alt: string } | null {
 	if (!isElement(node) || node.tagName !== "p") return null;
 	const kids = node.children.filter((c) => !isBlank(c));
 	const only = kids[0];
-	if (kids.length !== 1 || !isElement(only)) return null;
-	if (only.tagName === "img") return { content: only, img: only };
-	if (only.tagName === "a") {
+	if (kids.length !== 1 || only === undefined) return null;
+	const direct = imageOf(only);
+	if (direct) return { content: only, alt: direct.alt };
+	if (isElement(only) && only.tagName === "a") {
 		const inner = only.children.filter((c) => !isBlank(c));
-		const img = inner[0];
-		if (inner.length === 1 && isElement(img) && img.tagName === "img") return { content: only, img };
+		const linked = inner.length === 1 ? imageOf(inner[0]) : null;
+		if (linked) return { content: only, alt: linked.alt };
 	}
 	return null;
 }
@@ -279,9 +334,9 @@ export function rehypePostSections() {
 		const dress = (node: RootContent, no: string, count: { code: number }): RootContent => {
 			const image = soleImage(node);
 			if (image) {
-				const { alt } = image.img.properties;
+				const { alt } = image;
 				const n = pad2(figure++);
-				const label = typeof alt === "string" && alt ? `fig. ${n} / ${alt}` : `fig. ${n}`;
+				const label = alt ? `fig. ${n} / ${alt}` : `fig. ${n}`;
 				// Fig's flow markup (packages/design-system/src/components/Fig.astro).
 				return el("figure", { className: ["ds-fig"] }, [
 					image.content,

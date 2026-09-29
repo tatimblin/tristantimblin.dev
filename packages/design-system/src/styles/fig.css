@@ -11,6 +11,12 @@
 	margin: 0;
 	min-inline-size: 0;
 }
+/* The image arrives wrapped in a <picture> (the sources, then the img). The
+   wrapper contributes no box of its own, so the img is the figure's child
+   for layout — the rules below, and the flow, as for a bare img. */
+.ds-fig picture {
+	display: contents;
+}
 .ds-fig img {
 	display: block;
 	inline-size: 100%;

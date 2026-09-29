@@ -19,7 +19,10 @@
 //
 // `img` IS mapped (to ./mdx/Img.astro) — not for a DS component, but because
 // markdown cannot express width/height, lazy loading, or a reveal hook, and the
-// missing intrinsic dimensions were reflowing posts as each photo decoded.
+// missing intrinsic dimensions were reflowing posts as each photo decoded. A
+// post's images are files beside it, so @astrojs/mdx hands the mapping each
+// one's import (ImageMetadata), and Img draws it as a <Picture> — AVIF, a
+// WebP fallback, a srcset cut to the ruled columns.
 import H2 from "@whois/design-system/H2";
 import H3 from "@whois/design-system/H3";
 import H4 from "@whois/design-system/H4";
