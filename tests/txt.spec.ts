@@ -150,12 +150,16 @@ const currentRail = (page: Page) =>
 		),
 	RAIL_LINKS);
 
-/** An element's background as sRGB relative luminance (0 black – 1 white),
- *  whatever colour space the computed value is in: paint it to a canvas and
- *  read the pixel back. */
-const luminance = (page: Page, selector: string) =>
-	page.evaluate((selector) => {
-		const color = getComputedStyle(document.querySelector(selector)!).backgroundColor;
+/** An element's background (or, with `prop: "color"`, its text colour) as sRGB
+ *  relative luminance (0 black – 1 white), whatever colour space the computed
+ *  value is in: paint it to a canvas and read the pixel back. */
+const luminance = (
+	page: Page,
+	selector: string,
+	prop: "backgroundColor" | "color" = "backgroundColor",
+) =>
+	page.evaluate(([selector, prop]) => {
+		const color = getComputedStyle(document.querySelector(selector)!)[prop];
 		const ctx = document.createElement("canvas").getContext("2d")!;
 		ctx.fillStyle = color;
 		ctx.fillRect(0, 0, 1, 1);
@@ -164,7 +168,7 @@ const luminance = (page: Page, selector: string) =>
 			return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
 		});
 		return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-	}, selector);
+	}, [selector, prop] as const);
 
 test.describe("/txt/<slug> — the post page", () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
@@ -242,12 +246,23 @@ test.describe("/txt/<slug> — the post page", () => {
 		await context.close();
 	});
 
-	test("light theme: the art keeps its dark plate", async ({ page }) => {
+	test("light theme: the art's plate follows the theme — a bone plate, a dark ink", async ({
+		page,
+	}) => {
 		await page.addInitScript(() => localStorage.setItem("theme", "light"));
 		await page.goto(NEWEST);
 		await expect(page.locator("html")).toHaveClass(/maximeheckel-light/);
 		expect(await luminance(page, "body")).toBeGreaterThan(0.5);
+		expect(await luminance(page, ".post__art")).toBeGreaterThan(0.8);
+		expect(await luminance(page, ".post__art", "color")).toBeLessThan(0.05);
+	});
+
+	test("dark theme: the art keeps its near-black plate and white ink", async ({ page }) => {
+		await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+		await page.goto(NEWEST);
+		await expect(page.locator("html")).toHaveClass(/maximeheckel-dark/);
 		expect(await luminance(page, ".post__art")).toBeLessThan(0.05);
+		expect(await luminance(page, ".post__art", "color")).toBeGreaterThan(0.85);
 	});
 
 	test("the reading ruler tracks the scroll: 0 at the top, between, 100 at the bottom", async ({
