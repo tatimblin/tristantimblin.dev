@@ -147,6 +147,12 @@
 	.blog__main {
 		padding-block: var(--space-8) var(--space-10);
 	}
+	/* The instrument keeps its own: the bar sits straight under the header
+	   at every width (this rule is later in the file than the one above it
+	   restates, so it wins the tie without a doubled selector). */
+	.blog__main--instrument {
+		padding-block: 0 var(--container-pad);
+	}
 	.blog__header,
 	.blog__main--wide .blog__header {
 		margin-block-end: var(--space-6);

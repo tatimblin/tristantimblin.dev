@@ -82,11 +82,11 @@ const monthDay = (date: string) =>
 		</Mono>
 
 		<CardBody class="wx-bw-body">
-			<Flex direction="column" alignItems="flex-start" gap={2}>
+			<Flex direction="column" alignItems="flex-start" gap={2} class="wx-bw-reading">
 				<Stat value={fmt(bike.rides)} label="rides" />
 				<Stat value={fmt(bike.hours)} label="hours" />
 			</Flex>
-			<Figure unit="miles">{fmt(bike.miles)}</Figure>
+			<Figure unit="miles" class="wx-bw-reading">{fmt(bike.miles)}</Figure>
 			{/* Decoration: the figures above carry the content. A masked box, not an
 			     <img>, so the drawing takes its colour from the ink token. */}
 			<div class="wx-bw-bike" aria-hidden="true"></div>
@@ -101,9 +101,17 @@ const monthDay = (date: string) =>
 	   and its CSS sits in a layer under this. */
 
 	/* The stat pairs at the top, the figure at the foot: a left column of
-	   readings, with the bike filling the space to their right. */
+	   readings, with the bike filling the space to their right. The readings
+	   are positioned so they paint OVER the bike where the two meet (the
+	   figure's unit runs onto its front wheel, type over the picture as on the
+	   posters) — an absolutely positioned box would otherwise paint above
+	   in-flow text whatever the DOM order. */
 	.wx-bw-body {
 		justify-content: space-between;
+	}
+	.wx-bw-reading {
+		position: relative;
+		z-index: 1;
 	}
 
 	/* The Lyft e-bike, drawn in ink. /images/lyft-ebike-ink.png is an alpha mask
