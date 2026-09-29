@@ -49,9 +49,20 @@
 	white-space: nowrap;
 }
 
+/* The collapsed columns are sized by their content (`auto`), and every row is
+   its own grid — so each row would size them to ITS cells, and a wide label
+   ("← previous") would push that row's number and title off the others'. The
+   Index holds the columns instead, and the rows take them as a subgrid. */
 @media (max-width: 1023px) {
 	.ds-index {
 		--index-columns: auto auto minmax(0, 1fr);
+		display: grid;
+		grid-template-columns: var(--index-columns);
+		column-gap: var(--index-gap);
+	}
+	.ds-index__row {
+		grid-column: 1 / -1;
+		grid-template-columns: subgrid;
 	}
 	.ds-index__row > * {
 		padding: var(--space-3) var(--space-2);
