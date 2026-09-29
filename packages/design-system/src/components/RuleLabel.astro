@@ -13,8 +13,10 @@
 //
 // `dim` takes the whole row to the tertiary ink, the number with it (a
 // filler is texture, not an entry). `truncate` holds the label to one line
-// and ellipsises it; without it the label wraps. Polymorphic `as`; `class`
-// merges; everything else passes through.
+// and ellipsises it; without it the label wraps. `lines={2}` RESERVES two
+// lines whether the label fills them or not, with the row's text at its
+// top: a row of quilt cells keeps its arts on one line whichever titles
+// wrap. Polymorphic `as`; `class` merges; everything else passes through.
 import { cx } from "../lib/cx";
 
 interface Props {
@@ -25,6 +27,8 @@ interface Props {
 	dim?: boolean;
 	/** One line, ellipsised. */
 	truncate?: boolean;
+	/** Lines reserved for the label (2): a wrapping title and a short one take the same height. */
+	lines?: 2;
 	class?: string;
 	[key: string]: unknown;
 }
@@ -34,6 +38,7 @@ const {
 	no,
 	dim = false,
 	truncate = false,
+	lines,
 	class: className,
 	...rest
 } = Astro.props;
@@ -46,6 +51,7 @@ const cls = cx(
 	"ds-caps",
 	dim && "ds-rule-label--dim-true",
 	truncate && "ds-rule-label--truncate-true",
+	lines && `ds-rule-label--lines-${lines}`,
 	className,
 );
 ---

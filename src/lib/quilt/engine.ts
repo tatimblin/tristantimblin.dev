@@ -47,12 +47,19 @@
  * chronological order); it then shows its card in place of the list, with
  * the other matches still lit, and the list comes back when it is cleared.
  *
- * THE LAYOUT. DOM order is newest first; a post's grid SLOT is a seeded
- * permutation of the cells keyed by the grid size, indexed by the post's
- * chronological number, so a new post takes a fresh slot and the old ones
- * stay put until the row count changes. Cells the panel can never avoid (in a
- * 5×3 grid, the centre cell) go to the END of the permutation, so they are
- * only used when the grid is full.
+ * THE LAYOUT. DOM order is newest first. The NEWEST post is the LEAD: it
+ * takes a 2×2 block at the grid's top-left corner (the sheet's opening
+ * entry), and the grid grows to keep the panel able to dodge it — on a grid
+ * too narrow for the block to sit beside the lead (the 3-column tablet) the
+ * rows are the lead's plus the block's. Every other post's grid SLOT is a
+ * seeded permutation of the remaining cells keyed by the grid size, indexed
+ * by the post's chronological number, so a new post takes the lead, the old
+ * lead takes a fresh slot of its own, and the rest stay put until the row
+ * count changes. Cells the panel can never avoid (in a 5×3 grid, the centre
+ * cell) go to the END of the permutation, so they are only used when the
+ * grid is full. A post's `span` is its footprint; the block never overlaps a
+ * focused post's footprint, and a block that covers any of it takes the
+ * whole post out.
  */
 
 // --- Types ------------------------------------------------------------------
@@ -77,13 +84,18 @@ export interface IndexedPost {
 	/** "2026-02" — the post's month on the time ruler (the engine does not read it). */
 	ym?: string;
 	href: string;
-	/** 1-based grid position, from `layout()`. */
+	/** 1-based grid position (the top-left cell), from `layout()`. */
 	col: number;
 	row: number;
+	/** The footprint in cells; one cell when unset. The lead is `LEAD_SPAN`. */
+	span?: Block;
 }
 
 /** [width, height] in cells. */
 export type Block = [width: number, height: number];
+
+/** A post's footprint: its `span`, or one cell. */
+export const spanOf = (p: { span?: Block }): Block => p.span ?? [1, 1];
 
 export interface BlockAt {
 	col: number;
@@ -157,6 +169,9 @@ export interface Resolution {
 // --- Constants ---------------------------------------------------------------
 
 export const PANEL_BLOCK: Block = [3, 2];
+
+/** The newest post's footprint: 2×2 at the grid's top-left. */
+export const LEAD_SPAN: Block = [2, 2];
 
 export const WEIGHTS = {
 	title: 3,
@@ -288,6 +303,12 @@ export function inBlock(at: BlockAt, block: Block, c: number, r: number): boolea
 	return c >= at.col && c < at.col + block[0] && r >= at.row && r < at.row + block[1];
 }
 
+/** Does the block placed at `at` cover any cell of the post's footprint? */
+export function overlaps(at: BlockAt, block: Block, p: BlockAt & { span?: Block }): boolean {
+	const [w, h] = spanOf(p);
+	return p.col < at.col + block[0] && at.col < p.col + w && p.row < at.row + block[1] && at.row < p.row + h;
+}
+
 /**
  * The cells every placement of `block` contains — the ones a focused post can
  * never be dodged from. In a 5×3 grid with a 3×2 block that is just (3, 2); in
@@ -333,17 +354,20 @@ export function chooseBlock({
 }: ChooseBlockOptions): BlockAt | null {
 	const [bw, bh] = block;
 	const f = focus !== null ? posts[focus] : null;
-	const fx = f ? f.col : 1;
-	const fy = f ? f.row : 0;
+	// The distance is measured to the focused post's centre: a lead's is a
+	// cell in from its corner.
+	const [fw, fh] = f ? spanOf(f) : [1, 1];
+	const fx = f ? f.col + (fw - 1) / 2 : 1;
+	const fy = f ? f.row + (fh - 1) / 2 : 0;
 	let best: { at: BlockAt; key: number } | null = null;
 	for (let rs = 1; rs + bh - 1 <= rows; rs++) {
 		for (let cs = 1; cs + bw - 1 <= cols; cs++) {
 			const at = { col: cs, row: rs };
-			if (f && inBlock(at, block, f.col, f.row)) continue;
+			if (f && overlaps(at, block, f)) continue;
 			let cost = 0;
 			for (const i of keep) {
 				const p = posts[i];
-				if (p && inBlock(at, block, p.col, p.row)) cost++;
+				if (p && overlaps(at, block, p)) cost++;
 			}
 			const dist = Math.abs(cs + (bw - 1) / 2 - fx) + Math.abs(rs + (bh - 1) / 2 - fy);
 			const key = cost * 100 - dist;
@@ -411,24 +435,33 @@ export interface LayoutOptions {
 	minRows?: number;
 	block?: Block;
 	fillerCount?: number;
+	/** The newest post's footprint at the top-left; `null` for no lead. */
+	lead?: Block | null;
 }
 
 export interface Layout {
 	rows: number;
 	cells: number;
-	/** `slots[no - 1]` is the cell index of the post numbered `no`. */
+	/** `slots[no - 1]` is the cell index of the post numbered `no` (the
+	 *  newest post's is the lead's top-left cell). */
 	slots: number[];
-	/** The cells left over, ascending. */
+	/** The newest post's block: its top-left cell and its span; null with no
+	 *  posts or no lead. */
+	lead: { cell: number; span: Block } | null;
+	/** The cells left over, ascending — none of the lead's. */
 	fillerCells: number[];
 	/** `fillerOrder[k]` is the 0-based filler file for `fillerCells[k]`. */
 	fillerOrder: number[];
 }
 
 /**
- * Rows = max(minRows, ⌈posts / cols⌉); a seeded permutation of the cells keyed
- * by `cols×rows` gives every post its slot by chronological number; fillers
- * take the rest, cycling the filler files from a seeded offset so no two
- * neighbours repeat.
+ * The newest post takes the `lead` block at cell 0; rows = max(minRows, the
+ * rows the lead needs, ⌈cells needed / cols⌉), where the lead needs its own
+ * rows plus the block's when the block cannot sit beside it (cols < lead
+ * width + block width). A seeded permutation of the remaining cells keyed by
+ * `cols×rows` gives every other post its slot by chronological number;
+ * fillers take the rest, cycling the filler files from a seeded offset so
+ * no two neighbours repeat.
  */
 export function layout({
 	cols,
@@ -436,27 +469,43 @@ export function layout({
 	minRows = MIN_ROWS,
 	block = PANEL_BLOCK,
 	fillerCount = FILLER_COUNT,
+	lead = LEAD_SPAN,
 }: LayoutOptions): Layout {
-	const rows = Math.max(minRows, Math.ceil(postCount / cols));
+	const span = postCount > 0 ? lead : null;
+	if (span && span[0] > cols) {
+		throw new Error(`quilt: a ${span[0]}-wide lead does not fit ${cols} columns`);
+	}
+	const leadRows = span ? (cols >= span[0] + block[0] ? span[1] : span[1] + block[1]) : 0;
+	const need = span ? postCount - 1 + span[0] * span[1] : postCount;
+	const rows = Math.max(minRows, leadRows, Math.ceil(need / cols));
 	const cells = cols * rows;
 	const rand = mulberry32(hashSeed(`${cols}x${rows}`));
 
+	const leadCells = new Set<number>();
+	if (span) {
+		for (let r = 1; r <= span[1]; r++) for (let c = 1; c <= span[0]; c++) leadCells.add(toCell(c, r, cols));
+	}
+
 	// Dodge-able cells first, the ones the panel can never avoid last: they
-	// are only handed out when nothing else is left.
+	// are only handed out when nothing else is left. The lead's cells are
+	// nobody's.
 	const unavoidable = new Set(unavoidableCells(cols, rows, block));
 	const eligible: number[] = [];
 	const trapped: number[] = [];
-	for (let i = 0; i < cells; i++) (unavoidable.has(i) ? trapped : eligible).push(i);
+	for (let i = 0; i < cells; i++) {
+		if (leadCells.has(i)) continue;
+		(unavoidable.has(i) ? trapped : eligible).push(i);
+	}
 	const perm = [...shuffle(eligible, rand), ...shuffle(trapped, rand)];
 
-	const slots = perm.slice(0, postCount);
-	const taken = new Set(slots);
+	const slots = span ? [...perm.slice(0, postCount - 1), 0] : perm.slice(0, postCount);
+	const taken = new Set([...slots, ...leadCells]);
 	const fillerCells: number[] = [];
 	for (let i = 0; i < cells; i++) if (!taken.has(i)) fillerCells.push(i);
 	const offset = Math.floor(rand() * fillerCount);
 	const fillerOrder = fillerCells.map((_, k) => (offset + k) % fillerCount);
 
-	return { rows, cells, slots, fillerCells, fillerOrder };
+	return { rows, cells, slots, lead: span ? { cell: 0, span } : null, fillerCells, fillerOrder };
 }
 
 function shuffle(list: number[], rand: () => number): number[] {
@@ -531,20 +580,42 @@ export function resolve(posts: IndexedPost[], grid: Grid, state: QuiltState): Re
 				? `q:${result.tokens.join(" ")}`
 				: m;
 
+	// Every cell of a post's footprint names the post; the ones past its
+	// top-left corner take the corner's state, so a spanned post resolves as
+	// one thing.
 	const byCell = new Map<number, number>();
-	posts.forEach((p, i) => byCell.set(toCell(p.col, p.row, cols), i));
+	const originOf = new Map<number, number>();
+	posts.forEach((p, i) => {
+		const [w, h] = spanOf(p);
+		const origin = toCell(p.col, p.row, cols);
+		for (let r = 0; r < h; r++) {
+			for (let c = 0; c < w; c++) {
+				const k = toCell(p.col + c, p.row + r, cols);
+				byCell.set(k, i);
+				if (k !== origin) originOf.set(k, origin);
+			}
+		}
+	});
 
 	const cells: CellResolution[] = [];
 	for (let index = 0; index < cols * rows; index++) {
 		const { col, row } = toColRow(index, cols);
 		const post = byCell.get(index) ?? null;
+		const origin = originOf.get(index);
+		if (origin !== undefined && cells[origin]) {
+			const { state, delay } = cells[origin];
+			cells.push({ index, col, row, post, state, delay });
+			continue;
+		}
 		cells.push({ index, col, row, post, ...cellState(index, col, row, post) });
 	}
 
 	function cellState(index: number, col: number, row: number, post: number | null) {
 		const lit = { state: "lit" as const, delay: 0 };
 		if (m === "rest") return lit;
-		if (block_ && inBlock(block_, block, col, row)) {
+		const covered =
+			!!block_ && (post !== null ? overlaps(block_, block, posts[post]) : inBlock(block_, block, col, row));
+		if (covered) {
 			return { state: "gone" as const, delay: scatter({ cellIndex: index, seed }).delay };
 		}
 		const roll = scatter({ cellIndex: index, seed });

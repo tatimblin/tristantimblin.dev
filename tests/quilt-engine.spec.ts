@@ -9,13 +9,16 @@ import {
 	scatter,
 	layout,
 	mode,
+	overlaps,
 	resolve,
+	spanOf,
 	toCell,
 	toColRow,
 	tagLabel,
 	SCATTER_MAX_DELAY,
 	MIN_ROWS,
 	FILLER_COUNT,
+	LEAD_SPAN,
 	type IndexedPost,
 	type QuiltState,
 } from "../src/lib/quilt/engine";
@@ -33,8 +36,9 @@ import {
  */
 
 // The five real posts, newest first (DOM order), at hand-placed slots on the
-// desktop 5×3 grid. None sits on (3, 2), the one cell a 3×2 block can never
-// dodge in that grid — `layout()` keeps it for last.
+// desktop 5×3 grid, each one cell (the lead's span is the fixture further
+// down). None sits on (3, 2), the one cell a 3×2 block can never dodge in
+// that grid — `layout()` keeps it for last.
 const posts: IndexedPost[] = [
 	{
 		id: "asserting-on-agent-behavior",
@@ -399,40 +403,68 @@ test.describe("scatter", () => {
 // --- Layout --------------------------------------------------------------------
 
 test.describe("layout", () => {
-	test("5 posts at 5 cols: 3 rows, 15 cells, 10 fillers", () => {
+	test("5 posts at 5 cols: 3 rows, 15 cells, the lead's 4 and 7 fillers", () => {
 		const l = layout({ cols: 5, postCount: 5 });
 		expect(l.rows).toBe(3);
 		expect(l.cells).toBe(15);
 		expect(l.slots).toHaveLength(5);
-		expect(l.fillerCells).toHaveLength(10);
-		expect(l.fillerOrder).toHaveLength(10);
+		expect(l.lead).toEqual({ cell: 0, span: LEAD_SPAN });
+		expect(l.fillerCells).toHaveLength(7);
+		expect(l.fillerOrder).toHaveLength(7);
 	});
 
-	test("15 posts fill the desktop grid; the sixteenth adds a row", () => {
-		const full = layout({ cols: 5, postCount: 15 });
+	test("the newest post is the lead at the top-left; its 2×2 is nobody else's", () => {
+		for (const [cols, postCount] of [
+			[5, 5],
+			[5, 12],
+			[3, 5],
+			[3, 9],
+		] as const) {
+			const l = layout({ cols, postCount });
+			expect(l.slots[postCount - 1]).toBe(0);
+			const leadCells = [0, 1, cols, cols + 1];
+			for (const s of l.slots.slice(0, -1)) expect(leadCells, `${cols} cols, ${postCount} posts`).not.toContain(s);
+			for (const c of l.fillerCells) expect(leadCells).not.toContain(c);
+		}
+	});
+
+	test("12 posts fill the desktop grid round the lead; the thirteenth adds a row", () => {
+		const full = layout({ cols: 5, postCount: 12 });
 		expect(full.rows).toBe(3);
 		expect(full.fillerCells).toEqual([]);
-		const more = layout({ cols: 5, postCount: 16 });
+		const more = layout({ cols: 5, postCount: 13 });
 		expect(more.rows).toBe(4);
 		expect(more.cells).toBe(20);
 		expect(more.fillerCells).toHaveLength(4);
 	});
 
-	test("5 posts at 3 cols (tablet): 3 rows, 4 fillers", () => {
+	test("5 posts at 3 cols (tablet): 4 rows — the lead's two and the block's two under it — 4 fillers", () => {
 		const l = layout({ cols: 3, postCount: 5 });
-		expect(l.rows).toBe(3);
+		expect(l.rows).toBe(4);
+		expect(l.cells).toBe(12);
 		expect(l.fillerCells).toHaveLength(4);
-	});
-
-	test("the minimum is 3 rows even for one post (the block must dodge its row)", () => {
-		expect(MIN_ROWS).toBe(3);
+		// The block can sit beside the lead on five columns, so the desktop
+		// grid needs no extra row; it cannot on three.
 		expect(layout({ cols: 5, postCount: 1 }).rows).toBe(3);
+		expect(layout({ cols: 3, postCount: 1 }).rows).toBe(4);
 	});
 
-	test("slots are distinct cells inside the grid, and fillers are exactly the rest", () => {
+	test("without a lead, the minimum is 3 rows even for one post (the block must dodge its row)", () => {
+		expect(MIN_ROWS).toBe(3);
+		expect(layout({ cols: 5, postCount: 1, lead: null }).rows).toBe(3);
+		expect(layout({ cols: 3, postCount: 1, lead: null }).rows).toBe(3);
+		expect(layout({ cols: 5, postCount: 1, lead: null }).lead).toBeNull();
+		expect(layout({ cols: 5, postCount: 0 }).lead).toBeNull();
+	});
+
+	test("a lead wider than the grid is refused", () => {
+		expect(() => layout({ cols: 1, postCount: 2 })).toThrow(/lead/);
+	});
+
+	test("slots are distinct cells inside the grid, and with the lead's cells and the fillers they are exactly the grid", () => {
 		for (const [cols, postCount] of [
 			[5, 5],
-			[5, 14],
+			[5, 11],
 			[3, 5],
 			[3, 8],
 			[2, 5],
@@ -443,26 +475,38 @@ test.describe("layout", () => {
 				expect(s).toBeGreaterThanOrEqual(0);
 				expect(s).toBeLessThan(l.cells);
 			}
-			const all = [...l.slots, ...l.fillerCells].sort((a, b) => a - b);
+			const covered = [1, cols, cols + 1];
+			const all = [...l.slots, ...covered, ...l.fillerCells].sort((a, b) => a - b);
 			expect(all).toEqual(Array.from({ length: l.cells }, (_, i) => i));
 		}
 	});
 
-	test("is deterministic, and a new post keeps the old ones in place", () => {
+	test("is deterministic, and a new post takes the lead while the old ones stay put", () => {
 		expect(layout({ cols: 5, postCount: 5 })).toEqual(layout({ cols: 5, postCount: 5 }));
 		const five = layout({ cols: 5, postCount: 5 });
 		const six = layout({ cols: 5, postCount: 6 });
-		expect(six.slots.slice(0, 5)).toEqual(five.slots);
+		// Posts 1–4 keep their slots; 5 leaves the lead for a slot of its own
+		// (the next in the permutation), and 6 is the lead.
+		expect(six.slots.slice(0, 4)).toEqual(five.slots.slice(0, 4));
+		expect(six.slots[4]).not.toBe(0);
+		expect(six.slots[5]).toBe(0);
+		// Without a lead the whole permutation is stable.
+		const bare5 = layout({ cols: 5, postCount: 5, lead: null });
+		const bare6 = layout({ cols: 5, postCount: 6, lead: null });
+		expect(bare6.slots.slice(0, 5)).toEqual(bare5.slots);
 	});
 
 	test("the cell the panel can never dodge is handed out last", () => {
 		const centre = toCell(3, 2, 5);
-		expect(layout({ cols: 5, postCount: 14 }).slots).not.toContain(centre);
-		expect(layout({ cols: 5, postCount: 15 }).slots[14]).toBe(centre);
-		// Tablet: the middle row is unavoidable at 3 rows; six posts fit around it.
-		const tablet = layout({ cols: 3, postCount: 6 });
+		// Eleven posts round the lead leave one cell: the centre.
+		expect(layout({ cols: 5, postCount: 11 }).slots).not.toContain(centre);
+		expect(layout({ cols: 5, postCount: 12 }).slots[10]).toBe(centre);
+		// Tablet, no lead: the middle row is unavoidable at 3 rows; six posts
+		// fit around it. With the lead the grid is four rows and nothing is.
+		const tablet = layout({ cols: 3, postCount: 6, lead: null });
 		expect(tablet.rows).toBe(3);
 		for (const s of tablet.slots) expect(toColRow(s, 3).row).not.toBe(2);
+		expect(unavoidableCells(3, layout({ cols: 3, postCount: 6 }).rows)).toEqual([]);
 	});
 
 	test("fillers cycle the files from a seeded offset with no neighbour repeated", () => {
@@ -488,6 +532,118 @@ test.describe("layout", () => {
 			expect(toCell(col, row, 5)).toBe(i);
 		}
 		expect(toColRow(7, 5)).toEqual({ col: 3, row: 2 });
+	});
+});
+
+// --- The lead -------------------------------------------------------------------
+
+// The same posts with the newest as the LEAD: a 2×2 at the top-left of the
+// desktop grid, the rest placed round it (none on the centre cell).
+const LEAD = 0;
+const withLead: IndexedPost[] = posts.map((p, i) =>
+	i === LEAD
+		? { ...p, col: 1, row: 1, span: LEAD_SPAN }
+		: i === TAHOE
+			? { ...p, col: 5, row: 2 }
+			: i === DESK
+				? { ...p, col: 4, row: 3 }
+				: i === FISKER
+					? { ...p, col: 3, row: 1 }
+					: { ...p, col: 1, row: 3 },
+);
+// The tablet grid: 3 columns, 4 rows, the lead at the top-left again.
+const withLeadMd: IndexedPost[] = withLead.map((p, i) =>
+	i === LEAD
+		? p
+		: i === TAHOE
+			? { ...p, col: 3, row: 1 }
+			: i === DESK
+				? { ...p, col: 3, row: 2 }
+				: i === FISKER
+					? { ...p, col: 1, row: 3 }
+					: { ...p, col: 3, row: 3 },
+);
+const GRID_MD = { cols: 3, rows: 4 };
+
+test.describe("the lead", () => {
+	test("a post's footprint is its span, one cell by default", () => {
+		expect(spanOf(withLead[LEAD])).toEqual([2, 2]);
+		expect(spanOf(withLead[DESK])).toEqual([1, 1]);
+	});
+
+	test("overlaps: a block over any cell of the lead covers it; a one-cell post as before", () => {
+		const lead = withLead[LEAD];
+		expect(overlaps({ col: 1, row: 1 }, [3, 2], lead)).toBe(true); // the whole lead
+		expect(overlaps({ col: 2, row: 1 }, [3, 2], lead)).toBe(true); // its right half
+		expect(overlaps({ col: 1, row: 2 }, [3, 2], lead)).toBe(true); // its bottom half
+		expect(overlaps({ col: 3, row: 1 }, [3, 2], lead)).toBe(false); // beside it
+		expect(overlaps({ col: 3, row: 2 }, [3, 2], lead)).toBe(false);
+		const desk = withLead[DESK];
+		expect(overlaps({ col: 3, row: 2 }, [3, 2], desk)).toBe(inBlock({ col: 3, row: 2 }, [3, 2], desk.col, desk.row));
+	});
+
+	test("chooseBlock never overlaps the focused lead — beside it on the desktop, under it on the tablet", () => {
+		for (const keep of [new Set<number>(), new Set(posts.keys())]) {
+			const at = chooseBlock({ ...GRID, posts: withLead, keep, focus: LEAD })!;
+			expect(at).not.toBeNull();
+			expect(overlaps(at, [3, 2], withLead[LEAD])).toBe(false);
+			expect(at.col).toBe(3);
+			const md = chooseBlock({ ...GRID_MD, posts: withLeadMd, keep, focus: LEAD })!;
+			expect(md).toEqual({ col: 1, row: 3 });
+		}
+	});
+
+	test("a kept lead counts as hidden when a block covers any of it", () => {
+		// Focus the dashboard (1, 3), keep the lead: the far blocks (3, 1) and
+		// (3, 2) clear it; nearer ones over the lead cost one. Distance is to
+		// the focus, so (3, 1) — farther — wins among the zero-cost ones.
+		expect(chooseBlock({ ...GRID, posts: withLead, keep: new Set([LEAD]), focus: DASHBOARD })).toEqual({
+			col: 3,
+			row: 1,
+		});
+	});
+
+	test("resolve: every cell of the lead names it and shares its state", () => {
+		const leadCells = (r: ReturnType<typeof resolve>) => r.cells.filter((c) => c.post === LEAD);
+		const rest_ = resolve(withLead, GRID, rest);
+		expect(leadCells(rest_).map((c) => c.index)).toEqual([0, 1, 5, 6]);
+		for (const focus of [LEAD, TAHOE, DESK, FISKER, DASHBOARD]) {
+			const r = resolve(withLead, GRID, { ...rest, hovered: focus });
+			const cells = leadCells(r);
+			expect(cells).toHaveLength(4);
+			expect(new Set(cells.map((c) => `${c.state}:${c.delay}`)).size).toBe(1);
+			if (focus === LEAD) {
+				expect(cells[0].state).toBe("lit");
+				expect(overlaps(r.block!, [3, 2], withLead[LEAD])).toBe(false);
+			} else if (overlaps(r.block!, [3, 2], withLead[LEAD])) {
+				expect(cells[0].state).toBe("gone");
+			}
+		}
+	});
+
+	test("a block over half the lead takes the whole lead out", () => {
+		// Fisker at (3, 1) hovered, nothing kept: the block dodges it. The one
+		// covering the lead's bottom half, (1, 2), is the farthest of the
+		// placements below Fisker's row.
+		const r = resolve(withLead, GRID, { ...rest, hovered: FISKER });
+		expect(r.block).toEqual({ col: 1, row: 2 });
+		for (const c of r.cells.filter((c) => c.post === LEAD)) expect(c.state).toBe("gone");
+	});
+
+	test("on the tablet grid a step onto the lead puts the card in the rows under it", () => {
+		const r = resolve(withLeadMd, GRID_MD, { ...rest, stepped: LEAD });
+		expect(r.mode).toBe("step");
+		expect(r.block).toEqual({ col: 1, row: 3 });
+		expect(r.cells.filter((c) => c.post === LEAD).every((c) => c.state === "lit")).toBe(true);
+		for (const c of r.cells) if (c.row >= 3) expect(c.state).toBe("gone");
+	});
+
+	test("the page's lead is what layout() says: the newest post on the lead's cell, spanning it", () => {
+		const l = layout({ cols: 5, postCount: withLead.length });
+		const newest = withLead.reduce((a, b) => (a.no > b.no ? a : b));
+		expect(newest).toBe(withLead[LEAD]);
+		expect(toColRow(l.slots[newest.no - 1], 5)).toEqual({ col: 1, row: 1 });
+		expect(l.lead!.span).toEqual(spanOf(newest));
 	});
 });
 

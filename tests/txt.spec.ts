@@ -80,7 +80,11 @@ test.describe("/txt/", () => {
 		await page.goto("/txt/tag/diy/");
 		await page.locator('.site-header a[href="/txt/"]').click();
 		await expect(page).toHaveURL(/\/txt\/?$/);
-		await page.locator('[data-cell="post"] a[href="/txt/mega-desk/"]').click();
+		// The sheet's last row sits under the docked timeline in a short
+		// window until it scrolls clear; a reader scrolls, so does this.
+		const tile = page.locator('[data-cell="post"] a[href="/txt/mega-desk/"]');
+		await tile.evaluate((el) => el.scrollIntoView({ block: "center" }));
+		await tile.click();
 		await expect(page).toHaveURL(/\/txt\/mega-desk\/?$/);
 		await expect(page.locator("h1")).toHaveText("The Mega Desk");
 		await context.close();

@@ -12,7 +12,9 @@ import { test, expect, type Page } from "@playwright/test";
  * ?q=) reach the engine.
  *
  *   rest        every cell lit, one link per post, fillers aria-hidden and
- *               drawn faint; tiles cut by a gap, no ruling, no text on a tile; the
+ *               drawn a step back; entries cut by gaps, no ruling — a
+ *               numbered caps label over a dotted rule, the art bare under
+ *               it; the newest post the 2×2 lead with its excerpt; the
  *               instrument across the full page (to the container's
  *               gutter), under the site header, which keeps the container
  *   hover/focus the tile lit, the rest faint or gone on a stagger, the card
@@ -22,7 +24,9 @@ import { test, expect, type Page } from "@playwright/test";
  *   results     <mark>, the why, the listbox, ↑↓ wrap, the ring, Enter
  *   single/none the card; the nothing face and its pills
  *   keys        / and ⌘K (not from another field), Esc clears then blurs
- *   viewports   the 3-column tablet grid; the phone list, panel in flow
+ *   viewports   the 3-column tablet grid (four rows, the lead's and the
+ *               panel's); the phone list — the lead full width, the rest
+ *               2-up — panel in flow
  *   no JS       links, and the form submits ?q=
  *
  * And the INSTRUMENT around the board (the "instrument —" describes):
@@ -108,12 +112,18 @@ const count = (page: Page) => page.locator(COUNT).evaluate((el) => el.textConten
 const expectCount = (page: Page, text: string) => expect.poll(() => count(page)).toBe(text);
 const BAR = "[data-search-bar]";
 const chip = (q: string) => `[data-search-chips] [data-chip="${q}"]`;
-/** The active outline: the cell's ::after box-shadow, or null when it is transparent. */
+/** The active outline: the art box's ::after box-shadow, or null when it is transparent. */
 const ring = (page: Page, no: string) =>
-	page.locator(post(no)).evaluate((el) => {
+	page.locator(`${post(no)} .ds-quilt-cell__art`).evaluate((el) => {
 		const shadow = getComputedStyle(el, "::after").boxShadow;
 		return /rgba\(0, 0, 0, 0\)|transparent|^none$/.test(shadow) ? null : shadow;
 	});
+/** A cell's label row, as drawn: `05 ASSERTING ON AGENT BEHAVIOR` (the gap
+ *  after the number is a margin, so innerText runs them together), `F_07`. */
+const LABEL = /^(\d{2}\s*[A-Z].*|F_\d{2})$/s;
+/** The custom property `name` on `sel`, as a number of px. */
+const prop = (page: Page, sel: string, name: string) =>
+	page.locator(sel).first().evaluate((el, n) => parseFloat(getComputedStyle(el).getPropertyValue(n)), name);
 const RULER = "[data-quilt-ruler]";
 const mark = (no: string) => `${RULER} [data-mark][data-no="${no}"]`;
 /** The playhead's --at, as the script writes it, in percent. */
@@ -143,11 +153,14 @@ test.describe("quilt — rest", () => {
 		expect(posts.map((c) => c.no)).toEqual(["005", "004", "003", "002", "001"]);
 		expect(all.every((c) => c.state === "lit" && !c.active)).toBe(true);
 
-		// The desktop grid is 5×3 and every cell of it is drawn.
+		// The desktop grid is 5×3 and every cell of it is drawn: the lead's
+		// four as one entry, the other four posts, seven fillers.
 		const visible = await page
 			.locator("[data-cell]")
 			.evaluateAll((els) => els.filter((e) => e.checkVisibility()).length);
-		expect(visible).toBe(15);
+		expect(visible).toBe(12);
+		await expect(page.locator('[data-cell="post"][data-span]')).toHaveCount(1);
+		await expect(page.locator(post("005"))).toHaveAttribute("data-span", "2x2");
 
 		// Each tile is a link named by its title (the art is decorative).
 		const index = await page.evaluate(
@@ -172,34 +185,45 @@ test.describe("quilt — rest", () => {
 		await expectCount(page, "5 posts");
 	});
 
-	test("fillers' art is faint and greyscale at rest; the posts are at full strength", async ({
+	test("fillers' art is a step back and grey at rest, their tag dim; the posts are at full strength", async ({
 		page,
 	}) => {
 		await page.goto("/txt/");
-		// The state is painted on the cell's contents (its art), not the cell.
+		// The state is painted on the cell's contents — a filler's label and
+		// its art, a post's link — not the cell.
 		const look = (sel: string) =>
 			page.locator(sel).evaluateAll((els) =>
 				els
 					.filter((e) => e.checkVisibility())
 					.map((e) => {
-						const s = getComputedStyle(e.firstElementChild!);
+						const art = getComputedStyle(e.querySelector(".ds-quilt-cell__art")!);
+						const label = getComputedStyle(e.querySelector(".ds-quilt-cell__label")!);
+						const first = getComputedStyle(e.firstElementChild!);
 						const cell = getComputedStyle(e);
 						return {
 							state: (e as HTMLElement).dataset.state,
-							opacity: Number(s.opacity),
-							filter: s.filter,
+							opacity: Number(art.opacity),
+							filter: art.filter,
+							label: { color: label.color, opacity: Number(label.opacity) },
+							first: { opacity: Number(first.opacity), filter: first.filter },
 							cell: { opacity: Number(cell.opacity), filter: cell.filter },
 						};
 					}),
 			);
-		const faint = await page
-			.locator("[data-quilt]")
-			.evaluate((q) => Number(getComputedStyle(q).getPropertyValue("--quilt-faint")));
+		const dim = await prop(page, "[data-quilt]", "--quilt-dim");
+		const tertiary = await page.evaluate(() => {
+			const probe = document.createElement("div");
+			probe.style.color = "var(--text-tertiary)";
+			document.body.append(probe);
+			const c = getComputedStyle(probe).color;
+			probe.remove();
+			return c;
+		});
 		// Settled: the cells ease in from the stylesheet's first paint.
 		await expect
 			.poll(async () =>
 				(await look('[data-cell="filler"]')).every(
-					(f) => Math.abs(f.opacity - faint) < 0.01 && f.filter === "grayscale(1)",
+					(f) => Math.abs(f.opacity - dim) < 0.01 && f.filter === "grayscale(1)",
 				),
 			)
 			.toBe(true);
@@ -208,18 +232,23 @@ test.describe("quilt — rest", () => {
 		for (const f of fillers) {
 			// Still `lit` in the state contract — it is the paint that holds it back.
 			expect(f.state).toBe("lit");
-			expect(f.opacity).toBeCloseTo(faint, 2);
+			expect(f.opacity).toBeCloseTo(dim, 2);
 			expect(f.filter).toBe("grayscale(1)");
-			// The cell itself — which draws the active outline — is never faded.
+			// The tag is the tertiary ink at full strength: dim by colour, not faded.
+			expect(f.label.color).toBe(tertiary);
+			expect(f.label.opacity).toBe(1);
+			// The cell itself is never faded.
 			expect(f.cell).toEqual({ opacity: 1, filter: "none" });
 		}
 		for (const p of await look('[data-cell="post"]')) {
+			expect(p.first).toEqual({ opacity: 1, filter: "none" });
 			expect(p.opacity).toBe(1);
 			expect(p.filter).toBe("none");
+			expect(p.label.color).not.toBe(tertiary);
 		}
 	});
 
-	test("no ruling: tiles on the page cut by a gap token, the art filling each, no text on a tile", async ({
+	test("no ruling: entries on the page cut by the gap tokens, a label over each art, the art bare", async ({
 		page,
 	}) => {
 		await page.goto("/txt/");
@@ -227,52 +256,192 @@ test.describe("quilt — rest", () => {
 			const grid = document.querySelector<HTMLElement>("[data-quilt]")!;
 			const gs = getComputedStyle(grid);
 			const cells = [...document.querySelectorAll<HTMLElement>("[data-cell]")].filter((c) => c.checkVisibility());
-			const step = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--space-2"));
 			const borders = (cs: CSSStyleDeclaration) =>
 				[cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth, cs.borderLeftWidth];
 			return {
 				rowGap: parseFloat(gs.rowGap),
 				colGap: parseFloat(gs.columnGap),
+				gapToken: parseFloat(gs.getPropertyValue("--quilt-gap")),
+				rowGapToken: parseFloat(gs.getPropertyValue("--quilt-row-gap")),
 				grid: borders(gs),
 				cells: cells.map((c) => {
 					const cs = getComputedStyle(c);
-					const art = c.querySelector(".ds-art-frame")!.getBoundingClientRect();
-					const box = c.getBoundingClientRect();
+					const frame = c.querySelector<HTMLElement>(".ds-art-frame")!;
+					const fs = getComputedStyle(frame);
+					const label = c.querySelector<HTMLElement>(".ds-quilt-cell__label")!;
+					const ls = getComputedStyle(label);
 					return {
+						kind: c.dataset.cell,
+						span: c.dataset.span ?? null,
 						borders: borders(cs),
 						padding: cs.padding,
-						box: box.toJSON(),
-						art: art.toJSON(),
-						text: c.innerText.trim(),
-						caption: c.querySelector(".ds-quilt-cell__caption")?.checkVisibility() ?? false,
+						box: c.getBoundingClientRect().toJSON(),
+						art: frame.getBoundingClientRect().toJSON(),
+						frame: { borders: borders(fs), bg: fs.backgroundColor, radius: fs.borderTopLeftRadius },
+						label: {
+							box: label.getBoundingClientRect().toJSON(),
+							text: label.innerText.trim(),
+							ruleStyle: ls.borderTopStyle,
+							ruleWidth: ls.borderTopWidth,
+							transform: ls.textTransform,
+							family: ls.fontFamily,
+						},
+						noColor: c.querySelector(".ds-rule-label__no") ? getComputedStyle(c.querySelector(".ds-rule-label__no")!).color : null,
 					};
 				}),
-				step,
 			};
 		});
-		// The gap is the desktop token, both ways; no line round the grid.
-		expect(m.rowGap).toBeCloseTo(m.step, 1);
-		expect(m.colGap).toBeCloseTo(m.step, 1);
+		const accent = await page.evaluate(() => {
+			const probe = document.createElement("div");
+			probe.style.color = "var(--accent)";
+			document.body.append(probe);
+			const c = getComputedStyle(probe).color;
+			probe.remove();
+			return c;
+		});
+		// The gaps are the quilt's tokens — columns a step, rows a wider one
+		// — and no line round the grid.
+		expect(m.colGap).toBeCloseTo(m.gapToken, 1);
+		expect(m.rowGap).toBeCloseTo(m.rowGapToken, 1);
+		expect(m.rowGap).toBeGreaterThan(m.colGap);
 		expect(m.grid).toEqual(["0px", "0px", "0px", "0px"]);
-		expect(m.cells).toHaveLength(15);
+		expect(m.cells).toHaveLength(12);
 		for (const c of m.cells) {
-			// No line on a cell; the art fills it.
+			// No line on a cell, none on the art: no plate, edge or corner.
 			expect(c.borders).toEqual(["0px", "0px", "0px", "0px"]);
 			expect(c.padding).toBe("0px");
-			for (const k of ["left", "top", "right", "bottom"] as const) expect(c.art[k]).toBeCloseTo(c.box[k], 0);
-			// Art only: nothing is written on a tile.
-			expect(c.text).toBe("");
-			expect(c.caption).toBe(false);
+			expect(c.frame.borders).toEqual(["0px", "0px", "0px", "0px"]);
+			expect(c.frame.bg).toBe("rgba(0, 0, 0, 0)");
+			expect(c.frame.radius).toBe("0px");
+			// The label row over the art: a caps line on a dotted rule, the
+			// number in the accent (a post) or none (a filler's F_NN); the art
+			// fills the cell's width under it.
+			expect(c.label.text).toMatch(LABEL);
+			expect(c.label.ruleStyle).toBe("dotted");
+			expect(c.label.ruleWidth).toBe("1px");
+			expect(c.label.transform).toBe("uppercase");
+			expect(c.label.box.top).toBeCloseTo(c.box.top, 0);
+			expect(c.art.top).toBeGreaterThanOrEqual(c.label.box.bottom);
+			expect(c.art.left).toBeCloseTo(c.box.left, 0);
+			expect(c.art.right).toBeCloseTo(c.box.right, 0);
+			if (c.kind === "post") {
+				expect(c.label.text).toMatch(/^\d{2}/);
+				expect(c.noColor).toBe(accent);
+			} else {
+				expect(c.label.text).toMatch(/^F_\d{2}$/);
+			}
 		}
-		// Neighbours sit a gap apart, on both axes (DOM order is not grid
-		// order, so find the top-left cell's neighbours by position).
-		const boxes = m.cells.map((c) => c.box).sort((p, q) => p.top - q.top || p.left - q.left);
-		const a = boxes[0];
-		const right = boxes.filter((c) => Math.abs(c.top - a.top) < 1 && c.left > a.left).sort((p, q) => p.left - q.left)[0];
-		const below = boxes.filter((c) => Math.abs(c.left - a.left) < 1 && c.top > a.top).sort((p, q) => p.top - q.top)[0];
-		expect(right.left - a.right).toBeCloseTo(m.step, 0);
-		expect(below.top - a.bottom).toBeCloseTo(m.step, 0);
+		// The lead: the top-left entry, two columns and two rows of the
+		// grid; its right neighbour a column gap away, the entry under it a
+		// row gap away.
+		const boxes = [...m.cells].sort((p, q) => p.box.top - q.box.top || p.box.left - q.box.left);
+		const lead = boxes[0];
+		expect(lead.kind).toBe("post");
+		expect(lead.span).toBe("2x2");
+		const single = boxes.find((c) => c.span === null)!;
+		expect(lead.box.width).toBeCloseTo(2 * single.box.width + m.colGap, 0);
+		const right = boxes.filter((c) => Math.abs(c.box.top - lead.box.top) < 1 && c.box.left > lead.box.left).sort((p, q) => p.box.left - q.box.left)[0];
+		const below = boxes.filter((c) => Math.abs(c.box.left - lead.box.left) < 1 && c.box.top > lead.box.top).sort((p, q) => p.box.top - q.box.top)[0];
+		expect(right.box.left - lead.box.right).toBeCloseTo(m.colGap, 0);
+		expect(below.box.top - lead.box.bottom).toBeCloseTo(m.rowGap, 0);
+		// The lead's bottom is where the second row ends: the entry beside its
+		// lower half sits inside its height.
+		const beside = boxes.filter((c) => c.box.top > lead.box.top && c.box.top < lead.box.bottom && c.box.left > lead.box.left);
+		expect(beside.length).toBeGreaterThan(0);
+		for (const c of beside) expect(c.box.bottom).toBeLessThanOrEqual(lead.box.bottom + 1);
+		// A row's arts line up: every cell in the lead's first row starts its
+		// art on one line, whether its title wrapped or not.
+		const rowOne = boxes.filter((c) => Math.abs(c.box.top - lead.box.top) < 1);
+		expect(rowOne.length).toBeGreaterThan(2);
+		for (const c of rowOne) expect(c.art.top, c.label.text).toBeCloseTo(lead.art.top, 0);
 	});
+
+	for (const [width, height] of [
+		[1440, 1000],
+		[768, 1100],
+	] as const) {
+		test(`the lead at ${width}: the newest post 2×2 at the top-left, its excerpt in the body voice under the art`, async ({
+			page,
+		}) => {
+			await page.setViewportSize({ width, height });
+			await page.goto("/txt/");
+			const lead = page.locator(post("005"));
+			await expect(lead).toHaveAttribute("data-span", "2x2");
+			await expect(lead.locator(".ds-quilt-cell__label")).toHaveText(/05\s*Asserting on Agent Behavior/);
+			const excerpt = lead.locator(".ds-quilt-cell__excerpt");
+			await expect(excerpt).toBeVisible();
+			await expect(excerpt).toHaveText(/I built Aptitude — a test harness/);
+			// No other entry says more than its label.
+			await expect(page.locator(".ds-quilt-cell__excerpt")).toHaveCount(1);
+			const m = await page.evaluate(() => {
+				const lead = document.querySelector<HTMLElement>('[data-cell="post"][data-span]')!;
+				const ex = lead.querySelector<HTMLElement>(".ds-quilt-cell__excerpt")!;
+				const art = lead.querySelector<HTMLElement>(".ds-quilt-cell__art")!;
+				const cs = getComputedStyle(ex);
+				const probe = document.createElement("div");
+				probe.style.cssText = "color: var(--text-secondary); font-family: var(--font-body)";
+				document.body.append(probe);
+				const ps = getComputedStyle(probe);
+				const token = { color: ps.color, family: ps.fontFamily };
+				probe.remove();
+				const quilt = document.querySelector("[data-quilt]")!.getBoundingClientRect();
+				const single = document.querySelector<HTMLElement>('[data-cell="post"]:not([data-span])')!.getBoundingClientRect();
+				const rowArts = [...document.querySelectorAll<HTMLElement>("[data-cell]")]
+					.filter((c) => c.checkVisibility() && Math.abs(c.getBoundingClientRect().top - lead.getBoundingClientRect().top) < 1)
+					.map((c) => ({
+						label: c.querySelector<HTMLElement>(".ds-quilt-cell__label")!.innerText.trim(),
+						artTop: c.querySelector(".ds-quilt-cell__art")!.getBoundingClientRect().top,
+					}));
+				return {
+					token,
+					rowArts,
+					color: cs.color,
+					family: cs.fontFamily,
+					maxWidth: parseFloat(cs.maxWidth),
+					fontSize: parseFloat(cs.fontSize),
+					// 52ch in the excerpt's own face and size (the `font` shorthand
+					// does not serialise from a computed style; the longhands do).
+					ch: (() => {
+						const c = document.createElement("span");
+						c.style.cssText = `position:absolute; width: 52ch; font-family: ${cs.fontFamily}; font-size: ${cs.fontSize}; font-weight: ${cs.fontWeight}`;
+						document.body.append(c);
+						const w = c.getBoundingClientRect().width;
+						c.remove();
+						return w;
+					})(),
+					ex: ex.getBoundingClientRect().toJSON(),
+					art: art.getBoundingClientRect().toJSON(),
+					lead: lead.getBoundingClientRect().toJSON(),
+					quilt: quilt.toJSON(),
+					single,
+					colGap: parseFloat(getComputedStyle(document.querySelector("[data-quilt]")!).columnGap),
+					rows: getComputedStyle(document.querySelector("[data-quilt]")!).gridTemplateRows.split(" ").length,
+				};
+			});
+			// The body face in the secondary ink, a step down, held to ~52ch.
+			expect(m.family).toBe(m.token.family);
+			expect(m.color).toBe(m.token.color);
+			expect(m.fontSize).toBeLessThan(16);
+			expect(m.maxWidth).toBeCloseTo(m.ch, 0);
+			// Under the art, inside the lead.
+			expect(m.ex.top).toBeGreaterThanOrEqual(m.art.bottom);
+			expect(m.ex.bottom).toBeLessThanOrEqual(m.lead.bottom + 1);
+			// Top-left, two columns wide: two cells and the gap between (two
+			// fifths of the desktop board, two thirds of the tablet's).
+			expect(m.lead.left).toBeCloseTo(m.quilt.left, 0);
+			expect(m.lead.top).toBeCloseTo(m.quilt.top, 0);
+			expect(m.lead.width).toBeCloseTo(2 * m.single.width + m.colGap, 0);
+			// The grid's rows: three on the desktop; four on the tablet, where the
+			// panel needs two rows of its own under the lead.
+			expect(m.rows).toBe(width >= 1024 ? 3 : 4);
+			// The lead's row: every entry starts its art on the lead's line, the
+			// label reserving two lines whether the title took one or both (at
+			// 768 the car's two-line title sits beside the lead's one).
+			expect(m.rowArts.length).toBeGreaterThan(1);
+			for (const c of m.rowArts) expect(c.artTop, c.label).toBeCloseTo(m.art.top, 0);
+			if (width < 1024) expect(m.rowArts.map((c) => c.label)).toContain("02YOUR CAR KNOWS YOU'RE GETTING SICK");
+		});
+	}
 
 	test("no ruling in any state: a filler, a faint and a gone cell draw no line either", async ({ page }) => {
 		await page.goto("/txt/");
@@ -541,10 +710,11 @@ test.describe("quilt — hover and focus", () => {
 
 	test("tile to tile across the gap never passes through rest", async ({ page }) => {
 		await page.goto("/txt/");
-		// 005 sits beside 003 on the desktop grid and only faints under its hover.
-		await page.locator(`${post("003")} a`).hover();
+		// 001 sits right under the lead (005) on the desktop grid and only
+		// faints under its hover (a gone tile takes no pointer).
+		await page.locator(`${post("005")} a`).hover();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
-		await expect(page.locator(post("005"))).toHaveAttribute("data-state", "faint");
+		await expect(page.locator(post("001"))).toHaveAttribute("data-state", "faint");
 		await page.evaluate(() => {
 			const panel = document.querySelector<HTMLElement>("[data-quilt-panel]")!;
 			const seen: string[] = [];
@@ -554,15 +724,15 @@ test.describe("quilt — hover and focus", () => {
 				attributeFilter: ["data-mode"],
 			});
 		});
-		const b = (await page.locator(post("005")).boundingBox())!;
+		const b = (await page.locator(post("001")).boundingBox())!;
 		await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 10 });
-		await expect(card(page, "title")).toHaveText("Asserting on Agent Behavior");
+		await expect(card(page, "title")).toHaveText("No Honey, We Have a Dashboard at Home");
 		// Past the leave grace, and still no rest in between.
 		await page.waitForTimeout(250);
 		const modes = await page.evaluate(() => (window as unknown as { __modes: string[] }).__modes);
 		expect(modes).not.toContain("hidden");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
-		await expect(page.locator(post("005"))).toHaveAttribute("data-state", "lit");
+		await expect(page.locator(post("001"))).toHaveAttribute("data-state", "lit");
 	});
 
 	test("the panel holds the hover: the card's READ link is reachable by pointer and by Tab", async ({
@@ -904,7 +1074,11 @@ test.describe("quilt — tablet (900px)", () => {
 		const visible = await page
 			.locator("[data-cell]")
 			.evaluateAll((els) => els.filter((e) => e.checkVisibility()).length);
+		// Twelve cells: the lead's four as one entry, four posts, four fillers.
 		expect(visible).toBe(9);
+		expect(
+			await page.locator("[data-quilt]").evaluate((q) => getComputedStyle(q).gridTemplateRows.split(" ").length),
+		).toBe(4);
 
 		await page.locator(`${post("003")} a`).hover();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
@@ -919,12 +1093,27 @@ test.describe("quilt — tablet (900px)", () => {
 		expect(Math.abs(geo.p.right - geo.q.right)).toBeLessThanOrEqual(1);
 		expect(rectsOverlap(geo.p as DOMRect, geo.c as DOMRect)).toBe(false);
 	});
+
+	test("the lead stepped: the panel takes the two rows under it, clear of all four of its cells", async ({ page }) => {
+		await page.goto("/txt/");
+		await older(page).click();
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
+		await expect(card(page, "no")).toHaveText("005");
+		await expect(page.locator(post("005"))).toHaveAttribute("data-active", "");
+		expect(await block(page)).toEqual({ col: 1, row: 3 });
+		const geo = await page.evaluate(() => ({
+			p: document.querySelector("[data-quilt-panel]")!.getBoundingClientRect().toJSON(),
+			lead: document.querySelector('[data-no="005"]')!.getBoundingClientRect().toJSON(),
+		}));
+		expect(rectsOverlap(geo.p as DOMRect, geo.lead as DOMRect)).toBe(false);
+		expect(geo.p.top).toBeGreaterThanOrEqual(geo.lead.bottom);
+	});
 });
 
 test.describe("quilt — phone (390px)", () => {
 	test.use({ viewport: { width: 390, height: 844 } });
 
-	test("a captioned two-column list, the panel in flow, and nothing vanishes", async ({
+	test("a two-column list of labelled entries, the lead across both with no excerpt, the panel in flow, and nothing vanishes", async ({
 		page,
 	}) => {
 		await page.goto("/txt/");
@@ -932,12 +1121,33 @@ test.describe("quilt — phone (390px)", () => {
 			.locator("[data-quilt]")
 			.evaluate((q) => getComputedStyle(q).gridTemplateColumns.split(" ").length);
 		expect(tracks).toBe(2);
-		await expect(page.locator(`${post("003")} .ds-quilt-cell__caption`)).toBeVisible();
-		// The title alone: the date and the category are the card's.
-		await expect(page.locator(`${post("003")} .ds-quilt-cell__caption`)).toHaveText("The Mega Desk");
-		await expect(page.locator(".ds-quilt-cell__meta")).toHaveCount(0);
+		// Every entry keeps its label row: the number and the title, nothing
+		// else — the date and the category are the card's.
+		await expect(page.locator(`${post("003")} .ds-quilt-cell__label`)).toBeVisible();
+		await expect(page.locator(`${post("003")} .ds-quilt-cell__label`)).toHaveText(/03\s*The Mega Desk/);
+		await expect(page.locator(".ds-quilt-cell__caption, .ds-quilt-cell__meta")).toHaveCount(0);
 		for (const f of await page.locator('[data-cell="filler"]').all()) await expect(f).toBeHidden();
 		await expect(page.locator(PANEL)).toBeHidden();
+		// The lead is the full width and its excerpt is not drawn; the other
+		// posts flow two to a row in DOM order.
+		const geo = await page.evaluate(() => {
+			const r = (sel: string) => document.querySelector(sel)!.getBoundingClientRect().toJSON();
+			return {
+				quilt: r("[data-quilt]"),
+				lead: r('[data-cell="post"][data-span]'),
+				a: r('[data-no="004"]'),
+				b: r('[data-no="003"]'),
+				c: r('[data-no="002"]'),
+			};
+		});
+		expect(geo.lead.width).toBeCloseTo(geo.quilt.width, 0);
+		expect(geo.lead.top).toBeCloseTo(geo.quilt.top, 0);
+		await expect(page.locator(`${post("005")} .ds-quilt-cell__excerpt`)).toBeHidden();
+		expect(geo.a.top).toBeGreaterThanOrEqual(geo.lead.bottom);
+		expect(Math.abs(geo.a.top - geo.b.top)).toBeLessThanOrEqual(1);
+		expect(geo.b.left).toBeGreaterThan(geo.a.right);
+		expect(geo.c.top).toBeGreaterThanOrEqual(geo.a.bottom);
+		expect(Math.abs(geo.c.left - geo.a.left)).toBeLessThanOrEqual(1);
 
 		await page.locator(SEARCH).fill("home");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "results");
@@ -1112,9 +1322,12 @@ test.describe("instrument — the stepper", () => {
 		await page.goto("/txt/");
 		await older(page).click();
 		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · no\. 005/);
-		await page.locator(`${post("003")} a`).hover();
-		await expect(card(page, "title")).toHaveText("The Mega Desk");
-		await expect(readout(page)).toHaveText(/apr 2025 · no\. 003/);
+		// 001 is faint under the lead's step (a gone tile — under the block,
+		// or rolled so — takes no pointer, and 003 sits under the block here).
+		await expect(page.locator(post("001"))).toHaveAttribute("data-state", "faint");
+		await page.locator(`${post("001")} a`).hover();
+		await expect(card(page, "title")).toHaveText("No Honey, We Have a Dashboard at Home");
+		await expect(readout(page)).toHaveText(/may 2023 · no\. 001/);
 		// A preview, not a step: no ring on the hovered tile.
 		await expect(page.locator("[data-cell][data-active]")).toHaveCount(0);
 		await page.mouse.move(1, 1, { steps: 4 });
@@ -1396,7 +1609,10 @@ test.describe("instrument — the card", () => {
 		);
 		expect(clipped).toBe(0);
 
-		// Another post refills every field.
+		// Another post refills every field (from rest: the block over the
+		// desk's hover covers the lead, which takes no pointer while gone).
+		await page.mouse.move(1, 1);
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 		await page.locator(`${post("005")} a`).hover();
 		await expect(card(page, "no")).toHaveText("005");
 		await expect(card(page, "index")).toHaveText("[index] 000005 · log_005.txt");
@@ -1484,7 +1700,7 @@ test.describe("instrument — layouts", () => {
 		await expect(page.locator(`${BAR} .ds-search-bar__hint`)).toHaveText("/");
 	});
 
-	test("tablet (900): three columns, no text on a tile; the chips on their own row under the input, the stepper beside it", async ({
+	test("tablet (900): three columns, every entry labelled; the chips on their own row under the input, the stepper beside it", async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 900, height: 1100 });
@@ -1497,7 +1713,10 @@ test.describe("instrument — layouts", () => {
 			.locator("[data-cell]")
 			.evaluateAll((els) => els.filter((e) => e.checkVisibility()).map((e) => (e as HTMLElement).innerText.trim()));
 		expect(texts).toHaveLength(9);
-		expect(texts.every((t) => t === "")).toBe(true);
+		// A label row on every entry — a post's number and title, a filler's
+		// tag — and no other text on a tile but the lead's excerpt.
+		for (const t of texts) expect(t.split("\n")[0]).toMatch(LABEL);
+		expect(texts.filter((t) => /^F_\d{2}$/.test(t))).toHaveLength(4);
 		const b = await barBoxes(page);
 		expect(b.chips.y).toBeGreaterThanOrEqual(b.input.y + b.input.height - 1);
 		expect(Math.abs(b.chips.width - b.bar.width)).toBeLessThanOrEqual(2);
@@ -1510,7 +1729,7 @@ test.describe("instrument — layouts", () => {
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
 	});
 
-	test("phone (390): the chips scroll sideways under the input, the stepper beside it, captions on the tiles, the timeline compact", async ({
+	test("phone (390): the chips scroll sideways under the input, the stepper beside it, labels on the entries, the timeline compact", async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 390, height: 1000 });
@@ -1521,10 +1740,10 @@ test.describe("instrument — layouts", () => {
 		expect(b.chipsScroll.scrollable).toBe(true);
 		expect(Math.abs(b.older.y + b.older.height / 2 - (b.input.y + b.input.height / 2))).toBeLessThanOrEqual(2);
 		expect(b.older.x).toBeGreaterThanOrEqual(b.input.x + b.input.width - 1);
-		// A tap-list needs its titles: the phone tiles keep a small caption,
-		// the title and nothing else.
-		await expect(page.locator(`${post("003")} .ds-quilt-cell__caption`)).toBeVisible();
-		await expect(page.locator(`${post("003")} .ds-quilt-cell__caption`)).toHaveText("The Mega Desk");
+		// A tap-list needs its titles: the label row, the number and the
+		// title and nothing else, on every entry.
+		await expect(page.locator(`${post("003")} .ds-quilt-cell__label`)).toBeVisible();
+		await expect(page.locator(`${post("003")} .ds-quilt-cell__label`)).toHaveText(/03\s*The Mega Desk/);
 		// The timeline is drawn shorter than on a desktop, with its years.
 		const strip = (await page.locator(`${RULER} .ds-time-ruler__strip`).boundingBox())!;
 		expect(strip.height).toBeLessThan(48);

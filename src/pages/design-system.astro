@@ -110,19 +110,22 @@ interface QuiltPost {
 	row: number;
 	colMd: number;
 	rowMd: number;
+	/** The lead's 2×2 footprint. */
+	span?: [number, number];
 }
 const quiltPosts: QuiltPost[] = [
-	{ slug: "asserting-on-agent-behavior", title: "Asserting on Agent Behavior", blurb: "I built Aptitude — a test harness that lets you run cognitive tests against agent behavior by asserting on tool calls, parameters, and ordering.", cat: "programming", no: "005", month: "feb", year: "2026", min: 3, col: 2, row: 1, colMd: 1, rowMd: 1 },
+	{ slug: "asserting-on-agent-behavior", title: "Asserting on Agent Behavior", blurb: "I built Aptitude — a test harness that lets you run cognitive tests against agent behavior by asserting on tool calls, parameters, and ordering.", cat: "programming", no: "005", month: "feb", year: "2026", min: 3, col: 1, row: 1, colMd: 1, rowMd: 1, span: [2, 2] },
 	{ slug: "tahoe-mountain-hair", title: "Tahoe Mountain Hair", blurb: "A hair care routine to reproduce Tahoe's mineral-rich water and dry air in San Francisco's soft water and humidity.", cat: "personal", no: "004", month: "jun", year: "2025", min: 2, col: 5, row: 1, colMd: 3, rowMd: 1 },
-	{ slug: "mega-desk", title: "The Mega Desk", blurb: "Building an 8-foot hardwood standing desk for a shared home office — from sourcing burnt ash in Berkeley to finding an extension cable on Etsy.", cat: "projects", no: "003", month: "apr", year: "2025", min: 4, col: 3, row: 2, colMd: 2, rowMd: 2 },
+	{ slug: "mega-desk", title: "The Mega Desk", blurb: "Building an 8-foot hardwood standing desk for a shared home office — from sourcing burnt ash in Berkeley to finding an extension cable on Etsy.", cat: "projects", no: "003", month: "apr", year: "2025", min: 4, col: 3, row: 2, colMd: 3, rowMd: 2 },
 	{ slug: "why-i-joined-fisker", title: "Your Car Knows You're Getting Sick", blurb: "I joined Fisker to build a health product from vehicle signal data — steering patterns, braking behavior, and acceleration habits can detect cognitive decline.", cat: "thoughts", no: "002", month: "jul", year: "2024", min: 4, col: 1, row: 3, colMd: 1, rowMd: 3 },
 	{ slug: "no-honey-we-have-a-dashboard-at-home", title: "No Honey, We Have a Dashboard at Home", blurb: "Internal tools teams spend months building dashboards that are worse versions of things VS Code already provides out of the box.", cat: "programming", no: "001", month: "may", year: "2023", min: 3, col: 4, row: 3, colMd: 3, rowMd: 3 },
 ];
-// The ten cells the posts leave on the 5×3 grid, in reading order; the
-// first four also have a slot on the 3×3 tablet grid.
+// The seven cells the lead and the posts leave on the 5×3 grid, in reading
+// order; the first four also have a slot on the 3×4 tablet grid (which has
+// four of its own to fill).
 const quiltFillerSlots: Array<[number, number, number?, number?]> = [
-	[1, 1, 2, 1], [3, 1, 1, 2], [4, 1, 3, 2], [1, 2, 2, 3],
-	[2, 2], [4, 2], [5, 2], [2, 3], [3, 3], [5, 3],
+	[3, 1, 2, 3], [4, 1, 1, 4], [4, 2, 2, 4], [5, 2, 3, 4],
+	[2, 3], [3, 3], [5, 3],
 ];
 const metaOf = (p: QuiltPost) => `${p.month} ${p.year} · ${p.cat}`;
 const cardOf = (p: QuiltPost, why?: string) => ({
@@ -207,7 +210,7 @@ const quiltDemos: QuiltDemo[] = [
 	{
 		id: "rest",
 		title: "Rest — every cell lit, the panel hidden",
-		note: "Five posts and ten fillers; data-state=\"lit\" on every cell and data-mode=\"hidden\" on the panel, which still holds its block (3 / 2 here) so nothing moves when it opens.",
+		note: "Five posts — the newest the 2×2 lead — and seven fillers; data-state=\"lit\" on every cell and data-mode=\"hidden\" on the panel, which still holds its block (3 / 2 here) so nothing moves when it opens.",
 		search: { count: "5 posts" },
 		panel: { mode: "hidden", col: 3, row: 2 },
 	},
@@ -232,21 +235,21 @@ const quiltDemos: QuiltDemo[] = [
 	{
 		id: "results",
 		title: "Results — two hits, the active one ringed",
-		note: "“home” matches two posts. The block hiding the fewest matches that avoids the active post (4 / 3) is 1 / 1; the active tile carries data-active, the accent ring; the list marks the query and says why the other matched.",
+		note: "“home” matches two posts. The block hiding the fewest matches that avoids the active post (4 / 3) is 1 / 1, which covers the lead — a block over any of a spanned post's cells takes the whole of it out; the active tile carries data-active, the accent ring; the list marks the query and says why the other matched.",
 		search: { value: "home", count: "2 of 5", expanded: true },
 		panel: { mode: "results", col: 1, row: 1 },
 		lit: ["no-honey-we-have-a-dashboard-at-home", "mega-desk"],
 		active: "no-honey-we-have-a-dashboard-at-home",
 	},
 ];
-const inBlock = (d: QuiltDemo, c: number, r: number) =>
+const inBlock = (d: QuiltDemo, c: number, r: number, span: [number, number] = [1, 1]) =>
 	d.panel.mode !== "hidden" &&
-	c >= d.panel.col && c < d.panel.col + 3 && r >= d.panel.row && r < d.panel.row + 2;
+	c < d.panel.col + 3 && d.panel.col < c + span[0] && r < d.panel.row + 2 && d.panel.row < r + span[1];
 // A made-up scatter, deterministic per cell, standing in for the engine's.
 const roll = (c: number, r: number, salt: number) => (((r * 5 + c) * 7919 + salt * 104729) % 97) / 97;
-const cellState = (d: QuiltDemo, c: number, r: number, slug?: string): { state: QuiltCellState; delay: number } => {
+const cellState = (d: QuiltDemo, c: number, r: number, slug?: string, span?: [number, number]): { state: QuiltCellState; delay: number } => {
 	if (!d.lit) return { state: "lit", delay: 0 };
-	if (inBlock(d, c, r)) return { state: "gone", delay: Math.round(roll(c, r, 1) * 240) };
+	if (inBlock(d, c, r, span)) return { state: "gone", delay: Math.round(roll(c, r, 1) * 240) };
 	if (slug && d.lit.includes(slug)) return { state: "lit", delay: 0 };
 	if (!slug && d.fillersFaint) return { state: "faint", delay: Math.round(roll(c, r, 1) * 240) };
 	if (slug && d.fillersFaint) return { state: "lit", delay: 0 };
@@ -1603,21 +1606,25 @@ assertions:
 		<section class="ds-demo__section" id="quilt">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Quilt · QuiltCell — the grid of art tiles and its states</Heading>
 			<p class="ds-demo__note">
-				<code>&lt;Quilt cols rows colsMd rowsMd&gt;</code> is the grid (quilt.css): art
-				tiles on the page cut by the <code>--quilt-gap</code> token
-				(<code>--space-2</code> at ≥ 1024, <code>--space-3</code> below), no lines between
-				or round them, the art filling each cell — five across at ≥ 1024, three at
-				640–1023 (a cell takes its <code>colMd</code>/<code>rowMd</code> slot; a filler
-				without one drops), and on a phone two columns of tiles captioned with their
-				titles alone, in DOM order with no fillers. A tile above 640 carries no text.
-				<code>&lt;QuiltCell col row href label no&gt;</code> is a post — a link named by
-				its title around a decorative <code>ArtFrame</code>, the title drawn under the
-				art on phones; <code>filler</code> is aria-hidden art, drawn faint and grey.
-				The script's contract on a cell: <code>data-state="lit | faint | gone"</code>,
-				<code>--scatter-delay</code>, <code>data-active</code> (the 1px accent outline
-				round the tile). Every state below is set by hand;
-				<code>src/lib/quilt/engine.ts</code> decides them on the page. Resize to 768 and
-				390 for the other two grids.
+				<code>&lt;Quilt cols rows colsMd rowsMd&gt;</code> is the grid (quilt.css): the
+				spec sheet's entries on the page, cut by the <code>--quilt-gap</code> /
+				<code>--quilt-row-gap</code> tokens (<code>--space-4</code> / <code>--space-5</code>
+				at ≥ 1024, <code>--space-3</code> / <code>--space-5</code> below), no lines between or
+				round them — five across at ≥ 1024, three at 640–1023 (a cell takes its
+				<code>colMd</code>/<code>rowMd</code> slot; a filler without one drops), and on a
+				phone two columns in DOM order with no fillers.
+				<code>&lt;QuiltCell col row span href label no numeral excerpt&gt;</code> is a post: a
+				link named by its title around a <code>RuleLabel</code> (the number in the accent, the
+				title in caps, two lines reserved so a row's arts line up) and a decorative
+				<code>ArtFrame variant="bare"</code> — no plate, edge or corner. The newest post is
+				the LEAD, <code>span={[2, 2]}</code> at the top-left with its <code>excerpt</code>
+				under the art (at ≥ 640; the full width of a phone, no excerpt); <code>filler
+				file</code> is the same row with a dim <code>F_NN</code> tag over art a step back
+				(<code>--quilt-dim</code>, grey), aria-hidden. The script's contract on a cell:
+				<code>data-state="lit | faint | gone"</code> (the label and the art fade as one),
+				<code>--scatter-delay</code>, <code>data-active</code> (the 1px accent outline round
+				the art). Every state below is set by hand; <code>src/lib/quilt/engine.ts</code>
+				decides them on the page. Resize to 768 and 390 for the other two grids.
 			</p>
 			{quiltDemos.map((d) => (
 				<figure class="ds-demo__quilt" id={`quilt-${d.id}`}>
@@ -1642,31 +1649,34 @@ assertions:
 						<IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
 						<IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />
 					</SearchBar>
-					<Quilt cols={5} rows={3} colsMd={3} aria-label={`quilt demo: ${d.id}`}>
+					<Quilt cols={5} rows={3} colsMd={3} rowsMd={4} aria-label={`quilt demo: ${d.id}`}>
 						{quiltPosts.map((p) => {
-							const s = cellState(d, p.col, p.row, p.slug);
+							const s = cellState(d, p.col, p.row, p.slug, p.span);
 							return (
 								<QuiltCell
 									col={p.col}
 									row={p.row}
 									colMd={p.colMd}
 									rowMd={p.rowMd}
+									span={p.span}
 									href={`/txt/${p.slug}/`}
 									label={p.title}
 									no={p.no}
+									numeral={p.no.slice(1)}
+									excerpt={p.span ? p.blurb : undefined}
 									state={s.state}
 									delay={s.delay}
 									active={d.active === p.slug}
 								>
-									<ArtFrame svg={artOf(p.slug)} decorative />
+									<ArtFrame svg={artOf(p.slug)} decorative variant="bare" />
 								</QuiltCell>
 							);
 						})}
 						{quiltFillerSlots.map(([c, r, cMd, rMd], i) => {
 							const s = cellState(d, c, r);
 							return (
-								<QuiltCell col={c} row={r} colMd={cMd} rowMd={rMd} filler state={s.state} delay={s.delay}>
-									<ArtFrame svg={quiltFillers[i % quiltFillers.length]} decorative />
+								<QuiltCell col={c} row={r} colMd={cMd} rowMd={rMd} filler file={(i % quiltFillers.length) + 1} state={s.state} delay={s.delay}>
+									<ArtFrame svg={quiltFillers[i % quiltFillers.length]} decorative variant="bare" />
 								</QuiltCell>
 							);
 						})}

@@ -259,7 +259,9 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   no box: `no` (a leading number in the accent), the label in the default
   slot, a trailing `meta` slot in the tertiary ink at the far end; `dim` (the
   row and the number in the tertiary ink — a filler's `F_07`), `truncate`
-  (one line, ellipsised; the label wraps without it). A tile's title row.
+  (one line, ellipsised; the label wraps without it), `lines={2}` (two
+  lines reserved, the text at their top, so a row of labels holds one
+  height whichever wrap). A quilt entry's title row.
 - `DimensionLabel` — `|—•—•— LABEL —•—•—|`: the caps label in the ink,
   centred on a dimension line (an end tick at each edge, a hairline, dots on
   an even pitch; drawn by `::before`/`::after`, never read out). `as="h2"`
@@ -419,17 +421,20 @@ Below 1024 it is one column: the strip two by two, no column numbers, the
 title at 44px, the mark after the lead at 16rem, the hero and the index
 full width (the Fig and the Index collapse themselves).
 
-### Quilt — the index as a grid of art tiles
+### Quilt — the index as a spec sheet of art entries
 
-`/txt` is a **quilt**: a grid of landscape art tiles on the page, cut by an
-even gap token and no lines — the art filling each cell, no text on a tile
-— one per post, padded with fillers, under one ruled search bar. Hovering or
-focusing a post scatters the others and the ruled card takes a freed 3×2
-block; typing filters the same grid; a chip in the bar is a search
-shortcut. The package holds the **markup, the geometry and the state
-contract** (`styles/quilt.css`, `quilt-panel.css`, `search-bar.css`); every
-decision — which cells scatter, where the block goes, what the search found
-— is the site's (`src/lib/quilt/engine.ts`, pure; `src/lib/quilt/index.ts`,
+`/txt` is a **quilt**: the spec sheet's grid of entries on the page, cut by
+gap tokens and no lines — each a caps LABEL over a dotted rule (the post's
+number in the accent, its title) with its art BARE under it (no plate, edge
+or corner; the crop is the only edge) — one per post, the newest the 2×2
+LEAD at the top-left with its excerpt, the leftover cells fillers tagged
+`F_NN`, under one ruled search bar. Hovering or focusing a post scatters
+the others and the ruled card takes a freed 3×2 block; typing filters the
+same grid; a chip in the bar is a search shortcut. The package holds the
+**markup, the geometry and the state contract** (`styles/quilt.css`,
+`quilt-panel.css`, `search-bar.css`); every decision — which cells scatter,
+where the block goes, what the search found, which cells are the lead's —
+is the site's (`src/lib/quilt/engine.ts`, pure; `src/lib/quilt/index.ts`,
 the DOM wiring), which paints the attributes below. Nothing here ships JS.
 
 ```astro
@@ -440,33 +445,48 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
   <IconButton slot="controls" variant="outline" square size="sm" glyph="−" aria-label="Previous post" />
   <IconButton slot="controls" variant="outline" square size="sm" glyph="+" aria-label="Next post" />
 </SearchBar>
-<Quilt cols={5} rows={3} colsMd={3} aria-label="Posts">
-  <QuiltCell col={3} row={1} colMd={2} rowMd={1} href="/txt/mega-desk"
-             label="The Mega Desk" no="003">
-    <ArtFrame svg={raw} decorative />
+<Quilt cols={5} rows={3} colsMd={3} rowsMd={4} aria-label="Posts">
+  <QuiltCell col={1} row={1} colMd={1} rowMd={1} span={[2, 2]} href="/txt/asserting-on-agent-behavior"
+             label="Asserting on Agent Behavior" no="005" numeral="05" excerpt="I built Aptitude — …">
+    <ArtFrame svg={raw} decorative variant="bare" />
   </QuiltCell>
-  <QuiltCell col={1} row={1} colMd={1} rowMd={2} filler><ArtFrame svg={filler} decorative /></QuiltCell>
+  <QuiltCell col={3} row={2} colMd={3} rowMd={1} href="/txt/mega-desk"
+             label="The Mega Desk" no="003" numeral="03">
+    <ArtFrame svg={raw} decorative variant="bare" />
+  </QuiltCell>
+  <QuiltCell col={4} row={1} colMd={1} rowMd={3} filler file={7}><ArtFrame svg={filler} decorative variant="bare" /></QuiltCell>
   <QuiltPanel id="quilt-panel" mode="hidden" col={3} row={2}
               card={…} browse={…} results={…} nothing={…} />
 </Quilt>
 ```
 
 - `Quilt` — the grid: `cols`/`rows` for ≥ 1024, `colsMd`/`rowsMd` for
-  640–1023 (`rows` = max(3, ceil(posts / cols)), explicit so the block always
-  has lines). The cells sit `--quilt-gap` apart — `--space-2` on the desktop
-  board, `--space-3` below 1024 — with no line between or round them. A
-  state fades the cell's contents (the art, a phone tile's caption), never
-  the cell, so the active outline holds. `position: relative`,
-  `role="group"`, `data-quilt`. Under 640 it is two columns of tiles
-  captioned with their titles, in DOM order.
-- `QuiltCell` — a post (`href`, `label` = the link's accessible name and,
-  on a phone only, the caption under the art; `no`; a decorative `ArtFrame`
-  in the slot, filling the cell) or a `filler` (aria-hidden, its art faint
-  and grey at every state). Placement is `col`/`row` and `colMd`/`rowMd`, set
-  inline as `--cell-col`/`--cell-row`/`--cell-col-md`/`--cell-row-md`; a
-  filler with no tablet slot is dropped there, and every filler is dropped
-  on a phone. Renders `data-cell="post | filler"`, `data-no`, `data-lg` /
-  `data-md`. The link is a `ds-control`.
+  640–1023 (the engine's rows: at least 3, and 4 on the tablet grid, where
+  the block cannot sit beside the lead and needs two rows under it; explicit
+  so the block always has lines). The cells sit `--quilt-gap` apart across
+  — `--space-4` on the desktop board, `--space-3` below 1024 — and
+  `--quilt-row-gap` (`--space-5`) down, the room a label's rule needs over
+  it, with no line between or round them. Rows size to their content: every
+  cell in a row is a two-line label over the same 16:9 box, so the arts in
+  a row line up. A state fades the cell's contents (a post's link — label,
+  art, excerpt as one; a filler's label and art on the same delay), never
+  the cell. `position: relative`, `role="group"`, `data-quilt`. Under 640 it
+  is two columns of entries in DOM order, the lead across both.
+- `QuiltCell` — a post (`href`; `label` = the link's accessible name and the
+  label row's title; `no` = `data-no`, the script's key (`005`); `numeral` =
+  the number as the label draws it (`05`); `span={[2, 2]}` the lead's
+  footprint, as `--cell-cols`/`--cell-rows` and `data-span`; `excerpt`, the
+  lead's, under the art at ≥ 640 in `Body`'s voice a step down, 52ch, three
+  lines — not drawn on a phone; a decorative bare `ArtFrame` in the slot,
+  filling the cell's width) or a `filler` (`file` → the dim `F_07` tag;
+  aria-hidden; its art a step back at rest — `--quilt-dim`, grey — and
+  never brighter). Placement is `col`/`row` and `colMd`/`rowMd`, set inline
+  as `--cell-col`/`--cell-row`/`--cell-col-md`/`--cell-row-md`; a filler
+  with no tablet slot is dropped there, and every filler is dropped on a
+  phone. Renders `data-cell="post | filler"`, `data-no`, `data-span`,
+  `data-lg` / `data-md`; the label is a `RuleLabel lines={2}`
+  (`.ds-quilt-cell__label`), the art sits in `.ds-quilt-cell__art`, which
+  draws the active ring. The link is a `ds-control`.
 - `QuiltPanel` — four faces, every one rendered, each the page colour inside
   the strong hairline, square, no fill, filling the block. `card` is the
   RULED CARD: `{ no, category, minutes, words, month, year, rate, title,
@@ -497,9 +517,9 @@ the DOM wiring), which paints the attributes below. Nothing here ships JS.
 
 | On | Attribute / property | Meaning |
 | --- | --- | --- |
-| a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. A **filler is never brighter than faint**. |
+| a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. A **filler is never brighter than its rest** (`--quilt-dim`). The label and the art fade together. |
 | a cell | `--scatter-delay` (ms) | the stagger into faint/gone (0–240); the return to lit has none |
-| a post cell | `data-active` | the 1px accent outline round the tile (the cell's `::after`, over the art's edge) |
+| a post cell | `data-active` | the 1px accent outline round the art (the art wrapper's `::after`, over the crop's edge; the label is left alone) |
 | a chip | `aria-current="page"` | the chip whose word is the query (ALL when it is empty) |
 | the panel | `data-mode="card \| browse \| results \| none \| hidden"` | which face shows; the others are `visibility: hidden` |
 | the panel | `--panel-col`, `--panel-row` | the block's top-left cell, 1-based; the block is `--panel-cols` × `--panel-rows` (3 × 2) |

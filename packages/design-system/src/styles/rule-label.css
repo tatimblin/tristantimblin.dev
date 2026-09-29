@@ -34,6 +34,16 @@
 	color: var(--text-tertiary);
 }
 
+/* lines — two lines reserved, the text at the top of them, so a wrapping
+ * title and a short one take the same height and what sits under a row of
+ * labels lines up. */
+.ds-rule-label--lines-2 {
+	align-items: flex-start;
+}
+.ds-rule-label--lines-2 .ds-rule-label__text {
+	min-block-size: 2lh;
+}
+
 /* truncate — the label on one line, ellipsised; the number and the meta
  * stay whole. */
 .ds-rule-label--truncate-true .ds-rule-label__text {

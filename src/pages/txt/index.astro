@@ -3,10 +3,11 @@
 // page, in the site container. The BAR is the layout's: one ruled search
 // bar — the search, the quick-filter chips (each a query on the quilt), the
 // − / + that step through the matching posts. Then the BOARD, right under
-// it: the quilt, a grid of every post's art padded out with fillers, no text
-// on a tile above a phone (a phone's tiles carry their titles), and the
-// panel that takes a freed block of it when a tile is hovered or stepped to
-// or the bar is used. Then the TIMELINE, docked to the
+// it: the quilt, the spec sheet's grid — every post an entry, a numbered
+// caps label over a dotted rule with its art bare under it, the newest post
+// the 2×2 LEAD with its excerpt, the leftover cells fillers tagged `F_NN` —
+// and the panel that takes a freed block of it when a tile is hovered or
+// stepped to or the bar is used. Then the TIMELINE, docked to the
 // window's bottom edge while the quilt scrolls under it: one tick per month,
 // the posts as the tall ones, an accent playhead on the post in focus. The
 // page computes the index at build (numbers, slots, reading time) and
@@ -39,13 +40,20 @@ import { getPosts } from "../../lib/posts";
 
 const COLS = 5;
 const COLS_MD = 3;
+/** The art's frame on the sheet: bare (no plate, edge or corner). Set to
+ *  "corners" for registration ticks at each crop corner. */
+const ART_VARIANT: "bare" | "corners" = "bare";
+/** The number as a label draws it: two digits, the sheet's width (`05`,
+ *  `F_07`); `padNo` (`005`) is the index's and the card's. */
+const numeral = (n: number) => String(n).padStart(2, "0");
 
 const posts = await getPosts();
 const numbers = postNumbers(posts);
 
 // One layout per grid: the desktop 5-column quilt and the tablet 3-column
-// one. A post's slot comes from its chronological number, so it stays put
-// as newer posts arrive.
+// one. The newest post is the LEAD, a 2×2 block at the top-left of both;
+// every other post's slot comes from its chronological number, so it stays
+// put as newer posts arrive (the old lead takes a fresh slot).
 const lg = layout({ cols: COLS, postCount: posts.length });
 const md = layout({ cols: COLS_MD, postCount: posts.length });
 
@@ -55,6 +63,7 @@ const index: QuiltPost[] = posts.map((post) => {
 	const month = monthOf(post.data.date);
 	const at = toColRow(lg.slots[no - 1], COLS);
 	const atMd = toColRow(md.slots[no - 1], COLS_MD);
+	const lead = no === posts.length && lg.lead ? lg.lead.span : undefined;
 	const stats = readingStats(post.body);
 	const date = new Date(post.data.date);
 	return {
@@ -75,6 +84,7 @@ const index: QuiltPost[] = posts.map((post) => {
 		row: at.row,
 		colMd: atMd.col,
 		rowMd: atMd.row,
+		...(lead && { span: lead }),
 	};
 });
 const art = new Map(posts.map((post) => [post.id, artFor(post.id)]));
@@ -186,11 +196,14 @@ const timeline = {
 					row={p.row}
 					colMd={p.colMd}
 					rowMd={p.rowMd}
+					span={p.span}
 					href={p.href}
 					label={p.title}
 					no={padNo(p.no)}
+					numeral={numeral(p.no)}
+					excerpt={p.span ? p.excerpt : undefined}
 				>
-					{art.get(p.id) && <ArtFrame svg={art.get(p.id)!} decorative />}
+					{art.get(p.id) && <ArtFrame svg={art.get(p.id)!} decorative variant={ART_VARIANT} />}
 				</QuiltCell>
 			))}
 			{fillers.map((f) => (
@@ -200,10 +213,11 @@ const timeline = {
 					colMd={f.atMd?.col}
 					rowMd={f.atMd?.row}
 					filler
+					file={f.file}
 					data-cell-lg={f.cell}
 					data-cell-md={f.cellMd}
 				>
-					<ArtFrame svg={fillerArtFor(f.file)} decorative />
+					<ArtFrame svg={fillerArtFor(f.file)} decorative variant={ART_VARIANT} />
 				</QuiltCell>
 			))}
 			<QuiltPanel

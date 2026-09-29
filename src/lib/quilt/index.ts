@@ -45,10 +45,12 @@
  * quilt.
  *
  * VIEWPORTS. The engine runs on the desktop grid (5 columns) at ≥ 1024 and
- * the tablet one (3 columns, the posts' `colMd`/`rowMd`) below that. On a
- * phone (< 640) the same machine runs but nothing is hovered: the panel is
- * in flow, a tap navigates, a step shows the card above the list, and a
- * cell that would be `gone` is painted `faint` so the list never shows holes.
+ * the tablet one (3 columns, the posts' `colMd`/`rowMd`) below that; the
+ * newest post's `span` (its 2×2 lead block) travels with it, so the block
+ * dodges the whole of it. On a phone (< 640) the same machine runs but
+ * nothing is hovered: the panel is in flow, a tap navigates, a step shows
+ * the card above the list, and a cell that would be `gone` is painted
+ * `faint` so the list never shows holes.
  *
  * LIFECYCLE. Wired on astro:page-load, guarded by data-quilt-wired on the
  * grid; the document-level listeners are removed on astro:before-swap.
@@ -59,6 +61,7 @@ import {
 	chooseBlock,
 	highlight,
 	inBlock,
+	overlaps,
 	resolve,
 	scatter,
 	type CellResolution,
@@ -188,10 +191,10 @@ function wire(): (() => void) | null {
 				block = chooseBlock({ ...g, posts: ps, keep: new Set(res.matched), focus: null });
 				const at = block;
 				if (at) {
+					const covered = (c: CellResolution) =>
+						c.post !== null ? overlaps(at, PANEL_BLOCK, ps[c.post]) : inBlock(at, PANEL_BLOCK, c.col, c.row);
 					resolved = resolved.map((c) =>
-						inBlock(at, PANEL_BLOCK, c.col, c.row)
-							? { ...c, state: "gone", delay: scatter({ cellIndex: c.index, seed: res.seed }).delay }
-							: c,
+						covered(c) ? { ...c, state: "gone", delay: scatter({ cellIndex: c.index, seed: res.seed }).delay } : c,
 					);
 				}
 			}
@@ -212,8 +215,10 @@ function wire(): (() => void) | null {
 		activePos = res.active === null || mode === "step" ? -1 : res.matched.indexOf(res.active);
 
 		// Cells. The ring: the active result while searching, the stepped post.
+		// A post is painted from its top-left cell — the first of its footprint
+		// in row-major order (the lead's four cells resolve alike anyway).
 		const byPost = new Map<number, CellResolution>();
-		for (const c of resolved) if (c.post !== null) byPost.set(c.post, c);
+		for (const c of resolved) if (c.post !== null && !byPost.has(c.post)) byPost.set(c.post, c);
 		postCells.forEach((el, i) =>
 			paintCell(
 				el,
