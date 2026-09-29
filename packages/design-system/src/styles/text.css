@@ -77,3 +77,16 @@
 .ds-text--variant-tertiary {
 	color: var(--text-tertiary);
 }
+
+/* THE PHONE STEP. `responsive` Text steps down one size below 640 — the
+   steps a phone column can't carry at their desktop size (4 and up; 3 is the
+   reading size and stays). Heading's display steps have their own rules
+   (heading.css). */
+@media (max-width: 639px) {
+	.ds-text--responsive-true.ds-text--size-4 { font-size: var(--font-size-3); }
+	.ds-text--responsive-true.ds-text--size-5 { font-size: var(--font-size-4); }
+	.ds-text--responsive-true.ds-text--size-6 { font-size: var(--font-size-5); }
+	.ds-text--responsive-true.ds-text--size-7 { font-size: var(--font-size-6); }
+	.ds-text--responsive-true.ds-text--size-8 { font-size: var(--font-size-7); }
+	.ds-text--responsive-true.ds-text--size-9 { font-size: var(--font-size-8); }
+}

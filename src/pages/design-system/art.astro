@@ -150,7 +150,7 @@ const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 						<article class="art-cat__piece" id={p.slug} aria-labelledby={`${p.slug}-h`}>
 							<header class="art-cat__meta">
 								<Mono as="h3" variant="value" size={1} class="art-cat__slug" id={`${p.slug}-h`}>
-									<a href={`#${p.slug}`} class="art-cat__self">#{p.slug}</a>
+									<Anchor variant="ink" href={`#${p.slug}`} class="art-cat__self">#{p.slug}</Anchor>
 								</Mono>
 								<Mono variant="text">{p.title}</Mono>
 								<span class="art-cat__stats">
@@ -279,13 +279,9 @@ const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 	.art-cat__slug {
 		margin: 0;
 	}
+	/* An ink Anchor; only the wrap is the page's. */
 	.art-cat__self {
-		color: var(--text-primary);
-		text-decoration: none;
 		overflow-wrap: anywhere;
-	}
-	.art-cat__self:hover {
-		color: var(--accent);
 	}
 	.art-cat__stats {
 		display: flex;

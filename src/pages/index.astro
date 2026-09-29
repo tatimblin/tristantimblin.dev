@@ -8,6 +8,7 @@ import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
 import Body from "@whois/design-system/Body";
 import Text from "@whois/design-system/Text";
+import Anchor from "@whois/design-system/Anchor";
 import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import BikeStats from "../widgets/bike-stats/BikeStats.astro";
 import Github from "../widgets/github/Github.astro";
@@ -202,18 +203,11 @@ import "@whois/wobble-text/styles.css";
 						     leaving the cite silently inheriting the paragraph's size. (DS
 						     size 1 → --font-size-1, 14px. DS size 2 also maps to --font-size-1;
 						     1 is the honest spelling.) */}
-						{/* The link inside stays a raw <a>, not <Anchor>. Anchor's only
-						     underline is the `underline` variant, a HOVER-REVEALED
-						     border-bottom that resolves to --accent — the inverse of this
-						     mark, which is underlined at rest in the cite's own ink and only
-						     changes colour on hover. .ds-anchor's `color: var(--color,
-						     var(--hyperlink))` would also pull it off the quote's tertiary,
-						     and both of those are (0,1,0) against a scoped (0,1,0) here, so
-						     the tie would be decided by stylesheet order rather than by
-						     intent. Adopting the component would mean changing the look; the
-						     look is the thing being kept. */}
+						{/* The link is a discreet Anchor underlined at rest: the tertiary
+						     ink of the cite around it, its own underline, the accent under
+						     the pointer — the DS's one link. */}
 						<Text as="cite" size={1} variant="tertiary" class="home__cite">
-							&mdash; Ken Liu, in <a class="home__cite-link" href="https://future-sf.com/fiction/1700/">&ldquo;Good Stories&rdquo;</a>
+							&mdash; Ken Liu, in <Anchor discreet underline="always" href="https://future-sf.com/fiction/1700/">&ldquo;Good Stories&rdquo;</Anchor>
 						</Text>
 					</blockquote>
 					<Body>
@@ -693,17 +687,6 @@ import "@whois/wobble-text/styles.css";
 		display: block;
 		margin-block-start: var(--space-3);
 		font-style: normal;
-	}
-
-	.home__cite-link {
-		color: inherit;
-		text-decoration: underline;
-		text-underline-offset: 0.2em;
-		text-decoration-thickness: from-font;
-	}
-
-	.home__cite-link:hover {
-		color: var(--text-secondary);
 	}
 
 	/* Stacked layout (≤900px): single column (only the copy lives here now). */

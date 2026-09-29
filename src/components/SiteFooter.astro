@@ -6,6 +6,7 @@
 // including the animating <dotted-grid> visuals (they sample the bridge's
 // --color-fg / --color-bg fresh each frame).
 import Text from "@whois/design-system/Text";
+import Chip from "@whois/design-system/Chip";
 
 const year = new Date().getFullYear();
 ---
@@ -19,35 +20,17 @@ const year = new Date().getFullYear();
 	     What stays local is only what the DS has no opinion about — the face. */}
 	<Text as="p" size={1} variant="tertiary" class="site-footer__note">© {year} Tristan Timblin</Text>
 	<div class="site-footer__controls">
-		{/* RAW <button>, NOT the DS <Button> — a deliberate, documented exception.
-		     Button is a FILLED control: `border: 0`, a solid per-variant background,
-		     a fixed 34px height and --border-radius-1, and a hover that answers by
-		     changing that fill. These toggles are the opposite treatment — a hairline
-		     outline around transparent, sized by its own padding, answering a hover by
-		     tinting its border and its text. Adopting Button would mean overriding
-		     border, border-radius, background, height, padding AND the whole hover
-		     state, which is keeping the class name and throwing away the component;
-		     the alternative is shipping two filled pills into an understated footer.
-		     Taking the component here would change the design, and the design is the
-		     thing being kept. Tokens are adopted instead — see .site-footer__toggle. */}
-		<button
-			type="button"
-			class="site-footer__toggle"
-			data-sound-toggle
-			aria-label="Mute ruler sounds"
-			aria-pressed="false"
-		>
+		{/* The toggles are DS Chips as buttons — the ruled screen's boxed caps
+		     control (/txt's filters are the same chip): a hairline box, no fill,
+		     the strong hairline under the pointer, the one focus ring, and the ON
+		     state read off aria-pressed as the ink filled in. The scripts below
+		     keep aria-pressed true to the state, and the chip follows. */}
+		<Chip as="button" type="button" data-sound-toggle aria-label="Mute ruler sounds" aria-pressed="false">
 			<span data-sound-toggle-label>Sound</span>
-		</button>
-		<button
-			type="button"
-			class="site-footer__toggle"
-			data-theme-toggle
-			aria-label="Switch to light theme"
-			aria-pressed="false"
-		>
+		</Chip>
+		<Chip as="button" type="button" data-theme-toggle aria-label="Switch to light theme" aria-pressed="false">
 			<span data-theme-toggle-label>Light</span>
-		</button>
+		</Chip>
 	</div>
 </footer>
 
@@ -75,42 +58,7 @@ const year = new Date().getFullYear();
 	.site-footer__controls {
 		display: inline-flex;
 		align-items: center;
-		gap: var(--space-2, 0.5rem);
-	}
-
-	/* The raw-button exception is argued at the tag (see the comment in the markup).
-	   Everything the DS DOES have an opinion about is taken from it here: the gap,
-	   the padding and the radius were hand-typed lengths that happened to land near
-	   scale steps, so they are now the steps themselves. */
-	.site-footer__toggle {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-1);
-		padding: var(--space-2) var(--space-3);
-		/* `font: inherit` first to clear the UA's button font wholesale (family, size,
-		   weight, line-height), THEN the face — otherwise the shorthand would reset
-		   whichever of those the longhand set. It had been landing these on the body
-		   face; a control labelled "Sound" is interface, so it belongs on --font-ui
-		   alongside the note above and the header bar. */
-		font: inherit;
-		font-family: var(--font-ui);
-		font-size: var(--font-size-1, 0.875rem);
-		color: var(--text-primary);
-		background: transparent;
-		border: 1px solid var(--hairline);
-		border-radius: var(--border-radius-2);
-		cursor: pointer;
-		transition: border-color 0.15s ease, color 0.15s ease;
-	}
-
-	.site-footer__toggle:hover {
-		border-color: var(--accent);
-		color: var(--accent);
-	}
-
-	.site-footer__toggle:focus-visible {
-		outline: 2px solid var(--accent);
-		outline-offset: 2px;
+		gap: var(--space-2);
 	}
 </style>
 

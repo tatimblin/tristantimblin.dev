@@ -12,7 +12,8 @@
 	border: 0;
 	background: transparent;
 	border-radius: var(--border-radius-tile);
-	transition: background var(--duration-swap) var(--ease-reveal);
+	/* The wash is a micro-transition: felt, not watched. */
+	transition: background var(--duration-quick) var(--ease-reveal);
 }
 .ds-hit-area:disabled {
 	cursor: default;

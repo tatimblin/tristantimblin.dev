@@ -43,3 +43,14 @@
 		font-size: var(--font-size-4);
 	}
 }
+/* ...and a second step on a phone for the two display sizes, whose one step
+   down (44px, 32px) is still more than a 343px column holds in two or three
+   lines: 6 lands on 32px, 5 on 24px. */
+@media (max-width: 639px) {
+	.ds-heading--responsive-true.ds-heading--size-6 {
+		font-size: var(--font-size-7);
+	}
+	.ds-heading--responsive-true.ds-heading--size-5 {
+		font-size: var(--font-size-6);
+	}
+}

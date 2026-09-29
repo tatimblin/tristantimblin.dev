@@ -175,7 +175,7 @@ const neighbourRows = [
 				<Grid as="header" templateColumns={COLUMNS} gapX={4} class="post__head">
 					<Heading as="h1" size={6} responsive class="post__title">{title}</Heading>
 					{description && (
-						<Text as="p" size={5} variant="primary" class="post__lead">
+						<Text as="p" size={5} responsive variant="primary" class="post__lead">
 							{description}
 						</Text>
 					)}
@@ -320,8 +320,22 @@ const neighbourRows = [
 		.post {
 			--ruled-columns: minmax(0, 1fr);
 		}
+		/* The strip two by two, read as two label/value lines: the number
+		   and the date on the first, the category and the reading time on
+		   the second, the right-hand cells on the right edge. */
 		.post__strip {
 			--ruled-columns: repeat(2, minmax(0, 1fr));
+		}
+		.post__date {
+			order: 1;
+		}
+		.post__category,
+		.post__strip > .post__cell:nth-child(2) {
+			order: 2;
+		}
+		.post__stats {
+			order: 3;
+			text-align: end;
 		}
 		.post__colnos {
 			display: none;
@@ -329,6 +343,10 @@ const neighbourRows = [
 		.post__title {
 			grid-column: 1;
 			grid-row: auto;
+			/* Two lines of a big bitmap face need a hair more air than one
+			   wide line does: at 0.95 a descender reaches the next cap. */
+			--line-height-heading: 1.05;
+			text-wrap: pretty;
 		}
 		.post__lead {
 			grid-column: 1;
@@ -344,6 +362,17 @@ const neighbourRows = [
 		}
 		.post__fig {
 			margin-block-start: var(--space-9);
+		}
+	}
+	/* Phone: the strip sits a step under the header — <main>'s top pad
+	   shrunk to --space-5 and no further --space-10 of its own — so the
+	   post starts in the first screen, not after a band of nothing. */
+	@media (max-width: 639px) {
+		.blog__main--post {
+			padding-block-start: var(--space-5);
+		}
+		.post__strip {
+			margin-block-start: 0;
 		}
 	}
 </style>

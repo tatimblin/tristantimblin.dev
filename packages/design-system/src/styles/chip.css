@@ -22,10 +22,11 @@
 	user-select: none;
 	background: var(--chip-background, transparent);
 	color: var(--chip-color, var(--text-secondary));
+	/* A micro-transition on a small control: felt, not watched. */
 	transition:
-		background var(--duration-swap) var(--ease-reveal),
-		color var(--duration-swap) var(--ease-reveal),
-		border-color var(--duration-swap) var(--ease-reveal);
+		background var(--duration-quick) var(--ease-reveal),
+		color var(--duration-quick) var(--ease-reveal),
+		border-color var(--duration-quick) var(--ease-reveal);
 }
 
 /* A static one is not a control: no text cursor over it. At zero

@@ -15,6 +15,9 @@
 //   spaced   OFF by default. On, the body role's leading and tracking
 //            (`--line-height-body`, `--font-body-letter-spacing`): for a run
 //            of text that should sit like a paragraph without being one.
+//   responsive  steps the size DOWN one on a phone (below 640): for a lead or
+//            a display line whose desktop size a 343px column can't carry.
+//            Heading's `responsive` is the heading counterpart.
 //   truncate; polymorphic `as`.
 //
 // No `weight`: the body face has one cut above the Light and the roles carry
@@ -32,6 +35,7 @@ interface Props {
 	caps?: boolean;
 	family?: Family;
 	size?: Size | string;
+	responsive?: boolean;
 	truncate?: boolean;
 	variant?: Variant;
 	class?: string;
@@ -44,6 +48,7 @@ const {
 	caps = false,
 	family = "default",
 	size = 3,
+	responsive = false,
 	truncate,
 	variant = "default",
 	class: className,
@@ -58,6 +63,7 @@ const cls = cx(
 	caps && "ds-caps",
 	family !== "default" && `ds-text--family-${family}`,
 	`ds-text--size-${size}`,
+	responsive && "ds-text--responsive-true",
 	truncate && "ds-text--truncate-true",
 	variant !== "default" && `ds-text--variant-${variant}`,
 	className,
