@@ -17,6 +17,7 @@ const SRC_WEBM = SOURCES[0].webm;
 <Layout
 	title="Dotted Grid — Tristan Timblin"
 	description="An interactive playground for the dotted-grid web component: tune cell size, dot size, gamma, and contrast against live video sources."
+	noindex
 >
 	<main class="dotgrid-demo">
 		<!-- Full-viewport hero preview, driven live by the control panel. -->
@@ -137,8 +138,15 @@ const SRC_WEBM = SOURCES[0].webm;
 		// so a captured reference would leave every other slider driving a discarded
 		// node while the visible one ignored them.
 		const hero = () => document.querySelector<HTMLElement>("[data-hero]");
-		const panel = document.querySelector<HTMLElement>("[data-controls]");
-		if (hero() && panel) {
+
+		// Wired on astro:page-load, which ClientRouter fires for the first load AND
+		// after every navigation: a module script runs once per session, so wiring
+		// at its top level would leave the controls dead after navigating here from
+		// another page. The marker keeps a second page-load on the same panel a no-op.
+		function wireControls() {
+			const panel = document.querySelector<HTMLElement>("[data-controls]");
+			if (!hero() || !panel || panel.dataset.wired) return;
+			panel.dataset.wired = "true";
 			const sync = (input: HTMLInputElement) => {
 				const attr = input.dataset.attr;
 				// The intro delay/duration sliders have no data-attr: they feed the replay
@@ -205,6 +213,8 @@ const SRC_WEBM = SOURCES[0].webm;
 				});
 			});
 		}
+
+		document.addEventListener("astro:page-load", wireControls);
 	</script>
 </Layout>
 

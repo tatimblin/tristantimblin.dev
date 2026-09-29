@@ -39,13 +39,18 @@ export default defineConfig({
 		// MDX for the /txt posts: lets each post map markdown elements (p, h2,
 		// a, …) onto @whois/design-system components via <Content components={…}/>.
 		mdx(),
-		// Keep noindex pages out of the sitemap: the scratch /vc-experiments page,
-		// and the /txt tag lists (thin archive — the quilt and the
-		// posts carry the content).
+		// Keep noindex pages out of the sitemap: the /txt tag lists (thin
+		// archive — the quilt and the posts carry the content), and the
+		// workbenches, /dotgrid and /design-system (with /design-system/art).
 		sitemap({
-			filter: (page) =>
-				!page.includes('/vc-experiments') &&
-				!page.includes('/txt/tag/'),
+			filter: (page) => {
+				const { pathname } = new URL(page);
+				return (
+					!pathname.startsWith('/txt/tag/') &&
+					!pathname.startsWith('/dotgrid/') &&
+					!pathname.startsWith('/design-system/')
+				);
+			},
 		}),
 	],
 });
