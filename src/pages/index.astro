@@ -33,22 +33,22 @@ import "@whois/wobble-text/styles.css";
 	title="Tristan Timblin"
 	description="Tristan Timblin — American computer programmer and human-computer interaction engineer."
 >
-	<!-- SCENE: fabric video as a dotted-grid halftone — a full-viewport background
-	     layer, faded at the top+bottom edges (see FullHeroLayout .fh__scene). -->
-	<!-- No color/background attrs, DELIBERATELY: the grid falls back to --color-fg /
+	{/* SCENE: fabric video as a dotted-grid halftone — a full-viewport background
+	     layer, faded at the top+bottom edges (see FullHeroLayout .fh__scene). */}
+	{/* No color/background attrs, DELIBERATELY: the grid falls back to --color-fg /
 	     --color-bg, so it inverts with the active theme. This carried a hardcoded
 	     color="#fff" so the fold's crest could reach full white on the dark page —
 	     but --color-bg in the light theme is oklch(99.24%), so white dots landed on
 	     a white backdrop and the scene disappeared entirely. The highlight lift is
 	     what buys that crest anyway: it pushes the brightest cells toward the
 	     background's contrast pole (white on dark, black on light), which is the
-	     theme-safe version of the same intent. -->
-	<!-- `intro`: develop the halftone in on arrival, brightest dots first, so the
+	     theme-safe version of the same intent. */}
+	{/* `intro`: develop the halftone in on arrival, brightest dots first, so the
 	     scene resolves out of the page colour instead of snapping to full strength
 	     the moment the first video frame decodes. Runs once, starts at that first
 	     frame, and is skipped entirely under prefers-reduced-motion.
 	     No hold (intro-delay="0"): the develop-in starts immediately on the first
-	     frame — kept subtle by the eased ramp and the grid's sparse, cut-off field. -->
+	     frame — kept subtle by the eased ramp and the grid's sparse, cut-off field. */}
 	<dotted-grid
 		slot="scene"
 		class="hero__video"
@@ -69,31 +69,31 @@ import "@whois/wobble-text/styles.css";
 		crosshatch="0"
 	/>
 
-	<!-- SCENE (mobile only): the video carousel promoted into the hero as the
+	{/* SCENE (mobile only): the video carousel promoted into the hero as the
 	     full-bleed background, replacing fabric ≤900px (see .hero-carousel styles
 	     + videos.css which hides the footer copy at the same breakpoint). Portrait
 	     clip cover-fills; the date ruler is pinned HORIZONTAL along the bottom edge
 	     as a film scrubber, and publishes how much of that edge it occupies so the
-	     heading group can rest above it (--hero-floor; see the script below). -->
-	<!-- intro/introDelay match the fabric scene above so BOTH hero variants make the
+	     heading group can rest above it (--hero-floor; see the script below). */}
+	{/* intro/introDelay match the fabric scene above so BOTH hero variants make the
 	     same entrance — the halftone develops in brightest-dots-first with no hold,
 	     whichever scene the breakpoint is showing. Runs once, on the first
-	     clip; later clips swap in without re-developing. -->
-	<!-- max-dpr: this canvas is FULL-BLEED, and the halftone's cost is per-pixel — at
+	     clip; later clips swap in without re-developing. */}
+	{/* max-dpr: this canvas is FULL-BLEED, and the halftone's cost is per-pixel — at
 	     DPR 2 on a phone that is ~1.3 Mpx re-composited on every video frame. Measured
 	     at 8x CPU throttle while scrolling: 46.6ms median frame at 1.32 Mpx against
 	     11.8ms at 0.33 Mpx, i.e. the canvas was roughly three quarters of the frame and
 	     the cost tracks area. The footer widget's card is a fraction of the size and
 	     keeps the default cap. See effectiveDpr() for why a cap of 1 does not
-	     reintroduce lattice moiré (the upscale stays a whole number). -->
-	<!-- HALFTONE: the finer, dimmer grid, which is NOT the component's default. Those
+	     reintroduce lattice moiré (the upscale stays a whole number). */}
+	{/* HALFTONE: the finer, dimmer grid, which is NOT the component's default. Those
 	     defaults suit the footer widget — a small card, viewed directly, where a coarse
 	     bright grid reads as texture. Here the same clip is the full-bleed scene at 0.55
 	     opacity with the wordmark on top of it, and the coarser grid competes with the
 	     type instead of sitting under it. Same values the hero used before the defaults
 	     moved; gamma is the component default, restated so the whole look reads in one
-	     place rather than half here and half there. -->
-	<!-- color: THE ONE DELIBERATE EXCEPTION to the fabric scene's "no colour, stay
+	     place rather than half here and half there. */}
+	{/* color: THE ONE DELIBERATE EXCEPTION to the fabric scene's "no colour, stay
 	     theme-aware" note above, and the case VideoCarousel's own `color` prop doc
 	     is written around. The fabric grid can drop its colour because it also runs
 	     at full strength and leans on the highlight lift to reach the background's
@@ -104,7 +104,7 @@ import "@whois/wobble-text/styles.css";
 	     grey reads at the same weight against the near-white light backdrop and the
 	     near-black dark one, which is what a scene under type wants. Pick a fixed
 	     colour ONLY with that both-backdrops check done — the hardcoded #fff this
-	     pattern started from is what made the light theme's scene vanish. -->
+	     pattern started from is what made the light theme's scene vanish. */}
 	<VideoCarousel
 		slot="scene"
 		class="hero-carousel"
@@ -122,32 +122,32 @@ import "@whois/wobble-text/styles.css";
 		xfadeLive
 	/>
 
-	<!-- HEADER: brand + nav, overlaying the top of the scene (z-index 4). Lives in
-	     the heading slot so it renders inside the hero over the dotgrid. -->
+	{/* HEADER: brand + nav, overlaying the top of the scene (z-index 4). Lives in
+	     the heading slot so it renders inside the hero over the dotgrid. */}
 	<SiteHeader slot="heading" />
 
-	<!-- HEADING: the full-width "tristan" wordmark, then the animated
+	{/* HEADING: the full-width "tristan" wordmark, then the animated
 	     "& other stories" lockup. The big "&" overlaps the wordmark (indented) and
 	     parallaxes + fades on its own scroll position; "other stories" pins mid-
 	     viewport and wipes its outline→solid reveal.
 	     The INTRO is passed as the default slot: it flows directly beneath
 	     "other stories" (as a static sibling of the pin, so it scrolls away with the
-	     page rather than hanging pinned), and the two read as one group. -->
+	     page rather than hanging pinned), and the two read as one group. */}
 	<StoriesHeading slot="heading">
-		<!-- A short "who I am" lede. Static (no reveal). The parent regions opt
+		{/* A short "who I am" lede. Static (no reveal). The parent regions opt
 		     pointers out; .hero-intro opts back in.
 		     On the SAME 12-col grid as the body copy below (.home__grid) so the lede
-		     shares its exact measure — cols 1–5 — instead of an eyeballed max-width. -->
+		     shares its exact measure — cols 1–5 — instead of an eyeballed max-width. */}
 		<Grid class="hero-intro" align="end">
 			<GridItem class="hero-intro__lede">
-				<!-- A RAW <p>, deliberately — NOT <Body>. This line is a sentence, but it
+				{/* A RAW <p>, deliberately — NOT <Body>. This line is a sentence, but it
 				     is not the reading role: it is a small uppercase statement set in the
 				     sub-heading face, and every part of that (face, 14px step, 1.5 leading,
 				     caps tracking) is the opposite of what --font-body-* describes. Body
 				     would replace all four, and .ds-body.ds-body is (0,2,0) against this
 				     file's scoped (0,1,1), so the page could not win them back. The setting
 				     therefore stays whole in .hero-intro__lede p below rather than being
-				     split half into props and half into CSS. -->
+				     split half into props and half into CSS. */}
 				<p>
 					American computer programmer and human-computer interaction engineer.
 				</p>
@@ -155,25 +155,25 @@ import "@whois/wobble-text/styles.css";
 		</Grid>
 	</StoriesHeading>
 
-	<!-- CONTENT: the page owns its grid rows here. First row — body copy (cols
+	{/* CONTENT: the page owns its grid rows here. First row — body copy (cols
 	     1–5) — rises into the pinned lockup and pushes it away. The video carousel
 	     no longer lives here: it's a cell in the widget grid below that
-	     parallaxes UP to visually sit alongside this row (see widgets/videos). -->
+	     parallaxes UP to visually sit alongside this row (see widgets/videos). */}
 	<div class="fh-row">
 		<Grid class="home__grid">
-			<!-- Eases in as it is scrolled to. Marked on the grid CELL rather than on
+			{/* Eases in as it is scrolled to. Marked on the grid CELL rather than on
 			     <wobble-text> inside it, so the reveal's opacity and the element's
 			     `filter` stay on separate boxes (a filter on the same element as a
 			     fading ancestor is the containing-block hazard called out in
-			     src/lib/reveal.ts). -->
+			     src/lib/reveal.ts). */}
 			<GridItem class="home__copy" data-reveal>
-				<!-- <Body> rather than bare <p> + a local type rule. This copy IS the
+				{/* <Body> rather than bare <p> + a local type rule. This copy IS the
 				     reading role, so it should be set by the role and nothing else: the
 				     rule it replaces hand-rolled the face at --font-size-4 (18px, the
 				     SUB-HEADING step) with 1.6 leading and no tracking, while post prose
 				     runs the role's 16px/1.7/0.3px — so the site had two different "body
 				     texts" and this was the louder one. Body takes no size prop on purpose;
-				     retuning reading text is one edit in tokens.overrides.css. -->
+				     retuning reading text is one edit in tokens.overrides.css. */}
 				<wobble-text scale="3.2" speed="0.3">
 					<Body>
 						I am a craftsman, I create things to be used. Even if they often are
@@ -182,11 +182,11 @@ import "@whois/wobble-text/styles.css";
 						another I can build them worlds.
 					</Body>
 					<blockquote class="home__quote" cite="https://future-sf.com/fiction/1700/">
-						<!-- Same role as the copy around it — the blockquote's job is to MARK
+						{/* Same role as the copy around it — the blockquote's job is to MARK
 						     the passage (rule, indent, quieter ink), not to re-set the type,
 						     which is why the face/size/leading have left .home__quote. The
 						     quieter ink is a Body prop rather than a local colour: the role
-						     already has a variant for it. -->
+						     already has a variant for it. */}
 						<Body variant="tertiary">
 							I'm arrogant enough to demand the Reader's complete, total
 							attention. The Reader should likewise demand that the Writer puts
@@ -194,15 +194,15 @@ import "@whois/wobble-text/styles.css";
 							deserve each other. It's an act of love to read and an act of love
 							to write.
 						</Body>
-						<!-- <Text size={1}>, not <Body>: the attribution is a label on the
+						{/* <Text size={1}>, not <Body>: the attribution is a label on the
 						     quote, so it steps DOWN off the scale — which is exactly what Body
 						     refuses to do. It replaces a `font-size: var(--font-size-2)` that
 						     never applied: the DS scale is 1,3,4,5,6,7,8, so that token does
 						     not exist and the declaration was invalid at computed-value time,
 						     leaving the cite silently inheriting the paragraph's size. (DS
 						     size 1 → --font-size-1, 14px. DS size 2 also maps to --font-size-1;
-						     1 is the honest spelling.) -->
-						<!-- The link inside stays a raw <a>, not <Anchor>. Anchor's only
+						     1 is the honest spelling.) */}
+						{/* The link inside stays a raw <a>, not <Anchor>. Anchor's only
 						     underline is the `underline` variant, a HOVER-REVEALED
 						     border-bottom that resolves to --accent — the inverse of this
 						     mark, which is underlined at rest in the cite's own ink and only
@@ -211,7 +211,7 @@ import "@whois/wobble-text/styles.css";
 						     and both of those are (0,1,0) against a scoped (0,1,0) here, so
 						     the tie would be decided by stylesheet order rather than by
 						     intent. Adopting the component would mean changing the look; the
-						     look is the thing being kept. -->
+						     look is the thing being kept. */}
 						<Text as="cite" size={1} variant="tertiary" class="home__cite">
 							&mdash; Ken Liu, in <a class="home__cite-link" href="https://future-sf.com/fiction/1700/">&ldquo;Good Stories&rdquo;</a>
 						</Text>
@@ -224,7 +224,7 @@ import "@whois/wobble-text/styles.css";
 		</Grid>
 	</div>
 
-	<!-- WIDGETS: an Apple-widgets-style grid at the foot of the page. Mixed
+	{/* WIDGETS: an Apple-widgets-style grid at the foot of the page. Mixed
 	     sizes in non-packed DOM order so grid-auto-flow: dense re-packs holes;
 	     every cell is a DS Widget in the instrument UI (src/widgets/*).
 
@@ -234,7 +234,7 @@ import "@whois/wobble-text/styles.css";
 	     video cell is authored first but lands in the last column, so it reveals
 	     last. data-reveal-order exists for exactly this mismatch.
 	     Each widget's own <Widget> forwards data-* through Card → Box, so no wrapper
-	     element is needed (which would also disturb the dense packing). -->
+	     element is needed (which would also disturb the dense packing). */}
 	<div class="fh-row home__widgets">
 		<WidgetGrid cols={4}>
 			<Videos />
@@ -243,17 +243,17 @@ import "@whois/wobble-text/styles.css";
 
 			<BikeStats />
 
-			<!-- 1×1 in column 3 alongside the 1×2 video cell. -->
+			{/* 1×1 in column 3 alongside the 1×2 video cell. */}
 			<Github />
 
-			<!-- 2×2, and the first item that fits columns 1–2 of row 2 once the
+			{/* 2×2, and the first item that fits columns 1–2 of row 2 once the
 			     three 1×1s have filled row 1 — so it lands bottom-left with no
-			     explicit placement, purely from size + DOM order. -->
+			     explicit placement, purely from size + DOM order. */}
 			<Volo />
 
-			<!-- 1×1, and the only cell left once Volo has taken columns 1–2 of row
+			{/* 1×1, and the only cell left once Volo has taken columns 1–2 of row
 			     2 — so it lands beside it with no explicit placement, from size and
-			     DOM order alone. -->
+			     DOM order alone. */}
 			<Readers />
 		</WidgetGrid>
 	</div>

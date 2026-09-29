@@ -546,10 +546,10 @@ const faces = [
 	description="A living catalogue of the @whois design-system components, rendered in every variant, size, and state with a live token editor."
 	noindex
 >
-	<!-- Live token editor. Sliders/pickers write inline custom properties onto
+	{/* Live token editor. Sliders/pickers write inline custom properties onto
 	     <html> (which beats the class-scoped stylesheet), so every component in
 	     the catalogue re-renders instantly. "Copy config" exports the changed
-	     tokens as JSON for the agent to apply to tokens.overrides.css. -->
+	     tokens as JSON for the agent to apply to tokens.overrides.css. */}
 	<aside class="ds-controls" data-token-controls aria-label="design token controls">
 		<header class="ds-controls__top">
 			<h2 class="ds-controls__title">tokens</h2>
@@ -607,7 +607,7 @@ const faces = [
 	<main class="ds-demo">
 		<h1 class="ds-demo__title">@whois/design-system — component catalogue</h1>
 
-		<!-- TYPOGRAPHY ----------------------------------------------------- -->
+		{/* TYPOGRAPHY ----------------------------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Faces — the four roles</h2>
 			<p class="ds-demo__note">
@@ -724,7 +724,7 @@ const faces = [
 			</Flex>
 		</section>
 
-		<!-- INSTRUMENT UI: tokens + voices --------------------------------- -->
+		{/* INSTRUMENT UI: tokens + voices --------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Instrument UI — tokens</h2>
 			<p class="ds-demo__note">
@@ -843,7 +843,7 @@ const faces = [
 			<Text size={4}>Body with <EM>emphasis</EM> and <Strong>strong</Strong>.</Text>
 		</section>
 
-		<!-- BUTTONS -------------------------------------------------------- -->
+		{/* BUTTONS -------------------------------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Button — variants</h2>
 			<p class="ds-demo__note">
@@ -906,7 +906,7 @@ const faces = [
 			</Flex>
 		</section>
 
-		<!-- CARD ----------------------------------------------------------- -->
+		{/* CARD ----------------------------------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Card — the flat card / variants</h2>
 			<p class="ds-demo__note">
@@ -953,7 +953,7 @@ const faces = [
 			</Grid>
 		</section>
 
-		<!-- CALLOUT + PILL ------------------------------------------------- -->
+		{/* CALLOUT + PILL ------------------------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Callout — variants</h2>
 			<Flex direction="column" gap={3} alignItems="stretch">
@@ -1023,7 +1023,7 @@ const faces = [
 			</Flex>
 		</section>
 
-		<!-- HAIRLINE GRAPHICS ---------------------------------------------- -->
+		{/* HAIRLINE GRAPHICS ---------------------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">TickRuler</h2>
 			<p class="ds-demo__note">
@@ -1205,7 +1205,7 @@ const faces = [
 			</Card>
 		</section>
 
-		<!-- WIDGET: the pieces together --------------------------------- -->
+		{/* WIDGET: the pieces together --------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Widget — the pieces together</h2>
 			<p class="ds-demo__note">
@@ -1250,8 +1250,8 @@ const faces = [
 			</WidgetGrid>
 		</section>
 
-		<!-- ANCHOR --------------------------------------------------------- -->
-		<!-- READING UI ----------------------------------------------------- -->
+		{/* ANCHOR --------------------------------------------------------- */}
+		{/* READING UI ----------------------------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">PostList · PostGroup · PostRow — the archive</h2>
 			<p class="ds-demo__note">
@@ -1369,7 +1369,7 @@ assertions:
 			</Blockquote>
 		</section>
 
-		<!-- ART ------------------------------------------------------------ -->
+		{/* ART ------------------------------------------------------------ */}
 		<section class="ds-demo__section" id="art">
 			<h2 class="ds-demo__h">Art — tokens and the frame</h2>
 			<p class="ds-demo__note">
@@ -1501,7 +1501,7 @@ assertions:
 			</div>
 		</section>
 
-		<!-- QUILT ---------------------------------------------------------- -->
+		{/* QUILT ---------------------------------------------------------- */}
 		<section class="ds-demo__section" id="quilt">
 			<h2 class="ds-demo__h">Quilt · QuiltCell — the grid of art tiles and its states</h2>
 			<p class="ds-demo__note">
@@ -1680,7 +1680,7 @@ assertions:
 			</Flex>
 		</section>
 
-		<!-- LIST + INLINECODE ---------------------------------------------- -->
+		{/* LIST + INLINECODE ---------------------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">List — unordered / ordered</h2>
 			<Grid templateColumns="1fr 1fr" gap={5}>
@@ -1702,7 +1702,7 @@ assertions:
 			<Text size={4}>Run <InlineCode>bun install</InlineCode> then <InlineCode>bun dev</InlineCode>.</Text>
 		</section>
 
-		<!-- ICON ----------------------------------------------------------- -->
+		{/* ICON ----------------------------------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Icon — names</h2>
 			<Flex gap={4} wrap="wrap" alignItems="center">
@@ -1721,7 +1721,7 @@ assertions:
 			</Flex>
 		</section>
 
-		<!-- LAYOUT + A11Y -------------------------------------------------- -->
+		{/* LAYOUT + A11Y -------------------------------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Box / Flex (foundation)</h2>
 			<Flex gap={2} justifyContent="space-between"
@@ -1732,7 +1732,7 @@ assertions:
 			</Flex>
 		</section>
 
-		<!-- GRID: columns / gutters / breakpoints ------------------------- -->
+		{/* GRID: columns / gutters / breakpoints ------------------------- */}
 		<section class="ds-demo__section">
 			<h2 class="ds-demo__h">Grid — 12 columns + spans</h2>
 			<Text size={2} variant="tertiary">

@@ -69,15 +69,15 @@ const {
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<!-- Start above-the-fold media during HTML parse instead of after the page
+		{/* Start above-the-fold media during HTML parse instead of after the page
 		     bundle executes (see the preloadMedia prop). First, so it races the
-		     stylesheet below rather than queueing behind it. -->
+		     stylesheet below rather than queueing behind it. */}
 		{
 			preloadMedia.map((m) => (
 				<link rel="preload" href={m.href} as={m.as} type={m.type} />
 			))
 		}
-		<!-- The two faces that paint above the fold on EVERY page: the body face
+		{/* The two faces that paint above the fold on EVERY page: the body face
 		     (every paragraph) and the hero cut of Migra (the wordmark lockup). They
 		     are @font-face'd in src/styles/fonts.css, which the browser only
 		     discovers after the stylesheet parses — preloading starts the fetch
@@ -108,7 +108,7 @@ const {
 
 		     fs-mondwest-bold is left to normal discovery — 7 KB, and it only sets
 		     small-type labels. Its metric-matched fallback holds the layout until it
-		     lands. -->
+		     lands. */}
 		<link
 			rel="preload"
 			href="/fonts/ppmondwest-light.woff2"
@@ -155,8 +155,8 @@ const {
 			modifiedDate={modifiedDate}
 			tags={tags}
 		/>
-		<!-- No-FOUC theme init: apply the stored choice before first paint, and
-		     re-apply after each view-transition swap. Dark is the fallback. -->
+		{/* No-FOUC theme init: apply the stored choice before first paint, and
+		     re-apply after each view-transition swap. Dark is the fallback. */}
 		<script is:inline>
 			(function () {
 				function apply() {
@@ -169,7 +169,7 @@ const {
 				document.addEventListener("astro:after-swap", apply);
 			})();
 		</script>
-		<!-- ARM THE ASSET REVEAL. src/styles/reveal.css only hides a [data-reveal]
+		{/* ARM THE ASSET REVEAL. src/styles/reveal.css only hides a [data-reveal]
 		     element while this class is present, so the class IS the opt-in and its
 		     removal is the universal escape hatch.
 
@@ -185,7 +185,7 @@ const {
 
 		     Armed on the initial hard load ONLY — no astro:after-swap hook, unlike
 		     the theme script above. Internal navigations run against warm caches, so
-		     re-arming would blink already-decoded content on every click. -->
+		     re-arming would blink already-decoded content on every click. */}
 		<script is:inline>
 			(function () {
 				if (window.__revealArmed) return;

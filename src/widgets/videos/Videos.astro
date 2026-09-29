@@ -11,7 +11,7 @@ import VideoCarousel from "../../components/VideoCarousel.astro";
 import "./videos.css";
 ---
 
-<!-- Its OWN reveal group, deliberately not the row's "widgets" one. A group waits
+{/* Its OWN reveal group, deliberately not the row's "widgets" one. A group waits
      for every member to be in view before it fades any of them in, and this card
      paints ~90vh above its slot (the dock lift) while its row-mates sit at their
      real grid position — so grouping it with them held it invisible until the ROW
@@ -21,7 +21,7 @@ import "./videos.css";
      when it crosses the fold, which is where its entrance is choreographed to start.
      NB the reveal writes `translate` while the dock lift below writes `transform`
      — two independent properties, so they compose instead of overwriting each
-     other. -->
+     other. */}
 <Widget
 	size="1x2"
 	class="wx-videos"

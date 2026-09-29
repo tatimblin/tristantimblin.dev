@@ -11,13 +11,13 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-	<!-- <Text size={1} variant="tertiary">, not a bare <p>: the size step and the
+	{/* <Text size={1} variant="tertiary">, not a bare <p>: the size step and the
 	     tertiary ink are both DS decisions, so they come from the component rather
 	     than being retyped as a font-size and a colour in the scoped block below.
-	     What stays local is only what the DS has no opinion about — the face. -->
+	     What stays local is only what the DS has no opinion about — the face. */}
 	<Text as="p" size={1} variant="tertiary" class="site-footer__note">© {year} Tristan Timblin</Text>
 	<div class="site-footer__controls">
-		<!-- RAW <button>, NOT the DS <Button> — a deliberate, documented exception.
+		{/* RAW <button>, NOT the DS <Button> — a deliberate, documented exception.
 		     Button is a FILLED control: `border: 0`, a solid per-variant background,
 		     a fixed 34px height and --border-radius-1, and a hover that answers by
 		     changing that fill. These toggles are the opposite treatment — a hairline
@@ -27,7 +27,7 @@ const year = new Date().getFullYear();
 		     state, which is keeping the class name and throwing away the component;
 		     the alternative is shipping two filled pills into an understated footer.
 		     Taking the component here would change the design, and the design is the
-		     thing being kept. Tokens are adopted instead — see .site-footer__toggle. -->
+		     thing being kept. Tokens are adopted instead — see .site-footer__toggle. */}
 		<button
 			type="button"
 			class="site-footer__toggle"

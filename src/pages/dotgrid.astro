@@ -20,7 +20,7 @@ const SRC_WEBM = SOURCES[0].webm;
 	noindex
 >
 	<main class="dotgrid-demo">
-		<!-- Full-viewport hero preview, driven live by the control panel. -->
+		{/* Full-viewport hero preview, driven live by the control panel. */}
 		<dotted-grid data-hero src={SRC} src-webm={SRC_WEBM}></dotted-grid>
 
 		<aside class="controls" data-controls aria-label="dotted-grid controls">
@@ -92,10 +92,10 @@ const SRC_WEBM = SOURCES[0].webm;
 				<span>intro-jitter <output data-out="intro-jitter"></output></span>
 				<input type="range" data-attr="intro-jitter" min="0" max="0.5" step="0.02" value="0.16" />
 			</label>
-			<!-- The intro wipe is a one-shot ENTRANCE, so it can't be driven by a live
+			{/* The intro wipe is a one-shot ENTRANCE, so it can't be driven by a live
 			     slider like the other knobs: it runs once per element and latches. These
 			     two feed the replay button, which re-runs it on a fresh element at the
-			     chosen delay + duration (see the handler in the page script). -->
+			     chosen delay + duration (see the handler in the page script). */}
 			<label>
 				<span>intro delay ms <output data-out="intro-delay-ms">600</output></span>
 				<input type="range" data-intro-delay-ms min="0" max="3000" step="100" value="600" />

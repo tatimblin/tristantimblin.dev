@@ -61,8 +61,8 @@ const langs = [
 	data-reveal-group="widgets"
 	data-reveal-order="2"
 >
-	<!-- The handle, in the header's meta slot: outside the body the toggle
-	     covers, so tapping it never flips. -->
+	{/* The handle, in the header's meta slot: outside the body the toggle
+	     covers, so tapping it never flips. */}
 	<Mono
 		slot="meta"
 		as="a"
@@ -77,8 +77,8 @@ const langs = [
 
 	<CardBody class="wx-gh-body">
 		<Faces fill>
-		<!-- Face A: the contribution grid as tiles — ordinary days the ink at two
-		     strengths, the big days lit in the accent — over the yearly total. -->
+		{/* Face A: the contribution grid as tiles — ordinary days the ink at two
+		     strengths, the big days lit in the accent — over the yearly total. */}
 		<Face class="wx-gh-face--grid">
 			<TileGrid cols={weeks.length} rows={7} fit="height">
 				{
@@ -95,8 +95,8 @@ const langs = [
 			<Figure unit="contributions">{total}</Figure>
 		</Face>
 
-		<!-- Face B: language breakdown — a tick ruler split by share over the
-		     legend, both ranked (see `langs`). -->
+		{/* Face B: language breakdown — a tick ruler split by share over the
+		     legend, both ranked (see `langs`). */}
 		<Face class="wx-gh-face--langs" hidden>
 			<TickRuler
 				class="wx-gh-ruler"
@@ -111,10 +111,10 @@ const langs = [
 		</Face>
 		</Faces>
 
-		<!-- The flip surface: a transparent <button> over the whole body, last in
+		{/* The flip surface: a transparent <button> over the whole body, last in
 		     the DOM so the faces read before the control that swaps them. One name
 		     for both states — it always offers the languages; aria-pressed says
-		     whether they are showing. -->
+		     whether they are showing. */}
 		<button
 			class="wx-gh-flip"
 			type="button"

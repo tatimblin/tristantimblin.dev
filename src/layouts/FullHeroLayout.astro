@@ -42,14 +42,14 @@ const { title, description, image, preloadMedia } = Astro.props;
 	preloadMedia={preloadMedia}
 >
 	<div class="fh">
-		<!-- SCENE: full-bleed; height driven by --hero-height. -->
+		{/* SCENE: full-bleed; height driven by --hero-height. */}
 		<div class="fh__scene"><slot name="scene" /></div>
 
-		<!-- HEADING: inset to the container gutter so a 12-col lockup lines up
-		     with the content rows below. Slotted content owns any animation. -->
+		{/* HEADING: inset to the container gutter so a 12-col lockup lines up
+		     with the content rows below. Slotted content owns any animation. */}
 		<div class="fh__heading"><slot name="heading" /></div>
 
-		<!-- CONTENT: bare opaque riser. The consumer builds rows/sections here. -->
+		{/* CONTENT: bare opaque riser. The consumer builds rows/sections here. */}
 		<div class="fh__content"><slot /></div>
 	</div>
 </Layout>
