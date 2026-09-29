@@ -12,12 +12,13 @@ import { test, expect, type Page } from "@playwright/test";
  * ?q=) reach the engine.
  *
  *   rest        every cell lit, one link per post, fillers aria-hidden and
- *               drawn faint; the instrument in the site container, under
- *               the site header, its edges on the header's brand and nav
+ *               drawn faint; the ruled grid with no text on a tile; the
+ *               instrument in the site container, under the site header,
+ *               its edges on the header's brand and nav
  *   hover/focus the tile lit, the rest faint or gone on a stagger, the card
  *               in a block that dodges it; leaving the tile restores (the
  *               panel holds it, tile to tile never passes rest); deterministic
- *   typing      the count, ?q= via replaceState, ?q= on load
+ *   typing      the live count, ?q= via replaceState, ?q= on load
  *   results     <mark>, the why, the listbox, ↑↓ wrap, the ring, Enter
  *   single/none the card; the nothing face and its pills
  *   keys        / and ⌘K (not from another field), Esc clears then blurs
@@ -26,22 +27,23 @@ import { test, expect, type Page } from "@playwright/test";
  *
  * And the INSTRUMENT around the board (the "instrument —" describes):
  *
- *   tabs        real links to ?q=<category>, set in place; aria-current on
- *               ALL at rest, on the category's tab for its query, on none
- *               for any other query; ?q= on load
+ *   chips       search shortcuts in the bar: real links to ?q=<category>,
+ *               set in place; aria-current (the filled chip) on ALL at
+ *               rest, on the category's chip for its query, on none for any
+ *               other query; ?q= on load
  *   stepper     − older / + newer through the matching posts, newest
  *               first, wrapping; the card, the ring and the playhead follow;
  *               a step holds while the pointer is elsewhere; Escape clears
  *   timeline    one tick per month, a named link per post, the playhead on
  *               the post in focus (at rest the latest), dim ticks under a
  *               filter, a click pins
- *   card        the infra card's fields and its gauge; one size at 1440 and 1920
- *   count       the figure and its label
- *   layouts     the rows, the one surface, the header as the homepage's; tablet;
- *               phone; no horizontal overflow
+ *   card        the ruled card's fields and its stat strip; one size at 1440 and 1920
+ *   count       the live region a reader hears; no number on screen
+ *   layouts     the rows, nothing filled, the header as the homepage's; the
+ *               bar at tablet and phone; no horizontal overflow
  *
- * TEXT. The script writes the kicker and the why in capitals and everything
- * else in lowercase (CSS draws it in capitals), so assertions read the DOM's
+ * TEXT. The script writes the why in capitals and everything else in
+ * lowercase (CSS draws it in capitals), so assertions read the DOM's
  * textContent, not what is on screen.
  *
  * Post numbers are chronological: 001 is the dashboard (May 2023), 003 the
@@ -100,15 +102,17 @@ const cellOf = async (page: Page, no: string): Promise<[number, number]> => {
 
 // The instrument.
 const COUNT = "[data-search-count]";
-/** The count cell's figure and label as one line: `2 of 5 posts`. */
-const count = (page: Page) =>
-	page.locator(COUNT).evaluate((el) =>
-		[el.querySelector('[data-count="figure"]')?.textContent, el.querySelector('[data-count="label"]')?.textContent]
-			.join(" ")
-			.trim(),
-	);
+/** The live count a reader hears: `2 of 5 posts`. */
+const count = (page: Page) => page.locator(COUNT).evaluate((el) => el.textContent!.trim());
 const expectCount = (page: Page, text: string) => expect.poll(() => count(page)).toBe(text);
-const tab = (q: string) => `[data-tabs] [data-tab="${q}"]`;
+const BAR = "[data-search-bar]";
+const chip = (q: string) => `[data-search-chips] [data-chip="${q}"]`;
+/** The active outline: the cell's ::after box-shadow, or null when it is transparent. */
+const ring = (page: Page, no: string) =>
+	page.locator(post(no)).evaluate((el) => {
+		const shadow = getComputedStyle(el, "::after").boxShadow;
+		return /rgba\(0, 0, 0, 0\)|transparent|^none$/.test(shadow) ? null : shadow;
+	});
 const RULER = "[data-quilt-ruler]";
 const mark = (no: string) => `${RULER} [data-mark][data-no="${no}"]`;
 /** The playhead's --at, as the script writes it, in percent. */
@@ -205,7 +209,52 @@ test.describe("quilt — rest", () => {
 		}
 	});
 
-	test("one instrument: four rows on the page in the site container, under the site header, on its brand and nav", async ({
+	test("a ruled grid: hairlines between the cells and round them, the art inset, no text on a tile", async ({
+		page,
+	}) => {
+		await page.goto("/txt");
+		const m = await page.evaluate(() => {
+			const grid = document.querySelector<HTMLElement>("[data-quilt]")!;
+			const gs = getComputedStyle(grid);
+			const cells = [...document.querySelectorAll<HTMLElement>("[data-cell]")].filter((c) => c.checkVisibility());
+			const step = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--space-2"));
+			return {
+				gap: gs.gap,
+				left: gs.borderLeftWidth,
+				top: gs.borderTopWidth,
+				cells: cells.map((c) => {
+					const cs = getComputedStyle(c);
+					const art = c.querySelector(".ds-art")!.getBoundingClientRect();
+					const box = c.getBoundingClientRect();
+					return {
+						right: cs.borderRightWidth,
+						bottom: cs.borderBottomWidth,
+						radius: cs.borderTopLeftRadius,
+						inset: [art.left - box.left, art.top - box.top, box.right - art.right - 1, box.bottom - art.bottom - 1],
+						text: c.innerText.trim(),
+						caption: c.querySelector(".ds-quilt-cell__caption")?.checkVisibility() ?? false,
+					};
+				}),
+				step,
+			};
+		});
+		expect(m.gap).toBe("0px");
+		expect(m.left).toBe("1px");
+		expect(m.top).toBe("1px");
+		expect(m.cells).toHaveLength(15);
+		for (const c of m.cells) {
+			expect(c.right).toBe("1px");
+			expect(c.bottom).toBe("1px");
+			expect(c.radius).toBe("0px");
+			// The art a step in from the ruling on every side.
+			for (const d of c.inset) expect(d).toBeCloseTo(m.step, 0);
+			// Art only: nothing is written on a tile.
+			expect(c.text).toBe("");
+			expect(c.caption).toBe(false);
+		}
+	});
+
+	test("one instrument: three rows on the page in the site container, under the site header, on its brand and nav", async ({
 		page,
 	}) => {
 		await page.goto("/txt");
@@ -228,7 +277,7 @@ test.describe("quilt — rest", () => {
 					r.getBoundingClientRect().toJSON(),
 				),
 				quilt: rect("[data-quilt]"),
-				tabs: rect("[data-tabs]"),
+				bar: rect("[data-search-bar]"),
 				siteHeaders: document.querySelectorAll(".site-header").length,
 				header: rect(".site-header"),
 				brand: rect(".site-header__brand"),
@@ -245,9 +294,9 @@ test.describe("quilt — rest", () => {
 		expect(m.frame.top).toBeGreaterThanOrEqual(m.header.bottom - 1);
 		expect(m.brand.left).toBeCloseTo(m.frame.left, 0);
 		expect(m.nav.right).toBeCloseTo(m.frame.right, 0);
-		// Tabs, board, controls, timeline: each the container's width, under the
-		// last, set apart by space rather than a hairline gutter.
-		expect(m.rows).toHaveLength(4);
+		// The bar, the board, the timeline: each the container's width, under
+		// the last, set apart by space rather than a hairline gutter.
+		expect(m.rows).toHaveLength(3);
 		for (const r of m.rows) {
 			expect(r.left).toBeCloseTo(m.frame.left, 0);
 			expect(r.right).toBeCloseTo(m.frame.right, 0);
@@ -256,11 +305,12 @@ test.describe("quilt — rest", () => {
 			expect(m.rows[i].top - m.rows[i - 1].bottom, `row ${i}`).toBeGreaterThanOrEqual(16);
 		}
 		// The board takes the spare height: the timeline rests one gutter off the floor.
-		expect(m.rows[3].bottom).toBeCloseTo(m.vh - m.container.pad, 0);
-		// The tabs are the first row, their first pill on the container's edge;
-		// the quilt is the second, spanning the container edge to edge.
-		expect(m.tabs.left).toBeCloseTo(m.frame.left, 0);
-		expect(m.tabs.bottom).toBeLessThanOrEqual(m.rows[0].bottom + 1);
+		expect(m.rows[2].bottom).toBeCloseTo(m.vh - m.container.pad, 0);
+		// The bar is the first row, spanning the container; the quilt is the
+		// second, spanning it edge to edge.
+		expect(m.bar.left).toBeCloseTo(m.frame.left, 0);
+		expect(m.bar.right).toBeCloseTo(m.frame.right, 0);
+		expect(m.bar.bottom).toBeLessThanOrEqual(m.rows[0].bottom + 1);
 		expect(m.quilt.top).toBeGreaterThanOrEqual(m.rows[1].top);
 		expect(m.quilt.bottom).toBeLessThanOrEqual(m.rows[1].bottom + 1);
 		expect(m.quilt.left).toBeCloseTo(m.frame.left, 0);
@@ -268,33 +318,47 @@ test.describe("quilt — rest", () => {
 	});
 
 	for (const theme of ["dark", "light"] as const) {
-		test(`the page is the site background, bar the control row's cells (${theme})`, async ({ page }) => {
+		test(`nothing is filled but the current chip: the rows, the bar and the grid are the page (${theme})`, async ({ page }) => {
 			await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
 			await page.goto("/txt");
 			const m = await page.evaluate(() => {
 				const bg = (el: Element) => getComputedStyle(el).backgroundColor;
 				const clear = (c: string) => c === "rgba(0, 0, 0, 0)" || c === "transparent";
-				const page = bg(document.body);
 				const inst = document.querySelector("[data-instrument]")!;
-				// Everything in the tab row, the board (bar the quilt's own tiles and
-				// card) and the timeline, up to the page.
+				const bar = document.querySelector<HTMLElement>("[data-search-bar]")!;
+				const bs = getComputedStyle(bar);
 				const bare = [
 					inst,
 					document.querySelector("main")!,
-					...document.querySelectorAll(
-						"[data-instrument] > .blog__row:not(.blog__controls), [data-quilt]",
-					),
+					bar,
+					...document.querySelectorAll("[data-instrument] > .blog__row, [data-quilt], [data-cell]"),
 				].map((el) => ({ cls: el.className, clear: clear(bg(el)) }));
-				const cells = [...document.querySelectorAll(".blog__controls > .ds-panel")].map((el) => bg(el));
-				return { page, bare, cells, board: bg(document.querySelector(".blog__board")!) };
+				const chips = [...document.querySelectorAll<HTMLElement>("[data-search-chips] [data-chip]")].map((c) => ({
+					q: c.dataset.chip,
+					current: c.hasAttribute("aria-current"),
+					filled: !clear(bg(c)),
+					radius: getComputedStyle(c).borderTopLeftRadius,
+					border: getComputedStyle(c).borderTopWidth,
+				}));
+				return {
+					bare,
+					chips,
+					bar: { border: bs.borderTopWidth, radius: bs.borderTopLeftRadius, style: bs.borderTopStyle },
+				};
 			});
 			for (const b of m.bare) expect(b.clear, b.cls).toBe(true);
-			// Four cells, each a surface a step off the page.
-			expect(m.cells).toHaveLength(4);
-			for (const c of m.cells) {
-				expect(c).not.toBe("rgba(0, 0, 0, 0)");
-				expect(c).not.toBe(m.page);
+			// The bar: one hairline box, square.
+			expect(m.bar.border).toBe("1px");
+			expect(m.bar.style).toBe("solid");
+			expect(m.bar.radius).toBe("0px");
+			// The chips: square hairline boxes; ALL alone is filled, being current.
+			expect(m.chips.map((c) => c.q)).toEqual(["", "programming", "projects", "thoughts", "personal"]);
+			for (const c of m.chips) {
+				expect(c.radius).toBe("0px");
+				expect(c.border).toBe("1px");
+				expect(c.filled, `chip ${c.q}`).toBe(c.current);
 			}
+			expect(m.chips.filter((c) => c.current).map((c) => c.q)).toEqual([""]);
 		});
 	}
 
@@ -322,42 +386,34 @@ test.describe("quilt — rest", () => {
 		}
 	});
 
-	test("the site header is the banner; the tab row is in main, with the one h1 and no mark", async ({ page }) => {
+	test("the site header is the banner; the bar row is in main, with the one h1, the search and its chips", async ({ page }) => {
 		await page.goto("/txt");
 		const banner = page.getByRole("banner");
 		await expect(banner).toHaveCount(1);
 		await expect(banner.getByRole("link", { name: "tristantimblin.dev" })).toHaveAttribute("href", "/");
 		await expect(banner.getByRole("navigation", { name: "Primary" })).toHaveCount(1);
 		const main = page.getByRole("main");
-		// One h1, for a reader only: visually hidden, and no WRITING label beside the pills.
+		// One h1, for a reader only: visually hidden.
 		const h1 = main.getByRole("heading", { level: 1, name: "Writing" });
 		await expect(h1).toHaveCount(1);
 		expect(await main.locator("h1").count()).toBe(1);
 		await expect(h1).toHaveClass(/ds-visually-hidden/);
 		expect((await h1.boundingBox())!.width).toBeLessThanOrEqual(1);
-		// Beside the hidden h1 the row holds the tabs alone.
-		const rest = await page
-			.locator(".blog__tabrow")
-			.evaluate((r) => [...r.children].filter((c) => c.tagName !== "H1").map((c) => (c as HTMLElement).innerText).join(" "));
-		expect(rest).not.toMatch(/writing/i);
-		expect(await page.locator(".blog__tabrow > :not(h1, [data-tabs])").count()).toBe(0);
-		await expect(main.getByRole("navigation", { name: "Categories" })).toHaveCount(1);
+		// Beside the hidden h1 the row holds the bar's form alone.
+		expect(await page.locator(".blog__bar > :not(h1, form)").count()).toBe(0);
+		// The bar: the search landmark holding the quick-filter chips nav and the stepper.
+		const bar = main.getByRole("search");
+		await expect(bar).toHaveCount(1);
+		await expect(bar.getByRole("navigation", { name: "Quick filters" })).toHaveCount(1);
+		await expect(bar.getByRole("button", { name: "Previous post" })).toBeVisible();
+		await expect(bar.getByRole("button", { name: "Next post" })).toBeVisible();
+		// No number is drawn: the count is a live region for a reader.
+		await expect(bar.locator(COUNT)).toHaveClass(/ds-visually-hidden/);
+		expect((await bar.locator(COUNT).boundingBox())!.width).toBeLessThanOrEqual(1);
 		await expect(page.locator("[data-instrument]")).toHaveCount(1);
 		expect(await main.locator("[data-instrument]").count()).toBe(1);
-		// The "TT" mark and the site's name in the row are gone: the header carries the site.
-		await expect(page.locator(".blog__tabrow")).not.toContainText(/\bTT\b|tristantimblin\.dev/i);
-		await expect(page.locator(".blog__mark, .blog__site")).toHaveCount(0);
-		// ALL's glyph stands a step clear of its label.
-		const gap = await page
-			.locator('[data-tab=""]')
-			.evaluate((a) => {
-				const g = a.querySelector(".blog__tab-glyph")!.getBoundingClientRect();
-				const r = document.createRange();
-				r.selectNodeContents(a);
-				r.setStartAfter(a.querySelector(".blog__tab-glyph")!);
-				return r.getBoundingClientRect().left - g.right;
-			});
-		expect(gap).toBeGreaterThanOrEqual(6);
+		// No tab row, no count cell, no control panels.
+		await expect(page.locator(".blog__tabrow, .blog__tabs, .blog__controls, .blog__cell, .ds-panels, .ds-panel")).toHaveCount(0);
 		const footer = (await page.getByRole("contentinfo").boundingBox())!;
 		const frame = (await page.locator("[data-instrument]").boundingBox())!;
 		expect(footer.y).toBeGreaterThanOrEqual(frame.y + frame.height);
@@ -390,7 +446,8 @@ test.describe("quilt — hover and focus", () => {
 		// The block dodges the hovered tile.
 		expect(under(await block(page), desk.col, desk.row)).toBe(false);
 
-		await expect(card(page, "kicker")).toHaveText("NO. 003");
+		await expect(card(page, "no")).toHaveText("003");
+		await expect(card(page, "index")).toHaveText("[index] 000003 · log_003.txt");
 		await expect(card(page, "title")).toHaveText("The Mega Desk");
 		await expect(card(page, "category")).toHaveText("projects");
 		await expect(card(page, "minutes")).toHaveText(/^\d+$/);
@@ -474,7 +531,7 @@ test.describe("quilt — hover and focus", () => {
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 
 		// Keyboard: from the last tile, Tab lands on READ and the card stays;
-		// Tab on, out of the quilt (into the controls), and it lets go.
+		// Tab on, out of the quilt (into the timeline), and it lets go.
 		await page.locator(`${post("001")} a`).focus();
 		await expect(card(page, "title")).toHaveText("No Honey, We Have a Dashboard at Home");
 		await page.keyboard.press("Tab");
@@ -482,9 +539,9 @@ test.describe("quilt — hover and focus", () => {
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		await expect(read).toHaveAttribute("href", "/txt/no-honey-we-have-a-dashboard-at-home");
 		await page.keyboard.press("Tab");
-		// The next stop is the search cell, so the card gives way to browse.
-		await expect(page.locator(SEARCH)).toBeFocused();
-		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "browse");
+		// The next stop is the timeline's first tick, so the card goes.
+		await expect(page.locator(`${RULER} [data-mark]`).first()).toBeFocused();
+		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 	});
 
 	test("the same tile scatters identically, hover after hover and load after load", async ({
@@ -516,15 +573,15 @@ test.describe("quilt — hover and focus", () => {
 		page,
 	}) => {
 		await page.goto("/txt");
-		// The board follows the tab row in the tab order: from the last tab,
+		// The board follows the bar in the tab order: from its last control,
 		// Tab lands on the first tile.
-		await page.locator(tab("personal")).focus();
+		await newer(page).focus();
 		await page.keyboard.press("Tab");
 		const link = page.locator(`${post("005")} a`);
 		await expect(link).toBeFocused();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		await expect(card(page, "title")).toHaveText("Asserting on Agent Behavior");
-		await expect(card(page, "kicker")).toHaveText("NO. 005");
+		await expect(card(page, "no")).toHaveText("005");
 		const ring = await link.evaluate((a) => {
 			const s = getComputedStyle(a);
 			return { matches: a.matches(":focus-visible"), style: s.outlineStyle, width: s.outlineWidth };
@@ -536,7 +593,7 @@ test.describe("quilt — hover and focus", () => {
 		// Tab on: the next tile takes the card, even one that had scattered.
 		await page.keyboard.press("Tab");
 		await expect(page.locator(`${post("004")} a`)).toBeFocused();
-		await expect(card(page, "kicker")).toHaveText("NO. 004");
+		await expect(card(page, "no")).toHaveText("004");
 		await expect(page.locator(post("004"))).toHaveAttribute("data-state", "lit");
 	});
 });
@@ -630,14 +687,9 @@ test.describe("quilt — search", () => {
 			await expect(page.locator(`#${optId(1 - k)}`)).toHaveAttribute("aria-selected", "false");
 			await expect(page.locator("[data-cell][data-active]")).toHaveCount(1);
 			await expect(page.locator(post(no))).toHaveAttribute("data-active", "");
-			// The ring is drawn: the active tile's frame outline is not transparent.
-			await expect
-				.poll(() =>
-					page
-						.locator(`${post(no)} .ds-art`)
-						.evaluate((el) => getComputedStyle(el).outlineColor),
-				)
-				.not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
+			// The outline is drawn: a 1px accent line on the active cell's ruling.
+			await expect.poll(() => ring(page, no)).toMatch(/inset/);
+			expect(await ring(page, "005")).toBeNull();
 		};
 		await expectActive(0, "001");
 		await input.press("ArrowDown");
@@ -707,7 +759,7 @@ test.describe("quilt — keys", () => {
 	test("/ and ⌘K/Ctrl-K focus the search from the page", async ({ page }) => {
 		await page.goto("/txt");
 		const input = page.locator(SEARCH);
-		await page.locator(".blog__cell--count").click();
+		await page.locator(`${RULER} .ds-time-ruler__head`).click();
 		await page.keyboard.press("/");
 		await expect(input).toBeFocused();
 		await expect(input).toHaveValue(""); // the slash is not typed
@@ -879,8 +931,10 @@ test.describe("quilt — scripting off", () => {
 		await page.locator(SEARCH).press("Enter");
 		await expect(page).toHaveURL(/\/txt\/?\?q=home$/);
 
-		// The tabs and the timeline's ticks are plain links too.
-		await page.locator(tab("projects")).click();
+		// The chips and the timeline's ticks are plain links too: a chip is a
+		// search shortcut, and ALL is the bare page.
+		await expect(page.locator(chip(""))).toHaveAttribute("href", "/txt");
+		await page.locator(chip("projects")).click();
 		await expect(page).toHaveURL(/\/txt\/?\?q=projects$/);
 		await page.locator(mark("003")).click();
 		await expect(page).toHaveURL(/\/txt\/mega-desk\/?$/);
@@ -888,32 +942,41 @@ test.describe("quilt — scripting off", () => {
 	});
 });
 
-test.describe("instrument — tabs", () => {
-	test("real links to ?q=; ALL current at rest, the category's tab for its query, none otherwise", async ({
+test.describe("instrument — the chips", () => {
+	test("search shortcuts: real links to ?q=; ALL current at rest, the category's chip for its query, none otherwise", async ({
 		page,
 	}) => {
 		await page.goto("/txt");
-		const tabs = page.locator("[data-tabs] [data-tab]");
+		const chips = page.locator("[data-search-chips] [data-chip]");
 		expect(
-			await tabs.evaluateAll((as) => as.map((a) => [(a as HTMLElement).dataset.tab, a.getAttribute("href")])),
+			await chips.evaluateAll((as) => as.map((a) => [(a as HTMLElement).dataset.chip, a.getAttribute("href"), a.tagName])),
 		).toEqual([
-			["", "/txt"],
-			["programming", "/txt?q=programming"],
-			["projects", "/txt?q=projects"],
-			["thoughts", "/txt?q=thoughts"],
-			["personal", "/txt?q=personal"],
+			["", "/txt", "A"],
+			["programming", "/txt?q=programming", "A"],
+			["projects", "/txt?q=projects", "A"],
+			["thoughts", "/txt?q=thoughts", "A"],
+			["personal", "/txt?q=personal", "A"],
 		]);
-		await expect(page.locator(tab(""))).toHaveAttribute("aria-current", "page");
-		await expect(page.locator("[data-tabs] [aria-current]")).toHaveCount(1);
+		await expect(page.locator(chip(""))).toHaveAttribute("aria-current", "page");
+		await expect(page.locator("[data-search-chips] [aria-current]")).toHaveCount(1);
 
-		// A tab is a query, set in place: no navigation, ?q= through replaceState.
+		// A chip writes its category into the search, in place: no navigation,
+		// ?q= through replaceState, and it is the one chip filled.
 		const before = await page.evaluate(() => history.length);
-		await page.locator(tab("programming")).click();
+		await page.locator(chip("programming")).click();
 		await expect(page.locator(SEARCH)).toHaveValue("programming");
 		await expect(page).toHaveURL(/\/txt\/?\?q=programming$/);
 		expect(await page.evaluate(() => history.length)).toBe(before);
-		await expect(page.locator(tab("programming"))).toHaveAttribute("aria-current", "page");
-		await expect(page.locator(tab(""))).not.toHaveAttribute("aria-current");
+		await expect(page.locator(chip("programming"))).toHaveAttribute("aria-current", "page");
+		await expect(page.locator(chip(""))).not.toHaveAttribute("aria-current");
+		// The fill follows (it fades over --duration-swap, so poll).
+		await expect
+			.poll(() =>
+				chips.evaluateAll((as) =>
+					as.filter((a) => getComputedStyle(a).backgroundColor !== "rgba(0, 0, 0, 0)").map((a) => (a as HTMLElement).dataset.chip),
+				),
+			)
+			.toEqual(["programming"]);
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "results");
 		await expectCount(page, "2 of 5 posts");
 		for (const c of (await cells(page)).filter((c) => c.kind === "post")) {
@@ -921,23 +984,25 @@ test.describe("instrument — tabs", () => {
 			else expect(c.state, `post ${c.no}`).not.toBe("lit");
 		}
 
-		// Any other query: no tab is current.
+		// Typing the category by hand selects the chip too; any other query, none.
+		await page.locator(SEARCH).fill("projects");
+		await expect(page.locator(chip("projects"))).toHaveAttribute("aria-current", "page");
 		await page.locator(SEARCH).fill("home");
-		await expect(page.locator("[data-tabs] [aria-current]")).toHaveCount(0);
+		await expect(page.locator("[data-search-chips] [aria-current]")).toHaveCount(0);
 
 		// ALL clears the query.
-		await page.locator(tab("")).click();
+		await page.locator(chip("")).click();
 		await expect(page.locator(SEARCH)).toHaveValue("");
 		await expect(page).toHaveURL(/\/txt\/?$/);
-		await expect(page.locator(tab(""))).toHaveAttribute("aria-current", "page");
+		await expect(page.locator(chip(""))).toHaveAttribute("aria-current", "page");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 		await expectCount(page, "5 posts");
 	});
 
-	test("?q=<category> on load makes that tab current", async ({ page }) => {
+	test("?q=<category> on load makes that chip current", async ({ page }) => {
 		await page.goto("/txt?q=projects");
-		await expect(page.locator(tab("projects"))).toHaveAttribute("aria-current", "page");
-		await expect(page.locator(tab(""))).not.toHaveAttribute("aria-current");
+		await expect(page.locator(chip("projects"))).toHaveAttribute("aria-current", "page");
+		await expect(page.locator(chip(""))).not.toHaveAttribute("aria-current");
 		await expectCount(page, "1 of 5 posts");
 	});
 });
@@ -945,10 +1010,11 @@ test.describe("instrument — tabs", () => {
 test.describe("instrument — the stepper", () => {
 	const expectStep = async (page: Page, no: string, title: string, line: RegExp) => {
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
-		await expect(card(page, "kicker")).toHaveText(`NO. ${no}`);
+		await expect(card(page, "no")).toHaveText(no);
 		await expect(card(page, "title")).toHaveText(title);
 		await expect(page.locator("[data-cell][data-active]")).toHaveCount(1);
 		await expect(page.locator(post(no))).toHaveAttribute("data-active", "");
+		await expect.poll(() => ring(page, no)).toMatch(/inset/);
 		await expect(page.locator(post(no))).toHaveAttribute("data-state", "lit");
 		await expect(readout(page)).toHaveText(line);
 		expect(under(await block(page), ...(await cellOf(page, no)))).toBe(false);
@@ -1144,7 +1210,7 @@ test.describe("instrument — the timeline", () => {
 		// A lit tick pins its post over the list.
 		await page.locator(mark("001")).click();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
-		await expect(card(page, "kicker")).toHaveText("NO. 001");
+		await expect(card(page, "no")).toHaveText("001");
 		await expect(page.locator(post("001"))).toHaveAttribute("data-active", "");
 		// Clearing the filter lights every tick again.
 		await page.locator(SEARCH).fill("");
@@ -1153,7 +1219,7 @@ test.describe("instrument — the timeline", () => {
 });
 
 test.describe("instrument — the card", () => {
-	test("the infra card: number, category, three stats, title, excerpt, the gauge, READ", async ({
+	test("the ruled card: the top strip, the number and its readouts, title, excerpt, the stat strip, READ", async ({
 		page,
 	}) => {
 		await page.goto("/txt");
@@ -1165,49 +1231,80 @@ test.describe("instrument — the card", () => {
 					words: number;
 				}>,
 		);
-		const max = Math.max(...index.map((p) => p.minutes));
 		const desk = index.find((p) => p.no === 3)!;
 
 		await page.locator(`${post("003")} a`).hover();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
-		await expect(card(page, "kicker")).toHaveText("NO. 003");
+		// The top strip: the category as a boxed chip, and the index line.
 		await expect(card(page, "category")).toHaveText("projects");
+		await expect(card(page, "category")).toHaveClass(/ds-chip/);
+		await expect(card(page, "index")).toHaveText("[index] 000003 · log_003.txt");
+		// The body: the big number, the readouts, the words.
+		await expect(card(page, "no")).toHaveText("003");
+		const readouts = page.locator(`${PANEL} .ds-quilt-panel__readouts`);
+		await expect(readouts).toHaveText(/status: published/);
+		await expect(card(page, "node")).toHaveText("projects");
+		await expect(readouts).toHaveText(/node: txt\/projects/);
+		await expect(card(page, "rate")).toHaveText(String(Math.round(desk.words / desk.minutes)));
+		await expect(readouts).toHaveText(/rate: \d+ wpm/);
+		await expect(card(page, "title")).toHaveText("The Mega Desk");
+		await expect(card(page, "blurb")).toContainText("standing desk");
+		// The strip: three stat cells and the accent READ cell, which is the link.
+		const strip = page.locator(`${PANEL} [data-face="card"] .ds-stat-strip`);
+		const stats = strip.locator(".ds-stat");
+		await expect(stats).toHaveCount(3);
+		await expect(stats.nth(0)).toHaveText(new RegExp(`${desk.minutes} min\\s*read`));
+		await expect(stats.nth(1)).toHaveText(new RegExp(`${desk.words}\\s*words`));
+		await expect(stats.nth(2)).toHaveText(/apr 2025\s*published/);
 		await expect(card(page, "minutes")).toHaveText(String(desk.minutes));
 		await expect(card(page, "words")).toHaveText(String(desk.words));
 		await expect(card(page, "month")).toHaveText("apr");
 		await expect(card(page, "year")).toHaveText("2025");
-		await expect(card(page, "title")).toHaveText("The Mega Desk");
-		await expect(card(page, "blurb")).toContainText("standing desk");
 		await expect(card(page, "link")).toHaveAttribute("href", "/txt/mega-desk");
 		await expect(card(page, "link")).toHaveText(/read/i);
+		const accent = await page.evaluate(() => {
+			const probe = document.createElement("div");
+			probe.style.background = "var(--accent)";
+			document.body.append(probe);
+			const c = getComputedStyle(probe).backgroundColor;
+			probe.remove();
+			return c;
+		});
+		const action = strip.locator(".ds-stat-strip__action");
+		expect(await action.evaluate((a) => getComputedStyle(a).backgroundColor)).toBe(accent);
+		expect(await action.locator("a").evaluate((a) => a.closest(".ds-stat-strip__action") !== null)).toBe(true);
+		// Cells cut by hairlines, the strip under a hairline.
+		expect(await strip.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe("1px");
+		expect(await stats.first().evaluate((el) => getComputedStyle(el).borderRightWidth)).toBe("1px");
 
-		// The gauge: minutes over the longest post's, named for a reader, and
-		// the arc drawn from --ring-value (it glides, so poll).
-		const pct = Math.round((desk.minutes / max) * 100);
-		const gauge = card(page, "gauge");
-		await expect(gauge).toHaveAttribute("aria-label", `${desk.minutes} of ${max} minutes`);
-		expect(await gauge.evaluate((g: HTMLElement) => g.style.getPropertyValue("--ring-value"))).toBe(String(pct));
-		await expect(card(page, "gauge-caption")).toHaveText(`${desk.minutes} of ${max} min`);
-		await expect
-			.poll(() => gauge.locator(".ds-ring__arc").evaluate((c) => parseFloat(getComputedStyle(c).strokeDasharray)))
-			.toBeCloseTo(pct, 0);
-
-		// On a hairlined surface with a radius, filling the block.
+		// The page colour inside the strong hairline, square, filling the block.
 		const face = page.locator(`${PANEL} [data-face="card"]`);
 		const s = await face.evaluate((f) => {
 			const cs = getComputedStyle(f);
-			return { border: cs.borderTopWidth, radius: parseFloat(cs.borderTopLeftRadius) };
+			return { border: cs.borderTopWidth, radius: parseFloat(cs.borderTopLeftRadius), bg: cs.backgroundColor };
 		});
 		expect(s.border).toBe("1px");
-		expect(s.radius).toBeGreaterThan(0);
+		expect(s.radius).toBe(0);
+		expect(s.bg).toBe(await page.evaluate(() => getComputedStyle(document.body).backgroundColor));
 		const [faceBox, panelBox] = [await face.boundingBox(), await page.locator(PANEL).boundingBox()];
 		expect(Math.abs(faceBox!.width - panelBox!.width)).toBeLessThanOrEqual(1);
 		expect(Math.abs(faceBox!.height - panelBox!.height)).toBeLessThanOrEqual(1);
+		// Nothing in it is clipped: every line of the card is inside the block.
+		const clipped = await face.evaluate((f) =>
+			[...f.querySelectorAll<HTMLElement>("[data-card], .ds-stat")].filter((el) => {
+				const r = el.getBoundingClientRect();
+				const b = f.getBoundingClientRect();
+				return r.width > 0 && (r.bottom > b.bottom + 1 || r.right > b.right + 1);
+			}).length,
+		);
+		expect(clipped).toBe(0);
 
 		// Another post refills every field.
 		await page.locator(`${post("005")} a`).hover();
-		await expect(card(page, "kicker")).toHaveText("NO. 005");
+		await expect(card(page, "no")).toHaveText("005");
+		await expect(card(page, "index")).toHaveText("[index] 000005 · log_005.txt");
 		await expect(card(page, "category")).toHaveText("programming");
+		await expect(card(page, "node")).toHaveText("programming");
 		await expect(card(page, "month")).toHaveText("feb");
 		await expect(card(page, "year")).toHaveText("2026");
 	});
@@ -1236,15 +1333,16 @@ test.describe("instrument — the card", () => {
 });
 
 test.describe("instrument — the count", () => {
-	test("a figure over a label, live: 5 POSTS at rest, N OF 5 POSTS while filtering", async ({ page }) => {
+	test("a live region for a reader, never drawn: 5 posts at rest, N of 5 posts while filtering", async ({ page }) => {
 		await page.goto("/txt");
-		await expect(page.locator(COUNT)).toHaveAttribute("aria-live", "polite");
-		await expect(page.locator(COUNT)).toHaveCount(1);
-		await expect(page.locator(`${COUNT} [data-count="figure"]`)).toHaveText("5");
-		await expect(page.locator(`${COUNT} [data-count="label"]`)).toHaveText("posts");
-		await page.locator(tab("personal")).click();
-		await expect(page.locator(`${COUNT} [data-count="figure"]`)).toHaveText("1");
-		await expect(page.locator(`${COUNT} [data-count="label"]`)).toHaveText("of 5 posts");
+		const live = page.locator(COUNT);
+		await expect(live).toHaveCount(1);
+		await expect(live).toHaveAttribute("aria-live", "polite");
+		await expect(live).toHaveClass(/ds-visually-hidden/);
+		expect((await live.boundingBox())!.width).toBeLessThanOrEqual(1);
+		await expectCount(page, "5 posts");
+		await page.locator(chip("personal")).click();
+		await expectCount(page, "1 of 5 posts");
 		await page.locator(SEARCH).fill("zzz");
 		await expectCount(page, "0 of 5 posts");
 		await page.locator(SEARCH).fill("");
@@ -1253,19 +1351,57 @@ test.describe("instrument — the count", () => {
 });
 
 test.describe("instrument — layouts", () => {
-	test("tablet (900): the same rows, three columns, the stepper beside the count", async ({ page }) => {
+	/** The bar's parts, as boxes. */
+	const barBoxes = (page: Page) =>
+		page.evaluate(() => {
+			const box = (sel: string) => document.querySelector(sel)!.getBoundingClientRect().toJSON();
+			return {
+				bar: box("[data-search-bar]"),
+				input: box("[data-search-input]"),
+				chips: box("[data-search-chips]"),
+				older: box('[data-step="older"]'),
+				newer: box('[data-step="newer"]'),
+				chipsScroll: (() => {
+					const n = document.querySelector<HTMLElement>("[data-search-chips]")!;
+					return { overflowX: getComputedStyle(n).overflowX, scrollable: n.scrollWidth > n.clientWidth + 1 };
+				})(),
+			};
+		});
+
+	test("desktop (1440): one line — the input, the chips, the stepper and the hint side by side", async ({ page }) => {
+		await page.goto("/txt");
+		const b = await barBoxes(page);
+		const mid = (r: DOMRect) => r.y + r.height / 2;
+		expect(Math.abs(mid(b.chips) - mid(b.input))).toBeLessThanOrEqual(2);
+		expect(Math.abs(mid(b.older) - mid(b.input))).toBeLessThanOrEqual(2);
+		expect(b.chips.x).toBeGreaterThanOrEqual(b.input.x + b.input.width - 1);
+		expect(b.older.x).toBeGreaterThanOrEqual(b.chips.x + b.chips.width - 1);
+		expect(b.newer.x).toBeGreaterThan(b.older.x);
+		// The input keeps most of the bar.
+		expect(b.input.width).toBeGreaterThan(b.bar.width / 3);
+		await expect(page.locator(`${BAR} .ds-search-bar__hint`)).toBeVisible();
+		await expect(page.locator(`${BAR} .ds-search-bar__hint`)).toHaveText("/");
+	});
+
+	test("tablet (900): three columns, no text on a tile; the chips on their own row under the input, the stepper beside it", async ({
+		page,
+	}) => {
 		await page.setViewportSize({ width: 900, height: 1100 });
 		await page.goto("/txt");
-		expect(await page.locator("[data-instrument] > .blog__row").count()).toBe(4);
+		expect(await page.locator("[data-instrument] > .blog__row").count()).toBe(3);
 		expect(
 			await page.locator("[data-quilt]").evaluate((q) => getComputedStyle(q).gridTemplateColumns.split(" ").length),
 		).toBe(3);
-		const box = async (sel: string) => (await page.locator(sel).boundingBox())!;
-		const c = await box(".blog__cell--count");
-		const s = await box(".blog__cell--search");
-		const steps = await page.locator(".blog__cell--step").all();
-		for (const st of steps) expect(Math.abs((await st.boundingBox())!.y - c.y)).toBeLessThanOrEqual(1);
-		expect(Math.abs(s.y - c.y)).toBeLessThanOrEqual(1);
+		const texts = await page
+			.locator("[data-cell]")
+			.evaluateAll((els) => els.filter((e) => e.checkVisibility()).map((e) => (e as HTMLElement).innerText.trim()));
+		expect(texts).toHaveLength(9);
+		expect(texts.every((t) => t === "")).toBe(true);
+		const b = await barBoxes(page);
+		expect(b.chips.y).toBeGreaterThanOrEqual(b.input.y + b.input.height - 1);
+		expect(Math.abs(b.chips.width - b.bar.width)).toBeLessThanOrEqual(2);
+		expect(Math.abs(b.older.y + b.older.height / 2 - (b.input.y + b.input.height / 2))).toBeLessThanOrEqual(2);
+		expect(b.input.width).toBeGreaterThan(b.bar.width / 2);
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
 		await page.locator(`${post("003")} a`).hover();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
@@ -1273,39 +1409,32 @@ test.describe("instrument — layouts", () => {
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
 	});
 
-	test("phone (390): the tabs scroll in their row, count and stepper on one line, the search under them, the timeline compact", async ({
+	test("phone (390): the chips scroll sideways under the input, the stepper beside it, captions on the tiles, the timeline compact", async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 390, height: 1000 });
 		await page.goto("/txt");
-		const tabsNav = page.locator("[data-tabs]");
-		const scroll = await tabsNav.evaluate((n) => ({
-			overflowX: getComputedStyle(n).overflowX,
-			scrollable: n.scrollWidth > n.clientWidth,
-		}));
-		expect(scroll.overflowX).toBe("auto");
-		expect(scroll.scrollable).toBe(true);
-		const box = async (sel: string) => (await page.locator(sel).boundingBox())!;
-		const c = await box(".blog__cell--count");
-		const s = await box(".blog__cell--search");
-		const controls = await box("[data-controls]");
-		for (const st of await page.locator(".blog__cell--step").all()) {
-			expect(Math.abs((await st.boundingBox())!.y - c.y)).toBeLessThanOrEqual(1);
-		}
-		expect(s.y).toBeGreaterThanOrEqual(c.y + c.height - 1);
-		expect(Math.abs(s.width - controls.width)).toBeLessThanOrEqual(1);
+		const b = await barBoxes(page);
+		expect(b.chips.y).toBeGreaterThanOrEqual(b.input.y + b.input.height - 1);
+		expect(b.chipsScroll.overflowX).toBe("auto");
+		expect(b.chipsScroll.scrollable).toBe(true);
+		expect(Math.abs(b.older.y + b.older.height / 2 - (b.input.y + b.input.height / 2))).toBeLessThanOrEqual(2);
+		expect(b.older.x).toBeGreaterThanOrEqual(b.input.x + b.input.width - 1);
+		// A tap-list needs its titles: the phone tiles keep a small caption.
+		await expect(page.locator(`${post("003")} .ds-quilt-cell__caption`)).toBeVisible();
 		// The timeline is drawn shorter than on a desktop, with its years.
-		const strip = await box(`${RULER} .ds-time-ruler__strip`);
+		const strip = (await page.locator(`${RULER} .ds-time-ruler__strip`).boundingBox())!;
 		expect(strip.height).toBeLessThan(48);
 		await expect(page.locator(`${RULER} .ds-time-ruler__year`).first()).toBeVisible();
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
 
-		// A step shows the card in flow above the list, the stepped tile ringed.
+		// A step shows the card in flow above the list, the stepped tile outlined.
 		await newer(page).click();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		await expect(page.locator(PANEL)).toBeVisible();
-		await expect(card(page, "kicker")).toHaveText("NO. 001");
+		await expect(card(page, "no")).toHaveText("001");
 		await expect(page.locator(post("001"))).toHaveAttribute("data-active", "");
+		await expect(card(page, "link")).toBeVisible();
 		expect(await overflow(page)).toBeLessThanOrEqual(0);
 	});
 
