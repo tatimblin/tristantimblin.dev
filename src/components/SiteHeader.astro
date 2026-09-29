@@ -16,7 +16,7 @@ interface Props {
 	variant?: "overlay" | "flow";
 }
 
-const { links = [{ label: "Writing", href: "/txt" }], variant = "overlay" } = Astro.props;
+const { links = [{ label: "Writing", href: "/txt/" }], variant = "overlay" } = Astro.props;
 ---
 
 <header class:list={["site-header", variant === "flow" && "site-header--flow"]}>

@@ -137,7 +137,7 @@ test.describe("quilt — rest", () => {
 	test("a full grid, one named link per post, fillers hidden from assistive tech", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const all = await cells(page);
 		const posts = all.filter((c) => c.kind === "post");
 		expect(posts.map((c) => c.no)).toEqual(["005", "004", "003", "002", "001"]);
@@ -175,7 +175,7 @@ test.describe("quilt — rest", () => {
 	test("fillers' art is faint and greyscale at rest; the posts are at full strength", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		// The state is painted on the cell's contents (its art), not the cell.
 		const look = (sel: string) =>
 			page.locator(sel).evaluateAll((els) =>
@@ -222,7 +222,7 @@ test.describe("quilt — rest", () => {
 	test("no ruling: tiles on the page cut by a gap token, the art filling each, no text on a tile", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const m = await page.evaluate(() => {
 			const grid = document.querySelector<HTMLElement>("[data-quilt]")!;
 			const gs = getComputedStyle(grid);
@@ -275,7 +275,7 @@ test.describe("quilt — rest", () => {
 	});
 
 	test("no ruling in any state: a filler, a faint and a gone cell draw no line either", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const lines = (sel: string) =>
 			page.locator(sel).first().evaluate((el) => {
 				const cs = getComputedStyle(el);
@@ -294,7 +294,7 @@ test.describe("quilt — rest", () => {
 	test("one instrument: three rows on the page in the site container, under the site header, on its brand and nav", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const m = await page.evaluate(() => {
 			const rect = (sel: string) => document.querySelector(sel)!.getBoundingClientRect().toJSON();
 			const probe = document.createElement("div");
@@ -359,7 +359,7 @@ test.describe("quilt — rest", () => {
 	for (const theme of ["dark", "light"] as const) {
 		test(`nothing is filled but the current chip: the rows, the bar and the grid are the page (${theme})`, async ({ page }) => {
 			await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
-			await page.goto("/txt");
+			await page.goto("/txt/");
 			const m = await page.evaluate(() => {
 				const bg = (el: Element) => getComputedStyle(el).backgroundColor;
 				const clear = (c: string) => c === "rgba(0, 0, 0, 0)" || c === "transparent";
@@ -426,7 +426,7 @@ test.describe("quilt — rest", () => {
 		]) {
 			await page.setViewportSize({ width, height });
 			const home = await boxes("/");
-			const txt = await boxes("/txt");
+			const txt = await boxes("/txt/");
 			for (let i = 0; i < home.length; i++) {
 				for (const k of ["x", "y", "width", "height"] as const) {
 					expect(txt[i][k], `${width} ${i ? "nav" : "brand"} ${k}`).toBeCloseTo(home[i][k], 1);
@@ -436,7 +436,7 @@ test.describe("quilt — rest", () => {
 	});
 
 	test("the site header is the banner; the bar row is in main, with the one h1, the search and its chips", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const banner = page.getByRole("banner");
 		await expect(banner).toHaveCount(1);
 		await expect(banner.getByRole("link", { name: "tristantimblin.dev" })).toHaveAttribute("href", "/");
@@ -473,7 +473,7 @@ test.describe("quilt — hover and focus", () => {
 	test("hovering a tile lights it, scatters the rest on a stagger, and shows its card", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		await page.locator(`${post("003")} a`).hover();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 
@@ -500,7 +500,7 @@ test.describe("quilt — hover and focus", () => {
 		await expect(card(page, "title")).toHaveText("The Mega Desk");
 		await expect(card(page, "category")).toHaveText("projects");
 		await expect(card(page, "minutes")).toHaveText(/^\d+$/);
-		await expect(card(page, "link")).toHaveAttribute("href", "/txt/mega-desk");
+		await expect(card(page, "link")).toHaveAttribute("href", "/txt/mega-desk/");
 		await expect(card(page, "why")).toHaveText("");
 
 		// Leaving restores every cell and hides the panel.
@@ -512,7 +512,7 @@ test.describe("quilt — hover and focus", () => {
 	test("leaving a tile for anything but another tile or the panel returns to rest", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const center = async (sel: string) => {
 			const b = (await page.locator(sel).boundingBox())!;
 			return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
@@ -539,7 +539,7 @@ test.describe("quilt — hover and focus", () => {
 	});
 
 	test("tile to tile across the gap never passes through rest", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		// 005 sits beside 003 on the desktop grid and only faints under its hover.
 		await page.locator(`${post("003")} a`).hover();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
@@ -567,7 +567,7 @@ test.describe("quilt — hover and focus", () => {
 	test("the panel holds the hover: the card's READ link is reachable by pointer and by Tab", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		await page.locator(`${post("003")} a`).hover();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		const read = card(page, "link");
@@ -586,7 +586,7 @@ test.describe("quilt — hover and focus", () => {
 		await page.keyboard.press("Tab");
 		await expect(read).toBeFocused();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
-		await expect(read).toHaveAttribute("href", "/txt/no-honey-we-have-a-dashboard-at-home");
+		await expect(read).toHaveAttribute("href", "/txt/no-honey-we-have-a-dashboard-at-home/");
 		await page.keyboard.press("Tab");
 		// The next stop is the timeline's first tick, so the card goes.
 		await expect(page.locator(`${RULER} [data-mark]`).first()).toBeFocused();
@@ -605,7 +605,7 @@ test.describe("quilt — hover and focus", () => {
 			await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "hidden");
 			return { snapshot, b };
 		};
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const first = await scatterOf();
 		expect(await scatterOf()).toEqual(first);
 		await page.reload();
@@ -621,7 +621,7 @@ test.describe("quilt — hover and focus", () => {
 	test("keyboard focus on a tile is the same path as hover, with a visible ring", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		// The board follows the bar in the tab order: from its last control,
 		// Tab lands on the first tile.
 		await newer(page).focus();
@@ -651,7 +651,7 @@ test.describe("quilt — search", () => {
 	test("focused and empty: the browse face, posts lit and fillers stepped back", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		await page.locator(SEARCH).focus();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "browse");
 		await expect(page.locator(SEARCH)).toHaveAttribute("aria-expanded", "true");
@@ -665,14 +665,14 @@ test.describe("quilt — search", () => {
 		}
 		await expect(page.locator(`${PANEL} [data-face="browse"]`)).toBeVisible();
 		await expect(
-			page.locator(`${PANEL} [data-face="browse"] a[href="/txt?q=programming"]`),
+			page.locator(`${PANEL} [data-face="browse"] a[href="/txt/?q=programming"]`),
 		).toBeVisible();
 	});
 
 	test("typing updates the count and keeps ?q= in step through replaceState", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const before = await page.evaluate(() => history.length);
 		await page.locator(SEARCH).fill("home");
 		await expectCount(page, "2 of 5 posts");
@@ -685,7 +685,7 @@ test.describe("quilt — search", () => {
 	});
 
 	test("?q= on load restores the search", async ({ page }) => {
-		await page.goto("/txt?q=2025");
+		await page.goto("/txt/?q=2025");
 		await expect(page.locator(SEARCH)).toHaveValue("2025");
 		await expectCount(page, "2 of 5 posts");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "results");
@@ -699,7 +699,7 @@ test.describe("quilt — search", () => {
 	test("results: marks, the why, the listbox, ↑↓ wrapping with the ring, Enter opens", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const input = page.locator(SEARCH);
 		await input.fill("home");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "results");
@@ -756,7 +756,7 @@ test.describe("quilt — search", () => {
 	});
 
 	test("one match: the card, with the why when the title did not match", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const input = page.locator(SEARCH);
 		await input.fill("standing");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
@@ -779,7 +779,7 @@ test.describe("quilt — search", () => {
 	});
 
 	test("no match: the nothing face, and a suggestion pill searches in place", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const input = page.locator(SEARCH);
 		await input.fill("recipes");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "none");
@@ -790,7 +790,7 @@ test.describe("quilt — search", () => {
 			true,
 		);
 
-		const pill = page.locator(`${PANEL} [data-none="suggestions"] a[href="/txt?q=programming"]`);
+		const pill = page.locator(`${PANEL} [data-none="suggestions"] a[href="/txt/?q=programming"]`);
 		await expect(pill).toBeVisible();
 		await pill.click();
 		await expect(input).toHaveValue("programming");
@@ -806,7 +806,7 @@ const deskAt = (page: Page) => cellOf(page, "003");
 
 test.describe("quilt — keys", () => {
 	test("/ and ⌘K/Ctrl-K focus the search from the page", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const input = page.locator(SEARCH);
 		await page.locator(`${RULER} .ds-time-ruler__head`).click();
 		await page.keyboard.press("/");
@@ -822,7 +822,7 @@ test.describe("quilt — keys", () => {
 	test("the shortcuts leave other fields alone, and / types in the search itself", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const input = page.locator(SEARCH);
 		await page.evaluate(() => {
 			const t = document.createElement("textarea");
@@ -842,7 +842,7 @@ test.describe("quilt — keys", () => {
 	});
 
 	test("Esc clears the query, and a second Esc blurs", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const input = page.locator(SEARCH);
 		await input.fill("home");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "results");
@@ -864,7 +864,7 @@ test.describe("quilt — reduced motion", () => {
 		page,
 	}) => {
 		await page.emulateMedia({ reducedMotion: "reduce" });
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		await page.locator(`${post("003")} a`).hover();
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 		const scattered = page.locator('[data-cell]:not([data-state="lit"])');
@@ -895,7 +895,7 @@ test.describe("quilt — tablet (900px)", () => {
 	test("three columns, and the panel takes the full width clear of the hovered tile", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const tracks = await page
 			.locator("[data-quilt]")
 			.evaluate((q) => getComputedStyle(q).gridTemplateColumns.split(" ").length);
@@ -926,7 +926,7 @@ test.describe("quilt — phone (390px)", () => {
 	test("a captioned two-column list, the panel in flow, and nothing vanishes", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const tracks = await page
 			.locator("[data-quilt]")
 			.evaluate((q) => getComputedStyle(q).gridTemplateColumns.split(" ").length);
@@ -969,13 +969,13 @@ test.describe("quilt — scripting off", () => {
 			viewport: { width: 1440, height: 1000 },
 		});
 		const page = await context.newPage();
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const hrefs = await page
 			.locator('[data-cell="post"] a')
 			.evaluateAll((as) => as.map((a) => a.getAttribute("href")));
 		expect(hrefs).toHaveLength(5);
 		expect(new Set(hrefs).size).toBe(5);
-		expect(hrefs.every((h) => /^\/txt\/[^/]+$/.test(h ?? ""))).toBe(true);
+		expect(hrefs.every((h) => /^\/txt\/[^/]+\/$/.test(h ?? ""))).toBe(true);
 
 		await page.locator(SEARCH).fill("home");
 		await page.locator(SEARCH).press("Enter");
@@ -983,7 +983,7 @@ test.describe("quilt — scripting off", () => {
 
 		// The chips and the timeline's ticks are plain links too: a chip is a
 		// search shortcut, and ALL is the bare page.
-		await expect(page.locator(chip(""))).toHaveAttribute("href", "/txt");
+		await expect(page.locator(chip(""))).toHaveAttribute("href", "/txt/");
 		await page.locator(chip("projects")).click();
 		await expect(page).toHaveURL(/\/txt\/?\?q=projects$/);
 		await page.locator(mark("003")).click();
@@ -996,16 +996,16 @@ test.describe("instrument — the chips", () => {
 	test("search shortcuts: real links to ?q=; ALL current at rest, the category's chip for its query, none otherwise", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const chips = page.locator("[data-search-chips] [data-chip]");
 		expect(
 			await chips.evaluateAll((as) => as.map((a) => [(a as HTMLElement).dataset.chip, a.getAttribute("href"), a.tagName])),
 		).toEqual([
-			["", "/txt", "A"],
-			["programming", "/txt?q=programming", "A"],
-			["projects", "/txt?q=projects", "A"],
-			["thoughts", "/txt?q=thoughts", "A"],
-			["personal", "/txt?q=personal", "A"],
+			["", "/txt/", "A"],
+			["programming", "/txt/?q=programming", "A"],
+			["projects", "/txt/?q=projects", "A"],
+			["thoughts", "/txt/?q=thoughts", "A"],
+			["personal", "/txt/?q=personal", "A"],
 		]);
 		await expect(page.locator(chip(""))).toHaveAttribute("aria-current", "page");
 		await expect(page.locator("[data-search-chips] [aria-current]")).toHaveCount(1);
@@ -1050,7 +1050,7 @@ test.describe("instrument — the chips", () => {
 	});
 
 	test("?q=<category> on load makes that chip current", async ({ page }) => {
-		await page.goto("/txt?q=projects");
+		await page.goto("/txt/?q=projects");
 		await expect(page.locator(chip("projects"))).toHaveAttribute("aria-current", "page");
 		await expect(page.locator(chip(""))).not.toHaveAttribute("aria-current");
 		await expectCount(page, "1 of 5 posts");
@@ -1073,7 +1073,7 @@ test.describe("instrument — the stepper", () => {
 	test("− and + walk the posts newest first — from rest − takes the newest, + the oldest — and wrap", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		await older(page).click();
 		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · no\. 005/);
 		await older(page).click();
@@ -1089,7 +1089,7 @@ test.describe("instrument — the stepper", () => {
 	});
 
 	test("a step holds while the pointer is elsewhere; Escape lets it go", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		await newer(page).click();
 		await expectStep(page, "001", "No Honey, We Have a Dashboard at Home", /may 2023 · no\. 001/);
 		await page.mouse.move(1, 1, { steps: 4 });
@@ -1108,7 +1108,7 @@ test.describe("instrument — the stepper", () => {
 	test("a hover previews another post over the step and leaving returns to it; typing clears it", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		await older(page).click();
 		await expectStep(page, "005", "Asserting on Agent Behavior", /feb 2026 · no\. 005/);
 		await page.locator(`${post("003")} a`).hover();
@@ -1127,7 +1127,7 @@ test.describe("instrument — the stepper", () => {
 	test("under a filter the stepper walks the matches only and shows the card over the list", async ({
 		page,
 	}) => {
-		await page.goto("/txt?q=programming");
+		await page.goto("/txt/?q=programming");
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "results");
 		// The first result (005) is already the focus, so − is the older match:
 		// 001 — 004, 003 and 002 are not programming.
@@ -1149,7 +1149,7 @@ test.describe("instrument — the stepper", () => {
 	});
 
 	test("nothing matches: the buttons are disabled", async ({ page }) => {
-		await page.goto("/txt?q=recipes");
+		await page.goto("/txt/?q=recipes");
 		await expect(newer(page)).toBeDisabled();
 		await expect(older(page)).toBeDisabled();
 		await page.locator(SEARCH).fill("");
@@ -1166,7 +1166,7 @@ test.describe("instrument — the timeline", () => {
 			page,
 		}) => {
 			await page.setViewportSize({ width, height });
-			await page.goto("/txt");
+			await page.goto("/txt/");
 			const geo = () =>
 				page.evaluate(() => {
 					const dock = document.querySelector(".blog__timeline")!;
@@ -1207,7 +1207,7 @@ test.describe("instrument — the timeline", () => {
 	test("a tick per month over whole years, a named link per post in its month, the playhead on the latest", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const months = page.locator(`${RULER} [data-month]`);
 		const keys = await months.evaluateAll((ms) => ms.map((m) => (m as HTMLElement).dataset.month));
 		expect(keys[0]).toBe("2023-01");
@@ -1231,11 +1231,11 @@ test.describe("instrument — the timeline", () => {
 			),
 		).toEqual([
 			// In time order, left to right — the ruler's order, not the index's.
-			["/txt/no-honey-we-have-a-dashboard-at-home", "No Honey, We Have a Dashboard at Home, May 2023", "2023-05"],
-			["/txt/why-i-joined-fisker", "Your Car Knows You're Getting Sick, Jul 2024", "2024-07"],
-			["/txt/mega-desk", "The Mega Desk, Apr 2025", "2025-04"],
-			["/txt/tahoe-mountain-hair", "Tahoe Mountain Hair, Jun 2025", "2025-06"],
-			["/txt/asserting-on-agent-behavior", "Asserting on Agent Behavior, Feb 2026", "2026-02"],
+			["/txt/no-honey-we-have-a-dashboard-at-home/", "No Honey, We Have a Dashboard at Home, May 2023", "2023-05"],
+			["/txt/why-i-joined-fisker/", "Your Car Knows You're Getting Sick, Jul 2024", "2024-07"],
+			["/txt/mega-desk/", "The Mega Desk, Apr 2025", "2025-04"],
+			["/txt/tahoe-mountain-hair/", "Tahoe Mountain Hair, Jun 2025", "2025-06"],
+			["/txt/asserting-on-agent-behavior/", "Asserting on Agent Behavior, Feb 2026", "2026-02"],
 		]);
 		for (const a of await marks.all()) await expect(a).not.toHaveAttribute("data-dim");
 		// A mark is taller than a plain tick, and the year labels sit under the Januaries.
@@ -1259,7 +1259,7 @@ test.describe("instrument — the timeline", () => {
 	});
 
 	test("the playhead glides to the post in focus: a hover, the active result, a step", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		await page.locator(`${post("003")} a`).hover();
 		await expect.poll(() => rulerAt(page)).toBeCloseTo(await atOf(page, "2025-04"), 1);
 		await expect(readout(page)).toHaveText(/apr 2025 · no\. 003/);
@@ -1282,7 +1282,7 @@ test.describe("instrument — the timeline", () => {
 	test("clicking a lit tick pins its post; under a filter the others dim and are not controls", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		await page.locator(mark("002")).click();
 		await expect(page).toHaveURL(/\/txt\/?$/);
 		await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
@@ -1318,7 +1318,7 @@ test.describe("instrument — the card", () => {
 	test("the ruled card: the top strip, the number and its readouts, title, excerpt, the stat strip, READ", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const index = await page.evaluate(
 			() =>
 				JSON.parse(document.querySelector("script[data-quilt-index]")!.textContent!).posts as Array<{
@@ -1356,7 +1356,7 @@ test.describe("instrument — the card", () => {
 		await expect(card(page, "words")).toHaveText(String(desk.words));
 		await expect(card(page, "month")).toHaveText("apr");
 		await expect(card(page, "year")).toHaveText("2025");
-		await expect(card(page, "link")).toHaveAttribute("href", "/txt/mega-desk");
+		await expect(card(page, "link")).toHaveAttribute("href", "/txt/mega-desk/");
 		await expect(card(page, "link")).toHaveText(/read/i);
 		const accent = await page.evaluate(() => {
 			const probe = document.createElement("div");
@@ -1408,7 +1408,7 @@ test.describe("instrument — the card", () => {
 	test("the block is the container's: the same card at 1440 and at 1920", async ({ page }) => {
 		const measure = async (width: number, height: number) => {
 			await page.setViewportSize({ width, height });
-			await page.goto("/txt");
+			await page.goto("/txt/");
 			await page.locator(`${post("003")} a`).hover();
 			await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
 			return page.locator(PANEL).evaluate((p) => {
@@ -1430,7 +1430,7 @@ test.describe("instrument — the card", () => {
 
 test.describe("instrument — the count", () => {
 	test("a live region for a reader, never drawn: 5 posts at rest, N of 5 posts while filtering", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const live = page.locator(COUNT);
 		await expect(live).toHaveCount(1);
 		await expect(live).toHaveAttribute("aria-live", "polite");
@@ -1465,7 +1465,7 @@ test.describe("instrument — layouts", () => {
 		});
 
 	test("desktop (1440): one line — the input, the chips, the stepper and the hint side by side", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const b = await barBoxes(page);
 		const mid = (r: DOMRect) => r.y + r.height / 2;
 		expect(Math.abs(mid(b.chips) - mid(b.input))).toBeLessThanOrEqual(2);
@@ -1483,7 +1483,7 @@ test.describe("instrument — layouts", () => {
 		page,
 	}) => {
 		await page.setViewportSize({ width: 900, height: 1100 });
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		expect(await page.locator("[data-instrument] > .blog__row").count()).toBe(3);
 		expect(
 			await page.locator("[data-quilt]").evaluate((q) => getComputedStyle(q).gridTemplateColumns.split(" ").length),
@@ -1509,7 +1509,7 @@ test.describe("instrument — layouts", () => {
 		page,
 	}) => {
 		await page.setViewportSize({ width: 390, height: 1000 });
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const b = await barBoxes(page);
 		expect(b.chips.y).toBeGreaterThanOrEqual(b.input.y + b.input.height - 1);
 		expect(b.chipsScroll.overflowX).toBe("auto");
@@ -1547,7 +1547,7 @@ test.describe("instrument — layouts", () => {
 	test("no horizontal overflow at any width, at rest and with the card open", async ({ page }) => {
 		for (const width of [1920, 1440, 1280, 1024, 900, 768, 640, 480, 390, 360]) {
 			await page.setViewportSize({ width, height: 1000 });
-			await page.goto("/txt");
+			await page.goto("/txt/");
 			expect(await overflow(page), `${width} at rest`).toBeLessThanOrEqual(0);
 			await older(page).click();
 			await expect(page.locator(PANEL)).toHaveAttribute("data-mode", "card");
@@ -1558,7 +1558,7 @@ test.describe("instrument — layouts", () => {
 
 test.describe("quilt — accessibility", () => {
 	test("search landmark, combobox and listbox semantics, a live count", async ({ page }) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		await expect(page.getByRole("search")).toHaveCount(1);
 		const combo = page.getByRole("combobox", { name: /search/i });
 		await expect(combo).toHaveCount(1);

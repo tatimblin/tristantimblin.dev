@@ -29,6 +29,8 @@ import {
 	padNo,
 	postHref,
 	postNumbers,
+	queryHref,
+	TXT_HREF,
 	readingStats,
 } from "../../lib/blog";
 import { artFor, fillerArtFor } from "../../lib/quilt/art";
@@ -97,13 +99,12 @@ const fillers = Array.from({ length: fillerCount }, (_, k) => {
 });
 
 // The bar's chips: a category is a query, so each is a real link to ?q=<id>
-// (and ALL to /txt) — a search shortcut; the script upgrades them and keeps
+// (and ALL to /txt/) — a search shortcut; the script upgrades them and keeps
 // aria-current in step with the query. The page is static, so at build ALL
 // is current; the script corrects it from ?q= on load.
-const q = (word: string) => `/txt?q=${encodeURIComponent(word)}`;
 const chips = [
-	{ label: "all", href: "/txt", query: "", active: true },
-	...categoryIds.map((id) => ({ label: categories[id].label.toLowerCase(), href: q(id), query: id })),
+	{ label: "all", href: TXT_HREF, query: "", active: true },
+	...categoryIds.map((id) => ({ label: categories[id].label.toLowerCase(), href: queryHref(id), query: id })),
 ];
 
 // The panel's build-time faces. The card is the latest post (the script
@@ -115,9 +116,9 @@ const browse = {
 	categories: [...catCounts].map(([id, count]) => ({
 		label: categories[id as keyof typeof categories].label.toLowerCase(),
 		count,
-		href: q(id),
+		href: queryHref(id),
 	})),
-	years: [...new Set(index.map((p) => p.year))].map((y) => ({ label: y, href: q(y) })),
+	years: [...new Set(index.map((p) => p.year))].map((y) => ({ label: y, href: queryHref(y) })),
 	latest: index[0] ? { title: index[0].title, href: index[0].href } : undefined,
 };
 const tagCounts = new Map<string, number>();
@@ -130,7 +131,7 @@ const nothing = {
 	query: "",
 	suggestions: [...catCounts.keys(), ...topTags]
 		.slice(0, 6)
-		.map((w) => ({ label: w.replace(/[-_]+/g, " "), href: q(w) })),
+		.map((w) => ({ label: w.replace(/[-_]+/g, " "), href: queryHref(w) })),
 };
 const first = index[0];
 const card = first

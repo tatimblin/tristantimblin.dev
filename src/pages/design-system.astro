@@ -126,36 +126,36 @@ const cardOf = (p: QuiltPost, why?: string) => ({
 	title: p.title,
 	blurb: p.blurb,
 	why,
-	href: `/txt/${p.slug}`,
+	href: `/txt/${p.slug}/`,
 });
 // The bar's quick filters: ALL and the four categories, each a link to ?q=.
 const chipsDemo = [
-	{ label: "all", query: "", href: "/txt" },
-	...["programming", "projects", "thoughts", "personal"].map((c) => ({ label: c, query: c, href: `/txt?q=${c}` })),
+	{ label: "all", query: "", href: "/txt/" },
+	...["programming", "projects", "thoughts", "personal"].map((c) => ({ label: c, query: c, href: `/txt/?q=${c}` })),
 ];
 // The timeline demo: one tick per month over the posts' years, the five as marks.
 const monthNo: Record<string, string> = { jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06", jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12" };
 const rulerMarks = quiltPosts.map((p) => ({
 	month: `${p.year}-${monthNo[p.month]}`,
 	label: `${p.title}, ${p.month} ${p.year}`,
-	href: `/txt/${p.slug}`,
+	href: `/txt/${p.slug}/`,
 	no: p.no,
 }));
 const browseDemo = {
 	categories: [
-		{ label: "programming", count: 2, href: "/txt?q=programming" },
-		{ label: "projects", count: 1, href: "/txt?q=projects" },
-		{ label: "thoughts", count: 1, href: "/txt?q=thoughts" },
-		{ label: "personal", count: 1, href: "/txt?q=personal" },
+		{ label: "programming", count: 2, href: "/txt/?q=programming" },
+		{ label: "projects", count: 1, href: "/txt/?q=projects" },
+		{ label: "thoughts", count: 1, href: "/txt/?q=thoughts" },
+		{ label: "personal", count: 1, href: "/txt/?q=personal" },
 	],
-	years: ["2026", "2025", "2024", "2023"].map((y) => ({ label: y, href: `/txt?q=${y}` })),
-	latest: { title: quiltPosts[0].title, href: `/txt/${quiltPosts[0].slug}` },
+	years: ["2026", "2025", "2024", "2023"].map((y) => ({ label: y, href: `/txt/?q=${y}` })),
+	latest: { title: quiltPosts[0].title, href: `/txt/${quiltPosts[0].slug}/` },
 };
 const resultsDemo = {
 	label: "2 posts for “home”",
 	items: [
 		{
-			href: `/txt/${quiltPosts[4].slug}`,
+			href: `/txt/${quiltPosts[4].slug}/`,
 			title: [
 				{ text: "No Honey, We Have a Dashboard at ", hl: false },
 				{ text: "Home", hl: true },
@@ -163,7 +163,7 @@ const resultsDemo = {
 			meta: metaOf(quiltPosts[4]),
 		},
 		{
-			href: `/txt/${quiltPosts[2].slug}`,
+			href: `/txt/${quiltPosts[2].slug}/`,
 			title: quiltPosts[2].title,
 			meta: metaOf(quiltPosts[2]),
 			why: "matched tag · home office",
@@ -175,7 +175,7 @@ const nothingDemo = {
 	query: "recipes",
 	suggestions: ["agents", "desk", "vscode", "health", "projects", "2025"].map((w) => ({
 		label: w,
-		href: `/txt?q=${w}`,
+		href: `/txt/?q=${w}`,
 	})),
 };
 
@@ -1383,7 +1383,7 @@ assertions:
 				<code>packages/design-system/src/art/_template.svg</code>.
 			</p>
 			<p class="ds-demo__note">
-				<Anchor href="/design-system/art" arrow="right">The art catalogue</Anchor> shows
+				<Anchor href="/design-system/art/" arrow="right">The art catalogue</Anchor> shows
 				every post's art and every filler in both themes, with bytes, element count and
 				a play toggle; one piece is <code>/design-system/art#&lt;slug&gt;</code>.
 			</p>
@@ -1552,7 +1552,7 @@ assertions:
 									row={p.row}
 									colMd={p.colMd}
 									rowMd={p.rowMd}
-									href={`/txt/${p.slug}`}
+									href={`/txt/${p.slug}/`}
 									label={p.title}
 									no={p.no}
 									state={s.state}

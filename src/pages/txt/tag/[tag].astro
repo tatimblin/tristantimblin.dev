@@ -13,6 +13,7 @@ import BlogLayout from "../../../layouts/BlogLayout.astro";
 import PostIndex from "../../../components/txt/PostIndex.astro";
 import Pill from "@whois/design-system/Pill";
 import { getPosts } from "../../../lib/posts";
+import { queryHref } from "../../../lib/blog";
 
 export const getStaticPaths = (async () => {
 	const posts = await getPosts();
@@ -42,7 +43,7 @@ const label = tag.replace(/-/g, " ");
 	heading={label}
 >
 	<Fragment slot="lede">
-		<Pill as="a" href={`/txt?q=${encodeURIComponent(label)}`} variant="outline">
+		<Pill as="a" href={queryHref(label)} variant="outline">
 			search this in the quilt
 		</Pill>
 	</Fragment>

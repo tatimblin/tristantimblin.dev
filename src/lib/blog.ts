@@ -21,13 +21,18 @@ import type { IconName } from "@whois/design-system/icons";
  *  (src/lib/mdx/post-sections.ts) scope themselves to. */
 export const TXT_BASE = "./src/content/txt";
 
+/** The blog's index. Every internal URL on the site ends in a slash
+ *  (`trailingSlash: "always"` in astro.config), so the hrefs here do too:
+ *  the link, the canonical and the served URL are then one string. */
+export const TXT_HREF = "/txt/";
+
 export const BLOG_TITLE = "Writing";
 export const BLOG_DESCRIPTION = "Writing by Tristan Timblin.";
 
 /** The quiet nav in the blog's header. There is no categories page: a
- *  category is a query on the quilt (/txt?q=<id>), and /txt/categories 301s to
- *  /txt (public/_redirects). */
-export const blogNav = [{ label: "Writing", href: "/txt" }];
+ *  category is a query on the quilt (/txt/?q=<id>), and /txt/categories 301s to
+ *  /txt/ (public/_redirects). */
+export const blogNav = [{ label: "Writing", href: TXT_HREF }];
 
 export const categories = {
 	programming: { label: "Programming", icon: "code" },
@@ -39,8 +44,10 @@ export const categories = {
 export type CategoryId = keyof typeof categories;
 export const categoryIds = Object.keys(categories) as [CategoryId, ...CategoryId[]];
 
-export const tagHref = (tag: string) => `/txt/tag/${tag}`;
-export const postHref = (id: string) => `/txt/${id}`;
+export const tagHref = (tag: string) => `/txt/tag/${tag}/`;
+export const postHref = (id: string) => `/txt/${id}/`;
+/** A query on the quilt: `/txt/?q=<words>`. */
+export const queryHref = (q: string) => `${TXT_HREF}?q=${encodeURIComponent(q)}`;
 
 /** The shape this needs off a collection entry, spelled structurally so the
  *  module does not have to import astro:content. */

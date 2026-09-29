@@ -38,7 +38,7 @@ import { blogNav } from "../lib/blog";
 
 interface ChipLink {
 	label: string;
-	/** A real link: `/txt?q=<category>`, or `/txt` for all. */
+	/** A real link: `/txt/?q=<category>`, or `/txt/` for all. */
 	href: string;
 	/** The query the chip stands for; "" is all. The script keys on it. */
 	query: string;
@@ -83,7 +83,7 @@ const hasLede = Astro.slots.has("lede");
 					<div class="blog__instrument" data-instrument>
 						<div class="blog__row blog__bar">
 							<VisuallyHidden as="h1">{heading}</VisuallyHidden>
-							<form class="blog__search" action="/txt" method="get" data-quilt-form>
+							<form class="blog__search" action="/txt/" method="get" data-quilt-form>
 								<SearchBar
 									id="quilt-search"
 									label="Search"

@@ -52,6 +52,7 @@ import {
 	filedDate,
 	isoDate,
 	padNo,
+	queryHref,
 	tagHref,
 	type CategoryId,
 } from "../lib/blog";
@@ -138,7 +139,7 @@ const neighbourRows = [
 					{cat && category ? (
 						<Mono
 							as="a"
-							href={`/txt?q=${encodeURIComponent(category)}`}
+							href={queryHref(category)}
 							class="post__cell post__category"
 						>
 							{cat.label}

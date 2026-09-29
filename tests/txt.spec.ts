@@ -32,7 +32,7 @@ const postLinks = (page: Page) =>
 	page.evaluate(() =>
 		Array.from(document.querySelectorAll<HTMLAnchorElement>("a.ds-post-row__link"))
 			.map((a) => a.getAttribute("href"))
-			.filter((h) => h && /^\/txt\/[^/]+$/.test(h))
+			.filter((h) => h && /^\/txt\/[^/]+\/$/.test(h))
 	);
 
 /** The post links on the quilt: one per post tile, in DOM order. */
@@ -40,19 +40,19 @@ const tileLinks = (page: Page) =>
 	page.evaluate(() =>
 		Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-cell="post"] a'))
 			.map((a) => a.getAttribute("href"))
-			.filter((h) => h && /^\/txt\/[^/]+$/.test(h))
+			.filter((h) => h && /^\/txt\/[^/]+\/$/.test(h))
 	);
 
-test.describe("/txt", () => {
+test.describe("/txt/", () => {
 	test("every post is a tile linked exactly once, newest first; fillers link nothing", async ({
 		page,
 	}) => {
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const links = await tileLinks(page);
 		expect(links.length, "the quilt should link some posts").toBeGreaterThan(0);
 		expect(new Set(links).size, `duplicate post links: ${links}`).toBe(links.length);
 		// DOM order is newest first — the tab order and the phone's list.
-		expect(links.slice(0, 2)).toEqual(["/txt/asserting-on-agent-behavior", "/txt/tahoe-mountain-hair"]);
+		expect(links.slice(0, 2)).toEqual(["/txt/asserting-on-agent-behavior/", "/txt/tahoe-mountain-hair/"]);
 
 		const fillers = page.locator('[data-cell="filler"]');
 		expect(await fillers.count()).toBeGreaterThan(0);
@@ -66,10 +66,10 @@ test.describe("/txt", () => {
 	});
 
 	test("tag pages still resolve", async ({ page }) => {
-		const res = await page.request.get("/txt/tag/diy");
+		const res = await page.request.get("/txt/tag/diy/");
 		expect(res.status()).toBe(200);
-		await page.goto("/txt/tag/diy");
-		expect(await postLinks(page)).toEqual(["/txt/mega-desk"]);
+		await page.goto("/txt/tag/diy/");
+		expect(await postLinks(page)).toEqual(["/txt/mega-desk/"]);
 		// A tag page is thin archive, so it asks not to be indexed.
 		await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 	});
@@ -77,10 +77,10 @@ test.describe("/txt", () => {
 	test("tiles, rows and nav are reachable with scripting off", async ({ browser }) => {
 		const context = await browser.newContext({ javaScriptEnabled: false });
 		const page = await context.newPage();
-		await page.goto("/txt/tag/diy");
-		await page.locator('.site-header a[href="/txt"]').click();
+		await page.goto("/txt/tag/diy/");
+		await page.locator('.site-header a[href="/txt/"]').click();
 		await expect(page).toHaveURL(/\/txt\/?$/);
-		await page.locator('[data-cell="post"] a[href="/txt/mega-desk"]').click();
+		await page.locator('[data-cell="post"] a[href="/txt/mega-desk/"]').click();
 		await expect(page).toHaveURL(/\/txt\/mega-desk\/?$/);
 		await expect(page.locator("h1")).toHaveText("The Mega Desk");
 		await context.close();
@@ -91,7 +91,7 @@ test.describe("/txt", () => {
 	}) => {
 		const context = await browser.newContext({ javaScriptEnabled: false });
 		const page = await context.newPage();
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		// One chip per category in the enum, plus ALL; one tick per post.
 		await expect(page.locator("[data-search-chips] [data-chip]")).toHaveCount(5);
 		await expect(page.locator("[data-quilt-ruler] [data-mark]")).toHaveCount(5);
@@ -125,10 +125,10 @@ test.describe("/txt", () => {
  * width rather than to those literals, so a container retune does not fail
  * the geometry.
  */
-const NEWEST = "/txt/asserting-on-agent-behavior";
-const NO_H2S = "/txt/mega-desk";
-const OLDEST = "/txt/no-honey-we-have-a-dashboard-at-home";
-const NO_HERO = "/txt/why-i-joined-fisker";
+const NEWEST = "/txt/asserting-on-agent-behavior/";
+const NO_H2S = "/txt/mega-desk/";
+const OLDEST = "/txt/no-honey-we-have-a-dashboard-at-home/";
+const NO_HERO = "/txt/why-i-joined-fisker/";
 
 const box = async (page: Page, sel: string) => (await page.locator(sel).first().boundingBox())!;
 
@@ -172,7 +172,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		const strip = page.locator("[data-post-strip]");
 		await expect(strip.locator(".post__no")).toHaveText(/txt \/ 005/i);
 		await expect(strip.locator("a.post__category")).toHaveText(/Programming/);
-		await expect(strip.locator("a.post__category")).toHaveAttribute("href", "/txt?q=programming");
+		await expect(strip.locator("a.post__category")).toHaveAttribute("href", "/txt/?q=programming");
 		await expect(strip.locator(".post__stats")).toHaveText(/^\s*3 min · \d{3} words\s*$/i);
 		await expect(strip.locator("time.post__date")).toHaveText("02.02.2026");
 		await expect(strip.locator("time.post__date")).toHaveAttribute("datetime", "2026-02-02");
@@ -184,7 +184,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(Math.abs(no.x - row.x)).toBeLessThanOrEqual(1);
 
 		await strip.locator("a.post__category").click();
-		await expect(page).toHaveURL(/\/txt\?q=programming$/);
+		await expect(page).toHaveURL(/\/txt\/\?q=programming$/);
 		await expect(page.locator("[data-search-input]")).toHaveValue("programming");
 	});
 
@@ -357,8 +357,8 @@ test.describe("/txt/<slug> — the post page", () => {
 			/^fig\. 03 \//i,
 			/^fig\. 04 \//i,
 		]);
-		await expect(page.locator('a[data-neighbour="prev"]')).toHaveAttribute("href", "/txt/why-i-joined-fisker");
-		await expect(page.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair");
+		await expect(page.locator('a[data-neighbour="prev"]')).toHaveAttribute("href", "/txt/why-i-joined-fisker/");
+		await expect(page.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair/");
 	});
 
 	test("the body: links in the ink, code between hairlines under a numbered header, a captioned figure, the pull quote", async ({
@@ -446,11 +446,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(tags).toHaveText(/tags\s*005\s*ai · testing · agents · developer tools/i);
 		expect(
 			await tags.locator("a").evaluateAll((as) => as.map((a) => a.getAttribute("href"))),
-		).toEqual(["/txt/tag/ai", "/txt/tag/testing", "/txt/tag/agents", "/txt/tag/developer-tools"]);
+		).toEqual(["/txt/tag/ai/", "/txt/tag/testing/", "/txt/tag/agents/", "/txt/tag/developer-tools/"]);
 
 		const prev = index.locator('[data-index-row="prev"]');
 		await expect(prev).toHaveText(/← previous\s*004\s*Tahoe Mountain Hair\s*jun 2025/i);
-		await expect(prev.locator('a[data-neighbour="prev"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair");
+		await expect(prev.locator('a[data-neighbour="prev"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair/");
 		await expect(prev.locator("time")).toHaveAttribute("datetime", "2025-06-13");
 		await expect(prev).toHaveCSS("border-bottom-width", "1px");
 
@@ -465,7 +465,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator('[data-index-row="prev"] a')).toHaveCount(0);
 		await expect(page.locator('[data-index-row="next"] a[data-neighbour="next"]')).toHaveAttribute(
 			"href",
-			"/txt/why-i-joined-fisker",
+			"/txt/why-i-joined-fisker/",
 		);
 		await expect(page.locator('[data-index-row="next"]')).toHaveText(/002/);
 	});
@@ -589,7 +589,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator(".ds-prose-section__head > h2").first()).toBeVisible();
 		await expect(page.locator("[data-post-hero] img")).toBeVisible();
 		await expect(page.locator("figure.ds-prose-code")).toHaveCount(1);
-		await expect(page.locator('a[data-neighbour="prev"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair");
+		await expect(page.locator('a[data-neighbour="prev"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair/");
 		await expect(page.locator(".post__mark[data-art-play]")).toHaveCount(1);
 		await context.close();
 	});

@@ -172,7 +172,7 @@ test("a post title gets a REAL semibold, not a synthesised one", async ({
 	// (the art carries them; the card sets its title regular). A post's section
 	// headings (Prose retunes h2–h4 onto the UI face at the Semibold) are the
 	// role that wants the cut, so that is the page to ask on — one with an h2.
-	await page.goto("/txt/asserting-on-agent-behavior");
+	await page.goto("/txt/asserting-on-agent-behavior/");
 	await page.waitForFunction(() => document.fonts.status === "loaded", undefined, {
 		timeout: 15_000,
 	});

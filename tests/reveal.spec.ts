@@ -82,7 +82,7 @@ test.describe("reveal — safety", () => {
 		// the page must be fully visible. This is the "blank page" regression guard.
 		const context = await browser.newContext({ javaScriptEnabled: false });
 		const page = await context.newPage();
-		await page.goto("/txt/mega-desk");
+		await page.goto("/txt/mega-desk/");
 
 		const state = await page.evaluate(() => {
 			const all = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
@@ -106,7 +106,7 @@ test.describe("reveal — safety", () => {
 		// normally, so this exercises the deadline + inline backstop — the branch that
 		// never runs in practice and where a permanently-hidden region would hide.
 		await page.route("**/*.{webp,png,jpg,jpeg,gif,mp4,webm}", (route) => route.abort());
-		await page.goto("/txt/mega-desk");
+		await page.goto("/txt/mega-desk/");
 
 		await settleReveal(page);
 		const state = await readReveal(page);
@@ -199,7 +199,7 @@ test.describe("reveal — safety", () => {
 			);
 			link?.click();
 		});
-		await page.waitForURL("**/txt");
+		await page.waitForURL("**/txt/");
 		await settleReveal(page);
 		expect((await readReveal(page)).faded).toBe(0);
 
@@ -273,7 +273,7 @@ test.describe("reveal — safety", () => {
 			).find((a) => a.textContent?.trim() === "Writing");
 			link?.click();
 		});
-		await page.waitForURL("**/txt");
+		await page.waitForURL("**/txt/");
 		await page.goBack();
 		await page.waitForURL((u) => u.pathname === "/");
 
@@ -383,7 +383,7 @@ test.describe("reveal — below-the-fold behaviour", () => {
 		// Not a reveal assertion: markdown can't express width/height, so these
 		// images shipped without them and reflowed the article as each decoded. The
 		// mapped <Img> reads the real file, so a re-export can't desync the numbers.
-		await page.goto("/txt/mega-desk");
+		await page.goto("/txt/mega-desk/");
 		const imgs = await page.evaluate(() =>
 			Array.from(document.querySelectorAll<HTMLImageElement>(".ds-prose img")).map(
 				(img) => ({
@@ -802,7 +802,7 @@ test.describe("reveal — the /txt index", () => {
 		// the page is fully visible on a hard load — the path tests 6 and 7 do
 		// not exercise, since ClientRouter tears the reveal down before a swapped
 		// page mounts.
-		await page.goto("/txt");
+		await page.goto("/txt/");
 		const state = await readReveal(page);
 		expect(state.total, "the index should carry no reveal targets").toBe(0);
 		expect(state.faded).toBe(0);

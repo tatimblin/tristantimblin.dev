@@ -41,7 +41,7 @@ import { fileURLToPath } from "node:url";
  * 15 MB single-engine boot and this suite is not where its portability is argued.
  */
 
-const POST = "/txt/no-honey-we-have-a-dashboard-at-home";
+const POST = "/txt/no-honey-we-have-a-dashboard-at-home/";
 
 /** The embed's own bundle directory, as the browser asks for it. */
 const isEmbedRequest = (url: string) => new URL(url).pathname.startsWith("/fleet-demo/");
