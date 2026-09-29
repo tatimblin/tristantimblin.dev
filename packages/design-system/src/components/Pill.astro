@@ -51,6 +51,9 @@ const cls = cx(
 	// The voice: the caps mono, declared once (mono.css, caps.css).
 	"ds-mono",
 	"ds-caps",
+	// As a button or a link it is a control: the reset, the pointer, the ring
+	// and the disabled state are control.css's.
+	(as === "button" || as === "a") && "ds-control",
 	`ds-pill--variant-${variant}`,
 	size !== "md" && `ds-pill--size-${size}`,
 	className,

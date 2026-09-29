@@ -289,9 +289,22 @@
 		transparent 1px var(--tick-pitch)
 	);
 
-	/* The focus ring's distance from the thing it rings. Consumers set their
-	 * own offset only where a clip would cut an outset ring. */
+	/* The focus ring's distance from the thing it rings, and the INSET form of
+	 * it — the same distance inside the box — for a control that sits in a
+	 * clipping card or fills its parent edge to edge (control.css reads
+	 * `--control-ring-offset`; a control that must ring inside sets it to
+	 * this). */
 	--focus-ring-offset: 2px;
+	--focus-ring-inset: calc(-1 * var(--focus-ring-offset));
+
+	/* The BAR: the width of every solid edge bar the instrument draws — the
+	 * pull quote's accent bar, a post's mark on the time ruler, the active
+	 * row's bar in the search results. One width, so the bars agree. */
+	--bar-width: 2px;
+
+	/* The playhead's dot (playhead.css): small — a marker, not a control —
+	 * and sized off the ruler's headroom (--space-2) so the two agree. */
+	--playhead-dot: calc(var(--space-2) * 0.75);
 }
 
 .maximeheckel-light,
@@ -360,6 +373,10 @@
 	 * theme too) measures 4.7–4.9:1. Anything that puts type on --accent reaches
 	 * for this, never --white. */
 	--on-accent: oklch(21% 0.012 var(--gray-hue, 80));
+	/* The accent under the pointer: a touch lighter, by relative colour, so a
+	 * primary button, an accent pill and the strip's action cell all step
+	 * the same way. */
+	--accent-hover: oklch(from var(--accent) calc(l + 0.05) c h);
 }
 .maximeheckel-light {
 	--emphasis: oklch(from var(--accent) l c h / 8%);

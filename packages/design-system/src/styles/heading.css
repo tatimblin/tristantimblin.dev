@@ -32,5 +32,5 @@
    Weight 400 because FS Mondwest ships a single cut — it IS the bold. */
 .ds-heading.ds-text--size-4 {
 	font-family: var(--font-subheading);
-	font-weight: 400;
+	font-weight: var(--font-weight-400);
 }

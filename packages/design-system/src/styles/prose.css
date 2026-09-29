@@ -242,14 +242,14 @@
 
 /* A quote with an attribution: the blockquote, then the attribution as the
    figure's caption, outside the quoted words, in the caps mono a step under
-   them and on their indent (the pull bar's 2px and its --space-4 inset). */
+   them and on their indent (the pull bar's width and its --space-4 inset). */
 .ds-prose-quote {
 	margin: 0;
 }
 .ds-prose-quote > figcaption {
 	display: block;
 	margin-block-start: var(--space-3);
-	padding-inline-start: calc(2px + var(--space-4));
+	padding-inline-start: calc(var(--bar-width) + var(--space-4));
 }
 
 /* A fenced block: no box, no fill, no corner — a hairline above and below,

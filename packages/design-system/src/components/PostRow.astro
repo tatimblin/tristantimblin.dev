@@ -24,7 +24,7 @@ const hasMeta = Astro.slots.has("meta");
 ---
 
 <li class={cx("ds-post-row", className)}>
-	<a class="ds-post-row__link" href={href} {...rest}>
+	<a class="ds-post-row__link ds-control" href={href} {...rest}>
 		<span class="ds-post-row__title"><slot /></span>
 		{hasMeta && <span class="ds-post-row__meta"><slot name="meta" /></span>}
 		<span class="ds-post-row__arrow" aria-hidden="true"><Icon name="external" /></span>

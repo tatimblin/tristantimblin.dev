@@ -18,6 +18,9 @@
  * rules off DS elements (`:not(.ds-heading)`). */
 @layer ds.components, ds.roles;
 
+/* What every control and every playhead share, before the components. */
+@import "./control.css" layer(ds.components);
+@import "./playhead.css" layer(ds.components);
 @import "./box.css" layer(ds.components);
 @import "./flex.css" layer(ds.components);
 @import "./grid.css" layer(ds.components);

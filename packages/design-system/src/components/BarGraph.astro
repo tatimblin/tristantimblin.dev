@@ -67,7 +67,7 @@ const vars = [height && `--bars-height:${height}`, style].filter(Boolean).join("
 		values.map((v: number, i: number) => (
 			<span
 				class="ds-bars__bar"
-				style={`--v:${top > 0 ? Math.min(Math.max(v / top, 0), 1) : 0}`}
+				style={`--bar-value:${top > 0 ? Math.min(Math.max(v / top, 0), 1) : 0}`}
 				data-lit={i === litIndex ? "" : undefined}
 			/>
 		))

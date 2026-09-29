@@ -175,21 +175,16 @@
 }
 
 /* THE LINK. The whole cell's inside, named by aria-label (the art is
-   decorative); the focus ring outside it. The frame's own hover rule
-   (art-frame.css, `a:hover .ds-art`) runs the art's motion under the
-   pointer; nothing to add here. */
+   decorative); a `ds-control`, so the focus ring is control.css's, outside
+   it. The frame's own hover rule (art-frame.css, `a:hover .ds-art`) runs
+   the art's motion under the pointer; nothing to add here. */
 .ds-quilt-cell__link {
 	display: flex;
 	flex-direction: column;
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	color: inherit;
-	text-decoration: none;
 	border-radius: var(--art-radius);
-}
-.ds-quilt-cell__link:focus-visible {
-	outline: var(--focus-ring);
-	outline-offset: var(--focus-ring-offset);
 }
 /* THE ACTIVE RING — the search result the arrow keys are on, the stepped
    post: a 1px accent outline round the tile's art, drawn by a pseudo-element

@@ -30,7 +30,6 @@
 	border-radius: var(--border-radius-pill);
 	white-space: nowrap;
 	text-decoration: none;
-	cursor: default;
 	user-select: none;
 
 	background: var(--pill-background, var(--wash-1));
@@ -39,6 +38,11 @@
 		background var(--duration-swap) var(--ease-reveal),
 		color var(--duration-swap) var(--ease-reveal),
 		border-color var(--duration-swap) var(--ease-reveal);
+}
+/* A static one is not a control: no text cursor over it. At zero
+   specificity, so a control's pointer (control.css) wins. */
+:where(.ds-pill) {
+	cursor: default;
 }
 .ds-pill svg {
 	inline-size: 1em;
@@ -51,10 +55,12 @@
 	--pill-background: var(--wash-1);
 	--pill-color: var(--text-primary);
 }
+/* The outline's edge is the Chip's: the hairline at rest, the strong one
+   under the pointer. */
 .ds-pill--variant-outline {
 	--pill-background: transparent;
 	--pill-color: var(--text-secondary);
-	border-color: var(--wash-3);
+	border-color: var(--hairline);
 }
 .ds-pill--variant-accent {
 	--pill-background: var(--accent);
@@ -91,13 +97,8 @@
 	border-color: transparent;
 }
 
-/* As a control. */
-button.ds-pill,
-a.ds-pill {
-	cursor: pointer;
-	-webkit-appearance: none;
-	appearance: none;
-}
+/* As a control (Pill.astro composes `ds-control` for the reset, the
+   pointer, the ring and the disabled state): the hover steps. */
 :is(button, a).ds-pill:hover:not(:disabled),
 :is(button, a).ds-pill:focus-visible {
 	--pill-background: var(--wash-2);
@@ -106,16 +107,9 @@ a.ds-pill {
 :is(button, a).ds-pill--variant-outline:focus-visible {
 	--pill-background: var(--wash-1);
 	--pill-color: var(--text-primary);
+	border-color: var(--hairline-strong);
 }
 :is(button, a).ds-pill--variant-accent:hover:not(:disabled),
 :is(button, a).ds-pill--variant-accent:focus-visible {
-	--pill-background: oklch(from var(--accent) calc(l + 0.05) c h);
-}
-.ds-pill:focus-visible {
-	outline: var(--focus-ring);
-	outline-offset: var(--focus-ring-offset);
-}
-button.ds-pill:disabled {
-	cursor: not-allowed;
-	opacity: 0.4;
+	--pill-background: var(--accent-hover);
 }

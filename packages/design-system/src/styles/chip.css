@@ -19,7 +19,6 @@
 	border-radius: 0;
 	white-space: nowrap;
 	text-decoration: none;
-	cursor: default;
 	user-select: none;
 	background: var(--chip-background, transparent);
 	color: var(--chip-color, var(--text-secondary));
@@ -29,6 +28,11 @@
 		border-color var(--duration-swap) var(--ease-reveal);
 }
 
+/* A static one is not a control: no text cursor over it. At zero
+   specificity, so a control's pointer (control.css) wins. */
+:where(.ds-chip) {
+	cursor: default;
+}
 /* size: sm — the key hint: no minimum height, a hair of padding. */
 .ds-chip--size-sm {
 	min-block-size: 0;
@@ -44,23 +48,9 @@
 	--chip-border: var(--text-primary);
 }
 
-/* As a control. */
-button.ds-chip,
-a.ds-chip {
-	cursor: pointer;
-	-webkit-appearance: none;
-	appearance: none;
-}
+/* As a control (Chip.astro composes `ds-control`): the hover step. */
 :is(button, a).ds-chip:not([aria-current], [aria-pressed="true"]):hover:not(:disabled),
 :is(button, a).ds-chip:not([aria-current], [aria-pressed="true"]):focus-visible {
 	--chip-border: var(--hairline-strong);
 	--chip-color: var(--text-primary);
-}
-.ds-chip:focus-visible {
-	outline: var(--focus-ring);
-	outline-offset: var(--focus-ring-offset);
-}
-button.ds-chip:disabled {
-	cursor: not-allowed;
-	opacity: 0.4;
 }

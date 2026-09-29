@@ -18,7 +18,7 @@
 	flex: 0 0 1px;
 	inline-size: 1px;
 	/* Never nothing: a zero still marks its slot on the baseline. */
-	block-size: max(1px, calc(var(--v, 0) * 100%));
+	block-size: max(1px, calc(var(--bar-value, 0) * 100%));
 	background: currentColor;
 }
 .ds-bars__bar[data-lit] {

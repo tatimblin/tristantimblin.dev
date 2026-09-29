@@ -1,0 +1,30 @@
+/* Playhead — the one accent on a ruler: a full-height 1px line at a fraction
+ * of the width, with a dot on its top end. TickRuler and TimeRuler both
+ * draw it; this is the drawing, once.
+ *
+ * Its position is `--at` on the RULER (a percentage), not on the marker, so
+ * a script that has the ruler moves it in one call —
+ * `ruler.style.setProperty("--at", "37%")`. The line is 1px wide and the
+ * fraction lands anywhere, so it is centred on its own position. The dot is
+ * `--playhead-dot` across: a marker, not a control. The ruler leaves the
+ * dot's headroom itself (half of it overhangs the line's top). */
+.ds-playhead {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: var(--at, 0%);
+	inline-size: 1px;
+	background: var(--accent);
+	translate: -50% 0;
+	pointer-events: none;
+}
+.ds-playhead::before {
+	content: "";
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline-start: 50%;
+	inline-size: var(--playhead-dot);
+	block-size: var(--playhead-dot);
+	border-radius: 50%;
+	background: var(--accent);
+	translate: -50% -50%;
+}

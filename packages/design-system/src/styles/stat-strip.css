@@ -61,11 +61,13 @@
 }
 .ds-stat-strip__action > :is(a, button):hover,
 .ds-stat-strip__action > :is(a, button):focus-visible {
-	background: oklch(from var(--accent) calc(l + 0.05) c h);
+	background: var(--accent-hover);
 }
+/* The slotted link is the caller's element, so it cannot compose
+   `ds-control`; it takes the same ring, drawn inside the cell. */
 .ds-stat-strip__action > :is(a, button):focus-visible {
 	outline: var(--focus-ring);
-	outline-offset: calc(-1 * var(--focus-ring-offset));
+	outline-offset: var(--focus-ring-inset);
 }
 
 /* Narrow: the action cell gives up its fixed width and the cells tighten. */

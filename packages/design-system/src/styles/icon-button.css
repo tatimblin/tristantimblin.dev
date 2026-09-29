@@ -1,29 +1,23 @@
 /* IconButton — the flat icon button; `rounded` makes it the metronome's round
  * button (the big pause, the small − and +). A departure from the DS port on
  * the same grounds as button.css: no inset shadows, no glow. Variants are the
- * same three emphases as Button; sizes add `xl` for the one big control a
- * screen has. */
+ * same three emphases as Button plus `outline`; sizes add `xl` for the one big
+ * control a screen has. Composes `ds-control` (control.css) for the reset,
+ * the pointer, the focus ring and the disabled state. */
 
 .ds-icon-button {
-	-webkit-appearance: none;
-	appearance: none;
-	-webkit-tap-highlight-color: transparent;
 	user-select: none;
 	display: inline-flex;
 	justify-content: center;
 	align-items: center;
 	flex-shrink: 0;
 	box-sizing: border-box;
-	outline: none;
-	cursor: pointer;
-	margin: 0;
 	padding: 0;
-	opacity: var(--opacity, 1);
 
 	background: var(--button-background, transparent);
-	color: var(--color, var(--text-secondary));
+	color: var(--button-color, var(--text-secondary));
 	transform: scale(var(--button-content-scale, 1)) translateZ(0);
-	border-radius: var(--corner, var(--border-radius-1));
+	border-radius: var(--icon-button-corner, var(--border-radius-1));
 	border: 1px solid var(--button-border, var(--hairline));
 
 	transition:
@@ -47,34 +41,25 @@
 	font-variant-numeric: tabular-nums;
 }
 
-.ds-icon-button:disabled {
-	cursor: not-allowed;
-	--opacity: 0.4;
-}
-
 .ds-icon-button:hover:not(:disabled),
 .ds-icon-button:focus-visible {
 	--button-content-scale: 1.06;
-	--color: var(--text-primary);
+	--button-color: var(--text-primary);
 }
 .ds-icon-button:active:not(:disabled) {
 	--button-content-scale: 0.95;
-}
-.ds-icon-button:focus-visible {
-	outline: var(--focus-ring);
-	outline-offset: var(--focus-ring-offset);
 }
 
 /* variant: primary */
 .ds-icon-button--variant-primary {
 	--button-background: var(--accent);
 	--button-border: transparent;
-	--color: var(--on-accent);
+	--button-color: var(--on-accent);
 }
 .ds-icon-button--variant-primary:hover:not(:disabled),
 .ds-icon-button--variant-primary:focus-visible {
-	--button-background: oklch(from var(--accent) calc(l + 0.05) c h);
-	--color: var(--on-accent);
+	--button-background: var(--accent-hover);
+	--button-color: var(--on-accent);
 }
 
 /* variant: secondary — an ink wash inside a hairline */
@@ -102,7 +87,7 @@
 .ds-icon-button--variant-outline {
 	--button-background: transparent;
 	--button-border: var(--hairline);
-	--color: var(--text-primary);
+	--button-color: var(--text-primary);
 }
 .ds-icon-button--variant-outline:hover:not(:disabled),
 .ds-icon-button--variant-outline:focus-visible {
@@ -112,15 +97,16 @@
 
 /* rounded → a round button */
 .ds-icon-button--rounded-true {
-	--corner: var(--border-radius-pill);
+	--icon-button-corner: var(--border-radius-pill);
 }
 /* square → no corner */
 .ds-icon-button--square-true {
-	--corner: 0;
+	--icon-button-corner: 0;
 }
 
 /* size. xs is the pill's height (--space-5), so it sits in a card header's
-   meta slot without making the row taller than its neighbours'. */
+   meta slot without making the row taller than its neighbours'. The glyph
+   steps follow the widget scale inside a grid, the type tokens outside. */
 .ds-icon-button--size-xs {
 	inline-size: var(--space-5);
 	block-size: var(--space-5);

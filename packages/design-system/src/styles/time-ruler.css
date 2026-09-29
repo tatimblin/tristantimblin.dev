@@ -6,12 +6,14 @@
  * column's --k and the root's --months. Each column draws its own tick as a
  * pseudo-element: a hairline, a taller one on a January, and none at all when
  * the column holds a MARK, which is a link filling the column with the post's
- * 3px bar drawn on its bottom edge. So the pointer target is the column, the
- * bar is the picture, and a screen reader reaches one link per post.
+ * bar (--bar-width) drawn on its bottom edge. So the pointer target is the
+ * column, the bar is the picture, and a screen reader reaches one link per
+ * post.
  *
- * The PLAYHEAD is TickRuler's: an accent line with a dot on top, at --at on
- * the root, sliding on --duration-settle so a change of focus glides. The
- * dot overhangs the strip's top edge into the margin under the readout line.
+ * The PLAYHEAD is the shared `.ds-playhead` (playhead.css): an accent line
+ * with a dot on top, at --at on the root, sliding on --duration-settle so a
+ * change of focus glides. The dot overhangs the strip's top edge into the
+ * margin under the readout line.
  *
  * Year labels are absolutely positioned at their January column's left
  * edge, in the tertiary mono. */
@@ -76,9 +78,11 @@
 	display: none;
 }
 
-/* A mark: the link is the column; the bar is its ::after. Two posts in one
-   month share the column, side by side. */
+/* A mark: the link is the column (a `ds-control`, its ring drawn inside the
+   strip); the bar is its ::after. Two posts in one month share the column,
+   side by side. */
 .ds-time-ruler__mark {
+	--control-ring-offset: var(--focus-ring-inset);
 	position: relative;
 	flex: 1 1 0;
 	min-inline-size: 0;
@@ -93,7 +97,7 @@
 	position: absolute;
 	inset-block-end: 0;
 	inset-inline-start: 50%;
-	inline-size: 3px;
+	inline-size: var(--bar-width);
 	block-size: var(--time-ruler-mark);
 	border-radius: var(--border-radius-tile);
 	background: currentColor;
@@ -104,10 +108,6 @@
 .ds-time-ruler__mark:focus-visible {
 	color: var(--accent);
 }
-.ds-time-ruler__mark:focus-visible {
-	outline: var(--focus-ring);
-	outline-offset: calc(-1 * var(--focus-ring-offset));
-}
 /* Out of the filter: the tick colour, and not a control. */
 .ds-time-ruler__mark[data-dim] {
 	color: var(--tone-5);
@@ -117,27 +117,10 @@
 	block-size: var(--time-ruler-year);
 }
 
-/* The playhead: TickRuler's line and dot, at --at, gliding. */
+/* The playhead, gliding; its dot overhangs the strip's top edge. */
 .ds-time-ruler__playhead {
-	position: absolute;
 	inset-block: calc(-1 * var(--space-2)) 0;
-	inset-inline-start: var(--at, 0%);
-	inline-size: 1px;
-	background: var(--accent);
-	translate: -50% 0;
-	pointer-events: none;
 	transition: inset-inline-start var(--duration-settle) var(--ease-reveal);
-}
-.ds-time-ruler__playhead::before {
-	content: "";
-	position: absolute;
-	inset-block-start: 0;
-	inset-inline-start: 50%;
-	inline-size: calc(var(--space-2) * 0.75);
-	block-size: calc(var(--space-2) * 0.75);
-	border-radius: 50%;
-	background: var(--accent);
-	translate: -50% -50%;
 }
 
 /* Year labels under their January columns. */

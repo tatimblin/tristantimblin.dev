@@ -122,7 +122,7 @@ const vars = [`--months:${n}`, headK >= 0 && `--at:${at(headK)}`, style].filter(
 				>
 					{byMonth.get(ym)?.map((mark) => (
 						<a
-							class="ds-time-ruler__mark"
+							class="ds-time-ruler__mark ds-control"
 							href={mark.href}
 							aria-label={mark.label}
 							title={mark.label}
@@ -135,7 +135,7 @@ const vars = [`--months:${n}`, headK >= 0 && `--at:${at(headK)}`, style].filter(
 				</span>
 			))
 		}
-		{playhead ? <span class="ds-time-ruler__playhead" aria-hidden="true" /> : null}
+		{playhead ? <span class="ds-playhead ds-time-ruler__playhead" aria-hidden="true" /> : null}
 	</div>
 	<div class="ds-time-ruler__years" aria-hidden="true">
 		{

@@ -64,7 +64,7 @@ const vars = [
 	.join(";");
 
 const segStyle = (s: Segment, i: number) =>
-	[`--share:${s.share}`, `color:${s.color ?? `var(--tone-${Math.min(i + 1, 5)})`}`]
+	[`--tick-share:${s.share}`, `color:${s.color ?? `var(--tone-${Math.min(i + 1, 5)})`}`]
 		.filter(Boolean)
 		.join(";");
 ---
@@ -88,5 +88,5 @@ const segStyle = (s: Segment, i: number) =>
 			/>
 		))
 	}
-	{hasPlayhead ? <span class="ds-ticks__playhead" /> : null}
+	{hasPlayhead ? <span class="ds-playhead" /> : null}
 </Tag>

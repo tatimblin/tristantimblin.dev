@@ -7,7 +7,7 @@
 	margin: 0;
 	padding: var(--space-4) var(--space-5);
 	background: var(--wash-1);
-	border-inline-start: 3px solid var(--wash-3);
+	border-inline-start: var(--bar-width) solid var(--wash-3);
 	border-start-end-radius: var(--border-radius-1);
 	border-end-end-radius: var(--border-radius-1);
 	color: var(--text-secondary);
@@ -20,7 +20,7 @@
 }
 
 /* PULL (variant="pull") — the quote on the ruled page. No fill and no
- * corner; a 2px bar of the accent down the left edge — the one place the
+ * corner; a bar of the accent (--bar-width) down the left edge — the one place the
  * accent appears in a post's text — and the words a step up from the
  * paragraph: the body face still, at --font-size-5 on the UI leading, in
  * the primary ink. The Body inside reads the body role's tokens, so the
@@ -32,7 +32,7 @@
 	--font-body-line-height: var(--line-height-ui);
 	padding: 0 0 0 var(--space-4);
 	background: none;
-	border-inline-start: 2px solid var(--accent);
+	border-inline-start: var(--bar-width) solid var(--accent);
 	border-radius: 0;
 	color: var(--text-primary);
 }

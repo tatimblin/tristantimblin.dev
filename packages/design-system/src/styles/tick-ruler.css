@@ -6,13 +6,11 @@
  * background gradient in currentColor, so a segment is coloured by `color`
  * and any box becomes a stretch of ruler.
  *
- * The PLAYHEAD is the one accent: a full-height line at a fraction of the
- * width, with a dot on top. The ruler leaves headroom for the dot only when
- * it has one, so a plain ruler is exactly its ticks. Its position is --at on
- * the ruler itself (the component sets it inline; a script moves it there),
- * and with `lit` the stretch from the left edge to it is redrawn in the
- * primary ink — the same ticks, on the same pitch, over the dim ones — so
- * the ruler reads as progress: how far, of the whole. */
+ * The PLAYHEAD is the shared `.ds-playhead` (playhead.css) at --at on the
+ * ruler; the ruler leaves headroom for its dot only when it has one, so a
+ * plain ruler is exactly its ticks. With `lit` the stretch from the left
+ * edge to it is redrawn in the primary ink — the same ticks, on the same
+ * pitch, over the dim ones — so the ruler reads as progress. */
 .ds-ticks {
 	position: relative;
 	display: flex;
@@ -27,7 +25,7 @@
 }
 
 .ds-ticks__seg {
-	flex: var(--share, 1) 1 0;
+	flex: var(--tick-share, 1) 1 0;
 	min-inline-size: 1px;
 	block-size: 100%;
 	/* The ruler owns its gradient. A custom property substitutes its var()s
@@ -57,28 +55,4 @@
 	);
 	color: var(--text-primary);
 	pointer-events: none;
-}
-
-.ds-ticks__playhead {
-	position: absolute;
-	inset-block: 0;
-	inset-inline-start: var(--at, 0%);
-	inline-size: 1px;
-	background: var(--accent);
-	/* Sits ON the tick under it, not beside it: the line is 1px wide and the
-	   fraction lands anywhere, so centre it on its own position. */
-	translate: -50% 0;
-}
-.ds-ticks__playhead::before {
-	content: "";
-	position: absolute;
-	inset-block-start: 0;
-	inset-inline-start: 50%;
-	/* Small: a marker, not a control. Sized off the ruler's headroom so the
-	   two agree when either is retuned. */
-	inline-size: calc(var(--space-2) * 0.75);
-	block-size: calc(var(--space-2) * 0.75);
-	border-radius: 50%;
-	background: var(--accent);
-	translate: -50% -50%;
 }

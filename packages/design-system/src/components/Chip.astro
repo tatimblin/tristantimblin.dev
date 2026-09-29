@@ -30,4 +30,14 @@ const { as = "span", size = "md", class: className, ...rest } = Astro.props;
 const Tag = as as any;
 ---
 
-<Tag class={cx("ds-chip", "ds-mono", "ds-caps", size !== "md" && `ds-chip--size-${size}`, className)} {...rest}><slot /></Tag>
+<Tag
+	class={cx(
+		"ds-chip",
+		"ds-mono",
+		"ds-caps",
+		// As a button or a link it is a control (control.css).
+		(as === "button" || as === "a") && "ds-control",
+		size !== "md" && `ds-chip--size-${size}`,
+		className,
+	)}
+	{...rest}><slot /></Tag>

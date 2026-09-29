@@ -9,14 +9,13 @@
  *
  * Set in the structure voice (caps mono), because a button's label is a
  * label: Button.astro composes the `ds-mono ds-caps` classes, so the face,
- * size, weight, tracking and case are declared once (mono.css, caps.css)
- * and this file is the box and the colour. The prop API — variant,
- * inverted, rounded, the icon slots — is the DS's, unchanged. */
+ * size, weight, tracking and case are declared once (mono.css, caps.css);
+ * and it composes `ds-control`, so the reset, the pointer, the focus ring
+ * and the disabled state are control.css's. This file is the box and the
+ * colour. The prop API — variant, inverted, rounded, the icon slots — is
+ * the DS's, unchanged. */
 
 .ds-button {
-	-webkit-appearance: none;
-	appearance: none;
-	-webkit-tap-highlight-color: transparent;
 	user-select: none;
 	display: inline-flex;
 	justify-content: center;
@@ -24,12 +23,8 @@
 	gap: var(--space-1);
 	flex-shrink: 0;
 	box-sizing: border-box;
-	outline: none;
-	cursor: pointer;
 	border: 1px solid transparent;
-	margin: 0;
 	white-space: nowrap;
-	text-decoration: none;
 	block-size: var(--space-6);
 	inline-size: max-content;
 	padding: 0 var(--space-4);
@@ -40,9 +35,8 @@
 		transform var(--duration-swap) var(--ease-reveal);
 
 	background: var(--button-background, transparent);
-	color: var(--color, var(--text-primary));
+	color: var(--button-color, var(--text-primary));
 	transform: scale(var(--button-scale, 1)) translateZ(0);
-	opacity: var(--opacity, 1);
 }
 
 .ds-button svg {
@@ -52,16 +46,6 @@
 
 .ds-button:active:not(:disabled) {
 	--button-scale: 0.97;
-}
-
-.ds-button:focus-visible {
-	outline: var(--focus-ring);
-	outline-offset: var(--focus-ring-offset);
-}
-
-.ds-button:disabled {
-	cursor: not-allowed;
-	--opacity: 0.4;
 }
 
 /* Icon wrappers (Button.tsx wraps start/endIcon in a Flex). */
@@ -81,17 +65,17 @@
 /* variant: primary */
 .ds-button--variant-primary {
 	--button-background: var(--accent);
-	--color: var(--on-accent);
+	--button-color: var(--on-accent);
 }
 .ds-button--variant-primary:hover:not(:disabled),
 .ds-button--variant-primary:focus-visible {
-	--button-background: oklch(from var(--accent) calc(l + 0.05) c h);
+	--button-background: var(--accent-hover);
 }
 
 /* variant: secondary */
 .ds-button--variant-secondary {
 	--button-background: var(--wash-2);
-	--color: var(--text-primary);
+	--button-color: var(--text-primary);
 }
 .ds-button--variant-secondary:hover:not(:disabled),
 .ds-button--variant-secondary:focus-visible {
@@ -101,12 +85,12 @@
 /* variant: tertiary */
 .ds-button--variant-tertiary {
 	--button-background: transparent;
-	--color: var(--text-secondary);
+	--button-color: var(--text-secondary);
 }
 .ds-button--variant-tertiary:hover:not(:disabled),
 .ds-button--variant-tertiary:focus-visible {
 	--button-background: var(--wash-1);
-	--color: var(--text-primary);
+	--button-color: var(--text-primary);
 }
 
 /* rounded → a pill button */
@@ -117,5 +101,5 @@
 /* compoundVariants */
 .ds-button--variant-primary.ds-button--inverted-true {
 	--button-background: var(--text-primary);
-	--color: var(--background);
+	--button-color: var(--background);
 }

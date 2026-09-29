@@ -114,7 +114,7 @@
 }
 .ds-card-body--dot-matrix-true {
 	background-image: radial-gradient(
-		oklch(from var(--border-color) l c h / 54%) 1px,
+		oklch(from var(--hairline) l c h / 54%) 1px,
 		transparent 0
 	);
 	background-position: center center;

@@ -276,7 +276,7 @@
 	gap: var(--space-2);
 }
 .ds-quilt-panel__latest {
-	--color: var(--text-primary);
+	--anchor-color: var(--text-primary);
 	font-size: var(--font-size-5);
 	line-height: var(--line-height-ui);
 }
@@ -289,10 +289,9 @@
 /* THE RESULTS FACE. A listbox of two-line rows cut by hairlines — the
    title, then its meta and why in the structure voice — close-set, so four
    fit a full-size block under the strip (the script caps the list at four).
-   The active row (aria-selected) carries the accent bar on its left edge —
-   the focus ring's width, so the two accents on the page agree — and a
-   pointed-at row the strong hairline there; no fills. The marked query in a
-   title is underlined with the accent. */
+   The active row (aria-selected) carries the accent bar (--bar-width) on its
+   left edge and a pointed-at row the strong hairline there; no fills. The
+   marked query in a title is underlined with the accent. */
 .ds-quilt-panel__results {
 	list-style: none;
 	margin: 0;
@@ -308,8 +307,7 @@
 	display: grid;
 	gap: var(--space-1);
 	padding: var(--space-2) var(--space-3);
-	border-inline-start: var(--focus-ring);
-	border-inline-start-color: transparent;
+	border-inline-start: var(--bar-width) solid transparent;
 	color: inherit;
 	text-decoration: none;
 	transition: border-color var(--duration-swap) var(--ease-reveal);

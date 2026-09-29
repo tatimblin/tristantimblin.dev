@@ -1,0 +1,30 @@
+/* Control — what every DS control shares, once.
+ *
+ * A control is anything the pointer or the keyboard operates: Button and
+ * IconButton, a Pill or a Chip rendered as a button or a link, the archive's
+ * row link, a quilt tile's link, a mark on the time ruler, a hit area. Each
+ * of them composes the `ds-control` class (in its .astro), so the native
+ * chrome reset, the pointer, the disabled state and above all the FOCUS RING
+ * are declared here and nowhere else: one ring, at one offset, on every
+ * control on the site.
+ *
+ * A control that must draw its ring INSIDE its box — one that sits in a
+ * clipping card, or fills its parent edge to edge — sets
+ * `--control-ring-offset: var(--focus-ring-inset)` in its own rule; the
+ * ring itself never changes. */
+.ds-control {
+	-webkit-appearance: none;
+	appearance: none;
+	-webkit-tap-highlight-color: transparent;
+	margin: 0;
+	text-decoration: none;
+	cursor: pointer;
+}
+.ds-control:focus-visible {
+	outline: var(--focus-ring);
+	outline-offset: var(--control-ring-offset, var(--focus-ring-offset));
+}
+.ds-control:disabled {
+	cursor: not-allowed;
+	opacity: 0.4;
+}

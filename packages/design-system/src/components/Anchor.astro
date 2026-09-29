@@ -5,7 +5,7 @@
 // The DS Anchor.tsx computes an icon data-URI from `href` + the active variant
 // (getIconString) and injects it via the `css` prop as `--icon: url(...)`. That
 // is a real per-instance API (icon depends on href/variant), so we port the
-// logic and render it as an inline `style="--icon: url(...)"` — allowed per
+// logic and render it as an inline `style="--anchor-icon: url(...)"` — allowed per
 // CONVENTIONS.md (unlike an ad-hoc css prop).
 import { cx } from "../lib/cx";
 import { getIconString, type ArrowPosition } from "../lib/anchor-icons";
@@ -57,7 +57,7 @@ const cls = cx(
 );
 
 // Port of the DS css prop: '--icon': `url(${icon})`.
-const iconStyle = icon ? `--icon: url(${icon})` : undefined;
+const iconStyle = icon ? `--anchor-icon: url(${icon})` : undefined;
 const mergedStyle =
 	typeof style === "string"
 		? [iconStyle, style].filter(Boolean).join(";")
