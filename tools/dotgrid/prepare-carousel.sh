@@ -61,9 +61,15 @@
 # Usage: prepare-carousel.sh [-o out_subdir] [clip ...]
 #   -o    output subdir under public/videos/website-carousel (default: web)
 #   clip  basenames to process (e.g. IMG_0360); default: every clip
+#
+# The originals live in media-src/website-carousel (gitignored, kept locally),
+# OUTSIDE public/: Astro copies public/ into dist/ wholesale, so raw .mov files
+# there would ship with every local build — and a 28 MiB one fails Cloudflare
+# Pages' 25 MiB per-file limit, blocking the deploy.
 set -euo pipefail
 
-SRC_DIR="public/videos/website-carousel"
+SRC_DIR="media-src/website-carousel"
+DEST_DIR="public/videos/website-carousel"
 OUT_SUB="web"
 
 # The reference distribution: IMG_0360 (Redwoods) as encoded by the earlier
@@ -88,7 +94,7 @@ done
 command -v ffmpeg  >/dev/null || { echo "ffmpeg not found." >&2; exit 1; }
 command -v ffprobe >/dev/null || { echo "ffprobe not found." >&2; exit 1; }
 
-OUT_DIR="${SRC_DIR}/${OUT_SUB}"
+OUT_DIR="${DEST_DIR}/${OUT_SUB}"
 mkdir -p "$OUT_DIR"
 
 # iPhone HLG (BT.2020, arib-std-b67) needs the HDR->SDR contrast/saturation
