@@ -7,15 +7,14 @@
 //
 // Deliberately NOT mapped — kept as raw tags, styled by the DS Prose container
 // the post body sits in (packages/design-system/src/styles/prose.css):
-//   - `code`: MDX maps it globally, so mapping to InlineCode would also wrap
-//     fenced-block `<pre><code>`. Inline + block code are handled in CSS.
+//   - `code`: MDX maps it globally, so mapping it to a component would also
+//     wrap fenced-block `<pre><code>`. Inline + block code are handled in CSS.
 //   - `pre`, `hr`, `del`, `table`: no clean 1:1 DS component.
 //
-// `blockquote` IS mapped, to the DS Blockquote in its PULL variant (via
-// ./mdx/Blockquote.astro) — no fill, a bar of the accent down its left edge,
-// the words a step up. Not Callout, which is an ATTENTION box with a badge; a
-// pulled quote is the opposite gesture. The <p> inside is mapped too, so the
-// quote is set through the Body role (the variant retunes its tokens).
+// `blockquote` IS mapped, to the DS Blockquote (via ./mdx/Blockquote.astro) —
+// no fill, a bar of the accent down its left edge, the words a step up. The
+// <p> inside is mapped too, so the quote is set through the Body role (the
+// Blockquote retunes its tokens in scope).
 //
 // `img` IS mapped (to ./mdx/Img.astro) — not for a DS component, but because
 // markdown cannot express width/height, lazy loading, or a reveal hook, and the

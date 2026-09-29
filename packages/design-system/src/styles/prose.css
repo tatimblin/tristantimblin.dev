@@ -74,8 +74,8 @@
 }
 
 /* Inline code (anything not inside a <pre>). MDX maps `code` globally, so it
-   cannot be mapped to InlineCode without also wrapping every fenced block; the
-   tag is styled here instead. */
+   cannot be mapped to a component without also wrapping every fenced block;
+   the tag is styled here instead. */
 .ds-prose :not(pre) > code {
 	padding: 0.15em 0.4em;
 	background: var(--code-snippet-background);

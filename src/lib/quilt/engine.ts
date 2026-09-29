@@ -356,7 +356,7 @@ export function chooseBlock({
 // --- Randomness ---------------------------------------------------------------
 
 /** mulberry32: a small, fast, seedable PRNG in [0, 1). */
-export function mulberry32(seed: number): () => number {
+function mulberry32(seed: number): () => number {
 	let a = seed >>> 0;
 	return () => {
 		a = (a + 0x6d2b79f5) >>> 0;
@@ -368,7 +368,7 @@ export function mulberry32(seed: number): () => number {
 }
 
 /** A 32-bit seed from a string (FNV-1a) or a number (as is). */
-export function hashSeed(seed: number | string): number {
+function hashSeed(seed: number | string): number {
 	if (typeof seed === "number") return seed >>> 0;
 	let h = 0x811c9dc5;
 	for (let i = 0; i < seed.length; i++) {

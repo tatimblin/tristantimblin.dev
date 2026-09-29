@@ -1899,8 +1899,6 @@ assertions:
 			const changed = new Map<string, { value: string; scope: "root" | "themed" }>();
 			const baselines = new Map<string, string>();
 
-			const outputs = panel.querySelectorAll<HTMLOutputElement>("[data-out]");
-
 			// Seed every control from the resolved baseline for the active theme.
 			function seed() {
 				// Drop any live-preview overrides we set (leave other inline styles alone).
@@ -2103,7 +2101,7 @@ assertions:
 	.ds-demo__swatch--on {
 		display: inline-grid;
 		place-items: center;
-		font-family: var(--font-mono);
+		font-family: var(--font-code);
 		font-size: var(--font-size-0);
 		line-height: 1;
 	}

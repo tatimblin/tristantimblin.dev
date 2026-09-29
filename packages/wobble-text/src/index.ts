@@ -26,7 +26,6 @@ const CHURN_INTERVAL_MS = 1000 / 30;
 let filterContainer: SVGSVGElement | null = null;
 let instanceCount = 0;
 let rafId: number | null = null;
-let time = 0;
 const instances = new Set<WobbleTextElement>();
 
 /** ONE shared observer for every instance: an animated turbulence filter that is
@@ -80,7 +79,6 @@ function startLoop() {
 	if (prefersReduced) return;
 
 	const tick = (ts: number) => {
-		time = ts;
 		let anyVisible = false;
 		for (const instance of instances) {
 			if (!instance._visible) continue;
