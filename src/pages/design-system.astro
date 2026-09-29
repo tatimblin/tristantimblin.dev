@@ -1826,201 +1826,200 @@ assertions:
 			<VisuallyHidden>screen-reader only text</VisuallyHidden>
 		</section>
 	</main>
-</Layout>
+	<script>
+		// Live token editor: reflect each control onto an inline custom property on
+		// <html>, which overrides the class-scoped stylesheet so the catalogue below
+		// updates instantly. "Copy config" exports only the changed tokens as JSON,
+		// split into root/themed so the agent can drop them into tokens.overrides.css.
+		function initTokenControls() {
+			const panel = document.querySelector<HTMLElement>("[data-token-controls]");
+			if (!panel || panel.dataset.bound === "true") return;
+			panel.dataset.bound = "true";
 
-<script>
-	// Live token editor: reflect each control onto an inline custom property on
-	// <html>, which overrides the class-scoped stylesheet so the catalogue below
-	// updates instantly. "Copy config" exports only the changed tokens as JSON,
-	// split into root/themed so the agent can drop them into tokens.overrides.css.
-	function initTokenControls() {
-		const panel = document.querySelector<HTMLElement>("[data-token-controls]");
-		if (!panel || panel.dataset.bound === "true") return;
-		panel.dataset.bound = "true";
+			const root = document.documentElement;
+			const scopeOf = (varName: string): "root" | "themed" => {
+				const fs = panel
+					.querySelector(`[data-var="${varName}"]`)
+					?.closest<HTMLElement>("[data-scope]");
+				return (fs?.dataset.scope as "root" | "themed") ?? "themed";
+			};
+			const currentTheme = () =>
+				root.classList.contains("maximeheckel-light")
+					? "maximeheckel-light"
+					: "maximeheckel-dark";
 
-		const root = document.documentElement;
-		const scopeOf = (varName: string): "root" | "themed" => {
-			const fs = panel
-				.querySelector(`[data-var="${varName}"]`)
-				?.closest<HTMLElement>("[data-scope]");
-			return (fs?.dataset.scope as "root" | "themed") ?? "themed";
-		};
-		const currentTheme = () =>
-			root.classList.contains("maximeheckel-light")
-				? "maximeheckel-light"
-				: "maximeheckel-dark";
+			// Resolve any CSS color (incl. oklch) to #rrggbb by painting a pixel and
+			// reading its bytes — canvas serializes oklch as "oklch(...)", not hex, so
+			// we sample the rasterized RGB instead. Returns null on an unparseable value.
+			const canvas = document.createElement("canvas");
+			canvas.width = canvas.height = 1;
+			const canvasCtx = canvas.getContext("2d", { willReadFrequently: true });
+			const hex2 = (n: number) => n.toString(16).padStart(2, "0");
+			const toHex = (color: string): string | null => {
+				if (!canvasCtx) return null;
+				// Reject values the canvas can't parse (it keeps the prior fillStyle).
+				canvasCtx.fillStyle = "#000000";
+				canvasCtx.fillStyle = color;
+				if (canvasCtx.fillStyle === "#000000" && !/^(#000000|black)$/i.test(color.trim()))
+					return null;
+				canvasCtx.clearRect(0, 0, 1, 1);
+				canvasCtx.fillRect(0, 0, 1, 1);
+				const [r, g, b] = canvasCtx.getImageData(0, 0, 1, 1).data;
+				return `#${hex2(r)}${hex2(g)}${hex2(b)}`;
+			};
 
-		// Resolve any CSS color (incl. oklch) to #rrggbb by painting a pixel and
-		// reading its bytes — canvas serializes oklch as "oklch(...)", not hex, so
-		// we sample the rasterized RGB instead. Returns null on an unparseable value.
-		const canvas = document.createElement("canvas");
-		canvas.width = canvas.height = 1;
-		const canvasCtx = canvas.getContext("2d", { willReadFrequently: true });
-		const hex2 = (n: number) => n.toString(16).padStart(2, "0");
-		const toHex = (color: string): string | null => {
-			if (!canvasCtx) return null;
-			// Reject values the canvas can't parse (it keeps the prior fillStyle).
-			canvasCtx.fillStyle = "#000000";
-			canvasCtx.fillStyle = color;
-			if (canvasCtx.fillStyle === "#000000" && !/^(#000000|black)$/i.test(color.trim()))
-				return null;
-			canvasCtx.clearRect(0, 0, 1, 1);
-			canvasCtx.fillRect(0, 0, 1, 1);
-			const [r, g, b] = canvasCtx.getImageData(0, 0, 1, 1).data;
-			return `#${hex2(r)}${hex2(g)}${hex2(b)}`;
-		};
+			// Changed tokens keyed by var name → { value, scope }. Empty = pristine.
+			const changed = new Map<string, { value: string; scope: "root" | "themed" }>();
+			const baselines = new Map<string, string>();
 
-		// Changed tokens keyed by var name → { value, scope }. Empty = pristine.
-		const changed = new Map<string, { value: string; scope: "root" | "themed" }>();
-		const baselines = new Map<string, string>();
+			const outputs = panel.querySelectorAll<HTMLOutputElement>("[data-out]");
 
-		const outputs = panel.querySelectorAll<HTMLOutputElement>("[data-out]");
+			// Seed every control from the resolved baseline for the active theme.
+			function seed() {
+				// Drop any live-preview overrides we set (leave other inline styles alone).
+				for (const varName of changed.keys()) root.style.removeProperty(varName);
+				changed.clear();
+				baselines.clear();
+				const cs = getComputedStyle(root);
 
-		// Seed every control from the resolved baseline for the active theme.
-		function seed() {
-			// Drop any live-preview overrides we set (leave other inline styles alone).
-			for (const varName of changed.keys()) root.style.removeProperty(varName);
-			changed.clear();
-			baselines.clear();
-			const cs = getComputedStyle(root);
+				panel.querySelectorAll<HTMLInputElement>("[data-var]").forEach((input) => {
+					const varName = input.dataset.var!;
+					const base = cs.getPropertyValue(varName).trim();
+					baselines.set(varName, base);
+
+					const role = input.dataset.role;
+					if (input.type === "range") {
+						input.value = parseFloat(base).toString();
+						const out = panel.querySelector<HTMLElement>(`[data-out="${varName}"]`);
+						if (out) out.textContent = base;
+					} else if (role === "value") {
+						input.value = base; // text field holds the true (maybe oklch) value
+					} else if (role === "swatch") {
+						const hex = toHex(base);
+						if (hex) input.value = hex;
+					}
+				});
+
+				const nameEl = panel.querySelector<HTMLElement>("[data-theme-name]");
+				if (nameEl) nameEl.textContent = currentTheme().replace("maximeheckel-", "");
+			}
+
+			function apply(varName: string, value: string) {
+				root.style.setProperty(varName, value);
+				const base = baselines.get(varName);
+				if (base !== undefined && value === base) changed.delete(varName);
+				else changed.set(varName, { value, scope: scopeOf(varName) });
+			}
 
 			panel.querySelectorAll<HTMLInputElement>("[data-var]").forEach((input) => {
 				const varName = input.dataset.var!;
-				const base = cs.getPropertyValue(varName).trim();
-				baselines.set(varName, base);
-
-				const role = input.dataset.role;
-				if (input.type === "range") {
-					input.value = parseFloat(base).toString();
-					const out = panel.querySelector<HTMLElement>(`[data-out="${varName}"]`);
-					if (out) out.textContent = base;
-				} else if (role === "value") {
-					input.value = base; // text field holds the true (maybe oklch) value
-				} else if (role === "swatch") {
-					const hex = toHex(base);
-					if (hex) input.value = hex;
-				}
+				input.addEventListener("input", () => {
+					if (input.type === "range") {
+						const value = input.value + (input.dataset.unit || "");
+						const out = panel.querySelector<HTMLElement>(`[data-out="${varName}"]`);
+						if (out) out.textContent = value;
+						apply(varName, value);
+					} else if (input.dataset.role === "swatch") {
+						// Mirror the picker into the paired text field (the source of truth).
+						const text = panel.querySelector<HTMLInputElement>(
+							`input[data-var="${varName}"][data-role="value"]`,
+						);
+						if (text) text.value = input.value;
+						apply(varName, input.value);
+					} else {
+						// Text field: keep the swatch in sync when the value is hex-able.
+						const swatch = panel.querySelector<HTMLInputElement>(
+							`input[data-var="${varName}"][data-role="swatch"]`,
+						);
+						const hex = toHex(input.value);
+						if (swatch && hex) swatch.value = hex;
+						apply(varName, input.value);
+					}
+				});
 			});
 
-			const nameEl = panel.querySelector<HTMLElement>("[data-theme-name]");
-			if (nameEl) nameEl.textContent = currentTheme().replace("maximeheckel-", "");
+			const copyBtn = panel.querySelector<HTMLButtonElement>("[data-copy]");
+			copyBtn?.addEventListener("click", async () => {
+				const rootTokens: Record<string, string> = {};
+				const themed: Record<string, string> = {};
+				for (const [varName, { value, scope }] of changed) {
+					(scope === "root" ? rootTokens : themed)[varName] = value;
+				}
+				const config = {
+					target: "packages/design-system/src/tokens/tokens.overrides.css",
+					theme: currentTheme(),
+					root: rootTokens,
+					themed,
+				};
+				const json = JSON.stringify(config, null, 2);
+				try {
+					await navigator.clipboard.writeText(json);
+				} catch {
+					// Clipboard blocked (e.g. insecure context): log so it's still grabbable.
+					console.log(json);
+				}
+				const label = copyBtn.textContent;
+				copyBtn.textContent = changed.size ? "Copied!" : "No changes";
+				setTimeout(() => (copyBtn.textContent = label), 1200);
+			});
+
+			panel
+				.querySelector<HTMLButtonElement>("[data-reset]")
+				?.addEventListener("click", () => seed());
+
+			seed();
+			// Re-seed when the site theme toggles (SiteFooter dispatches themechange).
+			document.addEventListener("themechange", () => seed());
 		}
 
-		function apply(varName: string, value: string) {
-			root.style.setProperty(varName, value);
-			const base = baselines.get(varName);
-			if (base !== undefined && value === base) changed.delete(varName);
-			else changed.set(varName, { value, scope: scopeOf(varName) });
-		}
-
-		panel.querySelectorAll<HTMLInputElement>("[data-var]").forEach((input) => {
-			const varName = input.dataset.var!;
-			input.addEventListener("input", () => {
-				if (input.type === "range") {
-					const value = input.value + (input.dataset.unit || "");
-					const out = panel.querySelector<HTMLElement>(`[data-out="${varName}"]`);
-					if (out) out.textContent = value;
-					apply(varName, value);
-				} else if (input.dataset.role === "swatch") {
-					// Mirror the picker into the paired text field (the source of truth).
-					const text = panel.querySelector<HTMLInputElement>(
-						`input[data-var="${varName}"][data-role="value"]`,
-					);
-					if (text) text.value = input.value;
-					apply(varName, input.value);
-				} else {
-					// Text field: keep the swatch in sync when the value is hex-able.
-					const swatch = panel.querySelector<HTMLInputElement>(
-						`input[data-var="${varName}"][data-role="swatch"]`,
-					);
-					const hex = toHex(input.value);
-					if (swatch && hex) swatch.value = hex;
-					apply(varName, input.value);
+		// The Faces demo: the pill moves aria-hidden between the two faces.
+		function initFacesDemo() {
+			const button = document.querySelector<HTMLButtonElement>("[data-faces-demo]");
+			const faces = document.querySelectorAll<HTMLElement>("[data-faces-demo-stack] > .ds-face");
+			button?.addEventListener("click", () => {
+				for (const face of faces) {
+					face.setAttribute("aria-hidden", String(face.getAttribute("aria-hidden") !== "true"));
 				}
 			});
+		}
+
+		// The art demo: the checkbox sets data-art-play on every demo frame, the
+		// attribute the post page sets on its hero.
+		function initArtDemo() {
+			const toggle = document.querySelector<HTMLInputElement>("[data-art-play-toggle]");
+			const frames = document.querySelectorAll<HTMLElement>("[data-art-demo]");
+			toggle?.addEventListener("change", () => {
+				for (const frame of frames) frame.toggleAttribute("data-art-play", toggle.checked);
+			});
+		}
+
+		// The ring demo: a new --ring-value every two seconds, the way a script
+		// would move one — the arc glides there on its own.
+		let ringTimer: ReturnType<typeof setInterval> | undefined;
+		function initRingDemo() {
+			clearInterval(ringTimer);
+			const ring = document.querySelector<HTMLElement>("[data-demo-ring]");
+			const label = document.querySelector<HTMLElement>("[data-demo-ring-label]");
+			if (!ring) return;
+			const values = [60, 20, 100, 40, 80];
+			let k = 0;
+			ringTimer = setInterval(() => {
+				k = (k + 1) % values.length;
+				ring.style.setProperty("--ring-value", String(values[k]));
+				ring.setAttribute("aria-label", `${values[k]}%`);
+				if (label) label.textContent = `${values[k]}%`;
+			}, 2000);
+		}
+
+		document.addEventListener("astro:page-load", () => {
+			initTokenControls();
+			initFacesDemo();
+			initArtDemo();
+			initRingDemo();
 		});
-
-		const copyBtn = panel.querySelector<HTMLButtonElement>("[data-copy]");
-		copyBtn?.addEventListener("click", async () => {
-			const rootTokens: Record<string, string> = {};
-			const themed: Record<string, string> = {};
-			for (const [varName, { value, scope }] of changed) {
-				(scope === "root" ? rootTokens : themed)[varName] = value;
-			}
-			const config = {
-				target: "packages/design-system/src/tokens/tokens.overrides.css",
-				theme: currentTheme(),
-				root: rootTokens,
-				themed,
-			};
-			const json = JSON.stringify(config, null, 2);
-			try {
-				await navigator.clipboard.writeText(json);
-			} catch {
-				// Clipboard blocked (e.g. insecure context): log so it's still grabbable.
-				console.log(json);
-			}
-			const label = copyBtn.textContent;
-			copyBtn.textContent = changed.size ? "Copied!" : "No changes";
-			setTimeout(() => (copyBtn.textContent = label), 1200);
-		});
-
-		panel
-			.querySelector<HTMLButtonElement>("[data-reset]")
-			?.addEventListener("click", () => seed());
-
-		seed();
-		// Re-seed when the site theme toggles (SiteFooter dispatches themechange).
-		document.addEventListener("themechange", () => seed());
-	}
-
-	// The Faces demo: the pill moves aria-hidden between the two faces.
-	function initFacesDemo() {
-		const button = document.querySelector<HTMLButtonElement>("[data-faces-demo]");
-		const faces = document.querySelectorAll<HTMLElement>("[data-faces-demo-stack] > .ds-face");
-		button?.addEventListener("click", () => {
-			for (const face of faces) {
-				face.setAttribute("aria-hidden", String(face.getAttribute("aria-hidden") !== "true"));
-			}
-		});
-	}
-
-	// The art demo: the checkbox sets data-art-play on every demo frame, the
-	// attribute the post page sets on its hero.
-	function initArtDemo() {
-		const toggle = document.querySelector<HTMLInputElement>("[data-art-play-toggle]");
-		const frames = document.querySelectorAll<HTMLElement>("[data-art-demo]");
-		toggle?.addEventListener("change", () => {
-			for (const frame of frames) frame.toggleAttribute("data-art-play", toggle.checked);
-		});
-	}
-
-	// The ring demo: a new --ring-value every two seconds, the way a script
-	// would move one — the arc glides there on its own.
-	let ringTimer: ReturnType<typeof setInterval> | undefined;
-	function initRingDemo() {
-		clearInterval(ringTimer);
-		const ring = document.querySelector<HTMLElement>("[data-demo-ring]");
-		const label = document.querySelector<HTMLElement>("[data-demo-ring-label]");
-		if (!ring) return;
-		const values = [60, 20, 100, 40, 80];
-		let k = 0;
-		ringTimer = setInterval(() => {
-			k = (k + 1) % values.length;
-			ring.style.setProperty("--ring-value", String(values[k]));
-			ring.setAttribute("aria-label", `${values[k]}%`);
-			if (label) label.textContent = `${values[k]}%`;
-		}, 2000);
-	}
-
-	document.addEventListener("astro:page-load", () => {
-		initTokenControls();
-		initFacesDemo();
-		initArtDemo();
-		initRingDemo();
-	});
-	document.addEventListener("astro:before-swap", () => clearInterval(ringTimer));
-</script>
+		document.addEventListener("astro:before-swap", () => clearInterval(ringTimer));
+	</script>
+</Layout>
 
 <style>
 	.ds-demo {

@@ -14,87 +14,6 @@ const SRC = SOURCES[0].src;
 const SRC_WEBM = SOURCES[0].webm;
 ---
 
-<script>
-	import "@whois/dotted-grid";
-
-	// Live controls: reflect each input onto the hero <dotted-grid> attributes.
-	// Boolean attrs (invert/paused) toggle presence; the rest set a value.
-	//
-	// Resolved on every use, not captured once: the "replay intro" button below
-	// swaps in a FRESH element (the only honest way to re-run a one-shot entrance),
-	// so a captured reference would leave every other slider driving a discarded
-	// node while the visible one ignored them.
-	const hero = () => document.querySelector<HTMLElement>("[data-hero]");
-	const panel = document.querySelector<HTMLElement>("[data-controls]");
-	if (hero() && panel) {
-		const sync = (input: HTMLInputElement) => {
-			const attr = input.dataset.attr;
-			// The intro delay/duration sliders have no data-attr: they feed the replay
-			// button below rather than an attribute, since the wipe is a one-shot
-			// entrance that would otherwise re-latch on every drag. Their readout is
-			// named after the slider so both stay in step.
-			if (!attr) {
-				const key = input.dataset.introMs !== undefined ? "intro-ms" : "intro-delay-ms";
-				const out = panel.querySelector<HTMLElement>(`[data-out="${key}"]`);
-				if (out) out.textContent = input.value;
-				return;
-			}
-			const el = hero();
-			if (!el) return;
-			if (input.type === "checkbox") {
-				input.checked ? el.setAttribute(attr, "") : el.removeAttribute(attr);
-			} else if (input.dataset.zeroOff !== undefined && input.value === "0") {
-				// "absent = off" attrs (color-reveal, shimmer): 0 removes the attr.
-				el.removeAttribute(attr);
-			} else {
-				el.setAttribute(attr, input.value);
-			}
-			const out = panel.querySelector<HTMLElement>(`[data-out="${attr}"]`);
-			if (out) out.textContent = input.value;
-		};
-		panel.querySelectorAll<HTMLInputElement>("input").forEach((input) => {
-			input.addEventListener("input", () => sync(input));
-			sync(input); // apply initial state on load
-		});
-
-		// Replay the intro wipe. It latches after running (an entrance, not a loop),
-		// and the latch lives in the element instance — so the honest way to replay it
-		// is to give the page a FRESH element with the attribute already set, exactly
-		// as a real page load would. Copies the current attributes across so the
-		// replay reflects whatever the other sliders are set to.
-		const replay = panel.querySelector<HTMLButtonElement>("[data-replay-intro]");
-		const msInput = panel.querySelector<HTMLInputElement>("[data-intro-ms]");
-		const delayInput = panel.querySelector<HTMLInputElement>("[data-intro-delay-ms]");
-		replay?.addEventListener("click", () => {
-			const current = document.querySelector<HTMLElement>("[data-hero]");
-			if (!current) return;
-			const fresh = document.createElement("dotted-grid");
-			for (const { name, value } of Array.from(current.attributes)) {
-				fresh.setAttribute(name, value);
-			}
-			fresh.setAttribute("intro-delay", delayInput?.value ?? "600");
-			fresh.setAttribute("intro", msInput?.value ?? "3200");
-			current.replaceWith(fresh);
-		});
-
-		// Source switcher: swap the video the effect samples.
-		panel.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((btn) => {
-			btn.addEventListener("click", () => {
-				// Set src-webm before src: the element reads src-webm fresh when the
-				// src change triggers a (gapless) reload, so the pair stays consistent.
-				const el = hero();
-				if (!el) return;
-				if (btn.dataset.webm) el.setAttribute("src-webm", btn.dataset.webm);
-				else el.removeAttribute("src-webm");
-				el.setAttribute("src", btn.dataset.src!);
-				panel
-					.querySelectorAll("[data-src]")
-					.forEach((b) => b.classList.toggle("is-active", b === btn));
-			});
-		});
-	}
-</script>
-
 <Layout
 	title="Dotted Grid — Tristan Timblin"
 	description="An interactive playground for the dotted-grid web component: tune cell size, dot size, gamma, and contrast against live video sources."
@@ -207,6 +126,86 @@ const SRC_WEBM = SOURCES[0].webm;
 			</div>
 		</aside>
 	</main>
+	<script>
+		import "@whois/dotted-grid";
+
+		// Live controls: reflect each input onto the hero <dotted-grid> attributes.
+		// Boolean attrs (invert/paused) toggle presence; the rest set a value.
+		//
+		// Resolved on every use, not captured once: the "replay intro" button below
+		// swaps in a FRESH element (the only honest way to re-run a one-shot entrance),
+		// so a captured reference would leave every other slider driving a discarded
+		// node while the visible one ignored them.
+		const hero = () => document.querySelector<HTMLElement>("[data-hero]");
+		const panel = document.querySelector<HTMLElement>("[data-controls]");
+		if (hero() && panel) {
+			const sync = (input: HTMLInputElement) => {
+				const attr = input.dataset.attr;
+				// The intro delay/duration sliders have no data-attr: they feed the replay
+				// button below rather than an attribute, since the wipe is a one-shot
+				// entrance that would otherwise re-latch on every drag. Their readout is
+				// named after the slider so both stay in step.
+				if (!attr) {
+					const key = input.dataset.introMs !== undefined ? "intro-ms" : "intro-delay-ms";
+					const out = panel.querySelector<HTMLElement>(`[data-out="${key}"]`);
+					if (out) out.textContent = input.value;
+					return;
+				}
+				const el = hero();
+				if (!el) return;
+				if (input.type === "checkbox") {
+					input.checked ? el.setAttribute(attr, "") : el.removeAttribute(attr);
+				} else if (input.dataset.zeroOff !== undefined && input.value === "0") {
+					// "absent = off" attrs (color-reveal, shimmer): 0 removes the attr.
+					el.removeAttribute(attr);
+				} else {
+					el.setAttribute(attr, input.value);
+				}
+				const out = panel.querySelector<HTMLElement>(`[data-out="${attr}"]`);
+				if (out) out.textContent = input.value;
+			};
+			panel.querySelectorAll<HTMLInputElement>("input").forEach((input) => {
+				input.addEventListener("input", () => sync(input));
+				sync(input); // apply initial state on load
+			});
+
+			// Replay the intro wipe. It latches after running (an entrance, not a loop),
+			// and the latch lives in the element instance — so the honest way to replay it
+			// is to give the page a FRESH element with the attribute already set, exactly
+			// as a real page load would. Copies the current attributes across so the
+			// replay reflects whatever the other sliders are set to.
+			const replay = panel.querySelector<HTMLButtonElement>("[data-replay-intro]");
+			const msInput = panel.querySelector<HTMLInputElement>("[data-intro-ms]");
+			const delayInput = panel.querySelector<HTMLInputElement>("[data-intro-delay-ms]");
+			replay?.addEventListener("click", () => {
+				const current = document.querySelector<HTMLElement>("[data-hero]");
+				if (!current) return;
+				const fresh = document.createElement("dotted-grid");
+				for (const { name, value } of Array.from(current.attributes)) {
+					fresh.setAttribute(name, value);
+				}
+				fresh.setAttribute("intro-delay", delayInput?.value ?? "600");
+				fresh.setAttribute("intro", msInput?.value ?? "3200");
+				current.replaceWith(fresh);
+			});
+
+			// Source switcher: swap the video the effect samples.
+			panel.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((btn) => {
+				btn.addEventListener("click", () => {
+					// Set src-webm before src: the element reads src-webm fresh when the
+					// src change triggers a (gapless) reload, so the pair stays consistent.
+					const el = hero();
+					if (!el) return;
+					if (btn.dataset.webm) el.setAttribute("src-webm", btn.dataset.webm);
+					else el.removeAttribute("src-webm");
+					el.setAttribute("src", btn.dataset.src!);
+					panel
+						.querySelectorAll("[data-src]")
+						.forEach((b) => b.classList.toggle("is-active", b === btn));
+				});
+			});
+		}
+	</script>
 </Layout>
 
 <style>

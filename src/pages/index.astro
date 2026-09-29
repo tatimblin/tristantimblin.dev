@@ -20,69 +20,7 @@ import "@whois/video-carousel/styles.css";
 import "@whois/wobble-text/styles.css";
 ---
 
-<script>
-	import "@whois/stories-heading";
-	import "@whois/dotted-grid";
-	import "@whois/video-carousel";
-	import "@whois/wobble-text";
-</script>
-
-<script>
-	// FLOOR WIRING (≤900px, where the carousel IS the hero scene).
-	//
-	// The carousel measures how much of its bottom edge its own overlay UI (date
-	// scrubber ∪ caption) occupies and announces it; FullHeroLayout consumes that as
-	// --hero-floor to keep the heading group clear of it. The relay is needed because
-	// custom properties inherit DOWNWARD only — .fh is an ANCESTOR of the carousel, so
-	// it cannot read a property set on the carousel host.
-	//
-	// Above 900px the carousel is display:none in the hero (fabric is the scene) and
-	// reports 0-height boxes, so the floor stays 0 and the hero is a plain 100svh —
-	// which is why this is gated rather than always-on.
-	function wireHeroFloor() {
-		const fh = document.querySelector<HTMLElement>(".fh");
-		const carousel = document.querySelector<HTMLElement>(".hero-carousel");
-		if (!fh || !carousel) return;
-
-		// This module runs at script scope AND on astro:page-load, which ClientRouter
-		// also fires for the FIRST load — so without a marker the same carousel gets two
-		// sets of listeners, each with its own `latest`. They then disagree on a
-		// media-query change and the later one wins, which can remove a floor the other
-		// had correctly set (and nothing re-publishes it, since the carousel only
-		// dispatches when the extent CHANGES). Wire each element exactly once.
-		if (carousel.dataset.heroFloorWired) return;
-		carousel.dataset.heroFloorWired = "true";
-
-		const mq = window.matchMedia("(max-width: 900px)");
-
-		const apply = () => {
-			// Read the carousel's own published property rather than caching the event's
-			// value: it is the single source of truth, so a missed/early dispatch can't
-			// leave this relay stuck at 0. Falls back to the package's CSS default.
-			const raw = getComputedStyle(carousel)
-				.getPropertyValue("--vc-bottom-ui-extent")
-				.trim();
-			const extent = parseFloat(raw);
-			if (mq.matches && Number.isFinite(extent) && extent > 0) {
-				fh.style.setProperty("--hero-floor", `${extent.toFixed(1)}px`);
-			} else {
-				fh.style.removeProperty("--hero-floor");
-			}
-		};
-
-		carousel.addEventListener("video-carousel:metrics", apply);
-		mq.addEventListener("change", apply);
-		// Apply once on wire, in case the carousel measured before this ran.
-		apply();
-	}
-
-	wireHeroFloor();
-	// Layout uses ClientRouter view transitions: re-wire on each navigation, since the
-	// elements are replaced (the data- marker keeps a re-wire of the SAME node a no-op).
-	document.addEventListener("astro:page-load", wireHeroFloor);
-</script>
-
-<!-- NB: no preloadMedia here, deliberately. Preloading the hero clip looks like an
+{/* NB: no preloadMedia here, deliberately. Preloading the hero clip looks like an
      obvious win — <dotted-grid> only creates its <video> in connectedCallback, so
      the clip isn't requested until the page bundle has run (measured: 218ms vs a
      bundle finishing at 54ms). But A/B under 500kbps/200ms throttling showed no
@@ -90,7 +28,7 @@ import "@whois/wobble-text/styles.css";
      noise): the clip is only ~60KB, and on this page it contends with the video
      carousel's own clips for the same connection, so promoting it just reorders the
      queue. The Layout still supports `preloadMedia` for a page whose hero asset is
-     genuinely the critical path — this one's isn't. -->
+     genuinely the critical path — this one's isn't. */}
 <FullHeroLayout
 	title="Tristan Timblin"
 	description="Tristan Timblin — American computer programmer and human-computer interaction engineer."
@@ -319,6 +257,68 @@ import "@whois/wobble-text/styles.css";
 			<Readers />
 		</WidgetGrid>
 	</div>
+
+	<script>
+		import "@whois/stories-heading";
+		import "@whois/dotted-grid";
+		import "@whois/video-carousel";
+		import "@whois/wobble-text";
+	</script>
+
+	<script>
+		// FLOOR WIRING (≤900px, where the carousel IS the hero scene).
+		//
+		// The carousel measures how much of its bottom edge its own overlay UI (date
+		// scrubber ∪ caption) occupies and announces it; FullHeroLayout consumes that as
+		// --hero-floor to keep the heading group clear of it. The relay is needed because
+		// custom properties inherit DOWNWARD only — .fh is an ANCESTOR of the carousel, so
+		// it cannot read a property set on the carousel host.
+		//
+		// Above 900px the carousel is display:none in the hero (fabric is the scene) and
+		// reports 0-height boxes, so the floor stays 0 and the hero is a plain 100svh —
+		// which is why this is gated rather than always-on.
+		function wireHeroFloor() {
+			const fh = document.querySelector<HTMLElement>(".fh");
+			const carousel = document.querySelector<HTMLElement>(".hero-carousel");
+			if (!fh || !carousel) return;
+
+			// This module runs at script scope AND on astro:page-load, which ClientRouter
+			// also fires for the FIRST load — so without a marker the same carousel gets two
+			// sets of listeners, each with its own `latest`. They then disagree on a
+			// media-query change and the later one wins, which can remove a floor the other
+			// had correctly set (and nothing re-publishes it, since the carousel only
+			// dispatches when the extent CHANGES). Wire each element exactly once.
+			if (carousel.dataset.heroFloorWired) return;
+			carousel.dataset.heroFloorWired = "true";
+
+			const mq = window.matchMedia("(max-width: 900px)");
+
+			const apply = () => {
+				// Read the carousel's own published property rather than caching the event's
+				// value: it is the single source of truth, so a missed/early dispatch can't
+				// leave this relay stuck at 0. Falls back to the package's CSS default.
+				const raw = getComputedStyle(carousel)
+					.getPropertyValue("--vc-bottom-ui-extent")
+					.trim();
+				const extent = parseFloat(raw);
+				if (mq.matches && Number.isFinite(extent) && extent > 0) {
+					fh.style.setProperty("--hero-floor", `${extent.toFixed(1)}px`);
+				} else {
+					fh.style.removeProperty("--hero-floor");
+				}
+			};
+
+			carousel.addEventListener("video-carousel:metrics", apply);
+			mq.addEventListener("change", apply);
+			// Apply once on wire, in case the carousel measured before this ran.
+			apply();
+		}
+
+		wireHeroFloor();
+		// Layout uses ClientRouter view transitions: re-wire on each navigation, since the
+		// elements are replaced (the data- marker keeps a re-wire of the SAME node a no-op).
+		document.addEventListener("astro:page-load", wireHeroFloor);
+	</script>
 </FullHeroLayout>
 
 <style>

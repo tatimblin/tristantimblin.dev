@@ -192,25 +192,24 @@ const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 			</section>
 		))}
 	</main>
+	<script>
+		// The play toggle: data-art-play on every frame, the attribute the frame's
+		// motion runs under. Re-bound on each navigation (the site uses the client
+		// router).
+		function bindArtPlay() {
+			const toggle = document.querySelector<HTMLInputElement>("[data-art-play-toggle]");
+			if (!toggle) return;
+			const sync = () => {
+				for (const frame of document.querySelectorAll<HTMLElement>("[data-art-entry]")) {
+					frame.toggleAttribute("data-art-play", toggle.checked);
+				}
+			};
+			toggle.addEventListener("change", sync);
+			sync();
+		}
+		document.addEventListener("astro:page-load", bindArtPlay);
+	</script>
 </Layout>
-
-<script>
-	// The play toggle: data-art-play on every frame, the attribute the frame's
-	// motion runs under. Re-bound on each navigation (the site uses the client
-	// router).
-	function bindArtPlay() {
-		const toggle = document.querySelector<HTMLInputElement>("[data-art-play-toggle]");
-		if (!toggle) return;
-		const sync = () => {
-			for (const frame of document.querySelectorAll<HTMLElement>("[data-art-entry]")) {
-				frame.toggleAttribute("data-art-play", toggle.checked);
-			}
-		};
-		toggle.addEventListener("change", sync);
-		sync();
-	}
-	document.addEventListener("astro:page-load", bindArtPlay);
-</script>
 
 <style>
 	.art-cat {

@@ -53,66 +53,12 @@ const {
 } = Astro.props;
 ---
 
-
-<script>
-	// Reveal coordinator: schedules the [data-reveal] fades. Safe to load late —
-	// the inline arming script in <head> owns the fail-visible backstop, so if this
-	// module never arrives the page simply shows everything.
-	import "../lib/reveal";
-	import Lenis from "lenis";
-	import "lenis/dist/lenis.css";
-
-	declare global {
-		interface Window {
-			__lenis?: Lenis;
-		}
-	}
-
-	// Smooth scroll, initialized once and shared across view-transition
-	// navigations. Lenis drives the real window scroll (no transform hack), so it
-	// composes with the scroll-listener web components (stories-heading,
-	// video-carousel) without changes to them.
-	function initLenis() {
-		if (window.__lenis) return window.__lenis;
-		// Honor reduced-motion: leave native scrolling untouched.
-		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
-
-		// Wheel/trackpad only. Lenis 1.x keeps touch native (syncTouch off), so on a
-		// touch device it smooths NOTHING — yet the raf() loop below would still run
-		// every frame forever, a pure main-thread/battery cost with no visual payoff.
-		// Gate on a fine pointer so phones and tablets never start that loop; desktop
-		// wheel/trackpad smoothing is unchanged.
-		if (!window.matchMedia("(pointer: fine)").matches) return null;
-
-		// Subtle smoothing, close to native.
-		const lenis = new Lenis({ lerp: 0.18, smoothWheel: true });
-		window.__lenis = lenis;
-
-		function raf(time) {
-			lenis.raf(time);
-			requestAnimationFrame(raf);
-		}
-		requestAnimationFrame(raf);
-		return lenis;
-	}
-
-	initLenis();
-
-	// After a view-transition swap, re-measure the new page and reset to top.
-	document.addEventListener("astro:after-swap", () => {
-		const lenis = window.__lenis;
-		if (!lenis) return;
-		lenis.scrollTo(0, { immediate: true });
-		lenis.resize();
-	});
-</script>
-
 <!doctype html>
-<!-- Dark is the site default. The DS's OKLCH palettes are applied via the
+{/* Dark is the site default. The DS's OKLCH palettes are applied via the
      .maximeheckel-{light,dark} class on <html>; its ThemeProvider is React-only,
      so we manage the class ourselves. The server renders the dark class and the
      inline head script below re-applies any stored choice before first paint, so
-     tokens resolve with no JS dependency and no FOUC. -->
+     tokens resolve with no JS dependency and no FOUC. */}
 <html lang="en" class="maximeheckel-dark">
 	<head>
 		<meta charset="UTF-8" />
@@ -265,5 +211,57 @@ const {
 	<body>
 		<slot />
 		<SiteFooter />
+		<script>
+			// Reveal coordinator: schedules the [data-reveal] fades. Safe to load late —
+			// the inline arming script in <head> owns the fail-visible backstop, so if this
+			// module never arrives the page simply shows everything.
+			import "../lib/reveal";
+			import Lenis from "lenis";
+			import "lenis/dist/lenis.css";
+
+			declare global {
+				interface Window {
+					__lenis?: Lenis;
+				}
+			}
+
+			// Smooth scroll, initialized once and shared across view-transition
+			// navigations. Lenis drives the real window scroll (no transform hack), so it
+			// composes with the scroll-listener web components (stories-heading,
+			// video-carousel) without changes to them.
+			function initLenis() {
+				if (window.__lenis) return window.__lenis;
+				// Honor reduced-motion: leave native scrolling untouched.
+				if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+
+				// Wheel/trackpad only. Lenis 1.x keeps touch native (syncTouch off), so on a
+				// touch device it smooths NOTHING — yet the raf() loop below would still run
+				// every frame forever, a pure main-thread/battery cost with no visual payoff.
+				// Gate on a fine pointer so phones and tablets never start that loop; desktop
+				// wheel/trackpad smoothing is unchanged.
+				if (!window.matchMedia("(pointer: fine)").matches) return null;
+
+				// Subtle smoothing, close to native.
+				const lenis = new Lenis({ lerp: 0.18, smoothWheel: true });
+				window.__lenis = lenis;
+
+				function raf(time) {
+					lenis.raf(time);
+					requestAnimationFrame(raf);
+				}
+				requestAnimationFrame(raf);
+				return lenis;
+			}
+
+			initLenis();
+
+			// After a view-transition swap, re-measure the new page and reset to top.
+			document.addEventListener("astro:after-swap", () => {
+				const lenis = window.__lenis;
+				if (!lenis) return;
+				lenis.scrollTo(0, { immediate: true });
+				lenis.resize();
+			});
+		</script>
 	</body>
 </html>
