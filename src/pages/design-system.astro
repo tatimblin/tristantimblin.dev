@@ -1426,6 +1426,23 @@ const faces = [
 				<ArtFrame svg={artTemplate} label="the template cropped to 1 / 1" ratio="1 / 1" />
 				<ArtFrame svg={artTemplate} label="the template at 3 / 1, no chrome" ratio="3 / 1" chrome={false} />
 			</div>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">The mark — the art on the page, in the page's ink</h2>
+			<p class="ds-demo__note">
+				<code>variant="mark"</code> is the drawing beside a title rather than in a
+				window: no plate, edge or corner, and <code>--art-ink</code> retuned in scope
+				to <code>--text-primary</code>, so the line work is the same ink as the title
+				it sits by, on both pages. The fills keep their colours. Small by design — a
+				column of the post page's grid, playing (<code>play</code>) on the open post.
+			</p>
+			<div class="ds-demo__art-themes">
+				{(["light", "dark"] as const).map((t) => (
+					<div class={`maximeheckel-${t} ds-demo__art-page`}>
+						<Mono>{t} page</Mono>
+						<ArtFrame svg={artTemplate} label={`_template.svg as a mark on the ${t} page`} variant="mark" style="max-inline-size: 272px" />
+					</div>
+				))}
+			</div>
 		</section>
 
 		<!-- QUILT ---------------------------------------------------------- -->

@@ -27,6 +27,22 @@
 	border: 0;
 	border-radius: 0;
 }
+/* THE MARK (variant="mark"): the drawing on the page, in the page's ink. No
+ * chrome, as above, and --art-ink retuned in scope to --text-primary — the
+ * title's colour — so the line work and the "white" faces are the page's own
+ * ink rather than the plate's, on both themes; the dimmed line follows it, as
+ * it is re-derived here from the retuned ink (a custom property substitutes
+ * its var()s where it is declared, so the theme's --art-ink-2 would not). The
+ * fills keep their colours: coral is the accent, the rest hold on the page as
+ * they hold on the plate. Still a 16:9 box that clips, still moving. */
+.ds-art--variant-mark {
+	--art-ink: var(--text-primary);
+	--art-ink-2: color-mix(in oklab, var(--art-ink) 45%, transparent);
+	background: none;
+	border: 0;
+	border-radius: 0;
+	color: var(--art-ink);
+}
 .ds-art > svg {
 	display: block;
 	inline-size: 100%;

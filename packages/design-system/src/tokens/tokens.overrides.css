@@ -79,6 +79,18 @@
 	 * rendered at its parent's size. A name for the step people keep needing. */
 	--font-size-0: 12px;
 
+	/* The step ABOVE the generated scale, which stops at --font-size-8 (44px).
+	 * A post's title on the ruled page is DISPLAY type: one or two lines set
+	 * across three of the four columns, at a size the UI face was drawn to hold
+	 * and 44px does not reach — the reference sits at 72, which is the next
+	 * step of the same progression (32 → 44 → 72, each about 1.4× the last)
+	 * rather than a number picked for one page. Named here for the same reason
+	 * as --font-size-0: the generated file cannot be extended, and a display
+	 * size typed as a literal is exactly what this file exists to prevent.
+	 * Pair it with --line-height-heading retuned below 1 (a two-line title at
+	 * this size wants its lines almost touching) and --tracking-heading. */
+	--font-size-9: 72px;
+
 	/* The steps BELOW the generated weight scale, which starts at 400. Same reason
 	 * as --font-size-0 above: tokens.generated.css is re-emitted from the upstream
 	 * @maximeheckel/design-system package, so it cannot be extended there without
