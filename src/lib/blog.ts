@@ -39,7 +39,6 @@ export const categories = {
 export type CategoryId = keyof typeof categories;
 export const categoryIds = Object.keys(categories) as [CategoryId, ...CategoryId[]];
 
-export const categoryHref = (id: CategoryId) => `/txt/category/${id}`;
 export const tagHref = (tag: string) => `/txt/tag/${tag}`;
 export const postHref = (id: string) => `/txt/${id}`;
 
@@ -70,22 +69,13 @@ export function groupByYear<T extends Dated>(posts: T[]): Array<{ year: number; 
 		.map(([year, posts]) => ({ year, posts }));
 }
 
-/** "Sep 5, 2023". UTC, not the build machine's zone: frontmatter dates are bare
- *  YYYY-MM-DD, which parse as UTC midnight, and formatting those locally prints
- *  the day BEFORE anywhere west of UTC while the datetime attribute still says
- *  the right one. Pinning to UTC keeps the visible date and the machine-readable
- *  one in step. */
-export const formatDate = (d: Date) =>
-	new Date(d).toLocaleDateString("en-US", {
-		month: "short",
-		day: "numeric",
-		year: "numeric",
-		timeZone: "UTC",
-	});
-
 export const isoDate = (d: Date) => new Date(d).toISOString().split("T")[0];
 
-/** The month, UTC for the reason above: `{ short: "feb", long: "february" }`. */
+/** The month: `{ short: "feb", long: "february" }`. UTC, not the build
+ *  machine's zone, like every date here: frontmatter dates are bare
+ *  YYYY-MM-DD, which parse as UTC midnight, and formatting those locally
+ *  prints the day BEFORE anywhere west of UTC while the datetime attribute
+ *  still says the right one. */
 export function monthOf(d: Date): { short: string; long: string } {
 	const date = new Date(d);
 	const of = (month: "short" | "long") =>
@@ -128,15 +118,6 @@ export function neighbours<T extends Dated & { id: string }>(
 	if (i === -1) return { prev: null, next: null };
 	return { prev: asc[i - 1] ?? null, next: asc[i + 1] ?? null };
 }
-
-/** The post page's kicker date: `02 Feb 2026` — day padded, month short,
- *  UTC like the rest (the caps voice uppercases it on the page). */
-export const kickerDate = (d: Date) => {
-	const date = new Date(d);
-	const day = String(date.getUTCDate()).padStart(2, "0");
-	const month = date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
-	return `${day} ${month} ${date.getUTCFullYear()}`;
-};
 
 /** The ruled post page's status-strip date: `02.02.2026` — day, month, year,
  *  each padded, dotted; UTC like the rest. */

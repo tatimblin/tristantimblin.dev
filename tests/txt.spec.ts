@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
 /**
- * THE BLOG: /txt, ITS CATEGORY AND TAG PAGES, AND A POST.
+ * THE BLOG: /txt, ITS TAG PAGES, AND A POST.
  *
  * The index is the INSTRUMENT — one screen whose board is the quilt, a grid
  * of art tiles, one link per post, newest first in DOM order, with fillers
@@ -9,14 +9,14 @@ import { test, expect, type Page } from "@playwright/test";
  * its category chips and stepper, and over the timeline (the interaction
  * contract — hover, search, keys, the stepper, the ruler — is pinned in its
  * own spec).
- * The category and tag pages are still the year-grouped list, categories are
- * a closed set with real routes, and the older /txt/tag/<tag> URLs still
- * resolve. The properties worth pinning:
+ * The tag pages are still the year-grouped list, and the older
+ * /txt/tag/<tag> URLs still resolve. Categories are a closed set and only
+ * queries on the quilt (/txt?q=<id>): /txt/categories and /txt/category/<id>
+ * are 301s in public/_redirects (Cloudflare Pages, so not in dev or preview).
+ * The properties worth pinning:
  *
  *  1. EXACTLY ONE LINK PER POST on the index, newest first; fillers link nothing.
- *  2. A CATEGORY PAGE LISTS ONLY ITS POSTS, is noindex, and links its query on
- *     the quilt (/txt?q=<id>). There is no categories page: /txt/categories is
- *     a 301 to /txt in public/_redirects (Cloudflare Pages, so not in dev).
+ *  2. NO CATEGORY PAGES are built.
  *  3. TAG PAGES STILL RESOLVE — they predate the redesign and may be linked.
  *  4. IT WORKS WITH SCRIPTING OFF: tiles, rows and nav are plain links.
  *  5. A POST (the block at the foot of this file) is the RULED page: one
@@ -27,7 +27,7 @@ import { test, expect, type Page } from "@playwright/test";
  *     without h2s.
  */
 
-/** The post links on a list page (category, tag): one per PostRow. */
+/** The post links on a list page (a tag): one per PostRow. */
 const postLinks = (page: Page) =>
 	page.evaluate(() =>
 		Array.from(document.querySelectorAll<HTMLAnchorElement>("a.ds-post-row__link"))
@@ -60,20 +60,9 @@ test.describe("/txt", () => {
 		expect(await page.locator('[data-cell="filler"] a').count()).toBe(0);
 	});
 
-	test("a category page lists only its posts and links its query on the quilt", async ({
-		page,
-	}) => {
-		await page.goto("/txt/category/programming");
-		expect(await postLinks(page)).toEqual([
-			"/txt/asserting-on-agent-behavior",
-			"/txt/no-honey-we-have-a-dashboard-at-home",
-		]);
-		await expect(page.locator(".ds-post-row__meta")).toHaveText([/Programming/, /Programming/]);
-		// Thin archive, like the tag pages.
-		await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-		await page.locator('a.ds-pill[href="/txt?q=programming"]').click();
-		await expect(page).toHaveURL(/\/txt\/?\?q=programming$/);
-		await expect(page.locator("[data-search-input]")).toHaveValue("programming");
+	test("there are no category pages; a category is a query on the quilt", async ({ page }) => {
+		const res = await page.request.get("/txt/category/programming/");
+		expect(res.status()).toBe(404);
 	});
 
 	test("tag pages still resolve", async ({ page }) => {

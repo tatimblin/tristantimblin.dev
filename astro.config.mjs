@@ -35,12 +35,11 @@ export default defineConfig({
 		// a, …) onto @whois/design-system components via <Content components={…}/>.
 		mdx(),
 		// Keep noindex pages out of the sitemap: the scratch /vc-experiments page,
-		// and the /txt category and tag lists (thin archive — the quilt and the
+		// and the /txt tag lists (thin archive — the quilt and the
 		// posts carry the content).
 		sitemap({
 			filter: (page) =>
 				!page.includes('/vc-experiments') &&
-				!page.includes('/txt/category/') &&
 				!page.includes('/txt/tag/'),
 		}),
 	],
