@@ -388,7 +388,7 @@ const graphValues = [2, 3, 3, 4, 6, 5, 7, 9, 8, 11, 13, 12, 16, 18, 21, 25];
 
 const textSizes = [0, 1, 3, 4, 5, 6, 7, 8, 9] as const;
 const textVariants = ["default", "primary", "secondary", "tertiary"] as const;
-const families = ["default", "ui", "body", "hero", "code"] as const;
+const families = ["default", "ui", "heading", "body", "hero", "code"] as const;
 const iconNames = [
 	"chevron",
 	"check",
@@ -581,11 +581,11 @@ const faces = [
 	</Knobs>
 
 	<main class="ds-demo">
-		<h1 class="ds-demo__title">@whois/design-system — component catalogue</h1>
+		<Heading as="h1" size={5} responsive class="ds-demo__title">@whois/design-system — component catalogue</Heading>
 
 		{/* TYPOGRAPHY ----------------------------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Faces — three faces, four roles</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Faces — three faces, four roles</Heading>
 			<p class="ds-demo__note">
 				Self-hosted from <code>/fonts</code> (built by <code>tools/fonts/build.sh</code>,
 				@font-face'd in <code>src/styles/fonts.css</code>). Reach for the ROLE token, not
@@ -607,7 +607,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Text — sizes</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Text — sizes</Heading>
 			<p class="ds-demo__note">
 				0–9, each <code>--font-size-N</code>: 12 / 14 / 16 / 18 / 20 / 24 / 32 / 44 / 72.
 				There is no 2 — the scale has no such token. 8 and 9 are the display steps;
@@ -621,7 +621,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Text — variants (color)</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Text — variants (color)</Heading>
 			<Flex direction="column" gap={1} alignItems="start">
 				{textVariants.map((v) => (
 					<Text variant={v} size={4}>variant {v}</Text>
@@ -631,7 +631,7 @@ const faces = [
 
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Text — families</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Text — families</Heading>
 			<Flex direction="column" gap={1} alignItems="start">
 				{families.map((f) => (
 					<Text family={f} size={4}>family {f} — AaBbCc 123</Text>
@@ -640,7 +640,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Text — spaced / truncate / caps</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Text — spaced / truncate / caps</Heading>
 			<p class="ds-demo__note">
 				<code>spaced</code> is off by default; on, it is the body role's leading and
 				tracking for a run that should sit like a paragraph without being one.
@@ -657,7 +657,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Leading, tracking, and what the faces can actually do</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Leading, tracking, and what the faces can actually do</Heading>
 			<p class="ds-demo__note">
 				Three leadings, because there are three jobs. <code>--line-height-heading</code>
 				(1.15) holds a heading's lines together as one object; body leading on display
@@ -705,7 +705,7 @@ const faces = [
 
 		{/* INSTRUMENT UI: tokens + voices --------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Instrument UI — tokens</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Instrument UI — tokens</Heading>
 			<p class="ds-demo__note">
 				The vocabulary the cards, widgets and controls are drawn in (tokens.overrides.css
 				→ INSTRUMENT UI): one orange-red accent used once per card; the ink at three
@@ -738,7 +738,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Mono — the label voice</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Mono — the label voice</Heading>
 			<p class="ds-demo__note">
 				Small type in the UI face that labels rather than says (the name is from when
 				it was a monospace; the classes and the component keep it). <code>caps</code> is the panel
@@ -759,7 +759,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Figure · Stat</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Figure · Stat</Heading>
 			<p class="ds-demo__note">
 				<code>Figure</code>: the big regular-weight numeral with a caps unit on its
 				baseline — one size, the figure voice's (the type token, or the cell's step
@@ -779,13 +779,13 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Hairline</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Hairline</Heading>
 			<p class="ds-demo__note">A 1px rule that fades at both ends — the card header's divider. An <code>hr</code>, or <code>as="span"</code> when decorative.</p>
 			<Hairline />
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Body — the reading role</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Body — the reading role</Heading>
 			<p class="ds-demo__note">
 				Takes no size: the whole setting (face, size, line-height, letter-spacing,
 				reading colour) comes from the <code>--font-body-*</code> tokens, so reading
@@ -810,7 +810,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Heading + H1–H4 · EM · Strong</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Heading + H1–H4 · EM · Strong</Heading>
 			<p class="ds-demo__note">
 				Heading sizes 1–4 are the DS's (one Text step up each); 5 (44px) and 6 (72px)
 				are the display steps, and with <code>responsive</code> a heading steps down
@@ -830,7 +830,7 @@ const faces = [
 
 		{/* BUTTONS -------------------------------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Button — variants</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Button — variants</Heading>
 			<p class="ds-demo__note">
 				Flat: primary is the accent (the one action a card asks for), secondary an ink
 				wash (the reference's <code>Deploy ▸</code>), tertiary nothing until pointed at.
@@ -849,7 +849,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">IconButton — variants / sizes / rounded</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">IconButton — variants / sizes / rounded</Heading>
 			<p class="ds-demo__note">
 				<code>secondary</code> (the default) is an ink wash in a hairline;
 				<code>outline</code> the hairline alone, the ruled screen's. Sizes
@@ -884,7 +884,7 @@ const faces = [
 
 		{/* CARD ----------------------------------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Card — the flat card</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Card — the flat card</Heading>
 			<p class="ds-demo__note">
 				A surface a few percent off the page inside a 1px hairline; no shadow, no
 				depth scale, no glass — one card. The header is <code>CardHeader</code>:
@@ -925,7 +925,7 @@ const faces = [
 		{/* CALLOUT + PILL ------------------------------------------------- */}
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Pill — variants</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Pill — variants</Heading>
 			<p class="ds-demo__note">
 				Caps mono in a capsule. <code>subtle</code> (the default) is the header pill,
 				<code>outline</code> the quiet link or toggle (its edge is the Chip's). As a
@@ -943,7 +943,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section" id="chip">
-			<h2 class="ds-demo__h">Chip — the boxed chip</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Chip — the boxed chip</Heading>
 			<p class="ds-demo__note">
 				The ruled screen's tag and toggle: caps mono in a square hairline box, no fill,
 				where a Pill is the capsule with a wash. As an <code>a</code> or
@@ -968,7 +968,7 @@ const faces = [
 
 		{/* HAIRLINE GRAPHICS ---------------------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">TickRuler</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">TickRuler</Heading>
 			<p class="ds-demo__note">
 				Hairlines on a pitch (<code>--tick-pitch</code>), in currentColor. A plain
 				stretch, or split into share segments, which take the rank ramp in order unless
@@ -981,7 +981,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">BarGraph</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">BarGraph</Heading>
 			<p class="ds-demo__note">
 				Vertical hairlines with data heights, scaled to <code>max</code> (default: the
 				largest value); <code>mark</code> draws one bar in the accent — by INDEX (or
@@ -1002,7 +1002,7 @@ const faces = [
 
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Legend</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Legend</Heading>
 			<p class="ds-demo__note">
 				Dot · caps label · value. Dots take the rank ramp by position — the first is the
 				accent — unless a row sets <code>color</code>.
@@ -1025,7 +1025,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">TileGrid</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">TileGrid</Heading>
 			<p class="ds-demo__note">
 				Square tiles on a small gap. <code>lit</code> tiles take <code>--lit</code> (accent
 				dark, ink light); <code>level</code> 0–4 grades them — ordinary at two ink
@@ -1046,7 +1046,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section" id="time-ruler">
-			<h2 class="ds-demo__h">TimeRuler — ticks on a time scale</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">TimeRuler — ticks on a time scale</Heading>
 			<p class="ds-demo__note">
 				One tick per month from <code>from</code> to <code>to</code> (YYYY-MM), a taller
 				one on each January with the year under it, and a tall lit one for every
@@ -1071,7 +1071,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section" id="stat-strip">
-			<h2 class="ds-demo__h">StatStrip — hairline-cut stat cells and the accent action</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">StatStrip — hairline-cut stat cells and the accent action</Heading>
 			<p class="ds-demo__note">
 				A row of cells under a hairline, each child a cell with a hairline on its right
 				edge and an equal share of the width — put <code>Stat</code> pairs in
@@ -1096,7 +1096,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Faces — a stack of alternatives, one showing</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Faces — a stack of alternatives, one showing</Heading>
 			<p class="ds-demo__note">
 				Every face is rendered in the same grid cell; an <code>inactive</code> face is
 				<code>aria-hidden</code>, which is what the cross-fade keys on, so a script swaps
@@ -1124,7 +1124,7 @@ const faces = [
 
 		{/* WIDGET: the pieces together --------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Widget — the pieces together</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Widget — the pieces together</Heading>
 			<p class="ds-demo__note">
 				<code>Widget</code> draws the header (<code>title</code> left, the <code>meta</code>
 				slot right, the fading hairline) and <code>CardBody</code> fills the rest of the
@@ -1167,7 +1167,7 @@ const faces = [
 		{/* ANCHOR --------------------------------------------------------- */}
 		{/* READING UI ----------------------------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">PostList · PostGroup · PostRow — the archive</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">PostList · PostGroup · PostRow — the archive</Heading>
 			<p class="ds-demo__note">
 				An index of writing in the UI face. A <code>PostGroup</code> opens with a
 				full-width hairline and puts its <code>label</code> (a year) in the left
@@ -1190,7 +1190,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Prose — the reading column</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Prose — the reading column</Heading>
 			<p class="ds-demo__note">
 				Wraps rendered markdown. It spaces the blocks, sets section headings in the
 				UI face with a hairline under each h2 (by retuning <code>--font-heading</code>
@@ -1198,7 +1198,7 @@ const faces = [
 				markdown leaves raw: fenced and inline code, images, rules, tables. Mapped
 				blocks (Body, List, Anchor, Blockquote) keep their own type.
 			</p>
-			<Prose style="max-inline-size: 44rem;">
+			<Prose style="max-inline-size: var(--measure-prose);">
 				<Body>The first paragraph of a post, set in the body role. It carries an <Anchor href="#" underline>inline link</Anchor> and some <code>inline code</code> to show both against the reading colour.</Body>
 				<H2>A section heading</H2>
 				<Body>A paragraph under the heading, spaced tighter to it than to the block before it, so the heading holds onto what it introduces.</Body>
@@ -1264,7 +1264,7 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Blockquote</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Blockquote</Heading>
 			<p class="ds-demo__note">
 				Markdown <code>&gt;</code> maps here. The ruled page's quote — the one design:
 				no fill, the accent bar (<code>--bar-width</code>), the words up a step (the
@@ -1272,14 +1272,14 @@ assertions:
 				<code>footer</code> in the caps mono (in a post, the sections plugin moves it
 				out into the figure's caption).
 			</p>
-			<Blockquote style="max-inline-size: 44rem;">
+			<Blockquote style="max-inline-size: var(--measure-prose);">
 				<Body>"I typically make everything agentic, as that's what will scale better. The majority of tasks are best solved by AI."</Body>
 				<Mono as="footer">Brace Sproul / LangChain</Mono>
 			</Blockquote>
 		</section>
 
 		<section class="ds-demo__section" id="fig">
-			<h2 class="ds-demo__h">Fig — the numbered figure</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Fig — the numbered figure</Heading>
 			<p class="ds-demo__note">
 				The image on a hairline, square, with the <code>Fig. 0N /</code> label and a
 				caption in the caps mono. <code>layout="flow"</code> (the default) is one
@@ -1293,7 +1293,7 @@ assertions:
 				<Fig no="01" caption="Aptitude, passing — the read-order test" layout="ruled">
 					<img src="/blog-images/aptitude-pass.webp" alt="Aptitude CLI passing" width="1400" height="875" loading="lazy" />
 				</Fig>
-				<div style="max-inline-size: 44rem;">
+				<div style="max-inline-size: var(--measure-prose);">
 					<Fig no="02" caption="Aptitude CLI failing">
 						<img src="/blog-images/aptitude-fail.webp" alt="Aptitude CLI failing" width="1400" height="875" loading="lazy" />
 					</Fig>
@@ -1302,7 +1302,7 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section" id="index">
-			<h2 class="ds-demo__h">Index · IndexRow — the table at the foot</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Index · IndexRow — the table at the foot</Heading>
 			<p class="ds-demo__note">
 				Rows on the page's column template, cut by hairlines, opened by an inverted
 				<code>head</code> row; a <code>dim</code> row is an end with nothing beyond it.
@@ -1335,7 +1335,7 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section" id="hit-area">
-			<h2 class="ds-demo__h">HitArea · WidgetEmpty · Legend swatches</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">HitArea · WidgetEmpty · Legend swatches</Heading>
 			<p class="ds-demo__note">
 				<code>HitArea</code> is a transparent control laid OVER something — a real
 				button, no chrome, its focus ring inside the box it fills; <code>wash</code>
@@ -1373,7 +1373,7 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section" id="knobs">
-			<h2 class="ds-demo__h">Knobs · KnobGroup · Knob — the control panel</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Knobs · KnobGroup · Knob — the control panel</Heading>
 			<p class="ds-demo__note">
 				The playground's panel — the token editor on this page is one, /dotgrid's is
 				another. A <code>Knob</code> is a label over a native control the page's
@@ -1404,7 +1404,7 @@ assertions:
 
 		{/* ART ------------------------------------------------------------ */}
 		<section class="ds-demo__section" id="art">
-			<h2 class="ds-demo__h">Art — tokens and the frame</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Art — tokens and the frame</Heading>
 			<p class="ds-demo__note">
 				The illustration language the post art is drawn in (tokens.overrides.css →
 				ART; <code>ArtFrame</code>; art-frame.css): white 1px line work and flat fills
@@ -1528,7 +1528,7 @@ assertions:
 
 		{/* QUILT ---------------------------------------------------------- */}
 		<section class="ds-demo__section" id="quilt">
-			<h2 class="ds-demo__h">Quilt · QuiltCell — the grid of art tiles and its states</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Quilt · QuiltCell — the grid of art tiles and its states</Heading>
 			<p class="ds-demo__note">
 				<code>&lt;Quilt cols rows colsMd rowsMd&gt;</code> is the grid (quilt.css): art
 				tiles on the page cut by the <code>--quilt-gap</code> token
@@ -1613,7 +1613,7 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section" id="quilt-panel">
-			<h2 class="ds-demo__h">QuiltPanel — the four faces</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">QuiltPanel — the four faces</Heading>
 			<p class="ds-demo__note">
 				One panel, four faces, <code>data-mode</code> picks: <code>card</code> (a hovered
 				post, or the single hit with its <code>why</code>) — the RULED CARD: the top
@@ -1657,7 +1657,7 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section" id="search-bar">
-			<h2 class="ds-demo__h">SearchBar — the ruled bar</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">SearchBar — the ruled bar</Heading>
 			<p class="ds-demo__note">
 				<code>&lt;SearchBar id label placeholder count hint controls&gt;</code>: one box in
 				the strong hairline, square, no fill — the glyph, a native
@@ -1693,7 +1693,7 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Anchor — variants</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Anchor — variants</Heading>
 			<Flex direction="column" gap={2} alignItems="start">
 				<Anchor href="#">plain anchor</Anchor>
 				<Anchor href="#" underline>underline</Anchor>
@@ -1708,7 +1708,7 @@ assertions:
 
 		{/* LIST + INLINECODE ---------------------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">List — unordered / ordered</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">List — unordered / ordered</Heading>
 			<Grid templateColumns="1fr 1fr" gap={5}>
 				<List variant="unordered">
 					<ListItem>First item</ListItem>
@@ -1726,7 +1726,7 @@ assertions:
 
 		{/* ICON ----------------------------------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Icon — names</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Icon — names</Heading>
 			<Flex gap={4} wrap="wrap" alignItems="center">
 				{iconNames.map((n) => (
 					<Flex direction="column" gap={1} alignItems="center">
@@ -1745,7 +1745,7 @@ assertions:
 
 		{/* LAYOUT + A11Y -------------------------------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Box / Flex (foundation)</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Box / Flex (foundation)</Heading>
 			<Flex gap={2} justifyContent="space-between"
 				style="border:1px solid var(--border-color); padding:8px;">
 				<Box style="background:var(--blue-400); padding:8px;">flex a</Box>
@@ -1756,7 +1756,7 @@ assertions:
 
 		{/* GRID: columns / gutters / breakpoints ------------------------- */}
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Grid — 12 columns + spans</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Grid — 12 columns + spans</Heading>
 			<Text size={1} variant="tertiary">
 				A 12-track grid. GridItem <code>colSpan</code> maps to
 				<code>grid-column: span N</code>. Spans in each row sum to 12.
@@ -1780,7 +1780,7 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Grid — gutters (gap → --space-* tokens)</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Grid — gutters (gap → --space-* tokens)</Heading>
 			<Text size={1} variant="tertiary">
 				Same 4-column grid at increasing gap tokens. The gutter is the only
 				thing changing.
@@ -1812,7 +1812,7 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">Grid — breakpoints</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Grid — breakpoints</Heading>
 			<Text size={1} variant="tertiary">
 				Resize the window. First row uses intrinsic
 				<code>auto-fill / minmax()</code> (no media queries).
@@ -1844,7 +1844,7 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section">
-			<h2 class="ds-demo__h">VisuallyHidden</h2>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">VisuallyHidden</Heading>
 			<Text size={3}>There is a hidden label after this:</Text>
 			<VisuallyHidden>screen-reader only text</VisuallyHidden>
 		</section>
@@ -2066,26 +2066,17 @@ assertions:
 			border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
 		}
 	}
-	/* The catalogue's own headings take the HEADING role, like every other heading
-	   on the site. They used to set --font-display, which aliases --font-body — so
-	   a page whose job is to show the type system off was setting its 26 section
-	   headings in the body face, with no weight token, and demonstrating the exact
-	   mistake it documents. Family and weight together, from the role. */
+	/* The catalogue's own headings are DS Headings — the page title at the
+	   page-title step (size 5, responsive), the sections at size 2 in the
+	   secondary ink; only their spacing is the page's. */
 	.ds-demo__title {
-		font-family: var(--font-heading);
-		font-weight: var(--font-heading-weight);
-		font-size: var(--font-size-8);
 		margin-bottom: var(--space-8);
 	}
 	.ds-demo__section {
 		padding-block: var(--space-6);
-		border-top: 1px solid var(--border-color);
+		border-top: 1px solid var(--hairline);
 	}
 	.ds-demo__h {
-		font-family: var(--font-heading);
-		font-weight: var(--font-heading-weight);
-		font-size: var(--font-size-5);
-		color: var(--text-secondary);
 		margin-bottom: var(--space-4);
 	}
 
@@ -2205,7 +2196,7 @@ assertions:
 	.ds-demo__quilt-cap {
 		display: grid;
 		gap: var(--space-2);
-		max-width: 68ch;
+		max-width: var(--measure-note);
 	}
 	.ds-demo__panels {
 		display: grid;
@@ -2222,7 +2213,7 @@ assertions:
 	}
 
 	.ds-demo__note {
-		max-width: 68ch;
+		max-width: var(--measure-note);
 		margin-block: calc(-1 * var(--space-3)) var(--space-5);
 		font-size: var(--font-size-1);
 		line-height: var(--line-height-ui);

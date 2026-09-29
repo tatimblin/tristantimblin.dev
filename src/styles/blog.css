@@ -7,9 +7,8 @@
 .blog {
 	--font-heading: var(--font-ui);
 	--font-heading-weight: var(--font-weight-400);
-	/* The reading measure. A layout knob rather than a token: no DS step names a
-	   line length, and 44rem holds body copy at roughly 70 characters. */
-	--blog-measure: 44rem;
+	/* The reading measure (the site's --measure-prose, ~70 characters). */
+	--blog-measure: var(--measure-prose);
 	min-height: 100vh;
 	font-family: var(--font-ui);
 }

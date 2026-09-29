@@ -132,6 +132,14 @@
 	--tracking-caps: 0.1em;
 	--tracking-mono: 0.04em;
 
+	/* MEASURE. The two line lengths the site sets more than once, so a column
+	 * is named rather than a rem retyped: the reading column (the blog's, and
+	 * the catalogue's specimens of it — ~70 characters of body copy) and a
+	 * note's (a catalogue note, an art entry's, ~68 characters at the small
+	 * step). A width used once stays a literal at its call site. */
+	--measure-prose: 44rem;
+	--measure-note: 68ch;
+
 	/* CODE. The one monospace left on the site, for code alone — fenced blocks
 	 * and inline code: the system mono stack, no file loaded, since code wants a
 	 * real monospace and what a reader's terminal already looks like. The label

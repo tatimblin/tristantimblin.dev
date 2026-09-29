@@ -156,7 +156,7 @@ const indexLine = (no: string) => `[index] 000${no} · log_${no}.txt`;
 	style={vars}
 	{...rest}
 >
-	<!-- card -->
+	{/* card */}
 	<div class="ds-quilt-panel__face ds-quilt-panel__card" data-face="card">
 		<div class="ds-quilt-panel__strip">
 			<Chip class="ds-quilt-panel__category" data-card="category">{card?.category}</Chip>
@@ -189,7 +189,7 @@ const indexLine = (no: string) => `[index] 000${no} · log_${no}.txt`;
 		</StatStrip>
 	</div>
 
-	<!-- browse -->
+	{/* browse */}
 	<div class="ds-quilt-panel__face ds-quilt-panel__browse" data-face="browse">
 		<div class="ds-quilt-panel__strip">
 			<Mono tone="primary">{browse?.label ?? "browse"}</Mono>
@@ -226,7 +226,7 @@ const indexLine = (no: string) => `[index] 000${no} · log_${no}.txt`;
 		<Mono tone="tertiary" class="ds-quilt-panel__keys">{keys("close")}</Mono>
 	</div>
 
-	<!-- results -->
+	{/* results */}
 	<div class="ds-quilt-panel__face ds-quilt-panel__results-face" data-face="results">
 		<div class="ds-quilt-panel__strip">
 			<Mono tone="primary" data-results="label">{results?.label}</Mono>
@@ -271,7 +271,7 @@ const indexLine = (no: string) => `[index] 000${no} · log_${no}.txt`;
 		</template>
 	</div>
 
-	<!-- none -->
+	{/* none */}
 	<div class="ds-quilt-panel__face ds-quilt-panel__none" data-face="none">
 		<div class="ds-quilt-panel__strip">
 			<Mono tone="primary">no match</Mono>

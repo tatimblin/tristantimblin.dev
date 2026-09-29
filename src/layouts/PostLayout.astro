@@ -175,7 +175,7 @@ const neighbourRows = [
 				<Grid as="header" templateColumns={COLUMNS} gapX={4} class="post__head">
 					<Heading as="h1" size={6} responsive class="post__title">{title}</Heading>
 					{description && (
-						<Text as="p" size={5} responsive variant="primary" class="post__lead">
+						<Text as="p" size={5} responsive variant="primary" family="ui" class="post__lead">
 							{description}
 						</Text>
 					)}
@@ -291,7 +291,7 @@ const neighbourRows = [
 		grid-column: 2 / span 2;
 		grid-row: 2;
 		margin-block-start: var(--space-8);
-		font-family: var(--font-ui);
+		/* The UI leading: a step under the heading it follows, above the body's. */
 		line-height: var(--line-height-ui);
 	}
 	.post__mark {
@@ -353,7 +353,7 @@ const neighbourRows = [
 			grid-column: 1;
 			grid-row: auto;
 			align-self: start;
-			max-inline-size: 16rem;
+			max-inline-size: var(--space-14);
 			margin-block: var(--space-6) 0;
 		}
 		.post__fig {

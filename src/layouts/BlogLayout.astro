@@ -2,10 +2,9 @@
 // BlogLayout — the chrome for the blog's list pages: /txt and /txt/tag/<tag>
 // (and the 404). Two shells:
 //
-//   default   the site header in the flow, then one column: a page header
-//             (kicker, h1, lede) over whatever the page puts in the slot — a
-//             PostIndex. `width="wide"` opens the column to the site
-//             container with a compact header row.
+//   default   the site header in the flow, then one column at the reading
+//             measure: a page header (kicker, h1 at the page-title step, lede)
+//             over whatever the page puts in the slot — a PostIndex.
 //   `bar`     THE INSTRUMENT: the site header as on every page, then <main> in
 //             the site's container (padded by --container-inset, as the
 //             homepage's rows and the header are, so the rows' edges fall on
@@ -58,16 +57,13 @@ interface Props {
 	heading: string;
 	/** A small caps label above the h1 ("Category", "Tag"). */
 	kicker?: string;
-	/** The column: the reading measure (the lists), or the site's container
-	 *  with a compact header row. Not read with `bar`. */
-	width?: "measure" | "wide";
 	/** The instrument's bar row — the search with its chips and stepper;
 	 *  with this the page is the instrument in the site container and the
 	 *  slot is its remaining rows. */
 	bar?: Bar;
 }
 
-const { title, description, noindex, heading, kicker, width = "measure", bar } = Astro.props;
+const { title, description, noindex, heading, kicker, bar } = Astro.props;
 const hasLede = Astro.slots.has("lede");
 ---
 
@@ -78,6 +74,8 @@ const hasLede = Astro.slots.has("lede");
 				<SiteHeader variant="flow" links={blogNav} />
 				<main class="blog__main blog__main--instrument">
 					<div class="blog__instrument" data-instrument>
+						{/* .blog__row: a hook, not a style — tests/quilt.spec.ts counts
+						     the instrument's rows by it. */}
 						<div class="blog__row blog__bar">
 							<VisuallyHidden as="h1">{heading}</VisuallyHidden>
 							<form class="blog__search" action="/txt/" method="get" data-quilt-form>
@@ -131,10 +129,12 @@ const hasLede = Astro.slots.has("lede");
 		) : (
 			<div class="blog">
 				<SiteHeader variant="flow" links={blogNav} />
-				<main class:list={["blog__main", width === "wide" && "blog__main--wide"]}>
+				<main class="blog__main">
 					<header class="blog__header">
 						{kicker && <Mono class="blog__kicker">{kicker}</Mono>}
-						<Heading as="h1" size={4}>{heading}</Heading>
+						{/* The page-title step: 44px, 32px below 1024 — the one every
+						     page title on the site takes. */}
+						<Heading as="h1" size={5} responsive>{heading}</Heading>
 						{hasLede && (
 							<Body class="blog__lede"><slot name="lede" /></Body>
 						)}

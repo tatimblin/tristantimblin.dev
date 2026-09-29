@@ -81,14 +81,15 @@ import "@whois/vscode-fleet-demo/element.css";
 		border-radius: 0;
 	}
 
-	/* Give the launch button the weight of a primary action against a dark
-	   screenshot — element.css supplies the accent fill; the shadow is what
-	   lifts it off a busy editor background. */
+		/* Give the launch button the weight of a primary action against a dark
+	   screenshot — element.css supplies the accent fill; the shadow (the DS's
+	   second step, the one thing on the ruled page that floats) is what lifts
+	   it off a busy editor background. */
 	.fleet-demo [data-launch] {
 		font-family: var(--font-ui, inherit);
 		font-size: var(--font-size-3, 16px);
 		font-weight: var(--font-weight-500, 500);
-		box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+		box-shadow: var(--shadow-2);
 	}
 
 	/* The caption is a static block, so it would paint UNDERNEATH the absolutely
@@ -97,8 +98,8 @@ import "@whois/vscode-fleet-demo/element.css";
 	.fleet-demo [data-caption] {
 		position: relative;
 		font-family: var(--font-ui, inherit);
-		max-width: 34ch;
-		line-height: 1.45;
+				max-width: 34ch;
+		line-height: var(--line-height-ui);
 		text-wrap: balance;
 	}
 
