@@ -1,8 +1,11 @@
 [install]
 registry = "https://registry.npmjs.org/"
 
-# `bun test` is the unit tests under src/ (*.test.ts). The Playwright specs in
-# tests/ are *.spec.ts too, which bun would otherwise collect and fail to run;
-# they go through `bun run test` (playwright test).
+# `bun run test:unit` (= `bun test ./src ./packages`) is the unit tests beside the
+# code: src/**/*.test.ts and packages/*/src/**/*.test.ts. The Playwright specs
+# in tests/ are *.spec.ts, which bun would collect and fail to run, and bun has
+# no exclude — so the root below keeps a bare `bun test` to src/, and the
+# script names both trees as explicit ./paths (a path argument overrides the
+# root). Playwright's own run is `bun run test`.
 [test]
 root = "./src"

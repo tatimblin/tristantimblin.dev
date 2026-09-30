@@ -16,8 +16,10 @@ Guidance for AI agents working in this repo.
     `stories-heading`, `wobble-text`.
   - Two exceptions with real build steps: `fleet-extension` and
     `vscode-fleet-demo` — see below.
-- **`tests/`** — Playwright, against the built site (`bun run test`); `bun test`
-  runs the unit tests beside the code (`src/lib/**/*.test.ts`).
+- **`tests/`** — Playwright, against the built site (`bun run test`);
+  `bun run test:unit` runs the unit tests beside the code (`src/**/*.test.ts`
+  and `packages/*/src/**/*.test.ts`; a bare `bun test` sees `src/` only — see
+  `bunfig.toml`).
 - Run the dev server with **`bunx astro dev`** (Node). Do **not** use
   `bunx --bun astro dev` — it crashes the HMR WebSocket.
 

@@ -14,7 +14,7 @@
 //            hairline marks inlined beside text, their line work currentColor
 //            so they take the colour of the text they sit in. No classes, no
 //            ids, no clipPaths — many sit on one page and none owns a frame.
-//            Its fixtures are src/lib/validate-glyph.test.ts (`bun test`).
+//            Its fixtures are src/lib/validate-glyph.test.ts (`bun run test:unit`).
 //
 //   import { validateSvg, validateArt, PROFILES } from ".../validate-art.mjs";
 //   validateSvg(source, { profile: PROFILES.glyph }) → string[]   // [] when clean

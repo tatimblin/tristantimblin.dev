@@ -1,0 +1,18 @@
+/**
+ * Micrographics — the L0 kit. `import { kit } from "@whois/design-system/lib/micro"`.
+ *
+ *   const k = kit("glyph");
+ *   k.svg({ header: "baked from recipes/dial.ts — edit the recipe", children: [
+ *     k.ticksRadial(24, 18, 10, 13, 5, -120, 120, { dash: "dash", weight: "hair" }),
+ *     k.needle(24, 18, 11, -35, { paint: "blue" }),
+ *   ] });
+ */
+
+export { kit, Kit } from "./kit";
+export type { AngleOpts, BandOpts, Cap, Corner, End, FillOpts, GroupOpts, NeedleOpts, ShapeOpts, StrokeOpts, SvgOpts, TicksOpts, WireOpts } from "./kit";
+export { TARGETS } from "./paint";
+export type { Dash, Motion, Paint, Speed, Target, TargetTable, Weight } from "./paint";
+export { onArc, polar, round, snap, spread } from "./geometry";
+export type { Point } from "./geometry";
+export { ISO_X, ISO_Y, ISO_Z, iso, isoBox, isoCylinder, isoPlane, vanishingGrid } from "./iso";
+export type { IsoBoxOpts, IsoCylinderOpts, IsoPlaneOpts, VanishingGridOpts } from "./iso";

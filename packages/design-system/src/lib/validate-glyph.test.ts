@@ -3,10 +3,7 @@
  * (packages/design-system/scripts/validate-art.mjs): a clean glyph passes,
  * and each rule where a glyph differs from art still fires — a validator that
  * passes everything is the silent failure. The art profile's fixtures are
- * tests/post-art.spec.ts. `bun test`.
- *
- * Here rather than beside the script because `bun test` collects under src/
- * only (bunfig.toml: tests/ is Playwright's).
+ * tests/post-art.spec.ts. `bun run test:unit`.
  */
 import { describe, expect, test } from "bun:test";
 import {
@@ -14,7 +11,7 @@ import {
 	RULES,
 	validateArt,
 	validateSvg,
-} from "../../packages/design-system/scripts/validate-art.mjs";
+} from "../../scripts/validate-art.mjs";
 
 const glyph = (source: string) => validateSvg(source, { profile: PROFILES.glyph });
 /** A violation's rule is the text before its first colon. */

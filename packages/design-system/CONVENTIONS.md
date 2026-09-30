@@ -642,7 +642,8 @@ work is `currentColor` (dimmed: `var(--glyph-dim)`), never `--art-ink`, plus at
 most two of the four colours; dashes `0.01 3.99` (round-capped dots), `2 2`,
 `4 4` — screen px, since `non-scaling-stroke` takes the dash array out of the
 viewBox; ≤ 40 elements / 3 KB (80 / 6 KB wide), groups ≤ 3 deep. Motion is
-art's contract. The glyph fixtures are `src/lib/validate-glyph.test.ts`.
+art's contract. The glyph fixtures are `src/lib/validate-glyph.test.ts`
+(`bun run test:unit`).
 
 **`ArtFrame`** — the window every artwork renders through
 (`styles/art-frame.css`, class `ds-art-frame`): the plate, the edge, the corner,
@@ -688,6 +689,57 @@ reduced motion the loop is `0s` and it is all that ever shows.
 The catalogue's "Art" section shows the swatches, the template at tile and
 hero size and on both pages (two `ThemePage`s), the line weights, the five
 motions with a play-all toggle, and the mark.
+
+---
+
+## Micrographics — the L0 kit
+
+The micrographics (the signal-panel marks: waveforms, gauges, dials, fans,
+pip matrices, rings; the exploded iso parts) are built on a ladder, and its
+bottom rung is **`lib/micro`** (`src/lib/micro/`, `import { kit } from
+"@whois/design-system/lib/micro"`): pure TS geometry that emits SVG element
+strings with the language's discipline baked in — every stroke non-scaling
+and of a legal weight, every fill stated, every colour a token — so a recipe
+composes marks and never types a paint string. The rungs above it (glyph
+recipes baked into `src/glyphs/`, parametric generators, modules, scenes)
+all draw with it; the validator stays the gate.
+
+**Target-aware.** A kit is made for the language it emits, `kit("glyph")`
+or `kit("art")`, and the semantic names map per target: paint `ink` is
+`currentColor` on a glyph and `var(--art-ink)` on art, `dim` is
+`var(--glyph-dim)` / `var(--art-ink-2)`, and `blue | red | green | lavender`
+are `--art-cyan | -coral | -green | -lavender` on both (`none` is none);
+weight `hair` is 1 and `line` 1.5 — a glyph's default is `line`, art's is
+`hair` (its 1.5 is the one emphasis outline) and art also writes the
+agreeing `art-line` class; dash `dotted | dash | long` is `0.01 3.99 | 2 2
+| 4 4` on a glyph and `2 6 | 4 4 | 4 4` on art. `svg()` writes the target's
+viewBox unless told a wide one. Signatures read **position, then size, then
+an options object**; angles are degrees on a dial (0 up, clockwise);
+coordinates are rounded to two decimals (`snap()` to the half grid is there,
+not forced); every primitive returns a string, one element or a few on
+their own lines.
+
+| Group | Primitives |
+| --- | --- |
+| points | `dot` (filled; the target's terminal radius) · `pip` (hollow) · `terminal` (square) |
+| lines | `line` · `polyline` · `path` · `guide` (dim, hair, dotted) · `wire(points, {radius, start, end})` (rounded elbows, dot or terminal ends) · `leader(from, to)` (a callout ending in a dot) |
+| curves | `arc(cx, cy, r, a0, a1)` · `ring` · `band(cx, cy, r0, r1, a0, a1)` (a filled sector with half-disc caps — a thick line is a shape) · `polar` · `onArc` · `spread` |
+| marks | `arrowhead` · `chevron` · `plus` · `cross` · `check` · `ticksRadial` · `ticksLinear` · `needle` |
+| shapes | `polygon` · `tri` · `rect` · `roundRect` · `pill` · `keycap` · `bracket(x, y, size, corner)` · `hex` · `star(cx, cy, n, inner, outer)` · `coil(x, y, length, turns, r)` |
+| iso (`iso.ts`) | `iso(x, y, z)` at a true 30° · `isoBox` · `isoCylinder` (ry = r/2) · `isoPlane({grid})` · `vanishingGrid` — visible faces only, never a wireframe |
+| assembly | `group(children, {motion, speed, transform})` (the data-motion contract; a transform with a motion goes on an outer `g`) · `svg({viewBox, children, header})` |
+
+```ts
+const k = kit("glyph");
+export default k.svg({ header: "baked from recipes/dial.ts — edit the recipe", children: [
+  k.ticksRadial(24, 18, 10, 13, 5, -120, 120, { weight: "hair", dash: "dash" }),
+  k.needle(24, 18, 11, -35, { paint: "blue" }),
+  k.guide([[4, 28], [44, 28]]),
+] });
+```
+
+Its tests (`src/lib/micro/*.test.ts`, `bun run test:unit`) validate every
+primitive's output against both profiles.
 
 ---
 
