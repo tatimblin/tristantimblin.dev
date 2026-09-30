@@ -156,18 +156,18 @@ test.describe("steps — the mega desk", () => {
 });
 
 /**
- * Tahoe Mountain Hair: the module sheet's water cycle, five beats round
- * the orbit — cloud, snow, melt, lake, vapour — each lighting its arc and
- * ringing its stage (the icon in cyan) while current. No ripple. The still
- * is the whole cycle lit, vapour ringed.
+ * Tahoe Mountain Hair: the water cycle in simple shapes, five beats round
+ * the loop — vapour, snow, melt, minerals, lake — each putting the drop at
+ * its stage (a now-mark) and landing a bar of Tahoe's hardness meter. No
+ * ripple. The still is the drop in the lake, the meter full.
  */
 test.describe("steps — the water cycle", () => {
 	const cell = `[data-cell="post"]:has(a[href="/txt/tahoe-mountain-hair/"])`;
-	/** The now-marks in document order: one ring per beat. */
+	/** The now-marks in document order: one drop per beat. */
 	const NOW_BEAT = [0, 1, 2, 3, 4];
 	const cycled = (s: State) => {
 		expect(s.beats, "every beat lit").toEqual(Array(5).fill(1));
-		expect(s.now, "only the last beat's ring").toEqual(NOW_BEAT.map((b) => (b === 4 ? 1 : 0)));
+		expect(s.now, "only the last beat's drop").toEqual(NOW_BEAT.map((b) => (b === 4 ? 1 : 0)));
 		expect(s.ripples.every((o) => o === 0), "no ripple").toBe(true);
 	};
 
@@ -188,7 +188,7 @@ test.describe("steps — the water cycle", () => {
 
 		await page.locator(`${cell} a`).first().hover();
 		await expect.poll(async () => (await stateOf(page, cell)).play).toBe("running");
-		// Mid-cycle: the first beat has landed and stays, the last is faint, one beat's rings alone.
+		// Mid-cycle: the first beat has landed and stays, the last is faint, one beat's drop alone.
 		await expect.poll(async () => (await stateOf(page, cell)).clock, { timeout: 5000 }).toBeGreaterThan(3.2 / 7);
 		const mid = await stateOf(page, cell);
 		expect(mid.clock).toBeLessThan(5 / 7);
