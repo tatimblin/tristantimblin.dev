@@ -596,7 +596,7 @@ the motion, a **validator** holds the rules, and the `post-art` skill
 
 **Tokens** (`tokens.overrides.css` → ART, on the theme classes). **The plate
 follows the theme.** The values below are the dark palette the language was
-sampled on; the light theme overrides them, so a light page shows ink on bone
+sampled on (cyan and green since retuned toward signal neon); the light theme overrides them, so a light page shows ink on bone
 rather than black windows: the same drawing, inverted.
 
 | Token | Dark | Light | Use |
@@ -605,7 +605,7 @@ rather than black windows: the same drawing, inverted.
 | `--art-edge` | `oklch(34% 0.006 280)` | `var(--gray-500)` | the tile's 1px edge |
 | `--art-ink` | `oklch(97% 0 0)` | `var(--gray-1200)` | line work and "white" fills — dark on light |
 | `--art-ink-2` | the ink at 45% | the same mix of the light ink | secondary lines: grids, dashed paths, ghost outlines — the one dimming |
-| `--art-lavender` `--art-cyan` `--art-green` | `#bda3ea` · `#54b4cb` · `#4a9c63` | each by relative colour from the dark value, hue kept, lightness down and chroma up | the fills |
+| `--art-lavender` `--art-cyan` `--art-green` | `#bda3ea` · `#5b8def` · `#5ee27f` | each by relative colour from the dark value, hue kept, lightness down and chroma up (green's chroma a touch down, to stay in sRGB) | the fills |
 | `--art-coral` | `var(--accent)` | `var(--accent)` (the light theme's own) | coral IS the site accent |
 | `--art-radius` | `var(--border-radius-1)` | — | the frame's corner |
 | `--duration-loop` | `6s` (MOTION; `0s` under reduced motion) | — | one cycle of an art animation |

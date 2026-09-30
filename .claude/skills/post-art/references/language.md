@@ -19,7 +19,8 @@ tiles on a #202020 page. **Look at it before drawing.**
   concentric rings, converging and fanning flow lines, dashed paths and tick
   marks.
 - **The fills** are flat and solid, in five colours: white, lavender, coral,
-  cyan and green. There are no gradients and no tints. A few pseudo-isometric
+  cyan (a cornflower blue, since the signal-neon retune) and green. There are
+  no gradients and no tints. A few pseudo-isometric
   solids have white top faces and coloured or dark sides.
 - **The subjects are systems metaphors**: nodes, chips, pills or capsules,
   cursors, checkboxes, scattered dots, stacked cards, a rolled tape or ribbon,
@@ -51,15 +52,17 @@ Some tiles on the sheet, as a vocabulary:
 ## Tokens
 
 The tokens live in `tokens.overrides.css`, in the ART block on the theme
-classes. **The plate follows the theme.** The table gives the dark values,
-sampled from the sheet. The light theme overrides them in the block after:
+classes. **The plate follows the theme.** The table gives the dark values:
+plate, line, lavender and coral sampled from the sheet, cyan and green retuned
+since toward signal neon (a cornflower blue, a bright signal green). The light theme overrides them in the block after:
 
 - `--art-plate` is `--gray-300`, bone a step below the page;
 - `--art-edge` is `--gray-500`;
 - `--art-ink` is `--gray-1200`, a near-black, and `--art-ink-2` is the same
   45% mix of it;
 - lavender, cyan and green are the same hues, darker and a touch more
-  saturated;
+  saturated, each near 3.5:1 on the bone (green drops a little chroma instead,
+  to stay in sRGB at that depth);
 - coral stays the accent.
 
 So a light page shows the same drawing as ink on bone. **`--art-ink` is dark on
@@ -67,7 +70,7 @@ a light page:** a "white" face is a dark face there, and a cut to the plate
 is light, not dark. Draw with contrast between ink, plate and fill, not with
 "white" and "black", and it holds in both.
 
-| Token | Value (dark; sampled from the sheet) | Use | In a file? |
+| Token | Value (dark) | Use | In a file? |
 | --- | --- | --- | --- |
 | `--art-plate` | `oklch(17% 0.008 280)` (≈ #18181f) | the tile fill | **never**: the frame draws it |
 | `--art-edge` | `oklch(34% 0.006 280)` (≈ #3d3d42) | the tile's 1px border | **never** |
@@ -76,8 +79,8 @@ is light, not dark. Draw with contrast between ink, plate and fill, not with
 | `--art-ink-2` | the ink at 45% (`color-mix`) | secondary lines: grids, dashed paths, ghost outlines. The one dimming | yes |
 | `--art-lavender` | `#bda3ea` (sampled #b8a0e8 / #c0a0e8) | fill | yes |
 | `--art-coral` | `var(--accent)` (sampled #ea6a4f; it IS the site accent, an orange-red) | fill | yes |
-| `--art-cyan` | `#54b4cb` (sampled #50b0c8 / #58b0c8) | fill | yes |
-| `--art-green` | `#4a9c63` (sampled #489860 / #409860) | fill | yes |
+| `--art-cyan` | `#5b8def` (signal neon, a cornflower blue; not sampled) | fill | yes |
+| `--art-green` | `#5ee27f` (signal neon, a bright signal green; not sampled) | fill | yes |
 | `--duration-loop` | `6s`, and `0s` under reduced motion | one cycle of an art animation | no: the frame's CSS |
 
 **Paints.** A `fill` or `stroke` value is exactly one of these eight strings:

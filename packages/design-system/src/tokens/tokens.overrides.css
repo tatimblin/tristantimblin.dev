@@ -430,7 +430,9 @@
  * The illustration language the post art is drawn in (ArtFrame, art-frame.css,
  * the .svg files beside each post and the fillers in src/art/): white 1px line
  * work and flat fills in four colours on a near-black landscape plate. The
- * values were sampled from the reference tile sheet, and an art file may name
+ * plate, line, lavender and coral were sampled from the reference tile sheet;
+ * cyan and green were since retuned toward a synth panel's signal neon (a
+ * cornflower blue and a bright signal green). An art file may name
  * NO colour but these — every fill and stroke in it is one of these tokens,
  * `none` or currentColor (the validator holds that line) — so the whole
  * language retunes here and nowhere else.
@@ -460,8 +462,10 @@
 	 * sampled #ea6a4f is within a hair of it). */
 	--art-lavender: #bda3ea;
 	--art-coral: var(--accent);
-	--art-cyan: #54b4cb;
-	--art-green: #4a9c63;
+	/* Signal neon, not sampled: "cyan" is now a cornflower blue and green a
+	 * bright signal green. The names stay, so no art file changes. */
+	--art-cyan: #5b8def;
+	--art-green: #5ee27f;
 	/* The frame's corner: the reference's small radius is the surface step. */
 	--art-radius: var(--border-radius-1);
 }
@@ -475,16 +479,19 @@
  *          the "white" faces, which are dark faces here (--art-ink-2 is the
  *          same 45% mix above, so it re-resolves against this ink).
  * The fills keep their hue and move only in lightness and chroma, derived
- * from the dark palette's sampled values by relative colour (there is no DS
- * lavender or cyan scale, and the DS green sits at another hue): darker and a
- * touch more saturated, so a flat face holds against a near-white plate as
- * it did against near-black. Coral stays the accent, which is already the
- * light theme's own. */
+ * from the dark palette's values by relative colour (there is no DS lavender
+ * or cyan scale, and the DS green sits at another hue): darker and a touch
+ * more saturated, so a flat face — and a 1px line — holds against a
+ * near-white plate as it did against near-black (each lands near 3.5:1 on
+ * the bone). Green is the exception on chroma: the neon starts so light that
+ * it has to drop a long way, and at that depth full chroma leaves sRGB, so
+ * it comes down a little to stay in gamut. Coral stays the accent, which is
+ * already the light theme's own. */
 .maximeheckel-light {
 	--art-plate: var(--gray-300);
 	--art-edge: var(--gray-500);
 	--art-ink: var(--gray-1200);
 	--art-lavender: oklch(from #bda3ea calc(l - 0.12) calc(c * 1.3) h);
-	--art-cyan: oklch(from #54b4cb calc(l - 0.1) calc(c * 1.15) h);
-	--art-green: oklch(from #4a9c63 calc(l - 0.04) calc(c * 1.1) h);
+	--art-cyan: oklch(from #5b8def calc(l - 0.08) calc(c * 1.1) h);
+	--art-green: oklch(from #5ee27f calc(l - 0.24) calc(c * 0.9) h);
 }
