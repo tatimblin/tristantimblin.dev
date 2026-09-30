@@ -1,13 +1,14 @@
 # no-honey-we-have-a-dashboard-at-home
 
-The post art for *No Honey, We Have a Dashboard at Home*: a window at home —
-the frame, the glass and a double-lined cross mullion on a wall of square
-tiles, curtains gathered on a rod, a small plant on the sill — and through
-the glass a room of grid running back to one vanishing point, its far wall
-green. A still: no motion.
+The post art for *No Honey, We Have a Dashboard at Home*: a module sheet.
+The one strong element is the editor as a line icon — activity bar, the
+sidebar as the list of cars (one open, live in green), the digital twin
+open as a document (an SUV in side profile, dimensioned), the palette
+running UNLOCK, a terminal tailing a signal. Beside it, two modules in the
+plate's type voices: NO SEPARATE — 0 frontends (the coral numeral), 0
+deploy pipelines, 0 auth systems — and the route, Yext in 2022 (multi-tenant
+auth, `.yextrc`, a VS Code extension) to Fisker. A still: no motion.
 
 `scene.ts` is the source; `bun run scenes:bake` writes
 `src/content/txt/no-honey-we-have-a-dashboard-at-home.svg`. Drawn from
-nothing but the kit (the wall and the room are cut behind what stands in
-front of them with `clipOutside` from `lib/micro`): no external data, no
-credit.
+nothing but the kit: no external data, no credit.

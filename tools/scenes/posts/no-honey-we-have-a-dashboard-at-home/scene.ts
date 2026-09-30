@@ -1,178 +1,201 @@
 /**
- * No Honey, We Have a Dashboard at Home — the post's art, as a baked scene:
- * a WINDOW AT HOME. The post builds its own fleet dashboard rather than
- * buying one, so the panel is the home it was built in: a window centred
- * on a wall of square tiles, and through the glass not a garden but a
- * room of grid — the dashboard at home.
+ * No Honey, We Have a Dashboard at Home — the post's art, as a baked
+ * scene: a MODULE SHEET. The post's claim is that a fleet dashboard is a
+ * worse copy of an editor you already have open, so the one strong
+ * element is that editor, drawn as a line icon: an activity bar, a
+ * sidebar that is the list of cars (a tree view, one car selected), the
+ * digital twin open as a document (the car in side profile, dimensioned),
+ * the palette running UNLOCK, and a terminal tailing a signal. Beside it,
+ * two tight modules in the plate's type voices: the count the post ends on
+ * — no separate frontend, deploy pipeline or auth system: 0, 0, 0 — and
+ * the route the idea took, Yext in 2022 (the extension, multi-tenant
+ * auth, seven accounts in the sidebar, a `.yextrc`) to Fisker.
  *
- * The wall is a dim hairline grid of tiles. The window is an outer frame,
- * the glass inset from it, and a cross mullion drawn as double lines
- * making four panes. Curtains hang gathered from a rod with round finials,
- * four hairline folds a side, caught in at the sill. On the sill, a small
- * potted plant, its leaves green. Through the glass, a perspective grid
- * room: blue rays from the glass's edge to one vanishing point, blue depth
- * rings between, and the far wall lit green.
- *
- * HIDDEN LINES: everything is line work on the plate, so nothing can paint
- * over what stands behind it. What is behind is CUT (`clipOutside`): the
- * wall's grid stops at the frame, the sill, the rod and the curtains; the
- * room stops at the mullion bars and at the plant's pot and leaves.
- *
- * A still: no motion.
+ * Ink line work on a grid with air, coral for the one big numeral, green
+ * for what is live (the selected car, the signal's head). A still: no
+ * motion.
  *
  *   bun run scenes:bake      → src/content/txt/no-honey-we-have-a-dashboard-at-home.svg
  *
  * Drawn from nothing but the kit: no credit.
  */
 
-import { clipOutside, edges, type Point, round, type Segment, segmentsD } from "@whois/design-system/lib/micro";
+import type { Kit } from "@whois/design-system/lib/micro";
 import { scene } from "@whois/design-system/scenes/recipe";
 
-/** An axis-aligned box: where it starts, how big it is. */
-interface Box {
-	x: number;
-	y: number;
-	w: number;
-	h: number;
-}
+/** A number as a path writes it. */
+const r2 = (n: number): number => Math.round(n * 100) / 100;
 
-/** A box's outline, its corners in order: the polygon `clipOutside` cuts against. */
-const corners = ({ x, y, w, h }: Box): Point[] => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
+// --- The editor window ---------------------------------------------------------
 
-/** Cut `segs` outside every box in turn: what stands in front of them. */
-const behind = (segs: Segment[], boxes: readonly Box[]): Segment[] => boxes.reduce((s, b) => clipOutside(s, corners(b)), segs);
+/** The window: its box, the title bar's depth, the activity bar's and the sidebar's widths, the panel's top, the status bar's depth. */
+const W = { x: 16, y: 24, w: 158, h: 122 };
+const TITLE = 9;
+const ACT = 10;
+const SIDE = 44;
+const STATUS = 6;
+const PANEL_Y = W.y + W.h - STATUS - 28;
 
-/** A point as a path writes it. */
-const xy = (x: number, y: number): string => `${round(x)} ${round(y)}`;
+const X_ACT = W.x + ACT;
+const X_SIDE = X_ACT + SIDE;
+const Y_BODY = W.y + TITLE;
+const Y_STATUS = W.y + W.h - STATUS;
+const X_END = W.x + W.w;
 
-// --- The window ---------------------------------------------------------------
-
-/** The outer frame, centred on the plate. */
-const FRAME: Box = { x: 116, y: 34, w: 88, h: 104 };
-/** The glass, inset from the frame. */
-const GLASS: Box = { x: FRAME.x + 6, y: FRAME.y + 6, w: FRAME.w - 12, h: FRAME.h - 12 };
-/** The cross mullion: its centre lines, and half a bar's width. */
-const [MX, MY, BAR] = [FRAME.x + FRAME.w / 2, GLASS.y + GLASS.h * 0.46, 2.5];
-const V_BAR: Box = { x: MX - BAR, y: GLASS.y, w: BAR * 2, h: GLASS.h };
-const H_BAR: Box = { x: GLASS.x, y: MY - BAR, w: GLASS.w, h: BAR * 2 };
-/** The sill, proud of the frame each side. */
-const SILL: Box = { x: FRAME.x - 10, y: FRAME.y + FRAME.h, w: FRAME.w + 20, h: 6 };
-
-// --- The rod and the curtains -----------------------------------------------------
-
-/** The rod runs above the frame, 20 past it each side, a round finial at each end. */
-const ROD_Y = FRAME.y - 8;
-const [ROD_X0, ROD_X1] = [FRAME.x - 20, FRAME.x + FRAME.w + 20];
-const ROD_BAND: Box = { x: ROD_X0, y: ROD_Y - 2, w: ROD_X1 - ROD_X0, h: 4 };
-const FOLDS = 4;
+/** The cars in the tree: their ids, and which one is open. */
+const CARS = ["OCN-0412", "OCN-0413", "OCN-0521", "OCN-0588", "OCN-0602", "OCN-0719"];
+const OPEN = 2;
 
 /**
- * A curtain hung at `x0`, gathered outward (`dir`): four folds, each from
- * the rod swelling out, caught in at the sill's height and falling on to
- * it. Returns the folds as one path `d`, and the box it covers on the wall.
+ * The digital twin: an SUV in side profile, drawn on a local frame 60
+ * long with the ground at y 0 (up negative), wheels at 13 and 47.
  */
-function curtain(x0: number, dir: 1 | -1): { d: string; box: Box } {
-	const folds: string[] = [];
-	for (let i = 0; i < FOLDS; i++) {
-		const top = x0 + dir * i * 4;
-		const tie = x0 + dir * (i * 1.6 + 2);
-		folds.push(
-			`M ${xy(top, ROD_Y + 2)}` +
-				` C ${xy(top + dir * 3, ROD_Y + 40)} ${xy(tie + dir * 6, FRAME.y + 70)} ${xy(tie, FRAME.y + 84)}` +
-				` C ${xy(tie - dir * 3, FRAME.y + 96)} ${xy(top - dir, FRAME.y + 112)} ${xy(top + dir * 2, FRAME.y + FRAME.h - 2)}`,
+const BODY =
+	"M 2 -6 L 2 -12 C 2 -14 3 -15 5.5 -15.4 L 15 -17.4 L 36 -17.4 C 40.5 -17.4 44 -14.6 47.5 -11.6 L 55.5 -10 C 58.2 -9.4 59 -8.4 59 -6.5 L 59 -5 " +
+	"L 53.5 -5 A 6.5 6.5 0 0 0 40.5 -5 L 19.5 -5 A 6.5 6.5 0 0 0 6.5 -5 L 2 -5 Z";
+const GLASS = "M 16 -15.6 L 35.4 -15.6 C 38.6 -15.6 41.4 -14 44.2 -11.6 L 14.2 -11.6 Z M 29 -15.6 L 29 -11.6";
+const DETAIL = "M 29 -11.6 L 29 -6.5 M 21 -9.8 H 24 M 36 -9.8 H 39 M 44.2 -11.6 L 45.6 -9.6 H 43.4 M 52.5 -8.2 L 57.4 -8.2 M 2 -10.2 L 4.4 -10.2";
+
+/** The twin's placement in the editor: its frame's origin and scale. */
+const TWIN = { x: X_SIDE + 12, y: PANEL_Y - 14, s: 1.35 };
+
+/** A point on the twin's frame, on the plate. */
+const tw = (x: number, y: number): [number, number] => [r2(TWIN.x + x * TWIN.s), r2(TWIN.y + y * TWIN.s)];
+
+/** The signal the terminal tails: a stepped trace across the panel, its head live. */
+const SIGNAL: [number, number][] = [
+	[0, 0], [6, 0], [6, -5], [11, -5], [11, -2], [18, -2], [18, -7], [22, -7], [22, 0], [30, 0], [30, -4], [37, -4], [37, -1], [44, -1], [44, -6], [49, -6],
+];
+
+function editor(k: Kit): string[] {
+	const out: string[] = [];
+	const px = X_SIDE + 6;
+	const py = PANEL_Y + 18;
+
+	// The frame, its bars and panes: the outline the one emphasis weight.
+	out.push(
+		k.roundRect(W.x, W.y, W.w, W.h, 3, { weight: "line" }),
+		k.path(
+			`M ${W.x} ${Y_BODY} H ${X_END} M ${X_ACT} ${Y_BODY} V ${Y_STATUS} M ${X_SIDE} ${Y_BODY} V ${Y_STATUS} M ${W.x} ${Y_STATUS} H ${X_END} M ${X_SIDE} ${PANEL_Y} H ${X_END}`,
+			{ cap: "butt" },
+		),
+	);
+
+	// The title bar: three lights, and the palette running the unlock.
+	for (let i = 0; i < 3; i++) out.push(k.ring(W.x + 5 + i * 4.5, W.y + TITLE / 2, 1.3));
+	out.push(
+		k.pill(W.x + 50, W.y + 2, 66, 5, { paint: "dim" }),
+		k.text(W.x + 54, W.y + 5.9, "> FLEET: UNLOCK", { role: "label", size: 3.5 }),
+	);
+
+	// The activity bar: explorer, search, extensions, and the account at its foot.
+	const ax = W.x + ACT / 2;
+	out.push(
+		k.path(`M ${ax - 2.4} ${Y_BODY + 4} h 3.4 l 1.4 1.4 v 4.6 h -4.8 Z`),
+		k.ring(ax - 0.4, Y_BODY + 16.4, 1.9),
+		k.line(ax + 1, Y_BODY + 17.8, ax + 2.6, Y_BODY + 19.4),
+		k.path(`M ${ax - 2.6} ${Y_BODY + 25} h 2.3 v 2.3 h -2.3 Z M ${ax - 2.6} ${Y_BODY + 27.9} h 2.3 v 2.3 h -2.3 Z M ${ax + 0.3} ${Y_BODY + 27.9} h 2.3 v 2.3 h -2.3 Z M ${ax + 0.9} ${Y_BODY + 23.8} h 2.3 v 2.3 h -2.3 Z`),
+		k.line(W.x + 0.8, Y_BODY + 24, W.x + 0.8, Y_BODY + 31.2, { weight: "line", paint: "green" }),
+		k.ring(ax, Y_STATUS - 9, 1.5),
+		k.arc(ax, Y_STATUS - 3.2, 3, -60, 60),
+	);
+
+	// The sidebar: the list of cars as a tree, the open one marked.
+	out.push(k.text(X_ACT + 3.5, Y_BODY + 6, "FLEET // CARS", { role: "label", size: 3.5, paint: "dim" }));
+	CARS.forEach((id, i) => {
+		const y = Y_BODY + 14 + i * 7;
+		const open = i === OPEN;
+		if (open) out.push(k.rect(X_ACT + 1.5, y - 4.4, SIDE - 3, 6.4, { paint: "dim" }));
+		out.push(
+			k.chevron(X_ACT + 5, y - 1.4, open ? 180 : 90, 1.3),
+			k.text(X_ACT + 8.5, y, id, { role: "label", size: 3.5, paint: open ? "ink" : "dim" }),
 		);
-	}
-	const outer = x0 + dir * 16;
-	return { d: folds.join(" "), box: { x: Math.min(x0, outer) - 3, y: ROD_Y, w: 22, h: FRAME.h + 10 } };
-}
-const LEFT = curtain(FRAME.x - 2, -1);
-const RIGHT = curtain(FRAME.x + FRAME.w + 2, 1);
+		if (open) out.push(k.dot(X_SIDE - 4.5, y - 1.2, 1.1, { paint: "green" }));
+	});
 
-// --- The plant on the sill ------------------------------------------------------
+	// The editor: one tab, the twin open in it, dimensioned.
+	out.push(
+		k.path(`M ${X_SIDE} ${Y_BODY + 7} H ${X_SIDE + 1} V ${Y_BODY} M ${X_SIDE + 38} ${Y_BODY} V ${Y_BODY + 7} H ${X_END}`, { cap: "butt" }),
+		k.text(X_SIDE + 4, Y_BODY + 5, "OCN-0521", { role: "label", size: 3.5 }),
+		k.cross(X_SIDE + 33.5, Y_BODY + 3.5, 2, { paint: "dim" }),
+		k.group([k.path(BODY), k.path(GLASS), k.path(DETAIL, { paint: "dim" })], {
+			transform: `translate(${TWIN.x} ${TWIN.y}) scale(${TWIN.s})`,
+		}),
+		k.ring(...tw(13, -5), 4.8 * TWIN.s),
+		k.ring(...tw(13, -5), 1.8 * TWIN.s, { paint: "dim" }),
+		k.ring(...tw(47, -5), 4.8 * TWIN.s),
+		k.ring(...tw(47, -5), 1.8 * TWIN.s, { paint: "dim" }),
+		k.guide([tw(-4, 0.2), tw(64, 0.2)]),
+	);
+	// Its dimension over the roof: ticks at the bumpers, the digital twin's name.
+	const [dx0, dy] = tw(2, -23);
+	const [dx1] = tw(59, -23);
+	out.push(
+		k.path(`M ${dx0} ${dy} H ${dx1} M ${dx0} ${dy - 1.6} V ${dy + 1.6} M ${dx1} ${dy - 1.6} V ${dy + 1.6}`, { paint: "dim", cap: "butt" }),
+		k.text((dx0 + dx1) / 2, dy - 2, "DIGITAL TWIN", { role: "caption", size: 3.5, anchor: "middle" }),
+	);
 
-/** The pot's foot, on the sill near the right of the window. */
-const [POT_X, POT_Y] = [FRAME.x + FRAME.w - 18, SILL.y];
-/** The pot and the leaves as boxes: they stand in front of the glass and cut the room. */
-const PLANT: Box[] = [
-	{ x: POT_X - 5.5, y: POT_Y - 8.5, w: 11, h: 9 },
-	{ x: POT_X - 9, y: POT_Y - 19, w: 17.5, h: 11 },
-];
-/** Two leaves from the pot's rim, a small one leaning left, a taller one right. */
-const LEAVES = [
-	`M ${xy(POT_X, POT_Y - 8)} C ${xy(POT_X - 1, POT_Y - 14)} ${xy(POT_X - 6, POT_Y - 16)} ${xy(POT_X - 9, POT_Y - 15)} C ${xy(POT_X - 6, POT_Y - 12)} ${xy(POT_X - 2, POT_Y - 11)} ${xy(POT_X, POT_Y - 8)}`,
-	`M ${xy(POT_X, POT_Y - 8)} C ${xy(POT_X + 1, POT_Y - 16)} ${xy(POT_X + 5, POT_Y - 19)} ${xy(POT_X + 8, POT_Y - 19)} C ${xy(POT_X + 6, POT_Y - 15)} ${xy(POT_X + 3, POT_Y - 12)} ${xy(POT_X, POT_Y - 8)}`,
-].join(" ");
+	// The panel: a terminal tailing the car's signals, the trace's head live.
+	out.push(
+		k.text(X_SIDE + 4, PANEL_Y + 6, "$ FLEET TAIL --SIGNALS", { role: "label", size: 3.5, paint: "dim" }),
+		k.polyline(SIGNAL.map(([x, y]) => [px + x * 1.6, py + y] as [number, number])),
+		k.dot(px + 49 * 1.6 + 2, py - 6, 1.2, { paint: "green" }),
+	);
 
-// --- The room through the glass -------------------------------------------------
-
-/** The vanishing point, a little below the glass's centre, and the far wall round it. */
-const VP: Point = [GLASS.x + GLASS.w / 2, GLASS.y + GLASS.h / 2 + 4];
-const BACK: Box = { x: VP[0] - 16, y: VP[1] - 16, w: 32, h: 30 };
-/** A point on the glass's edge, carried to the far wall's edge. */
-const toBack = (x: number, y: number): Point => [BACK.x + ((x - GLASS.x) / GLASS.w) * BACK.w, BACK.y + ((y - GLASS.y) / GLASS.h) * BACK.h];
-/** The depth rings: how far each is from the glass toward the far wall, closing up as they recede. */
-const DEPTHS = [0.3, 0.52, 0.68, 0.8, 0.89];
-
-/** The room's grid: rays from the glass's four edges to the far wall — 8 across, 10 down — and the depth rings. */
-function room(): Segment[] {
-	const g = GLASS;
-	const segs: Segment[] = [];
-	for (let i = 0; i <= 8; i++) {
-		const x = g.x + (g.w * i) / 8;
-		segs.push([[x, g.y], toBack(x, g.y)], [[x, g.y + g.h], toBack(x, g.y + g.h)]);
-	}
-	for (let i = 1; i < 10; i++) {
-		const y = g.y + (g.h * i) / 10;
-		segs.push([[g.x, y], toBack(g.x, y)], [[g.x + g.w, y], toBack(g.x + g.w, y)]);
-	}
-	for (const t of DEPTHS) {
-		const lerp = (a: number, b: number) => a + (b - a) * t;
-		const [x0, y0] = [lerp(g.x, BACK.x), lerp(g.y, BACK.y)];
-		const [x1, y1] = [lerp(g.x + g.w, BACK.x + BACK.w), lerp(g.y + g.h, BACK.y + BACK.h)];
-		segs.push(...edges([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]));
-	}
-	return segs;
+	// The status bar: the account signed in.
+	out.push(k.text(X_SIDE + 4, Y_STATUS + 4.4, "ACCOUNTS: 7", { role: "caption", size: 3.5 }));
+	return out;
 }
 
-// --- The wall -----------------------------------------------------------------
+// --- The modules beside it ---------------------------------------------------------
 
-/** Square tiles, 12 on a side, off the plate's edges. */
-function wall(): Segment[] {
-	const segs: Segment[] = [];
-	for (let x = 2; x <= 320; x += 12) segs.push([[x, 0], [x, 180]]);
-	for (let y = 4; y <= 180; y += 12) segs.push([[0, y], [320, y]]);
-	return segs;
+const M = { x: 196, w: 108 };
+
+function modules(k: Kit): string[] {
+	const { x, w } = M;
+	const out: string[] = [];
+
+	// The count the post ends on: no separate frontend, pipeline or auth.
+	out.push(
+		k.section(x, 24, w, "No separate"),
+		k.ring(x + w - 3, 30, 2.6, { paint: "dim", dash: "dotted" }),
+		k.readout(x, 66, { value: "0", size: 32, caption: "frontends", paint: "red" }),
+		k.text(x + 22, 51, "WAS: CREATE-REACT-APP", { role: "caption", size: 3.5 }),
+		k.text(x + 22, 56, "DETAIL PAGE: 10 TABS", { role: "caption", size: 3.5 }),
+		k.rule(x, x + w, 72, { dotted: true }),
+		k.text(x, 80, "DEPLOY PIPELINES", { role: "label", size: 3.5 }),
+		k.text(x + w, 80, "0", { role: "label", size: 3.5, anchor: "end" }),
+		k.text(x, 87, "AUTH SYSTEMS", { role: "label", size: 3.5 }),
+		k.text(x + w, 87, "0", { role: "label", size: 3.5, anchor: "end" }),
+	);
+
+	// The route: Yext in 2022, the extension and its auth, then Fisker.
+	const y = 108;
+	out.push(
+		k.section(x, y, w, "Route // 2022"),
+		k.text(x, y + 17, "YEXT", { role: "title", size: 9 }),
+		k.line(x + 28, y + 13.6, x + w - 36, y + 13.6, { paint: "dim" }),
+		k.arrowhead(x + w - 36, y + 13.6, 90, 2, { paint: "dim" }),
+		k.text(x + w, y + 17, "FISKER", { role: "title", size: 9, anchor: "end" }),
+		k.bracketLabel(x, y + 27, "multi-tenant auth", { size: 3.5 }),
+		k.line(x, y + 34, x + 12, y + 34),
+		k.arrowhead(x + 12, y + 34, 90, 2),
+		k.text(x + 16, y + 35.3, ".YEXTRC", { role: "label", size: 3.5 }),
+		k.text(x + w, y + 35.3, "VS CODE EXT.", { role: "label", size: 3.5, anchor: "end" }),
+	);
+
+	// Registration: a dim + in the gutter between the icon and the sheet.
+	out.push(k.plus(185, 98, 4, { paint: "dim" }));
+	return out;
 }
-
-/** The mullion as double lines: each bar's two edges, broken where the bars cross. */
-const MULLION: Segment[] = [
-	...[MX - BAR, MX + BAR].flatMap((x): Segment[] => [[[x, GLASS.y], [x, MY - BAR]], [[x, MY + BAR], [x, GLASS.y + GLASS.h]]]),
-	...[MY - BAR, MY + BAR].flatMap((y): Segment[] => [[[GLASS.x, y], [MX - BAR, y]], [[MX + BAR, y], [GLASS.x + GLASS.w, y]]]),
-];
 
 export default scene({
 	viewBox: "0 0 320 180",
 	draw(k) {
 		return [
-			// The wall, stopping at everything in front of it.
-			k.path(segmentsD(behind(wall(), [FRAME, SILL, LEFT.box, RIGHT.box, ROD_BAND])), { paint: "dim", weight: "hair" }),
-			// Through the glass: the room, passing behind the mullion and the plant; its far wall lit green.
-			k.path(segmentsD(behind(room(), [V_BAR, H_BAR, ...PLANT])), { paint: "blue", weight: "hair" }),
-			k.path(segmentsD(behind(edges(corners(BACK)), [V_BAR, H_BAR])), { paint: "green", weight: "line" }),
-			// The window over it: the frame, the glass's edge, the mullion.
-			k.rect(FRAME.x, FRAME.y, FRAME.w, FRAME.h, { paint: "ink", weight: "line" }),
-			k.rect(GLASS.x, GLASS.y, GLASS.w, GLASS.h, { paint: "ink", weight: "hair" }),
-			k.path(segmentsD(MULLION), { paint: "ink", weight: "hair" }),
-			// The sill, and the plant on it: a tapered pot, two green leaves.
-			k.rect(SILL.x, SILL.y, SILL.w, SILL.h, { paint: "ink", weight: "line" }),
-			k.polygon([[POT_X - 5, POT_Y], [POT_X - 4, POT_Y - 8], [POT_X + 4, POT_Y - 8], [POT_X + 5, POT_Y]], { paint: "ink", weight: "hair" }),
-			k.path(LEAVES, { paint: "none", fill: "green" }),
-			// The rod, its finials, and the curtains hung from it.
-			k.line(ROD_X0, ROD_Y, ROD_X1, ROD_Y, { paint: "ink", weight: "line" }),
-			k.dot(ROD_X0, ROD_Y, 1.8, { paint: "ink" }),
-			k.dot(ROD_X1, ROD_Y, 1.8, { paint: "ink" }),
-			k.path(LEFT.d, { paint: "ink", weight: "hair" }),
-			k.path(RIGHT.d, { paint: "ink", weight: "hair" }),
+			...editor(k),
+			...modules(k),
+			k.text(W.x, W.y + W.h + 9, "LIST CARS // DIGITAL TWIN // UNLOCK // OTA UPDATE // TAIL SIGNALS", { role: "caption", size: 3.5 }),
 		];
 	},
 });
