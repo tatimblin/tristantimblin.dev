@@ -1,69 +1,32 @@
-<!-- baked from tools/scenes/posts/asserting-on-agent-behavior/scene.ts (sources 437ab060c01596eb) — edit the source -->
+<!-- baked from tools/scenes/posts/asserting-on-agent-behavior/scene.ts (sources 2caacd5442bff879) — edit the source -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
-  <line x1="16" y1="16" x2="104" y2="16" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <text class="art-label" x="16" y="21.74" font-size="4.5" fill="var(--art-ink)">AGENT // CLAUDE</text>
-  <g transform="translate(-23.6 37.6) scale(3.4)">
+  <g transform="translate(-36.4 1.4) scale(5.6)">
     <path d="M33.96 21.75L32.75 22.45L32.75 10.45L33.96 9.75ZM14.04 21.75L15.25 22.45L15.25 10.45L14.04 9.75ZM24.44 3.75L25.64 4.45L15.25 10.45L14.04 9.75ZM31.88 22.95L30.67 23.65L30.67 11.65L31.88 10.95ZM16.12 22.95L17.33 23.65L17.33 11.65L16.12 10.95ZM26.51 4.95L27.72 5.65L17.33 11.65L16.12 10.95ZM29.8 24.15L28.59 24.85L28.59 12.85L29.8 12.15ZM18.2 24.15L19.41 24.85L19.41 12.85L18.2 12.15ZM28.59 6.15L29.8 6.85L19.41 12.85L18.2 12.15ZM27.72 25.35L26.51 26.05L26.51 14.05L27.72 13.35ZM20.28 25.35L21.49 26.05L21.49 14.05L20.28 13.35ZM30.67 7.35L31.88 8.05L21.49 14.05L20.28 13.35ZM25.64 26.55L24.44 27.25L24.44 15.25L25.64 14.55ZM22.36 26.55L23.56 27.25L23.56 15.25L22.36 14.55ZM32.75 8.55L33.96 9.25L23.56 15.25L22.36 14.55Z" fill="var(--art-ink)" />
   </g>
-  <polyline points="98,90 115,90" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <polyline points="112.95,91.43 115,90 112.95,88.57" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <text class="art-caption" x="98" y="86" font-size="3.5" fill="var(--art-ink-2)">TRACE</text>
-  <line x1="16" y1="136" x2="104" y2="136" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <text class="art-caption" x="16" y="143" font-size="3.5" fill="var(--art-ink-2)">SESSION LOG</text>
-  <text class="art-caption" x="16" y="148.5" font-size="3.5" fill="var(--art-ink)">5709812E.JSONL</text>
-  <text class="art-caption" x="104" y="143" font-size="3.5" text-anchor="end" fill="var(--art-ink-2)">BLACK BOX</text>
-  <line x1="116" y1="16" x2="204" y2="16" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <text class="art-label" x="116" y="21.74" font-size="4.5" fill="var(--art-ink)">ASSERTIONS</text>
-  <polyline points="121,46 121,134" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <circle cx="121" cy="60" r="4" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <text class="art-label" x="130" y="59" font-size="4.5" fill="var(--art-ink)">READ_FILE</text>
-  <text class="art-caption" x="130" y="65" font-size="3.5" fill="var(--art-ink-2)">*AGENTS.MD // CALLED</text>
-  <text class="art-caption" x="204" y="59" font-size="3.5" text-anchor="end" fill="var(--art-ink-2)">01</text>
-  <circle cx="121" cy="90" r="4" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <text class="art-label" x="130" y="89" font-size="4.5" fill="var(--art-ink)">READ_FILE</text>
-  <text class="art-caption" x="130" y="95" font-size="3.5" fill="var(--art-ink-2)">ANY // CALLED</text>
-  <text class="art-caption" x="204" y="89" font-size="3.5" text-anchor="end" fill="var(--art-ink-2)">02</text>
-  <circle cx="121" cy="120" r="4" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <text class="art-label" x="130" y="119" font-size="4.5" fill="var(--art-ink)">READ</text>
-  <text class="art-caption" x="130" y="125" font-size="3.5" fill="var(--art-ink-2)">CALL #2 // PARAMS</text>
-  <text class="art-caption" x="204" y="119" font-size="3.5" text-anchor="end" fill="var(--art-ink-2)">03</text>
-  <text class="art-title" x="216" y="23" font-size="9" fill="var(--art-ink)">READ_ORDER</text>
-  <line x1="216" y1="27" x2="304" y2="27" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
-  <text class="art-label" x="216" y="35" font-size="3.5" fill="var(--art-ink)">AGENT:</text>
-  <text class="art-label" x="216" y="40" font-size="3.5" fill="var(--art-ink)">CLAUDE</text>
-  <text class="art-label" x="304" y="35" font-size="3.5" text-anchor="end" fill="var(--art-ink)">TIME:</text>
-  <text class="art-label" x="304" y="40" font-size="3.5" text-anchor="end" fill="var(--art-ink)">16S</text>
-  <line x1="216" y1="128" x2="304" y2="128" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <text class="art-label" x="216" y="138" font-size="4.5" fill="var(--art-green)">[ EVALUATED ]</text>
-  <circle cx="301" cy="136.4" r="1.6" fill="var(--art-green)" />
-  <text class="art-caption" x="216" y="148.5" font-size="3.5" fill="var(--art-ink-2)">PROMPT: AGENTS.MD</text>
+  <polyline points="164,91 194.5,91" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
+  <polyline points="192.04,92.72 194.5,91 192.04,89.28" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="204,-4 204,37.5" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
+  <polyline points="204,50.5 204,84.5" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
+  <polyline points="204,97.5 204,131.5" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
+  <polyline points="204,144.5 204,184" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
+  <circle cx="204" cy="44" r="6.5" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <text class="art-title" x="217.5" y="47.2" font-size="9" fill="var(--art-ink)">READ_FILE</text>
+  <circle cx="204" cy="91" r="6.5" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <text class="art-title" x="217.5" y="94.2" font-size="9" fill="var(--art-ink)">READ_FILE</text>
+  <circle cx="204" cy="138" r="6.5" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <text class="art-title" x="217.5" y="141.2" font-size="9" fill="var(--art-ink)">READ</text>
   <g data-motion="steps" data-beats="3">
     <g data-beat="0">
-      <circle cx="121" cy="60" r="4" data-ripple="" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-      <polyline points="119,60 120.4,61.4 123,58.6" fill="none" stroke="var(--art-green)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-      <g data-now="">
-        <text class="art-label" x="216" y="91.96" font-size="4.5" fill="var(--art-ink)">RESULTS</text>
-        <text class="art-numeral" x="216" y="118" font-size="32" fill="var(--art-ink)">1/3</text>
-        <text class="art-caption" x="267.52" y="98.2" font-size="4.5" fill="var(--art-ink)">PASSED</text>
-      </g>
+      <circle cx="204" cy="44" r="6.5" data-ripple="" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <polyline points="200.75,44 203.03,46.28 207.25,41.73" fill="none" stroke="var(--art-green)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
     </g>
     <g data-beat="1">
-      <circle cx="121" cy="90" r="4" data-ripple="" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-      <polyline points="119,90 120.4,91.4 123,88.6" fill="none" stroke="var(--art-green)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-      <g data-now="">
-        <text class="art-label" x="216" y="91.96" font-size="4.5" fill="var(--art-ink)">RESULTS</text>
-        <text class="art-numeral" x="216" y="118" font-size="32" fill="var(--art-ink)">2/3</text>
-        <text class="art-caption" x="267.52" y="98.2" font-size="4.5" fill="var(--art-ink)">PASSED</text>
-      </g>
+      <circle cx="204" cy="91" r="6.5" data-ripple="" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <polyline points="200.75,91 203.03,93.28 207.25,88.73" fill="none" stroke="var(--art-green)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
     </g>
     <g data-beat="2">
-      <circle cx="121" cy="120" r="4" data-ripple="" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-      <polyline points="119,120 120.4,121.4 123,118.6" fill="none" stroke="var(--art-green)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-      <g data-now="">
-        <text class="art-label" x="216" y="91.96" font-size="4.5" fill="var(--art-ink)">RESULTS</text>
-        <text class="art-numeral" x="216" y="118" font-size="32" fill="var(--art-ink)">3/3</text>
-        <text class="art-caption" x="267.52" y="98.2" font-size="4.5" fill="var(--art-ink)">PASSED</text>
-      </g>
+      <circle cx="204" cy="138" r="6.5" data-ripple="" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <polyline points="200.75,138 203.03,140.28 207.25,135.73" fill="none" stroke="var(--art-green)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
     </g>
   </g>
 </svg>

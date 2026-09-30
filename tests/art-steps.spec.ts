@@ -3,19 +3,19 @@ import { test, expect, type Page } from "@playwright/test";
 /**
  * THE STEPS MOTION, ON A REAL PAGE.
  *
- * The post art for "Asserting on Agent Behavior" is a baked scene, a
- * module sheet, whose run is a `steps` group (motion.css): three beats,
- * one per assertion of the read-order test, landing one slot apart off
- * one clock — a tick and a ripple in the assertion's node, and the big
- * counter as a now-mark per beat (1/3, 2/3, 3/3). The unit fixtures hold
- * the validator; this spec pins what only a browser can — that the host's
- * clock runs and the beats read it:
+ * The post art for "Asserting on Agent Behavior" is a baked scene — the
+ * black box and its trace, the graphic alone — whose run is a `steps`
+ * group (motion.css): three beats, one per assertion of the read-order
+ * test, landing one slot apart off one clock — a tick and a ripple in the
+ * assertion's node (no now-mark: the ticks are the count). The unit
+ * fixtures hold the validator; this spec pins what only a browser can —
+ * that the host's clock runs and the beats read it:
  *
  *   rest        paused, the clock at 0: the FINISHED run (every tick lit,
- *               only 3/3 shown, no ripple) — the poster
+ *               no ripple) — the poster
  *   hover       the quilt tile plays inside its hovered link: the clock
  *               advances, the run resets and ticks beat by beat, an
- *               unlanded tick faint, the current count alone
+ *               unlanded tick faint
  *   the post    the mark carries data-art-play and runs from the start
  *   reduced     the loop is 0s and the finished run is all that shows
  */
@@ -47,9 +47,10 @@ const stateOf = (page: Page, scope: string): Promise<State> =>
 		};
 	});
 
-const finished = (s: State, beats: number) => {
+/** The finished sequence: every beat lit, no ripple, and — when the file has now-marks (`nows`, one a beat unless said) — only the last beat's. */
+const finished = (s: State, beats: number, nows = beats) => {
 	expect(s.beats, "every beat lit").toEqual(Array(beats).fill(1));
-	expect(s.now, "only the last beat's now-mark").toEqual([...Array(beats - 1).fill(0), 1]);
+	expect(s.now, "only the last beat's now-mark").toEqual(nows ? [...Array(nows - 1).fill(0), 1] : []);
 	expect(s.ripples.every((o) => o === 0), "no ripple").toBe(true);
 };
 
@@ -61,8 +62,8 @@ test.describe("steps — the assertion sheet", () => {
 		const group = page.locator(`${cell} ${STEPS}`);
 		await expect(group).toHaveAttribute("data-beats", "3");
 		expect(await group.locator(":scope > [data-beat]").count()).toBe(3);
-		// One counter per beat, a ripple on every tick.
-		expect(await group.locator("[data-now]").count()).toBe(3);
+		// A ripple on every tick, and no now-mark: the ticks are the count.
+		expect(await group.locator("[data-now]").count()).toBe(0);
 		expect(await group.locator("[data-ripple]").count()).toBe(3);
 
 		const rest = await stateOf(page, cell);
@@ -70,20 +71,17 @@ test.describe("steps — the assertion sheet", () => {
 		expect(rest.clock).toBe(0);
 		// Three beats plus two slots of hold, a sixth of the 6s loop each: 5s.
 		expect(parseFloat(rest.duration)).toBeCloseTo(5, 1);
-		finished(rest, 3);
+		finished(rest, 3, 0);
 
 		await page.locator(`${cell} a`).first().hover();
 		await expect.poll(async () => (await stateOf(page, cell)).play).toBe("running");
 		// Past the hold and the reset, mid-run (the second tick landed, the
-		// third not yet): the first ticks stay, the last is faint, and the
-		// current count is the only one shown.
+		// third not yet): the first ticks stay, the last is faint.
 		await expect.poll(async () => (await stateOf(page, cell)).clock, { timeout: 5000, intervals: [50] }).toBeGreaterThan(2.1 / 5);
 		const mid = await stateOf(page, cell);
 		expect(mid.clock).toBeLessThan(3 / 5);
 		expect(mid.beats[0]).toBe(1);
 		expect(mid.beats[2]).toBeLessThan(1);
-		expect(mid.now.filter((o) => o === 1)).toHaveLength(1);
-		expect(mid.now[2]).toBe(0);
 
 		// Leaving pauses it in place, as every motion does.
 		await page.mouse.move(0, 0);
@@ -106,7 +104,7 @@ test.describe("steps — the assertion sheet", () => {
 		const s = await stateOf(page, cell);
 		expect(s.duration).toBe("0s");
 		expect(s.clock).toBe(0);
-		finished(s, 3);
+		finished(s, 3, 0);
 	});
 });
 
