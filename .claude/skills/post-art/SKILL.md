@@ -48,6 +48,22 @@ it has its own grid, profile, kit and bake. Read
 **`references/glyphs.md`** and follow it rather than the steps below. Use a
 generator before drawing any curve.
 
+**A rich panel?** When the picture needs what the hand-drawn language
+refuses — a translucent WASH (a band, a court), a board cut by a clipPath
+with rays through it, a walk in `steps` beside a second motion, a ruler
+from a glyph recipe — write it as a **baked scene source** instead of a
+file: `tools/scenes/posts/<slug>/scene.ts`, `scene({ viewBox: "0 0 320
+180", draw(k) })` on `kit("scene")` (`k.wash()`, `k.steps()`, the glyph
+recipes' exports such as `ruler` from `recipes/scale`), then `bun run
+scenes:bake`. It bakes to the same `src/content/txt/<slug>.svg`, the
+quilt tile and the post's mark render it as they render any art, and
+`bun run validate:art` reads its bake header and holds it to the scene
+profile (≤ 400 elements, one wash, two motions, the plate only). Keep the
+16:9 plate, the crop, the sparseness and the still frame that reads; §2
+and §5 still apply, and the source and its bake commit together. The
+worked example is `tools/scenes/posts/asserting-on-agent-behavior/`;
+the contract is CONVENTIONS → *L4 → Post art as a scene*.
+
 ## 1. Read first
 
 1. **`references/language.md`**: the spec, including the tokens, geometry,

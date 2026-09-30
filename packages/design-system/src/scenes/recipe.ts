@@ -37,6 +37,14 @@
  * see is a dependency's version (a d3-geo update that moves a coastline
  * by a tenth), which is what `bun run scenes:check` is for.
  *
+ * A POST'S ART as a scene: the same recipe on the plate (`viewBox: "0 0
+ * 320 180"`), at `tools/scenes/posts/<slug>/scene.ts`, bakes to the post's
+ * own `src/content/txt/<slug>.svg` — the file the quilt tile and the post
+ * page already load — for a panel the hand-drawn art language cannot hold
+ * (a wash, a clipPath, a steps walk). `loadScenes(root, POST_SCENES)`
+ * lists those; the bake writes them under the same header; the post-art
+ * gate reads the header and holds the file to the scene profile.
+ *
  * Node-only: the loader reads the sources directory, so nothing that
  * ships imports this module.
  */
@@ -46,9 +54,9 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 import { type Kit, kit } from "../lib/micro";
-import { type BakedHeader, bakedHeader } from "./header";
+import { type BakedHeader, bakedHeader, SCENES_SOURCE } from "./header";
 
-export { bakedFrom, bakedHeader, SCENES_SOURCE } from "./header";
+export { bakedFrom, bakedHeader, isPostScene, POST_SCENES, SCENES_SOURCE } from "./header";
 export type { BakedHeader } from "./header";
 
 /** The roots the scene profile allows: the post plate, or the square panel. */
@@ -96,35 +104,46 @@ export function sourceHash(dir: string): string {
 	return h.digest("hex").slice(0, 16);
 }
 
-/** A loaded source: its recipe and where it lives. */
+/** A loaded source: its recipe, where it lives, and what the header will say. */
 export interface SceneSource {
 	recipe: SceneRecipe;
+	/** the absolute path of the source's directory */
 	dir: string;
+	/** the file's name: the scene's, or the post's slug */
+	name: string;
+	/** the source's path under `tools/scenes`: `name`, or `posts/<name>` */
+	source: string;
 }
 
 /** The file a scene bakes to: the header, then the scene kit's `svg()` on the recipe's viewBox. */
-export async function bake(name: string, { recipe, dir }: SceneSource): Promise<string> {
+export async function bake({ recipe, dir, name, source }: SceneSource): Promise<string> {
 	const k = kit("scene");
 	const [, , w, h] = recipe.viewBox.split(/\s+/).map(Number);
 	const children = await recipe.draw(k, { name, dir, width: w, height: h });
-	const header: BakedHeader = { name, hash: sourceHash(dir), credit: recipe.credit };
+	const header: Omit<BakedHeader, "name"> = { source, hash: sourceHash(dir), credit: recipe.credit };
 	return `${bakedHeader(header)}\n${k.svg({ viewBox: recipe.viewBox, children })}`;
 }
 
-/** Every scene under `root` (`tools/scenes`): each `<name>/scene.ts`, by name, sorted. */
-export async function loadScenes(root: string): Promise<Map<string, SceneSource>> {
+/**
+ * Every scene under `root` (`tools/scenes`): each `<name>/scene.ts`, by
+ * name, sorted — or, with a `collection` (`POST_SCENES`), each
+ * `<collection>/<name>/scene.ts`, the sources that bake to a post's art.
+ */
+export async function loadScenes(root: string, collection?: string): Promise<Map<string, SceneSource>> {
 	const out = new Map<string, SceneSource>();
-	if (!existsSync(root)) return out;
-	for (const name of readdirSync(root).sort()) {
-		const dir = join(root, name);
+	const base = collection ? join(root, collection) : root;
+	if (!existsSync(base)) return out;
+	for (const name of readdirSync(base).sort()) {
+		const dir = join(base, name);
 		const file = join(dir, "scene.ts");
 		if (!statSync(dir).isDirectory() || !existsSync(file)) continue;
+		const source = collection ? `${collection}/${name}` : name;
 		const mod = await import(pathToFileURL(file).href);
 		const r = mod.default;
 		if (!r || typeof r.draw !== "function" || typeof r.viewBox !== "string") {
-			throw new Error(`tools/scenes/${name}/scene.ts: the default export must be a scene (\`scene({ viewBox, draw })\`)`);
+			throw new Error(`${SCENES_SOURCE}/${source}/scene.ts: the default export must be a scene (\`scene({ viewBox, draw })\`)`);
 		}
-		out.set(name, { recipe: r as SceneRecipe, dir });
+		out.set(name, { recipe: r as SceneRecipe, dir, name, source });
 	}
 	return out;
 }

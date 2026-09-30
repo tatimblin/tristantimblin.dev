@@ -208,6 +208,10 @@ the link carries the post title. A standalone frame takes `label` and renders
 src/content/txt/<slug>.svg                  a post's art, beside <slug>.mdx
 packages/design-system/src/art/filler-NN.svg   quilt fillers (abstract, no motion)
 packages/design-system/src/art/_template.svg   the starting file
+tools/scenes/posts/<slug>/scene.ts          a post's art as a BAKED SCENE source, when the
+                                            picture needs the scene profile (SKILL.md, "A rich
+                                            panel?"); it bakes to the same <slug>.svg under a
+                                            header, which the validator reads
 ```
 
 **Fillers** are quieter than post art: fewer and smaller fills, more

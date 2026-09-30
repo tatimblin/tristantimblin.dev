@@ -32,6 +32,12 @@
 //   bun run validate:glyph packages/design-system/src/glyphs/*.svg
 //   bun run validate:scene packages/design-system/src/scenes/*.svg
 //
+// Without --profile the CLI reads a file's BAKE HEADER: a post's art baked
+// from tools/scenes/posts/<slug>/scene.ts carries the scene bake's header
+// and is held to the scene profile (`profileOf`); a file with no header is
+// art. So `validate:art src/content/txt/*.svg` is the gate for every post
+// file, baked or hand-drawn.
+//
 // Every violation is one line, `<rule>: <element> line N: <what>`, where
 // <rule> is one of RULES below, so a reader (or the spec) knows which rule
 // fired without reading the prose. The slug is the file's basename: an art
@@ -746,6 +752,23 @@ function groupDepth(el) {
 
 // --- The CLI -------------------------------------------------------------
 
+/** The header a baked scene starts with (src/scenes/header.ts writes it); a baked glyph's is `baked from recipes/`. */
+const BAKED_SCENE = /^\s*<!-- baked from tools\/scenes\/[\w\/-]+\/scene\.ts \(sources [0-9a-f]+\) — edit the source -->/;
+const BAKED_GLYPH = /^\s*<!-- baked from recipes\/[\w-]+\.ts — edit the recipe -->/;
+
+/**
+ * The profile a file's bake header names: scene for a scene bake's, glyph
+ * for a glyph bake's, null for a file with no header (hand-drawn: the
+ * caller's default).
+ * @param {string} source
+ * @returns {Profile | null}
+ */
+export function profileOf(source) {
+	if (BAKED_SCENE.test(source)) return SCENE;
+	if (BAKED_GLYPH.test(source)) return GLYPH;
+	return null;
+}
+
 /** The slug an art file's ids are prefixed with: its basename without .svg. */
 export function slugOf(file) {
 	return basename(file, extname(file));
@@ -758,7 +781,8 @@ export function slugOf(file) {
  */
 export function main(args) {
 	const files = [...args];
-	let profile = PROFILES.art;
+	/** @type {Profile | null} null: by the file's header, art without one */
+	let profile = null;
 	const flag = files.findIndex((a) => a === "--profile" || a.startsWith("--profile="));
 	if (flag !== -1) {
 		const [arg] = files.splice(flag, 1);
@@ -783,9 +807,10 @@ export function main(args) {
 			code = code || 2;
 			continue;
 		}
-		const violations = validateSvg(source, { profile, slug: slugOf(file) });
+		const baked = profile ? null : profileOf(source);
+		const violations = validateSvg(source, { profile: profile ?? baked ?? PROFILES.art, slug: slugOf(file) });
 		if (violations.length === 0) {
-			console.log(`ok    ${file}`);
+			console.log(`ok    ${file}${baked ? ` (baked ${baked.name})` : ""}`);
 		} else {
 			console.log(`FAIL  ${file}\n${violations.map((v) => `  ${v}`).join("\n")}`);
 			code = 1;

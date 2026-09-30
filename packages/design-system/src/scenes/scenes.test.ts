@@ -59,6 +59,8 @@ describe("every file is baked, and fresh", () => {
 		test(`${f} carries the baked header and names itself`, () => {
 			expect(from, `${f} has no baked header; a scene is always baked from ${SCENES_SOURCE}/<name>/scene.ts`).not.toBeNull();
 			expect(from!.name).toBe(nameOf(f));
+			// A package scene's source is at the top of tools/scenes; the posts collection bakes elsewhere.
+			expect(from!.source).toBe(nameOf(f));
 		});
 		test(`${f} is baked from ${SCENES_SOURCE}/${nameOf(f)}/ as it is today`, () => {
 			const dir = join(SOURCES, nameOf(f));

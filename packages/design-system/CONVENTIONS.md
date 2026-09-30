@@ -639,12 +639,16 @@ prefixed with the slug; ≤ 120 elements, ≤ 12 KB. The validator
 (`scripts/validate-art.mjs`, `bun run validate:art <file>`) and
 `tests/post-art.spec.ts` enforce all of it. Import a file with `?raw`; it must
 be inlined, since its colours are tokens and its motion is the frame's CSS.
+A post's art may instead be **baked** from a scene source — the same file,
+under the scene profile (*Micrographics → L4 → Post art as a scene*).
 
 **Profiles.** The validator is one scanner with three profiles
 (`PROFILES.art`, `PROFILES.glyph`, `PROFILES.scene`; `validateSvg(source, {
 profile })`, `validateArt` is the art one). **`art`** is everything above.
 **`scene`** is art's language with room for a whole illustration (see
-*Micrographics → L4 — scenes*). **`glyph`** is for
+*Micrographics → L4 — scenes*); a post file that carries a scene bake's
+header is held to it — the validator's CLI reads the header
+(`profileOf`), and so does `tests/post-art.spec.ts`. **`glyph`** is for
 the micrographics in `src/glyphs/` (`bun run validate:glyph <file>`): viewBox
 `0 0 48 32`, or `0 0 96 32` / `0 0 96 64` wide; no `clipPath`/`defs`/`use`,
 no ids, no `class` — every stroked shape states `stroke-width` 1 or 1.5; line
@@ -1086,6 +1090,34 @@ same sources give the same bytes (round every coordinate — the globe's
 paths to a tenth — never `Math.random` or the clock), because the check
 compares bytes. The scenes are committed; the site's build does not bake.
 
+**Post art as a scene.** A post's picture that the hand-drawn language
+cannot hold — a washed band, a board cut by a clipPath, a walk in
+`steps` beside a second motion — is a scene source at
+**`tools/scenes/posts/<slug>/scene.ts`** (the `posts` collection;
+`loadScenes(root, POST_SCENES)`), on the plate (`viewBox: "0 0 320
+180"`, which the bake insists on: the frame and the quilt's cells are
+16:9), baked by the same `bun run scenes:bake` to the post's own
+**`src/content/txt/<slug>.svg`** — the file `src/lib/quilt/art.ts` already
+globs, so the quilt tile (`ArtFrame variant="bare"`) and the post's mark
+(`variant="mark" play`) render it as they render any art, its motions
+playing on hover and from the start on the post; there is no `Scene`
+host and no readout layer, since a post's art is decorative under its
+title. The header is the same, `<!-- baked from
+tools/scenes/posts/<slug>/scene.ts (sources <hash>) — edit the source
+-->` (`bakedFrom` reads `source` and `name`; `isPostScene` tells the
+collection), and it is what tells the gate a baked post from a hand-drawn
+one: `bun run validate:art src/content/txt/*.svg` holds a file with the
+header to the scene profile and one without to art's, and
+`tests/post-art.spec.ts` does the same and adds freshness — the header's
+hash against `tools/scenes/posts/<slug>/` today — and that every post
+source has been baked. `scenes:check` re-bakes the collection with the
+package's. A hand-drawn post art has no header and the bake never
+touches it; a baked one whose source is gone is removed like any orphan,
+and the spec then says the post has no art. The clipPath ids are
+prefixed with the slug, as art's are. The first is
+`asserting-on-agent-behavior`: the assertion board, six footprints landing
+in `steps`, the `scale` glyph's ruler as its timeline.
+
 **The registry** (`src/scenes/scenes.ts`, `import { sceneSvg,
 sceneCredit, SCENE_NAMES } from "@whois/design-system/scenes"`) is an
 eager `?raw` glob plus `SCENE_NAMES` (`names.ts`, the `SceneName` type —
@@ -1315,6 +1347,13 @@ dark one; `tests/scenes.spec.ts` holds them.
 4. `bun run scenes:check`, `bun run test:unit`; then `<Scene name>` with
    its `SceneLabel`s on `/design-system#scenes` in both themes, hovered
    (the motion) and under reduced motion (still).
+
+**A post's art as a scene:** the same, at `tools/scenes/posts/<slug>/scene.ts`
+on the plate; `bun run scenes:bake` writes `src/content/txt/<slug>.svg`
+(no registry name — the quilt globs it); then `bun run validate:art
+src/content/txt/<slug>.svg`, `bunx playwright test tests/post-art.spec.ts`,
+and look at it on `/txt` (hover the tile) and `/txt/<slug>` in both
+themes. Commit the source and the baked file together.
 
 ---
 

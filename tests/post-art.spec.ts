@@ -3,10 +3,15 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
 	validateArt,
+	validateSvg,
+	profileOf,
 	slugOf,
+	PROFILES,
 	RULES,
 	BUDGET,
+	VIEWBOX,
 } from "../packages/design-system/scripts/validate-art.mjs";
+import { bakedFrom, isPostScene, POST_SCENES, SCENES_SOURCE, sourceHash } from "../packages/design-system/src/scenes/recipe";
 
 /**
  * POST ART.
@@ -21,11 +26,19 @@ import {
  * that each rule still fires — a validator that passes everything is the
  * silent failure here.
  *
+ * A post's art may be a BAKED SCENE — `tools/scenes/posts/<slug>/scene.ts`
+ * baked by `bun run scenes:bake` to the same `<slug>.svg` — which its bake
+ * header says. Such a file is held to the scene profile (a wash, a
+ * clipPath, two motions) on the plate, and to freshness: the header's hash
+ * is the hash of its source directory today, so an edited source fails
+ * here until it is re-baked. A file with no header is hand-drawn art.
+ *
  * Static checks on the source: no browser, no page.
  */
 
 const POSTS = "src/content/txt";
 const FILLERS = "packages/design-system/src/art";
+const POST_SOURCES = join(SCENES_SOURCE, POST_SCENES);
 
 const svgsIn = (dir: string) =>
 	readdirSync(dir)
@@ -46,10 +59,56 @@ test.describe("post art: the files that ship", () => {
 
 	for (const file of files) {
 		test(`${file} passes the validator`, () => {
-			const violations = validateArt(readFileSync(file, "utf8"), { slug: slugOf(file) });
+			const source = readFileSync(file, "utf8");
+			const baked = profileOf(source);
+			const violations = baked
+				? validateSvg(source, { profile: baked, slug: slugOf(file) })
+				: validateArt(source, { slug: slugOf(file) });
 			expect(violations, violations.join("\n")).toEqual([]);
 		});
 	}
+});
+
+test.describe("post art: a baked scene is a post's art too", () => {
+	const baked = svgsIn(POSTS)
+		.map((file) => ({ file, source: readFileSync(file, "utf8") }))
+		.filter(({ source }) => bakedFrom(source) !== null);
+	const sources = existsSync(POST_SOURCES)
+		? readdirSync(POST_SOURCES).filter((d) => existsSync(join(POST_SOURCES, d, "scene.ts"))).sort()
+		: [];
+
+	for (const { file, source } of baked) {
+		test(`${file} is a fresh bake of ${POST_SOURCES}/${slugOf(file)}/, on the plate, under the scene profile`, () => {
+			const from = bakedFrom(source)!;
+			expect(from.name).toBe(slugOf(file));
+			expect(isPostScene(from), `${file} says it was baked from ${from.source}, not the posts collection`).toBe(true);
+			expect(profileOf(source)).toBe(PROFILES.scene);
+			// A post's art is the plate: the frame and the quilt's cells are 16:9.
+			expect(/viewBox="([^"]+)"/.exec(source)?.[1]).toBe(VIEWBOX);
+			const dir = join(POST_SOURCES, from.name);
+			expect(existsSync(join(dir, "scene.ts")), `${file} says it was baked from ${dir}/scene.ts, which does not exist (orphaned; \`bun run scenes:bake\`)`).toBe(true);
+			expect(from.hash, `${file} is stale: ${dir}/ changed since it was baked (\`bun run scenes:bake\`)`).toBe(sourceHash(dir));
+		});
+	}
+
+	test("every post scene source has been baked", () => {
+		const names = baked.map(({ file }) => slugOf(file));
+		for (const name of sources) {
+			expect(names, `${POST_SOURCES}/${name}/scene.ts has no ${POSTS}/${name}.svg (\`bun run scenes:bake\`)`).toContain(name);
+		}
+	});
+
+	test("a hand-drawn post art is art, a baked one a scene: the header decides", () => {
+		const plain = wrap("");
+		expect(profileOf(plain)).toBeNull();
+		const header = "<!-- baked from tools/scenes/posts/fx/scene.ts (sources 0123456789abcdef) — edit the source -->\n";
+		expect(profileOf(header + plain)).toBe(PROFILES.scene);
+		expect(bakedFrom(header + plain)).toEqual({ source: "posts/fx", name: "fx", hash: "0123456789abcdef" });
+		// A baked post file may carry what art refuses: the wash, and two motions.
+		const scene = header + wrap(`<rect x="0" y="0" width="60" height="180" fill="color-mix(in oklab, var(--art-green) 18%, transparent)" /><g data-motion="blink"><circle cx="90" cy="30" r="3" fill="var(--art-coral)" /></g><g data-motion="steps" data-beats="2">${beat(0)}${beat(1)}</g>`);
+		expect(validateSvg(scene, { profile: profileOf(scene)!, slug: SLUG })).toEqual([]);
+		expect(validateArt(scene, { slug: SLUG }).length).toBeGreaterThan(0);
+	});
 });
 
 test.describe("post art: every published post has its art", () => {
