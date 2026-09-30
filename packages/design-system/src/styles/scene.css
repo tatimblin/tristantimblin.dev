@@ -1,0 +1,196 @@
+/* Scene and SceneLabel — the L4 host (Scene.astro, SceneLabel.astro): a
+ * baked scene on an ArtFrame with a layer of HTML READOUTS over it, sized
+ * by the scene's width so a console's labels scale with its drawing, and
+ * a credit line under it. The frame is ArtFrame's (art-frame.css: the
+ * plate, the edge, the corner, the clip, the line weights); the motion is
+ * motion.css (a scene plays under the pointer anywhere on it); nothing of
+ * either is repeated here. This file is the stack, the readouts and the
+ * glow.
+ *
+ * THE STACK. The frame and the readout layer share one grid cell, so the
+ * layer is exactly the frame's box without an absolute inset over a
+ * height it does not know; the credit takes the row under them. The scene
+ * is an inline-size CONTAINER, and --scene-unit is a hundredth of it: a
+ * readout's font-size is so many units, which is the spike's `cqw` made a
+ * token a label reads and a page may retune. */
+.ds-scene {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-2);
+	container-type: inline-size;
+	--scene-unit: 1cqi;
+	/* how far in from the frame's edge a corner-anchored readout sits */
+	--scene-inset: 5%;
+}
+.ds-scene__frame {
+	grid-area: 1 / 1;
+}
+/* The readout layer: over the frame (its own stacking level), clipped to
+ * the frame's corner, and in the frame's ink — --art-ink follows the theme,
+ * so a readout is light on the dark plate and dark on the bone one, as the
+ * line work is. Real text: it is selectable, and it takes the pointer, which
+ * is why the scene (not the frame) is what hovering plays (motion.css). */
+.ds-scene__readouts {
+	grid-area: 1 / 1;
+	position: relative;
+	z-index: 1;
+	overflow: hidden;
+	border-radius: var(--art-radius);
+	color: var(--art-ink);
+}
+.ds-scene--variant-bare .ds-scene__readouts,
+.ds-scene--variant-corners .ds-scene__readouts {
+	border-radius: 0;
+}
+/* tone — the layer's colour: the console's phosphor, or the dimmed ink;
+ * a label's own tone overrides it. The same tokens as a label's. */
+.ds-scene--tone-dim .ds-scene__readouts {
+	color: var(--art-ink-2);
+}
+.ds-scene--tone-green .ds-scene__readouts {
+	color: var(--art-green);
+}
+.ds-scene--tone-red .ds-scene__readouts {
+	color: var(--art-coral);
+}
+.ds-scene--tone-blue .ds-scene__readouts {
+	color: var(--art-cyan);
+}
+.ds-scene--tone-lavender .ds-scene__readouts {
+	color: var(--art-lavender);
+}
+/* The credit under the frame: the label voice's quiet text (Scene.astro
+ * renders a Mono), pulled to the end. */
+.ds-scene__credit {
+	justify-self: end;
+}
+
+/* A READOUT: absolutely placed in the layer at a corner or an edge (`at`:
+ * --scene-inset in from it) or at a point (`x` / `y`, percent of the frame,
+ * set as --scene-x / --scene-y inline). The caps voice in the UI face
+ * (SceneLabel composes .ds-caps for the tracking), tabular, one line, at
+ * 2.6 units — a 400px scene sets it 10.4px, the reference sheet's size. */
+.ds-scene-label {
+	position: absolute;
+	inset-inline-start: var(--scene-x, var(--scene-inset));
+	inset-block-start: var(--scene-y, var(--scene-inset));
+	max-inline-size: calc(100% - 2 * var(--scene-inset));
+	margin: 0;
+	font-family: var(--voice-mono-family);
+	font-size: calc(var(--scene-unit) * 2.6);
+	font-weight: var(--font-weight-400);
+	font-variant-numeric: tabular-nums;
+	line-height: 1.35;
+	white-space: nowrap;
+}
+/* at — the nine anchors. An edge or the centre translates the label back
+ * by half itself, so it is the label's middle that sits on the axis. */
+.ds-scene-label--at-t,
+.ds-scene-label--at-c,
+.ds-scene-label--at-b {
+	inset-inline-start: 50%;
+	--scene-tx: -50%;
+	text-align: center;
+}
+.ds-scene-label--at-l,
+.ds-scene-label--at-c,
+.ds-scene-label--at-r {
+	inset-block-start: 50%;
+	--scene-ty: -50%;
+}
+.ds-scene-label--at-tr,
+.ds-scene-label--at-r,
+.ds-scene-label--at-br {
+	inset-inline-start: auto;
+	inset-inline-end: var(--scene-inset);
+	text-align: end;
+}
+.ds-scene-label--at-bl,
+.ds-scene-label--at-b,
+.ds-scene-label--at-br {
+	inset-block-start: auto;
+	inset-block-end: var(--scene-inset);
+}
+/* align — for a point-placed label: which of its edges the point is. */
+.ds-scene-label--align-center {
+	--scene-tx: -50%;
+	text-align: center;
+}
+.ds-scene-label--align-end {
+	--scene-tx: -100%;
+	text-align: end;
+}
+.ds-scene-label {
+	transform: translate(var(--scene-tx, 0), var(--scene-ty, 0));
+}
+/* size — the steps of the reference sheet's console: a caption, the label,
+ * a value, the big numeral. */
+.ds-scene-label--size-sm {
+	font-size: calc(var(--scene-unit) * 2.2);
+}
+.ds-scene-label--size-lg {
+	font-size: calc(var(--scene-unit) * 4.4);
+}
+.ds-scene-label--size-xl {
+	font-size: calc(var(--scene-unit) * 7);
+}
+/* variant: numeral — the spec sheet's thin numeral (the display role,
+ * Mondwest Thin), no case change, no tracking, set tight. */
+.ds-scene-label--variant-numeral {
+	font-family: var(--font-display);
+	font-weight: var(--font-display-weight);
+	letter-spacing: var(--tracking-heading);
+	line-height: 1.05;
+	text-transform: none;
+	margin-inline-end: 0;
+}
+/* tone — the ink unless said; the dimmed ink, or one of the four colours,
+ * as the drawing's own tokens, so a readout and the mark it reads agree. */
+.ds-scene-label--tone-dim {
+	color: var(--art-ink-2);
+}
+.ds-scene-label--tone-green {
+	color: var(--art-green);
+}
+.ds-scene-label--tone-red {
+	color: var(--art-coral);
+}
+.ds-scene-label--tone-blue {
+	color: var(--art-cyan);
+}
+.ds-scene-label--tone-lavender {
+	color: var(--art-lavender);
+}
+/* box — a hairline round it in its own colour: the console's boxed readout. */
+.ds-scene-label--box-true {
+	padding: 0.3em 0.5em;
+	border: 1px solid currentColor;
+}
+.ds-scene-label--box-true.ds-caps {
+	margin-inline-end: 0;
+	text-indent: var(--tracking-caps, 0.14em);
+}
+
+/* GLOW (`glow`) — the CRT's bloom: a soft halo on the line work and the
+ * readouts, on the DARK page only. The two shadows are the ART tokens'
+ * --scene-glow / --scene-text-glow (tokens.overrides.css), which the light
+ * theme sets to none — tokens rather than a `.maximeheckel-dark` selector
+ * here, so a light ThemePage nested on the dark page resolves to its own
+ * theme's value, the nearest one. Host CSS on the frame's <svg> and the
+ * readout layer, never inside a file (the language has no filters). Off
+ * where the page asks for less transparency, and under forced colours,
+ * where a shadow is noise. */
+.ds-scene--glow-true .ds-scene__frame > svg {
+	filter: var(--scene-glow, none);
+}
+.ds-scene--glow-true .ds-scene__readouts {
+	text-shadow: var(--scene-text-glow, none);
+}
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+	.ds-scene--glow-true .ds-scene__frame > svg {
+		filter: none;
+	}
+	.ds-scene--glow-true .ds-scene__readouts {
+		text-shadow: none;
+	}
+}

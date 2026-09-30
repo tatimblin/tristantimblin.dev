@@ -3,7 +3,7 @@
 // supplies the size, the tokens supply every colour, the host's CSS supplies
 // the motion — so what is left to check is that a file carries nothing else.
 //
-// Two languages share one scanner and one set of rules, and differ only in
+// Three languages share one scanner and one set of rules, and differ only in
 // their constants, which a PROFILE holds:
 //
 //   art    — the 320×180 post-art plates (src/content/txt/<slug>.svg, the
@@ -15,14 +15,22 @@
 //            so they take the colour of the text they sit in. No classes, no
 //            ids, no clipPaths — many sit on one page and none owns a frame.
 //            Its fixtures are src/lib/validate-glyph.test.ts (`bun run test:unit`).
+//   scene  — the L4 scenes (src/scenes/<name>.svg, baked from
+//            tools/scenes/<name>/scene.ts): art's language on the plate or on
+//            a 400×400 panel, with the budget a projected map or a sliced
+//            mesh needs, one WASH fill (a colour token mixed down to at most
+//            25% over transparent — an ocean, a ruler's band), a dot-dash, and
+//            two motion groups. Rendered through Scene (an ArtFrame). Its
+//            fixtures are src/lib/validate-scene.test.ts.
 //
 //   import { validateSvg, validateArt, PROFILES } from ".../validate-art.mjs";
 //   validateSvg(source, { profile: PROFILES.glyph }) → string[]   // [] when clean
 //   validateArt(source, { slug: "mega-desk" }) → string[]         // the art profile
 //
-//   bun packages/design-system/scripts/validate-art.mjs [--profile glyph] <file…>
+//   bun packages/design-system/scripts/validate-art.mjs [--profile glyph|scene] <file…>
 //   bun run validate:art src/content/txt/mega-desk.svg      // exit 1 on a violation
 //   bun run validate:glyph packages/design-system/src/glyphs/*.svg
+//   bun run validate:scene packages/design-system/src/scenes/*.svg
 //
 // Every violation is one line, `<rule>: <element> line N: <what>`, where
 // <rule> is one of RULES below, so a reader (or the spec) knows which rule
@@ -49,13 +57,13 @@ export const RULES = Object.freeze({
 	element: "element",
 	/** 3. No style=, no on*, no xlink:, class only art-line / art-line--2. Glyph: no class at all. */
 	attribute: "attribute",
-	/** 4. fill/stroke are none, currentColor or an --art-* token; no literals, no opacity. Glyph: --glyph-dim for the ink's dimming, no --art-ink*. */
+	/** 4. fill/stroke are none, currentColor or an --art-* token; no literals, no opacity. Glyph: --glyph-dim for the ink's dimming, no --art-ink*. Scene: a fill may also be a WASH, color-mix(in oklab, var(--art-<colour>) N%, transparent), N ≤ 25. */
 	paint: "paint",
-	/** 5. A stroked shape has vector-effect="non-scaling-stroke" and a weight of 1 or 1.5; dashes 4 4 or 2 6. Glyph: the weight is always a stroke-width. */
+	/** 5. A stroked shape has vector-effect="non-scaling-stroke" and a weight of 1 or 1.5; dashes 4 4 or 2 6. Glyph: the weight is always a stroke-width. Scene: the dot-dash 6 3 1 3 too. */
 	stroke: "stroke",
-	/** 6. One data-motion per file, on a <g>, spin|drift|slide|blink|dash; data-speed 0.5|1|2; a dash group is dashed and sets no offset. */
+	/** 6. One data-motion per file (a scene: two), on a <g>, spin|drift|slide|blink|dash; data-speed 0.5|1|2; a dash group is dashed with a period that divides 8, and sets no offset. */
 	motion: "motion",
-	/** 7. ≤ 120 elements, ≤ 12 KB, ≤ 3 clipPaths, groups ≤ 4 deep. Glyph: 40 / 3 KB (80 / 6 KB wide), groups ≤ 3 deep. */
+	/** 7. ≤ 120 elements, ≤ 12 KB, ≤ 3 clipPaths, groups ≤ 4 deep. Glyph: 40 / 3 KB (80 / 6 KB wide), groups ≤ 3 deep. Scene: 400 / 64 KB. */
 	budget: "budget",
 	/** 8. ids only on a clipPath or defs content, prefixed <slug>-; use/clip-path point inside the file. Glyph: no ids. */
 	ids: "ids",
@@ -108,13 +116,15 @@ export const BUDGET = Object.freeze({
  * this; a new kind is a new profile, not a new branch in the rules.
  *
  * @typedef {object} Profile
- * @property {string} name        "art" | "glyph"; names the kind in a message
+ * @property {string} name        "art" | "glyph" | "scene"; names the kind in a message
  * @property {string} host        what sizes and paints the file, for the prose ("the frame")
  * @property {Readonly<Record<string, Budget>>} viewBoxes
  *           the root viewBoxes allowed, each with its budget; the first is the
  *           default (and the budget a file with a wrong viewBox is held to)
  * @property {readonly string[]} elements   the element whitelist (FORBIDDEN_ELEMENTS always fail)
  * @property {readonly string[]} paints     every fill/stroke value allowed
+ * @property {number} wash                  the most a WASH fill may mix a colour to, in percent
+ *           (`color-mix(in oklab, var(--art-<colour>) N%, transparent)`, fill only); 0 for no wash
  * @property {string} dimming               the one paint that dims, named when an opacity is refused
  * @property {readonly { token: string, why: string }[]} forbiddenTokens
  *           tokens that may not appear in any attribute value, and why
@@ -127,6 +137,7 @@ export const BUDGET = Object.freeze({
  * @property {boolean} requireStrokeWidth   a stroked shape states its own-or-inherited stroke-width
  * @property {readonly string[]} dashes     stroke-dasharray values, space-separated
  * @property {readonly string[]} motions    data-motion kinds; empty means no motion
+ * @property {number} motionGroups          how many data-motion groups a file may carry
  * @property {readonly string[]} speeds
  * @property {boolean} ids                  false: no id anywhere (so no clipPath/use can point at one)
  *
@@ -144,6 +155,7 @@ const ART = Object.freeze({
 	viewBoxes: Object.freeze({ [VIEWBOX]: BUDGET }),
 	elements: ALLOWED_ELEMENTS,
 	paints: PAINTS,
+	wash: 0,
 	dimming: "var(--art-ink-2)",
 	forbiddenTokens: Object.freeze(FRAME_TOKENS.map((token) => ({ token, why: "belongs to the frame, not a file" }))),
 	palette: Object.freeze({ max: 3, require: "token", why: "the ink plus at most three, one dominant" }),
@@ -153,6 +165,7 @@ const ART = Object.freeze({
 	requireStrokeWidth: false,
 	dashes: DASHES,
 	motions: MOTIONS,
+	motionGroups: 1,
 	speeds: SPEEDS,
 	ids: true,
 });
@@ -191,6 +204,7 @@ const GLYPH = Object.freeze({
 		"none", "currentColor", "var(--glyph-dim)",
 		"var(--art-lavender)", "var(--art-coral)", "var(--art-cyan)", "var(--art-green)",
 	]),
+	wash: 0,
 	dimming: "var(--glyph-dim)",
 	forbiddenTokens: Object.freeze([
 		...FRAME_TOKENS.map((token) => ({ token, why: "belongs to the art frame; a glyph has none" })),
@@ -203,12 +217,60 @@ const GLYPH = Object.freeze({
 	requireStrokeWidth: true,
 	dashes: GLYPH_DASHES,
 	motions: MOTIONS,
+	motionGroups: 1,
 	speeds: SPEEDS,
 	ids: false,
 });
 
+/**
+ * The scene budget, on either root. ELEMENTS are what the DOM pays for —
+ * every one is a node the page lays out, hit-tests and (in a motion group)
+ * composites — so the cap is on them, not on bytes: 400 is a small page
+ * section's worth, and a scene that needs more is drawing many marks where
+ * one path with many points would do. BYTES are the wire cost of a file
+ * inlined into the HTML: a projected coastline is one long `d` (the globe's
+ * land is most of its 40 KB), so the cap is set where a scene stays cheaper
+ * than the image it replaces; 64 KB is about a well-compressed hero photo.
+ * The ART profile's dashes are screen px under non-scaling-stroke, so they
+ * hold on the panel as on the plate; the scene adds the dot-dash `6 3 1 3`
+ * (an orbit, a track), whose period 13 does not divide the dash motion's 8 —
+ * it is a still dash, or a spinning one, never in a dash group.
+ */
+const SCENE_BUDGET = Object.freeze({ elements: 400, bytes: 64 * 1024, clipPaths: 3, depth: 4 });
+export const SCENE_VIEWBOXES = Object.freeze([VIEWBOX, "0 0 400 400"]);
+const SCENE_DASHES = Object.freeze([...DASHES, "6 3 1 3"]);
+
+/** @type {Profile} */
+const SCENE = Object.freeze({
+	name: "scene",
+	host: "the Scene component",
+	viewBoxes: Object.freeze(Object.fromEntries(SCENE_VIEWBOXES.map((vb) => [vb, SCENE_BUDGET]))),
+	elements: ALLOWED_ELEMENTS,
+	paints: PAINTS,
+	wash: 25,
+	dimming: "var(--art-ink-2)",
+	forbiddenTokens: Object.freeze(FRAME_TOKENS.map((token) => ({ token, why: "belongs to the frame, not a file" }))),
+	palette: Object.freeze({ max: 3, require: "token", why: "the ink plus at most three, one dominant (a wash counts as its colour)" }),
+	classes: CLASSES,
+	weights: WEIGHTS,
+	strokeWidths: STROKE_WIDTHS,
+	requireStrokeWidth: false,
+	dashes: SCENE_DASHES,
+	motions: MOTIONS,
+	motionGroups: 2,
+	speeds: SPEEDS,
+	ids: true,
+});
+
 /** Every kind the validator knows, by name (the CLI's --profile). */
-export const PROFILES = Object.freeze({ art: ART, glyph: GLYPH });
+export const PROFILES = Object.freeze({ art: ART, glyph: GLYPH, scene: SCENE });
+
+/**
+ * The one wash form a scene's fill may take: a colour token mixed down over
+ * transparent, in oklab, at a whole percent. The kit writes it (`k.wash()`);
+ * the rule reads the colour and the percent back out of it.
+ */
+const WASH = /^color-mix\(in oklab, var\(--art-(lavender|coral|cyan|green)\) (\d{1,3})%, transparent\)$/;
 
 const FORBIDDEN = new Set(FORBIDDEN_ELEMENTS);
 const SHAPE = new Set(SHAPES);
@@ -336,12 +398,23 @@ export function validateSvg(source, { profile = ART, slug } = {}) {
 		for (const a of ["fill", "stroke"]) {
 			const v = el.attrs.get(a);
 			if (v === undefined) continue;
-			if (!PAINT.has(v)) {
-				const tokens = P.paints.filter((p) => p.startsWith("var("));
-				fail(RULES.paint, el, `${a}="${v}" is not a paint the language has: none, currentColor, or ${tokens.join(" ")}`);
-			} else {
+			const wash = WASH.exec(v);
+			if (PAINT.has(v)) {
 				if (v.startsWith("var(")) used.add(v);
 				if (v !== "none") painted = true;
+			} else if (wash && P.wash > 0 && a === "fill") {
+				const pct = Number(wash[2]);
+				if (pct < 1 || pct > P.wash) {
+					fail(RULES.paint, el, `a wash is a colour at 1–${P.wash}% over transparent (got ${pct}%); past that it is a fill, so use the token`);
+				}
+				used.add(`var(--art-${wash[1]})`);
+				painted = true;
+			} else if (wash && P.wash > 0) {
+				fail(RULES.paint, el, `a wash is a fill, never a stroke (${a}="${v}"); a line takes a token, dimmed with ${P.dimming}`);
+			} else {
+				const tokens = P.paints.filter((p) => p.startsWith("var("));
+				const or = P.wash > 0 ? `, or a wash fill color-mix(in oklab, var(--art-<colour>) N%, transparent) with N ≤ ${P.wash}` : "";
+				fail(RULES.paint, el, `${a}="${v}" is not a paint the language has: none, currentColor, or ${tokens.join(" ")}${or}`);
 			}
 		}
 		for (const a of ["opacity", "fill-opacity", "stroke-opacity"]) {
@@ -406,7 +479,11 @@ export function validateSvg(source, { profile = ART, slug } = {}) {
 			fail(RULES.motion, el, `no motion in a ${P.name}`);
 			return;
 		}
-		if (i > 0) fail(RULES.motion, el, `a second data-motion (the first is at line ${moving[0].line}); one moving idea per file`);
+		if (i >= P.motionGroups) {
+			fail(RULES.motion, el, P.motionGroups === 1
+				? `a second data-motion (the first is at line ${moving[0].line}); one moving idea per file`
+				: `data-motion group ${i + 1} (the first is at line ${moving[0].line}); a ${P.name} moves at most ${P.motionGroups} ideas`);
+		}
 		if (!MOTION.has(kind)) fail(RULES.motion, el, `data-motion="${kind}" is not one of ${P.motions.join(" | ")}`);
 		if (el.name !== "g") fail(RULES.motion, el, `data-motion belongs on a <g> that holds what moves`);
 		if (el.children.length === 0) fail(RULES.motion, el, `the data-motion group is empty; nothing would move`);
@@ -422,8 +499,15 @@ export function validateSvg(source, { profile = ART, slug } = {}) {
 				}
 				if (SHAPE.has(d.name)) {
 					const s = inherited(d, "stroke");
-					if (s !== undefined && s !== "none" && inherited(d, "stroke-dasharray") === undefined) {
+					const da = inherited(d, "stroke-dasharray");
+					if (s !== undefined && s !== "none" && da === undefined) {
 						fail(RULES.motion, d, `a stroked shape in a dash group needs stroke-dasharray (${either(P.dashes)})`);
+					}
+					// The host advances the offset by 8 screen px a loop; a period
+					// that does not divide 8 jumps at the end of every cycle.
+					const period = da?.trim().split(/[\s,]+/).reduce((sum, n) => sum + Number(n), 0);
+					if (period && !Number.isNaN(period) && Math.abs(8 / period - Math.round(8 / period)) > 1e-9) {
+						fail(RULES.motion, d, `stroke-dasharray="${da}" has a period of ${period}, which does not divide the dash motion's 8 (the loop would jump); keep it still, or spin it`);
 					}
 				}
 			}
@@ -617,7 +701,7 @@ export function slugOf(file) {
 }
 
 /**
- * Validate files from a shell: `[--profile art|glyph] <file…>`, art by default.
+ * Validate files from a shell: `[--profile art|glyph|scene] <file…>`, art by default.
  * @param {string[]} args
  * @returns {number} the exit code: 0 clean, 1 a violation, 2 usage
  */
@@ -635,7 +719,7 @@ export function main(args) {
 		profile = PROFILES[name];
 	}
 	if (files.length === 0) {
-		console.error("usage: bun packages/design-system/scripts/validate-art.mjs [--profile art|glyph] <file.svg…>");
+		console.error(`usage: bun packages/design-system/scripts/validate-art.mjs [--profile ${Object.keys(PROFILES).join("|")}] <file.svg…>`);
 		return 2;
 	}
 	let code = 0;

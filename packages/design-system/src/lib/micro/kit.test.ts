@@ -11,6 +11,7 @@ import { TARGETS } from "./paint";
 
 const g = kit("glyph");
 const a = kit("art");
+const sc = kit("scene");
 
 /** Every primitive once, on the kit for a target, named. */
 const sheet = (k: Kit): Array<[string, string]> => [
@@ -78,6 +79,13 @@ describe("every primitive is valid for its target", () => {
 			expect(validateSvg(file, { profile: PROFILES.art, slug: "x" })).toEqual([]);
 		});
 	}
+	for (const [name, body] of sheet(sc)) {
+		test(`scene: ${name}`, () => {
+			const file = sc.svg({ children: body });
+			expect(file).toContain('viewBox="0 0 400 400"');
+			expect(validateSvg(file, { profile: PROFILES.scene, slug: "x" })).toEqual([]);
+		});
+	}
 
 	test("a wide glyph keeps its viewBox", () => {
 		const file = g.svg({ viewBox: "0 0 96 32", children: g.line(0, 16, 96, 16) });
@@ -111,6 +119,22 @@ describe("paint, weight and dash map per target", () => {
 		expect(g.line(0, 0, 10, 10, { weight: "hair" })).toContain('stroke-width="1"');
 	});
 
+	test("a wash is the scene's fill: the one color-mix form, held to 1–25%, refused by art and glyph", () => {
+		const w = sc.wash("blue", 22);
+		expect(sc.fill(w)).toBe("color-mix(in oklab, var(--art-cyan) 22%, transparent)");
+		expect(sc.fill(sc.wash("green", 40)).match(/(\d+)%/)![1]).toBe("25");
+		expect(sc.fill(sc.wash("red", 0.2)).match(/(\d+)%/)![1]).toBe("1");
+		expect(sc.fill(sc.wash("lavender", 12.6)).match(/(\d+)%/)![1]).toBe("13");
+		expect(sc.fill("ink")).toBe("var(--art-ink)");
+		const sea = sc.ring(200, 200, 120, { paint: "none", fill: w });
+		expect(sea).toContain('fill="color-mix(in oklab, var(--art-cyan) 22%, transparent)"');
+		expect(sea).not.toContain("stroke=");
+		const scene = sc.svg({ children: [sea, sc.ring(200, 200, 120)] });
+		expect(validateSvg(scene, { profile: PROFILES.scene })).toEqual([]);
+		expect(validateSvg(a.svg({ children: [sea, a.ring(160, 90, 60)] }), { profile: PROFILES.art })).not.toEqual([]);
+		expect(validateSvg(g.svg({ children: [g.ring(24, 16, 10, { fill: g.wash("blue", 10) })] }), { profile: PROFILES.glyph })).not.toEqual([]);
+	});
+
 	test("art's weight is a class that agrees with the width, hair by default", () => {
 		const el = a.line(0, 0, 10, 10);
 		expect(el).toContain('stroke-width="1"');
@@ -127,9 +151,18 @@ describe("paint, weight and dash map per target", () => {
 		expect(a.dash("dotted")).toBe("2 6");
 		expect(a.dash("dash")).toBe("4 4");
 		expect(a.dash("long")).toBe("4 4");
-		for (const t of ["glyph", "art"] as const) {
+		for (const t of ["glyph", "art", "scene"] as const) {
 			for (const d of Object.values(TARGETS[t].dashes)) expect(PROFILES[t].dashes).toContain(d);
 		}
+	});
+
+	test("the dot-dash is the scene kit's alone; the others refuse it by name", () => {
+		expect(sc.dash("dotdash")).toBe("6 3 1 3");
+		expect(sc.paint("ink")).toBe(a.paint("ink"));
+		expect(() => a.dash("dotdash")).toThrow(/art kit has no "dotdash" dash/);
+		expect(() => g.line(0, 0, 10, 0, { dash: "dotdash" })).toThrow(/glyph kit/);
+		const orbit = sc.svg({ children: sc.group([sc.arc(200, 200, 144, -160, -20, { dash: "dotdash", paint: "red" }), sc.arc(200, 200, 144, 20, 160, { dash: "dotdash", paint: "red" })], { motion: "spin" }) });
+		expect(validateSvg(orbit, { profile: PROFILES.scene })).toEqual([]);
 	});
 
 	test("a guide is a dim, hair, dotted, round-capped polyline", () => {

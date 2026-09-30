@@ -615,6 +615,7 @@ rather than black windows: the same drawing, inverted.
 | `--art-lavender` `--art-cyan` `--art-green` | `#bda3ea` · `#5b8def` · `#5ee27f` | each by relative colour from the dark value, hue kept, lightness down and chroma up (green's chroma a touch down, to stay in sRGB) | the fills |
 | `--art-coral` | `var(--accent)` | `var(--accent)` (the light theme's own) | coral IS the site accent |
 | `--art-radius` | `var(--border-radius-1)` | — | the frame's corner |
+| `--scene-glow` `--scene-text-glow` | a 2px drop-shadow in the ink at 40%; a 0.25em text-shadow in the readout's colour | `none` | a scene's CRT bloom (`Scene glow`), the nearest theme deciding |
 | `--duration-loop` | `6s` (MOTION; `0s` under reduced motion) | — | one cycle of an art animation |
 
 Draw for both: **`--art-ink` is dark on a light page**, so never rely on a
@@ -639,9 +640,11 @@ prefixed with the slug; ≤ 120 elements, ≤ 12 KB. The validator
 `tests/post-art.spec.ts` enforce all of it. Import a file with `?raw`; it must
 be inlined, since its colours are tokens and its motion is the frame's CSS.
 
-**Profiles.** The validator is one scanner with two profiles
-(`PROFILES.art`, `PROFILES.glyph`; `validateSvg(source, { profile })`,
-`validateArt` is the art one). **`art`** is everything above. **`glyph`** is for
+**Profiles.** The validator is one scanner with three profiles
+(`PROFILES.art`, `PROFILES.glyph`, `PROFILES.scene`; `validateSvg(source, {
+profile })`, `validateArt` is the art one). **`art`** is everything above.
+**`scene`** is art's language with room for a whole illustration (see
+*Micrographics → L4 — scenes*). **`glyph`** is for
 the micrographics in `src/glyphs/` (`bun run validate:glyph <file>`): viewBox
 `0 0 48 32`, or `0 0 96 32` / `0 0 96 64` wide; no `clipPath`/`defs`/`use`,
 no ids, no `class` — every stroked shape states `stroke-width` 1 or 1.5; line
@@ -714,11 +717,13 @@ drawing with the one below:
 | **L1 glyphs** | fixed marks | a **recipe** on the kit, baked to a file, or a **hand-drawn** file | `src/glyphs/recipes/<name>.ts` → `src/glyphs/<name>.svg` |
 | **L2 generators** | parametric marks, drawn from props at build time | a pure function plus a thin component | `src/lib/micro/gen/<family>.ts` + `src/components/<Family>.astro` |
 | **L3 modules** | L1/L2 plus HTML text in tiles: the signal chain, a labelled readout | **composition in a page today; a component when reused** in ≥ 2 places (rule 4) | page markup |
-| **L4 scenes** | whole illustrations | post plates, via the `post-art` skill, with the kit's iso helpers as reference geometry | `src/content/txt/<slug>.svg` |
+| **L4 scenes** | whole illustrations — a projected globe, a sliced mesh, an exploded assembly — with HTML readouts over them | a **scene source** on the kit plus whatever data it needs, baked to a file under the scene profile; `Scene` hosts it | `tools/scenes/<name>/scene.ts` → `src/scenes/<name>.svg` |
 
-Every rung renders through one host, so a baked file and a generated mark
-are the same `<svg class="ds-glyph">` on the page, and the validator's glyph
-profile (see *Art → Profiles*) is the gate on all of them.
+Every rung up to L3 renders through one host, so a baked file and a
+generated mark are the same `<svg class="ds-glyph">` on the page, and the
+validator's glyph profile (see *Art → Profiles*) is the gate on all of
+them; a scene renders through `Scene`, an `ArtFrame`, under the scene
+profile.
 
 **The tile sheet**, `/design-system/glyphs` (`src/pages/design-system/
 glyphs.astro`), shows every registered glyph (72 files: 64 recipes, 8
@@ -740,16 +745,22 @@ discipline baked in — every stroke non-scaling and of a legal weight, every
 fill stated, every colour a token — so a recipe composes marks and never
 types a paint string.
 
-**Target-aware.** A kit is made for the language it emits, `kit("glyph")`
-or `kit("art")`, and the semantic names map per target: paint `ink` is
-`currentColor` on a glyph and `var(--art-ink)` on art, `dim` is
-`var(--glyph-dim)` / `var(--art-ink-2)`, and `blue | red | green | lavender`
-are `--art-cyan | -coral | -green | -lavender` on both (`none` is none);
-weight `hair` is 1 and `line` 1.5 — a glyph's default is `line`, art's is
-`hair` (its 1.5 is the one emphasis outline) and art also writes the
+**Target-aware.** A kit is made for the language it emits — one target
+per validator profile: `kit("glyph")`, `kit("art")` or `kit("scene")` — and
+the semantic names map per target: paint `ink` is `currentColor` on a
+glyph and `var(--art-ink)` on art and a scene, `dim` is `var(--glyph-dim)`
+/ `var(--art-ink-2)`, and `blue | red | green | lavender` are `--art-cyan |
+-coral | -green | -lavender` on all (`none` is none); weight `hair` is 1
+and `line` 1.5 — a glyph's default is `line`, art's and a scene's is `hair`
+(its 1.5 is the one emphasis outline) and those two also write the
 agreeing `art-line` class; dash `dotted | dash | long` is `0.01 3.99 | 2 2
-| 4 4` on a glyph and `2 6 | 4 4 | 4 4` on art. `svg()` writes the target's
-viewBox unless told a wide one. Signatures read **position, then size, then
+| 4 4` on a glyph and `2 6 | 4 4 | 4 4` on art and a scene, and `dotdash`
+(`6 3 1 3`, an orbit) is the scene kit's alone — `dash()` throws for a
+name the target has no array for, so a kit never writes a dash its
+profile refuses. A scene's fill may be a **wash**, `k.wash(colour, pct)`:
+the colour mixed down to 1–25% over transparent (`color-mix(in oklab,
+var(--art-cyan) 22%, transparent)`), the scene profile's one translucency,
+fill only. `svg()` writes the target's viewBox unless told another. Signatures read **position, then size, then
 an options object**; angles are degrees on a dial (0 up, clockwise);
 coordinates are rounded to two decimals (`snap()` to the half grid is there,
 not forced); every primitive returns a string, one element or a few on
@@ -763,7 +774,7 @@ their own lines.
 | marks | `arrowhead` · `chevron` · `plus` · `cross` · `check` · `ticksRadial` · `ticksLinear` · `needle` |
 | shapes | `polygon` · `tri` · `rect` · `roundRect` · `pill` · `keycap` · `bracket(x, y, size, corner)` · `hex` · `star(cx, cy, n, inner, outer)` · `coil(x, y, length, turns, r)` |
 | iso (`iso.ts`) | `iso(x, y, z, at?)` at a true 30° (`ISO_X` / `ISO_Y` / `ISO_Z` the unit axes) · `isoBox` · `isoCylinder(x, y, r, h, {axis, top, side})` (upright, or lying along `x` / `y`; discs r × r/2) · `isoEllipse(x, y, r, {axis})` (a 2:1 disc on the ground or standing on the x / y face) · `isoRoundRect(x, y, w, d, c)` (flat, rounded corners; `c = d/2` is a pill) · `isoRoundBox(x, y, w, d, h, c, {top, side})` (rounded vertical edges: a shell, a board) · `isoCoil(x, y, r, h, turns)` (a standing spring, one path) · `isoPlane({grid})` · `vanishingGrid` — visible faces only, never a wireframe; a disc keeps ry = r/2, a rounded corner is the true projection so it meets the 30° edges tangent |
-| assembly | `group(children, {motion, speed, transform})` (the data-motion contract; a transform with a motion goes on an outer `g`) · `svg({viewBox, children, header})` |
+| assembly | `group(children, {motion, speed, transform})` (the data-motion contract; a transform with a motion goes on an outer `g`) · `svg({viewBox, children, header})` · `wash(colour, pct)` (a scene's translucent fill) |
 
 ```ts
 const k = kit("glyph");
@@ -994,6 +1005,121 @@ had no component and are new (`styles/readout-stack.css`, `formula.css`,
   `play` (`data-art-play`) on itself or any ancestor; `0s`, so still,
   under reduced motion.
 
+### L4 — scenes
+
+A scene is a whole illustration in the art language — the globe, a
+sliced mesh, an exploded assembly — that a hand cannot draw and a recipe
+cannot hold: it is projected, computed or imported, with data and
+dependencies a page must never ship. So it is **baked**: a source at the
+repo root draws it through the scene kit, and the site sees only the
+committed file.
+
+**The profile** (`PROFILES.scene`, `bun run validate:scene <file>`; its
+fixtures `src/lib/validate-scene.test.ts`): art's elements (clipPath and
+defs included; still no text, images, gradients, filters, animation),
+art's paints plus **one wash form** for a fill only — `color-mix(in oklab,
+var(--art-<colour>) N%, transparent)`, N 1–25 — on the **plate** (`0 0 320
+180`) or the **square panel** (`0 0 400 400`); art's weights and classes;
+art's dashes plus the **dot-dash** `6 3 1 3` (still or spinning, never in a
+`dash` group: its period does not divide the motion's 8, and the rule
+says so); **two** motion groups (an orbit that spins and a marker that
+blinks), each under the contract; ids as art's, prefixed with the scene's
+name. **Budget ≤ 400 elements, ≤ 64 KB**, ≤ 3 clipPaths, groups ≤ 4 deep:
+elements are the cap that matters — each is a node the DOM lays out and a
+motion group composites, and a scene past 400 is drawing many marks where
+one path with many points would do — while bytes are the wire cost of a
+file inlined into the HTML, set where a scene stays cheaper than the image
+it replaces (a coastline is one long `d`; the globe is 57 KB, 26
+elements). Palette as art's, a wash counting as its colour.
+
+**Sources and the bake.** A scene is `tools/scenes/<name>/scene.ts`, with
+its data, assets and a README of credits beside it, default-exporting
+`scene({ viewBox, credit?, draw(k, ctx) })` (`SceneRecipe`,
+`src/scenes/recipe.ts`, `import { scene } from
+"@whois/design-system/scenes/recipe"`): `k` is `kit("scene")`, `ctx` is `{
+name, dir, width, height }` — `dir` the absolute path of the scene's
+directory, for reading what sits beside the source — and `draw` may be
+async, returning the kit's element strings in paint order. Whatever the
+drawing needs at bake time (`d3-geo`, `topojson-client`, `world-atlas`, a
+mesh reader) is a **root devDependency**: it runs in the bake and never
+ships. **`bun run scenes:bake`** (`scripts/bake-scenes.ts` — in the
+package, beside the validator and the glyph bake, because what it writes
+and gates is the package's; the sources are the site's) runs every source,
+validates each with the scene profile (exit 1, nothing written, on a
+violation), writes `src/scenes/<name>.svg` under a two-line header —
+`<!-- baked from tools/scenes/<name>/scene.ts (sources <hash>) — edit the
+source -->` and `<!-- credit: … -->` — and removes a baked file whose
+source is gone; **`bun run scenes:check`** is the same with no writes,
+exit 1 on a stale or orphaned file. **Determinism is the contract**: the
+same sources give the same bytes (round every coordinate — the globe's
+paths to a tenth — never `Math.random` or the clock), because the check
+compares bytes. The scenes are committed; the site's build does not bake.
+
+**The registry** (`src/scenes/scenes.ts`, `import { sceneSvg,
+sceneCredit, SCENE_NAMES } from "@whois/design-system/scenes"`) is an
+eager `?raw` glob plus `SCENE_NAMES` (`names.ts`, the `SceneName` type —
+add a name when you add a scene) and the credit read off the header. Its
+test (`src/scenes/scenes.test.ts`) holds the names against the directory,
+runs the profile over every file, and checks **freshness by the hash**:
+the header's hash is the sha256 of everything under `tools/scenes/<name>/`
+(paths and bytes, sixteen hex digits), recomputed and compared — not a
+re-bake, so the suite loads none of a scene's dependencies or data and
+takes no time. What the hash cannot see is a dependency's version (a
+d3-geo update that moves a coastline), which is why `scenes:check`
+re-bakes; run it before shipping.
+
+**`Scene`** (`styles/scene.css`) — `<Scene name label? decorative? play?
+glow? ratio? tone? credit? variant? …>` — is an **`ArtFrame`** (the gate's
+first rung: the plate, the edge, the clip, the line weights and the
+motion contract are the frame's, with `variant` bare / corners; not
+`mark`) with two things added. A **readout layer** over it: `Scene`'s
+default slot, a grid-cell sibling of the frame rather than its child,
+because a labelled frame is `role="img"` and an image's children are
+presentational — text inside it would be lost to a reader — so the layer
+is real, selectable, read text; the scene (not the frame) is what hovering
+plays (motion.css has the selector). And the **credit** under it: the
+file's header's unless said, `false` for none. `ratio` is the box's ratio,
+the file's viewBox unless said; `tone` colours the whole layer (the
+console's phosphor, `green`; one of the four; `dim`); `glow` is the CRT's
+bloom — `--scene-glow` / `--scene-text-glow`, ART tokens the light theme
+sets to `none`, so the nearest theme decides and a light `ThemePage` on
+the dark page has none; off under `prefers-reduced-transparency` and
+forced colours — host CSS on the frame's `<svg>`, never in a file. The
+root carries `data-scene="<name>"`; the rest passes through.
+
+**`SceneLabel`** — `<SceneLabel at? x? y? align? variant? size? tone? box?
+as?>` — is one readout: placed at one of nine anchors (`at="tl | t | tr |
+l | c | r | bl | b | br"`, `--scene-inset` in from the edges, an edge or
+the centre putting the label's middle on the axis) or at a point (`x` /
+`y`, percent of the frame; `align` says whether the point is the label's
+start, centre or end), in the caps voice by default or the thin display
+numeral (`variant="numeral"`), at a step of the console — `sm | md | lg |
+xl`, 2.2 / 2.6 / 4.4 / 7 units of `--scene-unit`, a hundredth of the
+scene's width (the spike's `cqw`, made a token), so plain text **scales
+with the scene**; a DS component inside — `Chip tone="accent"` for the
+tag, `ReadoutStack` for a stack, `Stat` — keeps its own size. `tone` is the
+drawing's own tokens, `box` a hairline round it. Text is never inside the
+SVG; this is where it goes.
+
+**The four routes**, chosen by subject:
+
+| Route | For | How | Status |
+| --- | --- | --- | --- |
+| **Constructed** | an iso platform, a HUD road, the exploded phone, radar chrome | a source composing the kit's primitives, `iso.ts`, `vanishingGrid` — no data | the primitives are there; no scene yet |
+| **Data** | a globe, maps, terrain, ground tracks | `d3-geo` over Natural Earth (`world-atlas` 110m), a graticule, coordinates to a tenth | **`globe`** (`/design-system#scenes`) |
+| **3D → line** | busts, bodies, objects | a `.glb` read directly, vertices welded, plane slices and silhouette edges, a z-buffer for hidden lines, orthographic to the panel | spiked, not ported |
+| **Hand vector** | characters with personality | Figma/Illustrator with a placeholder swatch set, an import that swaps each hex for its `var(--art-*)` token and validates | not spiked |
+
+**Credits.** A scene drawn from a licensed source — a map, a scan — says
+so: `credit` in the recipe (written into the header, shown by `Scene`
+under the drawing) and a README beside the source with the licence and
+the link. The globe's land is Natural Earth, public domain, via
+`world-atlas`; it is credited anyway.
+
+The catalogue's "Scenes" section shows the globe with its readouts on
+both pages (`ThemePage`), glowing on the dark one; `tests/scenes.spec.ts`
+holds it.
+
 ### Adding one — checklists
 
 **A glyph (L1):**
@@ -1027,6 +1153,21 @@ had no component and are new (`styles/readout-stack.css`, `formula.css`,
 5. Variants on the sheet (the `spread` table in `glyphs.astro`), the
    component in `GENERATORS` in `tests/glyphs.spec.ts`, a row in the table
    above.
+
+**A scene (L4):**
+
+1. Pick the route (above). Constructed: the kit alone. Data or 3D: the
+   dependency as a root devDependency (`bun add -d`), the data beside the
+   source or read from `node_modules` at bake time.
+2. `tools/scenes/<name>/scene.ts` → `scene({ viewBox, credit, draw })`,
+   drawing with `kit("scene")` (`k.wash()` for the one translucency,
+   `dotdash` for an orbit); round every coordinate; a README with the
+   credits if any source is licensed.
+3. `bun run scenes:bake`; add the name to `SCENE_NAMES`
+   (`src/scenes/names.ts`).
+4. `bun run scenes:check`, `bun run test:unit`; then `<Scene name>` with
+   its `SceneLabel`s on `/design-system#scenes` in both themes, hovered
+   (the motion) and under reduced motion (still).
 
 ---
 

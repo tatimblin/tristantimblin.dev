@@ -16,7 +16,10 @@
     "validate:art": "bun packages/design-system/scripts/validate-art.mjs",
     "validate:glyph": "bun packages/design-system/scripts/validate-art.mjs --profile glyph",
     "glyphs:bake": "bun packages/design-system/scripts/bake-glyphs.ts",
-    "glyphs:check": "bun packages/design-system/scripts/bake-glyphs.ts --check"
+    "glyphs:check": "bun packages/design-system/scripts/bake-glyphs.ts --check",
+    "validate:scene": "bun packages/design-system/scripts/validate-art.mjs --profile scene",
+    "scenes:bake": "bun packages/design-system/scripts/bake-scenes.ts",
+    "scenes:check": "bun packages/design-system/scripts/bake-scenes.ts --check"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",
@@ -36,7 +39,14 @@
     "@astrojs/check": "0.9.10",
     "@astrojs/markdown-remark": "7.2.2",
     "@playwright/test": "^1.62.1",
+    "@types/d3-geo": "^3.1.1",
+    "@types/geojson": "^7946.0.16",
+    "@types/topojson-client": "^3.1.5",
+    "@types/topojson-specification": "^1.0.5",
+    "d3-geo": "^3.1.1",
     "schema-dts": "^2.0.0",
-    "typescript": "5.9.3"
+    "topojson-client": "^3.1.0",
+    "typescript": "5.9.3",
+    "world-atlas": "^2.0.2"
   }
 }

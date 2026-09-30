@@ -263,3 +263,14 @@ transform="translate(x y)">` on the plate. The parts are drawn on a 96×64
 write the plate as usual (`SKILL.md`) and run `bun run validate:art`: the
 art profile is the gate, not the glyph one. Never put the transform on the
 motion group.
+
+**Scenes (L4).** A whole illustration that a hand cannot draw — a projected
+globe, a sliced mesh, an exploded assembly with readouts — is a **scene**,
+not a plate: a source in `tools/scenes/<name>/scene.ts` drawing with
+`kit("scene")` (art's kit plus `k.wash()` and the `dotdash`), baked by `bun
+run scenes:bake` to `packages/design-system/src/scenes/<name>.svg` under the
+scene profile (≤ 400 elements, ≤ 64 KB, two motions, one wash fill, the
+400×400 panel or the plate), and hosted by `<Scene name>` with its text as
+`<SceneLabel>`s over the frame. The routes, the profile, the bake and the
+components: CONVENTIONS → *Micrographics → L4 — scenes*; the globe
+(`tools/scenes/globe/`) is the worked example.

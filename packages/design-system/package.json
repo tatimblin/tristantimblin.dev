@@ -8,6 +8,8 @@
     "./styles.css": "./src/styles/index.css",
     "./icons": "./src/icons/icons.ts",
     "./glyphs": "./src/glyphs/glyphs.ts",
+    "./scenes": "./src/scenes/scenes.ts",
+    "./scenes/recipe": "./src/scenes/recipe.ts",
     "./lib/micro": "./src/lib/micro/index.ts",
     "./lib/*": "./src/lib/*.ts",
     "./art/*": "./src/art/*",

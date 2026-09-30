@@ -1,0 +1,84 @@
+---
+// SceneLabel — a readout over a Scene (styles/scene.css, class
+// ds-scene-label): HTML text placed on the frame, in the caps voice by
+// default, sized by the scene's width so it scales with the drawing. The
+// console's "300.733 MHZ", a boxed "STOP 801.000 MHZ", a thin "06 / 90 /
+// K5". Text is never inside the SVG; this is where it goes.
+//
+//   <SceneLabel at="tl">300.733 MHz</SceneLabel>                          a corner, --scene-inset in
+//   <SceneLabel x={12} y={21} tone="dim">LUX.NA<br />00.1 NASA.P0</SceneLabel>   a point, percent of the frame
+//   <SceneLabel x={94} y={58} align="end" variant="numeral" size="xl">06<br />90</SceneLabel>
+//   <SceneLabel at="tr" box size="sm">stop 801.000 MHz</SceneLabel>
+//   <SceneLabel x={12} y={13}><Chip tone="accent">Earth 001</Chip></SceneLabel>   a component, at its own size
+//
+// PLACE it with `at` — nine anchors, tl t tr / l c r / bl b br, each
+// --scene-inset (5%) in from its edges, an edge or the centre putting the
+// label's middle on the axis — or with `x` / `y`, percent of the frame,
+// where the point is the label's start edge unless `align` says its
+// centre or end. SIZE is a step of the sheet's console: sm (a caption),
+// md (the label, default), lg (a value), xl (the big numeral) — units of
+// --scene-unit, a hundredth of the scene's width, so plain text scales; a
+// DS component inside (a Chip, a ReadoutStack, a Stat) keeps its own
+// size, as it should. `variant="numeral"` is the thin display numeral;
+// `tone` the dimmed ink or one of the four colours, the drawing's own
+// tokens; `box` a hairline round it. Polymorphic `as` (a `p`, an `output`);
+// `class` merges; everything else passes through.
+import { cx } from "../lib/cx";
+
+type Anchor = "tl" | "t" | "tr" | "l" | "c" | "r" | "bl" | "b" | "br";
+
+interface Props {
+	as?: string;
+	/** A corner, an edge or the centre, --scene-inset in. */
+	at?: Anchor;
+	/** A point, percent of the frame's width. */
+	x?: number;
+	/** A point, percent of the frame's height. */
+	y?: number;
+	/** Which edge of the label sits on the point: start (default), center, end. */
+	align?: "start" | "center" | "end";
+	/** caps (default): the label voice, uppercase; numeral: the thin display numeral. */
+	variant?: "caps" | "numeral";
+	/** sm · md (default) · lg · xl, in units of the scene's width. */
+	size?: "sm" | "md" | "lg" | "xl";
+	/** ink (inherited, default) · dim · green · red · blue · lavender. */
+	tone?: "ink" | "dim" | "green" | "red" | "blue" | "lavender";
+	/** A hairline box round the text, in its own colour. */
+	box?: boolean;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const {
+	as = "span",
+	at,
+	x,
+	y,
+	align = "start",
+	variant = "caps",
+	size = "md",
+	tone,
+	box = false,
+	class: className,
+	style,
+	...rest
+} = Astro.props;
+
+const Tag = as as any;
+const place = [x != null && `--scene-x: ${x}%`, y != null && `--scene-y: ${y}%`, style].filter(Boolean).join("; ");
+---
+
+<Tag
+	class={cx(
+		"ds-scene-label",
+		variant === "caps" && "ds-caps",
+		at && `ds-scene-label--at-${at}`,
+		align !== "start" && `ds-scene-label--align-${align}`,
+		variant !== "caps" && `ds-scene-label--variant-${variant}`,
+		size !== "md" && `ds-scene-label--size-${size}`,
+		tone && tone !== "ink" && `ds-scene-label--tone-${tone}`,
+		box && "ds-scene-label--box-true",
+		className,
+	)}
+	style={place || undefined}
+	{...rest}><slot /></Tag>

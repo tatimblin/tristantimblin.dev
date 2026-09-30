@@ -67,6 +67,8 @@ import Matrix from "@whois/design-system/Matrix";
 import ReadoutStack from "@whois/design-system/ReadoutStack";
 import Formula from "@whois/design-system/Formula";
 import NumberStream from "@whois/design-system/NumberStream";
+import Scene from "@whois/design-system/Scene";
+import SceneLabel from "@whois/design-system/SceneLabel";
 // The quilt: the grid, its cells, the panel, and the search bar above it.
 import Quilt from "@whois/design-system/Quilt";
 import QuiltCell from "@whois/design-system/QuiltCell";
@@ -1777,6 +1779,34 @@ assertions:
 							<GlyphTile label="Action"><Chip variant="arrow" tone="accent">Replace</Chip></GlyphTile>
 							<GlyphTile label="Baud"><Stat variant="numeral" value="45" label="Baud" /></GlyphTile>
 						</Grid>
+					</ThemePage>
+				))}
+			</div>
+		</section>
+
+		{/* SCENES --------------------------------------------------------- */}
+		<section class="ds-demo__section" id="scenes">
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Scenes — L4, a baked illustration and its readouts</Heading>
+			<p class="ds-demo__note">
+				A scene is a whole illustration in the art language — a projected globe, a sliced mesh, an exploded assembly — drawn by a source in <code>tools/scenes/&lt;name&gt;/scene.ts</code> with whatever it needs at bake time (d3-geo, a mesh reader: root devDependencies that never ship) and baked by <code>bun run scenes:bake</code> to <code>packages/design-system/src/scenes/&lt;name&gt;.svg</code> under the scene profile: art's rules with a 400×400 panel beside the plate, a budget for a coastline (≤ 400 elements, ≤ 64 KB), one wash fill, a dot-dash and two motions. <code>Scene</code> is an <code>ArtFrame</code> with a layer of HTML readouts over it — <code>SceneLabel</code>, anchored (<code>at</code>) or at a point (<code>x</code> / <code>y</code>), sized by the scene's width — and the file's credit under it; <code>tone</code> is the console's colour, <code>glow</code> the CRT's bloom on the dark page only. Hover a scene: the orbit turns and the marker blinks.
+			</p>
+			<div class="ds-demo__art-themes">
+				{(["light", "dark"] as const).map((t) => (
+					<ThemePage theme={t}>
+						<Scene name="globe" label={`The Earth over the Atlantic, tracked, on the ${t} page`} tone="green" glow data-scene-demo={t}>
+							<SceneLabel x={12} y={5}>300.733 MHz</SceneLabel>
+							<SceneLabel x={43} y={5}>1 U FS</SceneLabel>
+							<SceneLabel x={62} y={5}>C7</SceneLabel>
+							<SceneLabel x={75} y={5}>4:126.6</SceneLabel>
+							<SceneLabel x={12} y={13}><Chip tone="accent">Earth 001</Chip></SceneLabel>
+							<SceneLabel x={12} y={22} tone="dim">LUX.NA<br />00.1 NASA.P0</SceneLabel>
+							<SceneLabel x={93} y={13} align="end" size="sm" box>stop 801.000 MHz<br />1.5.on | 30</SceneLabel>
+							<SceneLabel x={3.5} y={60}><ReadoutStack values={["3", "0", "2"]} active={2} aria-label="Channel" /></SceneLabel>
+							<SceneLabel x={94} y={57} align="end" variant="numeral" size="xl">06<br />90<br />K5</SceneLabel>
+							<SceneLabel x={20} y={82} size="lg">010</SceneLabel>
+							<SceneLabel x={80} y={82} align="end" size="lg">P.45</SceneLabel>
+							<SceneLabel x={88} y={92} align="end">stop 801.000 MHz</SceneLabel>
+						</Scene>
 					</ThemePage>
 				))}
 			</div>

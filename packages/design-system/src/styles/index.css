@@ -68,6 +68,8 @@
 @import "./art-frame.css" layer(ds.components);
 @import "./glyph.css" layer(ds.components);
 @import "./motion.css" layer(ds.components);
+/* The scenes: a baked illustration on the frame, its readouts over it. */
+@import "./scene.css" layer(ds.components);
 /* The readouts beside the marks: HTML text, not SVG. */
 @import "./readout-stack.css" layer(ds.components);
 @import "./formula.css" layer(ds.components);

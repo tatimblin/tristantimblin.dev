@@ -71,6 +71,13 @@ a:hover .ds-art-frame [data-motion],
 a:focus-visible .ds-art-frame [data-motion] {
 	animation-play-state: running;
 }
+/* A SCENE (Scene.astro) plays under the pointer anywhere on it — its HTML
+ * readouts sit over the frame, so the frame's own :hover would drop out
+ * under a label — and with focus within it. */
+.ds-scene:hover .ds-art-frame [data-motion],
+.ds-scene:focus-within .ds-art-frame [data-motion] {
+	animation-play-state: running;
+}
 /* A GLYPH plays under the pointer — on itself or on the tile it sits in —
  * inside a hovered or focused link, with data-art-play on itself (the
  * `play` prop) or on any ancestor (a page or a widget that says the whole

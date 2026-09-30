@@ -468,6 +468,12 @@
 	--art-green: #5ee27f;
 	/* The frame's corner: the reference's small radius is the surface step. */
 	--art-radius: var(--border-radius-1);
+	/* A scene's CRT bloom (Scene's `glow`, scene.css): a soft halo in the ink
+	 * on the line work, and each readout's own colour behind it. Tokens, so
+	 * the NEAREST theme class decides — a light ThemePage on the dark page
+	 * has no phosphor, and the light block below turns both off. */
+	--scene-glow: drop-shadow(0 0 2px color-mix(in oklab, var(--art-ink) 40%, transparent));
+	--scene-text-glow: 0 0 0.25em color-mix(in oklab, currentColor 50%, transparent);
 }
 /* INK ON BONE — the light theme's retune of the same palette. Every value
  * comes from the theme's own warm grey scale or from the dark value above,
@@ -494,4 +500,7 @@
 	--art-lavender: oklch(from #bda3ea calc(l - 0.12) calc(c * 1.3) h);
 	--art-cyan: oklch(from #5b8def calc(l - 0.08) calc(c * 1.1) h);
 	--art-green: oklch(from #5ee27f calc(l - 0.24) calc(c * 0.9) h);
+	/* Ink on bone glows nothing. */
+	--scene-glow: none;
+	--scene-text-glow: none;
 }

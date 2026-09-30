@@ -16,7 +16,7 @@
  */
 
 import { type Point, pointsAttr, polar, round, same, spread, xy } from "./geometry";
-import { type Dash, type Motion, type Paint, type Speed, type Target, type TargetTable, TARGETS, type Weight } from "./paint";
+import { type Colour, type Dash, type Fill, type Motion, type Paint, type Speed, type Target, type TargetTable, TARGETS, type Wash, WASH_MAX, type Weight } from "./paint";
 import { isoBox, isoCoil, isoCylinder, isoEllipse, isoPlane, isoRoundBox, isoRoundRect, vanishingGrid } from "./iso";
 import type { IsoBoxOpts, IsoCylinderOpts, IsoEllipseOpts, IsoPlaneOpts, IsoRoundBoxOpts, VanishingGridOpts } from "./iso";
 
@@ -33,9 +33,9 @@ export interface StrokeOpts {
 	cap?: Cap;
 }
 
-/** The options of a closed shape: its outline (`paint`) and its fill, `none` unless said. `paint: "none"` with a fill is a flat shape. */
+/** The options of a closed shape: its outline (`paint`) and its fill, `none` unless said. `paint: "none"` with a fill is a flat shape; a scene's fill may be a `wash()`. */
 export interface ShapeOpts extends StrokeOpts {
-	fill?: Paint;
+	fill?: Fill;
 }
 
 /** The options of a filled mark. */
@@ -116,9 +116,28 @@ export class Kit {
 		return this.t.paints[p];
 	}
 
-	/** The stroke-dasharray the target writes for a dash name. */
+	/**
+	 * A wash: `colour` mixed down to `pct` percent over transparent, for a
+	 * shape's `fill` — an ocean, a band, a haze. The scene profile's one
+	 * translucency (1–25%, fill only; the scene kit's to use — art and
+	 * glyph's profiles refuse it, whichever kit wrote it), written as
+	 * the one form the validator reads: `color-mix(in oklab, var(--art-cyan)
+	 * 22%, transparent)`. The percent is held to a whole number in range.
+	 */
+	wash(colour: Colour, pct: number): Wash {
+		return { wash: colour, pct: Math.min(WASH_MAX, Math.max(1, Math.round(pct))) };
+	}
+
+	/** The string the target writes for a fill: a paint, or a wash. */
+	fill(f: Fill): string {
+		return typeof f === "string" ? this.paint(f) : `color-mix(in oklab, ${this.paint(f.wash)} ${f.pct}%, transparent)`;
+	}
+
+	/** The stroke-dasharray the target writes for a dash name; a name the target's profile has no array for throws. */
 	dash(d: Dash): string {
-		return this.t.dashes[d];
+		const array = this.t.dashes[d];
+		if (array === undefined) throw new Error(`the ${this.target} kit has no "${d}" dash (${Object.keys(this.t.dashes).join(", ")})`);
+		return array;
 	}
 
 	/** The target's default viewBox. */
@@ -131,9 +150,9 @@ export class Kit {
 	 * is not `none`, a complete stroke — colour, weight (and art's class),
 	 * vector-effect, caps and dash — so the element is valid on its own.
 	 */
-	attrs(o: StrokeOpts = {}, fill: Paint = "none"): string {
+	attrs(o: StrokeOpts = {}, fill: Fill = "none"): string {
 		const { paint = "ink", weight = this.t.weight, dash, cap = "round" } = o;
-		const out = [`fill="${this.paint(fill)}"`];
+		const out = [`fill="${this.fill(fill)}"`];
 		if (paint !== "none") {
 			const w = this.t.weights[weight];
 			out.push(`stroke="${this.paint(paint)}"`, `stroke-width="${w.width}"`);
@@ -477,7 +496,7 @@ function towards(p: Point, q: Point, r: number): Point {
 	return [p[0] + ((q[0] - p[0]) / d) * r, p[1] + ((q[1] - p[1]) / d) * r];
 }
 
-/** The kit for a target: `kit("glyph")` for src/glyphs/, `kit("art")` for a 320×180 plate. */
+/** The kit for a target: `kit("glyph")` for src/glyphs/, `kit("art")` for a 320×180 plate, `kit("scene")` for tools/scenes/. */
 export function kit(target: Target): Kit {
 	return new Kit(target);
 }
