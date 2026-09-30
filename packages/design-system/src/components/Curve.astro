@@ -1,0 +1,38 @@
+---
+// Curve — an automation curve, generated (lib/micro/gen/curve.ts) and
+// rendered as a glyph through GlyphSvg: a line through the points with a
+// node dot at each — the reference's dim dotted guide with green nodes
+// unless said.
+//
+//   <Curve />                                                  the reference's five points
+//   <Curve points={[[6, 24], [16, 9], [25, 22], [34, 7], [42, 17]]} smooth />
+//   <Curve points={pts} dotted={false} paint="blue" nodes={false} />
+//
+// `points` in viewBox units (48×32; 2–12 of them, each held to the safe
+// area); `nodes` (true) the dots; `smooth` a curve through them; `dotted`
+// (true) the line as a hair dotted guide; `paint` the line (dim when
+// dotted, ink when solid); `accent` the nodes (green). The host props
+// are GlyphSvg's; data-gen="curve" on the root.
+import GlyphSvg from "./GlyphSvg.astro";
+import type { GlyphHostProps } from "../lib/glyph-host";
+import type { Point } from "../lib/micro/geometry";
+import { type AccentPaint, type GenPaint, curve } from "../lib/micro/gen";
+
+interface Props extends GlyphHostProps {
+	points?: readonly Point[];
+	/** a node dot at each point; true unless said */
+	nodes?: boolean;
+	/** a smooth curve through the points rather than a polyline */
+	smooth?: boolean;
+	/** the line as a hair-weight dotted guide; true unless said */
+	dotted?: boolean;
+	/** the line: dim when dotted, ink when solid, unless said */
+	paint?: GenPaint;
+	/** the nodes; green unless said */
+	accent?: AccentPaint;
+}
+
+const { points, nodes, smooth, dotted, paint, accent, ...rest } = Astro.props;
+---
+
+<GlyphSvg svg={curve(points, { nodes, smooth, dotted, paint, accent })} data-gen="curve" {...rest} />

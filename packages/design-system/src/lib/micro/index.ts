@@ -16,3 +16,7 @@ export { onArc, polar, round, snap, spread } from "./geometry";
 export type { Point } from "./geometry";
 export { ISO_X, ISO_Y, ISO_Z, iso, isoBox, isoCylinder, isoPlane, vanishingGrid } from "./iso";
 export type { IsoBoxOpts, IsoCylinderOpts, IsoPlaneOpts, VanishingGridOpts } from "./iso";
+
+// The L2 generators (gen/): parametric marks, `(params) => Drawing`, rendered by <GlyphSvg> and the <Wave>, <Envelope>, <Filter>, <Curve> components.
+export { wave, WAVE_SHAPES, envelope, ENVELOPE_DEFAULTS, filter, FILTER_TYPES, curve, CURVE_DEFAULT_POINTS, CURVE_MAX_POINTS, toSvg, drawing, simplify, smoothD, lineD, rng, GEN_PAINTS, ACCENT_PAINTS } from "./gen";
+export type { Drawing, GenPaint, AccentPaint, WaveOpts, WaveShape, EnvelopeOpts, FilterOpts, FilterType, CurveOpts } from "./gen";

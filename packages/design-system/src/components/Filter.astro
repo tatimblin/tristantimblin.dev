@@ -1,0 +1,34 @@
+---
+// Filter — a filter's magnitude response, generated (lib/micro/gen/
+// filter.ts) and rendered as a glyph through GlyphSvg: the biquad's curve
+// in dB over a dim dotted 0 dB guide, a band-pass's centre marked by a
+// fine dashed accent.
+//
+//   <Filter type="lp" />                        the reference low-pass, red
+//   <Filter type="bp" q={3} />                  a resonant peak, blue, centre in red
+//   <Filter type="hp" cutoff={0.45} accent="none" paint="blue" />
+//
+// `type` lp | hp | bp | notch; `cutoff` 0.05–0.95 across the tile;
+// `q` 0.5–10; `paint` the curve; `accent` the centre line (red on a bp,
+// none otherwise). The host props are GlyphSvg's; data-gen="filter"
+// data-type="<type>" on the root.
+import GlyphSvg from "./GlyphSvg.astro";
+import type { GlyphHostProps } from "../lib/glyph-host";
+import { type AccentPaint, type FilterType, type GenPaint, filter } from "../lib/micro/gen";
+
+interface Props extends GlyphHostProps {
+	type?: FilterType;
+	/** 0.05–0.95, the cutoff's position across the tile */
+	cutoff?: number;
+	/** 0.5–10, the resonance */
+	q?: number;
+	/** the curve's paint; red for lp/hp, blue for bp/notch unless said */
+	paint?: GenPaint;
+	/** the centre line; red on a bp, none otherwise, unless said */
+	accent?: AccentPaint;
+}
+
+const { type = "lp", cutoff, q, paint, accent, ...rest } = Astro.props;
+---
+
+<GlyphSvg svg={filter(type, { cutoff, q, paint, accent })} data-gen="filter" data-type={type} {...rest} />

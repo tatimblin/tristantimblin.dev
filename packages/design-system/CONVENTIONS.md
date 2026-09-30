@@ -832,6 +832,44 @@ The catalogue's "Glyphs" section shows the three seed glyphs inline in a
 reading line, on the size scale, and in tiles on both pages (a readout, a
 `play`, a label slot).
 
+### Generators — parametric marks (L2)
+
+A generator is a glyph drawn from props at build time: a **pure function**
+in `src/lib/micro/gen/<family>.ts`, `(params) => Drawing` (`{ viewBox,
+children }`, the children the glyph kit's element strings), exported from
+`lib/micro` (`import { wave, envelope, filter, curve } from
+"@whois/design-system/lib/micro"`), plus a **thin component**
+(`Wave`, `Envelope`, `Filter`, `Curve`) that maps its props to the
+function and hands the Drawing to **`GlyphSvg`** — the one host `Glyph`
+also renders through (`Glyph` is name → file → `GlyphSvg`), so a
+generated mark and a file are the same `<svg class="ds-glyph">` on the
+page: the same `size` / `label` / `play` / `class` / rest
+(`lib/glyph-host.ts`, `GlyphHostProps`), the same `--glyph-dim`, the same
+motion gating and ARIA. Its own hook is `data-gen="<family>"` (and
+`data-shape` / `data-type` where the family has kinds).
+
+**The contract.** A generator clamps every parameter into a range its
+doc comment states, and falls back to its default on a value that is
+not a number or not a name — so its output passes the glyph profile for
+ANY input; the same params give the same string (a `seed`, never
+`Math.random`); it stays inside the glyph budget by drawing one `path`
+with many points rather than many elements, rounding to two decimals and
+dropping sub-pixel points (`simplify`, Ramer–Douglas–Peucker at a
+twentieth of a unit). Shared props: `paint` (the main line: `ink | dim |
+blue | red | green | lavender`, the reference sheet's default per kind)
+and, where a family has a second mark, `accent` (the same names, or
+`none`). A meter passes `role="meter"` and its `aria-value*` in the rest
+— the host keeps the role it was given and adds the label's
+`aria-label`; without a `label` it is aria-hidden like any glyph.
+
+**To add one:** the function in `gen/<family>.ts` (params typed, ranges
+in the doc comment, `K` the glyph kit and `SAFE` the 4–44 × 4–28 area
+from `gen/base.ts`); re-export it from `gen/index.ts` and `lib/micro`'s
+index; a `<Family>` component of three lines on `GlyphSvg`; a sweep of
+its params, extremes and out-of-range values in `gen/gen.test.ts`
+(validate clean, ≤ 40 elements, ≤ 3 KB, deterministic, the geometry it
+claims); a tile per variant in the catalogue.
+
 ---
 
 ## Catalogue tooling

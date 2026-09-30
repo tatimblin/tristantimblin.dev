@@ -24,45 +24,19 @@
 // viewBox at 1×, so a hairline lands on the pixel grid; 8, 10 (2×) and 12
 // (3×) above it. A GlyphTile sizes the glyph itself. `class` merges;
 // everything else passes through to the root.
-import { cx } from "../lib/cx";
-import { inlineSvg } from "../lib/inline-svg";
+//
+// The rendering is GlyphSvg's — the host a generator component (Wave,
+// Envelope, …) shares, so a glyph from a file and a mark from a function
+// are the same <svg> on the page. This component is the name → file step.
+import GlyphSvg from "./GlyphSvg.astro";
+import type { GlyphHostProps } from "../lib/glyph-host";
 import { type GlyphName, glyphSvg } from "../glyphs/glyphs";
 
-type Size = 6 | 8 | 10 | 12;
-
-interface Props {
+interface Props extends GlyphHostProps {
 	name: GlyphName;
-	/** The glyph's height, a step on the space scale; 1em (in text) unless said. */
-	size?: Size;
-	/** Accessible name: renders role="img" aria-label. Without one the glyph is aria-hidden. */
-	label?: string;
-	/** Motion running from the start, not only under the pointer (data-art-play, the art's attribute). */
-	play?: boolean;
-	class?: string;
-	[key: string]: unknown;
 }
 
-const { name, size, label, play = false, class: className, ...rest } = Astro.props;
-
-const cls = cx("ds-glyph", size && `ds-glyph--size-${size}`, className);
-
-const a11y = label
-	? { role: "img", "aria-label": label }
-	: { "aria-hidden": "true", focusable: "false" };
-
-// The root carries everything (there is no wrapper): the class, the name
-// as a hook, the play attribute, the ARIA, and the pass-through — which
-// inlineSvg serialises and escapes, dropping null/false as Astro would.
-const svg = inlineSvg(glyphSvg(name), {
-	host: "Glyph",
-	attrs: {
-		class: cls,
-		"data-glyph": name,
-		"data-art-play": play ? "" : undefined,
-		...a11y,
-		...rest,
-	},
-});
+const { name, ...rest } = Astro.props;
 ---
 
-<Fragment set:html={svg} />
+<GlyphSvg svg={glyphSvg(name)} data-glyph={name} {...rest} />
