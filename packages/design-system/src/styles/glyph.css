@@ -81,6 +81,21 @@
 	inline-size: 78%;
 	block-size: auto;
 }
+/* WIDE — the cap for a 96-unit glyph. It spans two columns and keeps one
+ * tile's height: two tiles and the gap between them are the tile's width W,
+ * so one tile is (W − gap) / 2 wide and (W − gap) / 3 tall at 3:2. The tile
+ * is its own inline-size container so the cap can say W (100cqi); the gap
+ * is the grid's, told in --glyph-tile-gap. The glyph inside is sized as
+ * any other (just over three quarters of the cap's width), so a 96×32 mark
+ * draws at the same scale as its 48×32 neighbours. */
+.ds-glyph-tile--wide-true {
+	grid-column: span 2;
+	container-type: inline-size;
+}
+.ds-glyph-tile--wide-true > .ds-glyph-tile__cap {
+	aspect-ratio: auto;
+	block-size: calc((100cqi - var(--glyph-tile-gap, var(--space-4))) / 3);
+}
 /* The readout over the mark: the spec sheet's thin numeral (the display
  * role, Mondwest Thin), tabular, centred, in the tile's colour unless the
  * slot's content says its own. Not a hit target: it lets the pointer

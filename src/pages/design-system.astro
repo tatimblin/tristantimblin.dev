@@ -59,6 +59,11 @@ import ArtFrame from "@whois/design-system/ArtFrame";
 import artTemplate from "@whois/design-system/art/_template.svg?raw";
 import Glyph from "@whois/design-system/Glyph";
 import GlyphTile from "@whois/design-system/GlyphTile";
+import Wave from "@whois/design-system/Wave";
+import Filter from "@whois/design-system/Filter";
+import Gauge from "@whois/design-system/Gauge";
+import Fan from "@whois/design-system/Fan";
+import Matrix from "@whois/design-system/Matrix";
 // The quilt: the grid, its cells, the panel, and the search bar above it.
 import Quilt from "@whois/design-system/Quilt";
 import QuiltCell from "@whois/design-system/QuiltCell";
@@ -1654,6 +1659,9 @@ assertions:
 				Where <code>Icon</code> is a UI affordance — a 2px stroke in the ink, a meaning —
 				a glyph is a mark: decorative or data, hairline, aria-hidden unless it says <code>label</code>.
 			</p>
+			<p class="ds-demo__note">
+				<Anchor href="/design-system/glyphs/" arrow="right">The glyph tile sheet</Anchor> shows every glyph and a spread of every generator in tiles, grouped by family (A waves to H iso parts), with the L3 signal chain and a readouts panel; one tile is <code>/design-system/glyphs#glyph-&lt;name&gt;</code>.
+			</p>
 
 			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Inline — in a line of text, and on the size scale</h2>
 			<p class="ds-demo__note"> <code>&lt;Glyph name /&gt;</code> in text is 1em tall, as wide as the viewBox
@@ -1698,6 +1706,17 @@ assertions:
 					</ThemePage>
 				))}
 			</div>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Generators — a mark drawn from props, one per family</h2>
+			<p class="ds-demo__note"> A generator (<code>Wave</code>, <code>Envelope</code>, <code>Filter</code>, <code>Curve</code>, <code>Gauge</code>, <code>Dial</code>, <code>Ladder</code>, <code>Segments</code>, <code>Selector</code>, <code>Fan</code>, <code>Rings</code>, <code>Matrix</code>) is a pure function in <code>lib/micro/gen/</code> behind a thin component, rendered through the same host as <code>Glyph</code>: the same size, label, play and ARIA. A labelled <code>Gauge</code>, <code>Dial</code> or <code>Ladder</code> is a <code>role="meter"</code>. Every variant is on the sheet.
+			</p>
+			<Grid templateColumns="repeat(auto-fill, minmax(calc(var(--space-12) * 1.5), 1fr))" gap={4} data-glyph-generators>
+				<GlyphTile label="A · wave"><Wave shape="sine" /></GlyphTile>
+				<GlyphTile label="B · filter"><Filter type="bp" q={3} /></GlyphTile>
+				<GlyphTile label="C · gauge"><Gauge value={0.62} label="Level" /></GlyphTile>
+				<GlyphTile label="D · fan"><Fan /></GlyphTile>
+				<GlyphTile label="E · matrix"><Matrix hot={[2, 2]} /></GlyphTile>
+			</Grid>
 		</section>
 
 		{/* QUILT ---------------------------------------------------------- */}

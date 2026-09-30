@@ -693,17 +693,44 @@ motions with a play-all toggle, and the mark.
 
 ---
 
-## Micrographics — the L0 kit
+## Micrographics — glyphs, generators and the tile
 
-The micrographics (the signal-panel marks: waveforms, gauges, dials, fans,
-pip matrices, rings; the exploded iso parts) are built on a ladder, and its
-bottom rung is **`lib/micro`** (`src/lib/micro/`, `import { kit } from
-"@whois/design-system/lib/micro"`): pure TS geometry that emits SVG element
-strings with the language's discipline baked in — every stroke non-scaling
-and of a legal weight, every fill stated, every colour a token — so a recipe
-composes marks and never types a paint string. The rungs above it (glyph
-recipes baked into `src/glyphs/`, parametric generators, modules, scenes)
-all draw with it; the validator stays the gate.
+The micrographics are the signal-panel marks: waveforms, envelopes, filter
+curves, gauges, dials, fans, pip matrices, rings, the exploded iso parts.
+They are hairline marks on a 48×32 grid in the art palette, inlined beside
+text or set in a keycap tile, and they are built on a ladder, each rung
+drawing with the one below:
+
+| Rung | What | Built as | Lives in |
+| --- | --- | --- | --- |
+| **L0 kit** | geometry that emits SVG element strings with the discipline baked in | pure TS | `src/lib/micro/` (`kit.ts`, `iso.ts`, `geometry.ts`) |
+| **L1 glyphs** | fixed marks | a **recipe** on the kit, baked to a file, or a **hand-drawn** file | `src/glyphs/recipes/<name>.ts` → `src/glyphs/<name>.svg` |
+| **L2 generators** | parametric marks, drawn from props at build time | a pure function plus a thin component | `src/lib/micro/gen/<family>.ts` + `src/components/<Family>.astro` |
+| **L3 modules** | L1/L2 plus HTML text in tiles: the signal chain, a labelled readout | **composition in a page today; a component when reused** in ≥ 2 places (rule 4) | page markup |
+| **L4 scenes** | whole illustrations | post plates, via the `post-art` skill, with the kit's iso helpers as reference geometry | `src/content/txt/<slug>.svg` |
+
+Every rung renders through one host, so a baked file and a generated mark
+are the same `<svg class="ds-glyph">` on the page, and the validator's glyph
+profile (see *Art → Profiles*) is the gate on all of them.
+
+**The tile sheet**, `/design-system/glyphs` (`src/pages/design-system/
+glyphs.astro`), shows every registered glyph and a spread of every
+generator in tiles, captioned `<family>·NN name` and marked R (recipe), H
+(hand-drawn) or G (generator), grouped by family, with the L3 signal chain
+and a readouts panel; one tile is `#glyph-<name>` or
+`#gen-<component>-<n>`. The families: **A** waves · **B** curves · **C**
+instruments · **D** routing · **E** fields · **F** controls · **H** iso
+parts (a glyph file's family is the sheet's `FAMILY` table; unlisted is F).
+The catalogue's "Glyphs" section shows the inline mark, the size scale, the
+tiles on both pages, one generator per family, and links to the sheet.
+
+### L0 — the kit
+
+**`lib/micro`** (`import { kit } from "@whois/design-system/lib/micro"`):
+pure TS geometry that emits SVG element strings with the language's
+discipline baked in — every stroke non-scaling and of a legal weight, every
+fill stated, every colour a token — so a recipe composes marks and never
+types a paint string.
 
 **Target-aware.** A kit is made for the language it emits, `kit("glyph")`
 or `kit("art")`, and the semantic names map per target: paint `ink` is
@@ -742,10 +769,10 @@ export default k.svg({ header: "baked from recipes/dial.ts — edit the recipe",
 Its tests (`src/lib/micro/*.test.ts`, `bun run test:unit`) validate every
 primitive's output against both profiles.
 
-### Glyphs — recipes, hand-drawn files, the bake
+### L1 — glyphs: recipes, hand-drawn files, the bake, the registry
 
-A glyph (L1) is a file, `src/glyphs/<name>.svg`, and it gets there one of
-two ways:
+A glyph is a file, `src/glyphs/<name>.svg`, and it gets there one of two
+ways:
 
 - **A recipe** — `src/glyphs/recipes/<name>.ts`, a few lines on the kit,
   default-exporting `recipe((k) => [ …elements ])` (or `{ viewBox?: "0 0 96
@@ -758,9 +785,9 @@ two ways:
   is the same comparison with no writes: exit 1 on a stale or orphaned
   file. Edit the recipe, never the baked file.
 - **Hand-drawn** — a plain `.svg` with no header, for an organic one-off
-  the kit would fight (`toggle.svg`). The bake tells the two apart by the
-  header alone and never touches a file without one; a recipe and a
-  hand-drawn file of the same name is an error.
+  the kit would fight (`toggle`, `hand`, `knob`). The bake tells the two
+  apart by the header alone and never touches a file without one; a recipe
+  and a hand-drawn file of the same name is an error.
 
 **The registry** (`src/glyphs/glyphs.ts`, `import { glyphSvg, GLYPH_NAMES }
 from "@whois/design-system/glyphs"`) is an eager `?raw` glob of the
@@ -773,43 +800,125 @@ file in memory and fails on a stale one, and fails on a recipe never baked
 
 **Inlining** is `lib/inline-svg` (`inlineSvg(raw, { attrs, host })`,
 `viewBoxOf`): the prolog, doctype and comments dropped, `attrs` put on the
-root (one the file already carries is kept). ArtFrame, Glyph and every
-later generator go through it; a drawing is inlined, never an `<img>`,
-because its colours are tokens and its motion is CSS.
+root (one the file already carries is kept). ArtFrame and `GlyphSvg` go
+through it; a drawing is inlined, never an `<img>`, because its colours are
+tokens and its motion is CSS.
 
-### `Glyph` and `GlyphTile`
+### L2 — generators
 
-- `Glyph` — the mark inline (`styles/glyph.css`, the `<svg>` itself is the
-  element, class `ds-glyph`): `name` (a `GlyphName`), `size` (`6 | 8 | 10 |
-  12`, its HEIGHT on the space scale, numbered as Icon's size is — 6 is
-  32px, the 48×32 viewBox at 1×, 10 is 2×, 12 is 3×; in text, with no
+A generator is a glyph drawn from props at build time: a **pure function**
+in `src/lib/micro/gen/<family>.ts`, `(params) => Drawing` (`{ viewBox,
+children }`, the children the glyph kit's element strings), exported from
+`lib/micro` (`import { wave, gauge, fan, … } from
+"@whois/design-system/lib/micro"`), plus a **thin component** that maps its
+props to the function and hands the Drawing to **`GlyphSvg`** — the one
+host `Glyph` also renders through (`Glyph` is name → file → `GlyphSvg`), so
+a generated mark takes the same `size` / `label` / `play` / `class` / rest
+(`lib/glyph-host.ts`, `GlyphHostProps`), the same `--glyph-dim`, the same
+motion gating and ARIA. Its own hook is `data-gen="<family>"` (plus
+`data-shape` / `data-type` / `data-dir` / `data-mode` / `data-mark` /
+`data-axis` where the family has kinds).
+
+**The contract.** A generator clamps every parameter into the range its
+doc comment states, and falls back to its default on a value that is not a
+number or not a name — so its output passes the glyph profile for ANY
+input; the same params give the same string (a `seed`, never
+`Math.random`); it stays inside the budget by drawing one `path` with many
+points rather than many elements, rounding to two decimals and dropping
+sub-pixel points (`simplify`, Ramer–Douglas–Peucker at a twentieth of a
+unit). Shared props: `paint` (the main line: `ink | dim | blue | red |
+green | lavender`, the reference sheet's default per kind) and, where a
+family has a second mark, `accent` (the same names, or `none`).
+
+| Fam. | Generator → component | Params (ranges; defaults) | Draws |
+| --- | --- | --- | --- |
+| A | `wave(shape, {cycles, amp, seed, paint})` → `<Wave>` | shape sine \| saw \| square \| triangle \| noise \| burst; cycles 1–6 (2); amp 1–12 (8); seed (7) for noise and burst; paint per shape | one path in the paint; a burst sits on a dim guide |
+| B | `envelope({a, d, s, h, r, paint})` → `<Envelope>` | a d h r relative times 0–1, shared out in proportion; s sustain 0–1; paint blue | one path from the baseline and back; a zero-width stage is left out, not drawn as a hook (ADSR, AR, AD) |
+| B | `filter(type, {cutoff, q, paint, accent})` → `<Filter>` | type lp \| hp \| bp \| notch; cutoff 0.05–0.95; q 0.5–10; paint red (lp/hp) or blue (bp/notch); accent red on a bp, else none | the biquad's magnitude in dB over a dim dotted 0 dB guide; a bp's centre as a fine dashed accent |
+| B | `curve(points, {nodes, smooth, dotted, paint, accent})` → `<Curve>` | points 2–12 in viewBox units, held to the safe area; nodes true; smooth false; dotted true; paint dim when dotted, ink when solid; accent green | an automation line through the points, a node dot at each |
+| C | `gauge(value, {sweep, paint, track})` → `<Gauge value>` | value 0–1; sweep 90–330° (270); paint green; track dim | a thick arc as two filled `band`s (never a wide stroke): the track, the value over it; centred on the tile at any sweep |
+| C | `dial(value, {ticks, sweep, paint})` → `<Dial value>` | value 0–1; ticks 2–12 (5); sweep 90–330° (270); paint blue | hair dashed radial ticks, a needle in its own `<g>` (no motion by default — the hook for one), a hub dot |
+| C | `ladder(value, {steps, lit, axis, paint})` → `<Ladder value \| lit>` | value 0–1 → `round(value × steps)` lit, or `lit` 0–steps (wins); steps 2–12 (9); axis vertical \| horizontal; paint blue | hairline bars, lit from the bottom / the left; two paths (lit, unlit dim) |
+| C | `segments(value, {paint})` → `<Segments value>` | digits, `-`, ` ` (else a blank), 1–8 chars (cut past 8); paint blue | seven-segment digits as line segments — lit in the paint, unlit a dim dotted hair ghost (a solid dim hair reads as "8" at 1×); two paths; 1–4 on 48×32, 5–8 on the wide `0 0 96 32` |
+| C | `selector(n, {active, colours, paint, accent, spin})` → `<Selector>` | n 3–12 (8); active 0…n−1, wrapped (0, the top); colours a pip pattern, cycled (ink/dim, red opposite the active); paint blue (centre, input); accent green (active pip); spin | pips on a ring round a centre ring and dot, an input line from the left; `spin` puts the file's one `data-motion="spin"` on the pip ring |
+| D | `fan(n, {dir, dotted, paint, accent})` → `<Fan>` | n 2–8 (4); dir split \| merge; dotted; paint blue (dim when dotted); accent red (none drops the input) | a split (1 → n) or merge (n → 1): an accent input line into a node, n cubic branches (one path) to the far edge; `dotted` is the dotted spread. Always 48×32 — eight branches still read apart |
+| E | `rings(n, {mode, fade, dotted, paint, accent})` → `<Rings>` | n 1–6 (4); mode chain \| concentric; fade; dotted 0 to n − 1 (concentric); paint red; accent none | `chain`: n linked rings in a row, the unison glyph, `fade` dimming the last; `concentric`: a nested stack out to r 12, the outer `dotted` as dim dotted rings (the halo), `accent` a centre dot |
+| E | `matrix(rows, cols, {on, hot, mark, cursor, paint, accent})` → `<Matrix>` | rows 1–6 (4) × cols 1–10 (5); on a pattern (`"10110;01001"`) or row bitmasks (MSB leftmost); mark pip \| dot \| x; hot and cursor `[row, col]`; paint blue; accent red | a grid at pitch 5 (tighter for six rows): `pip` lit filled, unlit dim hollow; `x` the desk operator's x/o grid; `hot` cells and the square `cursor` in the accent. Every mark of one kind in one paint is ONE path, so 60 cells are a handful of elements; past six columns it takes `0 0 96 32` for the 6 KB budget |
+
+- **A meter's ARIA** (`meterAria`, `gen/meter.ts`): with a `label`,
+  `<Gauge>`, `<Dial>` and `<Ladder>` pass `role="meter"`,
+  `aria-valuemin="0" aria-valuemax="100"`, `aria-valuenow` the whole
+  PERCENT the drawing shows (a screen reader says "62", not "0.62") and
+  `aria-valuetext` — "62%", a ladder's "6 of 9" — in the rest; the host
+  keeps the role it was given and adds the label's `aria-label`. Without a
+  label they pass none of it and are aria-hidden like any glyph.
+  `<Segments>` and `<Selector>` are not meters: labelled, they are the
+  host's `role="img"` — give a segments readout its value as the label
+  ("045", or "045 BPM").
+- **Two colours at most** (the glyph profile's palette): a selector keeps
+  its paint, its accent, then its pattern's colours, first come first
+  kept, and draws a third in ink — under the default blue centre the
+  reference's red pip is ink; `paint="ink"` shows green and red.
+- **Spin turns about the group's box** (`transform-box: fill-box`), so a
+  spinning ring must be centrally symmetric: an odd `n` adds a dim dotted
+  halo round the pips that squares the box.
+- **Tests.** `gen/gen.test.ts` (A/B), `gen/instruments.test.ts` (C),
+  `gen/fields.test.ts` (D/E) sweep each function's params, extremes and
+  out-of-range values: validate clean, within budget (each viewBox held to
+  its own: ≤ 40 elements / 3 KB, 80 / 6 KB wide), deterministic, the
+  geometry it claims. `tests/glyphs.spec.ts` renders every component on the
+  sheet.
+
+### The host: `Glyph`, `GlyphTile`, motion
+
+- **`Glyph`** — the mark inline (`styles/glyph.css`, the `<svg>` itself is
+  the element, class `ds-glyph`): `name` (a `GlyphName`), `size` (`6 | 8 |
+  10 | 12`, its HEIGHT on the space scale, numbered as Icon's size is — 6
+  is 32px, the 48×32 viewBox at 1×, 10 is 2×, 12 is 3×; in text, with no
   size, it is 1em tall, `vertical-align: middle`, as wide as the viewBox
   makes it — 3:2, or 3:1 wide), `label` (→ `role="img" aria-label`;
   without one it is `aria-hidden` + `focusable="false"`: a mark beside a
-  word that already says it), `play` (`data-art-play`, the art's attribute,
-  on the root), `class` merged, the rest on the root (`data-glyph="<name>"`
-  is always there). The line work is `currentColor`, so a glyph takes the
-  colour of its text or a `color` set in scope; **`--glyph-dim`** is
-  declared on `.ds-glyph` as `color-mix(in oklab, currentColor 40%,
-  transparent)` and resolves ON THE ELEMENT THAT USES IT — `currentColor`
-  in a custom property is not substituted where the property is declared
-  (a `var()` would be), so a dim stroke deep in the file is 40% of the
-  glyph's own ink, whichever colour it was given. (Measured in Chromium in
-  both themes: the toggle's pill computes to the text colour at alpha 0.4,
-  and to green at 0.4 on a green glyph.)
-- `GlyphTile` — the keycap (class `ds-glyph-tile`): a 3:2 cap
-  (`__cap`; the `--art-edge` hairline rim, `--border-radius-1`, a `--wash-1`
-  fill so it sits a few percent off the page or a card in either theme;
-  the rim goes `--hairline-strong` under the pointer) that fills its
-  column — a row of them grids with `Grid` — and sizes the glyph in its
-  default slot itself (just over three quarters of the cap's width, the
-  height by the ratio; a glyph's `size` does not apply inside). `label`
-  (prop, or the `label` slot for markup) is the caps voice (`ds-mono
-  ds-caps`) under the cap, one line; the `readout` slot is drawn over the
-  mark, centred, in the spec sheet's thin numeral (`--font-display` at
-  `--font-size-7`), in the tile's colour unless its content says its own;
-  `as` (`figure` when the label captions it), `class` merged, `id`/`name`/
-  `data-*` pass through. Hovering the tile plays the glyph inside it.
+  word that already says it), `play` (`data-art-play`, the art's
+  attribute, on the root), `class` merged, the rest on the root
+  (`data-glyph="<name>"` is always there). A generator component takes the
+  same host props.
+- **`--glyph-dim`.** The line work is `currentColor`, so a glyph takes the
+  colour of its text or a `color` set in scope; `--glyph-dim` is declared
+  on `.ds-glyph` as `color-mix(in oklab, currentColor 40%, transparent)`
+  and resolves ON THE ELEMENT THAT USES IT — `currentColor` in a custom
+  property is not substituted where the property is declared (a `var()`
+  would be), so a dim stroke deep in the file is 40% of the glyph's own
+  ink, whichever colour it was given. (Measured in Chromium in both
+  themes: the toggle's pill computes to the text colour at alpha 0.4, and
+  to green at 0.4 on a green glyph.)
+- **`GlyphTile`** — the keycap (class `ds-glyph-tile`): a 3:2 cap
+  (`__cap`; the `--art-edge` hairline rim, `--border-radius-1`, a
+  `--wash-1` fill so it sits a few percent off the page or a card in
+  either theme; the rim goes `--hairline-strong` under the pointer) that
+  fills its column — a row of them grids with `Grid` — and sizes the mark
+  in its default slot itself (just over three quarters of the cap's width,
+  the height by the ratio; a glyph's `size` does not apply inside).
+  `label` (prop, or the `label` slot for markup) is the caps voice
+  (`ds-mono ds-caps`) under the cap, one line; the `readout` slot is drawn
+  over the mark, centred, in the spec sheet's thin numeral
+  (`--font-display` at `--font-size-7`), in the tile's colour unless its
+  content says its own; `wide` is the cap for a 96-unit glyph (keycaps, an
+  8-digit Segments, a Matrix past six columns): it spans two grid columns
+  and keeps ONE tile's height — `(its width − the gap) / 3`, the gap read
+  from `--glyph-tile-gap` (`--space-4` unless the grid says) — so a row's
+  caps and labels line up and the wide mark draws at its neighbours'
+  scale; `as` (`figure` when the label captions it), `class` merged,
+  `id`/`name`/`data-*` pass through. Hovering the tile plays the mark
+  inside it.
+- **Motion.** The data-motion contract is one file, `styles/motion.css`,
+  shared with the art frame: the keyframes, `--duration-loop` (0s under
+  reduced motion, so nothing moves and no host needs a block of its own),
+  the pause at rest. A glyph runs **on hover of the glyph or of the
+  `GlyphTile` it sits in, inside a hovered or focused link, with `play`
+  (`data-art-play` on itself) or under any ancestor carrying
+  `data-art-play`** — never on focus, since a glyph is not focusable. The
+  `dash` keyframe offsets by 8 screen px; a glyph's dash arrays repeat
+  every 4 or 8, so every loop is seamless.
 
 **Glyph vs Icon.** `Icon` is a UI AFFORDANCE: a 2px stroke in the ink, a
 meaning (chevron, copy, play), sized as a square on the space scale. A
@@ -818,107 +927,49 @@ palette, the text's ink dimmed, aria-hidden unless labelled, 3:2. A thing
 the reader acts on or must recognise is an Icon; a thing that decorates a
 label, illustrates a reading, or shows a value's shape is a Glyph.
 
-**Motion.** The data-motion contract is one file, `styles/motion.css`, and
-both hosts read it: the keyframes, `--duration-loop` (0s under reduced
-motion, so nothing moves and no host needs a block of its own), the pause
-at rest. The frame's gating is as above; a glyph runs **on hover of the
-glyph or of the `GlyphTile` it sits in, inside a hovered or focused link,
-with `play` (`data-art-play` on itself) or under any ancestor carrying
-`data-art-play`** — never on focus, since a glyph is not focusable. The
-`dash` keyframe offsets by 8 screen px; a glyph's dash arrays repeat every
-4 or 8, so every loop is seamless.
+### L3 modules — composition today
 
-The catalogue's "Glyphs" section shows the three seed glyphs inline in a
-reading line, on the size scale, and in tiles on both pages (a readout, a
-`play`, a label slot).
+A module is L1/L2 marks plus HTML text in tiles, composed in the page with
+DS components and tokens: the **signal chain** (`Dial` → the `amp` glyph
+with a `readout` "34" → an `Envelope` in stacked tiles → a `Selector`,
+joined by the `junction` glyph, caps labels SPEED / AMOUNT / DEST / P.DEST
+as tile labels) and the **readouts panel** (`Stat variant="numeral"` for
+the caps label and thin numeral, a labelled `Dial`, a `Chip` as the boxed
+tag) are on the sheet. Text is never inside the SVG. When one is needed in
+a second place it becomes a component (rule 4).
 
-### Generators — parametric marks (L2)
+### Adding one — checklists
 
-A generator is a glyph drawn from props at build time: a **pure function**
-in `src/lib/micro/gen/<family>.ts`, `(params) => Drawing` (`{ viewBox,
-children }`, the children the glyph kit's element strings), exported from
-`lib/micro` (`import { wave, envelope, filter, curve } from
-"@whois/design-system/lib/micro"`), plus a **thin component**
-(`Wave`, `Envelope`, `Filter`, `Curve`) that maps its props to the
-function and hands the Drawing to **`GlyphSvg`** — the one host `Glyph`
-also renders through (`Glyph` is name → file → `GlyphSvg`), so a
-generated mark and a file are the same `<svg class="ds-glyph">` on the
-page: the same `size` / `label` / `play` / `class` / rest
-(`lib/glyph-host.ts`, `GlyphHostProps`), the same `--glyph-dim`, the same
-motion gating and ARIA. Its own hook is `data-gen="<family>"` (and
-`data-shape` / `data-type` where the family has kinds).
+**A glyph (L1):**
 
-**The contract.** A generator clamps every parameter into a range its
-doc comment states, and falls back to its default on a value that is
-not a number or not a name — so its output passes the glyph profile for
-ANY input; the same params give the same string (a `seed`, never
-`Math.random`); it stays inside the glyph budget by drawing one `path`
-with many points rather than many elements, rounding to two decimals and
-dropping sub-pixel points (`simplify`, Ramer–Douglas–Peucker at a
-twentieth of a unit). Shared props: `paint` (the main line: `ink | dim |
-blue | red | green | lavender`, the reference sheet's default per kind)
-and, where a family has a second mark, `accent` (the same names, or
-`none`). A meter passes `role="meter"` and its `aria-value*` in the rest
-— the host keeps the role it was given and adds the label's
-`aria-label`; without a `label` it is aria-hidden like any glyph.
+1. Look for a generator first — a curve, a meter, a fan, a grid or a ring
+   of any shape is a generator's props, not a new file.
+2. Pick the family (A–H) and the build: a **recipe** for anything the kit
+   can say (rings, ticks, arcs, wires, shapes, iso); **hand-drawn** only
+   for an organic one-off the kit would fight.
+3. Recipe: `src/glyphs/recipes/<name>.ts` → `recipe((k) => […])`, then
+   `bun run glyphs:bake`. Hand-drawn: `src/glyphs/<name>.svg`, no header,
+   then `bun run validate:glyph src/glyphs/<name>.svg`.
+4. Add the name to `GLYPH_NAMES` (`src/glyphs/names.ts`); if it is not a
+   control, give it a family in the sheet's `FAMILY` table.
+5. `bun run glyphs:check`, `bun run test:unit`, then look at it on
+   `/design-system/glyphs#glyph-<name>` in both themes.
 
-**To add one:** the function in `gen/<family>.ts` (params typed, ranges
-in the doc comment, `K` the glyph kit and `SAFE` the 4–44 × 4–28 area
-from `gen/base.ts`); re-export it from `gen/index.ts` and `lib/micro`'s
-index; a `<Family>` component of three lines on `GlyphSvg`; a sweep of
-its params, extremes and out-of-range values in `gen/gen.test.ts`
-(validate clean, ≤ 40 elements, ≤ 3 KB, deterministic, the geometry it
-claims); a tile per variant in the catalogue.
+**A generator (L2):**
 
-**Routing and fields (families D/E)** — `gen/fan.ts`, `rings.ts`,
-`matrix.ts`, swept in `gen/fields.test.ts` (each viewBox held to its own
-budget):
-
-- **`fan(n, { dir, dotted, paint, accent })` → `<Fan>`** — a split
-  (1 → n) or merge (n → 1): an accent input line (red) into a node, `n`
-  (2–8) cubic branches (blue) to the far edge; the branches are one path.
-  `dotted` makes them dim dotted guides — the dotted spread. Always 48×32
-  (eight branches still read apart; a wide fan was mostly input line).
-- **`rings(n, { mode, fade, dotted, paint, accent })` → `<Rings>`** —
-  `chain` (default): `n` (1–6) linked rings in a row, the unison glyph,
-  `fade` dimming the last; `concentric`: a nested stack out to r 12, the
-  outer `dotted` (0 to n − 1) as dim dotted rings — the halo — and
-  `accent` a centre dot. Red unless said.
-- **`matrix(rows, cols, { on, hot, mark, cursor, paint, accent })` →
-  `<Matrix>`** — a pip grid, `rows` 1–6 × `cols` 1–10, pitch 5 (tighter
-  when six rows need it). `on` lights cells: a pattern (`"10110;01001"`)
-  or row bitmasks (MSB leftmost); `mark` `pip` (lit filled, unlit dim
-  hollow), `dot`, or `x` (the desk operator's x/o grid); `hot` cells and
-  the square `cursor` in the accent. Every mark of one kind in one paint
-  is ONE path (circles as arc subpaths), so 60 cells are a handful of
-  elements; past six columns it takes `0 0 96 32` for the 6 KB budget.
-
-**Instruments (family C)** — meters and readouts, in `gen/{gauge,dial,
-ladder,segments,selector}.ts`, their sweeps in `gen/instruments.test.ts`:
-
-| Generator | Component | Params (ranges; defaults) | Draws |
-| --- | --- | --- | --- |
-| `gauge(value, {sweep, paint, track})` | `<Gauge value>` | value 0–1; sweep 90–330° (270); paint green; track dim | a thick arc as two filled `band`s (never a wide stroke): the track, the value over it; centred on the tile at any sweep |
-| `dial(value, {ticks, sweep, paint})` | `<Dial value>` | value 0–1; ticks 2–12 (5); sweep 90–330° (270); paint blue | hair dashed radial ticks, a needle in its own `<g>` (no motion by default — the hook for one), a hub dot |
-| `ladder(value, {steps, lit, axis, paint})` | `<Ladder value \| lit>` | value 0–1 → `round(value × steps)` lit, or `lit` 0–steps (wins); steps 2–12 (9); axis vertical \| horizontal; paint blue | hairline bars, lit from the bottom / the left; two paths (lit, unlit dim) |
-| `segments(value, {paint})` | `<Segments value>` | digits, `-`, ` ` (else a blank), 1–8 chars (cut past 8); paint blue | seven-segment digits as line segments — lit in the paint, unlit a dim dotted hair ghost (a solid dim hair reads as "8" at 1×); two paths; 1–4 on 48×32, 5–8 on the wide `0 0 96 32` |
-| `selector(n, {active, colours, paint, accent, spin})` | `<Selector>` | n 3–12 (8); active 0…n−1, wrapped (0, the top); colours a pip pattern, cycled (ink/dim, red opposite the active); paint blue (centre, input); accent green (active pip); spin | pips on a ring round a centre ring and dot, an input line from the left; `spin` puts the file's one `data-motion="spin"` on the pip ring |
-
-- **A meter's ARIA** (`meterAria`, `gen/meter.ts`): with a `label`,
-  `<Gauge>`, `<Dial>` and `<Ladder>` pass `role="meter"`,
-  `aria-valuemin="0" aria-valuemax="100"`, `aria-valuenow` the whole
-  PERCENT the drawing shows (a screen reader says "62", not "0.62") and
-  `aria-valuetext` — "62%", a ladder's "6 of 9". Without a label they
-  pass none of it and are aria-hidden. `<Segments>` and `<Selector>` are
-  not meters: labelled, they are the host's `role="img"` — give a
-  segments readout its value as the label ("045", or "045 BPM").
-- **Two colours at most** (the glyph profile's palette): a selector keeps
-  its paint, its accent, then its pattern's colours, first come first
-  kept, and draws a third in ink — under the default blue centre the
-  reference's red pip is ink; `paint="ink"` shows green and red.
-- **Spin turns about the group's box** (`transform-box: fill-box`), so a
-  spinning ring must be centrally symmetric: an odd `n` adds a dim dotted
-  halo round the pips that squares the box.
+1. The function in `gen/<family>.ts`: params typed, ranges in the doc
+   comment, clamped with `clamp` / `clampInt` / `paintOf`, `K` the glyph
+   kit and `SAFE` the 4–44 × 4–28 area from `gen/base.ts`; returns a
+   `Drawing`.
+2. Re-export it from `gen/index.ts` and `lib/micro`'s index.
+3. A `<Family>` component of a few lines on `GlyphSvg` (with `data-gen`,
+   and `meterAria` in the rest if it is a meter).
+4. A sweep in the family's `gen/*.test.ts`: params, extremes and
+   out-of-range values validate clean, within budget, deterministic, the
+   geometry it claims.
+5. Variants on the sheet (the `spread` table in `glyphs.astro`), the
+   component in `GENERATORS` in `tests/glyphs.spec.ts`, a row in the table
+   above.
 
 ---
 

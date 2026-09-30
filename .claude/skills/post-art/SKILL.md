@@ -12,6 +12,10 @@ description: >
   motion. Use it whenever you make or change art for a post or the /txt quilt.
   Triggers: "post art", "artwork for a post", "art for <post>", "quilt tile",
   "filler tile", "draw the post's svg", "post illustration", "validate:art".
+  It also covers the micrographics — the small 48×32 signal-panel marks
+  (glyphs, their recipes, the parametric generators, the keycap tile): read
+  references/glyphs.md for those. Triggers: "glyph", "micrographic", "tile",
+  "generator", "glyph recipe", "glyphs:bake", "validate:glyph".
 ---
 
 # Post art
@@ -37,6 +41,12 @@ The drawing has to hold in both, so always check both columns.
 
 Your job is one small, sparse, off-centre SVG that reads as the post's idea at
 230px wide.
+
+**Drawing a glyph instead?** A micrographic (a 48×32 mark for a tile, a
+label or a readout; a waveform, gauge, fan, ring, pip grid) is not post art:
+it has its own grid, profile, kit and bake. Read
+**`references/glyphs.md`** and follow it rather than the steps below. Use a
+generator before drawing any curve.
 
 ## 1. Read first
 

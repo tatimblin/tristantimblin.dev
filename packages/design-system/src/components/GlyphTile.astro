@@ -16,23 +16,33 @@
 // the tile's colour; a readout in a data colour wraps itself. Polymorphic
 // `as` (a `figure` when the label captions it); `class` merges; everything
 // else — `id`, `name`, `data-*` — passes through to the root.
+//
+// `wide` is the cap for a 96-unit glyph (`0 0 96 32`: keycaps, an 8-digit
+// Segments, a Matrix past six columns): it spans two columns of the grid it
+// sits in and keeps ONE tile's height, so the row's caps and labels still
+// line up. Its height is worked from the column gap, which the grid says in
+// `--glyph-tile-gap` (--space-4 unless said).
+//
+//   <GlyphTile label="keycaps" wide><Glyph name="keycaps" /></GlyphTile>
 import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
 	/** The caps label under the tile (or the `label` slot). */
 	label?: string;
+	/** A two-column cap for a 96-unit glyph, one tile tall. */
+	wide?: boolean;
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "div", label, class: className, ...rest } = Astro.props;
+const { as = "div", label, wide = false, class: className, ...rest } = Astro.props;
 const Tag = as as any;
 const hasLabel = label != null || Astro.slots.has("label");
 const hasReadout = Astro.slots.has("readout");
 ---
 
-<Tag class={cx("ds-glyph-tile", className)} {...rest}>
+<Tag class={cx("ds-glyph-tile", wide && "ds-glyph-tile--wide-true", className)} {...rest}>
 	<span class="ds-glyph-tile__cap">
 		<slot />
 		{hasReadout && <span class="ds-glyph-tile__readout"><slot name="readout" /></span>}
