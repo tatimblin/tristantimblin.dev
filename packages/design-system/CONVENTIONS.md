@@ -595,7 +595,8 @@ with fillers, all in one language taken from the reference tile sheet
 (`.playwright-mcp/refs/illustration-style.jpg`, gitignored — local only): **white 1px line work and flat
 fills in four colours on a near-black landscape plate** — circuits with
 right-angle bends and terminal dots, isometric solids, concentric rings, flow
-lines, dashed paths, dot fields; systems metaphors, no text, compositions that
+lines, dashed paths, dot fields; systems metaphors, lettered (if at all) in
+the module sheet's small type voices, compositions that
 crop off the tile's edges. The language is centralised so a file carries only
 its drawing: the **tokens** name every colour, the **frame** owns the plate and
 the motion, a **validator** holds the rules, and the `post-art` skill
@@ -634,8 +635,9 @@ grid, a 16-unit safe area, at least one shape running out of frame; every
 stroked shape `vector-effect="non-scaling-stroke"` (1px at any size) with its
 weight by class, `art-line` (1, the inherited default) or `art-line--2` (1.5,
 one emphasis outline); dashes `4 4` or `2 6`; isometrics at true 30°; no
-`width`/`height`/`style`/`text`/gradients/filters/ids except a `clipPath`'s
-prefixed with the slug; ≤ 120 elements, ≤ 12 KB. The validator
+`width`/`height`/`style`/gradients/filters/ids except a `clipPath`'s
+prefixed with the slug; type only in the four voices (below); ≤ 120
+elements, ≤ 20 KB. The validator
 (`scripts/validate-art.mjs`, `bun run validate:art <file>`) and
 `tests/post-art.spec.ts` enforce all of it. Import a file with `?raw`; it must
 be inlined, since its colours are tokens and its motion is the frame's CSS.
@@ -651,13 +653,49 @@ header is held to it — the validator's CLI reads the header
 (`profileOf`), and so does `tests/post-art.spec.ts`. **`glyph`** is for
 the micrographics in `src/glyphs/` (`bun run validate:glyph <file>`): viewBox
 `0 0 48 32`, or `0 0 96 32` / `0 0 96 64` wide; no `clipPath`/`defs`/`use`,
-no ids, no `class` — every stroked shape states `stroke-width` 1 or 1.5; line
+no ids, no `class`, no type (a glyph's words are HTML beside it) — every stroked shape states `stroke-width` 1 or 1.5; line
 work is `currentColor` (dimmed: `var(--glyph-dim)`), never `--art-ink`, plus at
 most two of the four colours; dashes `0.01 3.99` (round-capped dots), `2 2`,
 `4 4` — screen px, since `non-scaling-stroke` takes the dash array out of the
 viewBox; ≤ 40 elements / 3 KB (80 / 6 KB wide), groups ≤ 3 deep. Motion is
 art's contract. The glyph fixtures are `src/lib/validate-glyph.test.ts`
 (`bun run test:unit`).
+
+**Type.** A plate (art and scene profiles, never a glyph) may set words —
+the HUD module sheet's labels, IDs, bracketed states and big thin
+numerals, the infographic's section heads and "14 SPEAKERS" — as
+`<text>` (with `<tspan>` runs) in one of four **voices**, each a class
+whose CSS (`art-frame.css`, `.ds-art-frame .art-label` …, so it reaches the
+inline SVG in `ArtFrame`, `Scene` and the quilt) sets the face, weight
+and tracking by role:
+
+| Class | Voice | Face | Sizes (viewBox units) |
+| --- | --- | --- | --- |
+| `art-label` | the label voice: IDs, codes, file names, a section head | `--voice-mono-family` (the UI face, Mondwest Regular), `--tracking-caps` | 3.5 · 4.5 · 6 |
+| `art-caption` | the line under a readout, a log line; dim by the kit's default | the same, `--tracking-mono` | 3.5 · 4.5 |
+| `art-title` | a module's heading: ONLINE, EPOCH, VARIANT 033 | `--font-heading` (Mondwest Bold) | 6 · 9 · 14 |
+| `art-numeral` | the big thin figure: 007, 45, 0079 | `--font-display` (Mondwest Thin), Stat's numeral | 9 · 14 · 22 · 32 |
+
+The file sets only `x`, `y` (the baseline), `font-size` — a step of the
+one **scale**, 3.5 4.5 6 9 14 22 32, the voice's steps only, in viewBox
+units so the words scale with the plate (3.5 is ~8px on a 720px hero and
+texture in a 230px tile; 32 is a 72px numeral) — `text-anchor`
+(start/middle/end), a quarter-turn `transform="rotate(±90 x y)"` for a
+label up a module's edge, and `fill` (a paint token; never `none`, never a
+stroke). No `style`, no `font-family`/`font-weight`/`letter-spacing`/
+baseline attributes: the voice is the class, so the whole language's type
+retunes in one place. Figures are tabular in every voice. Words are
+written in **caps** (the kit's module helpers case them; there is no CSS
+`text-transform`, so `0x7B8A` and `12ms` keep their lower case), with
+`&amp;` for an ampersand. The validator's rule is **`type`**
+(`TYPE_SCALE`, `TYPE_SIZES`); its fixtures are in `tests/post-art.spec.ts`.
+Type is lettering: on a post's art it is decorative under the title the
+link carries, and a scene's readable text stays `SceneLabel`s over the
+frame. The byte budget is 20 KB for it (was 12: a line of type is ~110
+bytes, a stroked mark ~150); the element cap, 120, still keeps a plate
+sparse. The proof is the **type specimen** (`src/art/specimen.ts`, on
+`/design-system/glyphs#type-modules`): six modules of the HUD sheet on one
+plate, passing the art profile.
 
 **`ArtFrame`** — the window every artwork renders through
 (`styles/art-frame.css`, class `ds-art-frame`): the plate, the edge, the corner,
@@ -761,14 +799,15 @@ them; a scene renders through `Scene`, an `ArtFrame`, under the scene
 profile.
 
 **The tile sheet**, `/design-system/glyphs` (`src/pages/design-system/
-glyphs.astro`), shows every registered glyph (72 files: 64 recipes, 8
+glyphs.astro`), shows every registered glyph (79 files: 71 recipes, 8
 hand-drawn) and a spread of every generator (13) in tiles, captioned `<family>·NN name` and marked R (recipe), H
 (hand-drawn) or G (generator), grouped by family, with the L3 signal chain
 and a readouts panel; one tile is `#glyph-<name>` or
 `#gen-<component>-<n>`. The families: **A** waves · **B** curves · **C**
 instruments · **D** routing · **E** fields · **F** controls · **H** iso
-parts — and **G** readouts, the HTML text below, marked T (a glyph file's
-family is the sheet's `FAMILY` table; unlisted is F).
+parts · **I** bold shapes — and **G** readouts, the HTML text below, marked T (a glyph file's
+family is the sheet's `FAMILY` table; unlisted is F). After the families,
+the **type & modules** specimen (an art plate: *Art → Type*).
 The catalogue's "Glyphs" section shows the inline mark, the size scale, the
 tiles on both pages, one generator per family, and links to the sheet.
 
@@ -811,6 +850,8 @@ their own lines.
 | iso (`iso.ts`) | `iso(x, y, z, at?)` at a true 30° (`ISO_X` / `ISO_Y` / `ISO_Z` the unit axes) · `isoBox` · `isoCylinder(x, y, r, h, {axis, top, side})` (upright, or lying along `x` / `y`; discs r × r/2) · `isoEllipse(x, y, r, {axis})` (a 2:1 disc on the ground or standing on the x / y face) · `isoRoundRect(x, y, w, d, c)` (flat, rounded corners; `c = d/2` is a pill) · `isoRoundBox(x, y, w, d, h, c, {top, side})` (rounded vertical edges: a shell, a board) · `isoCoil(x, y, r, h, turns)` (a standing spring, one path) · `isoPlane({grid})` · `vanishingGrid` — visible faces only, never a wireframe; a disc keeps ry = r/2, a rounded corner is the true projection so it meets the 30° edges tangent |
 | hidden lines (`clip.ts`) | `convexHull(points)` (a silhouette: the hull of a solid's projected corners) · `edges(points)` (a closed outline as segments) · `chain(points)` (an open line as segments) · `clipOutside(segs, poly)` (Cyrus–Beck: what of the segments shows outside a convex polygon, either winding) · `clipOutsidePolygon(segs, poly)` (the same for any simple polygon, convex or not — a mountain's ridge, a notched board: cut at every crossing, what lies along the outline hidden with it) · `insidePolygon(p, poly)` (a ray cast; on the outline counts as inside — a scatter kept off a lake) · `segmentsD(segs)` (one path `d`, rounded) — line work behind a solid is cut, not painted over, since a scene may not paint the plate |
 | curves through points (`gen/`) | `smoothD(points, closed?)` (Catmull-Rom as cubics; `closed` runs round the loop and shuts it, no corner at the join — a shore, a forest's edge) · `lineD(points)` (the polyline) · `rng(seed)` (a deterministic scatter) |
+| type (`type.ts`; art and scene — the glyph kit throws) | `text(x, y, words, {role, size, anchor, paint, turn})` (one line in a voice, `role` `label \| caption \| numeral \| title`, `size` a step of that voice's scale, default 4.5 / 3.5 / 22 / 9; a caption's paint dim unless said; a size off the voice throws; words escaped, set as given) · `rule(x0, x1, y, {dotted, paint})` (a solid ink hair, or dim round dots) · `section(x, y, w, title)` (the infographic's head: a dotted rule from (x, y), the title in caps hanging under it; `sectionDepth(size)` deep) · `bracketLabel(x, y, words)` (`[ ACTIVE ]`) · `readout(x, y, {value, label, caption, captionAt, size, paint})` (the thin numeral on the baseline at (x, y), a caps label over it, a caption beside its top — "14 SPEAKERS" — or `below`) · `advance(words, voice, size)` (an estimated width off the measured Mondwest cuts: figures 0.575 em, capitals 0.72, plus the voice's tracking — leave a margin) · `caps(words)` (upper case, a hex prefix's `x` kept) |
+| layout and strings (`layout.ts`, `ids.ts`) | `grid(cols, rows, gutter = 10, margin = 16, {width, height, inset})` (cell boxes `{x, y, w, h, col, row}` on the 320×180 plate or any box, row-major) · `span(a, b)` (the box two cells cover) · `ids(seed)` → `{ file, node, module, hex, id, code, state, status, coords, num, pick }` (`LOG_004.TXT`, `NODE B43`, `MODULE B7`, `0x7B8A`, `ID: 7F-C2`, `A0-04`, `ACTIVE`, `[ACTIVE]`, `02.44 / 118.09`, `0079`: deterministic off `rng`, each call the stream's next) |
 | assembly | `group(children, {motion, speed, transform, mark})` (the data-motion contract; a transform with a motion goes on an outer `g`; `mark: "now"` a steps beat's now-mark) · `steps(beats, {speed, transform})` (the `steps` motion: one `<g data-beat>` per entry, 2–8, none empty; a shape's `{ mark: "ripple" \| "now" }` is its `data-ripple` / `data-now`) · `svg({viewBox, children, header})` · `wash(colour, pct)` (a scene's translucent fill) |
 
 ```ts
@@ -845,6 +886,18 @@ ways:
   `pan`, `speaker`, `toggle`). The bake tells the two
   apart by the header alone and never touches a file without one; a recipe
   and a hand-drawn file of the same name is an error.
+
+**The bold shapes (family I)** are the exception to hairline: solid
+geometric marks after the 120-shapes pack and the HUD sheet's flowers —
+`burst` (eleven seeded spikes), `stripe-disc` (a disc as five chord-cut
+bars), `checker-warp` (an 8×8 checker swelling in the middle, its outline
+square), `iso-stripes` (a true-30° cube drawn only in bars), `tri-bands`
+(an ink apex over blue bands), `petals` (a lavender flower drawn as its
+scalloped outline, the heart cut by evenodd) and `swirl` (an eight-blade
+pinwheel that spins). Each is one or two FILLED paths in the ink or one
+colour — a thick mark is a shape, never a wide stroke — so the glyph
+profile needed nothing new; they read at 32px, and on a plate through
+`part()` (the specimen's row).
 
 **A recipe may call a generator** (or any `lib/micro` export — `iso`,
 `polar`, `rng`, `lineD` / `simplify`) and, since a generator is pure, bake
@@ -1008,13 +1061,13 @@ with a `readout` "34" → an `Envelope` in stacked tiles → a `Selector`,
 joined by the `junction` glyph, caps labels SPEED / AMOUNT / DEST / P.DEST
 as tile labels) and the **readouts panel** (`Stat variant="numeral"` for
 the caps label and thin numeral, a labelled `Dial`, the G readouts and
-Chip's tags) are on the sheet. Text is never inside the SVG. When one is needed in
+Chip's tags) are on the sheet. Text is never inside a glyph. When one is needed in
 a second place it becomes a component (rule 4).
 
 ### G — readouts: the text beside a mark
 
 The synth panel pairs its marks with small typographic readouts. They are
-HTML text (never inside an SVG) that sits centred in a `GlyphTile`'s cap
+HTML text (never inside a glyph) that sits centred in a `GlyphTile`'s cap
 where a mark would, or beside one in a panel. The gate first: the label
 and thin numeral pair ("PHONIC 45") is `Stat variant="numeral"`, and the
 boxed and arrow tags are `Chip`'s `tone="accent"` / `variant="arrow"`; three
@@ -1053,7 +1106,7 @@ committed file.
 
 **The profile** (`PROFILES.scene`, `bun run validate:scene <file>`; its
 fixtures `src/lib/validate-scene.test.ts`): art's elements (clipPath and
-defs included; still no text, images, gradients, filters, animation),
+defs included, and art's type voices; still no images, gradients, filters, animation),
 art's paints plus **one wash form** for a fill only — `color-mix(in oklab,
 var(--art-<colour>) N%, transparent)`, N 1–25 — on the **plate** (`0 0 320
 180`) or the **square panel** (`0 0 400 400`); art's weights and classes;
@@ -1165,8 +1218,10 @@ xl`, 2.2 / 2.6 / 4.4 / 7 units of `--scene-unit`, a hundredth of the
 scene's width (the spike's `cqw`, made a token), so plain text **scales
 with the scene**; a DS component inside — `Chip tone="accent"` for the
 tag, `ReadoutStack` for a stack, `Stat` — keeps its own size. `tone` is the
-drawing's own tokens, `box` a hairline round it. Text is never inside the
-SVG; this is where it goes.
+drawing's own tokens, `box` a hairline round it. Text a reader must read
+is never inside the SVG (an `<svg role="img">`'s words are lost to a
+reader); this is where it goes. Lettering — a module's IDs and codes —
+may be the plate's own type (*Art → Type*).
 
 **The four routes**, chosen by subject:
 
@@ -1310,7 +1365,7 @@ dark one; `tests/scenes.spec.ts` holds them.
 1. Look for a generator first — a curve, a meter, a progress bar, a fan,
    a grid or a ring of any shape is a generator's props, not a new file;
    a generator's mark plus a little more is a recipe that calls it (above).
-2. Pick the family (A–H) and the build: a **recipe** for anything the kit
+2. Pick the family (A–I) and the build: a **recipe** for anything the kit
    can say (rings, ticks, arcs, wires, shapes, iso); **hand-drawn** only
    for an organic one-off the kit would fight.
 3. Recipe: `src/glyphs/recipes/<name>.ts` → `recipe((k) => […])`, then

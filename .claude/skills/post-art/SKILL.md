@@ -6,7 +6,8 @@ description: >
   wireframes, cylinders, concentric rings, flow lines, dashed paths) and flat
   lavender, coral, cyan and green fills on a near-black landscape plate (the
   plate follows the theme: bone, with dark ink, on the light page), cropped
-  off the edges, with no text. It writes one hand-authored SVG
+  off the edges, lettered — if at all — in small type voices (a HUD module
+  sheet's labels, IDs, a big thin numeral). It writes one hand-authored SVG
   (src/content/txt/<slug>.svg, or packages/design-system/src/art/filler-NN.svg)
   that passes `bun run validate:art` the first time, with an optional single
   motion. Use it whenever you make or change art for a post or the /txt quilt.
@@ -132,7 +133,7 @@ set together on a contact sheet (§5).
 
 The template (also at `references/template.svg`, which may lag the package's
 copy) opens with a comment holding the rules. Keep it while you draw, and
-delete it if the file nears 12 KB. Replace the example drawing inside the `<g>`
+delete it if the file nears 20 KB. Replace the example drawing inside the `<g>`
 with yours.
 
 The skeleton:
@@ -202,12 +203,18 @@ fails on, or a trap it cannot see.
       slug is the file's basename. Use `clip-path="url(#<slug>-…)"` and no
       `xlink:href`.
 - [ ] **Budget.** At most 120 elements (merge line work into multi-subpath
-      paths), at most 12 KB including comments, at most 3 clipPaths, and `<g>`
+      paths), at most 20 KB including comments, at most 3 clipPaths, and `<g>`
       at most 4 deep.
 - [ ] **Palette.** At least one token, at most three of
       lavender/coral/cyan/green, and one of them dominant.
-- [ ] **The language.** No text, and at least one element crosses an edge. The
-      composition is off-centre and sparse.
+- [ ] **Type**, if any: every `<text>` has one voice class (`art-label`,
+      `art-caption`, `art-numeral`, `art-title`), `x`, `y`, a `font-size` on
+      that voice's steps of the scale (label 3.5 4.5 6 · caption 3.5 4.5 ·
+      title 6 9 14 · numeral 9 14 22 32), a `fill` token, and optionally
+      `text-anchor` or `rotate(±90 x y)`; nothing else (no font-family,
+      weight, letter-spacing, style, stroke). Words in caps; `&amp;`.
+- [ ] **The language.** At least one element crosses an edge. The
+      composition is off-centre and sparse; type is lettering, not captions.
 
 Then run it:
 
@@ -217,7 +224,7 @@ bun run validate:art src/content/txt/<slug>.svg      # or packages/design-system
 
 It prints `ok` or one line per violation, `<rule>: <element> line N: what`.
 The rule is one of `markup`, `root`, `element`, `attribute`, `paint`, `stroke`,
-`motion`, `budget`, `ids` or `palette`. Fix each one and re-run until it
+`motion`, `budget`, `ids`, `palette` or `type`. Fix each one and re-run until it
 passes. `bunx playwright test tests/post-art.spec.ts` runs the same checks over
 every shipped file.
 
@@ -275,9 +282,13 @@ What to check:
 
 ## 6. What not to do
 
-- **No text.** No letters, digits, labels or logos, not even drawn as paths.
-  A symbol is not text: a check, a cross (✕) or an arrow drawn as line work
-  is fine.
+- **No type outside the voices, and no captions.** Words go in only as
+  `<text>` in the four voices (§4, `language.md` → *Type*): the module
+  sheet's lettering — a label, an ID, a bracketed state, a big thin numeral
+  — sized from the scale, never letters drawn as paths or a logo. The
+  picture still carries the idea: if the drawing needs its words to be
+  understood, choose a simpler metaphor. Most post art needs none; a
+  systems picture (a console, a log, a node) earns a few.
 - **No gradients, blurs, shadows, patterns, masks or opacity.** Flat fills only.
 - **No literal colours.** Every colour is a token.
 - **No plate inside the file.** No background rect, and no `--art-plate` used to

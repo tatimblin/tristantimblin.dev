@@ -28,7 +28,10 @@ tiles on a #202020 page. **Look at it before drawing.**
 - **The compositions crop off the tile edges.** Objects run out of frame on one
   or two sides and sit off-centre. The tiles are sparse, with generous dark
   space.
-- **There is no text anywhere in the art.**
+- **The tile sheet has no text.** The later references (a HUD module
+  sheet, a synth panel, a car infographic) do: tiny tracked caps labels,
+  IDs and codes in brackets, big thin numerals with small caps captions.
+  The language takes that lettering in four voices (see *Type*), sparingly.
 
 Some tiles on the sheet, as a vocabulary:
 
@@ -141,7 +144,7 @@ edges**. You never paint something plate-coloured to hide something else.
 - **Budgets.**
   - At most **120 elements**. One `<path>` with many subpaths is one element,
     so draw grids, ticks and fans that way.
-  - At most **12 KB** of source, comments included. The template's comment is
+  - At most **20 KB** of source, comments included (12 before type). The template's comment is
     about 2 KB, so delete it if you get close.
   - At most **3 `<clipPath>`s**.
   - `<g>` nesting at most **4 deep**.
@@ -161,8 +164,13 @@ The validator passes all of these; your eye has to catch them.
 - **Contrast.** Ink on ink disappears (a cursor on an ink row, a white dot on
   a white face). Put the mark on a colour, or cut it to the plate with an
   evenodd hole.
-- **Symbols are not text.** A check, a cross (✕), an arrow: line work, fine
-  to draw. Letters, digits and logos are not.
+- **Words are type, never paths.** A check, a cross (✕), an arrow: line
+  work. Letters and digits go in as `<text>` in a voice, never drawn as
+  outlines; logos not at all.
+- **Word widths are estimates.** The file cannot measure a font; the kit's
+  `advance()` guesses from the measured cuts (figures 0.575 em, capitals
+  0.72). Leave a margin after a word before the next mark, and look at it
+  in the browser, where the real face sets it.
 - **Outlines overlap honestly.** Overlapping *unfilled* shapes may let their
   back edges show through each other, as on the reference; that is a
   wireframe, not a mistake. Only filled solids hide what is behind them.
@@ -225,10 +233,10 @@ optional `preserveAspectRatio`. It has no `width`, `height`, `style` or
 `xmlns:xlink`.
 
 **Elements** are limited to `svg` (the root only), `g`, `path`, `rect`, `circle`,
-`ellipse`, `line`, `polyline`, `polygon`, `clipPath`, `defs` and `use`. These
-fail on sight:
+`ellipse`, `line`, `polyline`, `polygon`, `clipPath`, `defs`, `use`, and the
+type elements `text` and `tspan` (see *Type*). These fail on sight:
 
-- text: `text`, `tspan`, `title`, `desc`;
+- `title`, `desc`;
 - embedded content: `image`, `foreignObject`, `a`;
 - styling and scripting: `style`, `script`;
 - effects: `filter`, `linearGradient`, `radialGradient`, `pattern`, `mask`;
@@ -241,6 +249,32 @@ fail on sight:
 - There is no `style=` and no `on*`.
 - The only classes are `art-line` and `art-line--2`.
 - There is no `xlink:`. A `<use>` takes `href="#…"`.
+
+**Type.** Words on a plate are `<text>` (runs as `<tspan>` directly inside
+it) in one of four VOICES — a class whose CSS in `art-frame.css` sets the
+face, weight and tracking by role, so a file never names a font:
+
+| Class | For | Face | font-size steps |
+| --- | --- | --- | --- |
+| `art-label` | IDs, codes, file names, a section head, `[ ACTIVE ]` | the label voice (Mondwest Regular), tracked caps | 3.5 · 4.5 · 6 |
+| `art-caption` | the line under a readout, a log line (paint it `--art-ink-2`) | the same, less tracking | 3.5 · 4.5 |
+| `art-title` | a module's heading: ONLINE, EPOCH | Mondwest Bold | 6 · 9 · 14 |
+| `art-numeral` | the big thin figure: 007, 45 | Mondwest Thin | 9 · 14 · 22 · 32 |
+
+The scale is 3.5 4.5 6 9 14 22 32 in viewBox units (3.5 ≈ 8px on a 720px
+hero, texture in a 230px tile; 32 ≈ a 72px numeral). A `<text>` carries
+exactly: `class` (one voice), `x`, `y` (the baseline), `font-size`, `fill`
+(a token, never `none`), and optionally `text-anchor` (start / middle /
+end) and `transform="rotate(-90 x y)"` or `rotate(90 x y)`. A `<tspan>` may
+carry `class`, `x`, `y`, `dx`, `dy`, `font-size`, `fill`. Nothing else —
+no `font-family`, `font-weight`, `letter-spacing`, `style`, `stroke`,
+baseline attributes; the validator's `type` rule fails each. Write the
+words in caps (there is no CSS case change, so `0x7B8A` keeps its x) and an
+ampersand as `&amp;`. The voice: a HUD module sheet — small, tracked,
+precise, IDs rather than prose; a numeral is the loudest word on a plate.
+With the kit, `k.text()`, `k.section()`, `k.bracketLabel()`,
+`k.readout()`, `grid()` and `ids(seed)` write it (`glyphs.md`, cheat sheet).
+The worked example is the type specimen, `/design-system/glyphs#type-modules`.
 
 **Ids** go only on a `<clipPath>` or on something inside `<defs>` that a `<use>`
 points at. Every id is prefixed `<slug>-`, where the slug is the file's

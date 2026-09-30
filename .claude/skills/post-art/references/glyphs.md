@@ -39,7 +39,7 @@ Work down this list and stop at the first match:
 
 - `viewBox="0 0 48 32"`. The wide ones are `0 0 96 32` (a keycap bank, a long
   readout) and `0 0 96 64`. No `width`, `height`, `style`, `class`, ids,
-  `clipPath`, `defs`, `use` or text.
+  `clipPath`, `defs`, `use` or text (type is the plate's, not a glyph's).
 - Keep the drawing in the **safe area, x 4–44 × y 4–28**, centred on
   (24, 16). The tile shows about 78% of its width, so a mark that fills the
   safe area reads.
@@ -155,6 +155,12 @@ red is `--art-coral`).
 | `smoothD(points, closed?)` | a Catmull-Rom curve through points, from `lib/micro`; `closed` shuts it with no corner at the join (a lake, a forest's edge) |
 | `group(children, {motion, speed, transform, mark})` | a group, the one motion; `mark: "now"` inside a steps beat |
 | `steps(beats, {speed, transform})` | the `steps` motion: one `<g data-beat>` per entry (2–8); `{ mark: "ripple" \| "now" }` on a shape inside a beat |
+| `text(x, y, words, {role, size, anchor, paint, turn})` | **art / scene kit only** (the glyph kit throws): one line in a voice, `label` (4.5; 3.5 4.5 6) · `caption` (3.5, dim; 3.5 4.5) · `title` (9; 6 9 14) · `numeral` (22; 9 14 22 32); y is the baseline; `turn: -90` reads up the page |
+| `rule(x0, x1, y, {dotted})` | a solid ink hair, or a dim dotted rule |
+| `section(x, y, w, title)` | a dotted rule from (x, y) with the title in caps hanging under it; `sectionDepth()` deep |
+| `bracketLabel(x, y, words)` | `[ ACTIVE ]` in the label voice |
+| `readout(x, y, {value, label, caption, captionAt, size, paint})` | a thin numeral on the baseline, a caps label over it, a caption beside its top ("14 SPEAKERS") or `below` |
+| `grid(cols, rows, gutter, margin)` / `span(a, b)` / `ids(seed)` / `advance(words, voice, size)` / `caps(words)` | from `lib/micro`: cell boxes on the plate; plausible module strings from a seed (`file() node() module() hex() id() code() status() coords() num()`); a word's estimated width; the voice's case |
 | helpers: `polar(cx, cy, r, angle)`, `onArc`, `spread`, `snap`, `round`, `iso(x, y, z, at?)`, `ISO_X` / `ISO_Y` / `ISO_Z` | geometry, from `lib/micro` |
 
 All the iso solids are at a true 30° (x runs down-right, y down-left, z
@@ -178,7 +184,7 @@ error.
 2. If it is not a control (F), give it a family in the `FAMILY` table at the
    top of `src/pages/design-system/glyphs.astro`: **A** waves, **B** curves,
    **C** instruments, **D** routing, **E** fields, **F** controls, **H** iso
-   parts.
+   parts, **I** bold shapes.
 3. Run the commands:
    - `bun run glyphs:bake` bakes the recipes (validating each; a violation
      writes nothing).
@@ -205,7 +211,7 @@ checklist is in CONVENTIONS.
 
 ## 6. The menu
 
-**Glyph files** (`<Glyph name>`): 72, of which 64 are recipes (R) and 8
+**Glyph files** (`<Glyph name>`): 79, of which 71 are recipes (R) and 8
 hand-drawn (H). "wide" is `0 0 96 32`, "wide 64" is `0 0 96 64`.
 
 | Fam. | Glyphs |
@@ -216,6 +222,7 @@ hand-drawn (H). "wide" is `0 0 96 32`, "wide 64" is `0 0 96 64`.
 | D routing | `crossfade` R · `junction` R (the dot-line-dot between tiles) · `leader` R · `loop` R · `mixer` R (two inputs into one) · `patch` R (a cable between jacks) · `ring-in` R · `ring-out` R · `send` R · `switch` R (a lever between contacts) · `wire` R |
 | E fields | `distort` R (spiky star ring) · `dot-rain` R · `halo` R · `orbit` R · `pendulum` R · `radar` R · `registration` R · `reticle` R · `rgb` R (the colour trio) · `scatter` R (seeded dots) · `target` R |
 | F controls | `amp` H (holds a readout) · `bracket` R · `cards` R (stacked, an envelope on the front) · `checkbox` R · `compass` H · `cross` R · `crossbox` R · `dot` R · `eject` R · `gate` R · `hand` H · `hex` R · `key` R (a pressed keycap) · `keycaps` R (wide) · `knob` H · `lock` H · `pan` H · `plus` R · `power` R · `slider` R (a fader) · `spark` R · `speaker` H · `toggle` H |
+| I bold shapes | `burst` R (seeded starburst) · `checker-warp` R (a swelling checker) · `iso-stripes` R (a cube in bars) · `petals` R (lavender flower, evenodd heart) · `stripe-disc` R (a disc of bars) · `swirl` R (pinwheel, spin) · `tri-bands` R (ink apex, blue bands) — FILLED paths, the one family that is not hairline |
 | H iso parts | `battery` R (wide 64) · `cone` R (the speaker driver, wide 64) · `handset` R (wide 64) · `iso-shell` R (wide 64) · `joystick` R · `pcb` R (board and chips, wide 64) · `rotary` R (the dial disc, wide 64) · `screw` R · `spring` R (wide 64) |
 
 **Generators** (13), with their props (ranges and defaults are in each
