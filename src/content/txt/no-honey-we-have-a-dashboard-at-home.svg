@@ -1,53 +1,17 @@
+<!-- baked from tools/scenes/posts/no-honey-we-have-a-dashboard-at-home/scene.ts (sources 660d3a5fc1a76d98) — edit the source -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
-  <g>
-    <!-- Three identical dashboards cascading in from the top-left corner.
-         The back two are only their visible edges, each with the same header:
-         three chrome dots and a coral badge. -->
-    <path d="M 10 70 H -10 V 10 H 80 V 30" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M -10 30 H 10 M 10 50 H 30" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 30 90 H 10 V 30 H 100 V 50" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <rect x="30" y="50" width="90" height="60" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 30 70 H 120 M 30 90 H 120 M 60 70 V 110 M 90 70 V 110" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
-    <circle cx="-1" cy="20" r="1.5" fill="var(--art-ink)" />
-    <circle cx="5" cy="20" r="1.5" fill="var(--art-ink)" />
-    <circle cx="11" cy="20" r="1.5" fill="var(--art-ink)" />
-    <circle cx="19" cy="40" r="1.5" fill="var(--art-ink)" />
-    <circle cx="25" cy="40" r="1.5" fill="var(--art-ink)" />
-    <circle cx="31" cy="40" r="1.5" fill="var(--art-ink)" />
-    <circle cx="39" cy="60" r="1.5" fill="var(--art-ink)" />
-    <circle cx="45" cy="60" r="1.5" fill="var(--art-ink)" />
-    <circle cx="51" cy="60" r="1.5" fill="var(--art-ink)" />
-    <rect x="62" y="16" width="8" height="8" fill="var(--art-coral)" />
-    <rect x="82" y="36" width="8" height="8" fill="var(--art-coral)" />
-    <rect x="102" y="56" width="8" height="8" fill="var(--art-coral)" />
-    <!-- The front dashboard's widgets: bars, a status pip, a sparkline, a gauge. -->
-    <path d="M 36 88 V 80 H 40 V 88 Z M 43 88 V 76 H 47 V 88 Z M 50 88 V 82 H 54 V 88 Z" fill="var(--art-ink)" />
-    <circle cx="75" cy="80" r="4" fill="var(--art-coral)" />
-    <path d="M 94 86 L 100 80 L 106 84 L 116 74" fill="none" stroke="var(--art-ink)" stroke-linecap="round" stroke-linejoin="round" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 36 104 A 9 9 0 0 1 54 104" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 45 104 L 50 98" fill="none" stroke="var(--art-ink)" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
-
-    <!-- The editor, cropped large off the right and bottom: cyan chrome with
-         the tab + editor area and the terminal cut through to the plate. -->
-    <path d="M 150 40 H 340 V 200 H 150 Z M 190 60 V 46 H 230 V 60 H 340 V 140 H 190 Z M 190 150 H 340 V 200 H 190 Z M 154 86 H 186 V 94 H 154 Z" fill="var(--art-cyan)" fill-rule="evenodd" />
-    <path d="M 236 60 V 48 H 272 V 60" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <!-- The sidebar tree: a list of cars, one selected. -->
-    <path d="M 158 70 H 176 M 164 80 H 180 M 164 100 H 176 M 158 110 H 174 M 164 120 H 180" fill="none" stroke="var(--art-ink)" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
-    <!-- Code: the digital twin as a document. -->
-    <path d="M 200 72 H 240 M 206 82 H 260 M 212 92 H 236 M 212 102 H 250 M 206 112 H 228 M 200 122 H 216" fill="none" stroke="var(--art-ink)" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 244 72 H 270 M 240 92 H 290 M 232 112 H 300" fill="none" stroke="var(--art-ink-2)" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
-    <!-- The terminal: a prompt, and signals tailing past the edge. -->
-    <path d="M 198 160 L 203 164 L 198 168" fill="none" stroke="var(--art-ink)" stroke-linecap="round" stroke-linejoin="round" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 210 164 H 340 M 198 178 H 340" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="2 6" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
-    <!-- The hand, on the selected car. -->
-    <path d="M 176 90 V 106 L 180 102.5 L 183 109 L 185.5 108 L 182.5 101.5 H 188 Z" fill="var(--art-ink)" />
-
-    <circle cx="40" cy="140" r="2" fill="var(--art-ink)" />
-    <circle cx="90" cy="156" r="1.5" fill="var(--art-ink)" />
-    <circle cx="120" cy="134" r="2.5" fill="var(--art-coral)" />
-  </g>
-  <!-- The caret: the editor is already open, live. -->
-  <g data-motion="blink">
-    <rect x="253" y="96" width="3" height="12" fill="var(--art-ink)" />
-  </g>
+  <path d="M 2 0 L 2 180 M 14 0 L 14 180 M 26 0 L 26 180 M 38 0 L 38 180 M 50 0 L 50 180 M 62 0 L 62 180 M 74 0 L 74 180 M 86 0 L 86 180 M 98 0 L 98 24 M 98 140 L 98 180 M 110 0 L 110 24 M 110 144 L 110 180 M 122 0 L 122 24 M 122 28 L 122 34 M 122 144 L 122 180 M 134 0 L 134 24 M 134 28 L 134 34 M 134 144 L 134 180 M 146 0 L 146 24 M 146 28 L 146 34 M 146 144 L 146 180 M 158 0 L 158 24 M 158 28 L 158 34 M 158 144 L 158 180 M 170 0 L 170 24 M 170 28 L 170 34 M 170 144 L 170 180 M 182 0 L 182 24 M 182 28 L 182 34 M 182 144 L 182 180 M 194 0 L 194 24 M 194 28 L 194 34 M 194 144 L 194 180 M 206 0 L 206 24 M 206 144 L 206 180 M 218 0 L 218 24 M 218 140 L 218 180 M 230 0 L 230 180 M 242 0 L 242 180 M 254 0 L 254 180 M 266 0 L 266 180 M 278 0 L 278 180 M 290 0 L 290 180 M 302 0 L 302 180 M 314 0 L 314 180 M 0 4 L 320 4 M 0 16 L 320 16 M 0 28 L 95 28 M 225 28 L 320 28 M 0 40 L 95 40 M 225 40 L 320 40 M 0 52 L 95 52 M 225 52 L 320 52 M 0 64 L 95 64 M 225 64 L 320 64 M 0 76 L 95 76 M 225 76 L 320 76 M 0 88 L 95 88 M 225 88 L 320 88 M 0 100 L 95 100 M 225 100 L 320 100 M 0 112 L 95 112 M 225 112 L 320 112 M 0 124 L 95 124 M 225 124 L 320 124 M 0 136 L 95 136 M 225 136 L 320 136 M 0 148 L 320 148 M 0 160 L 320 160 M 0 172 L 320 172" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 122 40 L 144 74 M 122 132 L 144 104 M 131.5 40 L 148 74 M 131.5 132 L 148 104 M 141 40 L 152 74 M 141 132 L 152 104 M 150.5 40 L 156 74 M 150.5 132 L 156 104 M 169.5 40 L 164 74 M 169.5 132 L 164 104 M 179 40 L 168 74 M 179 132 L 178.21 130 M 177 126.91 L 168 104 M 188.5 40 L 172 74 M 180.84 119 L 172 104 M 198 40 L 176 74 M 198 132 L 194.5 127.55 M 187.79 119 L 176 104 M 122 49.2 L 144 77 M 198 49.2 L 176 77 M 122 58.4 L 143.82 79.82 M 198 58.4 L 176.18 79.82 M 122 67.6 L 139.46 79.82 M 198 67.6 L 180.54 79.82 M 122 76.8 L 129.22 79.82 M 141.18 84.82 L 144 86 M 198 76.8 L 190.78 79.82 M 178.82 84.82 L 176 86 M 122 86 L 144 89 M 198 86 L 176 89 M 122 95.2 L 144 92 M 198 95.2 L 176 92 M 122 104.4 L 144 95 M 198 104.4 L 176 95 M 122 113.6 L 144 98 M 198 113.6 L 176 98 M 122 122.8 L 144 101 M 198 122.8 L 194.5 119.33 M 194.17 119 L 176 101 M 128.6 50.2 L 157.5 50.2 M 162.5 50.2 L 191.4 50.2 M 191.4 50.2 L 191.4 79.82 M 191.4 84.82 L 191.4 119 M 177 123.6 L 162.5 123.6 M 157.5 123.6 L 128.6 123.6 M 128.6 123.6 L 128.6 84.82 M 128.6 79.82 L 128.6 50.2 M 133.44 57.68 L 157.5 57.68 M 162.5 57.68 L 186.56 57.68 M 186.56 57.68 L 186.56 79.82 M 186.56 84.82 L 186.56 117.44 M 186.56 117.44 L 162.5 117.44 M 157.5 117.44 L 133.44 117.44 M 133.44 117.44 L 133.44 84.82 M 133.44 79.82 L 133.44 57.68 M 136.96 63.12 L 157.5 63.12 M 162.5 63.12 L 183.04 63.12 M 183.04 63.12 L 183.04 79.82 M 183.04 84.82 L 183.04 112.96 M 183.04 112.96 L 162.5 112.96 M 157.5 112.96 L 136.96 112.96 M 136.96 112.96 L 136.96 84.82 M 136.96 79.82 L 136.96 63.12 M 139.6 67.2 L 157.5 67.2 M 162.5 67.2 L 180.4 67.2 M 180.4 67.2 L 180.4 79.82 M 180.4 84.82 L 180.4 109.6 M 180.4 109.6 L 162.5 109.6 M 157.5 109.6 L 139.6 109.6 M 139.6 109.6 L 139.6 84.82 M 139.6 79.82 L 139.6 67.2 M 141.58 70.26 L 157.5 70.26 M 162.5 70.26 L 178.42 70.26 M 178.42 70.26 L 178.42 79.82 M 178.42 84.82 L 178.42 107.08 M 178.42 107.08 L 162.5 107.08 M 157.5 107.08 L 141.58 107.08 M 141.58 107.08 L 141.58 84.82 M 141.58 79.82 L 141.58 70.26" fill="none" stroke="var(--art-cyan)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 144 74 L 157.5 74 M 162.5 74 L 176 74 M 176 74 L 176 79.82 M 176 84.82 L 176 104 M 176 104 L 162.5 104 M 157.5 104 L 144 104 M 144 104 L 144 84.82 M 144 79.82 L 144 74" fill="none" stroke="var(--art-green)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="116" y="34" width="88" height="104" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="122" y="40" width="76" height="92" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 157.5 40 L 157.5 79.82 M 157.5 84.82 L 157.5 132 M 162.5 40 L 162.5 79.82 M 162.5 84.82 L 162.5 132 M 122 79.82 L 157.5 79.82 M 162.5 79.82 L 198 79.82 M 122 84.82 L 157.5 84.82 M 162.5 84.82 L 198 84.82" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="106" y="138" width="108" height="6" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <polygon points="181,138 182,130 190,130 191,138" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 186 130 C 185 124 180 122 177 123 C 180 126 184 127 186 130 M 186 130 C 187 122 191 119 194 119 C 192 123 189 126 186 130" fill="var(--art-green)" />
+  <line x1="96" y1="26" x2="224" y2="26" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="96" cy="26" r="1.8" fill="var(--art-ink)" />
+  <circle cx="224" cy="26" r="1.8" fill="var(--art-ink)" />
+  <path d="M 114 28 C 111 66 106 104 112 118 C 115 130 115 146 112 136 M 110 28 C 107 66 104.4 104 110.4 118 C 113.4 130 111 146 108 136 M 106 28 C 103 66 102.8 104 108.8 118 C 111.8 130 107 146 104 136 M 102 28 C 99 66 101.2 104 107.2 118 C 110.2 130 103 146 100 136" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 206 28 C 209 66 214 104 208 118 C 205 130 205 146 208 136 M 210 28 C 213 66 215.6 104 209.6 118 C 206.6 130 209 146 212 136 M 214 28 C 217 66 217.2 104 211.2 118 C 208.2 130 213 146 216 136 M 218 28 C 221 66 218.8 104 212.8 118 C 209.8 130 217 146 220 136" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
 </svg>
