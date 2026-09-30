@@ -156,8 +156,7 @@ test.describe("steps — the mega desk", () => {
 /**
  * Tahoe Mountain Hair: the water cycle in simple shapes, five beats round
  * the loop — vapour, snow, melt, minerals, lake — each putting the drop at
- * its stage (a now-mark) and landing a bar of Tahoe's hardness meter. No
- * ripple. The still is the drop in the lake, the meter full.
+ * its stage (a now-mark). No ripple. The still is the drop in the lake.
  */
 test.describe("steps — the water cycle", () => {
 	const cell = `[data-cell="post"]:has(a[href="/txt/tahoe-mountain-hair/"])`;
