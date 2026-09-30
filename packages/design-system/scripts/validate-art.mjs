@@ -1,53 +1,70 @@
-// The art validator: the rules of the post-art language, enforceable from a
-// shell and from the test suite (tests/post-art.spec.ts). An art file is a
-// drawing only — the frame (ArtFrame) supplies the plate, the tokens supply
-// every colour, the frame's CSS supplies the motion — so what is left to
-// check is that a file carries nothing else. The rules are the CONVENTIONS
-// "Art" section and the comment in src/art/_template.svg, made mechanical.
+// The SVG validator: the rules of the drawing languages, enforceable from a
+// shell and from the test suite. A drawing is a drawing only — its host
+// supplies the size, the tokens supply every colour, the host's CSS supplies
+// the motion — so what is left to check is that a file carries nothing else.
 //
-//   import { validateArt } from ".../validate-art.mjs";
-//   validateArt(source, { slug: "mega-desk" }) → string[]   // [] when clean
+// Two languages share one scanner and one set of rules, and differ only in
+// their constants, which a PROFILE holds:
 //
-//   bun packages/design-system/scripts/validate-art.mjs <file…>
+//   art    — the 320×180 post-art plates (src/content/txt/<slug>.svg, the
+//            fillers in src/art/), rendered through ArtFrame. The rules are the
+//            CONVENTIONS "Art" section and the comment in src/art/_template.svg,
+//            made mechanical; tests/post-art.spec.ts holds a fixture per rule.
+//   glyph  — the micrographics (src/glyphs/<name>.svg): 48×32 or 96-wide
+//            hairline marks inlined beside text, their line work currentColor
+//            so they take the colour of the text they sit in. No classes, no
+//            ids, no clipPaths — many sit on one page and none owns a frame.
+//            Its fixtures are src/lib/validate-glyph.test.ts (`bun test`).
+//
+//   import { validateSvg, validateArt, PROFILES } from ".../validate-art.mjs";
+//   validateSvg(source, { profile: PROFILES.glyph }) → string[]   // [] when clean
+//   validateArt(source, { slug: "mega-desk" }) → string[]         // the art profile
+//
+//   bun packages/design-system/scripts/validate-art.mjs [--profile glyph] <file…>
 //   bun run validate:art src/content/txt/mega-desk.svg      // exit 1 on a violation
+//   bun run validate:glyph packages/design-system/src/glyphs/*.svg
 //
 // Every violation is one line, `<rule>: <element> line N: <what>`, where
 // <rule> is one of RULES below, so a reader (or the spec) knows which rule
-// fired without reading the prose. The slug is the file's basename: clipPath
-// ids must be prefixed with it so two artworks inlined on one page cannot
-// collide.
+// fired without reading the prose. The slug is the file's basename: an art
+// file's clipPath ids must be prefixed with it so two artworks inlined on one
+// page cannot collide.
 //
 // No XML dependency: the format is constrained enough (tags, attributes,
 // comments, nothing else) that a tag/attribute scanner reads it whole, and a
-// file it cannot read is itself a violation.
+// file it cannot read is itself a violation. The file keeps its old name
+// (validate-art) so nothing that imports it has to move.
 
 import { readFileSync } from "node:fs";
 import { basename, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/** The rule names, as they prefix a violation. */
+/** The rule names, as they prefix a violation. Numbers are the art rules; a glyph's differences follow. */
 export const RULES = Object.freeze({
 	/** The file is one well-formed <svg> and nothing else. */
 	markup: "markup",
-	/** 1. viewBox is exactly 0 0 320 180; no width/height; only the svg namespace. */
+	/** 1. viewBox is exactly 0 0 320 180; no width/height; only the svg namespace. Glyph: 0 0 48 32, 0 0 96 32 or 0 0 96 64. */
 	root: "root",
-	/** 2. Only the drawing elements; text, images, gradients, filters, animation fail on sight. */
+	/** 2. Only the drawing elements; text, images, gradients, filters, animation fail on sight. Glyph: no clipPath/defs/use either. */
 	element: "element",
-	/** 3. No style=, no on*, no xlink:, class only art-line / art-line--2. */
+	/** 3. No style=, no on*, no xlink:, class only art-line / art-line--2. Glyph: no class at all. */
 	attribute: "attribute",
-	/** 4. fill/stroke are none, currentColor or an --art-* token; no literals, no opacity. */
+	/** 4. fill/stroke are none, currentColor or an --art-* token; no literals, no opacity. Glyph: --glyph-dim for the ink's dimming, no --art-ink*. */
 	paint: "paint",
-	/** 5. A stroked shape has vector-effect="non-scaling-stroke" and a weight of 1 or 1.5; dashes 4 4 or 2 6. */
+	/** 5. A stroked shape has vector-effect="non-scaling-stroke" and a weight of 1 or 1.5; dashes 4 4 or 2 6. Glyph: the weight is always a stroke-width. */
 	stroke: "stroke",
 	/** 6. One data-motion per file, on a <g>, spin|drift|slide|blink|dash; data-speed 0.5|1|2; a dash group is dashed and sets no offset. */
 	motion: "motion",
-	/** 7. ≤ 120 elements, ≤ 12 KB, ≤ 3 clipPaths, groups ≤ 4 deep. */
+	/** 7. ≤ 120 elements, ≤ 12 KB, ≤ 3 clipPaths, groups ≤ 4 deep. Glyph: 40 / 3 KB (80 / 6 KB wide), groups ≤ 3 deep. */
 	budget: "budget",
-	/** 8. ids only on a clipPath or defs content, prefixed <slug>-; use/clip-path point inside the file. */
+	/** 8. ids only on a clipPath or defs content, prefixed <slug>-; use/clip-path point inside the file. Glyph: no ids. */
 	ids: "ids",
-	/** 9. At least one --art-* token, at most three of the four fill colours. */
+	/** 9. At least one --art-* token, at most three of the four fill colours. Glyph: at least one paint, at most two colours. */
 	palette: "palette",
 });
+
+// --- The art constants (the art profile is built from these; they stay
+// exported under their old names for the spec and the motif check) ---------
 
 export const VIEWBOX = "0 0 320 180";
 export const SVG_NS = "http://www.w3.org/2000/svg";
@@ -84,15 +101,125 @@ export const BUDGET = Object.freeze({
 	depth: 4,
 });
 
-const ALLOWED = new Set(ALLOWED_ELEMENTS);
+// --- Profiles ------------------------------------------------------------
+
+/**
+ * Everything that differs between two kinds of drawing. The rules read only
+ * this; a new kind is a new profile, not a new branch in the rules.
+ *
+ * @typedef {object} Profile
+ * @property {string} name        "art" | "glyph"; names the kind in a message
+ * @property {string} host        what sizes and paints the file, for the prose ("the frame")
+ * @property {Readonly<Record<string, Budget>>} viewBoxes
+ *           the root viewBoxes allowed, each with its budget; the first is the
+ *           default (and the budget a file with a wrong viewBox is held to)
+ * @property {readonly string[]} elements   the element whitelist (FORBIDDEN_ELEMENTS always fail)
+ * @property {readonly string[]} paints     every fill/stroke value allowed
+ * @property {string} dimming               the one paint that dims, named when an opacity is refused
+ * @property {readonly { token: string, why: string }[]} forbiddenTokens
+ *           tokens that may not appear in any attribute value, and why
+ * @property {{ max: number, require: "token" | "paint", why: string }} palette
+ *           at most `max` of COLOURS; "token": at least one --art-* token,
+ *           "paint": at least one fill/stroke other than none
+ * @property {readonly string[]} classes    the allowed classes; empty means no class attribute at all
+ * @property {Readonly<Record<string, string>>} weights  class → the stroke-width it sets
+ * @property {readonly string[]} strokeWidths
+ * @property {boolean} requireStrokeWidth   a stroked shape states its own-or-inherited stroke-width
+ * @property {readonly string[]} dashes     stroke-dasharray values, space-separated
+ * @property {readonly string[]} motions    data-motion kinds; empty means no motion
+ * @property {readonly string[]} speeds
+ * @property {boolean} ids                  false: no id anywhere (so no clipPath/use can point at one)
+ *
+ * @typedef {object} Budget
+ * @property {number} elements  every element but the root
+ * @property {number} bytes     the file's size, comments included
+ * @property {number} depth     how many <g>s deep
+ * @property {number} [clipPaths]  absent when the kind has no clipPath
+ */
+
+/** @type {Profile} */
+const ART = Object.freeze({
+	name: "art",
+	host: "the frame",
+	viewBoxes: Object.freeze({ [VIEWBOX]: BUDGET }),
+	elements: ALLOWED_ELEMENTS,
+	paints: PAINTS,
+	dimming: "var(--art-ink-2)",
+	forbiddenTokens: Object.freeze(FRAME_TOKENS.map((token) => ({ token, why: "belongs to the frame, not a file" }))),
+	palette: Object.freeze({ max: 3, require: "token", why: "the ink plus at most three, one dominant" }),
+	classes: CLASSES,
+	weights: WEIGHTS,
+	strokeWidths: STROKE_WIDTHS,
+	requireStrokeWidth: false,
+	dashes: DASHES,
+	motions: MOTIONS,
+	speeds: SPEEDS,
+	ids: true,
+});
+
+/**
+ * The glyph dashes. Measured in Chromium (a 48×32 glyph at 96px and 192px
+ * wide, at DPR 1 and 2): under vector-effect="non-scaling-stroke" a
+ * stroke-dasharray is in SCREEN px, not viewBox units — "4 4" drew 4px on,
+ * 4px off at both sizes, and 8/16px without the vector-effect. (Art's dashes
+ * are screen px too, for the same reason.) So a glyph's dashes are chosen as
+ * pixels, the same at every size a glyph is drawn:
+ *
+ *   "0.01 3.99"  the dotted guide: with stroke-linecap="round", a 1px dot every
+ *                4px. The 0.01 is load-bearing — a "0 4" dash drew nothing at
+ *                DPR 1. The period is exactly 4 so the frame's dash motion
+ *                (an 8-unit offset) loops seamlessly over it.
+ *   "2 2"        a fine dash, period 4.
+ *   "4 4"        art's dash, period 8.
+ *
+ * Every period divides 8, for the same seamless loop ("3 3", period 6, would
+ * jump at the end of each cycle).
+ */
+const GLYPH_DASHES = Object.freeze(["0.01 3.99", "2 2", "4 4"]);
+
+/** @type {Profile} */
+const GLYPH = Object.freeze({
+	name: "glyph",
+	host: "the Glyph component",
+	viewBoxes: Object.freeze({
+		"0 0 48 32": Object.freeze({ elements: 40, bytes: 3 * 1024, depth: 3 }),
+		"0 0 96 32": Object.freeze({ elements: 80, bytes: 6 * 1024, depth: 3 }),
+		"0 0 96 64": Object.freeze({ elements: 80, bytes: 6 * 1024, depth: 3 }),
+	}),
+	elements: Object.freeze(["svg", "g", ...SHAPES]),
+	paints: Object.freeze([
+		"none", "currentColor", "var(--glyph-dim)",
+		"var(--art-lavender)", "var(--art-coral)", "var(--art-cyan)", "var(--art-green)",
+	]),
+	dimming: "var(--glyph-dim)",
+	forbiddenTokens: Object.freeze([
+		...FRAME_TOKENS.map((token) => ({ token, why: "belongs to the art frame; a glyph has none" })),
+		{ token: "--art-ink", why: "is the plate's ink; a glyph's line work is currentColor (dimmed: var(--glyph-dim)) so it follows the text it sits in" },
+	]),
+	palette: Object.freeze({ max: 2, require: "paint", why: "currentColor plus at most two" }),
+	classes: Object.freeze([]),
+	weights: Object.freeze({}),
+	strokeWidths: STROKE_WIDTHS,
+	requireStrokeWidth: true,
+	dashes: GLYPH_DASHES,
+	motions: MOTIONS,
+	speeds: SPEEDS,
+	ids: false,
+});
+
+/** Every kind the validator knows, by name (the CLI's --profile). */
+export const PROFILES = Object.freeze({ art: ART, glyph: GLYPH });
+
 const FORBIDDEN = new Set(FORBIDDEN_ELEMENTS);
 const SHAPE = new Set(SHAPES);
-const PAINT = new Set(PAINTS);
-const CLASS = new Set(CLASSES);
-const WIDTH = new Set(STROKE_WIDTHS);
-const DASH = new Set(DASHES);
-const MOTION = new Set(MOTIONS);
-const SPEED = new Set(SPEEDS);
+
+/** `"a" or "b"`, `"a", "b" or "c"`: a list in a message. */
+const either = (xs, quote = true) => {
+	const q = xs.map((x) => (quote ? `"${x}"` : x));
+	return q.length < 2 ? q.join("") : `${q.slice(0, -1).join(", ")} or ${q[q.length - 1]}`;
+};
+
+const COUNTS = ["no", "one", "two", "three", "all four"];
 
 /**
  * @typedef {object} Element
@@ -104,12 +231,32 @@ const SPEED = new Set(SPEEDS);
  */
 
 /**
- * Validate one art file.
+ * Validate one art file: validateSvg with the art profile.
  * @param {string} source  the file's text
  * @param {{ slug?: string }} [options]  the file's basename without .svg; clipPath ids must start with `<slug>-`
  * @returns {string[]}  violations, one line each; empty when the file is clean
  */
 export function validateArt(source, { slug } = {}) {
+	return validateSvg(source, { profile: ART, slug });
+}
+
+/**
+ * Validate one drawing against a profile.
+ * @param {string} source  the file's text
+ * @param {{ profile?: Profile, slug?: string }} [options]  profile defaults to art; slug as validateArt
+ * @returns {string[]}  violations, one line each; empty when the file is clean
+ */
+export function validateSvg(source, { profile = ART, slug } = {}) {
+	const P = profile;
+	const ALLOWED = new Set(P.elements);
+	const PAINT = new Set(P.paints);
+	const CLASS = new Set(P.classes);
+	const WIDTH = new Set(P.strokeWidths);
+	const DASH = new Set(P.dashes);
+	const MOTION = new Set(P.motions);
+	const SPEED = new Set(P.speeds);
+	const VIEWBOXES = Object.keys(P.viewBoxes);
+
 	const out = [];
 	const fail = (rule, el, detail) => {
 		const where = el ? `<${el.name}> line ${el.line}` : "file";
@@ -126,14 +273,21 @@ export function validateArt(source, { slug } = {}) {
 	const root = roots[0];
 	const all = flatten(root);
 
-	// 1. The root.
+	// 1. The root. Its viewBox also picks the budget (a wrong one, the first).
 	const vb = root.attrs.get("viewBox");
-	if (vb === undefined) fail(RULES.root, root, `viewBox="${VIEWBOX}" is required`);
-	else if (vb.trim().split(/\s+/).join(" ") !== VIEWBOX) {
-		fail(RULES.root, root, `viewBox must be exactly "${VIEWBOX}" (got "${vb}"); the frame sets the size`);
+	const vbNorm = vb?.trim().split(/\s+/).join(" ");
+	const budget = P.viewBoxes[vbNorm] ?? P.viewBoxes[VIEWBOXES[0]];
+	if (vb === undefined) {
+		fail(RULES.root, root, VIEWBOXES.length === 1
+			? `viewBox="${VIEWBOXES[0]}" is required`
+			: `a viewBox is required: ${either(VIEWBOXES)}`);
+	} else if (!VIEWBOXES.includes(vbNorm)) {
+		fail(RULES.root, root, VIEWBOXES.length === 1
+			? `viewBox must be exactly "${VIEWBOXES[0]}" (got "${vb}"); ${P.host} sets the size`
+			: `viewBox must be one of ${either(VIEWBOXES)} (got "${vb}"); ${P.host} sets the size`);
 	}
 	for (const a of ["width", "height"]) {
-		if (root.attrs.has(a)) fail(RULES.root, root, `no ${a} on the root; the frame sets the size`);
+		if (root.attrs.has(a)) fail(RULES.root, root, `no ${a} on the root; ${P.host} sets the size`);
 	}
 	const xmlns = root.attrs.get("xmlns");
 	if (xmlns !== undefined && xmlns !== SVG_NS) {
@@ -145,13 +299,13 @@ export function validateArt(source, { slug } = {}) {
 		if (FORBIDDEN.has(el.name)) {
 			fail(RULES.element, el, `<${el.name}> is not part of the language (no text, images, gradients, filters, masks, animation, style)`);
 		} else if (!ALLOWED.has(el.name)) {
-			fail(RULES.element, el, `<${el.name}> is not an allowed element (${ALLOWED_ELEMENTS.join(" ")})`);
+			fail(RULES.element, el, `<${el.name}> is not an allowed element (${P.elements.join(" ")})`);
 		} else if (el.name === "svg" && el !== root) {
 			fail(RULES.element, el, `<svg> only as the root`);
 		}
 		for (const [name, value] of el.attrs) {
 			if (name === "style") {
-				fail(RULES.attribute, el, `no style attribute; colours are fill/stroke tokens and motion is the frame's CSS`);
+				fail(RULES.attribute, el, `no style attribute; colours are fill/stroke tokens and motion is ${P.host}'s CSS`);
 			} else if (/^on/i.test(name)) {
 				fail(RULES.attribute, el, `no event attribute (${name})`);
 			} else if (/^xlink:/i.test(name) || name === "xmlns:xlink") {
@@ -159,30 +313,45 @@ export function validateArt(source, { slug } = {}) {
 			} else if (/^xmlns:/i.test(name)) {
 				fail(RULES.attribute, el, `only the svg namespace (${name})`);
 			} else if (name === "class") {
+				if (P.classes.length === 0) {
+					fail(RULES.attribute, el, `no class attribute in a ${P.name}; the weight is stroke-width="${P.strokeWidths.join("|")}"`);
+					continue;
+				}
 				for (const c of value.trim().split(/\s+/).filter(Boolean)) {
-					if (!CLASS.has(c)) fail(RULES.attribute, el, `class "${c}" is not one of ${CLASSES.join(", ")}`);
+					if (!CLASS.has(c)) fail(RULES.attribute, el, `class "${c}" is not one of ${P.classes.join(", ")}`);
 				}
 			}
-			for (const t of FRAME_TOKENS) {
-				if (value.includes(t)) fail(RULES.paint, el, `${t} belongs to the frame, not a file (${name}="${value}")`);
+			for (const { token, why } of P.forbiddenTokens) {
+				if (value.includes(token)) {
+					fail(RULES.paint, el, `${token} ${why} (${name}="${value}")`);
+				}
 			}
 		}
 	}
 
 	// 4. Paint.
-	const used = new Set(); // every --art-* token a fill/stroke names
+	const used = new Set(); // every token a fill/stroke names
+	let painted = false; // some fill/stroke is not none
 	for (const el of all) {
 		for (const a of ["fill", "stroke"]) {
 			const v = el.attrs.get(a);
 			if (v === undefined) continue;
 			if (!PAINT.has(v)) {
-				fail(RULES.paint, el, `${a}="${v}" is not a paint the language has: none, currentColor, or ${PAINTS.slice(2).join(" ")}`);
-			} else if (v.startsWith("var(")) used.add(v);
+				const tokens = P.paints.filter((p) => p.startsWith("var("));
+				fail(RULES.paint, el, `${a}="${v}" is not a paint the language has: none, currentColor, or ${tokens.join(" ")}`);
+			} else {
+				if (v.startsWith("var(")) used.add(v);
+				if (v !== "none") painted = true;
+			}
 		}
 		for (const a of ["opacity", "fill-opacity", "stroke-opacity"]) {
-			if (el.attrs.has(a)) fail(RULES.paint, el, `no ${a}; var(--art-ink-2) is the one dimming`);
+			if (el.attrs.has(a)) fail(RULES.paint, el, `no ${a}; ${P.dimming} is the one dimming`);
 		}
-		if (el.attrs.has("color")) fail(RULES.paint, el, `no color attribute; currentColor is the ink, set by the frame`);
+		if (el.attrs.has("color")) {
+			fail(RULES.paint, el, P.name === "art"
+				? `no color attribute; currentColor is the ink, set by the frame`
+				: `no color attribute; currentColor is the colour of the text the ${P.name} sits in`);
+		}
 		// A shape with no fill (its own or a group's) paints SVG's default:
 		// black — invisible on the plate, and never what was meant. That holds for
 		// a STROKED outline too: it renders as a black-filled shape under its line,
@@ -195,6 +364,7 @@ export function validateArt(source, { slug } = {}) {
 	}
 
 	// 5. Strokes.
+	const widths = either(P.strokeWidths, false);
 	for (const el of all) {
 		const ve = el.attrs.get("vector-effect");
 		if (ve !== undefined && ve !== "non-scaling-stroke") {
@@ -202,21 +372,28 @@ export function validateArt(source, { slug } = {}) {
 		}
 		const sw = el.attrs.get("stroke-width");
 		if (sw !== undefined && !WIDTH.has(sw)) {
-			fail(RULES.stroke, el, `stroke-width must be 1 or 1.5 (got "${sw}"); prefer class="art-line" / "art-line--2"`);
+			fail(RULES.stroke, el, P.classes.length
+				? `stroke-width must be ${widths} (got "${sw}"); prefer class="${P.classes.join('" / "')}"`
+				: `stroke-width must be ${widths} (got "${sw}")`);
 		}
-		const cls = (el.attrs.get("class") ?? "").trim().split(/\s+/).find((c) => c in WEIGHTS);
-		if (sw !== undefined && cls && WEIGHTS[cls] !== sw) {
-			fail(RULES.stroke, el, `class="${cls}" says ${WEIGHTS[cls]} but stroke-width says ${sw}; keep one`);
+		const cls = (el.attrs.get("class") ?? "").trim().split(/\s+/).find((c) => c in P.weights);
+		if (sw !== undefined && cls && P.weights[cls] !== sw) {
+			fail(RULES.stroke, el, `class="${cls}" says ${P.weights[cls]} but stroke-width says ${sw}; keep one`);
 		}
 		const da = el.attrs.get("stroke-dasharray");
 		if (da !== undefined) {
 			const norm = da.trim().replace(/[\s,]+/g, " ");
-			if (!DASH.has(norm)) fail(RULES.stroke, el, `stroke-dasharray must be "4 4" or "2 6" (got "${da}")`);
+			if (!DASH.has(norm)) fail(RULES.stroke, el, `stroke-dasharray must be ${either(P.dashes)} (got "${da}")`);
 		}
 		if (SHAPE.has(el.name) && !inside(el, "clipPath")) {
 			const s = inherited(el, "stroke");
-			if (s !== undefined && s !== "none" && ve === undefined) {
-				fail(RULES.stroke, el, `a stroked shape needs vector-effect="non-scaling-stroke" on itself (it is not inherited from a <g>)`);
+			if (s !== undefined && s !== "none") {
+				if (ve === undefined) {
+					fail(RULES.stroke, el, `a stroked shape needs vector-effect="non-scaling-stroke" on itself (it is not inherited from a <g>)`);
+				}
+				if (P.requireStrokeWidth && inherited(el, "stroke-width") === undefined) {
+					fail(RULES.stroke, el, `a stroked shape needs a stroke-width, ${widths} (its own or a group's)`);
+				}
 			}
 		}
 	}
@@ -225,11 +402,15 @@ export function validateArt(source, { slug } = {}) {
 	const moving = all.filter((el) => el.attrs.has("data-motion"));
 	moving.forEach((el, i) => {
 		const kind = el.attrs.get("data-motion");
+		if (P.motions.length === 0) {
+			fail(RULES.motion, el, `no motion in a ${P.name}`);
+			return;
+		}
 		if (i > 0) fail(RULES.motion, el, `a second data-motion (the first is at line ${moving[0].line}); one moving idea per file`);
-		if (!MOTION.has(kind)) fail(RULES.motion, el, `data-motion="${kind}" is not one of ${MOTIONS.join(" | ")}`);
+		if (!MOTION.has(kind)) fail(RULES.motion, el, `data-motion="${kind}" is not one of ${P.motions.join(" | ")}`);
 		if (el.name !== "g") fail(RULES.motion, el, `data-motion belongs on a <g> that holds what moves`);
 		if (el.children.length === 0) fail(RULES.motion, el, `the data-motion group is empty; nothing would move`);
-		// The frame's keyframes set the group's CSS transform, which replaces a
+		// The host's keyframes set the group's CSS transform, which replaces a
 		// transform attribute outright: the group would jump when motion starts.
 		if (el.attrs.has("transform")) {
 			fail(RULES.motion, el, `no transform on the data-motion group (its animation replaces it); wrap it in an outer <g transform>`);
@@ -237,12 +418,12 @@ export function validateArt(source, { slug } = {}) {
 		if (kind === "dash") {
 			for (const d of [el, ...flatten(el).slice(1)]) {
 				if (d.attrs.has("stroke-dashoffset")) {
-					fail(RULES.motion, d, `a dash group must not set stroke-dashoffset; the frame animates it`);
+					fail(RULES.motion, d, `a dash group must not set stroke-dashoffset; ${P.host} animates it`);
 				}
 				if (SHAPE.has(d.name)) {
 					const s = inherited(d, "stroke");
 					if (s !== undefined && s !== "none" && inherited(d, "stroke-dasharray") === undefined) {
-						fail(RULES.motion, d, `a stroked shape in a dash group needs stroke-dasharray ("4 4" or "2 6")`);
+						fail(RULES.motion, d, `a stroked shape in a dash group needs stroke-dasharray (${either(P.dashes)})`);
 					}
 				}
 			}
@@ -251,25 +432,33 @@ export function validateArt(source, { slug } = {}) {
 	for (const el of all) {
 		const speed = el.attrs.get("data-speed");
 		if (speed === undefined) continue;
-		if (!SPEED.has(speed)) fail(RULES.motion, el, `data-speed="${speed}" is not one of ${SPEEDS.join(" | ")}`);
+		if (!SPEED.has(speed)) fail(RULES.motion, el, `data-speed="${speed}" is not one of ${P.speeds.join(" | ")}`);
 		if (!el.attrs.has("data-motion")) fail(RULES.motion, el, `data-speed goes on the data-motion group`);
 	}
 
 	// 7. Budgets.
 	const count = all.length - 1;
-	if (count > BUDGET.elements) fail(RULES.budget, root, `${count} elements; the budget is ${BUDGET.elements}`);
+	if (count > budget.elements) fail(RULES.budget, root, `${count} elements; the budget is ${budget.elements}`);
 	const bytes = Buffer.byteLength(source, "utf8");
-	if (bytes > BUDGET.bytes) fail(RULES.budget, root, `${bytes} bytes; the budget is ${BUDGET.bytes} (12 KB), comments included`);
-	const clips = all.filter((el) => el.name === "clipPath");
-	if (clips.length > BUDGET.clipPaths) fail(RULES.budget, root, `${clips.length} clipPaths; the budget is ${BUDGET.clipPaths}`);
-	const deep = all.find((el) => el.name === "g" && groupDepth(el) > BUDGET.depth);
-	if (deep) fail(RULES.budget, deep, `groups ${groupDepth(deep)} deep; the budget is ${BUDGET.depth}`);
+	if (bytes > budget.bytes) {
+		fail(RULES.budget, root, `${bytes} bytes; the budget is ${budget.bytes} (${budget.bytes / 1024} KB), comments included`);
+	}
+	if (budget.clipPaths !== undefined) {
+		const clips = all.filter((el) => el.name === "clipPath");
+		if (clips.length > budget.clipPaths) fail(RULES.budget, root, `${clips.length} clipPaths; the budget is ${budget.clipPaths}`);
+	}
+	const deep = all.find((el) => el.name === "g" && groupDepth(el) > budget.depth);
+	if (deep) fail(RULES.budget, deep, `groups ${groupDepth(deep)} deep; the budget is ${budget.depth}`);
 
 	// 8. Ids and references.
 	const ids = new Map();
 	for (const el of all) {
 		const id = el.attrs.get("id");
 		if (id === undefined) continue;
+		if (!P.ids) {
+			fail(RULES.ids, el, `no ids in a ${P.name}: many are inlined on one page, and an id would collide`);
+			continue;
+		}
 		if (ids.has(id)) fail(RULES.ids, el, `duplicate id "${id}" (first at line ${ids.get(id).line})`);
 		else ids.set(id, el);
 		if (el.name !== "clipPath" && !inside(el, "defs")) {
@@ -280,8 +469,9 @@ export function validateArt(source, { slug } = {}) {
 		}
 	}
 	for (const el of all) {
-		if (el.name === "clipPath" && !el.attrs.has("id")) fail(RULES.ids, el, `a <clipPath> needs an id (prefixed <slug>-)`);
-		if (el.name === "use") {
+		// A clipPath or use the profile refuses has had its say under the element rule.
+		if (el.name === "clipPath" && ALLOWED.has("clipPath") && !el.attrs.has("id")) fail(RULES.ids, el, `a <clipPath> needs an id (prefixed <slug>-)`);
+		if (el.name === "use" && ALLOWED.has("use")) {
 			const href = el.attrs.get("href");
 			const target = href?.startsWith("#") ? ids.get(href.slice(1)) : undefined;
 			if (href === undefined) fail(RULES.ids, el, `a <use> needs href="#<id>"`);
@@ -299,10 +489,15 @@ export function validateArt(source, { slug } = {}) {
 	}
 
 	// 9. Palette.
-	if (used.size === 0) fail(RULES.palette, root, `no --art-* token used; the drawing is ink and colour from the tokens`);
+	if (P.palette.require === "token" && used.size === 0) {
+		fail(RULES.palette, root, `no --art-* token used; the drawing is ink and colour from the tokens`);
+	}
+	if (P.palette.require === "paint" && !painted) {
+		fail(RULES.palette, root, `every fill and stroke is none; nothing would draw`);
+	}
 	const colours = COLOURS.filter((c) => used.has(`var(--art-${c})`));
-	if (colours.length > 3) {
-		fail(RULES.palette, root, `all four colours (${colours.join(", ")}); the ink plus at most three, one dominant`);
+	if (colours.length > P.palette.max) {
+		fail(RULES.palette, root, `${COUNTS[colours.length]} colours (${colours.join(", ")}); ${P.palette.why}`);
 	}
 
 	return out;
@@ -422,13 +617,25 @@ export function slugOf(file) {
 }
 
 /**
- * Validate files from a shell.
- * @param {string[]} files
+ * Validate files from a shell: `[--profile art|glyph] <file…>`, art by default.
+ * @param {string[]} args
  * @returns {number} the exit code: 0 clean, 1 a violation, 2 usage
  */
-export function main(files) {
+export function main(args) {
+	const files = [...args];
+	let profile = PROFILES.art;
+	const flag = files.findIndex((a) => a === "--profile" || a.startsWith("--profile="));
+	if (flag !== -1) {
+		const [arg] = files.splice(flag, 1);
+		const name = arg.includes("=") ? arg.slice(arg.indexOf("=") + 1) : files.splice(flag, 1)[0];
+		if (!Object.hasOwn(PROFILES, name ?? "")) {
+			console.error(`unknown profile "${name ?? ""}"; one of ${Object.keys(PROFILES).join(", ")}`);
+			return 2;
+		}
+		profile = PROFILES[name];
+	}
 	if (files.length === 0) {
-		console.error("usage: bun packages/design-system/scripts/validate-art.mjs <file.svg…>");
+		console.error("usage: bun packages/design-system/scripts/validate-art.mjs [--profile art|glyph] <file.svg…>");
 		return 2;
 	}
 	let code = 0;
@@ -441,7 +648,7 @@ export function main(files) {
 			code = code || 2;
 			continue;
 		}
-		const violations = validateArt(source, { slug: slugOf(file) });
+		const violations = validateSvg(source, { profile, slug: slugOf(file) });
 		if (violations.length === 0) {
 			console.log(`ok    ${file}`);
 		} else {

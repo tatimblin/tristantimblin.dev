@@ -632,6 +632,18 @@ prefixed with the slug; ≤ 120 elements, ≤ 12 KB. The validator
 `tests/post-art.spec.ts` enforce all of it. Import a file with `?raw`; it must
 be inlined, since its colours are tokens and its motion is the frame's CSS.
 
+**Profiles.** The validator is one scanner with two profiles
+(`PROFILES.art`, `PROFILES.glyph`; `validateSvg(source, { profile })`,
+`validateArt` is the art one). **`art`** is everything above. **`glyph`** is for
+the micrographics in `src/glyphs/` (`bun run validate:glyph <file>`): viewBox
+`0 0 48 32`, or `0 0 96 32` / `0 0 96 64` wide; no `clipPath`/`defs`/`use`,
+no ids, no `class` — every stroked shape states `stroke-width` 1 or 1.5; line
+work is `currentColor` (dimmed: `var(--glyph-dim)`), never `--art-ink`, plus at
+most two of the four colours; dashes `0.01 3.99` (round-capped dots), `2 2`,
+`4 4` — screen px, since `non-scaling-stroke` takes the dash array out of the
+viewBox; ≤ 40 elements / 3 KB (80 / 6 KB wide), groups ≤ 3 deep. Motion is
+art's contract. The glyph fixtures are `src/lib/validate-glyph.test.ts`.
+
 **`ArtFrame`** — the window every artwork renders through
 (`styles/art-frame.css`, class `ds-art-frame`): the plate, the edge, the corner,
 `overflow: hidden` and the 16:9 box (`--art-ratio` retunes it in scope; the

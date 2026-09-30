@@ -12,7 +12,8 @@
     "astro": "bunx --bun astro",
     "check": "astro check",
     "test": "playwright test",
-    "validate:art": "bun packages/design-system/scripts/validate-art.mjs"
+    "validate:art": "bun packages/design-system/scripts/validate-art.mjs",
+    "validate:glyph": "bun packages/design-system/scripts/validate-art.mjs --profile glyph"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",
