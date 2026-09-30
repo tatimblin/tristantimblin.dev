@@ -111,9 +111,10 @@ test.describe("steps — the assertion sheet", () => {
 });
 
 /**
- * The Mega Desk: the drafting sheet, the desk rising sitting to standing
- * in four beats — each beat's now-mark is the whole desk at that height,
- * so exactly one desk shows at a time, and the still is the standing one.
+ * The Mega Desk: a module sheet, the desk rising sitting to standing in
+ * four beats — each beat's now-mark is the whole desk at that height with
+ * its state ([ SITTING ] … [ STANDING ]), so exactly one desk shows at a
+ * time, a meter pip lands per beat, and the still is the standing one.
  */
 test.describe("steps — the mega desk", () => {
 	const cell = `[data-cell="post"]:has(a[href="/txt/mega-desk/"])`;
