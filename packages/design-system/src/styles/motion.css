@@ -1,10 +1,11 @@
 /* MOTION — the data-motion contract, shared by the art frame (ArtFrame,
  * art-frame.css) and the glyphs (Glyph, glyph.css). A file marks at most
- * one group data-motion="spin|drift|slide|blink|dash" and the HOST owns the
- * keyframes — so every artwork and every glyph moves the same way, and no
- * file carries a <style> or an <animate>. Transform and opacity only, apart
- * from `dash`, which advances a dashed trace by stroke-dashoffset (a bent
- * trace has no transform that does it).
+ * one group data-motion="spin|drift|slide|blink|dash|steps" and the HOST
+ * owns the keyframes — so every artwork and every glyph moves the same way,
+ * and no file carries a <style> or an <animate>. Transform and opacity
+ * only, apart from `dash`, which advances a dashed trace by
+ * stroke-dashoffset (a bent trace has no transform that does it), and
+ * `steps`, which animates a CLOCK the beats read (below).
  *
  * PAUSED AT REST. The still frame is the poster — a file must read at t=0 —
  * and it runs only under the pointer, under keyboard focus, inside a
@@ -22,7 +23,9 @@
  * out and back; a slide moves a group repeating every 40 units by exactly
  * 40; a blink returns to lit; a dash advances by one 8-unit period — art's
  * dash arrays (4 4, 2 6) sum to 8, and a glyph's (0.01 3.99, 2 2, 4 4) to 4
- * or 8, so eight is a whole number of periods for every one of them. */
+ * or 8, so eight is a whole number of periods for every one of them; a
+ * steps loop ends on its last beat's landing and starts on the hold that
+ * keeps it. */
 :is(.ds-art-frame, .ds-glyph) [data-motion] {
 	transform-box: fill-box;
 	transform-origin: center;
@@ -59,6 +62,87 @@
 :is(.ds-art-frame, .ds-glyph) [data-motion="dash"] {
 	animation-name: ds-art-dash;
 	--art-cycle: calc(1 / 6);
+}
+
+/* STEPS — a sequence that lands beat by beat: a walk, a build-up, a trace
+ * of calls. The file says <g data-motion="steps" data-beats="N"> (N 2–8)
+ * with exactly N children <g data-beat="0"> … <g data-beat="N-1">; inside
+ * a beat, a data-ripple is a shape that scales out and fades as the beat
+ * lands, and a data-now shows only while the beat is the current one (a
+ * pointer steps along a ruler as one copy per beat). No file carries a
+ * number: the host animates ONE CLOCK on the group — a registered custom
+ * property, 0 → 1 over the loop — and every beat derives its own state from
+ * it, its index and the count, so an eight-beat file and a two-beat file
+ * take the same rules.
+ *
+ * THE TIMELINE, in SLOTS of a sixth of --duration-loop (1s at the 6s loop),
+ * the loop being N + 2 slots long (--art-cycle): slots [0, 0.5) are the
+ * HOLD — the finished walk, every beat lit, the last beat's now-mark
+ * shown, no ripple — which is also the still frame, so a paused tile and
+ * a reduced-motion page show the finished drawing; at 0.5 the walk RESETS
+ * to faint; beat i LANDS at slot i + 1 (its ripple runs for the next 0.8
+ * of a slot, its now-mark shows until the next lands); the last lands at
+ * slot N and holds through the loop's end, which wraps onto the hold —
+ * seamless. A landed beat stays. An unlanded beat is faint, not gone: the
+ * whole walk reads as the poster's ghost.
+ *
+ * The arithmetic: --art-s is the clock in slots, --art-u the slots since
+ * this beat landed (negative before), and each state is a clamp of that
+ * — a hard step, because the ×1000 makes the ramp a thousandth of a slot.
+ * `clamp(faint, max(u, 0.5 − s) × 1000, 1)` is lit once landed OR during
+ * the hold. Every value is a number the browser interpolates from the
+ * clock; nothing is keyframed per beat. */
+@property --art-clock {
+	syntax: "<number>";
+	inherits: true;
+	initial-value: 0;
+}
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] {
+	animation-name: ds-art-steps;
+	--art-cycle: calc((var(--art-beats) + 2) / 6);
+	--art-s: calc(var(--art-clock) * (var(--art-beats) + 2));
+}
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"][data-beats="2"] { --art-beats: 2; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"][data-beats="3"] { --art-beats: 3; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"][data-beats="4"] { --art-beats: 4; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"][data-beats="5"] { --art-beats: 5; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"][data-beats="6"] { --art-beats: 6; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"][data-beats="7"] { --art-beats: 7; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"][data-beats="8"] { --art-beats: 8; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] > [data-beat] {
+	/* slots since this beat landed; the hold before the reset counts as landed */
+	--art-u: calc(var(--art-s) - var(--art-beat) - 1);
+	--art-lit: max(var(--art-u), 0.5 - var(--art-s));
+	/* the current beat's window: from its landing to the next beat's */
+	--art-now: var(--art-u);
+	--art-end: 1;
+	opacity: clamp(0.09, var(--art-lit) * 1000, 1);
+}
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] > [data-beat]:last-child {
+	/* the last beat stays current through the loop's end and the hold */
+	--art-now: var(--art-lit);
+	--art-end: 1000000;
+}
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] > [data-beat="0"] { --art-beat: 0; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] > [data-beat="1"] { --art-beat: 1; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] > [data-beat="2"] { --art-beat: 2; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] > [data-beat="3"] { --art-beat: 3; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] > [data-beat="4"] { --art-beat: 4; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] > [data-beat="5"] { --art-beat: 5; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] > [data-beat="6"] { --art-beat: 6; }
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] > [data-beat="7"] { --art-beat: 7; }
+/* The ripple: from 0.3× to 2.1× about its own box over 0.8 of a slot,
+ * fast then slow (two linear pieces, an ease-out), fading as it goes;
+ * nothing before its beat lands. */
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] [data-ripple] {
+	transform-box: fill-box;
+	transform-origin: center;
+	opacity: clamp(0, min(var(--art-u) * 1000, (0.8 - var(--art-u)) / 0.8), 1);
+	transform: scale(clamp(0.3, min(0.3 + var(--art-u) * 4.5, 1.2 + var(--art-u) * 1.1), 2.1));
+}
+/* The now-mark: shown from its beat's landing until the next beat lands. */
+:is(.ds-art-frame, .ds-glyph) [data-motion="steps"] [data-now] {
+	opacity: clamp(0, min(var(--art-now) * 1000, (var(--art-end) - var(--art-u)) * 1000), 1);
 }
 
 /* THE ART FRAME plays under the pointer, under focus within it, inside a
@@ -119,5 +203,11 @@ a:focus-visible .ds-glyph [data-motion] {
 @keyframes ds-art-dash {
 	to {
 		stroke-dashoffset: -8px;
+	}
+}
+/* The steps clock: the loop's fraction, which the beats read (above). */
+@keyframes ds-art-steps {
+	to {
+		--art-clock: 1;
 	}
 }

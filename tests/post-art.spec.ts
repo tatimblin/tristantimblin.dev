@@ -82,6 +82,10 @@ const wrap = (inner: string, open = OPEN) => `${open}
 
 const SLUG = "fx";
 
+/** One beat of a steps group: a landing dot, its ripple, and a now-mark. */
+const beat = (i: number) =>
+	`<g data-beat="${i}"><circle cx="${40 + i * 30}" cy="90" r="3" fill="var(--art-green)" /><circle data-ripple="" cx="${40 + i * 30}" cy="90" r="8" fill="none" stroke="var(--art-green)" class="art-line" vector-effect="non-scaling-stroke" /><g data-now=""><path d="M ${40 + i * 30} 110 v 6" ${LINE} /></g></g>`;
+
 /** [what it does wrong, the rule that must fire — and only it, the file] */
 const fixtures: Array<[string, string, string]> = [
 	// 1. root
@@ -125,6 +129,22 @@ const fixtures: Array<[string, string, string]> = [
 	["an empty motion group", RULES.motion, wrap(`<g data-motion="spin"></g>`)],
 	["a dash group that sets stroke-dashoffset", RULES.motion, wrap(`<g data-motion="dash"><path d="M 0 0 H 10" ${LINE} stroke-dasharray="4 4" stroke-dashoffset="2" /></g>`)],
 	["a dash group whose trace is not dashed", RULES.motion, wrap(`<g data-motion="dash"><path d="M 0 0 H 10" ${LINE} /></g>`)],
+	// 6. motion — steps: the beats and their marks
+	["a steps group with no data-beats", RULES.motion, wrap(`<g data-motion="steps">${beat(0)}${beat(1)}</g>`)],
+	["a steps group of one beat", RULES.motion, wrap(`<g data-motion="steps" data-beats="1">${beat(0)}</g>`)],
+	["a steps group of nine beats", RULES.motion, wrap(`<g data-motion="steps" data-beats="9">${Array.from({ length: 9 }, (_, i) => beat(i)).join("")}</g>`)],
+	["fewer beats than data-beats says", RULES.motion, wrap(`<g data-motion="steps" data-beats="3">${beat(0)}${beat(1)}</g>`)],
+	["beats out of order", RULES.motion, wrap(`<g data-motion="steps" data-beats="2">${beat(1)}${beat(0)}</g>`)],
+	["beats not from 0", RULES.motion, wrap(`<g data-motion="steps" data-beats="2">${beat(1)}${beat(2)}</g>`)],
+	["an unmarked child in a steps group", RULES.motion, wrap(`<g data-motion="steps" data-beats="2">${beat(0)}${beat(1)}<circle cx="60" cy="30" r="3" fill="var(--art-coral)" /></g>`)],
+	["a beat that is not a <g>", RULES.motion, wrap(`<g data-motion="steps" data-beats="2">${beat(0)}<circle data-beat="1" cx="60" cy="30" r="3" fill="var(--art-coral)" /></g>`)],
+	["an empty beat", RULES.motion, wrap(`<g data-motion="steps" data-beats="2">${beat(0)}<g data-beat="1"></g></g>`)],
+	["a beat outside a steps group", RULES.motion, wrap(beat(0))],
+	["data-beats on a spin group", RULES.motion, wrap(`<g data-motion="spin" data-beats="2"><circle cx="60" cy="30" r="3" fill="var(--art-coral)" /></g>`)],
+	["a ripple outside a beat", RULES.motion, wrap(`<circle data-ripple="" cx="60" cy="30" r="3" ${LINE} />`)],
+	["a now-mark outside a beat", RULES.motion, wrap(`<g data-now=""><circle cx="60" cy="30" r="3" fill="var(--art-coral)" /></g>`)],
+	["a ripple with a transform (its scale replaces it)", RULES.motion, wrap(`<g data-motion="steps" data-beats="2">${beat(0)}<g data-beat="1"><circle data-ripple="" transform="translate(4 0)" cx="60" cy="30" r="3" ${LINE} /></g></g>`)],
+	["a steps group beside another motion", RULES.motion, wrap(`<g data-motion="steps" data-beats="2">${beat(0)}${beat(1)}</g><g data-motion="blink"><circle cx="90" cy="30" r="3" fill="var(--art-coral)" /></g>`)],
 	// 7. budget
 	[
 		`more than ${BUDGET.elements} elements`,
@@ -187,6 +207,18 @@ test.describe("post art: each rule fires, and only it", () => {
 		);
 		expect(validateArt(file, { slug: SLUG })).toEqual([]);
 		expect(validateArt(file, { slug: "other" }).map(ruleOf)).toEqual([RULES.ids]);
+	});
+
+	test("a steps group is a motion: two to eight beats in order, ripples and now-marks inside them, at any speed", () => {
+		for (const n of [2, 5, 8]) {
+			const file = wrap(`<g data-motion="steps" data-beats="${n}" data-speed="2">${Array.from({ length: n }, (_, i) => beat(i)).join("")}</g>`);
+			expect(validateArt(file, { slug: SLUG }), `${n} beats`).toEqual([]);
+		}
+		// A beat may hold a transformed group (a footprint placed and turned); the steps group may not, like any motion.
+		const placed = wrap(`<g data-motion="steps" data-beats="2">${beat(0)}<g data-beat="1"><g transform="translate(70 90) rotate(30)"><circle cx="0" cy="0" r="3" fill="var(--art-green)" /></g></g></g>`);
+		expect(validateArt(placed, { slug: SLUG })).toEqual([]);
+		const moved = wrap(`<g data-motion="steps" data-beats="2" transform="translate(4 0)">${beat(0)}${beat(1)}</g>`);
+		expect(validateArt(moved, { slug: SLUG }).map(ruleOf)).toEqual([RULES.motion]);
 	});
 
 	test("comments are prose: a rule word inside one does not fire", () => {

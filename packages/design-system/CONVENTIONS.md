@@ -684,7 +684,7 @@ mark at each crop corner: an 8px (`--space-2`) L of two 1px bars in
 `--text-tertiary`, drawn by the frame's `::after` over the art.
 
 **Motion contract.** A file marks at most one group `<g data-motion="spin |
-drift | slide | blink | dash" data-speed="0.5 | 1 | 2">`; the host owns the
+drift | slide | blink | dash | steps" data-speed="0.5 | 1 | 2">`; the host owns the
 keyframes (`styles/motion.css`, shared by the frame and the glyphs;
 `transform-box: fill-box; transform-origin: center`), paused at
 rest and **running on `:hover`, `:focus-within`, inside a hovered or focused
@@ -697,8 +697,39 @@ a slow alternate translate; `slide` moves the group left by exactly 40 units;
 per loop. The still frame is the poster: a drawing must read at t=0, and under
 reduced motion the loop is `0s` and it is all that ever shows.
 
+**`steps`** is the one SEQUENCE — a walk, a build-up, a trace of calls
+landing one after another. The group says how many, `<g data-motion="steps"
+data-beats="N">` (N 2–8), and its direct children are exactly those beats,
+`<g data-beat="0">` … `<g data-beat="N−1">`, in that order (later beats
+paint over earlier; the last is the one the hold keeps current). Inside a
+beat, two optional marks: **`data-ripple`** on a shape that scales out
+(0.3× → 2.1× about its own box, fast then slow) and fades over most of a
+slot as its beat lands — a landing's ring; and **`data-now`** on what shows
+only while its beat is the current one — so a pointer stepping along a
+ruler is one pointer copy per beat, and the file carries no number the
+host has to know. The host animates ONE CLOCK on the group (a registered
+custom property, `--art-clock` 0 → 1, `@property`) and every beat derives
+its state from it, its index and the count, in `clamp()`s: no keyframe is
+per beat, and an eight-beat file and a two-beat file take the same rules.
+The timeline is in SLOTS of a sixth of `--duration-loop` (1s at 6s), the
+loop `N + 2` slots long (so `--art-cycle`, still divided by `data-speed`):
+the first half-slot is the HOLD — the finished sequence: every beat lit,
+the last beat's now-mark, no ripple — then the walk RESETS to faint (0.09,
+a ghost of the whole walk, not gone), beat `i` LANDS at slot `i + 1` and
+stays, the last lands at slot `N` and holds through the loop's end, which
+wraps onto the hold: seamless. The **still frame is the finished
+sequence** — a paused tile and a reduced-motion page show the walk
+complete — so draw the last beat as where the picture reads. A beat may
+hold a transformed group (a footprint placed and turned); a ripple may
+not carry a transform (its scale replaces it); the steps group may not,
+like any motion group. The validator holds all of it: the count, the
+order, the marks inside a beat, one steps group per file, and a steps
+group counting as the file's motion (art: its only one; a scene: one of
+two). The kit writes one with `k.steps(beats, { speed })` and marks with
+`{ mark: "ripple" | "now" }` on a shape or a group (*L0 — the kit*).
+
 The catalogue's "Art" section shows the swatches, the template at tile and
-hero size and on both pages (two `ThemePage`s), the line weights, the five
+hero size and on both pages (two `ThemePage`s), the line weights, the six
 motions with a play-all toggle, and the mark.
 
 ---
@@ -774,7 +805,7 @@ their own lines.
 | marks | `arrowhead` · `chevron` · `plus` · `cross` · `check` · `ticksRadial` · `ticksLinear` · `needle` |
 | shapes | `polygon` · `tri` · `rect` · `roundRect` · `pill` · `keycap` · `bracket(x, y, size, corner)` · `hex` · `star(cx, cy, n, inner, outer)` · `coil(x, y, length, turns, r)` |
 | iso (`iso.ts`) | `iso(x, y, z, at?)` at a true 30° (`ISO_X` / `ISO_Y` / `ISO_Z` the unit axes) · `isoBox` · `isoCylinder(x, y, r, h, {axis, top, side})` (upright, or lying along `x` / `y`; discs r × r/2) · `isoEllipse(x, y, r, {axis})` (a 2:1 disc on the ground or standing on the x / y face) · `isoRoundRect(x, y, w, d, c)` (flat, rounded corners; `c = d/2` is a pill) · `isoRoundBox(x, y, w, d, h, c, {top, side})` (rounded vertical edges: a shell, a board) · `isoCoil(x, y, r, h, turns)` (a standing spring, one path) · `isoPlane({grid})` · `vanishingGrid` — visible faces only, never a wireframe; a disc keeps ry = r/2, a rounded corner is the true projection so it meets the 30° edges tangent |
-| assembly | `group(children, {motion, speed, transform})` (the data-motion contract; a transform with a motion goes on an outer `g`) · `svg({viewBox, children, header})` · `wash(colour, pct)` (a scene's translucent fill) |
+| assembly | `group(children, {motion, speed, transform, mark})` (the data-motion contract; a transform with a motion goes on an outer `g`; `mark: "now"` a steps beat's now-mark) · `steps(beats, {speed, transform})` (the `steps` motion: one `<g data-beat>` per entry, 2–8, none empty; a shape's `{ mark: "ripple" \| "now" }` is its `data-ripple` / `data-now`) · `svg({viewBox, children, header})` · `wash(colour, pct)` (a scene's translucent fill) |
 
 ```ts
 const k = kit("glyph");

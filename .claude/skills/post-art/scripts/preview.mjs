@@ -109,12 +109,15 @@ const probe = () => {
 	if (!g) return null;
 	const s = getComputedStyle(g);
 	const dashed = g.querySelector("[stroke-dasharray]");
+	// A steps group moves nothing itself: its clock runs, and its beats read it.
+	const steps = g.getAttribute("data-motion") === "steps";
 	return {
 		kind: g.getAttribute("data-motion"),
 		playState: s.animationPlayState,
 		opacity: s.opacity,
 		transform: s.transform,
 		dashoffset: dashed ? getComputedStyle(dashed).strokeDashoffset : undefined,
+		clock: steps ? s.getPropertyValue("--art-clock") : undefined,
 	};
 };
 
@@ -148,8 +151,9 @@ async function screenshot(out) {
 
 		const show = (p) =>
 			`play-state ${p.playState}, opacity ${p.opacity}, transform ${p.transform}` +
-			(p.dashoffset === undefined ? "" : `, dashoffset ${p.dashoffset}`);
-		const key = (p) => `${p.opacity}|${p.transform}|${p.dashoffset}`;
+			(p.dashoffset === undefined ? "" : `, dashoffset ${p.dashoffset}`) +
+			(p.clock === undefined ? "" : `, clock ${p.clock}`);
+		const key = (p) => `${p.opacity}|${p.transform}|${p.dashoffset}|${p.clock}`;
 		const moved = samples.some((p) => key(p) !== key(rest));
 		console.log(`motion: ${rest.kind}`);
 		console.log(`  at rest: ${show(rest)}`);

@@ -55,9 +55,11 @@ Work down this list and stop at the first match:
   guide), `2 2`, `4 4`.
 - **Budget**: ≤ 40 elements / 3 KB (80 / 6 KB wide), groups ≤ 3 deep.
 - **Motion**: at most one `<g data-motion="spin | drift | slide | blink |
-  dash">`, the art's contract. It runs on hover and `play`, so the still
+  dash | steps">`, the art's contract. It runs on hover and `play`, so the still
   frame must read on its own. A spinning group has to be centrally
-  symmetric, because it turns about its own box.
+  symmetric, because it turns about its own box. A `steps` group is
+  `k.steps([...beats])` (language.md's motion table); its still frame is the
+  finished sequence.
 - The house style: filled dots as terminals, dim dotted guides, one idea per
   mark, sparse. Look at `ring-in`, `junction`, `send` and `target` before
   you start.
@@ -148,7 +150,8 @@ red is `--art-coral`).
 | `isoRoundBox(x, y, w, d, h, c, {top, side})` | a box with rounded vertical edges (a shell, a board, a handset slab): top + body, no crease |
 | `isoCoil(x, y, r, h, turns, o)` | a standing spring, one path of 2:1 loops |
 | `isoPlane(x, y, w, d, {grid})` / `vanishingGrid(vx, vy, w, h, rows, cols, o)` | a ground rhombus (with a grid) / a one-point perspective grid |
-| `group(children, {motion, speed, transform})` | a group, the one motion |
+| `group(children, {motion, speed, transform, mark})` | a group, the one motion; `mark: "now"` inside a steps beat |
+| `steps(beats, {speed, transform})` | the `steps` motion: one `<g data-beat>` per entry (2–8); `{ mark: "ripple" \| "now" }` on a shape inside a beat |
 | helpers: `polar(cx, cy, r, angle)`, `onArc`, `spread`, `snap`, `round`, `iso(x, y, z, at?)`, `ISO_X` / `ISO_Y` / `ISO_Z` | geometry, from `lib/micro` |
 
 All the iso solids are at a true 30° (x runs down-right, y down-left, z

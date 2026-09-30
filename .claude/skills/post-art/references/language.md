@@ -174,8 +174,9 @@ The validator passes all of these; your eye has to catch them.
   open post's mark). At rest it is paused.
 - **The still frame is the poster.** The art must read as complete with the
   animation at t = 0. Under reduced motion `--duration-loop` is 0s, and the
-  still frame is all anyone sees.
-- **The markup.** Put `<g data-motion="spin|drift|slide|blink|dash">…</g>` around
+  still frame is all anyone sees. (For `steps` the still frame is the
+  FINISHED sequence — every beat lit, the last beat's now-mark, no ripple.)
+- **The markup.** Put `<g data-motion="spin|drift|slide|blink|dash|steps">…</g>` around
   what moves, with an optional `data-speed="0.5|1|2"`. The speed goes only on
   that group; 0.5 is slower and 2 is faster.
   - A file has **at most one** `data-motion`, on a `<g>`, and the group must
@@ -193,6 +194,7 @@ The validator passes all of these; your eye has to catch them.
 | `slide` | `translateX(-40)` units per loop, linear | The group must **repeat every 40 units** (10 and 20 divide it) and run from x ≤ 0 to at least x = 360, one period past the right edge, so the loop is seamless. Use it for tick rules, tape and conveyor rows. |
 | `blink` | opacity dips to 0.3 and back on a hard step, four per loop | Use it for a node under test or a status light. Keep the group small: one filled shape, or a shape and its mark (a failed node and its cross). |
 | `dash` | `stroke-dashoffset` advances by −8 (one period of `4 4` or `2 6`), six per loop | **Every** stroked shape in the group must be dashed (on itself or through the group). Nothing inside sets `stroke-dashoffset`. Use it for signal moving along a trace. |
+| `steps` | a SEQUENCE: the group says `data-beats="N"` (2–8) and holds exactly `<g data-beat="0">` … `<g data-beat="N−1">`, in order; the host lands one beat a slot (a sixth of the loop) off one clock — unlanded beats faint (0.09), landed ones stay — after a half-slot HOLD of the finished walk, which is also the still frame; the loop is N + 2 slots | Draw the walk as its beats: what appears at each step. Inside a beat, `data-ripple` on a shape that scales out (0.3× → 2.1×, about its own box) and fades as the beat lands — a landing's ring, no `transform` on it; `data-now` on what shows only while the beat is current — a pointer is one copy per beat. A beat may hold a `<g transform>` (a footprint placed and turned). The last beat is the finished picture: draw it as where the drawing reads (the failure, the result), since a paused tile and a reduced-motion page show it. Use it for a walk, a trace of calls, a build-up. |
 
 ## Accessibility
 

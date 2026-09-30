@@ -61,7 +61,7 @@ export const RULES = Object.freeze({
 	paint: "paint",
 	/** 5. A stroked shape has vector-effect="non-scaling-stroke" and a weight of 1 or 1.5; dashes 4 4 or 2 6. Glyph: the weight is always a stroke-width. Scene: the dot-dash 6 3 1 3 too. */
 	stroke: "stroke",
-	/** 6. One data-motion per file (a scene: two), on a <g>, spin|drift|slide|blink|dash; data-speed 0.5|1|2; a dash group is dashed with a period that divides 8, and sets no offset. */
+	/** 6. One data-motion per file (a scene: two), on a <g>, spin|drift|slide|blink|dash|steps; data-speed 0.5|1|2; a dash group is dashed with a period that divides 8, and sets no offset; a steps group says data-beats (2–8) and holds exactly those <g data-beat> children, 0…N−1 in order, with data-ripple / data-now marks only inside a beat. */
 	motion: "motion",
 	/** 7. ≤ 120 elements, ≤ 12 KB, ≤ 3 clipPaths, groups ≤ 4 deep. Glyph: 40 / 3 KB (80 / 6 KB wide), groups ≤ 3 deep. Scene: 400 / 64 KB. */
 	budget: "budget",
@@ -100,8 +100,12 @@ export const CLASSES = Object.freeze(["art-line", "art-line--2"]);
 export const WEIGHTS = Object.freeze({ "art-line": "1", "art-line--2": "1.5" });
 export const STROKE_WIDTHS = Object.freeze(["1", "1.5"]);
 export const DASHES = Object.freeze(["4 4", "2 6"]);
-export const MOTIONS = Object.freeze(["spin", "drift", "slide", "blink", "dash"]);
+export const MOTIONS = Object.freeze(["spin", "drift", "slide", "blink", "dash", "steps"]);
 export const SPEEDS = Object.freeze(["0.5", "1", "2"]);
+/** A steps group's beat count: at least two (one is a blink), at most eight (motion.css maps that many). */
+export const STEPS = Object.freeze({ min: 2, max: 8 });
+/** The marks a beat may hold: a shape that scales out and fades as its beat lands; what shows only while its beat is the current one. */
+export const BEAT_MARKS = Object.freeze(["data-ripple", "data-now"]);
 export const BUDGET = Object.freeze({
 	elements: 120,
 	bytes: 12 * 1024,
@@ -492,6 +496,22 @@ export function validateSvg(source, { profile = ART, slug } = {}) {
 		if (el.attrs.has("transform")) {
 			fail(RULES.motion, el, `no transform on the data-motion group (its animation replaces it); wrap it in an outer <g transform>`);
 		}
+		if (kind === "steps") {
+			// A steps group is a sequence: data-beats says how many, and its
+			// direct children are exactly those beats, <g data-beat="0"> to
+			// <g data-beat="N-1"> in document order (the host's CSS maps each
+			// index; the last child is the one the hold keeps current).
+			const n = Number(el.attrs.get("data-beats"));
+			if (!el.attrs.has("data-beats") || !Number.isInteger(n) || n < STEPS.min || n > STEPS.max) {
+				fail(RULES.motion, el, `a steps group says data-beats="N", N ${STEPS.min}–${STEPS.max} (got ${el.attrs.has("data-beats") ? `"${el.attrs.get("data-beats")}"` : "none"})`);
+			} else {
+				const beats = el.children.map((c) => c.attrs.get("data-beat"));
+				const want = Array.from({ length: n }, (_, i) => String(i));
+				if (beats.length !== n || beats.some((b, i) => b !== want[i])) {
+					fail(RULES.motion, el, `data-beats="${n}" wants exactly ${n} direct children <g data-beat="0"> … <g data-beat="${n - 1}">, in that order (got ${beats.map((b) => (b === undefined ? "an unmarked child" : `"${b}"`)).join(", ") || "none"})`);
+				}
+			}
+		}
 		if (kind === "dash") {
 			for (const d of [el, ...flatten(el).slice(1)]) {
 				if (d.attrs.has("stroke-dashoffset")) {
@@ -518,6 +538,30 @@ export function validateSvg(source, { profile = ART, slug } = {}) {
 		if (speed === undefined) continue;
 		if (!SPEED.has(speed)) fail(RULES.motion, el, `data-speed="${speed}" is not one of ${P.speeds.join(" | ")}`);
 		if (!el.attrs.has("data-motion")) fail(RULES.motion, el, `data-speed goes on the data-motion group`);
+	}
+	// The steps vocabulary outside its place: data-beats belongs to a steps
+	// group, a beat is a non-empty <g> directly under one, and a ripple or a
+	// now-mark is inside a beat (the host animates them off the beat's clock;
+	// a ripple's scale replaces any transform of its own).
+	const isSteps = (e) => e?.attrs.get("data-motion") === "steps";
+	for (const el of all) {
+		if (el.attrs.has("data-beats") && !isSteps(el)) {
+			fail(RULES.motion, el, `data-beats goes on the <g data-motion="steps"> group`);
+		}
+		if (el.attrs.has("data-beat")) {
+			if (!isSteps(el.parent)) fail(RULES.motion, el, `data-beat="${el.attrs.get("data-beat")}" is a direct child of a <g data-motion="steps"> group; here it is under ${el.parent ? `<${el.parent.name}>` : "the root"}`);
+			if (el.name !== "g") fail(RULES.motion, el, `a beat is a <g> that holds what lands, not a <${el.name}>`);
+			else if (el.children.length === 0) fail(RULES.motion, el, `the beat is empty; nothing would land`);
+		}
+		for (const mark of BEAT_MARKS) {
+			if (!el.attrs.has(mark)) continue;
+			if (!ancestors(el).some((a) => a.attrs.has("data-beat"))) {
+				fail(RULES.motion, el, `${mark} is a mark inside a <g data-beat>; the beat's landing is what it plays off`);
+			}
+			if (mark === "data-ripple" && el.attrs.has("transform")) {
+				fail(RULES.motion, el, `no transform on a data-ripple (its scale replaces it); wrap it in an outer <g transform>, or place it by its own coordinates`);
+			}
+		}
 	}
 
 	// 7. Budgets.
@@ -678,6 +722,13 @@ function inherited(el, name) {
 		if (v !== undefined) return v;
 	}
 	return undefined;
+}
+
+/** The element's ancestors, nearest first. */
+function ancestors(el) {
+	const out = [];
+	for (let e = el.parent; e; e = e.parent) out.push(e);
+	return out;
 }
 
 /** Whether an ancestor (not the element itself) is `name`. */

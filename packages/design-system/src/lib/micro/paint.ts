@@ -53,8 +53,16 @@ export type Weight = "hair" | "line";
  */
 export type Dash = "dotted" | "dash" | "long" | "dotdash";
 
-/** The motion kinds of the shared data-motion contract (CONVENTIONS, "Motion contract"). */
-export type Motion = "spin" | "drift" | "slide" | "blink" | "dash";
+/** The motion kinds of the shared data-motion contract (CONVENTIONS, "Motion contract"). `steps` is built with `k.steps()`, not `group()`. */
+export type Motion = "spin" | "drift" | "slide" | "blink" | "dash" | "steps";
+
+/**
+ * A mark inside a `steps` beat: a `ripple` is a shape that scales out
+ * and fades as its beat lands; a `now` shows only while its beat is the
+ * current one (a pointer, one copy per beat). Written as `data-ripple` /
+ * `data-now`; the host's motion.css plays them off the beat's clock.
+ */
+export type Mark = "ripple" | "now";
 
 /** The speeds the contract allows on a motion group. */
 export type Speed = 0.5 | 1 | 2;

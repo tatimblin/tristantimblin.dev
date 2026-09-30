@@ -34,6 +34,10 @@ ${open}
   ${inner}
 </svg>`;
 
+/** One beat of a steps group: a landing dot, its ripple, and a now-mark. */
+const beat = (i: number) =>
+	`<g data-beat="${i}"><circle cx="${40 + i * 30}" cy="90" r="3" fill="var(--art-green)" /><circle data-ripple="" cx="${40 + i * 30}" cy="90" r="8" ${GREEN} /><g data-now=""><path d="M ${40 + i * 30} 110 v 6" ${LINE} /></g></g>`;
+
 const circles = (n: number, fill = "var(--art-ink)") =>
 	Array.from({ length: n }, (_, i) => `<circle cx="${i % 400}" cy="10" r="1" fill="${fill}" />`).join("\n");
 
@@ -68,6 +72,8 @@ const fixtures: Array<[string, string, string]> = [
 	["a third data-motion group", RULES.motion, wrap('<g data-motion="drift"><circle cx="8" cy="4" r="1" fill="var(--art-ink)" /></g>')],
 	["the dot-dash in a dash group (period 13: the loop would jump)", RULES.motion, wrap(`<g data-motion="dash"><path d="M 0 0 H 10" ${GREEN} stroke-dasharray="6 3 1 3" /></g>`).replace('<g data-motion="blink" data-speed="0.5">', '<g>')],
 	["a speed outside the set", RULES.motion, wrap('<g data-motion="spin" data-speed="3"><circle cx="4" cy="4" r="1" fill="var(--art-ink)" /></g>').replace('<g data-motion="blink" data-speed="0.5">', "<g>")],
+	["a steps group as a third motion", RULES.motion, wrap(`<g data-motion="steps" data-beats="2">${beat(0)}${beat(1)}</g>`)],
+	["a steps group whose beats are out of order", RULES.motion, wrap(`<g data-motion="steps" data-beats="2">${beat(1)}${beat(0)}</g>`).replace('<g data-motion="blink" data-speed="0.5">', "<g>")],
 	// budget
 	["401 elements", RULES.budget, wrap(circles(400 - 8 + 1))],
 	["more than 64 KB", RULES.budget, wrap(`<!-- ${"x".repeat(64 * 1024)} -->`)],
@@ -107,6 +113,14 @@ describe("scene profile", () => {
 		const moving = ["4 4", "2 6"].map((d) => `<path d="M 0 4 H 10" ${LINE} stroke-dasharray="${d}" />`).join("");
 		const one = wrap(`<g data-motion="dash">${moving}</g>`).replace('<g data-motion="blink" data-speed="0.5">', "<g>");
 		expect(scene(one)).toEqual([]);
+	});
+
+	test("a steps group is one of a scene's two motions: with the orbit, on the plate or the panel", () => {
+		const steps = `<g data-motion="steps" data-beats="3">${beat(0)}${beat(1)}${beat(2)}</g>`;
+		const withOrbit = wrap(steps).replace('<g data-motion="blink" data-speed="0.5">', "<g>");
+		expect(scene(withOrbit)).toEqual([]);
+		const open = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">';
+		expect(scene(wrap(steps, open).replace('<g data-motion="blink" data-speed="0.5">', "<g>"))).toEqual([]);
 	});
 
 	test("a clipPath id prefixed with the scene's name passes; another prefix fails", () => {

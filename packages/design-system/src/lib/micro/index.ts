@@ -9,9 +9,9 @@
  */
 
 export { kit, Kit } from "./kit";
-export type { AngleOpts, BandOpts, Cap, Corner, End, FillOpts, GroupOpts, NeedleOpts, ShapeOpts, StrokeOpts, SvgOpts, TicksOpts, WireOpts } from "./kit";
+export type { AngleOpts, BandOpts, Cap, Corner, End, FillOpts, GroupOpts, NeedleOpts, ShapeOpts, StepsOpts, StrokeOpts, SvgOpts, TicksOpts, WireOpts } from "./kit";
 export { TARGETS, WASH_MAX } from "./paint";
-export type { Colour, Dash, Fill, Motion, Paint, Speed, Target, TargetTable, Wash, Weight } from "./paint";
+export type { Colour, Dash, Fill, Mark, Motion, Paint, Speed, Target, TargetTable, Wash, Weight } from "./paint";
 export { onArc, polar, round, snap, spread } from "./geometry";
 export type { Point } from "./geometry";
 export { ISO_X, ISO_Y, ISO_Z, iso, isoBox, isoCoil, isoCylinder, isoEllipse, isoPlane, isoRoundBox, isoRoundRect, vanishingGrid } from "./iso";
