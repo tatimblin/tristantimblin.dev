@@ -1,24 +1,22 @@
 /**
  * No Honey, We Have a Dashboard at Home — the post's art, as a baked
  * scene: THE GRAPHIC ALONE, in simple shapes. The post's claim is that a
- * fleet dashboard is a worse copy of an editor you already have open:
- * everything it did — list cars, show a digital twin, run actions, tail
- * signals — is a part the editor already has. So nothing here is drawn
- * literally; four plain rectangles stand in for those four jobs.
+ * fleet dashboard is a worse copy of the editor you already have open: its
+ * list, its digital twin, its actions and its live signals are all panes
+ * the editor already tiles. So the picture is a TILING of plain app windows
+ * — a treemap of rectangles packed like a tiling window manager, cropped
+ * by the plate on every side, one gutter throughout.
  *
- *   left     THE DASHBOARD: the four jobs as a loose stack of separate
- *            pages, dashed and dim, running off the plate's left edge —
- *            struck through in coral (no separate frontend)
- *   right    THE EDITOR: one heavy frame, a solid bar across its top, and
- *            the same four rectangles docked into it — the list a solid
- *            column (the sidebar), the twin a pane holding a bold striped
- *            disc (the car, as a node), the actions a key, the signals a
- *            green bar (live: the terminal)
+ * Each window is a rectangle with a title bar (a rule under three small
+ * dots). Some hold a very simple hint of content — a few bars (the list),
+ * a green block (the terminal: live signals), a coral block, a bar and a
+ * block — and some are empty. The largest holds the bold striped disc: the
+ * car, as a node, the digital twin. Ink, green and coral; no words.
  *
- * No words: it is a teaser, not a sheet.
- *
- * The motion is `steps`, four beats, one per job: its rectangle lands in
- * the editor. The still frame is the last beat: all four docked.
+ * The motion is `steps`, three beats: the FOCUS moves across the tiling —
+ * a window's title bar fills solid, its first dot lit coral, while it is the
+ * current one, list → signals → twin. The still frame is the last beat:
+ * the twin's window focused.
  *
  *   bun run scenes:bake      → src/content/txt/no-honey-we-have-a-dashboard-at-home.svg
  *
@@ -30,72 +28,91 @@ import type { Kit } from "@whois/design-system/lib/micro";
 import { part } from "@whois/design-system/scenes/parts";
 import { scene } from "@whois/design-system/scenes/recipe";
 
-/** A box on the plate. */
-interface Box {
+/** A window on the plate, and what it holds. */
+interface Win {
 	x: number;
 	y: number;
 	w: number;
 	h: number;
+	hint?: "list" | "green" | "coral" | "bar" | "block" | "twin";
 }
 
-/** The editor's frame, and the depth of the bar across its top. */
-const E: Box = { x: 134, y: 22, w: 164, h: 136 };
+/** The title bar's depth, a content inset, and the dots' radius and pitch. */
 const BAR = 8;
-const PAD = 5;
-const GAP = 4;
+const PAD = 6;
+const [DOT, PITCH] = [1.3, 4.5];
 
-/** The editor's inner box: the side column's width, the pane's depth, the key's, the signal bar's. */
-const IN = { x: E.x + PAD, y: E.y + BAR + PAD, w: E.w - 2 * PAD, h: E.h - BAR - 2 * PAD };
-const [SIDE, PANE, KEY] = [30, 80, 9];
-const MAIN = { x: IN.x + SIDE + GAP, w: IN.w - SIDE - GAP };
-const SIG = IN.h - PANE - KEY - 2 * GAP;
-
-/** The four jobs, docked: where each sits in the editor (list, twin, actions, signals). */
-const JOBS: Box[] = [
-	{ x: IN.x, y: IN.y, w: SIDE, h: IN.h },
-	{ x: MAIN.x, y: IN.y, w: MAIN.w, h: PANE },
-	{ x: MAIN.x, y: IN.y + PANE + GAP, w: 48, h: KEY },
-	{ x: MAIN.x, y: IN.y + PANE + KEY + 2 * GAP, w: MAIN.w, h: SIG },
+/**
+ * The tiling: three columns, each split its own way, a 6-unit gutter
+ * throughout, running off every edge of the plate. Columns x −12…70,
+ * 76…210, 216…332: the middle one a little left of centre.
+ */
+const WINS: Win[] = [
+	// Left column: the list over the signals.
+	{ x: -12, y: 12, w: 82, h: 82, hint: "list" },
+	{ x: -12, y: 100, w: 82, h: 96, hint: "green" },
+	// Middle: a sliver off the top, the twin, and two side by side under it.
+	{ x: 76, y: -14, w: 134, h: 24 },
+	{ x: 76, y: 16, w: 134, h: 114, hint: "twin" },
+	{ x: 76, y: 136, w: 58, h: 60 },
+	{ x: 140, y: 136, w: 70, h: 60, hint: "bar" },
+	// Right: a coral block, a bar and block, and an empty one off the bottom.
+	{ x: 216, y: -4, w: 116, h: 58, hint: "coral" },
+	{ x: 216, y: 60, w: 116, h: 76, hint: "block" },
+	{ x: 216, y: 142, w: 116, h: 54 },
 ];
 
-/** A job's rectangle, drawn as it docks: each its own plain treatment. */
-function docked(k: Kit, i: number): string[] {
-	const { x, y, w, h } = JOBS[i];
-	switch (i) {
-		case 1:
-			return [k.rect(x, y, w, h, { paint: "ink" }), part(k, stripeDisc, { at: [x + w / 2, y + h / 2], scale: 2.5 })];
-		case 3:
-			return [k.rect(x, y, w, h, { paint: "none", fill: "green" })];
-		default:
-			return [k.rect(x, y, w, h, { paint: "none", fill: "ink" })];
+/** Where the focus goes, one window a beat: the list, the signals, the twin. */
+const FOCUS = [0, 1, 3];
+
+/** The three dots' centres on a window's title bar, from its left end (or the plate's, when it runs off). */
+const dots = (w: Win) => [0, 1, 2].map((i) => [Math.max(w.x, 0) + 6 + i * PITCH, w.y + BAR / 2] as const);
+
+/** A window: its outline, the title bar's rule, the dots, and its hint. */
+function win(k: Kit, w: Win): string[] {
+	const out = [
+		k.rect(w.x, w.y, w.w, w.h, { paint: "ink", weight: "hair" }),
+		k.line(w.x, w.y + BAR, w.x + w.w, w.y + BAR, { paint: "ink", weight: "hair", cap: "butt" }),
+		...dots(w).map(([x, y]) => k.dot(x, y, DOT, { paint: "ink" })),
+	];
+	const [cx, cy, cw, ch] = [w.x + PAD, w.y + BAR + PAD, w.w - 2 * PAD, w.h - BAR - 2 * PAD];
+	// A window off the left edge keeps its content on the plate's side.
+	const left = Math.max(cx, 10);
+	switch (w.hint) {
+		case "list":
+			out.push(...[0, 1, 2, 3].map((i) => k.rect(left, cy + i * 10, [48, 34, 52, 26][i], 3, { paint: "none", fill: "ink" })));
+			break;
+		case "green":
+			out.push(k.rect(left, cy, cx + cw - left, 40, { paint: "none", fill: "green" }));
+			break;
+		case "coral":
+			out.push(k.rect(cx, cy, 38, ch, { paint: "none", fill: "red" }));
+			break;
+		case "bar":
+			out.push(k.rect(cx, cy, cw - 20, 5, { paint: "none", fill: "ink" }));
+			break;
+		case "block":
+			out.push(k.rect(cx, cy, 30, 30, { paint: "none", fill: "ink" }), k.rect(cx + 36, cy, 40, 3, { paint: "none", fill: "ink" }), k.rect(cx + 36, cy + 9, 26, 3, { paint: "none", fill: "dim" }));
+			break;
+		case "twin":
+			out.push(part(k, stripeDisc, { at: [cx + cw / 2, cy + ch / 2], scale: 3.2 }));
+			break;
 	}
+	return out;
 }
 
-/** The dashboard: the same four jobs as separate pages, stacked off the plate's left edge. */
-const PAGES: Box[] = [
-	{ x: -14, y: 31, w: 84, h: 23 },
-	{ x: -14, y: 64, w: 84, h: 31 },
-	{ x: -14, y: 105, w: 84, h: 13 },
-	{ x: -14, y: 128, w: 84, h: 18 },
-];
+/** The focus on a window: its title bar filled solid, its first dot lit coral. */
+function focus(k: Kit, w: Win): string {
+	const [x, y] = dots(w)[0];
+	return k.group([k.rect(w.x, w.y, w.w, BAR, { paint: "none", fill: "ink" }), k.dot(x, y, DOT + 0.4, { paint: "red" })], { mark: "now" });
+}
 
 export default scene({
 	viewBox: "0 0 320 180",
 	draw(k) {
-		const out: string[] = [];
-
-		// THE DASHBOARD: four separate pages, dashed, struck through in coral.
-		out.push(...PAGES.map((p) => k.rect(p.x, p.y, p.w, p.h, { paint: "dim", dash: "dash" })));
-		out.push(k.line(-6, 162, 48, 16, { paint: "red", weight: "line" }));
-		// The trace from the stack into the editor.
-		out.push(k.guide([[80, 90], [E.x - 5, 90]]), k.arrowhead(E.x - 5, 90, 90, 3, { paint: "dim" }));
-
-		// THE EDITOR: the heavy frame and the solid bar across its top.
-		out.push(k.rect(E.x, E.y, E.w, E.h, { paint: "ink", weight: "line" }), k.rect(E.x, E.y, E.w, BAR, { paint: "none", fill: "ink" }));
-
-		// The dock: a beat per job — its rectangle lands in the editor.
-		const beats = JOBS.map((_, i) => docked(k, i));
-
-		return [...out, k.steps(beats)];
+		const out = WINS.flatMap((w) => win(k, w));
+		// The focus moves: one window's title bar solid a beat, ending on the twin.
+		out.push(k.steps(FOCUS.map((i) => [focus(k, WINS[i])])));
+		return out;
 	},
 });

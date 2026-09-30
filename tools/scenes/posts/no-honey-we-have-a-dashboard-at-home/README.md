@@ -1,16 +1,17 @@
 # no-honey-we-have-a-dashboard-at-home
 
 The post art for *No Honey, We Have a Dashboard at Home*: the graphic alone,
-in simple shapes. Nothing is drawn literally — four plain rectangles stand in
-for the four jobs the fleet dashboard did (list cars, show a digital twin,
-run actions, tail signals). On the left they are the dashboard: separate
-dashed pages running off the plate, struck through in coral. On the right
-they dock into one heavy frame, the editor: the list a solid column, the
-twin a pane holding the bold `stripe-disc`, the actions a key, the signals
-a green bar. No words: a teaser, not a sheet.
+in simple shapes — a tiling of plain app windows, packed like a tiling
+window manager and cropped by the plate on every side, one gutter
+throughout. Each window is a rectangle with a title bar (a rule, three
+dots); some hold a simple hint of content — a few bars, a green block, a
+coral block, a bar and a block — and some are empty. The largest holds the
+bold `stripe-disc`: the car's digital twin, as a node. No words: a teaser,
+not a sheet.
 
-The motion is `steps`, four beats: each job lands in the editor. The still
-is all four docked.
+The motion is `steps`, three beats: the focus moves across the tiling —
+the list, the signals, the twin — its title bar filled solid, the first dot
+lit coral. The still is the twin's window focused.
 
 `scene.ts` is the source; `bun run scenes:bake` writes
 `src/content/txt/no-honey-we-have-a-dashboard-at-home.svg`. Drawn from the

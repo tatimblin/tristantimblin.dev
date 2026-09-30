@@ -261,36 +261,37 @@ test.describe("steps — the driver's signals", () => {
 });
 
 /**
- * No Honey, We Have a Dashboard at Home: the four jobs a fleet dashboard
- * did — list, twin, actions, signals — dock into the editor one a beat,
- * no now-mark and no ripple: the rectangles landing are the whole motion.
- * The still is all four docked.
+ * No Honey, We Have a Dashboard at Home: a tiling of plain app windows, the
+ * FOCUS moving across it in three beats — the list, the signals, the twin —
+ * each beat's now-mark the focused window's title bar filled solid with its
+ * first dot lit coral. No ripple. The still is the twin's window focused.
  */
-test.describe("steps — the dock", () => {
+test.describe("steps — the focus", () => {
 	const cell = `[data-cell="post"]:has(a[href="/txt/no-honey-we-have-a-dashboard-at-home/"])`;
 
-	test("the quilt tile: all docked and paused at rest, docking beat by beat under the pointer", async ({ page }) => {
+	test("the quilt tile: the twin focused and paused at rest, the focus moving beat by beat under the pointer", async ({ page }) => {
 		await page.goto("/txt/");
 		const group = page.locator(`${cell} ${STEPS}`);
-		await expect(group).toHaveAttribute("data-beats", "4");
-		expect(await group.locator("[data-now]").count()).toBe(0);
+		await expect(group).toHaveAttribute("data-beats", "3");
+		expect(await group.locator(":scope > [data-beat] > [data-now]").count()).toBe(3);
 		expect(await group.locator("[data-ripple]").count()).toBe(0);
 
 		const rest = await stateOf(page, cell);
 		expect(rest.play).toBe("paused");
 		expect(rest.clock).toBe(0);
-		// Four beats plus two slots of hold, a sixth of the 6s loop each: 6s.
-		expect(parseFloat(rest.duration)).toBeCloseTo(6, 1);
-		finished(rest, 4, 0);
+		// Three beats plus two slots of hold, a sixth of the 6s loop each: 5s.
+		expect(parseFloat(rest.duration)).toBeCloseTo(5, 1);
+		finished(rest, 3);
 
 		await page.locator(`${cell} a`).first().hover();
 		await expect.poll(async () => (await stateOf(page, cell)).play).toBe("running");
-		// Mid-dock: the first job has landed, and not yet the last.
-		await expect.poll(async () => (await stateOf(page, cell)).clock, { timeout: 5000 }).toBeGreaterThan(2.2 / 6);
+		// Mid-walk: the first beat has landed, one window focused alone, and not yet the twin.
+		await expect.poll(async () => (await stateOf(page, cell)).clock, { timeout: 5000, intervals: [50] }).toBeGreaterThan(1.2 / 5);
 		const mid = await stateOf(page, cell);
-		expect(mid.clock).toBeLessThan(4 / 6);
+		expect(mid.clock).toBeLessThan(2.4 / 5);
 		expect(mid.beats[0]).toBe(1);
-		expect(mid.beats[3]).toBeLessThan(1);
+		expect(mid.now.filter((o) => o === 1)).toHaveLength(1);
+		expect(mid.now[2]).toBe(0);
 	});
 
 	test("the post: the mark plays from the start", async ({ page }) => {
@@ -301,12 +302,12 @@ test.describe("steps — the dock", () => {
 		await expect.poll(async () => (await stateOf(page, mark)).clock).toBeGreaterThan(0);
 	});
 
-	test("reduced motion: the loop is 0s and all four docked is all that shows", async ({ page }) => {
+	test("reduced motion: the loop is 0s and the twin focused is all that shows", async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: "reduce" });
 		await page.goto("/txt/");
 		await page.locator(`${cell} a`).first().hover();
 		const s = await stateOf(page, cell);
 		expect(s.duration).toBe("0s");
-		finished(s, 4, 0);
+		finished(s, 3);
 	});
 });
