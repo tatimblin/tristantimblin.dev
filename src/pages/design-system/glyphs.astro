@@ -41,7 +41,10 @@ import Matrix from "@whois/design-system/Matrix";
 import ReadoutStack from "@whois/design-system/ReadoutStack";
 import Formula from "@whois/design-system/Formula";
 import NumberStream from "@whois/design-system/NumberStream";
+import ArtFrame from "@whois/design-system/ArtFrame";
+import ThemePage from "@whois/design-system/ThemePage";
 import { GLYPH_NAMES, glyphSvg, type GlyphName } from "@whois/design-system/glyphs";
+import { typeSpecimen } from "@whois/design-system/art/specimen.ts";
 
 type FamilyKey = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I";
 type Kind = "R" | "H" | "G" | "T";
@@ -238,6 +241,10 @@ const groups = (Object.keys(FAMILIES) as FamilyKey[])
 	})
 	.filter((g) => g.entries.length > 0);
 
+// The type specimen: six HUD modules on one art plate (packages/design-
+// system/src/art/specimen.ts), held to the art profile by its test.
+const specimen = typeSpecimen();
+
 const no = (i: number) => String(i + 1).padStart(2, "0");
 const kinds = (entries: Entry[]) =>
 	(["G", "R", "H", "T"] as Kind[])
@@ -266,6 +273,7 @@ const kinds = (entries: Entry[]) =>
 				{groups.map((g) => (
 					<Mono variant="text"><Anchor href={`#family-${g.key}`} discreet>{`${g.key} ${g.title}`}</Anchor></Mono>
 				))}
+				<Mono variant="text"><Anchor href="#type-modules" discreet>Type &amp; modules</Anchor></Mono>
 				<Mono variant="text"><Anchor href="#modules" discreet>L3 modules</Anchor></Mono>
 			</nav>
 		</header>
@@ -313,6 +321,26 @@ const kinds = (entries: Entry[]) =>
 					</div>
 				</section>
 			))}
+
+			<section class="glyph-sheet__family" id="type-modules" aria-labelledby="type-modules-h">
+				<RuleLabel role="heading" aria-level="2" no="T" id="type-modules-h">
+					Type &amp; modules
+					<Mono slot="meta" variant="text">one art plate · the kit's type + module helpers</Mono>
+				</RuleLabel>
+				<p class="glyph-sheet-page__note">
+					Six modules of a HUD module sheet on one 320×180 art plate, drawn with <code>kit("art")</code>: a node label over a rule (<code>k.text</code>, <code>k.rule</code>, <code>ids</code>), a big thin numeral (<code>art-numeral</code>), a bracketed state and a routed pill (<code>k.bracketLabel</code>), a section head over a dotted rule with a readout (<code>k.section</code>, <code>k.readout</code>), a line glyph with its fields (<code>part()</code>), and the bold shapes, placed on <code>grid(3, 2, 12, 14)</code>. It passes the art profile. At the hero width and at a quilt tile's, on each page.
+				</p>
+				<div class="glyph-specimen">
+					{(["dark", "light"] as const).map((t) => (
+						<ThemePage theme={t}>
+							<div class="glyph-specimen__pair">
+								<ArtFrame svg={specimen} label="Type specimen: six HUD modules on one plate" class="glyph-specimen__hero" data-specimen="hero" />
+								<ArtFrame svg={specimen} decorative class="glyph-specimen__tile" data-specimen="tile" />
+							</div>
+						</ThemePage>
+					))}
+				</div>
+			</section>
 
 			<section class="glyph-sheet__family" id="modules" aria-labelledby="modules-h">
 				<RuleLabel role="heading" aria-level="2" no="L3" id="modules-h">
@@ -497,6 +525,25 @@ const kinds = (entries: Entry[]) =>
 		min-inline-size: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	/* THE TYPE SPECIMEN — the plate at the hero width (the art catalogue's
+	 * 720) and at a quilt tile's (230), side by side where there is room. */
+	.glyph-specimen {
+		display: grid;
+		gap: var(--space-5);
+	}
+	.glyph-specimen__pair {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: start;
+		gap: var(--space-5);
+	}
+	.glyph-specimen__pair :global(.glyph-specimen__hero) {
+		inline-size: min(100%, 720px);
+	}
+	.glyph-specimen__pair :global(.glyph-specimen__tile) {
+		inline-size: 230px;
 	}
 
 	/* THE SIGNAL CHAIN — four tiles joined by the junction glyph. The wire's

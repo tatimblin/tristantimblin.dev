@@ -71,7 +71,7 @@ export const RULES = Object.freeze({
 	stroke: "stroke",
 	/** 6. One data-motion per file (a scene: two), on a <g>, spin|drift|slide|blink|dash|steps; data-speed 0.5|1|2; a dash group is dashed with a period that divides 8, and sets no offset; a steps group says data-beats (2–8) and holds exactly those <g data-beat> children, 0…N−1 in order, with data-ripple / data-now marks only inside a beat. */
 	motion: "motion",
-	/** 7. ≤ 120 elements, ≤ 12 KB, ≤ 3 clipPaths, groups ≤ 4 deep. Glyph: 40 / 3 KB (80 / 6 KB wide), groups ≤ 3 deep. Scene: 400 / 64 KB. */
+	/** 7. ≤ 120 elements, ≤ 20 KB, ≤ 3 clipPaths, groups ≤ 4 deep. Glyph: 40 / 3 KB (80 / 6 KB wide), groups ≤ 3 deep. Scene: 400 / 64 KB. */
 	budget: "budget",
 	/** 8. ids only on a clipPath or defs content, prefixed <slug>-; use/clip-path point inside the file. Glyph: no ids. */
 	ids: "ids",
@@ -150,9 +150,18 @@ const TYPE_ATTRS = Object.freeze({
 	tspan: Object.freeze(["class", "x", "y", "dx", "dy", "font-size", "fill"]),
 });
 
+/**
+ * The art budget. ELEMENTS are the cap that keeps a plate sparse (and what
+ * the DOM pays for). BYTES were 12 KB for a wordless drawing; type put
+ * them to 20 KB — a module sheet is many small elements, and each stroked
+ * one carries the kit's full stroke discipline (~150 bytes) and each line
+ * of type its voice, place and paint (~110): the type specimen's six
+ * modules are 100 elements in 17 KB. A sparse post plate stays far under
+ * either.
+ */
 export const BUDGET = Object.freeze({
 	elements: 120,
-	bytes: 12 * 1024,
+	bytes: 20 * 1024,
 	clipPaths: 3,
 	depth: 4,
 });
