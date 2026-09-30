@@ -107,3 +107,47 @@ test.describe("steps — the assertion board", () => {
 		finished(s, 6);
 	});
 });
+
+/**
+ * The Mega Desk: the drafting sheet, the desk rising sitting to standing
+ * in four beats — each beat's now-mark is the whole desk at that height,
+ * so exactly one desk shows at a time, and the still is the standing one.
+ */
+test.describe("steps — the mega desk", () => {
+	const cell = `[data-cell="post"]:has(a[href="/txt/mega-desk/"])`;
+
+	test("the quilt tile: standing and paused at rest, rising beat by beat under the pointer", async ({ page }) => {
+		await page.goto("/txt/");
+		const group = page.locator(`${cell} ${STEPS}`);
+		await expect(group).toHaveAttribute("data-beats", "4");
+		// A desk per beat, and no ripple: the rise is the height, not a landing.
+		expect(await group.locator(":scope > [data-beat] > [data-now]").count()).toBe(4);
+		expect(await group.locator("[data-ripple]").count()).toBe(0);
+
+		const rest = await stateOf(page, cell);
+		expect(rest.play).toBe("paused");
+		expect(rest.clock).toBe(0);
+		// Four beats plus two slots of hold, a sixth of the 6s loop each: 6s.
+		expect(parseFloat(rest.duration)).toBeCloseTo(6, 1);
+		finished(rest, 4);
+
+		await page.locator(`${cell} a`).hover();
+		await expect.poll(async () => (await stateOf(page, cell)).play).toBe("running");
+		// Mid-rise: one desk only, and it is not yet the standing one.
+		await expect.poll(async () => (await stateOf(page, cell)).clock, { timeout: 5000 }).toBeGreaterThan(2.2 / 6);
+		const mid = await stateOf(page, cell);
+		expect(mid.clock).toBeLessThan(4 / 6);
+		expect(mid.beats[0]).toBe(1);
+		expect(mid.now.filter((o) => o === 1)).toHaveLength(1);
+		expect(mid.now[3]).toBe(0);
+	});
+
+	test("reduced motion: the loop is 0s and the standing desk is all that shows", async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: "reduce" });
+		await page.goto("/txt/");
+		await page.locator(`${cell} a`).first().hover();
+		const s = await stateOf(page, cell);
+		expect(s.duration).toBe("0s");
+		finished(s, 4);
+	});
+});

@@ -809,6 +809,7 @@ their own lines.
 | marks | `arrowhead` · `chevron` · `plus` · `cross` · `check` · `ticksRadial` · `ticksLinear` · `needle` |
 | shapes | `polygon` · `tri` · `rect` · `roundRect` · `pill` · `keycap` · `bracket(x, y, size, corner)` · `hex` · `star(cx, cy, n, inner, outer)` · `coil(x, y, length, turns, r)` |
 | iso (`iso.ts`) | `iso(x, y, z, at?)` at a true 30° (`ISO_X` / `ISO_Y` / `ISO_Z` the unit axes) · `isoBox` · `isoCylinder(x, y, r, h, {axis, top, side})` (upright, or lying along `x` / `y`; discs r × r/2) · `isoEllipse(x, y, r, {axis})` (a 2:1 disc on the ground or standing on the x / y face) · `isoRoundRect(x, y, w, d, c)` (flat, rounded corners; `c = d/2` is a pill) · `isoRoundBox(x, y, w, d, h, c, {top, side})` (rounded vertical edges: a shell, a board) · `isoCoil(x, y, r, h, turns)` (a standing spring, one path) · `isoPlane({grid})` · `vanishingGrid` — visible faces only, never a wireframe; a disc keeps ry = r/2, a rounded corner is the true projection so it meets the 30° edges tangent |
+| hidden lines (`clip.ts`) | `convexHull(points)` (a silhouette: the hull of a solid's projected corners) · `edges(points)` (a closed outline as segments) · `clipOutside(segs, poly)` (Cyrus–Beck: what of the segments shows outside a convex polygon, either winding) · `segmentsD(segs)` (one path `d`, rounded) — line work behind a solid is cut, not painted over, since a scene may not paint the plate |
 | assembly | `group(children, {motion, speed, transform, mark})` (the data-motion contract; a transform with a motion goes on an outer `g`; `mark: "now"` a steps beat's now-mark) · `steps(beats, {speed, transform})` (the `steps` motion: one `<g data-beat>` per entry, 2–8, none empty; a shape's `{ mark: "ripple" \| "now" }` is its `data-ripple` / `data-now`) · `svg({viewBox, children, header})` · `wash(colour, pct)` (a scene's translucent fill) |
 
 ```ts
@@ -1116,7 +1117,9 @@ touches it; a baked one whose source is gone is removed like any orphan,
 and the spec then says the post has no art. The clipPath ids are
 prefixed with the slug, as art's are. The first is
 `asserting-on-agent-behavior`: the assertion board, six footprints landing
-in `steps`, the `scale` glyph's ruler as its timeline.
+in `steps`, the `scale` glyph's ruler as its timeline. The second is `mega-desk`: the drafting sheet, the desk rising in
+four `steps` beats, what stands under the slab cut outside its silhouette
+with `clipOutside`.
 
 **The registry** (`src/scenes/scenes.ts`, `import { sceneSvg,
 sceneCredit, SCENE_NAMES } from "@whois/design-system/scenes"`) is an
