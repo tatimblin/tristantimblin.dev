@@ -721,8 +721,8 @@ are the same `<svg class="ds-glyph">` on the page, and the validator's glyph
 profile (see *Art → Profiles*) is the gate on all of them.
 
 **The tile sheet**, `/design-system/glyphs` (`src/pages/design-system/
-glyphs.astro`), shows every registered glyph and a spread of every
-generator in tiles, captioned `<family>·NN name` and marked R (recipe), H
+glyphs.astro`), shows every registered glyph (72 files: 64 recipes, 8
+hand-drawn) and a spread of every generator (13) in tiles, captioned `<family>·NN name` and marked R (recipe), H
 (hand-drawn) or G (generator), grouped by family, with the L3 signal chain
 and a readouts panel; one tile is `#glyph-<name>` or
 `#gen-<component>-<n>`. The families: **A** waves · **B** curves · **C**
@@ -762,7 +762,7 @@ their own lines.
 | curves | `arc(cx, cy, r, a0, a1)` · `ring` · `band(cx, cy, r0, r1, a0, a1)` (a filled sector with half-disc caps — a thick line is a shape) · `polar` · `onArc` · `spread` |
 | marks | `arrowhead` · `chevron` · `plus` · `cross` · `check` · `ticksRadial` · `ticksLinear` · `needle` |
 | shapes | `polygon` · `tri` · `rect` · `roundRect` · `pill` · `keycap` · `bracket(x, y, size, corner)` · `hex` · `star(cx, cy, n, inner, outer)` · `coil(x, y, length, turns, r)` |
-| iso (`iso.ts`) | `iso(x, y, z)` at a true 30° · `isoBox` · `isoCylinder` (ry = r/2) · `isoPlane({grid})` · `vanishingGrid` — visible faces only, never a wireframe |
+| iso (`iso.ts`) | `iso(x, y, z, at?)` at a true 30° (`ISO_X` / `ISO_Y` / `ISO_Z` the unit axes) · `isoBox` · `isoCylinder(x, y, r, h, {axis, top, side})` (upright, or lying along `x` / `y`; discs r × r/2) · `isoEllipse(x, y, r, {axis})` (a 2:1 disc on the ground or standing on the x / y face) · `isoRoundRect(x, y, w, d, c)` (flat, rounded corners; `c = d/2` is a pill) · `isoRoundBox(x, y, w, d, h, c, {top, side})` (rounded vertical edges: a shell, a board) · `isoCoil(x, y, r, h, turns)` (a standing spring, one path) · `isoPlane({grid})` · `vanishingGrid` — visible faces only, never a wireframe; a disc keeps ry = r/2, a rounded corner is the true projection so it meets the 30° edges tangent |
 | assembly | `group(children, {motion, speed, transform})` (the data-motion contract; a transform with a motion goes on an outer `g`) · `svg({viewBox, children, header})` |
 
 ```ts
@@ -793,9 +793,25 @@ ways:
   is the same comparison with no writes: exit 1 on a stale or orphaned
   file. Edit the recipe, never the baked file.
 - **Hand-drawn** — a plain `.svg` with no header, for an organic one-off
-  the kit would fight (`toggle`, `hand`, `knob`). The bake tells the two
+  the kit would fight (the eight: `amp`, `compass`, `hand`, `knob`, `lock`,
+  `pan`, `speaker`, `toggle`). The bake tells the two
   apart by the header alone and never touches a file without one; a recipe
   and a hand-drawn file of the same name is an error.
+
+**A recipe may call a generator** (or any `lib/micro` export — `iso`,
+`polar`, `rng`, `lineD` / `simplify`) and, since a generator is pure, bake
+its output as fixed marks: `sine-square`, `phase-cross`, `phase-invert`
+and `transient` draw with `wave()`, `cards` with `envelope()`,
+`switch-ladder` / `ladder-switch` with `ladder()`. A Drawing's `children`
+are the glyph kit's strings on the 48×32 grid, so spread them in place
+(`...wave("sine", { amp: 6 }).children`) or, to move, scale or mirror
+them, wrap them in ONE group with a transform — `k.group(bars.children,
+{ transform: "translate(11.5 0)" })`, `scale(0.5)` for a mark inside a
+card, `matrix(1 0 0 -1 0 32)` for the inverted twin. The strokes are
+non-scaling, so a scaled generator keeps its weights; a shared drawing
+function a recipe exports (`switchLadder(k, mirror)`) is how two glyphs
+share one. Keep the whole under the budget and the two-colour cap — a
+generator's paints count.
 
 **The registry** (`src/glyphs/glyphs.ts`, `import { glyphSvg, GLYPH_NAMES }
 from "@whois/design-system/glyphs"`) is an eager `?raw` glob of the
@@ -848,13 +864,14 @@ family has a second mark, `accent` (the same names, or `none`).
 | C | `dial(value, {ticks, sweep, paint})` → `<Dial value>` | value 0–1; ticks 2–12 (5); sweep 90–330° (270); paint blue | hair dashed radial ticks, a needle in its own `<g>` (no motion by default — the hook for one), a hub dot |
 | C | `ladder(value, {steps, lit, axis, paint})` → `<Ladder value \| lit>` | value 0–1 → `round(value × steps)` lit, or `lit` 0–steps (wins); steps 2–12 (9); axis vertical \| horizontal; paint blue | hairline bars, lit from the bottom / the left; two paths (lit, unlit dim) |
 | C | `segments(value, {paint})` → `<Segments value>` | digits, `-`, ` ` (else a blank), 1–8 chars (cut past 8); paint blue | seven-segment digits as line segments — lit in the paint, unlit a dim dotted hair ghost (a solid dim hair reads as "8" at 1×); two paths; 1–4 on 48×32, 5–8 on the wide `0 0 96 32` |
+| C | `progress(value, {dotted, paint})` → `<Progress value>` | value 0–1; dotted true; paint green | a filled bar (a `roundRect`, never a wide stroke) from the left, the remainder a dim hair — dotted, or solid — out to an ink end tick marking the whole; three elements at most, under a quarter unit is no bar |
 | C | `selector(n, {active, colours, paint, accent, spin})` → `<Selector>` | n 3–12 (8); active 0…n−1, wrapped (0, the top); colours a pip pattern, cycled (ink/dim, red opposite the active); paint blue (centre, input); accent green (active pip); spin | pips on a ring round a centre ring and dot, an input line from the left; `spin` puts the file's one `data-motion="spin"` on the pip ring |
 | D | `fan(n, {dir, dotted, paint, accent})` → `<Fan>` | n 2–8 (4); dir split \| merge; dotted; paint blue (dim when dotted); accent red (none drops the input) | a split (1 → n) or merge (n → 1): an accent input line into a node, n cubic branches (one path) to the far edge; `dotted` is the dotted spread. Always 48×32 — eight branches still read apart |
 | E | `rings(n, {mode, fade, dotted, paint, accent})` → `<Rings>` | n 1–6 (4); mode chain \| concentric; fade; dotted 0 to n − 1 (concentric); paint red; accent none | `chain`: n linked rings in a row, the unison glyph, `fade` dimming the last; `concentric`: a nested stack out to r 12, the outer `dotted` as dim dotted rings (the halo), `accent` a centre dot |
 | E | `matrix(rows, cols, {on, hot, mark, cursor, paint, accent})` → `<Matrix>` | rows 1–6 (4) × cols 1–10 (5); on a pattern (`"10110;01001"`) or row bitmasks (MSB leftmost); mark pip \| dot \| x; hot and cursor `[row, col]`; paint blue; accent red | a grid at pitch 5 (tighter for six rows): `pip` lit filled, unlit dim hollow; `x` the desk operator's x/o grid; `hot` cells and the square `cursor` in the accent. Every mark of one kind in one paint is ONE path, so 60 cells are a handful of elements; past six columns it takes `0 0 96 32` for the 6 KB budget |
 
 - **A meter's ARIA** (`meterAria`, `gen/meter.ts`): with a `label`,
-  `<Gauge>`, `<Dial>` and `<Ladder>` pass `role="meter"`,
+  `<Gauge>`, `<Dial>`, `<Ladder>` and `<Progress>` pass `role="meter"`,
   `aria-valuemin="0" aria-valuemax="100"`, `aria-valuenow` the whole
   PERCENT the drawing shows (a screen reader says "62", not "0.62") and
   `aria-valuetext` — "62%", a ladder's "6 of 9" — in the rest; the host
@@ -870,7 +887,7 @@ family has a second mark, `accent` (the same names, or `none`).
 - **Spin turns about the group's box** (`transform-box: fill-box`), so a
   spinning ring must be centrally symmetric: an odd `n` adds a dim dotted
   halo round the pips that squares the box.
-- **Tests.** `gen/gen.test.ts` (A/B), `gen/instruments.test.ts` (C),
+- **Tests.** `gen/gen.test.ts` (A/B), `gen/instruments.test.ts` and `gen/progress.test.ts` (C),
   `gen/fields.test.ts` (D/E) sweep each function's params, extremes and
   out-of-range values: validate clean, within budget (each viewBox held to
   its own: ≤ 40 elements / 3 KB, 80 / 6 KB wide), deterministic, the
@@ -981,8 +998,9 @@ had no component and are new (`styles/readout-stack.css`, `formula.css`,
 
 **A glyph (L1):**
 
-1. Look for a generator first — a curve, a meter, a fan, a grid or a ring
-   of any shape is a generator's props, not a new file.
+1. Look for a generator first — a curve, a meter, a progress bar, a fan,
+   a grid or a ring of any shape is a generator's props, not a new file;
+   a generator's mark plus a little more is a recipe that calls it (above).
 2. Pick the family (A–H) and the build: a **recipe** for anything the kit
    can say (rings, ticks, arcs, wires, shapes, iso); **hand-drawn** only
    for an organic one-off the kit would fight.

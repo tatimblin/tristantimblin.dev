@@ -17,13 +17,15 @@ Work down this list and stop at the first match:
 
 1. **A generator already draws it.** A waveform, an envelope, a filter
    curve, an automation line, a gauge, a dial, a ladder, digits, a selector
-   ring, a split or merge fan, linked or concentric rings, or a pip / x grid
-   is a generator's props, not a new file. **Use a generator before drawing
+   ring, a progress bar, a split or merge fan, linked or concentric rings, or
+   a pip / x grid is a generator's props, not a new file. **Use a generator before drawing
    any curve.** Hand-plotting a sine or a biquad is where drift and bad
    coordinates creep in.
 2. **The kit can say it** (rings, ticks, arcs, wires, arrows, shapes, stars,
-   coils, iso solids): write a **recipe**, `src/glyphs/recipes/<name>.ts`,
-   and bake it.
+   coils, iso solids), or it is a generator's mark plus something more (a sine
+   through a keycap, a ladder fed by a switch): write a **recipe**,
+   `src/glyphs/recipes/<name>.ts`, and bake it. A recipe may call a generator
+   (§2).
 3. **It is organic and the kit would fight it** (a pointing hand, a gear knob
    with a letter, a padlock's shackle): draw it **by hand**,
    `src/glyphs/<name>.svg`, with no header.
@@ -82,6 +84,28 @@ export default recipe((k) => [
 recipes/<name>.ts — edit the recipe -->`. Always edit the recipe, never
 the baked file.
 
+**A recipe can call a generator.** A generator is pure and its Drawing's
+`children` are the glyph kit's strings on the same 48×32 grid, so a recipe
+bakes them in as fixed marks. Spread them where they already sit, or wrap
+them in **one** `k.group(…, { transform })` to move, scale or mirror them:
+
+```ts
+import { wave, envelope } from "../../lib/micro";
+import { ladder } from "../../lib/micro/gen";
+
+...wave("sine", { amp: 6 }).children                                        // sine-square: as drawn
+k.group(wave("sine", { amp: 8, paint: "dim" }).children, { transform: "matrix(1 0 0 -1 0 32)" }) // phase-invert: mirrored
+k.group(envelope({ paint: "blue" }).children, { transform: "translate(10 12.5) scale(0.5)" })   // cards: scaled into a card
+k.group(ladder(0, { lit: 4, steps: 6 }).children, { transform: "translate(11.5 0)" })           // switch-ladder: shifted
+```
+
+The strokes are non-scaling, so a scaled mark keeps its weights. The
+generator's paints count toward the two colours, and its elements toward
+the budget. Two glyphs that are one drawing share an exported function
+(`switchLadder(k, mirror)` in `switch-ladder.ts`, reused by
+`ladder-switch`). Other `lib/micro` exports recipes use: `iso`, `polar`,
+`rng(seed)`, `lineD` / `simplify` (a plotted curve as one path), `round`.
+
 ### Kit cheat sheet (`packages/design-system/src/lib/micro/kit.ts`)
 
 Arguments go position first, then size, then an options object. Angles are
@@ -117,14 +141,27 @@ red is `--art-coral`).
 | `bracket(x, y, size, "tl" \| "tr" \| "bl" \| "br", o)` | a corner bracket |
 | `star(cx, cy, n, inner, outer, o)` | a spiky ring (distortion) |
 | `coil(x, y, length, turns, r, o)` | a spring |
-| `isoBox(x, y, w, d, h, o)` / `isoCylinder(x, y, r, h, o)` / `isoPlane(x, y, w, d, {grid})` / `vanishingGrid(vx, vy, w, h, rows, cols, o)` | iso solids at a true 30°, with visible faces only |
+| `isoBox(x, y, w, d, h, {top, right, left})` | a box by its nearest bottom corner, three visible faces |
+| `isoCylinder(x, y, r, h, {axis, top, side})` | a cylinder from the centre of its base: upright (`z`, default) or lying along `x` (down-right) / `y` (down-left); discs r × r/2 |
+| `isoEllipse(x, y, r, {axis, fill})` | a 2:1 disc on the ground, or standing on the x / y face |
+| `isoRoundRect(x, y, w, d, c, o)` | a flat rounded rectangle by its nearest corner; `c = d/2` is a pill |
+| `isoRoundBox(x, y, w, d, h, c, {top, side})` | a box with rounded vertical edges (a shell, a board, a handset slab): top + body, no crease |
+| `isoCoil(x, y, r, h, turns, o)` | a standing spring, one path of 2:1 loops |
+| `isoPlane(x, y, w, d, {grid})` / `vanishingGrid(vx, vy, w, h, rows, cols, o)` | a ground rhombus (with a grid) / a one-point perspective grid |
 | `group(children, {motion, speed, transform})` | a group, the one motion |
-| helpers: `polar(cx, cy, r, angle)`, `onArc`, `spread`, `snap`, `round`, `iso(x, y, z)` | geometry, from `lib/micro` |
+| helpers: `polar(cx, cy, r, angle)`, `onArc`, `spread`, `snap`, `round`, `iso(x, y, z, at?)`, `ISO_X` / `ISO_Y` / `ISO_Z` | geometry, from `lib/micro` |
+
+All the iso solids are at a true 30° (x runs down-right, y down-left, z
+up) and draw visible faces only, never a wireframe; they are methods on the
+kit and also plain functions taking the kit first. A point on a solid's top
+face is `iso(wx - w, wy - d, h, [x, y])` from the same anchor (see
+`handset.ts`, `pcb.ts`).
 
 ## 3. Hand-drawn
 
-This is a plain SVG with the profile's attributes typed out. Copy them from
-`toggle.svg`, `hand.svg`, `knob.svg`, `lock.svg` or `battery.svg`. Leave out
+This is a plain SVG with the profile's attributes typed out. There are eight:
+`amp`, `compass`, `hand`, `knob`, `lock`, `pan`, `speaker`, `toggle`. Copy
+the attributes from one of them. Leave out
 the header: the bake identifies its own output by it and never touches a
 file without one. A recipe and a hand-drawn file with the same name is an
 error.
@@ -162,16 +199,20 @@ checklist is in CONVENTIONS.
 
 ## 6. The menu
 
-**Glyph files** (`<Glyph name>`). R is a recipe, H is hand-drawn.
+**Glyph files** (`<Glyph name>`): 72, of which 64 are recipes (R) and 8
+hand-drawn (H). "wide" is `0 0 96 32`, "wide 64" is `0 0 96 64`.
 
 | Fam. | Glyphs |
 | --- | --- |
-| D routing | `crossfade` R · `junction` R (the dot-line-dot between tiles) · `leader` R · `loop` R · `ring-in` R · `ring-out` R · `send` R · `wire` R |
-| E fields | `distort` R (spiky star ring) · `dot-rain` R · `halo` R · `orbit` R · `registration` R · `reticle` R · `target` R |
-| F controls | `amp` H (holds a readout) · `bracket` R · `checkbox` R · `compass` H · `cross` R · `crossbox` R · `dot` R · `gate` R · `hand` H · `hex` R · `keycaps` R (wide) · `knob` H · `lock` H · `pan` H · `plus` R · `spark` R · `speaker` H · `toggle` H |
-| H iso parts | `battery` H |
+| A waves | `phase-cross` R (a sine through a ring) · `sample-hold` R (noise stepping to held levels) · `sine-lock` R (a sine locking in) · `sine-square` R (a sine through a keycap) · `transient` R (the burst on a dim envelope) |
+| B curves | `bezier` R (green handles) · `phase-invert` R (a sine and its dim mirror) · `ramp` R (lavender triangle) · `shelf` R (a high shelf under a dotted ceiling) · `waveshaper` R (x³ on dotted axes) |
+| C instruments | `clock` R (in a dotted ring) · `colour-bars` R (the HUD's segmented bar row) · `knob-notch` R · `ladder-switch` R · `loader` R (dot circle, spin) · `scale` R (ruler with a pointer) · `skyline` R (seeded equaliser bars) · `switch-ladder` R |
+| D routing | `crossfade` R · `junction` R (the dot-line-dot between tiles) · `leader` R · `loop` R · `mixer` R (two inputs into one) · `patch` R (a cable between jacks) · `ring-in` R · `ring-out` R · `send` R · `switch` R (a lever between contacts) · `wire` R |
+| E fields | `distort` R (spiky star ring) · `dot-rain` R · `halo` R · `orbit` R · `pendulum` R · `radar` R · `registration` R · `reticle` R · `rgb` R (the colour trio) · `scatter` R (seeded dots) · `target` R |
+| F controls | `amp` H (holds a readout) · `bracket` R · `cards` R (stacked, an envelope on the front) · `checkbox` R · `compass` H · `cross` R · `crossbox` R · `dot` R · `eject` R · `gate` R · `hand` H · `hex` R · `key` R (a pressed keycap) · `keycaps` R (wide) · `knob` H · `lock` H · `pan` H · `plus` R · `power` R · `slider` R (a fader) · `spark` R · `speaker` H · `toggle` H |
+| H iso parts | `battery` R (wide 64) · `cone` R (the speaker driver, wide 64) · `handset` R (wide 64) · `iso-shell` R (wide 64) · `joystick` R · `pcb` R (board and chips, wide 64) · `rotary` R (the dial disc, wide 64) · `screw` R · `spring` R (wide 64) |
 
-**Generators**, with their props (ranges and defaults are in each
+**Generators** (13), with their props (ranges and defaults are in each
 component's header and the CONVENTIONS table):
 
 | Fam. | Component | Variants |
@@ -185,20 +226,40 @@ component's header and the CONVENTIONS table):
 | C | `<Ladder value \| lit steps axis paint>` | a vertical or horizontal level ladder |
 | C | `<Segments value paint>` | 7-segment digits, 1–4 on 48×32 and 5–8 wide |
 | C | `<Selector n active colours paint accent spin>` | the dot-ring selector (P.DEST), optionally spinning |
+| C | `<Progress value dotted paint>` | a green bar with a dotted remainder to an end tick · a solid remainder |
 | D | `<Fan n dir dotted paint accent>` | split 1→n · merge n→1 · dotted spread |
 | E | `<Rings n mode fade dotted paint accent>` | the unison chain · a concentric stack or halo |
 | E | `<Matrix rows cols on hot mark cursor paint accent>` | a pip matrix with a hot pip · an x/o grid with a square cursor · wide past six columns |
 
-A labelled `Gauge`, `Dial` or `Ladder` is `role="meter"` with
+A labelled `Gauge`, `Dial`, `Ladder` or `Progress` is `role="meter"` with
 `aria-valuenow` as a percentage. Every host takes `size` (6 | 8 | 10 | 12),
 `label`, `play` and `class`.
 
-**The backlog**, to pull as the site needs it (plan inventory): transient
-in an envelope, sine + lock, noise → square (sample and hold), phase-cross;
-notch or shelf with a dotted ceiling, ramp, bezier with green handles,
-waveshaper x³, phase invert; clock in a dotted ring, ladder + switch lever,
-segmented colour bar, scale with a pointer, dotted progress, dot-circle
-loader (spin), skyline bars; toggle lever between contacts; RGB trio overlap,
-pendulum; stacked cards; the rest of the iso parts (shell, PCB with chips,
-spring, rotary disc, speaker cone, screw, joystick, handset). Before adding
-any of these, check whether it is a generator's props or a kit recipe.
+**G readouts** are HTML text, not glyphs: `Stat variant="numeral"`,
+`ReadoutStack`, `Formula`, `NumberStream`, and Chip's `tone="accent"` /
+`variant="arrow"` tags (CONVENTIONS, *G — readouts*).
+
+The planned inventory is built. Before adding a new mark, check whether it
+is a generator's props, a recipe on a generator, or a kit recipe.
+
+## 7. Composing iso parts into a scene
+
+The H parts share one projection, the kit's true 30° (`ISO_X` (0.866,
+0.5), `ISO_Y` (−0.866, 0.5), `ISO_Z` (0, −1)). That is the plate
+language's iso slope of ±0.577 as well, so the parts line up with each
+other and with a plate's iso slabs. An exploded assembly (the phone:
+shell, pcb, battery, spring, screws, rotary, cone, handset) is the parts
+offset along one axis, usually `z`, so their edges stay parallel.
+
+To put them on a **320×180 plate**, draw with **`kit("art")`**. Never paste
+a baked glyph file: glyphs paint in `currentColor` / `--glyph-dim` and fail
+the art profile. `kit("art")` maps the same calls to the art tokens
+(`--art-ink`, `--art-ink-2`, the art dashes, the 2.5 terminal dot, hair by
+default). Either call the iso helpers at plate coordinates, or run a
+part's recipe with the art kit (`recipe.draw(kit("art"))`, from a
+throwaway bun script) and set its elements in one `<g
+transform="translate(x y)">` on the plate. The parts are drawn on a 96×64
+(or 48×32) tile, so a translate places them at their drawn size. Then
+write the plate as usual (`SKILL.md`) and run `bun run validate:art`: the
+art profile is the gate, not the glyph one. Never put the transform on the
+motion group.
