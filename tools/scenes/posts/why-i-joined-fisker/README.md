@@ -1,14 +1,14 @@
 # why-i-joined-fisker
 
-The post art for *Your Car Knows You're Getting Sick*: a module sheet — the
-driver's seat as one line illustration (a steering wheel cropped by the
-bottom edge, two dials under the binnacle's brow seen through it, the rim
-cutting them by one even-odd clipPath) beside three modules lettered with
-the post's numbers: the three signals as small traces, the pipeline (8 TB a
-day in parquet, 2M messages a second), and the LSU research's reading,
-`[ COGNITIVE DECLINE ]`. The car reads its signals in `steps`, three beats:
-each lands a trace and holds the wheel's spokes at that beat's angle.
+The post art for *Your Car Knows You're Getting Sick*: the graphic alone —
+the driving HUD across the whole plate, a few lines standing for a car: the
+windshield's frame, the road as a green one-point grid running to a small
+blue skyline, the dash with the console's step and the gear knob's R, a
+needle dial either side of the road (STEER in blue, BRAKE in red), and the
+signal row's three bars on the dash. No readouts: a teaser, not a sheet.
+The car reads its signals in `steps`, three beats: each lights a bar and
+holds the road's rows and the needles at that moment.
 
 `scene.ts` is the source; `bun run scenes:bake` writes
-`src/content/txt/why-i-joined-fisker.svg`. Drawn from nothing but the kit:
-no external data, no credit.
+`src/content/txt/why-i-joined-fisker.svg`. Drawn from the kit and the
+skyline recipe: no external data, no credit.
