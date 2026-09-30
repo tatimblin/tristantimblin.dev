@@ -1,0 +1,5 @@
+<!-- baked from recipes/crossbox.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <rect x="16" y="8" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 20.5 12.5 L 27.5 19.5 M 27.5 12.5 L 20.5 19.5" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

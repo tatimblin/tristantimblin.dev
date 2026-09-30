@@ -1,0 +1,6 @@
+<!-- baked from recipes/wire.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <path d="M 6 23 L 17 23 Q 20 23 20 20 L 20 12 Q 20 9 23 9 L 38 9" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" />
+  <circle cx="6" cy="23" r="1.5" fill="var(--art-cyan)" />
+  <rect x="38" y="7" width="4" height="4" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" />
+</svg>

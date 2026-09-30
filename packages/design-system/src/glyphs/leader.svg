@@ -1,0 +1,6 @@
+<!-- baked from recipes/leader.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <polyline points="11,23 24,10 29,10" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="33,10 43,10" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0.01 3.99" />
+  <circle cx="11" cy="23" r="2" fill="var(--art-coral)" />
+</svg>

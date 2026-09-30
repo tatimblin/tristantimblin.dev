@@ -1,0 +1,11 @@
+<!-- baked from recipes/keycaps.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 32">
+  <rect x="8" y="7" width="8" height="14" rx="4" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="20" y="7" width="8" height="14" rx="4" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="32" y="7" width="8" height="14" rx="4" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="44" y="7" width="8" height="14" rx="4" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="56" y="7" width="8" height="14" rx="4" fill="var(--art-green)" />
+  <rect x="68" y="7" width="8" height="14" rx="4" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="80" y="7" width="8" height="14" rx="4" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="60" cy="26" r="1.5" fill="var(--art-cyan)" />
+</svg>

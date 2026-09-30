@@ -20,7 +20,7 @@ const recipes = await loadRecipes(join(DIR, "recipes"));
 
 describe("the registry", () => {
 	test("GLYPH_NAMES is exactly the set of .svg files", () => {
-		expect([...GLYPH_NAMES].sort()).toEqual(files.map(nameOf));
+		expect([...GLYPH_NAMES].sort()).toEqual(files.map(nameOf).sort());
 	});
 
 	test("no name repeats", () => {
