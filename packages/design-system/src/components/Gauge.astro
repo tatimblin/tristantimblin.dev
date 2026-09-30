@@ -1,0 +1,34 @@
+---
+// Gauge — an arc meter, generated (lib/micro/gen/gauge.ts) and rendered as
+// a glyph through GlyphSvg: a thick arc drawn as filled bands (never a wide
+// stroke) — the dim track over the whole sweep, the value's band over it.
+//
+//   <Gauge value={0.62} />                            the reference: 270°, green on dim
+//   <Gauge value={0.35} sweep={180} paint="blue" size={8} />
+//   <Gauge value={cpu} label="CPU load" />            a labelled meter
+//
+// `value` 0–1; `sweep` 90–330 degrees (270); `paint` the value (green);
+// `track` the sweep (dim). With a `label` it is role="meter",
+// aria-valuemin 0, aria-valuemax 100, aria-valuenow the whole percent and
+// aria-valuetext "62%" (meterAria); without one it is aria-hidden. The
+// host props are GlyphSvg's; data-gen="gauge" on the root.
+import GlyphSvg from "./GlyphSvg.astro";
+import type { GlyphHostProps } from "../lib/glyph-host";
+import { type GenPaint, gauge, meterAria } from "../lib/micro/gen";
+
+interface Props extends GlyphHostProps {
+	/** 0–1, the reading */
+	value: number;
+	/** 90–330 degrees, the arc's sweep; 270 unless said */
+	sweep?: number;
+	/** the value's band; green unless said */
+	paint?: GenPaint;
+	/** the track's band; dim unless said */
+	track?: GenPaint;
+}
+
+const { value, sweep, paint, track, ...rest } = Astro.props;
+const meter = rest.label ? meterAria(value) : {};
+---
+
+<GlyphSvg svg={gauge(value, { sweep, paint, track })} data-gen="gauge" {...meter} {...rest} />

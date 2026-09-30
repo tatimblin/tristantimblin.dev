@@ -893,6 +893,33 @@ budget):
   is ONE path (circles as arc subpaths), so 60 cells are a handful of
   elements; past six columns it takes `0 0 96 32` for the 6 KB budget.
 
+**Instruments (family C)** — meters and readouts, in `gen/{gauge,dial,
+ladder,segments,selector}.ts`, their sweeps in `gen/instruments.test.ts`:
+
+| Generator | Component | Params (ranges; defaults) | Draws |
+| --- | --- | --- | --- |
+| `gauge(value, {sweep, paint, track})` | `<Gauge value>` | value 0–1; sweep 90–330° (270); paint green; track dim | a thick arc as two filled `band`s (never a wide stroke): the track, the value over it; centred on the tile at any sweep |
+| `dial(value, {ticks, sweep, paint})` | `<Dial value>` | value 0–1; ticks 2–12 (5); sweep 90–330° (270); paint blue | hair dashed radial ticks, a needle in its own `<g>` (no motion by default — the hook for one), a hub dot |
+| `ladder(value, {steps, lit, axis, paint})` | `<Ladder value \| lit>` | value 0–1 → `round(value × steps)` lit, or `lit` 0–steps (wins); steps 2–12 (9); axis vertical \| horizontal; paint blue | hairline bars, lit from the bottom / the left; two paths (lit, unlit dim) |
+| `segments(value, {paint})` | `<Segments value>` | digits, `-`, ` ` (else a blank), 1–8 chars (cut past 8); paint blue | seven-segment digits as line segments — lit in the paint, unlit a dim dotted hair ghost (a solid dim hair reads as "8" at 1×); two paths; 1–4 on 48×32, 5–8 on the wide `0 0 96 32` |
+| `selector(n, {active, colours, paint, accent, spin})` | `<Selector>` | n 3–12 (8); active 0…n−1, wrapped (0, the top); colours a pip pattern, cycled (ink/dim, red opposite the active); paint blue (centre, input); accent green (active pip); spin | pips on a ring round a centre ring and dot, an input line from the left; `spin` puts the file's one `data-motion="spin"` on the pip ring |
+
+- **A meter's ARIA** (`meterAria`, `gen/meter.ts`): with a `label`,
+  `<Gauge>`, `<Dial>` and `<Ladder>` pass `role="meter"`,
+  `aria-valuemin="0" aria-valuemax="100"`, `aria-valuenow` the whole
+  PERCENT the drawing shows (a screen reader says "62", not "0.62") and
+  `aria-valuetext` — "62%", a ladder's "6 of 9". Without a label they
+  pass none of it and are aria-hidden. `<Segments>` and `<Selector>` are
+  not meters: labelled, they are the host's `role="img"` — give a
+  segments readout its value as the label ("045", or "045 BPM").
+- **Two colours at most** (the glyph profile's palette): a selector keeps
+  its paint, its accent, then its pattern's colours, first come first
+  kept, and draws a third in ink — under the default blue centre the
+  reference's red pip is ink; `paint="ink"` shows green and red.
+- **Spin turns about the group's box** (`transform-box: fill-box`), so a
+  spinning ring must be centrally symmetric: an odd `n` adds a dim dotted
+  halo round the pips that squares the box.
+
 ---
 
 ## Catalogue tooling

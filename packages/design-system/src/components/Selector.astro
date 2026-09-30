@@ -1,0 +1,40 @@
+---
+// Selector — a dot-ring selector (the reference's P.Dest), generated
+// (lib/micro/gen/selector.ts) and rendered as a glyph through GlyphSvg:
+// pips on a ring, the active one in the accent, round a centre ring and
+// dot with an input line from the left.
+//
+//   <Selector />                                     eight pips, the top one green
+//   <Selector n={6} active={2} spin />               the pip ring spins on hover / play
+//   <Selector paint="ink" />                         the reference's green and red pips
+//
+// `n` 3–12 pips (8); `active` the accent's pip (0, the top; wrapped);
+// `colours` the other pips' pattern, cycled (ink/dim alternating, red
+// opposite the active); `paint` the centre and input (blue); `accent`
+// the active pip (green). At most two colours: a third is drawn in ink.
+// `spin` gives the pip ring data-motion="spin", which the host runs under
+// the pointer or `play`. The host props are GlyphSvg's (role="img" with a
+// label); data-gen="selector" on the root.
+import GlyphSvg from "./GlyphSvg.astro";
+import type { GlyphHostProps } from "../lib/glyph-host";
+import { type GenPaint, selector } from "../lib/micro/gen";
+
+interface Props extends GlyphHostProps {
+	/** 3–12 pips; 8 unless said */
+	n?: number;
+	/** the accent's pip, 0 (the top) clockwise; wrapped */
+	active?: number;
+	/** the other pips' paints, cycled */
+	colours?: readonly GenPaint[];
+	/** the centre and the input line; blue unless said */
+	paint?: GenPaint;
+	/** the active pip; green unless said */
+	accent?: GenPaint;
+	/** the pip ring spins under the host's motion gating */
+	spin?: boolean;
+}
+
+const { n, active, colours, paint, accent, spin = false, ...rest } = Astro.props;
+---
+
+<GlyphSvg svg={selector(n, { active, colours, paint, accent, spin })} data-gen="selector" {...rest} />

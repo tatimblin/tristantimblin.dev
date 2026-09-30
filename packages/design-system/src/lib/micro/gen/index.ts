@@ -24,3 +24,16 @@ export { matrix, MATRIX_MARKS, MATRIX_WIDE_AFTER } from "./matrix";
 export type { Cell, MatrixMark, MatrixOpts } from "./matrix";
 export { ACCENT_PAINTS, GEN_PAINTS, clamp, clampInt, drawing, lineD, paintOf, rng, simplify, smoothD, toSvg } from "./base";
 export type { AccentPaint, Drawing, GenPaint } from "./base";
+// family C — the instruments (meters and readouts)
+export { gauge, arcMiddle } from "./gauge";
+export type { GaugeOpts } from "./gauge";
+export { dial } from "./dial";
+export type { DialOpts } from "./dial";
+export { ladder, ladderLevel, LADDER_AXES } from "./ladder";
+export type { LadderAxis, LadderOpts } from "./ladder";
+export { segments, segmentsText, SEGMENTS_MAX } from "./segments";
+export type { SegmentsOpts } from "./segments";
+export { selector } from "./selector";
+export type { SelectorOpts } from "./selector";
+export { meterAria } from "./meter";
+export type { MeterAria } from "./meter";

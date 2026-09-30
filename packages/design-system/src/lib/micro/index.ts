@@ -23,3 +23,7 @@ export type { Drawing, GenPaint, AccentPaint, WaveOpts, WaveShape, EnvelopeOpts,
 // The routing and field generators (families D/E): <Fan>, <Rings>, <Matrix>.
 export { fan, FAN_DIRS, rings, RINGS_MODES, matrix, MATRIX_MARKS, MATRIX_WIDE_AFTER } from "./gen";
 export type { FanDir, FanOpts, RingsMode, RingsOpts, Cell, MatrixMark, MatrixOpts } from "./gen";
+
+// The instrument generators (gen/, family C): <Gauge>, <Dial>, <Ladder>, <Segments>, <Selector>; meterAria is a labelled meter's ARIA.
+export { gauge, dial, ladder, ladderLevel, LADDER_AXES, segments, segmentsText, SEGMENTS_MAX, selector, meterAria } from "./gen";
+export type { GaugeOpts, DialOpts, LadderAxis, LadderOpts, SegmentsOpts, SelectorOpts, MeterAria } from "./gen";

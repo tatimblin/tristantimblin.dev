@@ -1,0 +1,30 @@
+---
+// Segments — seven-segment digits, generated (lib/micro/gen/segments.ts)
+// and rendered as a glyph through GlyphSvg: drawn as line segments, so no
+// font — lit in the paint, unlit a dim dotted ghost.
+//
+//   <Segments value="045" />                       the reference, blue
+//   <Segments value={7} paint="red" size={8} />
+//   <Segments value="20260929" label="20260929" />  5–8 characters: the wide 96×32
+//
+// `value` digits, "-" and " " (anything else is a blank; cut at 8);
+// `paint` the lit segments (blue). One to four characters sit on the
+// 48×32 tile, five to eight on 96×32. It is not a meter: with a `label`
+// it is role="img" aria-label (the host's default) — make the label the
+// value, or the value and its unit ("045 BPM"). The host props are
+// GlyphSvg's; data-gen="segments" on the root.
+import GlyphSvg from "./GlyphSvg.astro";
+import type { GlyphHostProps } from "../lib/glyph-host";
+import { type GenPaint, segments } from "../lib/micro/gen";
+
+interface Props extends GlyphHostProps {
+	/** the characters: digits, "-", " "; 1–8 of them */
+	value: string | number;
+	/** the lit segments; blue unless said */
+	paint?: GenPaint;
+}
+
+const { value, paint, ...rest } = Astro.props;
+---
+
+<GlyphSvg svg={segments(value, { paint })} data-gen="segments" {...rest} />
