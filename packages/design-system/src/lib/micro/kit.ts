@@ -19,6 +19,8 @@ import { type Point, pointsAttr, polar, round, same, spread, xy } from "./geomet
 import { type Colour, type Dash, type Fill, type Mark, type Motion, type Paint, type Speed, type Target, type TargetTable, TARGETS, type Wash, WASH_MAX, type Weight } from "./paint";
 import { isoBox, isoCoil, isoCylinder, isoEllipse, isoPlane, isoRoundBox, isoRoundRect, vanishingGrid } from "./iso";
 import type { IsoBoxOpts, IsoCylinderOpts, IsoEllipseOpts, IsoPlaneOpts, IsoRoundBoxOpts, VanishingGridOpts } from "./iso";
+import { bracketLabel, readout, rule, section, text } from "./type";
+import type { BracketOpts, ReadoutOpts, RuleOpts, SectionOpts, TextOpts } from "./type";
 
 /** How a stroke ends. `round` (the default) also rounds the joins; a circuit trace takes `butt`. */
 export type Cap = "round" | "butt" | "square";
@@ -475,6 +477,33 @@ export class Kit {
 	/** A one-point perspective grid; see `vanishingGrid` in iso.ts. */
 	vanishingGrid(vx: number, vy: number, width: number, height: number, rows: number, cols: number, o: VanishingGridOpts = {}): string {
 		return vanishingGrid(this, vx, vy, width, height, rows, cols, o);
+	}
+
+	// --- type and the module sheet (type.ts; art and scene only) -----------
+
+	/** Words at `(x, y)`, the baseline, in a voice; see `text` in type.ts. The glyph kit throws. */
+	text(x: number, y: number, words: string, o: TextOpts = {}): string {
+		return text(this, x, y, words, o);
+	}
+
+	/** A horizontal rule, solid or `dotted`; see `rule` in type.ts. */
+	rule(x0: number, x1: number, y: number, o: RuleOpts = {}): string {
+		return rule(this, x0, x1, y, o);
+	}
+
+	/** A section head: a dotted rule with a caps title under it; see `section` in type.ts. */
+	section(x: number, y: number, w: number, title: string, o: SectionOpts = {}): string {
+		return section(this, x, y, w, title, o);
+	}
+
+	/** A bracketed state, `[ ACTIVE ]`; see `bracketLabel` in type.ts. */
+	bracketLabel(x: number, y: number, words: string, o: BracketOpts = {}): string {
+		return bracketLabel(this, x, y, words, o);
+	}
+
+	/** A big thin numeral with a label and a caption; see `readout` in type.ts. */
+	readout(x: number, y: number, o: ReadoutOpts): string {
+		return readout(this, x, y, o);
 	}
 
 	// --- assembly ---------------------------------------------------------

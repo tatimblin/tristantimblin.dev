@@ -10,6 +10,13 @@
 
 export { kit, Kit } from "./kit";
 export type { AngleOpts, BandOpts, Cap, Corner, End, FillOpts, GroupOpts, NeedleOpts, ShapeOpts, StepsOpts, StrokeOpts, SvgOpts, TicksOpts, WireOpts } from "./kit";
+// Type and the module sheet (type.ts, layout.ts, ids.ts): words in four voices on a plate, a grid of cells, plausible module strings.
+export { advance, bracketLabel, caps, escapeText, readout, rule, section, sectionDepth, text, TYPE_SCALE, VOICE_DEFAULT, VOICE_SIZES } from "./type";
+export type { Anchor, BracketOpts, ReadoutOpts, RuleOpts, SectionOpts, TextOpts, TypeSize, Voice } from "./type";
+export { grid, span } from "./layout";
+export type { GridCell, GridOpts } from "./layout";
+export { ids, STATES } from "./ids";
+export type { Ids } from "./ids";
 export { TARGETS, WASH_MAX } from "./paint";
 export type { Colour, Dash, Fill, Mark, Motion, Paint, Speed, Target, TargetTable, Wash, Weight } from "./paint";
 export { onArc, polar, round, snap, spread } from "./geometry";
