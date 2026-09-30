@@ -260,3 +260,57 @@ test.describe("steps — the driver's signals", () => {
 		finished(s, 3);
 	});
 });
+
+/**
+ * No Honey, We Have a Dashboard at Home: the four jobs a fleet dashboard
+ * did — list, twin, actions, signals — dock into the editor one a beat,
+ * each lighting a meter pip, the mapping (LIST → TREE VIEW … SIGNALS →
+ * TERMINAL, 1/4 … 4/4) a now-mark per beat, no ripple. The still is all
+ * four docked, 4/4.
+ */
+test.describe("steps — the dock", () => {
+	const cell = `[data-cell="post"]:has(a[href="/txt/no-honey-we-have-a-dashboard-at-home/"])`;
+
+	test("the quilt tile: all docked and paused at rest, docking beat by beat under the pointer", async ({ page }) => {
+		await page.goto("/txt/");
+		const group = page.locator(`${cell} ${STEPS}`);
+		await expect(group).toHaveAttribute("data-beats", "4");
+		expect(await group.locator(":scope > [data-beat] > [data-now]").count()).toBe(4);
+		expect(await group.locator("[data-ripple]").count()).toBe(0);
+
+		const rest = await stateOf(page, cell);
+		expect(rest.play).toBe("paused");
+		expect(rest.clock).toBe(0);
+		// Four beats plus two slots of hold, a sixth of the 6s loop each: 6s.
+		expect(parseFloat(rest.duration)).toBeCloseTo(6, 1);
+		finished(rest, 4);
+
+		await page.locator(`${cell} a`).first().hover();
+		await expect.poll(async () => (await stateOf(page, cell)).play).toBe("running");
+		// Mid-dock: the first job has landed, one mapping alone, and not yet the last.
+		await expect.poll(async () => (await stateOf(page, cell)).clock, { timeout: 5000 }).toBeGreaterThan(2.2 / 6);
+		const mid = await stateOf(page, cell);
+		expect(mid.clock).toBeLessThan(4 / 6);
+		expect(mid.beats[0]).toBe(1);
+		expect(mid.beats[3]).toBeLessThan(1);
+		expect(mid.now.filter((o) => o === 1)).toHaveLength(1);
+		expect(mid.now[3]).toBe(0);
+	});
+
+	test("the post: the mark plays from the start", async ({ page }) => {
+		await page.goto("/txt/no-honey-we-have-a-dashboard-at-home/");
+		const mark = ".post__mark";
+		await expect(page.locator(mark)).toHaveAttribute("data-art-play", "");
+		expect((await stateOf(page, mark)).play).toBe("running");
+		await expect.poll(async () => (await stateOf(page, mark)).clock).toBeGreaterThan(0);
+	});
+
+	test("reduced motion: the loop is 0s and all four docked is all that shows", async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: "reduce" });
+		await page.goto("/txt/");
+		await page.locator(`${cell} a`).first().hover();
+		const s = await stateOf(page, cell);
+		expect(s.duration).toBe("0s");
+		finished(s, 4);
+	});
+});
