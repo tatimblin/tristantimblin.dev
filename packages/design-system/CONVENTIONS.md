@@ -77,7 +77,7 @@ such rules off DS elements (`h2:where(:not(.ds-heading))`, global.css).
 every artwork on both pages. Open it instead of guessing a prop; this doc
 deliberately does not duplicate per-component API tables.
 
-**Components available (62):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (64):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Pill`, `Chip`, `Anchor`, `List`, `ListItem`, `Icon`,
 `VisuallyHidden`, `WidgetGrid`, `Widget`, `WidgetEmpty`, `HitArea` — the
@@ -87,8 +87,8 @@ instrument UI (next section): `Mono`, `Figure`, `Stat`, `StatStrip`,
 `TileGrid`, `Tile`, `Faces`, `Face` — the reading UI (the section after it):
 `PostList`, `PostGroup`, `PostRow`, `Prose`, `Blockquote`, `Fig`, `Index`,
 `IndexRow`, `Quilt`, `QuiltCell`, `QuiltPanel`, `SearchBar` — the art:
-`ArtFrame` — and the catalogue's tooling: `Knobs`, `KnobGroup`, `Knob`,
-`ThemePage`.
+`ArtFrame`, and the micrographics `Glyph`, `GlyphTile` — and the catalogue's
+tooling: `Knobs`, `KnobGroup`, `Knob`, `ThemePage`.
 
 **Client helpers** (`@whois/design-system/lib/*`, plain TS, no DOM at import):
 `breakpoints` (`WIDGET_COMPACT_MQ`, `WIDGET_WIDE_MQ`), `faces` (`showFace`,
@@ -101,7 +101,7 @@ Work top-down. Stop at the first rule that matches.
 
 | # | Situation | Do this |
 |---|-----------|---------|
-| 1 | What you're building maps to a component (any text/heading, layout, button, card, pill, chip, link, list, icon, a figure, an index table, a hit area) | **Use the DS component.** This is the default. |
+| 1 | What you're building maps to a component (any text/heading, layout, button, card, pill, chip, link, list, icon, a glyph or its keycap tile, a figure, an index table, a hit area) | **Use the DS component.** This is the default. |
 | 2 | Bespoke/one-off layout or site visual with no matching component | **Write your own CSS, but consume DS tokens** — `var(--space-*)`, `var(--font-size-*)`, colors, `var(--border-radius-*)`, `--bar-width`, `--shadow-*`, the durations. Never hardcode a value a token exists for. |
 | 3 | A genuinely unique, non-reusable visual (hero dotted-grid, the stories-heading lockup, page-specific art direction) | **Hand-roll it** — but still pull spacing/color from tokens where any apply. |
 | 4 | The same component-like pattern now appears in **≥2 places**, or you're about to duplicate component CSS | **Expand the package** — add/extend a component (see *Authoring* below). Don't copy-paste. |
@@ -674,8 +674,9 @@ mark at each crop corner: an 8px (`--space-2`) L of two 1px bars in
 `--text-tertiary`, drawn by the frame's `::after` over the art.
 
 **Motion contract.** A file marks at most one group `<g data-motion="spin |
-drift | slide | blink | dash" data-speed="0.5 | 1 | 2">`; the frame owns the
-keyframes (`transform-box: fill-box; transform-origin: center`), paused at
+drift | slide | blink | dash" data-speed="0.5 | 1 | 2">`; the host owns the
+keyframes (`styles/motion.css`, shared by the frame and the glyphs;
+`transform-box: fill-box; transform-origin: center`), paused at
 rest and **running on `:hover`, `:focus-within`, inside a hovered or focused
 `a`, or when the frame carries `data-art-play`** (the `play` prop, or a
 script's `toggleAttribute`). Durations are fractions of `--duration-loop`
@@ -740,6 +741,96 @@ export default k.svg({ header: "baked from recipes/dial.ts — edit the recipe",
 
 Its tests (`src/lib/micro/*.test.ts`, `bun run test:unit`) validate every
 primitive's output against both profiles.
+
+### Glyphs — recipes, hand-drawn files, the bake
+
+A glyph (L1) is a file, `src/glyphs/<name>.svg`, and it gets there one of
+two ways:
+
+- **A recipe** — `src/glyphs/recipes/<name>.ts`, a few lines on the kit,
+  default-exporting `recipe((k) => [ …elements ])` (or `{ viewBox?: "0 0 96
+  32" | "0 0 96 64", draw(k) }` for a wide one; `Recipe` in
+  `src/glyphs/recipe.ts`). **`bun run glyphs:bake`** bakes every recipe
+  through `kit("glyph").svg()` under the header `<!-- baked from
+  recipes/<name>.ts — edit the recipe -->`, validates each with the glyph
+  profile (exit 1, nothing written, on a violation), writes what is stale,
+  and removes a baked file whose recipe is gone. **`bun run glyphs:check`**
+  is the same comparison with no writes: exit 1 on a stale or orphaned
+  file. Edit the recipe, never the baked file.
+- **Hand-drawn** — a plain `.svg` with no header, for an organic one-off
+  the kit would fight (`toggle.svg`). The bake tells the two apart by the
+  header alone and never touches a file without one; a recipe and a
+  hand-drawn file of the same name is an error.
+
+**The registry** (`src/glyphs/glyphs.ts`, `import { glyphSvg, GLYPH_NAMES }
+from "@whois/design-system/glyphs"`) is an eager `?raw` glob of the
+directory plus `GLYPH_NAMES` (`names.ts`, the `GlyphName` type — add a name
+when you add a file). It does not care how a file was made. Its test
+(`src/glyphs/glyphs.test.ts`, `bun run test:unit`) holds the names against
+the directory, runs the glyph profile over every file, re-bakes every baked
+file in memory and fails on a stale one, and fails on a recipe never baked
+— so a bake cannot be forgotten and a hand edit to a baked file cannot land.
+
+**Inlining** is `lib/inline-svg` (`inlineSvg(raw, { attrs, host })`,
+`viewBoxOf`): the prolog, doctype and comments dropped, `attrs` put on the
+root (one the file already carries is kept). ArtFrame, Glyph and every
+later generator go through it; a drawing is inlined, never an `<img>`,
+because its colours are tokens and its motion is CSS.
+
+### `Glyph` and `GlyphTile`
+
+- `Glyph` — the mark inline (`styles/glyph.css`, the `<svg>` itself is the
+  element, class `ds-glyph`): `name` (a `GlyphName`), `size` (`6 | 8 | 10 |
+  12`, its HEIGHT on the space scale, numbered as Icon's size is — 6 is
+  32px, the 48×32 viewBox at 1×, 10 is 2×, 12 is 3×; in text, with no
+  size, it is 1em tall, `vertical-align: middle`, as wide as the viewBox
+  makes it — 3:2, or 3:1 wide), `label` (→ `role="img" aria-label`;
+  without one it is `aria-hidden` + `focusable="false"`: a mark beside a
+  word that already says it), `play` (`data-art-play`, the art's attribute,
+  on the root), `class` merged, the rest on the root (`data-glyph="<name>"`
+  is always there). The line work is `currentColor`, so a glyph takes the
+  colour of its text or a `color` set in scope; **`--glyph-dim`** is
+  declared on `.ds-glyph` as `color-mix(in oklab, currentColor 40%,
+  transparent)` and resolves ON THE ELEMENT THAT USES IT — `currentColor`
+  in a custom property is not substituted where the property is declared
+  (a `var()` would be), so a dim stroke deep in the file is 40% of the
+  glyph's own ink, whichever colour it was given. (Measured in Chromium in
+  both themes: the toggle's pill computes to the text colour at alpha 0.4,
+  and to green at 0.4 on a green glyph.)
+- `GlyphTile` — the keycap (class `ds-glyph-tile`): a 3:2 cap
+  (`__cap`; the `--art-edge` hairline rim, `--border-radius-1`, a `--wash-1`
+  fill so it sits a few percent off the page or a card in either theme;
+  the rim goes `--hairline-strong` under the pointer) that fills its
+  column — a row of them grids with `Grid` — and sizes the glyph in its
+  default slot itself (just over three quarters of the cap's width, the
+  height by the ratio; a glyph's `size` does not apply inside). `label`
+  (prop, or the `label` slot for markup) is the caps voice (`ds-mono
+  ds-caps`) under the cap, one line; the `readout` slot is drawn over the
+  mark, centred, in the spec sheet's thin numeral (`--font-display` at
+  `--font-size-7`), in the tile's colour unless its content says its own;
+  `as` (`figure` when the label captions it), `class` merged, `id`/`name`/
+  `data-*` pass through. Hovering the tile plays the glyph inside it.
+
+**Glyph vs Icon.** `Icon` is a UI AFFORDANCE: a 2px stroke in the ink, a
+meaning (chevron, copy, play), sized as a square on the space scale. A
+`Glyph` is a MARK — decorative or data: a hairline (1 / 1.5), the art
+palette, the text's ink dimmed, aria-hidden unless labelled, 3:2. A thing
+the reader acts on or must recognise is an Icon; a thing that decorates a
+label, illustrates a reading, or shows a value's shape is a Glyph.
+
+**Motion.** The data-motion contract is one file, `styles/motion.css`, and
+both hosts read it: the keyframes, `--duration-loop` (0s under reduced
+motion, so nothing moves and no host needs a block of its own), the pause
+at rest. The frame's gating is as above; a glyph runs **on hover of the
+glyph or of the `GlyphTile` it sits in, inside a hovered or focused link,
+with `play` (`data-art-play` on itself) or under any ancestor carrying
+`data-art-play`** — never on focus, since a glyph is not focusable. The
+`dash` keyframe offsets by 8 screen px; a glyph's dash arrays repeat every
+4 or 8, so every loop is seamless.
+
+The catalogue's "Glyphs" section shows the three seed glyphs inline in a
+reading line, on the size scale, and in tiles on both pages (a readout, a
+`play`, a label slot).
 
 ---
 
@@ -894,6 +985,7 @@ visual or a new token in `tokens.overrides.css` with its reason.
 | `Legend` / `LegendItem` | default; `value` |
 | `PostGroup` / `PostRow` | default; `label` / `meta` |
 | `Fig` | default (the image), `caption` |
+| `GlyphTile` | default (the glyph), `label`, `readout` |
 | `Knobs` | default, `meta`, `note`, `actions` |
 | `SearchBar` | `chips` |
 | `DimensionLabel`, `TileGrid`, `Faces`, `Index`, `IndexRow`, `Prose`, `Blockquote`, `HitArea`, `ThemePage`, `Quilt`, `QuiltCell` | default |

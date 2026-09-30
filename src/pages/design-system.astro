@@ -57,6 +57,8 @@ import Blockquote from "@whois/design-system/Blockquote";
 // The art: the frame, and the file every artwork starts from.
 import ArtFrame from "@whois/design-system/ArtFrame";
 import artTemplate from "@whois/design-system/art/_template.svg?raw";
+import Glyph from "@whois/design-system/Glyph";
+import GlyphTile from "@whois/design-system/GlyphTile";
 // The quilt: the grid, its cells, the panel, and the search bar above it.
 import Quilt from "@whois/design-system/Quilt";
 import QuiltCell from "@whois/design-system/QuiltCell";
@@ -1638,6 +1640,66 @@ assertions:
 			</div>
 		</section>
 
+		{/* GLYPHS --------------------------------------------------------- */}
+		<section class="ds-demo__section" id="glyphs">
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Glyphs — micrographics and the keycap tile</Heading>
+			<p class="ds-demo__note">
+				The micrographics (<code>packages/design-system/src/glyphs/</code>; <code>Glyph</code>, <code>GlyphTile</code>; glyph.css and motion.css): hairline
+				marks on a 48×32 grid, inlined beside text. Their line work is <code>currentColor</code> — the ink of the text they sit in, dimmed through <code>--glyph-dim</code> (that ink at 40%, resolved on the glyph) — and their
+				colour is the art palette, so a glyph follows the theme as the art does. A
+				glyph is BAKED from a recipe (<code>src/glyphs/recipes/&lt;name&gt;.ts</code>, a
+				few lines on the L0 kit; <code>bun run glyphs:bake</code> writes the file under a
+				header, <code>glyphs:check</code> fails on a stale one) or hand-drawn; the
+				registry (<code>glyphs.ts</code>, <code>GLYPH_NAMES</code>) reads only the files.
+				Where <code>Icon</code> is a UI affordance — a 2px stroke in the ink, a meaning —
+				a glyph is a mark: decorative or data, hairline, aria-hidden unless it says <code>label</code>.
+			</p>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Inline — in a line of text, and on the size scale</h2>
+			<p class="ds-demo__note"> <code>&lt;Glyph name /&gt;</code> in text is 1em tall, as wide as the viewBox
+				makes it (3:2), centred on the x-height, in the text's ink. <code>size</code> is its height on the space scale, numbered as <code>Icon</code>'s size is: 6 (32px, the viewBox at 1×), 8, 10 (2×), 12 (3×).
+			</p>
+			<Body>
+				A red <Glyph name="plus" /> beside a word, a signal <Glyph name="ring-in" label="a signal arriving" /> arriving
+				(that one has a label, so it is an image), and a <Glyph name="toggle" /> toggle,
+				whose pill is the dimmed ink: three glyphs in a reading line.
+			</Body>
+			<div class="ds-demo__glyph-sizes">
+				{([6, 8, 10, 12] as const).map((s) => (
+					<figure class="ds-demo__glyph-size">
+						<Glyph name="ring-in" size={s} />
+						<figcaption><Mono variant="text">size={s}</Mono></figcaption>
+					</figure>
+				))}
+				<figure class="ds-demo__glyph-size" style="color: var(--art-green)">
+					<Glyph name="toggle" size={10} />
+					<figcaption><Mono variant="text">size={10}, coloured</Mono></figcaption>
+				</figure>
+			</div>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Tiles — the keycap, on both pages</h2>
+			<p class="ds-demo__note"> <code>&lt;GlyphTile label&gt;</code>: a 3:2 cap in the rim's hairline
+				(<code>--art-edge</code>) on a wash, the caps label under it (a prop, or the <code>label</code> slot), and a <code>readout</code> slot drawn over the mark in
+				the thin numeral. The tile sizes the glyph and fills its column, so a row of
+				them sits on a <code>Grid</code>. Hover a tile and its glyph's motion runs (the
+				ring's dash crawls); <code>play</code> on the glyph, or <code>data-art-play</code> on any ancestor, runs it from the start; under reduced motion nothing moves.
+			</p>
+			<div class="ds-demo__art-themes">
+				{(["light", "dark"] as const).map((t) => (
+					<ThemePage theme={t}>
+						<Grid templateColumns="repeat(3, minmax(0, 1fr))" gap={4} data-glyph-tiles={t}>
+							<GlyphTile label="plus"><Glyph name="plus" /></GlyphTile>
+							<GlyphTile label="ring-in"><Glyph name="ring-in" /></GlyphTile>
+							<GlyphTile label="toggle"><Glyph name="toggle" /></GlyphTile>
+							<GlyphTile label="readout"><Glyph name="ring-in" /><span slot="readout">34</span></GlyphTile>
+							<GlyphTile label="play"><Glyph name="ring-in" play /></GlyphTile>
+							<GlyphTile><Mono slot="label" tone="primary">label slot</Mono><Glyph name="toggle" /></GlyphTile>
+						</Grid>
+					</ThemePage>
+				))}
+			</div>
+		</section>
+
 		{/* QUILT ---------------------------------------------------------- */}
 		<section class="ds-demo__section" id="quilt">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Quilt · QuiltCell — the grid of art tiles and its states</Heading>
@@ -2296,6 +2358,20 @@ assertions:
 	.ds-demo__art-link:focus-visible {
 		outline: var(--focus-ring);
 		outline-offset: var(--focus-ring-offset);
+	}
+	/* The glyph size row: the steps on one baseline, each captioned. */
+	.ds-demo__glyph-sizes {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--space-6);
+		margin-top: var(--space-5);
+	}
+	.ds-demo__glyph-size {
+		margin: 0;
+		display: grid;
+		gap: var(--space-2);
+		justify-items: center;
 	}
 	@media (max-width: 640px) {
 		.ds-demo__art-sizes {

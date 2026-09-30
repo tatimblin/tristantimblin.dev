@@ -14,7 +14,9 @@
     "test": "playwright test",
     "test:unit": "bun test ./src ./packages",
     "validate:art": "bun packages/design-system/scripts/validate-art.mjs",
-    "validate:glyph": "bun packages/design-system/scripts/validate-art.mjs --profile glyph"
+    "validate:glyph": "bun packages/design-system/scripts/validate-art.mjs --profile glyph",
+    "glyphs:bake": "bun packages/design-system/scripts/bake-glyphs.ts",
+    "glyphs:check": "bun packages/design-system/scripts/bake-glyphs.ts --check"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",

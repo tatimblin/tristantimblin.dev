@@ -31,6 +31,7 @@
 // the box is without drawing it. The box is the file's 16:9 (a caller may
 // retune `--art-ratio` in scope; the quilt's cells do) and it clips.
 import { cx } from "../lib/cx";
+import { inlineSvg } from "../lib/inline-svg";
 
 interface Props {
 	/** The raw SVG file text (import it with `?raw`). */
@@ -64,29 +65,14 @@ const {
 
 const Tag = as as any;
 
-// The file, made an inline fragment: drop the XML prolog and any doctype (an
-// editor's, not the language's), and the comments — the template's grid and
-// safe-area notes are for the author, not the page. Then the root takes
-// aria-hidden/focusable (the frame, not the svg, carries the name) and the
-// slice fit, so a box of another ratio crops rather than letterboxes.
-const body = svg
-	.replace(/^\s*<\?xml[^>]*\?>/i, "")
-	.replace(/^\s*<!DOCTYPE[^>]*>/i, "")
-	.replace(/<!--[\s\S]*?-->/g, "")
-	.trim();
-if (!/^<svg[\s>]/i.test(body)) {
-	throw new Error(
-		"ArtFrame: `svg` must be the raw text of an SVG file (import it with `?raw`).",
-	);
-}
-const root = body.match(/^<svg[^>]*>/i)![0];
-const fit = /preserveAspectRatio=/i.test(root)
-	? ""
-	: ' preserveAspectRatio="xMidYMid slice"';
-const inner = body.replace(
-	/^<svg/i,
-	`<svg aria-hidden="true" focusable="false"${fit}`,
-);
+// The file, made an inline fragment (lib/inline-svg: prolog, doctype and
+// comments dropped). The root takes aria-hidden/focusable (the frame, not
+// the svg, carries the name) and the slice fit, so a box of another ratio
+// crops rather than letterboxes; a file that sets its own fit keeps it.
+const inner = inlineSvg(svg, {
+	host: "ArtFrame",
+	attrs: { "aria-hidden": "true", focusable: "false", preserveAspectRatio: "xMidYMid slice" },
+});
 
 const cls = cx("ds-art-frame", variant !== "frame" && `ds-art-frame--variant-${variant}`, className);
 

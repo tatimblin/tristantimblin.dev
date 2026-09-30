@@ -1,0 +1,108 @@
+/* Glyph and GlyphTile — the micrographics on the page (Glyph.astro,
+ * GlyphTile.astro). A glyph is an inline <svg> whose line work is
+ * currentColor, so it takes the colour of the text it sits in; its fills
+ * are the art tokens (which follow the theme), and its motion is
+ * motion.css, shared with the art frame.
+ *
+ * --glyph-dim is the one dimming a glyph may use — the text's colour at 40%
+ * — declared HERE and nowhere in a file: a file says var(--glyph-dim) and
+ * the host resolves it. It is a color-mix of currentColor, and currentColor
+ * inside a custom property is NOT substituted where the property is
+ * declared (a var() would be): the keyword travels with the token stream
+ * and resolves on the element that finally uses it, against that element's
+ * own colour — so a dim stroke deep in the file is 40% of the glyph's
+ * inherited ink, whatever colour the page or the tile gave it. Measured in
+ * Chromium: a file's var(--glyph-dim) stroke computes to the text colour
+ * with alpha 0.4, and follows a colour change on the glyph. */
+.ds-glyph {
+	--glyph-dim: color-mix(in oklab, currentColor 40%, transparent);
+	/* THE BOX. No width or height in the file; the viewBox gives the ratio
+	 * (3:2, or 3:1 for a wide glyph) and the host one dimension. In text the
+	 * glyph is a line's em tall, and as wide as the ratio makes it, centred
+	 * on the x-height so a mark reads beside a word as a word. Overflow
+	 * visible: a round cap or a dot on the viewBox's edge is not clipped. */
+	block-size: 1em;
+	inline-size: auto;
+	vertical-align: middle;
+	overflow: visible;
+	flex: none;
+}
+/* size — the glyph's HEIGHT on the space scale, numbered as Icon's size is
+ * (N → --space-N): 6 is 32px, the 48×32 viewBox at 1× (a hairline on the
+ * pixel grid), 8 is 48, 10 is 64 (2×), 12 is 96 (3×). */
+.ds-glyph--size-6 {
+	block-size: var(--space-6);
+}
+.ds-glyph--size-8 {
+	block-size: var(--space-8);
+}
+.ds-glyph--size-10 {
+	block-size: var(--space-10);
+}
+.ds-glyph--size-12 {
+	block-size: var(--space-12);
+}
+
+/* THE TILE — the keycap. A 3:2 cap in the rim's hairline (--art-edge, the
+ * art tile's edge, which follows the theme) with the surface radius, a
+ * wash under it so it sits a few percent off the page, on the page or on a
+ * card (a wash is the ink at a low alpha, so it reads on either); the rim
+ * strengthens under the pointer, as a chip's does. The tile fills its
+ * column, so a row of them grids with Grid, and stacks its label under the
+ * cap. */
+.ds-glyph-tile {
+	display: grid;
+	gap: var(--space-2);
+	align-content: start;
+	margin: 0;
+	min-inline-size: 0;
+	color: var(--text-primary);
+}
+.ds-glyph-tile__cap {
+	position: relative;
+	display: grid;
+	place-items: center;
+	inline-size: 100%;
+	aspect-ratio: 3 / 2;
+	background: var(--wash-1);
+	border: 1px solid var(--art-edge);
+	border-radius: var(--border-radius-1);
+	transition: border-color var(--duration-quick) var(--ease-reveal);
+}
+.ds-glyph-tile:hover .ds-glyph-tile__cap {
+	border-color: var(--hairline-strong);
+}
+/* The glyph in the cap: the tile sizes it — the cap's width less a margin
+ * on each side, the height following the ratio — so a glyph's own `size`
+ * does not apply here and a wide glyph sits centred on its band. The one
+ * literal: the mark takes just over three quarters of the cap, the
+ * spec sheet's proportion. */
+.ds-glyph-tile__cap > .ds-glyph {
+	inline-size: 78%;
+	block-size: auto;
+}
+/* The readout over the mark: the spec sheet's thin numeral (the display
+ * role, Mondwest Thin), tabular, centred, in the tile's colour unless the
+ * slot's content says its own. Not a hit target: it lets the pointer
+ * through to the cap under it. */
+.ds-glyph-tile__readout {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	pointer-events: none;
+	font-family: var(--font-display);
+	font-weight: var(--font-display-weight);
+	font-size: var(--font-size-7);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: var(--tracking-heading);
+	line-height: 1;
+}
+/* The label under the cap: the caps voice (the component composes
+ * .ds-mono.ds-caps; nothing repeated here), on one line, the secondary ink. */
+.ds-glyph-tile__label {
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

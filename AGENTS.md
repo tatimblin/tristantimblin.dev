@@ -74,7 +74,8 @@ ad-hoc.
 **The gate (work top-down, stop at the first match):**
 
 1. Maps to a component (text/heading, layout, button, card, pill, chip, link,
-   list, icon, figure, index table, hit area)? → **use the DS component.**
+   list, icon, glyph / glyph tile, figure, index table, hit area)? → **use the
+   DS component.**
 2. Bespoke layout/visual with no matching component? → **write your own CSS but
    consume DS tokens** (`var(--space-*)`, `var(--font-size-*)`, colors, radii).
    Never hardcode a value a token exists for.

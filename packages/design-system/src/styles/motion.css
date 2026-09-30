@@ -1,0 +1,116 @@
+/* MOTION — the data-motion contract, shared by the art frame (ArtFrame,
+ * art-frame.css) and the glyphs (Glyph, glyph.css). A file marks at most
+ * one group data-motion="spin|drift|slide|blink|dash" and the HOST owns the
+ * keyframes — so every artwork and every glyph moves the same way, and no
+ * file carries a <style> or an <animate>. Transform and opacity only, apart
+ * from `dash`, which advances a dashed trace by stroke-dashoffset (a bent
+ * trace has no transform that does it).
+ *
+ * PAUSED AT REST. The still frame is the poster — a file must read at t=0 —
+ * and it runs only under the pointer, under keyboard focus, inside a
+ * hovered or focused link, or when the host says data-art-play (the open
+ * post's hero, a Glyph's `play`, the catalogue's toggle). Leaving pauses in
+ * place. The two hosts gate it a little differently, below.
+ *
+ * ONE CLOCK. --duration-loop is one cycle; each kind takes its natural
+ * fraction of it through --art-cycle, and the file's data-speed (0.5 | 1 |
+ * 2) divides it again. Under prefers-reduced-motion the token is 0s, the
+ * animation has no active interval, and the drawing holds its still frame —
+ * nothing more to do, for either host.
+ *
+ * Every loop is seamless: a spin ends where it starts; a drift alternates,
+ * out and back; a slide moves a group repeating every 40 units by exactly
+ * 40; a blink returns to lit; a dash advances by one 8-unit period — art's
+ * dash arrays (4 4, 2 6) sum to 8, and a glyph's (0.01 3.99, 2 2, 4 4) to 4
+ * or 8, so eight is a whole number of periods for every one of them. */
+:is(.ds-art-frame, .ds-glyph) [data-motion] {
+	transform-box: fill-box;
+	transform-origin: center;
+	animation-duration: calc(
+		var(--duration-loop) * var(--art-cycle, 1) / var(--art-speed, 1)
+	);
+	animation-timing-function: linear;
+	animation-iteration-count: infinite;
+	animation-play-state: paused;
+}
+:is(.ds-art-frame, .ds-glyph) [data-speed="0.5"] {
+	--art-speed: 0.5;
+}
+:is(.ds-art-frame, .ds-glyph) [data-speed="2"] {
+	--art-speed: 2;
+}
+:is(.ds-art-frame, .ds-glyph) [data-motion="spin"] {
+	animation-name: ds-art-spin;
+}
+:is(.ds-art-frame, .ds-glyph) [data-motion="drift"] {
+	animation-name: ds-art-drift;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
+	--art-cycle: 0.5;
+}
+:is(.ds-art-frame, .ds-glyph) [data-motion="slide"] {
+	animation-name: ds-art-slide;
+}
+:is(.ds-art-frame, .ds-glyph) [data-motion="blink"] {
+	animation-name: ds-art-blink;
+	animation-timing-function: steps(1, end);
+	--art-cycle: 0.25;
+}
+:is(.ds-art-frame, .ds-glyph) [data-motion="dash"] {
+	animation-name: ds-art-dash;
+	--art-cycle: calc(1 / 6);
+}
+
+/* THE ART FRAME plays under the pointer, under focus within it, inside a
+ * hovered or focused link (the quilt's cells), or with data-art-play on the
+ * frame. */
+.ds-art-frame:hover [data-motion],
+.ds-art-frame:focus-within [data-motion],
+.ds-art-frame[data-art-play] [data-motion],
+a:hover .ds-art-frame [data-motion],
+a:focus-visible .ds-art-frame [data-motion] {
+	animation-play-state: running;
+}
+/* A GLYPH plays under the pointer — on itself or on the tile it sits in —
+ * inside a hovered or focused link, with data-art-play on itself (the
+ * `play` prop) or on any ancestor (a page or a widget that says the whole
+ * panel is live), never on focus: a glyph is not focusable. */
+.ds-glyph:hover [data-motion],
+.ds-glyph-tile:hover .ds-glyph [data-motion],
+.ds-glyph[data-art-play] [data-motion],
+[data-art-play] .ds-glyph [data-motion],
+a:hover .ds-glyph [data-motion],
+a:focus-visible .ds-glyph [data-motion] {
+	animation-play-state: running;
+}
+
+/* Lengths in a transform on an SVG element are user units — grid units of
+ * the drawing (320×180 for art, 48×32 for a glyph), not screen pixels. The
+ * dash offset is the exception: under vector-effect="non-scaling-stroke"
+ * the dash pattern is in screen px (validate-art.mjs, GLYPH_DASHES), and
+ * so is its offset. */
+@keyframes ds-art-spin {
+	to {
+		transform: rotate(1turn);
+	}
+}
+@keyframes ds-art-drift {
+	to {
+		transform: translate(6px, -8px);
+	}
+}
+@keyframes ds-art-slide {
+	to {
+		transform: translateX(-40px);
+	}
+}
+@keyframes ds-art-blink {
+	50% {
+		opacity: 0.3;
+	}
+}
+@keyframes ds-art-dash {
+	to {
+		stroke-dashoffset: -8px;
+	}
+}
