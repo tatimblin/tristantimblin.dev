@@ -1,0 +1,5 @@
+<!-- baked from recipes/tri-bands.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <path d="M24 4L24 4L30.93 16L17.07 16Z" fill="currentColor" />
+  <path d="M11.15 26.25L36.85 26.25L37.86 28L10.14 28ZM12.89 23.25L35.11 23.25L36.12 25L11.88 25ZM14.62 20.25L33.38 20.25L34.39 22L13.61 22ZM16.35 17.25L31.65 17.25L32.66 19L15.34 19Z" fill="var(--art-cyan)" />
+</svg>

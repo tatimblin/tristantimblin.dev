@@ -3,7 +3,7 @@
 // (GLYPH_NAMES: a baked recipe or a hand-drawn file) and a spread of every
 // generator's variants, each in a GlyphTile captioned `<family>·NN name`
 // with how it is made (R recipe, H hand-drawn, G generator, T html text),
-// grouped by family A–H under RuleLabels — G is the readouts, the HTML
+// grouped by family A–I under RuleLabels — G is the readouts, the HTML
 // text that sits in a tile where a mark would; then two L3 compositions
 // (the signal chain and a readouts panel). An anchor per tile —
 // #glyph-<name>, #gen-<component>-<n>, #readout-<component>-<n> — as the
@@ -43,7 +43,7 @@ import Formula from "@whois/design-system/Formula";
 import NumberStream from "@whois/design-system/NumberStream";
 import { GLYPH_NAMES, glyphSvg, type GlyphName } from "@whois/design-system/glyphs";
 
-type FamilyKey = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H";
+type FamilyKey = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I";
 type Kind = "R" | "H" | "G" | "T";
 
 const FAMILIES: Record<FamilyKey, string> = {
@@ -55,6 +55,7 @@ const FAMILIES: Record<FamilyKey, string> = {
 	F: "Controls",
 	G: "Readouts",
 	H: "Iso parts",
+	I: "Bold shapes",
 };
 
 // Where each glyph FILE sits; a name not listed is a control (F).
@@ -113,6 +114,13 @@ const FAMILY: Partial<Record<GlyphName, FamilyKey>> = {
 	rotary: "H",
 	screw: "H",
 	spring: "H",
+	burst: "I",
+	"checker-warp": "I",
+	"iso-stripes": "I",
+	petals: "I",
+	"stripe-disc": "I",
+	swirl: "I",
+	"tri-bands": "I",
 };
 
 const KIND_NAME: Record<Kind, string> = { R: "recipe", H: "hand-drawn", G: "generator", T: "html text" };
