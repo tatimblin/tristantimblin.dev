@@ -1,0 +1,18 @@
+<!-- baked from recipes/rotary.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64">
+  <path d="M 14 34 L 14 38 A 34 17 0 0 0 82 38 L 82 34 A 34 17 0 0 1 14 34 Z" fill="none" stroke="var(--art-green)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="48" cy="34" rx="34" ry="17" fill="none" stroke="var(--art-green)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="48" cy="34" rx="9" ry="4.5" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="48" cy="34" r="1.5" fill="var(--art-green)" />
+  <ellipse cx="54.47" cy="46.07" rx="3.5" ry="1.75" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="41.53" cy="46.07" rx="3.5" ry="1.75" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="30.32" cy="42.84" rx="3.5" ry="1.75" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="23.85" cy="37.24" rx="3.5" ry="1.75" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="23.85" cy="30.76" rx="3.5" ry="1.75" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="30.32" cy="25.16" rx="3.5" ry="1.75" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="41.53" cy="21.93" rx="3.5" ry="1.75" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="54.47" cy="21.93" rx="3.5" ry="1.75" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="65.68" cy="25.16" rx="3.5" ry="1.75" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="72.15" cy="30.76" rx="3.5" ry="1.75" fill="none" stroke="var(--art-green)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <line x1="64.45" y1="38.75" x2="74.85" y2="41.75" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

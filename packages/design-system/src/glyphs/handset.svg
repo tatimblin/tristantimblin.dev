@@ -1,0 +1,11 @@
+<!-- baked from recipes/handset.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64">
+  <path d="M 17.63 18 L 17.63 23 A 9.8 5.66 0 0 0 20.5 27 L 62.07 51 A 9.8 5.66 0 0 0 75.93 51 L 75.93 51 A 9.8 5.66 0 0 0 78.8 47 L 78.8 42 A 9.8 5.66 0 0 1 75.93 46 L 75.93 46 A 9.8 5.66 0 0 1 62.07 46 L 20.5 22 A 9.8 5.66 0 0 1 17.63 18 Z" fill="none" stroke="var(--art-lavender)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 75.93 46 L 75.93 46 A 9.8 5.66 0 0 0 75.93 38 L 34.36 14 A 9.8 5.66 0 0 0 20.5 14 L 20.5 14 A 9.8 5.66 0 0 0 20.5 22 L 62.07 46 A 9.8 5.66 0 0 0 75.93 46 Z" fill="none" stroke="var(--art-lavender)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 25.89 17 L 25.89 20 A 5 2.5 0 0 0 35.89 20 L 35.89 17 A 5 2.5 0 0 1 25.89 17 Z" fill="none" stroke="var(--art-lavender)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="30.89" cy="17" rx="5" ry="2.5" fill="none" stroke="var(--art-lavender)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="30.89" cy="17" r="1" fill="var(--art-lavender)" />
+  <path d="M 60.54 37 L 60.54 40 A 5 2.5 0 0 0 70.54 40 L 70.54 37 A 5 2.5 0 0 1 60.54 37 Z" fill="none" stroke="var(--art-lavender)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="65.54" cy="37" rx="5" ry="2.5" fill="none" stroke="var(--art-lavender)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="65.54" cy="37" r="1" fill="var(--art-lavender)" />
+</svg>

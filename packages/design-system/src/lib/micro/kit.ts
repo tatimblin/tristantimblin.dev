@@ -17,8 +17,8 @@
 
 import { type Point, pointsAttr, polar, round, same, spread, xy } from "./geometry";
 import { type Dash, type Motion, type Paint, type Speed, type Target, type TargetTable, TARGETS, type Weight } from "./paint";
-import { isoBox, isoCylinder, isoPlane, vanishingGrid } from "./iso";
-import type { IsoBoxOpts, IsoCylinderOpts, IsoPlaneOpts, VanishingGridOpts } from "./iso";
+import { isoBox, isoCoil, isoCylinder, isoEllipse, isoPlane, isoRoundBox, isoRoundRect, vanishingGrid } from "./iso";
+import type { IsoBoxOpts, IsoCylinderOpts, IsoEllipseOpts, IsoPlaneOpts, IsoRoundBoxOpts, VanishingGridOpts } from "./iso";
 
 /** How a stroke ends. `round` (the default) also rounds the joins; a circuit trace takes `butt`. */
 export type Cap = "round" | "butt" | "square";
@@ -406,9 +406,29 @@ export class Kit {
 		return isoBox(this, x, y, w, d, h, o);
 	}
 
-	/** An isometric cylinder; see `isoCylinder` in iso.ts. */
+	/** An isometric cylinder, upright or lying along x or y; see `isoCylinder` in iso.ts. */
 	isoCylinder(x: number, y: number, r: number, h: number, o: IsoCylinderOpts = {}): string {
 		return isoCylinder(this, x, y, r, h, o);
+	}
+
+	/** A 2:1 disc on the ground or standing on the x or y face; see `isoEllipse` in iso.ts. */
+	isoEllipse(x: number, y: number, r: number, o: IsoEllipseOpts = {}): string {
+		return isoEllipse(this, x, y, r, o);
+	}
+
+	/** A rounded rectangle flat on the ground; see `isoRoundRect` in iso.ts. */
+	isoRoundRect(x: number, y: number, w: number, d: number, c: number, o: ShapeOpts = {}): string {
+		return isoRoundRect(this, x, y, w, d, c, o);
+	}
+
+	/** A box with rounded vertical edges; see `isoRoundBox` in iso.ts. */
+	isoRoundBox(x: number, y: number, w: number, d: number, h: number, c: number, o: IsoRoundBoxOpts = {}): string {
+		return isoRoundBox(this, x, y, w, d, h, c, o);
+	}
+
+	/** A spring standing on the ground; see `isoCoil` in iso.ts. */
+	isoCoil(x: number, y: number, r: number, h: number, turns: number, o: StrokeOpts = {}): string {
+		return isoCoil(this, x, y, r, h, turns, o);
 	}
 
 	/** An isometric ground plane; see `isoPlane` in iso.ts. */

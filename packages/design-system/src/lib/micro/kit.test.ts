@@ -51,6 +51,12 @@ const sheet = (k: Kit): Array<[string, string]> => [
 	["group transform+motion", k.group([k.dot(0, 0, 3, { paint: "red" })], { motion: "blink", transform: "translate(24 16)" })],
 	["isoBox", k.isoBox(24, 28, 12, 12, 10, { right: "blue" })],
 	["isoCylinder", k.isoCylinder(24, 27, 8, 14, { side: "green" })],
+	["isoCylinder x", k.isoCylinder(14, 12, 6, 24, { axis: "x", side: "blue", top: "none" })],
+	["isoEllipse", k.isoEllipse(24, 16, 10, { fill: "green" })],
+	["isoEllipse y", k.isoEllipse(24, 16, 10, { axis: "y", paint: "blue" })],
+	["isoRoundRect", k.isoRoundRect(30, 30, 24, 12, 3, { paint: "lavender" })],
+	["isoRoundBox", k.isoRoundBox(30, 30, 24, 12, 5, 3, { side: "lavender", top: "none" })],
+	["isoCoil", k.isoCoil(24, 28, 8, 20, 3, { paint: "red" })],
 	["isoPlane", k.isoPlane(24, 30, 20, 20, { grid: 4, paint: "blue" })],
 	["vanishingGrid", k.vanishingGrid(24, 8, 44, 22, 5, 7, { paint: "blue" })],
 ];

@@ -1,0 +1,14 @@
+<!-- baked from recipes/cone.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64">
+  <polygon points="48,52 82.64,32 48,12 13.36,32" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <polygon points="48,55 82.64,35 82.64,32 48,52" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <polygon points="48,55 13.36,35 13.36,32 48,52" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="48" cy="16" r="0.75" fill="var(--glyph-dim)" />
+  <circle cx="75.71" cy="32" r="0.75" fill="var(--glyph-dim)" />
+  <circle cx="20.29" cy="32" r="0.75" fill="var(--glyph-dim)" />
+  <circle cx="48" cy="48" r="0.75" fill="var(--glyph-dim)" />
+  <ellipse cx="48" cy="32" rx="17" ry="8.5" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="48" cy="32" rx="12" ry="6" fill="none" stroke="var(--art-coral)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="48" cy="32" rx="8" ry="4" fill="none" stroke="var(--art-coral)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <ellipse cx="48" cy="32" rx="4" ry="2" fill="var(--art-coral)" />
+</svg>
