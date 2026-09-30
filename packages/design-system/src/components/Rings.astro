@@ -1,0 +1,38 @@
+---
+// Rings — a row or a stack of rings, generated (lib/micro/gen/rings.ts)
+// and rendered as a glyph through GlyphSvg: chain is n linked rings in a
+// row (the unison glyph), concentric n nested on the centre (a speaker, a
+// target, with dotted outer rings a halo).
+//
+//   <Rings />                                          four linked red rings
+//   <Rings n={4} fade />                               …the last one dimmed
+//   <Rings mode="concentric" n={3} dotted={2} accent="blue" />
+//
+// `n` 1–6; `mode` chain | concentric; `fade` dims the last ring (the
+// rightmost, or the outermost); `dotted` (concentric) that many outer
+// rings as dim dotted guides, 0 to n − 1; `paint` the rings (red);
+// `accent` (concentric) a centre dot (none). The host props are
+// GlyphSvg's; data-gen="rings" data-mode="<mode>" on the root.
+import GlyphSvg from "./GlyphSvg.astro";
+import type { GlyphHostProps } from "../lib/glyph-host";
+import { type AccentPaint, type GenPaint, type RingsMode, rings } from "../lib/micro/gen";
+
+interface Props extends GlyphHostProps {
+	/** 1–6 rings; 4 unless said */
+	n?: number;
+	/** chain (a row) or concentric (a stack); chain unless said */
+	mode?: RingsMode;
+	/** the last ring dimmed */
+	fade?: boolean;
+	/** concentric: how many outer rings are dim dotted guides */
+	dotted?: number;
+	/** red unless said */
+	paint?: GenPaint;
+	/** concentric: a centre dot; none unless said */
+	accent?: AccentPaint;
+}
+
+const { n, mode = "chain", fade, dotted, paint, accent, ...rest } = Astro.props;
+---
+
+<GlyphSvg svg={rings(n, { mode, fade, dotted, paint, accent })} data-gen="rings" data-mode={mode} {...rest} />

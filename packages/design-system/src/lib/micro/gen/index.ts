@@ -15,5 +15,12 @@ export { filter, FILTER_TYPES } from "./filter";
 export type { FilterOpts, FilterType } from "./filter";
 export { curve, CURVE_DEFAULT_POINTS, CURVE_MAX_POINTS } from "./curve";
 export type { CurveOpts } from "./curve";
+// family D/E: routing and fields
+export { fan, FAN_DIRS } from "./fan";
+export type { FanDir, FanOpts } from "./fan";
+export { rings, RINGS_MODES } from "./rings";
+export type { RingsMode, RingsOpts } from "./rings";
+export { matrix, MATRIX_MARKS, MATRIX_WIDE_AFTER } from "./matrix";
+export type { Cell, MatrixMark, MatrixOpts } from "./matrix";
 export { ACCENT_PAINTS, GEN_PAINTS, clamp, clampInt, drawing, lineD, paintOf, rng, simplify, smoothD, toSvg } from "./base";
 export type { AccentPaint, Drawing, GenPaint } from "./base";

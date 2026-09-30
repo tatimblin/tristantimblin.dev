@@ -1,0 +1,35 @@
+---
+// Fan — a split or a merge, generated (lib/micro/gen/fan.ts) and rendered
+// as a glyph through GlyphSvg: an input line in the accent meeting a node,
+// and n cubic branches in the paint fanning to the far edge (split) or
+// gathering from the near one (merge).
+//
+//   <Fan />                                    1 → 4, a red line into blue branches
+//   <Fan n={3} dir="merge" />                  3 → 1
+//   <Fan n={6} dotted label="spread" />        the dotted spread: dim dotted branches
+//
+// `n` 2–8; `dir` split | merge; `dotted` the branches as dim dotted
+// guides; `paint` the branches (blue, or dim when dotted); `accent` the
+// input line and node (red; none leaves them out). The host props are
+// GlyphSvg's; data-gen="fan" data-dir="<dir>" on the root.
+import GlyphSvg from "./GlyphSvg.astro";
+import type { GlyphHostProps } from "../lib/glyph-host";
+import { type AccentPaint, type FanDir, type GenPaint, fan } from "../lib/micro/gen";
+
+interface Props extends GlyphHostProps {
+	/** 2–8 branches; 4 unless said */
+	n?: number;
+	/** split (1 → n) or merge (n → 1); split unless said */
+	dir?: FanDir;
+	/** the branches as dim dotted guides */
+	dotted?: boolean;
+	/** the branches: blue, or dim when dotted, unless said */
+	paint?: GenPaint;
+	/** the input line and node; red unless said */
+	accent?: AccentPaint;
+}
+
+const { n, dir = "split", dotted, paint, accent, ...rest } = Astro.props;
+---
+
+<GlyphSvg svg={fan(n, { dir, dotted, paint, accent })} data-gen="fan" data-dir={dir} {...rest} />

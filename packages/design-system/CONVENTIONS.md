@@ -870,6 +870,29 @@ its params, extremes and out-of-range values in `gen/gen.test.ts`
 (validate clean, ≤ 40 elements, ≤ 3 KB, deterministic, the geometry it
 claims); a tile per variant in the catalogue.
 
+**Routing and fields (families D/E)** — `gen/fan.ts`, `rings.ts`,
+`matrix.ts`, swept in `gen/fields.test.ts` (each viewBox held to its own
+budget):
+
+- **`fan(n, { dir, dotted, paint, accent })` → `<Fan>`** — a split
+  (1 → n) or merge (n → 1): an accent input line (red) into a node, `n`
+  (2–8) cubic branches (blue) to the far edge; the branches are one path.
+  `dotted` makes them dim dotted guides — the dotted spread. Always 48×32
+  (eight branches still read apart; a wide fan was mostly input line).
+- **`rings(n, { mode, fade, dotted, paint, accent })` → `<Rings>`** —
+  `chain` (default): `n` (1–6) linked rings in a row, the unison glyph,
+  `fade` dimming the last; `concentric`: a nested stack out to r 12, the
+  outer `dotted` (0 to n − 1) as dim dotted rings — the halo — and
+  `accent` a centre dot. Red unless said.
+- **`matrix(rows, cols, { on, hot, mark, cursor, paint, accent })` →
+  `<Matrix>`** — a pip grid, `rows` 1–6 × `cols` 1–10, pitch 5 (tighter
+  when six rows need it). `on` lights cells: a pattern (`"10110;01001"`)
+  or row bitmasks (MSB leftmost); `mark` `pip` (lit filled, unlit dim
+  hollow), `dot`, or `x` (the desk operator's x/o grid); `hot` cells and
+  the square `cursor` in the accent. Every mark of one kind in one paint
+  is ONE path (circles as arc subpaths), so 60 cells are a handful of
+  elements; past six columns it takes `0 0 96 32` for the 6 KB budget.
+
 ---
 
 ## Catalogue tooling

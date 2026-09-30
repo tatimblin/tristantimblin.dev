@@ -20,3 +20,6 @@ export type { IsoBoxOpts, IsoCylinderOpts, IsoPlaneOpts, VanishingGridOpts } fro
 // The L2 generators (gen/): parametric marks, `(params) => Drawing`, rendered by <GlyphSvg> and the <Wave>, <Envelope>, <Filter>, <Curve> components.
 export { wave, WAVE_SHAPES, envelope, ENVELOPE_DEFAULTS, filter, FILTER_TYPES, curve, CURVE_DEFAULT_POINTS, CURVE_MAX_POINTS, toSvg, drawing, simplify, smoothD, lineD, rng, GEN_PAINTS, ACCENT_PAINTS } from "./gen";
 export type { Drawing, GenPaint, AccentPaint, WaveOpts, WaveShape, EnvelopeOpts, FilterOpts, FilterType, CurveOpts } from "./gen";
+// The routing and field generators (families D/E): <Fan>, <Rings>, <Matrix>.
+export { fan, FAN_DIRS, rings, RINGS_MODES, matrix, MATRIX_MARKS, MATRIX_WIDE_AFTER } from "./gen";
+export type { FanDir, FanOpts, RingsMode, RingsOpts, Cell, MatrixMark, MatrixOpts } from "./gen";
