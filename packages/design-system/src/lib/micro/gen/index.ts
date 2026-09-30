@@ -37,3 +37,6 @@ export { selector } from "./selector";
 export type { SelectorOpts } from "./selector";
 export { meterAria } from "./meter";
 export type { MeterAria } from "./meter";
+// family C — the progress bar
+export { progress, PROGRESS } from "./progress";
+export type { ProgressOpts } from "./progress";

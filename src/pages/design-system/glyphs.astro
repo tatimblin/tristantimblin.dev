@@ -32,6 +32,7 @@ import Dial from "@whois/design-system/Dial";
 import Ladder from "@whois/design-system/Ladder";
 import Segments from "@whois/design-system/Segments";
 import Selector from "@whois/design-system/Selector";
+import Progress from "@whois/design-system/Progress";
 import Fan from "@whois/design-system/Fan";
 import Rings from "@whois/design-system/Rings";
 import Matrix from "@whois/design-system/Matrix";
@@ -62,6 +63,14 @@ const FAMILY: Partial<Record<GlyphName, FamilyKey>> = {
 	"sine-square": "A",
 	transient: "A",
 	waveshaper: "B",
+	clock: "C",
+	"colour-bars": "C",
+	"knob-notch": "C",
+	"ladder-switch": "C",
+	loader: "C",
+	scale: "C",
+	skyline: "C",
+	"switch-ladder": "C",
 	crossfade: "D",
 	junction: "D",
 	leader: "D",
@@ -154,6 +163,8 @@ const spread: [FamilyKey, string, any, string, Record<string, unknown>, boolean?
 	["C", "segments", Segments, "segments", { value: "045" }],
 	["C", "selector", Selector, "selector", {}],
 	["C", "selector", Selector, "selector spin", { n: 6, active: 2, spin: true }],
+	["C", "progress", Progress, "progress", { value: 0.62, label: "Progress" }],
+	["C", "progress", Progress, "progress solid", { value: 0.3, dotted: false, paint: "blue" }],
 	["D", "fan", Fan, "split", {}],
 	["D", "fan", Fan, "merge", { n: 3, dir: "merge" }],
 	["D", "fan", Fan, "spread", { n: 6, dotted: true }],

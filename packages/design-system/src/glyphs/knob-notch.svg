@@ -1,0 +1,8 @@
+<!-- baked from recipes/knob-notch.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <path d="M 16.93 24.57 L 15.16 26.34 M 14.34 20.09 L 11.93 20.74 M 14.34 14.91 L 11.93 14.26 M 16.93 10.43 L 15.16 8.66 M 21.41 7.84 L 20.76 5.43 M 26.59 7.84 L 27.24 5.43 M 31.07 10.43 L 32.84 8.66" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" />
+  <path d="M 33.66 14.91 L 36.07 14.26 M 33.66 20.09 L 36.07 20.74 M 31.07 24.57 L 32.84 26.34" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" />
+  <circle cx="24" cy="17.5" r="8" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <line x1="26.12" y1="15.38" x2="28.6" y2="12.9" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="28.6" cy="12.9" r="1.25" fill="var(--art-cyan)" />
+</svg>

@@ -27,3 +27,7 @@ export type { FanDir, FanOpts, RingsMode, RingsOpts, Cell, MatrixMark, MatrixOpt
 // The instrument generators (gen/, family C): <Gauge>, <Dial>, <Ladder>, <Segments>, <Selector>; meterAria is a labelled meter's ARIA.
 export { gauge, dial, ladder, ladderLevel, LADDER_AXES, segments, segmentsText, SEGMENTS_MAX, selector, meterAria } from "./gen";
 export type { GaugeOpts, DialOpts, LadderAxis, LadderOpts, SegmentsOpts, SelectorOpts, MeterAria } from "./gen";
+
+// The progress generator (gen/, family C): <Progress>, a labelled meter like <Gauge>.
+export { progress, PROGRESS } from "./gen";
+export type { ProgressOpts } from "./gen";

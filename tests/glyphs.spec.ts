@@ -27,6 +27,7 @@ const GENERATORS = [
 	"ladder",
 	"segments",
 	"selector",
+	"progress",
 	"fan",
 	"rings",
 	"matrix",

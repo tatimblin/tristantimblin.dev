@@ -1,0 +1,7 @@
+<!-- baked from recipes/colour-bars.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <polyline points="4,21.5 44,21.5" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0.01 3.99" />
+  <path d="M 4 10.5 h 2 v 8 h -2 Z M 7 10.5 h 2 v 8 h -2 Z M 10 10.5 h 2 v 8 h -2 Z M 13 10.5 h 2 v 8 h -2 Z" fill="var(--art-coral)" />
+  <path d="M 18.5 10.5 h 2 v 8 h -2 Z M 21.5 10.5 h 2 v 8 h -2 Z M 24.5 10.5 h 2 v 8 h -2 Z M 27.5 10.5 h 2 v 8 h -2 Z" fill="var(--art-cyan)" />
+  <path d="M 33 10.5 h 2 v 8 h -2 Z M 36 10.5 h 2 v 8 h -2 Z M 39 10.5 h 2 v 8 h -2 Z M 42 10.5 h 2 v 8 h -2 Z" fill="currentColor" />
+</svg>
