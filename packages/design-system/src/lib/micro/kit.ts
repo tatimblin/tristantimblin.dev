@@ -38,6 +38,8 @@ export interface StrokeOpts {
 /** The options of a closed shape: its outline (`paint`) and its fill, `none` unless said. `paint: "none"` with a fill is a flat shape; a scene's fill may be a `wash()`. */
 export interface ShapeOpts extends StrokeOpts {
 	fill?: Fill;
+	/** fill by the even-odd rule: a path whose second subpath cuts a hole in its first (a band, a frame, a window) */
+	evenodd?: boolean;
 }
 
 /** The options of a filled mark. */
@@ -162,9 +164,10 @@ export class Kit {
 	 * is not `none`, a complete stroke — colour, weight (and art's class),
 	 * vector-effect, caps and dash — so the element is valid on its own.
 	 */
-	attrs(o: StrokeOpts = {}, fill: Fill = "none"): string {
-		const { paint = "ink", weight = this.t.weight, dash, cap = "round", mark } = o;
+	attrs(o: StrokeOpts & { evenodd?: boolean } = {}, fill: Fill = "none"): string {
+		const { paint = "ink", weight = this.t.weight, dash, cap = "round", mark, evenodd } = o;
 		const out = [`fill="${this.fill(fill)}"`];
+		if (evenodd) out.push('fill-rule="evenodd"');
 		if (mark) out.unshift(markAttr(mark));
 		if (paint !== "none") {
 			const w = this.t.weights[weight];

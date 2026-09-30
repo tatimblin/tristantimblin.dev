@@ -1,26 +1,93 @@
+<!-- baked from tools/scenes/posts/asserting-on-agent-behavior/scene.ts (sources 076f5fb0bf14a84e) — edit the source -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
-  <!-- A trace of tool calls: a circuit stepping down from the left edge, each
-       call a green checkbox, until the one assertion that fails, lit coral
-       and blinking. The untaken rest of the trace runs off the bottom, dashed.
-       A dim assertion grid crops the top-right corner. -->
-  <g>
-    <path d="M 230 10 H 330 M 230 30 H 330 M 230 50 H 330 M 230 -10 V 50 M 250 -10 V 50 M 270 -10 V 50 M 290 -10 V 50 M 310 -10 V 50" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
-    <rect x="235" y="15" width="10" height="10" rx="2" fill="var(--art-green)" />
-    <rect x="255" y="-5" width="10" height="10" rx="2" fill="var(--art-green)" />
-    <rect x="275" y="15" width="10" height="10" rx="2" fill="var(--art-green)" />
-    <rect x="295" y="35" width="10" height="10" rx="2" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M -10 40 H 70 A 10 10 0 0 1 80 50 V 60 A 10 10 0 0 0 90 70 H 140 A 10 10 0 0 1 150 80 V 90 A 10 10 0 0 0 160 100 H 210 A 10 10 0 0 1 220 110 V 120 A 10 10 0 0 0 230 130 H 238" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 262 130 H 290 A 10 10 0 0 1 300 140 V 190" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="4 4" class="art-line" vector-effect="non-scaling-stroke" />
-    <rect x="31" y="31" width="18" height="18" rx="2" fill="var(--art-green)" />
-    <rect x="106" y="61" width="18" height="18" rx="2" fill="var(--art-green)" />
-    <rect x="176" y="91" width="18" height="18" rx="2" fill="var(--art-green)" />
-    <path d="M 35 40 L 38.5 43.5 L 45 36.5 M 110 70 L 113.5 73.5 L 120 66.5 M 180 100 L 183.5 103.5 L 190 96.5" fill="none" stroke="var(--art-ink)" stroke-linecap="round" stroke-linejoin="round" class="art-line" vector-effect="non-scaling-stroke" />
-    <rect x="230" y="110" width="40" height="40" rx="4" fill="none" stroke="var(--art-ink)" class="art-line--2" vector-effect="non-scaling-stroke" />
-    <circle cx="20" cy="110" r="1.5" fill="var(--art-ink)" />
-    <circle cx="60" cy="150" r="2" fill="var(--art-ink)" />
+  <path d="M 14 10 H 306 Q 312 10 312 16 V 76 L 301 90 L 312 104 V 164 Q 312 170 306 170 H 14 Q 8 170 8 164 V 104 L 19 90 L 8 76 V 16 Q 8 10 14 10 Z M 39 27 H 281 Q 286 27 286 32 V 148 Q 286 153 281 153 H 39 Q 34 153 34 148 V 32 Q 34 27 39 27 Z" fill="color-mix(in oklab, var(--art-green) 18%, transparent)" fill-rule="evenodd" />
+  <path d="M 14 10 H 306 Q 312 10 312 16 V 76 L 301 90 L 312 104 V 164 Q 312 170 306 170 H 14 Q 8 170 8 164 V 104 L 19 90 L 8 76 V 16 Q 8 10 14 10 Z" fill="none" stroke="var(--art-green)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 39 27 H 281 Q 286 27 286 32 V 148 Q 286 153 281 153 H 39 Q 34 153 34 148 V 32 Q 34 27 39 27 Z" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 46 16 V 21 M 46 159 V 164 M 69 16 V 21 M 69 159 V 164 M 92 16 V 21 M 92 159 V 164 M 115 16 V 21 M 115 159 V 164 M 138 16 V 21 M 161 16 V 21 M 184 16 V 21 M 207 16 V 21 M 230 16 V 21 M 230 159 V 164 M 253 16 V 21 M 253 159 V 164 M 276 16 V 21 M 276 159 V 164 M 21 40 H 26 M 294 40 H 299 M 21 65 H 26 M 294 65 H 299 M 21 115 H 26 M 294 115 H 299 M 21 140 H 26 M 294 140 H 299" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <path d="M 157 40 H 163 M 157 65 H 163 M 157 90 H 163 M 157 115 H 163 M 157 140 H 163" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <clipPath id="asserting-on-agent-behavior-board"><path d="M 14 10 H 306 Q 312 10 312 16 V 76 L 301 90 L 312 104 V 164 Q 312 170 306 170 H 14 Q 8 170 8 164 V 104 L 19 90 L 8 76 V 16 Q 8 10 14 10 Z" /></clipPath>
+  <g clip-path="url(#asserting-on-agent-behavior-board)">
+  <line x1="0" y1="42" x2="320" y2="146" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <line x1="0" y1="134" x2="206" y2="88" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <line x1="136" y1="0" x2="190" y2="180" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
   </g>
-  <g data-motion="blink">
-    <rect x="238" y="118" width="24" height="24" rx="2" fill="var(--art-coral)" />
-    <path d="M 244.5 124.5 L 255.5 135.5 M 255.5 124.5 L 244.5 135.5" fill="none" stroke="var(--art-ink)" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
+  <circle cx="100" cy="84" r="33" fill="none" stroke="var(--art-green)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="200" cy="96" r="50" fill="none" stroke="var(--art-green)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 117 97 h 3.2 v 3.2 h -3.2 Z M 123.8 97 h 3.2 v 3.2 h -3.2 Z M 120.4 100.4 h 3.2 v 3.2 h -3.2 Z M 117 103.8 h 3.2 v 3.2 h -3.2 Z M 123.8 103.8 h 3.2 v 3.2 h -3.2 Z" fill="var(--art-green)" />
+  <path d="M 220.4 65 h 3.2 v 3.2 h -3.2 Z M 217 68.4 h 3.2 v 3.2 h -3.2 Z M 223.8 68.4 h 3.2 v 3.2 h -3.2 Z M 220.4 71.8 h 3.2 v 3.2 h -3.2 Z" fill="var(--art-green)" />
+  <path d="M 265 53 h 3.2 v 3.2 h -3.2 Z M 271.8 53 h 3.2 v 3.2 h -3.2 Z M 268.4 56.4 h 3.2 v 3.2 h -3.2 Z M 265 59.8 h 3.2 v 3.2 h -3.2 Z M 271.8 59.8 h 3.2 v 3.2 h -3.2 Z" fill="var(--art-green)" />
+  <circle cx="60" cy="132" r="2.6" fill="var(--art-green)" />
+  <circle cx="234" cy="118" r="2.2" fill="var(--art-green)" />
+  <polyline points="58,142 84,110 112,76 170,104 206,76 268,120" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
+  <path d="M 118 163 V 158 M 124.26666666666667 163 V 160.5 M 130.53333333333333 163 V 160.5 M 136.8 163 V 158 M 143.06666666666666 163 V 160.5 M 149.33333333333334 163 V 160.5 M 155.6 163 V 158 M 161.86666666666667 163 V 160.5 M 168.13333333333333 163 V 160.5 M 174.4 163 V 158 M 180.66666666666666 163 V 160.5 M 186.93333333333334 163 V 160.5 M 193.2 163 V 158 M 199.46666666666667 163 V 160.5 M 205.73333333333335 163 V 160.5 M 212 163 V 158" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <line x1="118" y1="163" x2="212" y2="163" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <g data-motion="steps" data-beats="6">
+    <g data-beat="0">
+      <g transform="translate(58 140) rotate(39.1) scale(-0.85 0.85)">
+        <path d="M -0.8 -13 C 2.6 -13.3 4.6 -10.4 4.6 -6 C 4.6 -2.2 3.4 1 1 1.8 C -1.4 2.5 -3.3 1.2 -3.7 -2 C -4 -5 -3.8 -8.4 -3.2 -10.6 C -2.7 -12.3 -1.9 -13 -0.8 -13 Z" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M -2.5 4.8 H 2.8 C 3.1 9.2 2.1 12 0.2 12 C -1.8 12 -2.8 9.2 -2.5 4.8 Z" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+      <g data-now="">
+        <path d="M 118 163 V 158" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+        <polygon points="118,164.3 120.25,168.2 115.75,168.2" fill="var(--art-ink)" />
+      </g>
+    </g>
+    <g data-beat="1">
+      <g transform="translate(84 108) rotate(39.5) scale(0.85)">
+        <path d="M -0.8 -13 C 2.6 -13.3 4.6 -10.4 4.6 -6 C 4.6 -2.2 3.4 1 1 1.8 C -1.4 2.5 -3.3 1.2 -3.7 -2 C -4 -5 -3.8 -8.4 -3.2 -10.6 C -2.7 -12.3 -1.9 -13 -0.8 -13 Z" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M -2.5 4.8 H 2.8 C 3.1 9.2 2.1 12 0.2 12 C -1.8 12 -2.8 9.2 -2.5 4.8 Z" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+      <circle cx="84" cy="108" r="9" data-ripple="" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <g data-now="">
+        <path d="M 136.8 163 V 158" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+        <polygon points="136.8,164.3 139.05,168.2 134.55,168.2" fill="var(--art-ink)" />
+      </g>
+    </g>
+    <g data-beat="2">
+      <g transform="translate(112 74) rotate(115.8) scale(-0.85 0.85)">
+        <path d="M -0.8 -13 C 2.6 -13.3 4.6 -10.4 4.6 -6 C 4.6 -2.2 3.4 1 1 1.8 C -1.4 2.5 -3.3 1.2 -3.7 -2 C -4 -5 -3.8 -8.4 -3.2 -10.6 C -2.7 -12.3 -1.9 -13 -0.8 -13 Z" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M -2.5 4.8 H 2.8 C 3.1 9.2 2.1 12 0.2 12 C -1.8 12 -2.8 9.2 -2.5 4.8 Z" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+      <circle cx="112" cy="74" r="9" data-ripple="" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <g data-now="">
+        <path d="M 155.6 163 V 158" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+        <polygon points="155.6,164.3 157.85,168.2 153.35,168.2" fill="var(--art-ink)" />
+      </g>
+    </g>
+    <g data-beat="3">
+      <g transform="translate(170 102) rotate(52.1) scale(0.85)">
+        <path d="M -0.8 -13 C 2.6 -13.3 4.6 -10.4 4.6 -6 C 4.6 -2.2 3.4 1 1 1.8 C -1.4 2.5 -3.3 1.2 -3.7 -2 C -4 -5 -3.8 -8.4 -3.2 -10.6 C -2.7 -12.3 -1.9 -13 -0.8 -13 Z" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M -2.5 4.8 H 2.8 C 3.1 9.2 2.1 12 0.2 12 C -1.8 12 -2.8 9.2 -2.5 4.8 Z" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+      <circle cx="170" cy="102" r="9" data-ripple="" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <g data-now="">
+        <path d="M 174.4 163 V 158" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+        <polygon points="174.4,164.3 176.65,168.2 172.15,168.2" fill="var(--art-ink)" />
+      </g>
+    </g>
+    <g data-beat="4">
+      <g transform="translate(206 74) rotate(125.4) scale(-0.85 0.85)">
+        <path d="M -0.8 -13 C 2.6 -13.3 4.6 -10.4 4.6 -6 C 4.6 -2.2 3.4 1 1 1.8 C -1.4 2.5 -3.3 1.2 -3.7 -2 C -4 -5 -3.8 -8.4 -3.2 -10.6 C -2.7 -12.3 -1.9 -13 -0.8 -13 Z" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M -2.5 4.8 H 2.8 C 3.1 9.2 2.1 12 0.2 12 C -1.8 12 -2.8 9.2 -2.5 4.8 Z" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+      <circle cx="206" cy="74" r="9" data-ripple="" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <g data-now="">
+        <path d="M 193.2 163 V 158" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+        <polygon points="193.2,164.3 195.45,168.2 190.95,168.2" fill="var(--art-ink)" />
+      </g>
+    </g>
+    <g data-beat="5">
+      <g transform="translate(268 118) rotate(125.4) scale(0.85)">
+        <path d="M -0.8 -13 C 2.6 -13.3 4.6 -10.4 4.6 -6 C 4.6 -2.2 3.4 1 1 1.8 C -1.4 2.5 -3.3 1.2 -3.7 -2 C -4 -5 -3.8 -8.4 -3.2 -10.6 C -2.7 -12.3 -1.9 -13 -0.8 -13 Z" fill="none" stroke="var(--art-coral)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M -2.5 4.8 H 2.8 C 3.1 9.2 2.1 12 0.2 12 C -1.8 12 -2.8 9.2 -2.5 4.8 Z" fill="none" stroke="var(--art-coral)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+      <circle cx="268" cy="118" r="9" data-ripple="" fill="none" stroke="var(--art-coral)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M 281 101 h 3.2 v 3.2 h -3.2 Z M 287.8 101 h 3.2 v 3.2 h -3.2 Z M 284.4 104.4 h 3.2 v 3.2 h -3.2 Z M 281 107.8 h 3.2 v 3.2 h -3.2 Z M 287.8 107.8 h 3.2 v 3.2 h -3.2 Z" fill="var(--art-coral)" />
+      <circle cx="200" cy="96" r="50" fill="none" stroke="var(--art-coral)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <g data-now="">
+        <path d="M 212 163 V 158" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+        <polygon points="212,164.3 214.25,168.2 209.75,168.2" fill="var(--art-ink)" />
+      </g>
+    </g>
   </g>
 </svg>

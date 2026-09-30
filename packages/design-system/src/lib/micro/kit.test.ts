@@ -21,6 +21,7 @@ const sheet = (k: Kit): Array<[string, string]> => [
 	["line", k.line(6, 24, 42, 8)],
 	["polyline", k.polyline([[4, 24], [14, 8], [24, 24]], { paint: "red" })],
 	["path", k.path("M 4 16 Q 14 2 24 16 T 44 16", { paint: "lavender" })],
+	["path evenodd", k.path("M 4 4 H 44 V 28 H 4 Z M 10 10 H 38 V 22 H 10 Z", { paint: "none", fill: "green", evenodd: true })],
 	["guide", k.guide([[4, 16], [44, 16]])],
 	["dashes", [k.line(4, 8, 44, 8, { dash: "dash" }), k.line(4, 16, 44, 16, { dash: "long" }), k.line(4, 24, 44, 24, { dash: "dotted" })].join("\n")],
 	["wire", k.wire([[6, 25], [22, 25], [22, 8], [40, 8]], { start: "dot", end: "terminal", paint: "blue" })],
