@@ -4,8 +4,9 @@ import { SCENE_NAMES } from "../packages/design-system/src/scenes/names";
 /**
  * THE SCENES SECTION OF THE CATALOGUE, IN THE BROWSER.
  *
- * /design-system#scenes shows the globe — the L4 data route — and the hud —
- * the hand-vector route — through Scene on both themes' pages, with their
+ * /design-system#scenes shows the globe — the L4 data route — the head
+ * — 3D → line — the hud — hand vector — and the phone — constructed —
+ * through Scene on both themes' pages, with their
  * HTML readouts over them. This spec
  * pins what the unit tests cannot: that the baked file renders inline
  * through the frame (its viewBox, its two motion groups), that a labelled
@@ -14,7 +15,9 @@ import { SCENE_NAMES } from "../packages/design-system/src/scenes/names";
  * at rest, running under the pointer anywhere on the scene (the readouts
  * sit over the frame), still under reduced motion — that the glow is the
  * dark page's alone, resolved by the nearest theme (a light ThemePage on
- * the dark page has none), and that the credit is on the page.
+ * the dark page has none), and that the credit is on the page — for the
+ * head, the CC BY attribution the licence requires, and its reticle over
+ * the eye, a mark the source placed by a model point.
  */
 
 const PAGE = "/design-system/";
@@ -58,6 +61,45 @@ test.describe("scenes", () => {
 			const f = await scene.locator(".ds-scene__frame").boundingBox();
 			expect(f && Math.abs(f.width / f.height - 16 / 9) < 0.02, "a 320×180 scene is a 16:9 box").toBe(true);
 		}
+	});
+
+	test("renders the head on both pages, credited, its readouts and motion in place", async ({ page }) => {
+		const errors: string[] = [];
+		page.on("pageerror", (e) => errors.push(e.message));
+		await page.goto(PAGE);
+		for (const theme of ["light", "dark"]) {
+			const scene = page.locator(`[data-scene-demo="head-${theme}"]`);
+			await expect(scene, theme).toHaveCount(1);
+			await expect(scene, theme).toHaveAttribute("data-scene", "head");
+			const svg = scene.locator(".ds-scene__frame > svg");
+			await expect(svg, theme).toHaveAttribute("viewBox", "0 0 400 400");
+			// The scanner's marching eye plane and the reticle's blinking centre: the scene's two motions.
+			await expect(svg.locator('[data-motion="dash"]'), theme).toHaveCount(1);
+			await expect(svg.locator('[data-motion="blink"]'), theme).toHaveCount(1);
+			await expect(svg.locator("text"), theme).toHaveCount(0);
+			// The line work: the slices and the silhouette are a handful of long paths, not thousands of marks.
+			expect(await svg.locator("*").count(), theme).toBeLessThan(40);
+			await expect(scene.locator(".ds-scene__readouts .ds-scene-label").first(), theme).toContainText("[SCAN]-SUBJ.07");
+			await expect(scene.locator(".ds-scene__readouts [data-gen='ladder']"), theme).toHaveCount(1);
+			// The scan is CC BY: the attribution is under the frame.
+			await expect(scene.locator(".ds-scene__credit"), theme).toHaveText("Lee Perry-Smith head scan by Infinite-Realities, CC BY 3.0");
+		}
+		expect(errors, errors.join("\n")).toEqual([]);
+	});
+
+	test("the head's reticle is on the near eye, in the frame's upper middle", async ({ page }) => {
+		await page.goto(PAGE);
+		const scene = page.locator('[data-scene-demo="head-dark"]');
+		const frame = scene.locator(".ds-scene__frame > svg");
+		const reticle = frame.locator('circle[r="12"]');
+		await expect(reticle).toHaveCount(1);
+		const [f, r] = await Promise.all([frame.boundingBox(), reticle.boundingBox()]);
+		expect(f && r).toBeTruthy();
+		const cx = (r!.x + r!.width / 2 - f!.x) / f!.width;
+		const cy = (r!.y + r!.height / 2 - f!.y) / f!.height;
+		// The source projects the eye's model point with the same fit as the lines: panel (208.3, 146.1).
+		expect(Math.abs(cx - 208.3 / 400)).toBeLessThan(0.01);
+		expect(Math.abs(cy - 146.1 / 400)).toBeLessThan(0.01);
 	});
 
 	test("every registered scene is on the page", async ({ page }) => {

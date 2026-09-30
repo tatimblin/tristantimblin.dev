@@ -5,6 +5,6 @@
  * hold it against the directory under plain bun. scenes.ts re-exports it;
  * import from there.
  */
-export const SCENE_NAMES = ["globe", "hud", "phone"] as const;
+export const SCENE_NAMES = ["globe", "head", "hud", "phone"] as const;
 
 export type SceneName = (typeof SCENE_NAMES)[number];

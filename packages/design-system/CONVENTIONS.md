@@ -1107,7 +1107,7 @@ SVG; this is where it goes.
 | --- | --- | --- | --- |
 | **Constructed** | an iso platform, a HUD road, the exploded phone, radar chrome | a source composing the kit's primitives, `iso.ts`, `vanishingGrid` and the glyph recipes (`part()`) — no data | **`phone`** (`/design-system#scenes`) |
 | **Data** | a globe, maps, terrain, ground tracks | `d3-geo` over Natural Earth (`world-atlas` 110m), a graticule, coordinates to a tenth | **`globe`** (`/design-system#scenes`) |
-| **3D → line** | busts, bodies, objects | a `.glb` read directly, vertices welded, plane slices and silhouette edges, a z-buffer for hidden lines, orthographic to the panel | spiked, not ported |
+| **3D → line** | busts, bodies, objects | `tools/scenes/lib/mesh-lines.ts`: a `.glb` read directly, vertices welded, plane slices and silhouette edges, a z-buffer for hidden lines, orthographic to the panel | **`head`** (`/design-system#scenes`) |
 | **Hand vector** | characters with personality | Figma/Illustrator with a placeholder swatch set, an import that swaps each hex for its `var(--art-*)` token and validates | **`hud`** (`/design-system#scenes`) |
 
 **The hand-vector route** is implemented: an illustrator draws in Figma or
@@ -1187,15 +1187,54 @@ text is `SceneLabel`s over the outer thirds. The source's hash covers
 only its own directory, so an edited recipe is caught by `scenes:check`
 (which re-bakes), not the registry test.
 
+**The 3D → line route** is `tools/scenes/lib/mesh-lines.ts` — typed,
+dependency-free, deterministic, tested on meshes built in its own test
+(`mesh-lines.test.ts`; `bun run test:unit` covers `tools/`). Three
+functions: **`readGlb(buffer)`** → `{ positions, indices }`, the first
+primitive of the first mesh of a binary glTF (a clear error for anything
+else — no mesh, a strip, a sparse accessor); **`weld(mesh, precision?)`**
+merges vertices at one position, because an export splits every UV seam
+and each would read as an open edge; and **`meshLines(mesh, { yaw, pitch,
+fit: { width, height, margin }, slices, silhouette, epsilon?, zScale?,
+thin?, winding? })`** → `{ sets, project, visible, bounds, stats }`. The
+camera is on +z looking down −z (the mesh's +z face is toward the viewer
+at yaw 0), yaw turns the subject about y and pitch tips it about x, and
+the rotated bounds are fitted orthographically inside the margin. Each
+**slice** spec is `{ axis, count | values, range?, region?, paint,
+weight }`: planes normal to a model axis, `count` at the middles of equal
+bands (across `range`, or the mesh's extent) or explicit `values`, cut
+through the front-facing triangles and chained through the edges they
+share, kept only inside `region` (a model-space predicate). The
+**silhouette** (`{ paint, weight }` or `false`) is every edge between a
+front and a back triangle plus every open front edge. Front is read off
+the mesh — its signed volume says which winding is outward (`winding`
+overrides) — and hidden lines go by a software z-buffer of the front
+faces at `zScale` (2) samples per panel unit: every line is tested every
+panel unit along it, lenient over the four samples round a point (the
+nearest-sample reading hides every curved outline), cut where it sits
+more than `epsilon` (0.08 model units) behind the surface. Each set is
+one path `d` — thinned (`thin`, 1.2 panel units; the mesh's own points
+kept), every number to a tenth — for `k.path(set.d, { paint, weight })`;
+`project(p)` is the same fit, so a mark on a feature (the reticle on an
+eye) is placed by its model point, exactly. The model sits beside the
+source (`head.glb`, the original file, checked against upstream by hash)
+and is read at bake time only; the library lives outside the scene's
+directory, so a change to it is what `bun run scenes:check` catches, not
+the registry's hash. **A scan is licensed**: the head is the
+Lee Perry-Smith scan by Infinite-Realities, CC BY 3.0 — `credit` in the
+recipe carries the attribution, the README the licence and the link, and
+`Scene` shows the credit wherever the scene is used.
+
 **Credits.** A scene drawn from a licensed source — a map, a scan — says
 so: `credit` in the recipe (written into the header, shown by `Scene`
 under the drawing) and a README beside the source with the licence and
 the link. The globe's land is Natural Earth, public domain, via
-`world-atlas`; it is credited anyway.
+`world-atlas`; it is credited anyway. The head's scan is CC BY 3.0; its
+credit is required, and the recipe's `credit` is where it lives.
 
-The catalogue's "Scenes" section shows the globe and the hud with their
-readouts on both pages (`ThemePage`), glowing on the dark one;
-`tests/scenes.spec.ts` holds it.
+The catalogue's "Scenes" section shows the globe, the head, the hud and
+the phone with their readouts on both pages (`ThemePage`), glowing on the
+dark one; `tests/scenes.spec.ts` holds them.
 
 ### Adding one — checklists
 

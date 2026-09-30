@@ -63,6 +63,7 @@ import Wave from "@whois/design-system/Wave";
 import Filter from "@whois/design-system/Filter";
 import Gauge from "@whois/design-system/Gauge";
 import Dial from "@whois/design-system/Dial";
+import Ladder from "@whois/design-system/Ladder";
 import Fan from "@whois/design-system/Fan";
 import Matrix from "@whois/design-system/Matrix";
 import ReadoutStack from "@whois/design-system/ReadoutStack";
@@ -1848,6 +1849,27 @@ assertions:
 							<SceneLabel x={96} y={14} align="end" size="lg">45</SceneLabel>
 							<SceneLabel x={96} y={27} align="end"><Chip tone="accent">Telematic</Chip></SceneLabel>
 							<SceneLabel x={96} y={64} align="end" variant="numeral" size="xl">45</SceneLabel>
+						</Scene>
+					</ThemePage>
+				))}
+			</div>
+			{/* The head — the 3D → line route (tools/scenes/head/, tools/scenes/lib/mesh-lines.ts). */}
+			<p class="ds-demo__note">
+				<code>head</code> is the <strong>3D → line</strong> route: a scanned head read from a <code>.glb</code> at bake time by <code>tools/scenes/lib/mesh-lines.ts</code> — vertices welded, 38 horizontal plane slices (green) over the bust and 9 vertical ones (red) below the chin on the far side, the eye plane in lavender as the scanner's marching line, the silhouette in ink, a z-buffer removing the hidden lines, orthographic at yaw −20° / pitch 8°. The reticle sits on the near eye because the source projected the eye's model point with the same fit; the readouts are HTML as always. The scan is licensed CC BY 3.0, so the credit under the frame is the recipe's and stays wherever the scene goes. Hover: the eye plane marches and the reticle's centre blinks.
+			</p>
+			<div class="ds-demo__art-themes">
+				{(["light", "dark"] as const).map((t) => (
+					<ThemePage theme={t}>
+						<Scene name="head" label={`A scanned head as the contour lines of a scan, turned twenty degrees, on the ${t} page`} tone="green" glow data-scene-demo={`head-${t}`}>
+							<SceneLabel x={9} y={5}><Chip tone="accent">[SCAN]-SUBJ.07</Chip></SceneLabel>
+							<SceneLabel x={9} y={15} tone="dim">LPS.IR<br />CC-BY 3.0</SceneLabel>
+							<SceneLabel x={91} y={5} align="end" size="sm" box>38 SLC | 09 SECT<br />Y −20.0 P 08.0</SceneLabel>
+							<SceneLabel x={91} y={14} align="end" tone="dim">MESH 17684 T</SceneLabel>
+							{/* The reticle is at panel (208.3, 146.1) — 52.1%, 36.5% — so its tag ends just left of it, over the brow. */}
+							<SceneLabel x={46} y={27.5} align="end" size="sm" tone="lavender">L.EYE<br />1.05 1.60 1.70</SceneLabel>
+							<SceneLabel x={9} y={87} size="lg">YAW −20°</SceneLabel>
+							<SceneLabel x={9} y={93.5} size="sm" tone="dim">EPS 0.08 · Z×2</SceneLabel>
+							<SceneLabel x={91} y={86} align="end"><Ladder value={0.72} axis="horizontal" paint="green" size={8} label="Scan progress" /></SceneLabel>
 						</Scene>
 					</ThemePage>
 				))}
