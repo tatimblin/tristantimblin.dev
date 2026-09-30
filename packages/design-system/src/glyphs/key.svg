@@ -1,0 +1,6 @@
+<!-- baked from recipes/key.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <rect x="13" y="5" width="22" height="22" rx="3" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="16.5" y="7.5" width="15" height="15" rx="2" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="24" cy="15" r="2.5" fill="var(--art-green)" />
+</svg>
