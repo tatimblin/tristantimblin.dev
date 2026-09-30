@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <!-- The cabinet's edges: two dotted verticals -->
+  <path d="M 13 4 V 28 M 35 4 V 28" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-dasharray="0.01 3.99" />
+  <!-- Tweeter -->
+  <circle cx="24" cy="8.5" r="3.5" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" />
+  <!-- Woofer: the surround, the cone, the dust cap -->
+  <circle cx="24" cy="20.5" r="7" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" />
+  <circle cx="24" cy="20.5" r="3.5" fill="none" stroke="var(--art-cyan)" stroke-width="1" vector-effect="non-scaling-stroke" />
+  <circle cx="24" cy="20.5" r="1.25" fill="var(--art-cyan)" />
+</svg>

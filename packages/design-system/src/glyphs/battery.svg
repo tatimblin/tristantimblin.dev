@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <!-- The cell, standing: the top face, the two sides, the front of the bottom rim -->
+  <ellipse cx="24" cy="9.5" rx="9" ry="4.5" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" />
+  <path d="M 15 9.5 V 25.5 A 9 4.5 0 0 0 33 25.5 V 9.5" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- The label band, a hairline round the front -->
+  <path d="M 15 15 A 9 4.5 0 0 0 33 15" fill="none" stroke="var(--art-cyan)" stroke-width="1" vector-effect="non-scaling-stroke" />
+  <!-- The positive terminal: a short cylinder on the top face, its cap a dot -->
+  <path d="M 21 9.5 V 7 A 3 1.5 0 0 1 27 7 V 9.5 A 3 1.5 0 0 1 21 9.5" fill="none" stroke="var(--art-cyan)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
+  <circle cx="24" cy="7" r="1.25" fill="var(--art-coral)" />
+</svg>

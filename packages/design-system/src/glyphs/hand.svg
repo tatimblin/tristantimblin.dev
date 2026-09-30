@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <!-- The hand: up the index finger, over its tip, down to the knuckles, three curled fingers, the wrist, the thumb out to the left -->
+  <path d="M 21.5 17 V 5.5 A 2.5 2.5 0 0 1 26.5 5.5 V 14 H 30.5 A 2.25 2.25 0 0 1 30.5 18.5 A 2.25 2.25 0 0 1 30.5 23 A 2.25 2.25 0 0 1 30.5 27.5 H 19.5 V 21 L 15 16.5 A 2 2 0 0 1 18 13.5 Z" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- The creases between the curled fingers -->
+  <path d="M 26.5 18.5 H 30.5 M 26.5 23 H 30.5" fill="none" stroke="var(--art-coral)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" />
+  <!-- The cuff -->
+  <path d="M 19.5 30 H 30.5" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" />
+</svg>
