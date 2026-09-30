@@ -35,8 +35,14 @@
     A slide repeats every 40 units and moves left by 40; a dash advances its
     4 4 or 2 6 pattern by one period; a blink dims to lit again.
 
-    BUDGET. At most 120 elements, 12 KB, 3 clipPaths, groups 4 deep. No text,
-    no style, no gradients, no filters, no images, no ids except a clipPath's,
+    TYPE. Optional words, in caps, in a VOICE: <text class="art-label |
+    art-caption | art-numeral | art-title" x y font-size text-anchor fill>.
+    font-size is on the scale 3.5 4.5 6 9 14 22 32 (viewBox units; label
+    3.5-6, caption 3.5-4.5, title 6-14, numeral 9-32); the class sets the
+    face, so no font-family, weight, letter-spacing or style.
+
+    BUDGET. At most 120 elements, 12 KB, 3 clipPaths, groups 4 deep. No
+    style, no gradients, no filters, no images, no ids except a clipPath's,
     prefixed with the file's slug.
   -->
   <g>

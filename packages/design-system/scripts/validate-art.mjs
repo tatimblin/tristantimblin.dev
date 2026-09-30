@@ -10,6 +10,8 @@
 //            fillers in src/art/), rendered through ArtFrame. The rules are the
 //            CONVENTIONS "Art" section and the comment in src/art/_template.svg,
 //            made mechanical; tests/post-art.spec.ts holds a fixture per rule.
+//            A plate may carry TYPE — <text>/<tspan> in one of four voices,
+//            a class that the frame's CSS sets the face from (TYPE below).
 //   glyph  — the micrographics (src/glyphs/<name>.svg): 48×32 or 96-wide
 //            hairline marks inlined beside text, their line work currentColor
 //            so they take the colour of the text they sit in. No classes, no
@@ -59,7 +61,7 @@ export const RULES = Object.freeze({
 	markup: "markup",
 	/** 1. viewBox is exactly 0 0 320 180; no width/height; only the svg namespace. Glyph: 0 0 48 32, 0 0 96 32 or 0 0 96 64. */
 	root: "root",
-	/** 2. Only the drawing elements; text, images, gradients, filters, animation fail on sight. Glyph: no clipPath/defs/use either. */
+	/** 2. Only the drawing elements (and art's type); images, gradients, filters, animation fail on sight. Glyph: no clipPath/defs/use, and no text either. */
 	element: "element",
 	/** 3. No style=, no on*, no xlink:, class only art-line / art-line--2. Glyph: no class at all. */
 	attribute: "attribute",
@@ -75,6 +77,8 @@ export const RULES = Object.freeze({
 	ids: "ids",
 	/** 9. At least one --art-* token, at most three of the four fill colours. Glyph: at least one paint, at most two colours. */
 	palette: "palette",
+	/** 10. Type (art and scene only): a <text> carries one voice class (art-label | art-caption | art-numeral | art-title), x, y, a font-size on its voice's steps of the scale, a fill, optionally text-anchor — nothing else; the face, weight and tracking are the class's CSS. A <tspan> sits directly in a <text>. */
+	type: "type",
 });
 
 // --- The art constants (the art profile is built from these; they stay
@@ -84,13 +88,15 @@ export const VIEWBOX = "0 0 320 180";
 export const SVG_NS = "http://www.w3.org/2000/svg";
 export const ALLOWED_ELEMENTS = Object.freeze([
 	"svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline",
-	"polygon", "clipPath", "defs", "use",
+	"polygon", "clipPath", "defs", "use", "text", "tspan",
 ]);
 export const FORBIDDEN_ELEMENTS = Object.freeze([
-	"text", "tspan", "image", "foreignObject", "style", "script", "filter",
+	"image", "foreignObject", "style", "script", "filter",
 	"linearGradient", "radialGradient", "pattern", "mask", "animate",
 	"animateTransform", "animateMotion", "set", "a", "title", "desc",
 ]);
+/** The type elements: art's and a scene's, never a glyph's. */
+export const TEXT_ELEMENTS = Object.freeze(["text", "tspan"]);
 export const SHAPES = Object.freeze([
 	"path", "rect", "circle", "ellipse", "line", "polyline", "polygon",
 ]);
@@ -112,6 +118,38 @@ export const SPEEDS = Object.freeze(["0.5", "1", "2"]);
 export const STEPS = Object.freeze({ min: 2, max: 8 });
 /** The marks a beat may hold: a shape that scales out and fades as its beat lands; what shows only while its beat is the current one. */
 export const BEAT_MARKS = Object.freeze(["data-ripple", "data-now"]);
+/**
+ * TYPE. A plate may set words — a module sheet's labels, IDs, bracketed
+ * states, a big thin numeral — in four VOICES, each a class whose CSS
+ * (art-frame.css, `.ds-art-frame .art-label` …) sets the face, the weight
+ * and the tracking, so a file never names a font:
+ *
+ *   art-label    the label voice: --voice-mono-family (the UI face), tracked caps, small
+ *   art-caption  a smaller, dimmer label: the line under a readout
+ *   art-numeral  the thin display numeral (--font-display, Mondwest Thin)
+ *   art-title    a module's heading: --font-heading, Mondwest Bold
+ *
+ * The file sets only where (x, y, text-anchor), how big (font-size, in
+ * viewBox units, on the voice's steps of one SCALE) and the paint (fill,
+ * a token). The scale is in plate units — 3.5 is ~8px on a 720px hero and
+ * texture (~2.5px) in a 230px tile, 32 is a 72px numeral on the hero:
+ */
+export const TYPE_SCALE = Object.freeze(["3.5", "4.5", "6", "9", "14", "22", "32"]);
+/** Each voice's steps of the scale. */
+export const TYPE_SIZES = Object.freeze({
+	"art-label": Object.freeze(["3.5", "4.5", "6"]),
+	"art-caption": Object.freeze(["3.5", "4.5"]),
+	"art-title": Object.freeze(["6", "9", "14"]),
+	"art-numeral": Object.freeze(["9", "14", "22", "32"]),
+});
+export const TYPE_CLASSES = Object.freeze(Object.keys(TYPE_SIZES));
+export const TEXT_ANCHORS = Object.freeze(["start", "middle", "end"]);
+/** The attributes type may carry; everything else is the class's (or refused by another rule). */
+const TYPE_ATTRS = Object.freeze({
+	text: Object.freeze(["class", "x", "y", "font-size", "text-anchor", "fill", "transform"]),
+	tspan: Object.freeze(["class", "x", "y", "dx", "dy", "font-size", "fill"]),
+});
+
 export const BUDGET = Object.freeze({
 	elements: 120,
 	bytes: 12 * 1024,
@@ -150,6 +188,7 @@ export const BUDGET = Object.freeze({
  * @property {number} motionGroups          how many data-motion groups a file may carry
  * @property {readonly string[]} speeds
  * @property {boolean} ids                  false: no id anywhere (so no clipPath/use can point at one)
+ * @property {boolean} type                 <text>/<tspan> in the four voices (TYPE_SIZES); false: no text at all
  *
  * @typedef {object} Budget
  * @property {number} elements  every element but the root
@@ -178,6 +217,7 @@ const ART = Object.freeze({
 	motionGroups: 1,
 	speeds: SPEEDS,
 	ids: true,
+	type: true,
 });
 
 /**
@@ -230,6 +270,7 @@ const GLYPH = Object.freeze({
 	motionGroups: 1,
 	speeds: SPEEDS,
 	ids: false,
+	type: false,
 });
 
 /**
@@ -270,6 +311,7 @@ const SCENE = Object.freeze({
 	motionGroups: 2,
 	speeds: SPEEDS,
 	ids: true,
+	type: true,
 });
 
 /** Every kind the validator knows, by name (the CLI's --profile). */
@@ -284,6 +326,8 @@ const WASH = /^color-mix\(in oklab, var\(--art-(lavender|coral|cyan|green)\) (\d
 
 const FORBIDDEN = new Set(FORBIDDEN_ELEMENTS);
 const SHAPE = new Set(SHAPES);
+const TEXTUAL = new Set(TEXT_ELEMENTS);
+const TYPE_CLASS = new Set(TYPE_CLASSES);
 
 /** `"a" or "b"`, `"a", "b" or "c"`: a list in a message. */
 const either = (xs, quote = true) => {
@@ -300,6 +344,7 @@ const COUNTS = ["no", "one", "two", "three", "all four"];
  * @property {number} line   1-based, of the opening tag
  * @property {Element | null} parent
  * @property {Element[]} children
+ * @property {string} [text]  the words directly inside a <text> or <tspan>
  */
 
 /**
@@ -369,7 +414,9 @@ export function validateSvg(source, { profile = ART, slug } = {}) {
 	// 2 + 3. Elements and attributes, on sight.
 	for (const el of all) {
 		if (FORBIDDEN.has(el.name)) {
-			fail(RULES.element, el, `<${el.name}> is not part of the language (no text, images, gradients, filters, masks, animation, style)`);
+			fail(RULES.element, el, `<${el.name}> is not part of the language (no images, gradients, filters, masks, animation, style)`);
+		} else if (TEXTUAL.has(el.name) && !P.type) {
+			fail(RULES.element, el, `<${el.name}>: no type in a ${P.name}; its words are HTML beside it (a GlyphTile's label or readout)`);
 		} else if (!ALLOWED.has(el.name)) {
 			fail(RULES.element, el, `<${el.name}> is not an allowed element (${P.elements.join(" ")})`);
 		} else if (el.name === "svg" && el !== root) {
@@ -385,12 +432,15 @@ export function validateSvg(source, { profile = ART, slug } = {}) {
 			} else if (/^xmlns:/i.test(name)) {
 				fail(RULES.attribute, el, `only the svg namespace (${name})`);
 			} else if (name === "class") {
+				// Type's classes are the type rule's (below); a glyph's type has had its say under the element rule.
+				if (TEXTUAL.has(el.name)) continue;
 				if (P.classes.length === 0) {
 					fail(RULES.attribute, el, `no class attribute in a ${P.name}; the weight is stroke-width="${P.strokeWidths.join("|")}"`);
 					continue;
 				}
 				for (const c of value.trim().split(/\s+/).filter(Boolean)) {
-					if (!CLASS.has(c)) fail(RULES.attribute, el, `class "${c}" is not one of ${P.classes.join(", ")}`);
+					if (TYPE_CLASS.has(c) && P.type) fail(RULES.attribute, el, `class "${c}" is a type voice; it goes on a <text> or <tspan>`);
+					else if (!CLASS.has(c)) fail(RULES.attribute, el, `class "${c}" is not one of ${P.classes.join(", ")}`);
 				}
 			}
 			for (const { token, why } of P.forbiddenTokens) {
@@ -570,6 +620,81 @@ export function validateSvg(source, { profile = ART, slug } = {}) {
 		}
 	}
 
+	// 10. Type: where, how big, what paint — never what face.
+	if (P.type) {
+		for (const el of all) {
+			if (!TEXTUAL.has(el.name)) continue;
+			const own = TYPE_ATTRS[el.name];
+			// Placement: a <text> holds only <tspan>s, a <tspan> sits directly in a <text>.
+			if (el.name === "text" && el.parent && TEXTUAL.has(el.parent.name)) {
+				fail(RULES.type, el, `a <text> inside a <${el.parent.name}>; a run inside a <text> is a <tspan>`);
+			}
+			if (el.name === "tspan" && el.parent?.name !== "text") {
+				fail(RULES.type, el, `a <tspan> sits directly in a <text> (here under ${el.parent ? `<${el.parent.name}>` : "the root"})`);
+			}
+			for (const c of el.children) {
+				if (!TEXTUAL.has(c.name)) fail(RULES.type, el, `a <${el.name}> holds words and <tspan>s, not a <${c.name}>`);
+			}
+			// Attributes: the few type sets; the rest belongs to the class, or to another rule.
+			for (const [name, value] of el.attrs) {
+				if (own.includes(name) || name === "style" || name === "id" || /^(on|xlink:|xmlns|data-)/i.test(name)) continue;
+				if (["opacity", "fill-opacity", "stroke-opacity", "color"].includes(name)) continue;
+				if (/^(font|letter-spacing|word-spacing|text-(?!anchor)|dominant-baseline|alignment-baseline|baseline-shift|writing-mode)/.test(name)) {
+					fail(RULES.type, el, `no ${name}="${value}": the voice's class sets the face, weight and tracking (${TYPE_CLASSES.join(", ")})`);
+				} else if (/^stroke|^vector-effect$/.test(name)) {
+					fail(RULES.type, el, `type is filled, never stroked (${name}="${value}")`);
+				} else {
+					fail(RULES.type, el, `no ${name} on a <${el.name}>; it takes ${own.join(", ")}`);
+				}
+			}
+			// The voice: exactly one on a <text>; a <tspan> may switch to another.
+			const classes = (el.attrs.get("class") ?? "").trim().split(/\s+/).filter(Boolean);
+			const bad = classes.filter((c) => !TYPE_CLASS.has(c));
+			const voices = classes.filter((c) => TYPE_CLASS.has(c));
+			if (bad.length) fail(RULES.type, el, `class "${bad.join(" ")}" is not a voice; type takes one of ${TYPE_CLASSES.join(", ")}`);
+			if (voices.length > 1) fail(RULES.type, el, `one voice per element (got ${voices.join(", ")})`);
+			if (el.name === "text" && voices.length === 0 && bad.length === 0) {
+				fail(RULES.type, el, `a <text> names its voice: class="${TYPE_CLASSES.join(" | ")}"`);
+			}
+			const voice = voices[0] ?? (el.name === "tspan" ? voiceOf(el.parent) : undefined);
+			// Position and size.
+			if (el.name === "text") {
+				for (const a of ["x", "y"]) {
+					if (!el.attrs.has(a)) fail(RULES.type, el, `a <text> says its ${a}`);
+				}
+				if (!el.attrs.has("font-size")) fail(RULES.type, el, `a <text> says its font-size, one of ${either(voice ? TYPE_SIZES[voice] : TYPE_SCALE, false)} (viewBox units)`);
+			}
+			for (const a of ["x", "y", "dx", "dy"]) {
+				const v = el.attrs.get(a);
+				if (v !== undefined && !/^-?\d+(\.\d+)?$/.test(v.trim())) fail(RULES.type, el, `${a}="${v}" is one number in viewBox units`);
+			}
+			const size = el.attrs.get("font-size");
+			if (size !== undefined) {
+				if (!TYPE_SCALE.includes(size)) {
+					fail(RULES.type, el, `font-size="${size}" is not on the scale (${TYPE_SCALE.join(" ")}, viewBox units, no px)`);
+				} else if (voice && !TYPE_SIZES[voice].includes(size)) {
+					fail(RULES.type, el, `font-size="${size}" is not a ${voice} size (${TYPE_SIZES[voice].join(" ")})`);
+				}
+			}
+			// A quarter turn about a point (a label up a module's edge) and nothing
+			// else: a scale would set the words off the scale.
+			const turn = el.attrs.get("transform");
+			if (turn !== undefined && !/^rotate\((-?90|-?270)(\s+-?\d+(\.\d+)?\s+-?\d+(\.\d+)?)?\)$/.test(turn.trim())) {
+				fail(RULES.type, el, `transform="${turn}": type turns a quarter at most, rotate(-90 x y) or rotate(90 x y), and never scales`);
+			}
+			const anchor = el.attrs.get("text-anchor");
+			if (anchor !== undefined && !TEXT_ANCHORS.includes(anchor)) {
+				fail(RULES.type, el, `text-anchor="${anchor}" is not one of ${TEXT_ANCHORS.join(" | ")}`);
+			}
+			// Paint: a <text> states its own; none (on it or a run) draws nothing.
+			const fill = el.attrs.get("fill");
+			if (el.name === "text" && fill === undefined) fail(RULES.type, el, `a <text> says its fill (a token), on itself`);
+			if (fill === "none") fail(RULES.type, el, `fill="none" on type draws nothing`);
+			// Words: a <text> must say something.
+			if (el.name === "text" && !textOf(el).trim()) fail(RULES.type, el, `an empty <text>`);
+		}
+	}
+
 	// 7. Budgets.
 	const count = all.length - 1;
 	if (count > budget.elements) fail(RULES.budget, root, `${count} elements; the budget is ${budget.elements}`);
@@ -671,7 +796,14 @@ function parse(source) {
 		if (!gap.trim()) return;
 		const at = lineAt(from + gap.search(/\S/));
 		const el = stack[stack.length - 1] ?? null;
-		// Words inside a <text> or a <style>: the element rule says it once.
+		// Words inside a <text> or a <tspan> are its content; a bare & is not.
+		if (el && TEXTUAL.has(el.name) && !gap.includes("<")) {
+			el.text = (el.text ?? "") + gap;
+			const amp = /&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/.exec(gap);
+			if (amp) problems.push({ el: { ...el, line: lineAt(from + amp.index) }, detail: `a bare "&" in the words; write &amp;` });
+			return;
+		}
+		// Words inside a <style>, a <title>…: the element rule says it once.
 		if (el && FORBIDDEN.has(el.name) && !gap.includes("<")) return;
 		const detail = gap.includes("<")
 			? `unreadable markup: ${gap.trim().slice(0, 40)}`
@@ -712,6 +844,16 @@ function parse(source) {
 		problems.push({ el: open, detail: `<${open.name}> is never closed` });
 	}
 	return { roots, problems };
+}
+
+/** The words of a <text>: its own and its runs', in order enough to test for emptiness. */
+function textOf(el) {
+	return (el.text ?? "") + el.children.map(textOf).join("");
+}
+
+/** The voice a <text> names (for a <tspan> that names none). */
+function voiceOf(el) {
+	return (el?.attrs.get("class") ?? "").trim().split(/\s+/).find((c) => TYPE_CLASS.has(c));
 }
 
 /** The element and every descendant, document order. */

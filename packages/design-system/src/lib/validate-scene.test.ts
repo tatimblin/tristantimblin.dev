@@ -48,7 +48,10 @@ const fixtures: Array<[string, string, string]> = [
 	["a wide panel", RULES.root, wrap("", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">')],
 	["width and height on the root", RULES.root, wrap("", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">')],
 	// element: art's list, nothing more
-	["a <text> (a readout is HTML over the frame)", RULES.element, wrap('<text x="1" y="1" fill="var(--art-ink)">300.733 MHZ</text>')],
+	// type: art's voices (a scene's plate may set words; tests/post-art.spec.ts holds a fixture per type rule)
+	["a <text> with no voice", RULES.type, wrap('<text x="1" y="1" font-size="4.5" fill="var(--art-ink)">300.733 MHZ</text>')],
+	["a <text> off the scale", RULES.type, wrap('<text class="art-label" x="1" y="1" font-size="5" fill="var(--art-ink)">300.733 MHZ</text>')],
+	["a <text> that names its face", RULES.type, wrap('<text class="art-label" x="1" y="1" font-size="4.5" font-family="Mondwest" fill="var(--art-ink)">300.733 MHZ</text>')],
 	["a gradient", RULES.element, wrap("<defs><linearGradient></linearGradient></defs>")],
 	["a filter (the glow is the host's CSS)", RULES.element, wrap("<defs><filter></filter></defs>")],
 	// paint: the wash, and its edges
@@ -121,6 +124,15 @@ describe("scene profile", () => {
 		expect(scene(withOrbit)).toEqual([]);
 		const open = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">';
 		expect(scene(wrap(steps, open).replace('<g data-motion="blink" data-speed="0.5">', "<g>"))).toEqual([]);
+	});
+
+	test("a scene may set type in art's four voices", () => {
+		const type = [
+			'<text class="art-label" x="20" y="30" font-size="4.5" fill="var(--art-ink)">300.733 MHZ</text>',
+			'<text class="art-numeral" x="380" y="380" font-size="32" text-anchor="end" fill="var(--art-coral)">045</text>',
+			'<text class="art-caption" x="20" y="40" font-size="3.5" fill="var(--art-ink-2)">LAT <tspan class="art-title" font-size="6">N 37.4</tspan></text>',
+		].join("");
+		expect(scene(wrap(type))).toEqual([]);
 	});
 
 	test("a clipPath id prefixed with the scene's name passes; another prefix fails", () => {

@@ -9,6 +9,7 @@ import {
 	PROFILES,
 	RULES,
 	BUDGET,
+	TYPE_SIZES,
 	VIEWBOX,
 } from "../packages/design-system/scripts/validate-art.mjs";
 import { bakedFrom, isPostScene, POST_SCENES, SCENES_SOURCE, sourceHash } from "../packages/design-system/src/scenes/recipe";
@@ -141,6 +142,9 @@ const wrap = (inner: string, open = OPEN) => `${open}
 
 const SLUG = "fx";
 
+/** A line of type in the clean file: the attributes, and the words. */
+const type = (attrs: string, words = "NODE B43") => wrap(`<text ${attrs}>${words}</text>`);
+
 /** One beat of a steps group: a landing dot, its ripple, and a now-mark. */
 const beat = (i: number) =>
 	`<g data-beat="${i}"><circle cx="${40 + i * 30}" cy="90" r="3" fill="var(--art-green)" /><circle data-ripple="" cx="${40 + i * 30}" cy="90" r="8" fill="none" stroke="var(--art-green)" class="art-line" vector-effect="non-scaling-stroke" /><g data-now=""><path d="M ${40 + i * 30} 110 v 6" ${LINE} /></g></g>`;
@@ -153,7 +157,6 @@ const fixtures: Array<[string, string, string]> = [
 	["width and height on the root", RULES.root, wrap("", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" width="320" height="180">')],
 	["another namespace", RULES.root, wrap("", '<svg xmlns="http://www.w3.org/1999/xhtml" viewBox="0 0 320 180">')],
 	// 2. element
-	["a <text>", RULES.element, wrap('<text x="10" y="20" fill="var(--art-ink)">hi</text>')],
 	["a gradient in defs", RULES.element, wrap('<defs><linearGradient id="fx-g"></linearGradient></defs>')],
 	["an <animateTransform>", RULES.element, wrap('<animateTransform attributeName="transform" type="rotate" />')],
 	["an element outside the set", RULES.element, wrap("<marker></marker>")],
@@ -238,6 +241,32 @@ const fixtures: Array<[string, string, string]> = [
 		RULES.palette,
 		`${OPEN}<path d="M -10 60 H 130" fill="none" stroke="currentColor" class="art-line" vector-effect="non-scaling-stroke" /></svg>`,
 	],
+	// 10. type — a voice, a place, a size on the voice's steps, a fill; never a face
+	["a <text> with no voice", RULES.type, type('x="20" y="20" font-size="4.5" fill="var(--art-ink)"')],
+	["a <text> whose class is a line weight", RULES.type, type('class="art-line" x="20" y="20" font-size="4.5" fill="var(--art-ink)"')],
+	["a <text> in two voices", RULES.type, type('class="art-label art-title" x="20" y="20" font-size="6" fill="var(--art-ink)"')],
+	["a <text> with no font-size", RULES.type, type('class="art-label" x="20" y="20" fill="var(--art-ink)"')],
+	["a font-size off the scale", RULES.type, type('class="art-label" x="20" y="20" font-size="5" fill="var(--art-ink)"')],
+	["a font-size in px", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5px" fill="var(--art-ink)"')],
+	["a size on the scale but not the voice's (a 4.5 numeral)", RULES.type, type('class="art-numeral" x="20" y="20" font-size="4.5" fill="var(--art-ink)"', "07")],
+	["a font-family (the class sets the face)", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5" font-family="Mondwest" fill="var(--art-ink)"')],
+	["a font-weight", RULES.type, type('class="art-numeral" x="20" y="40" font-size="22" font-weight="200" fill="var(--art-ink)"', "07")],
+	["a letter-spacing", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5" letter-spacing="1" fill="var(--art-ink)"')],
+	["a baseline shift", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5" dominant-baseline="middle" fill="var(--art-ink)"')],
+	["stroked type", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5" fill="var(--art-ink)" stroke="var(--art-ink)" vector-effect="non-scaling-stroke"')],
+	["a text-anchor outside start / middle / end", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5" text-anchor="left" fill="var(--art-ink)"')],
+	["a <text> with no fill", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5"')],
+	["type filled none", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5" fill="none"')],
+	["a <text> with no y", RULES.type, type('class="art-label" x="20" font-size="4.5" fill="var(--art-ink)"')],
+	["an x that is a list", RULES.type, type('class="art-label" x="20 24 28" y="20" font-size="4.5" fill="var(--art-ink)"')],
+	["an empty <text>", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5" fill="var(--art-ink)"', " ")],
+	["a scaled <text> (off the scale by another road)", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5" transform="scale(3)" fill="var(--art-ink)"')],
+	["a <tspan> outside a <text>", RULES.type, wrap('<tspan class="art-label" font-size="4.5" fill="var(--art-ink)">NODE</tspan>')],
+	["a shape inside a <text>", RULES.type, type('class="art-label" x="20" y="20" font-size="4.5" fill="var(--art-ink)"', 'NODE <circle cx="1" cy="1" r="1" fill="var(--art-ink)" />')],
+	["a run off its voice's steps", RULES.type, type('class="art-numeral" x="20" y="40" font-size="22" fill="var(--art-ink)"', '45<tspan font-size="3.5">DB</tspan>')],
+	["a type voice on a shape", RULES.attribute, wrap('<circle class="art-label" cx="60" cy="30" r="3" fill="var(--art-ink)" />')],
+	["a style on type", RULES.attribute, type('class="art-label" x="20" y="20" font-size="4.5" fill="var(--art-ink)" style="font-weight:700"')],
+	["a bare & in the words", RULES.markup, type('class="art-label" x="20" y="20" font-size="4.5" fill="var(--art-ink)"', "R&D")],
 	// The file itself.
 	["a tag that never closes", RULES.markup, wrap("<g>")],
 	["a close tag that closes nothing", RULES.markup, wrap("</g>")],
@@ -278,6 +307,33 @@ test.describe("post art: each rule fires, and only it", () => {
 		expect(validateArt(placed, { slug: SLUG })).toEqual([]);
 		const moved = wrap(`<g data-motion="steps" data-beats="2" transform="translate(4 0)">${beat(0)}${beat(1)}</g>`);
 		expect(validateArt(moved, { slug: SLUG }).map(ruleOf)).toEqual([RULES.motion]);
+	});
+
+	test("type in the four voices passes: runs, entities, anchors, a quarter turn, the whole scale", () => {
+		const file = wrap(
+			[
+				type('class="art-label" x="20" y="20" font-size="4.5" fill="var(--art-ink)"', "LOG_004.TXT &amp; [ ACTIVE ]"),
+				type('class="art-caption" x="20" y="30" font-size="3.5" fill="var(--art-ink-2)"', "ID: 7F-C2 // 0x7B8A"),
+				type('class="art-title" x="160" y="60" font-size="14" text-anchor="middle" fill="var(--art-ink)"', "EPOCH"),
+				type('class="art-numeral" x="300" y="160" font-size="32" text-anchor="end" fill="var(--art-coral)"', '14<tspan class="art-label" dx="2" dy="-20" font-size="4.5" fill="var(--art-ink)">SPEAKERS</tspan>'),
+				type('class="art-label" x="10" y="170" font-size="3.5" transform="rotate(-90 10 170)" fill="var(--art-ink-2)"', "MAINTENANCE MODE"),
+			]
+				.map((f) => /<text[\s\S]*<\/text>/.exec(f)![0])
+				.join(""),
+		);
+		expect(validateArt(file, { slug: SLUG })).toEqual([]);
+		for (const [voice, sizes] of Object.entries(TYPE_SIZES)) {
+			for (const size of sizes) {
+				const one = type(`class="${voice}" x="20" y="40" font-size="${size}" fill="var(--art-ink)"`, "07");
+				expect(validateArt(one, { slug: SLUG }), `${voice} ${size}`).toEqual([]);
+			}
+		}
+	});
+
+	test("type is the plate's and a scene's, never a glyph's", () => {
+		const words = '<text class="art-label" x="4" y="10" font-size="4.5" fill="currentColor">ON</text>';
+		const glyph = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32"><circle cx="24" cy="16" r="3" fill="currentColor" />${words}</svg>`;
+		expect(new Set(validateSvg(glyph, { profile: PROFILES.glyph }).map(ruleOf))).toEqual(new Set([RULES.element]));
 	});
 
 	test("comments are prose: a rule word inside one does not fire", () => {

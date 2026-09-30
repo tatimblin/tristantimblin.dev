@@ -1,5 +1,5 @@
 /* ArtFrame — the window every artwork renders through. The plate, its 1px
- * edge and the corner, and the art's line weights; the motion contract is
+ * edge and the corner, the art's line weights and its type voices; the motion contract is
  * motion.css, shared with the glyphs. No colour is spelled here: everything
  * resolves from the ART tokens in tokens.overrides.css, so an art file,
  * this sheet and the theme agree by construction.
@@ -87,6 +87,46 @@
 }
 .ds-art-frame .art-line--2 {
 	stroke-width: 1.5;
+}
+
+/* TYPE: the four voices a plate may set words in (the validator's TYPE,
+ * scripts/validate-art.mjs). The file says where, how big (font-size in
+ * viewBox units, so the words scale with the drawing as its line work
+ * doesn't) and which token fills it; the VOICE — face, weight, tracking —
+ * is only ever here, so a file never names a font and the whole language's
+ * type retunes in one place. Fill is not touched: the file's token is the
+ * colour (a caption is the dimmed ink by the kit's default, not by force).
+ * Figures are tabular in every voice, so a column of IDs or a readout that
+ * changes holds its width. No case change: the voice is written in caps
+ * (the kit's helpers write it so), because `0x7B8A` and `12ms` must keep
+ * their lower case. */
+.ds-art-frame :is(.art-label, .art-caption, .art-numeral, .art-title) {
+	font-variant-numeric: tabular-nums;
+	font-kerning: normal;
+}
+/* the label: the label voice (Mono's), tracked as caps are */
+.ds-art-frame .art-label {
+	font-family: var(--voice-mono-family);
+	font-weight: var(--font-weight-400);
+	letter-spacing: var(--tracking-caps);
+}
+/* the caption: the same face, a size down, the mono tracking */
+.ds-art-frame .art-caption {
+	font-family: var(--voice-mono-family);
+	font-weight: var(--font-weight-400);
+	letter-spacing: var(--tracking-mono);
+}
+/* the numeral: the display role, Mondwest Thin — Stat's numeral */
+.ds-art-frame .art-numeral {
+	font-family: var(--font-display);
+	font-weight: var(--font-display-weight);
+	letter-spacing: var(--tracking-heading);
+}
+/* the title: a module's heading, the heading role (Mondwest Bold) */
+.ds-art-frame .art-title {
+	font-family: var(--font-heading);
+	font-weight: var(--font-heading-weight);
+	letter-spacing: var(--tracking-heading);
 }
 
 /* MOTION: the data-motion contract — the keyframes, the pause at rest and
