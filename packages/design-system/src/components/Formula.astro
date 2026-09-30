@@ -1,0 +1,49 @@
+---
+// Formula — a tiny formula readout with real superscripts and subscripts
+// (styles/formula.css): z⁻¹ on a delay tile, x³ on a waveshaper's, f_c
+// under a filter. The thin numeral's voice (the display role), a step
+// under a tile's readout; the raised and lowered runs are <sup> / <sub> at
+// a smaller size, set so they do not open the line.
+//
+//   <Formula value="z^-1" />               z⁻¹, heard "z to the minus 1"
+//   <Formula value="x^3" />                x³
+//   <Formula value="f_c" label="cutoff" />  heard "cutoff"
+//   <GlyphTile label="Delay"><Formula value="z^-1" /></GlyphTile>
+//
+// `value` is a tiny syntax (lib/readouts, `parseFormula`): `^` raises and
+// `_` lowers the next run — a `{…}` group, or a sign and a run of letters,
+// digits and dots; a hyphen is drawn as a minus. A reader is given words,
+// not the drawing (a sup read aloud is lost): the drawn formula is
+// aria-hidden and a visually hidden twin says `label`, or the formula
+// spoken ("z to the minus 1"). Centred in a GlyphTile's cap as a glyph is.
+//
+// Site use: the micrographic migration's labelled tiles, where a stage is
+// named by its transfer function. Polymorphic `as` (a span); `class`
+// merges; everything else passes through.
+import { cx } from "../lib/cx";
+import { parseFormula, spokenFormula } from "../lib/readouts";
+
+interface Props {
+	as?: string;
+	/** The formula: `z^-1`, `x^3`, `f_c`, `x^{n+1}`. */
+	value: string;
+	/** What a reader hears instead of the formula spoken. */
+	label?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { as = "span", value, label, class: className, ...rest } = Astro.props;
+const Tag = as as any;
+const parts = parseFormula(value);
+const spoken = label ?? spokenFormula(parts);
+---
+
+<Tag class={cx("ds-formula", className)} {...rest}>
+	<span class="ds-formula__drawn" aria-hidden="true">{
+		parts.map((p) =>
+			p.kind === "sup" ? <sup>{p.text}</sup> : p.kind === "sub" ? <sub>{p.text}</sub> : p.text,
+		)
+	}</span>
+	<span class="ds-visually-hidden">{spoken}</span>
+</Tag>

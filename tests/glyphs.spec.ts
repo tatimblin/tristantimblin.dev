@@ -112,6 +112,36 @@ test.describe("glyph tile sheet", () => {
 		await expect(chain.locator(".ds-glyph-tile__readout")).toHaveText("34");
 		await expect(page.locator(".glyph-readouts .ds-stat--variant-numeral")).toHaveCount(2);
 		await expect(page.getByRole("meter", { name: "Freq", exact: true })).toBeVisible();
+		const panel = page.locator(".glyph-readouts");
+		await expect(panel.locator(".ds-readout-stack [aria-current='true']")).toHaveText("44.1k");
+		await expect(panel.locator(".ds-formula sup")).toHaveText("\u22121");
+		await expect(panel.locator(".ds-chip--tone-accent", { hasText: /telematic/i })).toHaveCount(1);
+		await expect(panel.locator(".ds-chip--variant-arrow")).toHaveCount(2);
+	});
+
+	test("the G readouts: html text in tiles, anchored #readout-<component>-<n>", async ({ page }) => {
+		await page.goto(SHEET);
+		const row = page.locator("#family-G");
+		await expect(row.locator('[data-glyph-entry="readout"]')).toHaveCount(10);
+		// Text, not a drawing: no svg in any readout tile.
+		await expect(row.locator('[data-glyph-entry="readout"] svg')).toHaveCount(0);
+		const stack = page.locator("#readout-stack-1 .ds-readout-stack");
+		await expect(stack).toHaveAttribute("aria-label", "Sample rate");
+		await expect(stack.locator("li")).toHaveCount(3);
+		await expect(stack.locator('[aria-current="true"]')).toHaveText("44.1k");
+		// A formula is heard in words; the drawing is hidden.
+		const formula = page.locator("#readout-formula-1 .ds-formula");
+		await expect(formula.locator(".ds-formula__drawn")).toHaveAttribute("aria-hidden", "true");
+		await expect(formula.locator(".ds-visually-hidden")).toHaveText("z to the minus 1");
+		await expect(page.locator("#readout-formula-3 .ds-visually-hidden")).toHaveText("cutoff frequency");
+		// The stream: decorative, deterministic, and doubled for the loop only with motion.
+		const stream = page.locator("#readout-stream-1 .ds-number-stream");
+		await expect(stream).toHaveAttribute("aria-hidden", "true");
+		await expect(stream.locator(".ds-number-stream__row")).toHaveText(["0096544257", "2175132529"]);
+		await expect(page.locator("#readout-stream-2 .ds-number-stream__row")).toHaveCount(6);
+		// The tags are Chip's.
+		await expect(page.locator("#readout-tag-1 .ds-glyph-tile__cap .ds-chip")).toHaveClass(/ds-chip--tone-accent/);
+		await expect(page.locator("#readout-tag-2 .ds-glyph-tile__cap .ds-chip")).toHaveClass(/ds-chip--variant-arrow/);
 	});
 
 	test("the theme switch puts the sheet on the other page", async ({ page }) => {

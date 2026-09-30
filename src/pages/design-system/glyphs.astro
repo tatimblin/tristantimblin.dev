@@ -2,10 +2,12 @@
 // /design-system/glyphs — the glyph tile sheet. Every registered glyph
 // (GLYPH_NAMES: a baked recipe or a hand-drawn file) and a spread of every
 // generator's variants, each in a GlyphTile captioned `<family>·NN name`
-// with how it is made (R recipe, H hand-drawn, G generator), grouped by
-// family A–H under RuleLabels; then two L3 compositions (the signal chain
-// and a readouts panel). An anchor per tile — #glyph-<name>,
-// #gen-<component>-<n> — as the art page has one per file.
+// with how it is made (R recipe, H hand-drawn, G generator, T html text),
+// grouped by family A–H under RuleLabels — G is the readouts, the HTML
+// text that sits in a tile where a mark would; then two L3 compositions
+// (the signal chain and a readouts panel). An anchor per tile —
+// #glyph-<name>, #gen-<component>-<n>, #readout-<component>-<n> — as the
+// art page has one per file.
 //
 // Glyph files are read from the registry, so a new one shows up on the next
 // build with no edit here: FAMILY below places it (unknown → F, controls).
@@ -36,10 +38,13 @@ import Progress from "@whois/design-system/Progress";
 import Fan from "@whois/design-system/Fan";
 import Rings from "@whois/design-system/Rings";
 import Matrix from "@whois/design-system/Matrix";
+import ReadoutStack from "@whois/design-system/ReadoutStack";
+import Formula from "@whois/design-system/Formula";
+import NumberStream from "@whois/design-system/NumberStream";
 import { GLYPH_NAMES, glyphSvg, type GlyphName } from "@whois/design-system/glyphs";
 
-type FamilyKey = "A" | "B" | "C" | "D" | "E" | "F" | "H";
-type Kind = "R" | "H" | "G";
+type FamilyKey = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H";
+type Kind = "R" | "H" | "G" | "T";
 
 const FAMILIES: Record<FamilyKey, string> = {
 	A: "Waves",
@@ -48,6 +53,7 @@ const FAMILIES: Record<FamilyKey, string> = {
 	D: "Routing",
 	E: "Fields",
 	F: "Controls",
+	G: "Readouts",
 	H: "Iso parts",
 };
 
@@ -101,7 +107,8 @@ const FAMILY: Partial<Record<GlyphName, FamilyKey>> = {
 	battery: "H",
 };
 
-const KIND_NAME: Record<Kind, string> = { R: "recipe", H: "hand-drawn", G: "generator" };
+const KIND_NAME: Record<Kind, string> = { R: "recipe", H: "hand-drawn", G: "generator", T: "html text" };
+const ENTRY_KIND: Record<Kind, string> = { R: "glyph", H: "glyph", G: "generator", T: "readout" };
 
 // A baked file starts with the bake's header; anything else was drawn by hand.
 const BAKED = /^\s*<!-- baked from recipes\/[\w-]+\.ts — edit the recipe -->/;
@@ -116,6 +123,8 @@ interface Entry {
 	// A capitalised variable is a component in Astro's markup.
 	Comp: any;
 	props: Record<string, unknown>;
+	/** The default slot's text (a Chip's word). */
+	text?: string;
 }
 
 const glyphEntries: Entry[] = GLYPH_NAMES.map((name) => {
@@ -183,11 +192,31 @@ const genEntries: Entry[] = spread.map(([family, component, Comp, name, props, w
 });
 const components = Object.keys(genCount);
 
+// The readouts (G): HTML text in a tile, where a mark would sit — the
+// components, and Chip's two tags. [component name, Component, name, props, text?]
+const readouts: [string, any, string, Record<string, unknown>, string?][] = [
+	["stack", ReadoutStack, "sample rate", { values: ["32.0k", "44.1k", "96.0k"], active: 1, "aria-label": "Sample rate" }],
+	["stack", ReadoutStack, "division", { values: ["1/4", "1/8", "1/16"], active: 2, "aria-label": "Division" }],
+	["formula", Formula, "unit delay", { value: "z^-1" }],
+	["formula", Formula, "cubic", { value: "x^3" }],
+	["formula", Formula, "cutoff", { value: "f_c", label: "cutoff frequency" }],
+	["stream", NumberStream, "stream", {}],
+	["stream", NumberStream, "stream motion", { seed: 42, rows: 3, digits: 8, motion: true }],
+	["tag", Chip, "telematic", { tone: "accent" }, "Telematic"],
+	["tag", Chip, "replace", { variant: "arrow" }, "Replace"],
+	["tag", Chip, "replace accent", { variant: "arrow", tone: "accent" }, "Replace"],
+];
+const readoutCount: Record<string, number> = {};
+const readoutEntries: Entry[] = readouts.map(([component, Comp, name, props, text]) => {
+	const n = (readoutCount[component] = (readoutCount[component] ?? 0) + 1);
+	return { id: `readout-${component}-${n}`, name, family: "G", kind: "T", Comp, props, text };
+});
+
 // Generators lead a family, files follow in the registry's order; a wide
 // tile goes first so it starts a row and the grid never leaves a hole.
 const groups = (Object.keys(FAMILIES) as FamilyKey[])
 	.map((key) => {
-		const all = [...genEntries, ...glyphEntries].filter((e) => e.family === key);
+		const all = [...genEntries, ...glyphEntries, ...readoutEntries].filter((e) => e.family === key);
 		const entries = [...all.filter((e) => e.wide), ...all.filter((e) => !e.wide)];
 		return { key, title: FAMILIES[key], entries };
 	})
@@ -195,7 +224,7 @@ const groups = (Object.keys(FAMILIES) as FamilyKey[])
 
 const no = (i: number) => String(i + 1).padStart(2, "0");
 const kinds = (entries: Entry[]) =>
-	(["G", "R", "H"] as Kind[])
+	(["G", "R", "H", "T"] as Kind[])
 		.map((k) => [k, entries.filter((e) => e.kind === k).length] as const)
 		.filter(([, n]) => n > 0)
 		.map(([k, n]) => `${n} ${k}`)
@@ -212,7 +241,7 @@ const kinds = (entries: Entry[]) =>
 			<Mono><Anchor href="/design-system/#glyphs" discreet arrow="left">design system</Anchor></Mono>
 			<Heading as="h1" size={5} responsive>Glyphs</Heading>
 			<p class="glyph-sheet-page__note">
-				Every registered glyph and a spread of every generator, each in a <code>GlyphTile</code> captioned <code>family·NN name</code> and marked by how it is made: <strong>R</strong> a recipe baked from the L0 kit, <strong>H</strong> hand-drawn, <strong>G</strong> a generator drawn from props. Then two L3 compositions. Hover a tile to play its motion. Link to one tile with <code>/design-system/glyphs#glyph-&lt;name&gt;</code> or <code>#gen-&lt;component&gt;-&lt;n&gt;</code>.
+				Every registered glyph and a spread of every generator, each in a <code>GlyphTile</code> captioned <code>family·NN name</code> and marked by how it is made: <strong>R</strong> a recipe baked from the L0 kit, <strong>H</strong> hand-drawn, <strong>G</strong> a generator drawn from props, <strong>T</strong> HTML text — the G family, the readouts that sit in a tile where a mark would. Then two L3 compositions. Hover a tile to play its motion. Link to one tile with <code>/design-system/glyphs#glyph-&lt;name&gt;</code> or <code>#gen-&lt;component&gt;-&lt;n&gt;</code>.
 			</p>
 			<p class="glyph-sheet-page__note">
 				<Mono variant="value">{glyphEntries.length} glyphs · {genEntries.length} generator variants of {components.length} components</Mono>
@@ -253,10 +282,10 @@ const kinds = (entries: Entry[]) =>
 								id={e.id}
 								wide={e.wide}
 								class="glyph-sheet__tile"
-								data-glyph-entry={e.kind === "G" ? "generator" : "glyph"}
+								data-glyph-entry={ENTRY_KIND[e.kind]}
 								data-kind={e.kind}
 							>
-								<e.Comp {...e.props} />
+								{e.text ? <e.Comp {...e.props}>{e.text}</e.Comp> : <e.Comp {...e.props} />}
 								<Flex as="span" slot="label" justifyContent="space-between" gap={2}>
 									<span class="glyph-sheet__name">
 										<Mono tone="primary">{g.key}·{no(i)}</Mono> {e.name}
@@ -295,17 +324,32 @@ const kinds = (entries: Entry[]) =>
 			<section class="glyph-sheet__family" aria-labelledby="readouts-h">
 				<RuleLabel role="heading" aria-level="2" no="L3" id="readouts-h">
 					Module · readouts
-					<Mono slot="meta" variant="text">thin numeral + caps label + glyph</Mono>
+					<Mono slot="meta" variant="text">the G readouts + a glyph</Mono>
 				</RuleLabel>
 				<div class="glyph-readouts">
-					<Stat variant="numeral" value="45" label="Phonic" />
-					<div class="glyph-readouts__dial">
+					<div class="glyph-readouts__cell">
+						<Stat variant="numeral" value="45" label="Phonic" />
+						<Chip variant="arrow" tone="accent">Replace</Chip>
+					</div>
+					<div class="glyph-readouts__cell glyph-readouts__cell--centre">
 						<Dial value={0.38} size={12} label="Freq" />
 						<Mono>Freq</Mono>
 					</div>
-					<div class="glyph-readouts__tagged">
+					<div class="glyph-readouts__cell">
 						<Stat variant="numeral" value="45" label="Baud" />
-						<Chip>Telematic</Chip>
+						<Chip tone="accent">Telematic</Chip>
+					</div>
+					<div class="glyph-readouts__cell glyph-readouts__cell--centre">
+						<ReadoutStack values={["32.0k", "44.1k", "96.0k"]} active={1} aria-label="Sample rate" />
+						<Mono>Rate</Mono>
+					</div>
+					<div class="glyph-readouts__cell">
+						<Formula value="z^-1" />
+						<Chip variant="arrow">Delay</Chip>
+					</div>
+					<div class="glyph-readouts__cell">
+						<NumberStream motion />
+						<Mono>Stream</Mono>
 					</div>
 				</div>
 			</section>
@@ -489,7 +533,8 @@ const kinds = (entries: Entry[]) =>
 		block-size: auto;
 	}
 
-	/* THE READOUTS PANEL — numerals, a dial, a boxed tag. */
+	/* THE READOUTS PANEL — the G readouts composed: numerals, a dial, the
+	 * tags, a stack, a formula, a stream. */
 	.glyph-readouts {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(calc(var(--space-12) * 2), 1fr));
@@ -500,18 +545,18 @@ const kinds = (entries: Entry[]) =>
 		border: 1px solid var(--art-edge);
 		border-radius: var(--border-radius-1);
 	}
-	.glyph-readouts__dial,
-	.glyph-readouts__tagged {
+	/* A cell: a readout over its caps label or tag, at the start; a mark or
+	 * a stack has its label centred under it. */
+	.glyph-readouts__cell {
 		display: grid;
-		gap: var(--space-2);
+		gap: var(--space-3);
 		justify-items: start;
 	}
-	/* The dial's caps label centred under the mark, the pair at the start. */
-	.glyph-readouts__dial {
-		justify-self: start;
+	.glyph-readouts__cell--centre {
 		justify-items: center;
+		justify-self: start;
 	}
-	.glyph-readouts__dial :global(.ds-glyph) {
+	.glyph-readouts__cell :global(.ds-glyph) {
 		color: var(--text-primary);
 	}
 

@@ -77,7 +77,7 @@ such rules off DS elements (`h2:where(:not(.ds-heading))`, global.css).
 every artwork on both pages. Open it instead of guessing a prop; this doc
 deliberately does not duplicate per-component API tables.
 
-**Components available (64):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (67):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Pill`, `Chip`, `Anchor`, `List`, `ListItem`, `Icon`,
 `VisuallyHidden`, `WidgetGrid`, `Widget`, `WidgetEmpty`, `HitArea` — the
@@ -87,13 +87,15 @@ instrument UI (next section): `Mono`, `Figure`, `Stat`, `StatStrip`,
 `TileGrid`, `Tile`, `Faces`, `Face` — the reading UI (the section after it):
 `PostList`, `PostGroup`, `PostRow`, `Prose`, `Blockquote`, `Fig`, `Index`,
 `IndexRow`, `Quilt`, `QuiltCell`, `QuiltPanel`, `SearchBar` — the art:
-`ArtFrame`, and the micrographics `Glyph`, `GlyphTile` — and the catalogue's
+`ArtFrame`, the micrographics `Glyph`, `GlyphTile`, and their readouts
+`ReadoutStack`, `Formula`, `NumberStream` — and the catalogue's
 tooling: `Knobs`, `KnobGroup`, `Knob`, `ThemePage`.
 
 **Client helpers** (`@whois/design-system/lib/*`, plain TS, no DOM at import):
 `breakpoints` (`WIDGET_COMPACT_MQ`, `WIDGET_WIDE_MQ`), `faces` (`showFace`,
 `shownFace`), `keys` (`stepFromKey`), `lifecycle` (`onPage`), `bar-graph`
-(`markBar`, `barsOf`). See *Widget grid* below.
+(`markBar`, `barsOf`), `readouts` (`parseFormula`, `spokenFormula`,
+`numberStream` — the readouts' pure parts). See *Widget grid* below.
 
 ## The decision gate
 
@@ -248,7 +250,12 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   `aria-pressed="true"` — and fills it with the ink. `variant="tab"` is the
   same caps with NO box — a text tab, the tertiary ink at rest, selected the
   ink over a 1px accent underline — and `count` a small superscript figure
-  after the label (the search bar's quick filters).
+  after the label (the search bar's quick filters). The readout TAGS (the
+  micrographics' panels): `tone="accent"` draws the box's edge and caps in
+  the accent (TELEMATIC), and `variant="arrow"` is a FILLED tag cut to a
+  right-pointing chevron by clip-path (a border cannot follow the cut) —
+  the ink with the page colour on it, or the accent with `--on-accent`
+  under `tone="accent"` (REPLACE). Both are static tags.
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
   = pill button; `start-icon`/`end-icon` slots. `IconButton` — `secondary`
   (default, a wash in a hairline) / `outline` (the hairline alone),
@@ -720,7 +727,8 @@ generator in tiles, captioned `<family>·NN name` and marked R (recipe), H
 and a readouts panel; one tile is `#glyph-<name>` or
 `#gen-<component>-<n>`. The families: **A** waves · **B** curves · **C**
 instruments · **D** routing · **E** fields · **F** controls · **H** iso
-parts (a glyph file's family is the sheet's `FAMILY` table; unlisted is F).
+parts — and **G** readouts, the HTML text below, marked T (a glyph file's
+family is the sheet's `FAMILY` table; unlisted is F).
 The catalogue's "Glyphs" section shows the inline mark, the size scale, the
 tiles on both pages, one generator per family, and links to the sheet.
 
@@ -934,9 +942,40 @@ DS components and tokens: the **signal chain** (`Dial` → the `amp` glyph
 with a `readout` "34" → an `Envelope` in stacked tiles → a `Selector`,
 joined by the `junction` glyph, caps labels SPEED / AMOUNT / DEST / P.DEST
 as tile labels) and the **readouts panel** (`Stat variant="numeral"` for
-the caps label and thin numeral, a labelled `Dial`, a `Chip` as the boxed
-tag) are on the sheet. Text is never inside the SVG. When one is needed in
+the caps label and thin numeral, a labelled `Dial`, the G readouts and
+Chip's tags) are on the sheet. Text is never inside the SVG. When one is needed in
 a second place it becomes a component (rule 4).
+
+### G — readouts: the text beside a mark
+
+The synth panel pairs its marks with small typographic readouts. They are
+HTML text (never inside an SVG) that sits centred in a `GlyphTile`'s cap
+where a mark would, or beside one in a panel. The gate first: the label
+and thin numeral pair ("PHONIC 45") is `Stat variant="numeral"`, and the
+boxed and arrow tags are `Chip`'s `tone="accent"` / `variant="arrow"`; three
+had no component and are new (`styles/readout-stack.css`, `formula.css`,
+`number-stream.css`; the pure parts in `lib/readouts.ts`, tested by
+`readouts.test.ts`). Their site use is the micrographic migration's tiles.
+
+- `ReadoutStack` — `values`, `active` (an index, clamped): a list, the
+  emphasised value `aria-current="true"` and drawn off that attribute in
+  the thin numeral (`--font-display` at `--font-size-6`), the rest the
+  label voice in the tertiary ink (the sample-rate tile: 32.0k / **44.1k**
+  / 96.0k). Name it with `aria-label`.
+- `Formula` — `value` in a tiny syntax (`z^-1`, `x^3`, `f_c`, `x^{n+1}`:
+  `^` raises and `_` lowers the next run, a `{…}` group or a sign and
+  letters/digits; a hyphen is a minus), drawn in the thin numeral at
+  `--font-size-6` with real `<sup>`/`<sub>` in the label face; the drawing
+  is aria-hidden and a visually hidden twin says `label`, or the formula
+  spoken ("z to the minus 1").
+- `NumberStream` — `seed` (7), `rows` 1–8 (2), `digits` 1–16 (10): rows of
+  digits in the label voice, tabular, the same for the same seed.
+  aria-hidden unless it has a `label` (then `role="img"`). `motion` steps
+  the rows up one line at a time, a seamless loop (the rows drawn twice) of
+  `--duration-loop` per two rows — the art's clock and its gating: paused
+  at rest, running under the pointer, in a hovered tile or link, with
+  `play` (`data-art-play`) on itself or any ancestor; `0s`, so still,
+  under reduced motion.
 
 ### Adding one — checklists
 

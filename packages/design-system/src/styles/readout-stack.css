@@ -1,0 +1,31 @@
+/* ReadoutStack — a column of values, one emphasised. The rest are the label
+ * voice (Mondwest Regular at the label step, tabular) in the tertiary ink;
+ * the emphasised one — read off aria-current — is the thin numeral (the
+ * display role) a few steps up, in the ink. Centred: it is a tile's
+ * readout, and the lit value sits on the stack's axis. */
+.ds-readout-stack {
+	display: grid;
+	justify-items: center;
+	gap: var(--space-1);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-family: var(--voice-mono-family);
+	font-size: var(--voice-mono-size);
+	font-weight: var(--font-weight-400);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: var(--tracking-mono);
+	line-height: 1;
+	color: var(--text-tertiary);
+}
+.ds-readout-stack__value {
+	margin: 0;
+	white-space: nowrap;
+}
+.ds-readout-stack__value[aria-current="true"] {
+	font-family: var(--font-display);
+	font-weight: var(--font-display-weight);
+	font-size: var(--font-size-6);
+	letter-spacing: var(--tracking-heading);
+	color: var(--text-primary);
+}

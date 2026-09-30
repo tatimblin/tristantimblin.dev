@@ -24,6 +24,19 @@
 //
 //   <Chip variant="tab" as="a" href="/txt?q=projects" count={1}>projects</Chip>
 //
+// Two TAGS for the micrographic readouts (the synth panel's): `tone="accent"`
+// draws the box's edge and caps in the accent — TELEMATIC, the one flagged
+// word on a panel — and `variant="arrow"` is a filled tag cut to a
+// right-pointing chevron (clip-path; a border cannot follow the cut, so it
+// is a fill): the ink with the page colour on it, or with `tone="accent"`
+// the accent with --on-accent — REPLACE, a label that says where a thing
+// goes. Both are static tags, not controls. Site use: the micrographic
+// migration's labelled tiles and readout panels.
+//
+//   <Chip tone="accent">telematic</Chip>
+//   <Chip variant="arrow">replace</Chip>
+//   <Chip variant="arrow" tone="accent">replace</Chip>
+//
 // `class` merges; everything else passes through.
 import { cx } from "../lib/cx";
 
@@ -31,15 +44,18 @@ interface Props {
 	as?: string;
 	/** md (default) is the control step, --space-5 tall; sm is the key hint's. */
 	size?: "sm" | "md";
-	/** box (default): the hairline box; tab: no box, an accent underline when selected. */
-	variant?: "box" | "tab";
+	/** box (default): the hairline box; tab: no box, an accent underline when
+	 *  selected; arrow: a filled tag cut to a right-pointing chevron. */
+	variant?: "box" | "tab" | "arrow";
+	/** accent: the box's edge and caps, or the arrow's fill, in the accent. */
+	tone?: "accent";
 	/** A small superscript figure after the label. */
 	count?: string | number;
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "span", size = "md", variant = "box", count, class: className, ...rest } = Astro.props;
+const { as = "span", size = "md", variant = "box", tone, count, class: className, ...rest } = Astro.props;
 const Tag = as as any;
 ---
 
@@ -52,6 +68,7 @@ const Tag = as as any;
 		(as === "button" || as === "a") && "ds-control",
 		size !== "md" && `ds-chip--size-${size}`,
 		variant !== "box" && `ds-chip--variant-${variant}`,
+		tone && `ds-chip--tone-${tone}`,
 		className,
 	)}
 	{...rest}><slot />{count != null && <sup class="ds-chip__count">{count}</sup>}</Tag>

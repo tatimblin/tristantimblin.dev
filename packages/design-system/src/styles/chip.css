@@ -92,3 +92,37 @@
 	letter-spacing: 0;
 	color: var(--text-tertiary);
 }
+
+/* THE READOUT TAGS (the micrographics' panels).
+ *
+ * tone: accent — the box's edge and caps in the accent: the one flagged word
+   on a panel (TELEMATIC). */
+.ds-chip--tone-accent {
+	--chip-border: var(--accent);
+	--chip-color: var(--accent);
+}
+
+/* variant: arrow — a FILLED tag cut to a right-pointing chevron (REPLACE):
+   the point is --chip-arrow deep (half the box's height makes a right
+   angle), the padding on that side grows by it so the caps clear the cut.
+   A clip-path cuts a border too, so the tag is a fill — the ink with the
+   page colour on it, or (tone: accent) the accent with --on-accent. */
+.ds-chip--variant-arrow {
+	--chip-arrow: calc(var(--space-5) / 2);
+	--chip-background: var(--text-primary);
+	--chip-color: var(--background);
+	--chip-border: transparent;
+	padding-inline-end: calc(var(--space-2) + var(--chip-arrow));
+	clip-path: polygon(
+		0 0,
+		calc(100% - var(--chip-arrow)) 0,
+		100% 50%,
+		calc(100% - var(--chip-arrow)) 100%,
+		0 100%
+	);
+}
+.ds-chip--variant-arrow.ds-chip--tone-accent {
+	--chip-background: var(--accent);
+	--chip-color: var(--on-accent);
+	--chip-border: transparent;
+}

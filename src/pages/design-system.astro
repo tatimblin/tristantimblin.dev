@@ -64,6 +64,9 @@ import Filter from "@whois/design-system/Filter";
 import Gauge from "@whois/design-system/Gauge";
 import Fan from "@whois/design-system/Fan";
 import Matrix from "@whois/design-system/Matrix";
+import ReadoutStack from "@whois/design-system/ReadoutStack";
+import Formula from "@whois/design-system/Formula";
+import NumberStream from "@whois/design-system/NumberStream";
 // The quilt: the grid, its cells, the panel, and the search bar above it.
 import Quilt from "@whois/design-system/Quilt";
 import QuiltCell from "@whois/design-system/QuiltCell";
@@ -1015,7 +1018,7 @@ const faces = [
 				<code>variant="tab"</code> is the same caps with no box — a text tab, the
 				tertiary ink at rest, selected the ink over an accent underline — and
 				<code>count</code> a small superscript figure after the label: the search
-				bar's quick filters.
+				bar's quick filters. The readout TAGS (see <a href="#readouts">Readouts</a>): <code>tone="accent"</code> draws the edge and caps in the accent, and <code>variant="arrow"</code> is a filled tag cut to a chevron — the ink, or the accent with <code>tone="accent"</code>.
 			</p>
 			<Flex gap={2} wrap="wrap" alignItems="center">
 				<Chip>projects</Chip>
@@ -1034,6 +1037,11 @@ const faces = [
 				))}
 				<Chip variant="tab" as="button" type="button" aria-pressed="true">on</Chip>
 				<Chip variant="tab" as="button" type="button">off</Chip>
+			</Flex>
+			<Flex gap={2} wrap="wrap" alignItems="center" data-chip-tags>
+				<Chip tone="accent">telematic</Chip>
+				<Chip variant="arrow">replace</Chip>
+				<Chip variant="arrow" tone="accent">replace</Chip>
 			</Flex>
 		</section>
 
@@ -1717,6 +1725,61 @@ assertions:
 				<GlyphTile label="D · fan"><Fan /></GlyphTile>
 				<GlyphTile label="E · matrix"><Matrix hot={[2, 2]} /></GlyphTile>
 			</Grid>
+		</section>
+
+		<section class="ds-demo__section" id="readouts">
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Readouts — the text beside a mark</Heading>
+			<p class="ds-demo__note">
+				The synth panel pairs its marks with small typographic readouts, and they are HTML text, never inside an SVG (family G on the <Anchor href="/design-system/glyphs/#family-G">glyph sheet</Anchor>). Label and thin numeral is <code>Stat variant="numeral"</code>; the boxed and arrow tags are <code>Chip</code>'s <code>tone="accent"</code> and <code>variant="arrow"</code>. The three below are new: each sits centred in a <code>GlyphTile</code>'s cap where a glyph would.
+			</p>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">ReadoutStack — values, one emphasised</h2>
+			<p class="ds-demo__note">
+				<code>&lt;ReadoutStack values active&gt;</code>: a list, the emphasised value <code>aria-current="true"</code> — drawn in the thin numeral (<code>--font-display</code> at <code>--font-size-6</code>), the rest the label voice in the tertiary ink. <code>active</code> is an index, clamped. Name it with <code>aria-label</code>.
+			</p>
+			<Flex gap={8} wrap="wrap" alignItems="center" data-readout-stacks>
+				<ReadoutStack values={["32.0k", "44.1k", "96.0k"]} active={1} aria-label="Sample rate" />
+				<ReadoutStack values={["1/4", "1/8", "1/16"]} active={0} aria-label="Division" />
+				<ReadoutStack values={["lo", "mid", "hi", "air"]} active={3} aria-label="Band" />
+			</Flex>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Formula — real superscripts and subscripts</h2>
+			<p class="ds-demo__note">
+				<code>&lt;Formula value&gt;</code>: <code>^</code> raises and <code>_</code> lowers the next run (a <code>{"{…}"}</code> group, or a sign and letters or digits); a hyphen is a minus. The drawing is aria-hidden and a visually hidden twin says <code>label</code>, or the formula spoken — "z to the minus 1".
+			</p>
+			<Flex gap={8} wrap="wrap" alignItems="baseline" data-formulas>
+				<Formula value="z^-1" />
+				<Formula value="x^3" />
+				<Formula value="f_c" label="cutoff frequency" />
+				<Formula value="x_n^{2}" />
+				<Formula value="1/(1-z^-1)" />
+			</Flex>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">NumberStream — rows of digits from a seed</h2>
+			<p class="ds-demo__note">
+				<code>&lt;NumberStream seed rows digits&gt;</code>: the label voice, tabular, the same digits for the same seed. Decorative (aria-hidden) unless it has a <code>label</code>. <code>motion</code> steps the rows up on the art's clock and gating — paused at rest, running under the pointer or with <code>play</code>; still under reduced motion.
+			</p>
+			<Flex gap={8} wrap="wrap" alignItems="start" data-number-streams>
+				<NumberStream />
+				<NumberStream seed={42} rows={4} digits={8} />
+				<NumberStream motion play rows={3} label="Packet counter" />
+			</Flex>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">In tiles, on both pages</h2>
+			<div class="ds-demo__art-themes">
+				{(["light", "dark"] as const).map((t) => (
+					<ThemePage theme={t}>
+						<Grid templateColumns="repeat(3, minmax(0, 1fr))" gap={4} data-readout-tiles={t}>
+							<GlyphTile label="Rate"><ReadoutStack values={["32.0k", "44.1k", "96.0k"]} active={1} aria-label="Sample rate" /></GlyphTile>
+							<GlyphTile label="Delay"><Formula value="z^-1" /></GlyphTile>
+							<GlyphTile label="Stream"><NumberStream motion /></GlyphTile>
+							<GlyphTile label="Mode"><Chip tone="accent">Telematic</Chip></GlyphTile>
+							<GlyphTile label="Action"><Chip variant="arrow" tone="accent">Replace</Chip></GlyphTile>
+							<GlyphTile label="Baud"><Stat variant="numeral" value="45" label="Baud" /></GlyphTile>
+						</Grid>
+					</ThemePage>
+				))}
+			</div>
 		</section>
 
 		{/* QUILT ---------------------------------------------------------- */}
