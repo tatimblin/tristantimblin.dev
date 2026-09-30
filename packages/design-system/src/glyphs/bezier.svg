@@ -1,0 +1,10 @@
+<!-- baked from recipes/bezier.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <line x1="7" y1="25" x2="17" y2="6" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <line x1="41" y1="7" x2="31" y2="26" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 7 25 C 17 6 31 26 41 7" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="5.5" y="23.5" width="3" height="3" fill="currentColor" />
+  <rect x="39.5" y="5.5" width="3" height="3" fill="currentColor" />
+  <circle cx="17" cy="6" r="1.5" fill="var(--art-green)" />
+  <circle cx="31" cy="26" r="1.5" fill="var(--art-green)" />
+</svg>

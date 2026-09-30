@@ -1,0 +1,6 @@
+<!-- baked from recipes/transient.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <path d="M 14 16 L 18.4 4 L 19.5 6.27 L 21.15 8.9 L 22.8 10.82 L 25 12.6 L 27.2 13.76 L 29.4 14.53 L 32.15 15.13 L 36 15.58 M 14 16 L 18.4 28 L 19.5 25.73 L 21.15 23.1 L 22.8 21.18 L 25 19.4 L 27.2 18.24 L 29.4 17.47 L 32.15 16.87 L 36 16.42" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="4,16 44,16" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0.01 3.99" />
+  <path d="M 4 16 L 14 16 L 14 16 L 14.85 16.97 L 15.69 12.05 L 16.54 21.01 L 17.38 10.11 L 18.23 22.73 L 19.08 9.54 L 19.92 20.53 L 20.77 11.01 L 21.62 20.79 L 22.46 13.17 L 23.31 18.18 L 24.15 12.98 L 25 18.17 L 25.85 14.6 L 26.69 17.39 L 27.54 14.89 L 28.38 17.15 L 29.23 15.19 L 30.08 17.11 L 30.92 15.44 L 31.77 16.76 L 32.62 15.62 L 33.46 16.31 L 34.31 15.73 L 35.15 16.26 L 36 15.73 L 44 16" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

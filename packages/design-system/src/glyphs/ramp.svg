@@ -1,0 +1,5 @@
+<!-- baked from recipes/ramp.ts — edit the recipe -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
+  <polyline points="4,25 44,25" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0.01 3.99" />
+  <polygon points="9,25 39,7 39,25" fill="none" stroke="var(--art-lavender)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
