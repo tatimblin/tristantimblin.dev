@@ -62,6 +62,7 @@ import GlyphTile from "@whois/design-system/GlyphTile";
 import Wave from "@whois/design-system/Wave";
 import Filter from "@whois/design-system/Filter";
 import Gauge from "@whois/design-system/Gauge";
+import Dial from "@whois/design-system/Dial";
 import Fan from "@whois/design-system/Fan";
 import Matrix from "@whois/design-system/Matrix";
 import ReadoutStack from "@whois/design-system/ReadoutStack";
@@ -1806,6 +1807,26 @@ assertions:
 							<SceneLabel x={20} y={82} size="lg">010</SceneLabel>
 							<SceneLabel x={80} y={82} align="end" size="lg">P.45</SceneLabel>
 							<SceneLabel x={88} y={92} align="end">stop 801.000 MHz</SceneLabel>
+						</Scene>
+					</ThemePage>
+				))}
+			</div>
+			{/* The exploded phone — the constructed route (tools/scenes/phone/). */}
+			<p class="ds-demo__note">
+				The constructed route: <code>phone</code> is the family-H iso part recipes run again with the scene kit — each placed by <code>part(k, recipe, {"{"} at, scale, recolour {"}"})</code> (<code>scenes/parts.ts</code>) along one explosion axis on the plate — with the shells recoloured to the ink so the scene keeps three colours. The outer thirds are the readouts'. Hover it: the axis's dashes march.
+			</p>
+			<div class="ds-demo__art-themes">
+				{(["light", "dark"] as const).map((t) => (
+					<ThemePage theme={t}>
+						<Scene name="phone" label={`A telephone exploded into its parts, on the ${t} page`} glow data-scene-demo={`phone-${t}`}>
+							<SceneLabel x={4} y={7}>Tone</SceneLabel>
+							<SceneLabel x={4} y={14}><Dial value={0.62} ticks={7} paint="red" size={8} /></SceneLabel>
+							<SceneLabel x={4} y={56}>Phonic</SceneLabel>
+							<SceneLabel x={4} y={63} variant="numeral" size="xl">45</SceneLabel>
+							<SceneLabel x={96} y={7} align="end">Baud</SceneLabel>
+							<SceneLabel x={96} y={14} align="end" size="lg">45</SceneLabel>
+							<SceneLabel x={96} y={27} align="end"><Chip tone="accent">Telematic</Chip></SceneLabel>
+							<SceneLabel x={96} y={64} align="end" variant="numeral" size="xl">45</SceneLabel>
 						</Scene>
 					</ThemePage>
 				))}

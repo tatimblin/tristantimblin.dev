@@ -10,6 +10,8 @@
     "./glyphs": "./src/glyphs/glyphs.ts",
     "./scenes": "./src/scenes/scenes.ts",
     "./scenes/recipe": "./src/scenes/recipe.ts",
+    "./scenes/parts": "./src/scenes/parts.ts",
+    "./glyphs/recipes/*": "./src/glyphs/recipes/*.ts",
     "./lib/micro": "./src/lib/micro/index.ts",
     "./lib/*": "./src/lib/*.ts",
     "./art/*": "./src/art/*",

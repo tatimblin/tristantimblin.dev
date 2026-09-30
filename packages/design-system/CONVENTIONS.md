@@ -1105,10 +1105,34 @@ SVG; this is where it goes.
 
 | Route | For | How | Status |
 | --- | --- | --- | --- |
-| **Constructed** | an iso platform, a HUD road, the exploded phone, radar chrome | a source composing the kit's primitives, `iso.ts`, `vanishingGrid` — no data | the primitives are there; no scene yet |
+| **Constructed** | an iso platform, a HUD road, the exploded phone, radar chrome | a source composing the kit's primitives, `iso.ts`, `vanishingGrid` and the glyph recipes (`part()`) — no data | **`phone`** (`/design-system#scenes`) |
 | **Data** | a globe, maps, terrain, ground tracks | `d3-geo` over Natural Earth (`world-atlas` 110m), a graticule, coordinates to a tenth | **`globe`** (`/design-system#scenes`) |
 | **3D → line** | busts, bodies, objects | a `.glb` read directly, vertices welded, plane slices and silhouette edges, a z-buffer for hidden lines, orthographic to the panel | spiked, not ported |
 | **Hand vector** | characters with personality | Figma/Illustrator with a placeholder swatch set, an import that swaps each hex for its `var(--art-*)` token and validates | not spiked |
+
+**The constructed route, implemented: `phone`** (`tools/scenes/phone/`).
+A constructed scene composes what the package already draws. The iso
+parts are glyph recipes (family H, `src/glyphs/recipes/`), all in the
+kit's one true-30° projection, so an exploded assembly is those recipes
+run again, stacked along one axis (usually z, up the page) so their edges
+stay parallel — never their geometry copied into the scene. **`part(k,
+recipe, { at, scale?, recolour?, weight? })`** (`src/scenes/parts.ts`,
+`import { part } from "@whois/design-system/scenes/parts"`; the recipes
+import as `@whois/design-system/glyphs/recipes/<name>`) is the adapter: it
+runs `recipe.draw` with a kit of the scene's target, so the paints come
+out as the scene's (`--art-*`, `--art-ink-2` for dim, art's dashes and
+classes), and wraps the result in one `<g transform="translate scale">`
+with the tile's centre at `at`. It carries the two things that differ
+from a glyph: a recipe's **unmarked stroke** keeps the glyph's `line`
+(1.5) rather than dropping to the scene kit's `hair`, so an outline stays
+heavier than its detail; and **`recolour`** maps a paint for that part —
+the H parts use all four colours between them and a scene may use three,
+so the phone draws its case (shells, handset) in the ink and lets the
+internals carry green, red and blue. The rest — the explosion axis, the
+wires to square terminals — is the kit at plate coordinates, and the
+text is `SceneLabel`s over the outer thirds. The source's hash covers
+only its own directory, so an edited recipe is caught by `scenes:check`
+(which re-bakes), not the registry test.
 
 **Credits.** A scene drawn from a licensed source — a map, a scan — says
 so: `credit` in the recipe (written into the header, shown by `Scene`
