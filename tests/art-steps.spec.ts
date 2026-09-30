@@ -153,16 +153,15 @@ test.describe("steps — the mega desk", () => {
 });
 
 /**
- * Tahoe Mountain Hair: the water cycle in two insets, five beats —
- * evaporate, condense, snow, melt, collect — each lighting its phase disc
- * and ringing it while current. The first beat has two now-marks (its
- * ring and the sun's rays turning blue); the last has the ripple where the
- * creek meets the lake. The still is the whole cycle.
+ * Tahoe Mountain Hair: the module sheet's water cycle, five beats round
+ * the orbit — cloud, snow, melt, lake, vapour — each lighting its arc and
+ * ringing its stage (the icon in cyan) while current. No ripple. The still
+ * is the whole cycle lit, vapour ringed.
  */
 test.describe("steps — the water cycle", () => {
 	const cell = `[data-cell="post"]:has(a[href="/txt/tahoe-mountain-hair/"])`;
-	/** The now-marks in document order: the sun and beat 0's ring, then one ring per beat. */
-	const NOW_BEAT = [0, 0, 1, 2, 3, 4];
+	/** The now-marks in document order: one ring per beat. */
+	const NOW_BEAT = [0, 1, 2, 3, 4];
 	const cycled = (s: State) => {
 		expect(s.beats, "every beat lit").toEqual(Array(5).fill(1));
 		expect(s.now, "only the last beat's ring").toEqual(NOW_BEAT.map((b) => (b === 4 ? 1 : 0)));
@@ -175,7 +174,7 @@ test.describe("steps — the water cycle", () => {
 		await expect(group).toHaveAttribute("data-beats", "5");
 		expect(await group.locator(":scope > [data-beat]").count()).toBe(5);
 		expect(await group.locator("[data-now]").count()).toBe(NOW_BEAT.length);
-		expect(await group.locator("[data-ripple]").count()).toBe(1);
+		expect(await group.locator("[data-ripple]").count()).toBe(0);
 
 		const rest = await stateOf(page, cell);
 		expect(rest.play).toBe("paused");
