@@ -8,7 +8,9 @@
  *
  * The windshield's frame across the top, the road as a green one-point grid
  * running to a small blue skyline, the dash's edge with the console's step,
- * the gear knob (a rounded rect with its R) under it. Either side of the
+ * and in front of it all the STEERING WHEEL, cropped by the bottom edge the
+ * way a driver sees it: a bold rim, a hub, three flat spokes, a coral mark
+ * at the top of the rim. Either side of the
  * road, a needle dial for a signal — STEER in blue, BRAKE in red — and on
  * the dash, the signal row: three bars under a bracket, lit in each dial's
  * colour and the road's green for acceleration; the vents and a lamp on the
@@ -17,11 +19,15 @@
  * The motion is `steps`, three beats: the car reads its signals. Each beat
  * lights one signal's bar (it stays) and holds that moment as a now-mark —
  * the road's rows a third of a row nearer, the two needles where the
- * signals are. The still frame is the last beat: all three read.
+ * signals are, the wheel's spokes and mark turned a few degrees. The still
+ * frame is the last beat: all three read, the wheel straight.
  *
  * The road's rails are the kit's `vanishingGrid`, cut by one clipPath to
  * the band between the skyline and the dash; its rows are drawn per beat,
- * only where they fall inside that band.
+ * only where they fall inside that band and outside the wheel
+ * (`clipOutside` against the rim's silhouette). The rim and hub are
+ * round, so they are static, painted over the rails; only what shows the
+ * turn — the spokes and the mark — is drawn per beat.
  *
  *   bun run scenes:bake      → src/content/txt/why-i-joined-fisker.svg
  *
@@ -29,7 +35,7 @@
  */
 
 import skyline from "@whois/design-system/glyphs/recipes/skyline";
-import { type Kit, type Point, round } from "@whois/design-system/lib/micro";
+import { clipOutside, type Kit, type Point, polar, type Segment, segmentsD } from "@whois/design-system/lib/micro";
 import { part } from "@whois/design-system/scenes/parts";
 import { scene } from "@whois/design-system/scenes/recipe";
 
@@ -52,18 +58,42 @@ const DASH_LINE: Point[] = [
 	[330, DASH],
 ];
 
-/** The rows at `phase` (0…1 of a row): a perspective spacing, 1/(1 + i/2), only those inside the band. */
+// --- The wheel: in front of the dash, cropped by the plate's bottom edge -------------
+
+/** The wheel's centre, the rim's outer and inner radii, the hub's, and a spoke's half-width. */
+const W: Point = [160, 162];
+const [RIM, RIM_IN, HUB, SPOKE] = [50, 42, 12, 3.5];
+/** The spokes' directions on the dial (0 up): left, right, down. */
+const SPOKES = [-90, 90, 180];
+/** The wheel's turn at each beat, degrees: a little left, a little right, straight. */
+const TURN = [-8, 6, 0];
+/** The rim's silhouette, as a polygon: what stands behind it is cut outside it. */
+const RIM_HULL: Point[] = Array.from({ length: 48 }, (_, i) => polar(W[0], W[1], RIM + 0.5, (i * 360) / 48));
+
+/** A disc's outline as one subpath; two make a ring by the even-odd rule. */
+const circleD = ([x, y]: Point, r: number) => `M ${x - r} ${y} a ${r} ${r} 0 1 0 ${2 * r} 0 a ${r} ${r} 0 1 0 ${-2 * r} 0 Z`;
+
+/** The spokes at `turn` degrees — flat bars from the hub into the rim — and the coral mark at the rim's top. */
+function spokes(k: Kit, turn: number): string[] {
+	const bar = (a: number) => {
+		const [r0, r1] = [HUB - 2, RIM_IN + 1];
+		return k.polygon([polar(...polar(W[0], W[1], r0, a), SPOKE, a - 90), polar(...polar(W[0], W[1], r1, a), SPOKE, a - 90), polar(...polar(W[0], W[1], r1, a), SPOKE, a + 90), polar(...polar(W[0], W[1], r0, a), SPOKE, a + 90)], { paint: "none", fill: "ink" });
+	};
+	return [...SPOKES.map((a) => bar(a + turn)), k.band(W[0], W[1], RIM_IN, RIM, turn - 6, turn + 6, { paint: "red", cap: "butt" })];
+}
+
+/** The rows at `phase` (0…1 of a row): a perspective spacing, 1/(1 + i/2), only those inside the band, cut outside the wheel. */
 function rows(k: Kit, phase: number): string {
-	const d: string[] = [];
+	const segs: Segment[] = [];
 	for (let i = 0; i < 24; i++) {
 		const p = 1 / (1 + (i + phase) / 2);
 		const y = V[1] + ROAD_H * p;
 		if (y < FAR + 0.5) break;
 		if (y > DASH - STEP_H - 0.5) continue;
 		const h = (ROAD_W / 2) * p;
-		d.push(`M ${round(V[0] - h)} ${round(y)} H ${round(V[0] + h)}`);
+		segs.push([[V[0] - h, y], [V[0] + h, y]]);
 	}
-	return k.path(d.join(" "), { paint: "green", weight: "hair", cap: "butt" });
+	return k.path(segmentsD(clipOutside(segs, RIM_HULL)), { paint: "green", weight: "hair", cap: "butt" });
 }
 
 // --- The dials: a signal each, either side of the road ------------------------------
@@ -103,16 +133,8 @@ export default scene({
 		const sc = 1.7;
 		out.push(part(k, skyline, { at: [V[0], FAR - 9 * sc], scale: sc, weight: "hair" }));
 
-		// The dash: its edge with the console's step, and the gear knob under it — a rounded head with its R, the stick, the boot to the floor.
-		const [kx, ky] = [V[0], DASH + 7];
-		out.push(
-			k.polyline(DASH_LINE, { paint: "ink", weight: "line" }),
-			k.roundRect(kx - 8, ky, 16, 16, 5, { paint: "ink", weight: "line" }),
-			k.text(kx, ky + 11.3, "R", { role: "title", size: 9, anchor: "middle", paint: "red" }),
-			k.line(kx, ky + 16, kx, ky + 26, { paint: "ink", weight: "line" }),
-			k.ring(kx, ky + 26, 3, { paint: "ink", weight: "hair" }),
-			k.path(`M ${kx - 22} 190 C ${kx - 15} ${ky + 38} ${kx - 10} ${ky + 31} ${kx - 9} ${ky + 31} H ${kx + 9} C ${kx + 10} ${ky + 31} ${kx + 15} ${ky + 38} ${kx + 22} 190`, { paint: "dim", weight: "hair" }),
-		);
+		// The dash: its edge with the console's step.
+		out.push(k.polyline(DASH_LINE, { paint: "ink", weight: "line" }));
 
 		// The dials: the signal's name over its ticks and a dim track, the needle added per beat.
 		for (const { at: [x, y], name, paint } of DIALS) {
@@ -131,17 +153,21 @@ export default scene({
 
 		// The dash's right: the vents and a lamp.
 		{
-			const x0 = V[0] + STEP_W + 30;
-			out.push(k.ticksLinear(x0, DASH + 12, x0 + 36, DASH + 12, 5, 11, { paint: "dim", weight: "hair" }), k.ring(290, DASH + 17.5, 4, { paint: "dim", weight: "hair" }));
+			const x0 = V[0] + STEP_W + 42;
+			out.push(k.ticksLinear(x0, DASH + 12, x0 + 36, DASH + 12, 5, 11, { paint: "dim", weight: "hair" }), k.ring(296, DASH + 17.5, 4, { paint: "dim", weight: "hair" }));
 		}
 
-		// The read: a bar lit per beat (it stays); the road a third of a row nearer and the needles, current while it is.
+		// The wheel in front of it all: the rim a bold ring, the hub a disc — round, so still.
+		out.push(k.path(`${circleD(W, RIM)} ${circleD(W, RIM_IN)}`, { paint: "none", fill: "ink", evenodd: true }), k.ring(W[0], W[1], HUB, { paint: "none", fill: "ink" }));
+
+		// The read: a bar lit per beat (it stays); the road a third of a row nearer, the needles and the wheel's turn, current while it is.
 		const beats = SIGNALS.map((paint, i) => [
 			bar(k, i, paint),
 			k.group(
 				[
 					rows(k, ((2 - i) * 1) / 3),
 					...DIALS.map(({ at: [x, y], paint, read }) => k.needle(x, y, DR - 5, read[i], { paint, weight: "line", hub: 2.2 })),
+					...spokes(k, TURN[i]),
 				],
 				{ mark: "now" },
 			),

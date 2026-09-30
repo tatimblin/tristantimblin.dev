@@ -217,8 +217,10 @@ test.describe("steps — the water cycle", () => {
 /**
  * Your Car Knows You're Getting Sick: the driving HUD reads its signals,
  * three beats — steering, braking, acceleration — each lighting its bar on
- * the dash and holding the road's rows and the two dials' needles at that
- * moment (one now-mark a beat, no ripple). The still is all three read.
+ * the dash and holding the road's rows, the two dials' needles and the
+ * wheel's turn (its spokes and coral mark at −8°, 6°, 0°) at that moment —
+ * one now-mark a beat, no ripple. The still is all three read, the wheel
+ * straight.
  */
 test.describe("steps — the driver's signals", () => {
 	const cell = `[data-cell="post"]:has(a[href="/txt/why-i-joined-fisker/"])`;
@@ -239,7 +241,7 @@ test.describe("steps — the driver's signals", () => {
 
 		await page.locator(`${cell} a`).first().hover();
 		await expect.poll(async () => (await stateOf(page, cell)).play).toBe("running");
-		// Mid-read: the first bar has lit, one road-and-needles alone, and not yet the last.
+		// Mid-read: the first bar has lit, one road-needles-and-wheel alone, and not yet the last.
 		await expect.poll(async () => (await stateOf(page, cell)).clock, { timeout: 5000 }).toBeGreaterThan(1.2 / 5);
 		const mid = await stateOf(page, cell);
 		expect(mid.clock).toBeLessThan(2.4 / 5);
