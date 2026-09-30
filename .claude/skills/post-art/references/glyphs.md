@@ -150,7 +150,9 @@ red is `--art-coral`).
 | `isoRoundBox(x, y, w, d, h, c, {top, side})` | a box with rounded vertical edges (a shell, a board, a handset slab): top + body, no crease |
 | `isoCoil(x, y, r, h, turns, o)` | a standing spring, one path of 2:1 loops |
 | `isoPlane(x, y, w, d, {grid})` / `vanishingGrid(vx, vy, w, h, rows, cols, o)` | a ground rhombus (with a grid) / a one-point perspective grid |
-| `convexHull(points)` / `edges(points)` / `clipOutside(segs, poly)` / `segmentsD(segs)` | hidden lines, from `lib/micro`: cut what stands behind a solid outside its convex silhouette (a scene can't paint the plate over it) |
+| `convexHull(points)` / `edges(points)` / `chain(points)` / `clipOutside(segs, poly)` / `segmentsD(segs)` | hidden lines, from `lib/micro`: cut what stands behind a solid outside its convex silhouette (a scene can't paint the plate over it) |
+| `clipOutsidePolygon(segs, poly)` / `insidePolygon(p, poly)` | the same cut for any simple polygon, convex or not (a range behind a ridge); a point-in-polygon test, the outline counting as inside |
+| `smoothD(points, closed?)` | a Catmull-Rom curve through points, from `lib/micro`; `closed` shuts it with no corner at the join (a lake, a forest's edge) |
 | `group(children, {motion, speed, transform, mark})` | a group, the one motion; `mark: "now"` inside a steps beat |
 | `steps(beats, {speed, transform})` | the `steps` motion: one `<g data-beat>` per entry (2–8); `{ mark: "ripple" \| "now" }` on a shape inside a beat |
 | helpers: `polar(cx, cy, r, angle)`, `onArc`, `spread`, `snap`, `round`, `iso(x, y, z, at?)`, `ISO_X` / `ISO_Y` / `ISO_Z` | geometry, from `lib/micro` |

@@ -86,20 +86,23 @@ export function lineD(points: readonly Point[]): string {
 
 /**
  * The `d` of a smooth curve through `points` (Catmull-Rom, as cubics), the
- * ends' tangents taken from their one neighbour.
+ * ends' tangents taken from their one neighbour. `closed` runs it on from
+ * the last point back to the first and shuts it (`Z`), every point's
+ * tangent from both its neighbours round the loop — a lake's shore, a
+ * forest's edge — so the join has no corner.
  */
-export function smoothD(points: readonly Point[]): string {
-	if (points.length < 3) return lineD(points);
+export function smoothD(points: readonly Point[], closed = false): string {
+	const n = points.length;
+	if (n < 3) return closed && n ? `${lineD(points)} Z` : lineD(points);
+	const at = (i: number): Point => (closed ? points[(i + n) % n] : points[Math.max(0, Math.min(n - 1, i))]);
 	let d = `M ${xy(points[0])}`;
-	for (let i = 0; i < points.length - 1; i++) {
-		const p0 = points[Math.max(0, i - 1)];
-		const [p1, p2] = [points[i], points[i + 1]];
-		const p3 = points[Math.min(points.length - 1, i + 2)];
+	for (let i = 0; i < (closed ? n : n - 1); i++) {
+		const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
 		const c1: Point = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
 		const c2: Point = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
 		d += ` C ${xy(c1)} ${xy(c2)} ${xy(p2)}`;
 	}
-	return d;
+	return closed ? `${d} Z` : d;
 }
 
 /**

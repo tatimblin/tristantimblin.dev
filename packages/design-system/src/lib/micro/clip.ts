@@ -5,7 +5,9 @@
  * the lines behind are split into segments and the parts inside the
  * front solid's silhouette dropped. A slab's, a box's or a prism's
  * silhouette is convex — the convex hull of its projected corners — so
- * the cut is Cyrus–Beck against that polygon.
+ * the cut is Cyrus–Beck against that polygon. A silhouette that is not
+ * convex — a mountain range, a notched outline — is cut by
+ * `clipOutsidePolygon`, which takes any simple polygon.
  *
  *   const top = convexHull(corners.map(([x, y, z]) => iso(x, y, z, at)));
  *   k.path(segmentsD(clipOutside(edges(footprint), top)), { dash: "dash" });
@@ -96,6 +98,84 @@ export function clipOutside(segs: readonly Segment[], poly: readonly Point[]): S
 	for (let i = 0; i < poly.length; i++) area += turn([0, 0], poly[i], poly[(i + 1) % poly.length]);
 	const sign = area > 0 ? 1 : -1;
 	return segs.flatMap((s) => outside(s, poly, sign));
+}
+
+/** How near a point must be to an edge to count as on it: a hundredth, the kit's rounding. */
+const ON = 0.01;
+
+/** Whether `p` lies on the segment `a`–`b`, to a hundredth. */
+function onEdge(p: Point, a: Point, b: Point): boolean {
+	const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+	const len2 = dx * dx + dy * dy;
+	const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2));
+	return Math.hypot(p[0] - (a[0] + dx * t), p[1] - (a[1] + dy * t)) <= ON;
+}
+
+/**
+ * Whether `p` is inside the simple polygon `poly` — any shape, convex or
+ * not, either winding (a ray cast: an odd number of edges crossed). A
+ * point on the outline, to a hundredth, counts as inside: the outline
+ * is the solid's, and what lies along it is hidden with it.
+ */
+export function insidePolygon(p: Point, poly: readonly Point[]): boolean {
+	if (poly.length < 3) return false;
+	let odd = false;
+	for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+		const [a, b] = [poly[j], poly[i]];
+		if (onEdge(p, a, b)) return true;
+		if (a[1] > p[1] !== b[1] > p[1] && p[0] < ((b[0] - a[0]) * (p[1] - a[1])) / (b[1] - a[1]) + a[0]) odd = !odd;
+	}
+	return odd;
+}
+
+/** The parts of one segment outside the simple polygon `poly`, in order along it. */
+function outsideAny(seg: Segment, poly: readonly Point[]): Segment[] {
+	const [a, b] = seg;
+	const d: Point = [b[0] - a[0], b[1] - a[1]];
+	// Every place the segment crosses or touches an edge; parallel edges add none (the midpoints below decide them).
+	const ts = [0, 1];
+	for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+		const [p, q] = [poly[j], poly[i]];
+		const e: Point = [q[0] - p[0], q[1] - p[1]];
+		const den = d[0] * e[1] - d[1] * e[0];
+		if (Math.abs(den) < 1e-12) continue;
+		const w: Point = [p[0] - a[0], p[1] - a[1]];
+		const t = (w[0] * e[1] - w[1] * e[0]) / den;
+		const u = (w[0] * d[1] - w[1] * d[0]) / den;
+		if (t > 0 && t < 1 && u >= 0 && u <= 1) ts.push(t);
+	}
+	ts.sort((x, y) => x - y);
+	const at = (t: number): Point => [a[0] + d[0] * t, a[1] + d[1] * t];
+	// Keep each piece whose middle is outside, joining neighbours kept either side of a mere touch.
+	const kept: Array<[number, number]> = [];
+	for (let i = 0; i + 1 < ts.length; i++) {
+		const [t0, t1] = [ts[i], ts[i + 1]];
+		if (t1 - t0 < EPS || insidePolygon(at((t0 + t1) / 2), poly)) continue;
+		const last = kept[kept.length - 1];
+		if (last && last[1] === t0) last[1] = t1;
+		else kept.push([t0, t1]);
+	}
+	return kept.map(([t0, t1]): Segment => (t0 === 0 && t1 === 1 ? seg : [t0 === 0 ? a : at(t0), t1 === 1 ? b : at(t1)]));
+}
+
+/**
+ * What of `segs` shows outside the simple polygon `poly` — convex or not:
+ * a mountain's ridge, a notched board, an L-shaped slab. Each segment is
+ * cut everywhere it crosses the outline and the pieces inside dropped, so
+ * one that dips behind a range and out again comes back in as many pieces
+ * as it shows. What runs along the outline is hidden with the solid (as
+ * `clipOutside` hides it). The polygon may run either way round; one of
+ * fewer than three corners hides nothing. On a convex polygon it cuts as
+ * `clipOutside` does — that one is the cheaper for a hull.
+ */
+export function clipOutsidePolygon(segs: readonly Segment[], poly: readonly Point[]): Segment[] {
+	if (poly.length < 3) return [...segs];
+	return segs.flatMap((s) => outsideAny(s, poly));
+}
+
+/** An open line through `points` as its segments: `points[i]` to `points[i + 1]` (`edges` closes it). */
+export function chain(points: readonly Point[]): Segment[] {
+	return points.slice(1).map((q, i) => [points[i], q] as const);
 }
 
 /** Segments as one path's `d`: a move and a line each, rounded as the kit rounds. Empty for none. */

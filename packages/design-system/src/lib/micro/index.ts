@@ -16,8 +16,8 @@ export { onArc, polar, round, snap, spread } from "./geometry";
 export type { Point } from "./geometry";
 export { ISO_X, ISO_Y, ISO_Z, iso, isoBox, isoCoil, isoCylinder, isoEllipse, isoPlane, isoRoundBox, isoRoundRect, vanishingGrid } from "./iso";
 export type { Axis, IsoBoxOpts, IsoCylinderOpts, IsoEllipseOpts, IsoPlaneOpts, IsoRoundBoxOpts, VanishingGridOpts } from "./iso";
-// Hidden lines: segments cut outside a convex silhouette (clip.ts).
-export { clipOutside, convexHull, edges, segmentsD } from "./clip";
+// Hidden lines: segments cut outside a silhouette — a convex hull, or any simple polygon (clip.ts).
+export { chain, clipOutside, clipOutsidePolygon, convexHull, edges, insidePolygon, segmentsD } from "./clip";
 export type { Segment } from "./clip";
 
 // The L2 generators (gen/): parametric marks, `(params) => Drawing`, rendered by <GlyphSvg> and the <Wave>, <Envelope>, <Filter>, <Curve> components.

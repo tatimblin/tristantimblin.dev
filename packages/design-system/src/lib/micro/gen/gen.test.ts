@@ -296,4 +296,18 @@ describe("the base helpers", () => {
 		expect(smoothD([[0, 0], [10, 10]])).toBe("M 0 0 L 10 10");
 		expect(smoothD([[0, 0], [10, 10], [20, 0]])).toMatch(/^M 0 0 C .* 20 0$/);
 	});
+	test("smoothD closed: one cubic per point, back to the start, shut", () => {
+		const sq: Array<[number, number]> = [[0, 0], [10, 0], [10, 10], [0, 10]];
+		const d = smoothD(sq, true);
+		expect(d.startsWith("M 0 0 C ")).toBe(true);
+		expect(d.match(/C /g)).toHaveLength(4);
+		expect(d.endsWith(" 0 0 Z")).toBe(true);
+		// Every tangent from both neighbours round the loop: at (0, 0) it runs from (0, 10) to (10, 0), so the first control is (10 − 0)/6 right and (0 − 10)/6 up.
+		expect(d).toMatch(/^M 0 0 C 1\.67 -1\.67 /);
+		// Symmetric: the join at the start is as smooth as any other point (the last control mirrors the first through (0, 0)).
+		expect(d).toMatch(/C [^C]* -1\.67 1\.67 0 0 Z$/);
+		// Open is unchanged by the option's existence; two points shut as a line.
+		expect(smoothD(sq)).toBe(smoothD(sq, false));
+		expect(smoothD([[0, 0], [10, 10]], true)).toBe("M 0 0 L 10 10 Z");
+	});
 });

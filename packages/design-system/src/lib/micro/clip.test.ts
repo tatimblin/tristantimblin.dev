@@ -3,7 +3,7 @@
  * `bun run test:unit`.
  */
 import { describe, expect, test } from "bun:test";
-import { clipOutside, convexHull, edges, type Segment, segmentsD } from "./clip";
+import { chain, clipOutside, clipOutsidePolygon, convexHull, edges, insidePolygon, type Segment, segmentsD } from "./clip";
 import type { Point } from "./geometry";
 
 const SQUARE: Point[] = [[0, 0], [10, 0], [10, 10], [0, 10]];
@@ -57,6 +57,81 @@ describe("clipOutside", () => {
 	test("a segment along an edge, outside, is kept; a degenerate polygon hides nothing", () => {
 		expect(clipOutside([[[-5, -1], [15, -1]]], SQUARE)).toEqual([[[-5, -1], [15, -1]]]);
 		expect(clipOutside([[[0, 0], [5, 5]]], [[0, 0], [5, 5]])).toEqual([[[0, 0], [5, 5]]]);
+	});
+});
+
+/** A U: a 30 × 20 block with a 10-wide notch cut 15 down from the top. */
+const U: Point[] = [[0, 0], [10, 0], [10, 15], [20, 15], [20, 0], [30, 0], [30, 20], [0, 20]];
+/** A comb: three teeth hanging from a spine along the bottom. */
+const COMB: Point[] = [[0, 0], [4, 0], [4, 10], [8, 10], [8, 0], [12, 0], [12, 10], [16, 10], [16, 0], [20, 0], [20, 14], [0, 14]];
+/** Rounded to a hundredth, as a file would write it: floating crossings compare cleanly. */
+const r = (segs: Segment[]) => segs.map(([a, b]) => [a.map((v) => Math.round(v * 100) / 100), b.map((v) => Math.round(v * 100) / 100)]);
+
+describe("insidePolygon", () => {
+	test("the notch of a U is outside; its arms and base inside", () => {
+		expect(insidePolygon([15, 5], U)).toBe(false);
+		expect(insidePolygon([5, 5], U)).toBe(true);
+		expect(insidePolygon([15, 18], U)).toBe(true);
+		expect(insidePolygon([40, 5], U)).toBe(false);
+	});
+
+	test("a point on the outline counts as inside; either winding agrees", () => {
+		expect(insidePolygon([15, 15], U)).toBe(true);
+		expect(insidePolygon([0, 10], U)).toBe(true);
+		expect(insidePolygon([15, 5], [...U].reverse())).toBe(false);
+		expect(insidePolygon([5, 5], [...U].reverse())).toBe(true);
+	});
+});
+
+describe("clipOutsidePolygon", () => {
+	test("a concave notch: a line across the U's arms shows only in the notch and past the ends", () => {
+		expect(r(clipOutsidePolygon([[[-5, 5], [35, 5]]], U))).toEqual([[[-5, 5], [0, 5]], [[10, 5], [20, 5]], [[30, 5], [35, 5]]]);
+	});
+
+	test("entering and leaving several times: a line through a comb's teeth is cut at every tooth", () => {
+		const out = r(clipOutsidePolygon([[[-2, 5], [22, 5]]], COMB));
+		expect(out).toEqual([[[-2, 5], [0, 5]], [[4, 5], [8, 5]], [[12, 5], [16, 5]], [[20, 5], [22, 5]]]);
+	});
+
+	test("collinear edges: a line along the notch's floor is hidden there, what runs on past is kept", () => {
+		// y = 15 runs along the notch's floor (10–20) and through both arms: all of 0–30 is the solid's.
+		expect(r(clipOutsidePolygon([[[-5, 15], [35, 15]]], U))).toEqual([[[-5, 15], [0, 15]], [[30, 15], [35, 15]]]);
+		// Along the top edge of an arm and on over the notch: the edge is hidden, the open notch shows.
+		expect(r(clipOutsidePolygon([[[0, 0], [30, 0]]], U))).toEqual([[[10, 0], [20, 0]]]);
+	});
+
+	test("a line through a vertex it only touches stays whole", () => {
+		const tri: Point[] = [[0, 0], [10, -10], [20, 0]];
+		const seg: Segment = [[0, -10], [20, -10]];
+		expect(clipOutsidePolygon([seg], tri)).toEqual([seg]);
+	});
+
+	test("wholly inside is gone, wholly outside untouched, a degenerate polygon hides nothing", () => {
+		const inArm: Segment = [[2, 2], [8, 12]];
+		const inNotch: Segment = [[12, 2], [18, 12]];
+		expect(clipOutsidePolygon([inArm, inNotch], U)).toEqual([inNotch]);
+		expect(clipOutsidePolygon([inArm], [[0, 0], [5, 5]])).toEqual([inArm]);
+	});
+
+	test("on a convex polygon it cuts as clipOutside does, either winding", () => {
+		const segs: Segment[] = [[[-5, 5], [15, 5]], [[5, 5], [5, 20]], [[2, 2], [8, 8]], [[20, 0], [30, 10]], [[-5, -1], [15, -1]]];
+		expect(r(clipOutsidePolygon(segs, SQUARE))).toEqual(r(clipOutside(segs, SQUARE)));
+		expect(r(clipOutsidePolygon(segs, [...SQUARE].reverse()))).toEqual(r(clipOutside(segs, SQUARE)));
+	});
+
+	test("a ridge hides the range behind it: a polyline dipping under a sawtooth comes back in pieces", () => {
+		const ridge: Point[] = [[0, 20], [10, 0], [20, 20], [30, 0], [40, 20]];
+		const solid: Point[] = [...ridge, [40, 40], [0, 40]];
+		const out = clipOutsidePolygon(chain([[0, 8], [40, 8]]), solid);
+		expect(out).toHaveLength(3);
+		expect(r(out)).toEqual([[[0, 8], [6, 8]], [[14, 8], [26, 8]], [[34, 8], [40, 8]]]);
+	});
+});
+
+describe("chain", () => {
+	test("an open line: one segment per step, no closing edge", () => {
+		expect(chain([[0, 0], [1, 0], [1, 1]])).toEqual([[[0, 0], [1, 0]], [[1, 0], [1, 1]]]);
+		expect(chain([[0, 0]])).toEqual([]);
 	});
 });
 
