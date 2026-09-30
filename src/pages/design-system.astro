@@ -38,6 +38,7 @@ import TickRuler from "@whois/design-system/TickRuler";
 import TimeRuler from "@whois/design-system/TimeRuler";
 // The ruled screen: the boxed chip and the stat strip.
 import Chip from "@whois/design-system/Chip";
+import Dial from "@whois/design-system/Dial";
 import StatStrip from "@whois/design-system/StatStrip";
 import BarGraph from "@whois/design-system/BarGraph";
 import Legend from "@whois/design-system/Legend";
@@ -1795,18 +1796,39 @@ assertions:
 				{(["light", "dark"] as const).map((t) => (
 					<ThemePage theme={t}>
 						<Scene name="globe" label={`The Earth over the Atlantic, tracked, on the ${t} page`} tone="green" glow data-scene-demo={t}>
-							<SceneLabel x={12} y={5}>300.733 MHz</SceneLabel>
+							<SceneLabel x={11} y={5}>300.733 MHz</SceneLabel>
 							<SceneLabel x={43} y={5}>1 U FS</SceneLabel>
 							<SceneLabel x={62} y={5}>C7</SceneLabel>
 							<SceneLabel x={75} y={5}>4:126.6</SceneLabel>
-							<SceneLabel x={12} y={13}><Chip tone="accent">Earth 001</Chip></SceneLabel>
-							<SceneLabel x={12} y={22} tone="dim">LUX.NA<br />00.1 NASA.P0</SceneLabel>
+							<SceneLabel x={11} y={10.5}><Chip tone="accent">Earth 001</Chip></SceneLabel>
+							<SceneLabel x={11} y={20} tone="dim" size="sm">LUX.NA<br />00.1 NASA.P0</SceneLabel>
 							<SceneLabel x={93} y={13} align="end" size="sm" box>stop 801.000 MHz<br />1.5.on | 30</SceneLabel>
 							<SceneLabel x={3.5} y={60}><ReadoutStack values={["3", "0", "2"]} active={2} aria-label="Channel" /></SceneLabel>
-							<SceneLabel x={94} y={57} align="end" variant="numeral" size="xl">06<br />90<br />K5</SceneLabel>
+							<SceneLabel x={97} y={57} align="end" variant="numeral" size="lg">06<br />90<br />K5</SceneLabel>
 							<SceneLabel x={20} y={82} size="lg">010</SceneLabel>
 							<SceneLabel x={80} y={82} align="end" size="lg">P.45</SceneLabel>
-							<SceneLabel x={88} y={92} align="end">stop 801.000 MHz</SceneLabel>
+							<SceneLabel x={89} y={89.6} align="end" size="sm">stop 801.000 MHz</SceneLabel>
+						</Scene>
+					</ThemePage>
+				))}
+			</div>
+
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">hud — the hand-vector route</h2>
+			<p class="ds-demo__note">
+				Drawn in an editor with the placeholder swatches (<code>tools/scenes/SWATCHES.md</code>, importable as <code>swatches.svg</code>) and exported as <code>tools/scenes/hud/source.svg</code> — a Figma frame at 2×, ids, a <code>style=</code>, the frame's clip and mask and all — then imported by <code>tools/scenes/lib/import-vector.ts</code>: stripped, flattened, each swatch swapped for its <code>--art-*</code> token, a fill opacity ≤ 25% made a wash, the 2 and 3 strokes made 1 and 1.5, the dashes snapped, refitted to the plate and rounded. The centre line's dashes run under the dash motion. The readouts are HTML: the two tuners' FREQ and <code>Dial</code>, blue and red, FF, and the <code>colour-bars</code> glyph.
+			</p>
+			<div class="ds-demo__art-themes">
+				{(["light", "dark"] as const).map((t) => (
+					<ThemePage theme={t}>
+						<Scene name="hud" label={`A driving HUD: a perspective road into a skyline, the gear knob, on the ${t} page`} glow data-scene-demo={`hud-${t}`}>
+							<SceneLabel x={5} y={5} size="sm" tone="blue">Freq</SceneLabel>
+							<SceneLabel x={5} y={13} variant="numeral" size="lg" tone="blue">88.1</SceneLabel>
+							<SceneLabel x={18} y={5} size="xl" tone="blue"><Dial value={0.3} paint="blue" /></SceneLabel>
+							<SceneLabel x={95} y={5} align="end" size="sm" tone="red">Freq</SceneLabel>
+							<SceneLabel x={95} y={13} align="end" variant="numeral" size="lg" tone="red">104.7</SceneLabel>
+							<SceneLabel x={80} y={5} align="end" size="xl" tone="red"><Dial value={0.72} paint="red" /></SceneLabel>
+							<SceneLabel x={5} y={87} size="lg"><Glyph name="colour-bars" /></SceneLabel>
+							<SceneLabel x={17} y={88} size="sm" box>FF</SceneLabel>
 						</Scene>
 					</ThemePage>
 				))}

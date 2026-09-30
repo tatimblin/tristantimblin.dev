@@ -54,10 +54,11 @@ export default scene({
 		const guide = { paint: "dim", weight: "hair", dash: "dotted" } as const;
 
 		return [
-			// The console's guides: a dotted square inset 40, the crosshair out to the range ring, a dashed rule.
+			// The console's guides: a dotted square inset 40, the crosshair out to the range ring.
 			k.path("M 40 0 V 400 M 360 0 V 400 M 0 40 H 400 M 0 360 H 400", guide),
 			k.path("M 0 200 H 67 M 333 200 H 400 M 200 0 V 67 M 200 333 V 400", guide),
-			k.line(290, 14, 290, 386, { paint: "dim", weight: "hair", dash: "dash" }),
+			// The dashed rule, from under the STOP box to above the P.45 readout, so it cuts no text.
+			k.line(290, 92, 290, 320, { paint: "dim", weight: "hair", dash: "dash" }),
 			// The Earth: an ocean wash, the graticule, the land, the limb.
 			k.ring(C, C, R, { paint: "none", fill: k.wash("blue", 22) }),
 			k.path(tidy(path(geoGraticule10())!), { paint: "dim", weight: "hair" }),
@@ -83,10 +84,11 @@ export default scene({
 			k.path("M 62 128 H 52 V 292 H 62", chrome),
 			k.path("M 338 128 H 348 V 292 H 338", chrome),
 			k.path("M 40 200 H 56 M 344 200 H 360", chrome),
-			// The ruler: a washed band, minor ticks every 8, majors every 40.
-			k.rect(80, 356, 240, 18, { paint: "none", fill: k.wash("green", 22) }),
-			k.ticksLinear(80, 364, 320, 364, 31, 4, { paint: "green", weight: "hair" }),
-			k.ticksLinear(80, 364, 320, 364, 7, 8, { paint: "green", weight: "hair" }),
+			// The ruler: a washed band, minor ticks every 8, majors every 40 — from the left bracket's line
+			// to 240, leaving the bottom-right to the STOP readout the page sets beside it.
+			k.rect(80, 356, 160, 18, { paint: "none", fill: k.wash("green", 22) }),
+			k.ticksLinear(80, 364, 240, 364, 21, 4, { paint: "green", weight: "hair" }),
+			k.ticksLinear(80, 364, 240, 364, 5, 8, { paint: "green", weight: "hair" }),
 		];
 	},
 });

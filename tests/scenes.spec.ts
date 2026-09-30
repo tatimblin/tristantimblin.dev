@@ -4,8 +4,9 @@ import { SCENE_NAMES } from "../packages/design-system/src/scenes/names";
 /**
  * THE SCENES SECTION OF THE CATALOGUE, IN THE BROWSER.
  *
- * /design-system#scenes shows the globe — the L4 data route — through
- * Scene on both themes' pages, with its HTML readouts over it. This spec
+ * /design-system#scenes shows the globe — the L4 data route — and the hud —
+ * the hand-vector route — through Scene on both themes' pages, with their
+ * HTML readouts over them. This spec
  * pins what the unit tests cannot: that the baked file renders inline
  * through the frame (its viewBox, its two motion groups), that a labelled
  * scene is an image whose readouts are still real text OUTSIDE the
@@ -42,6 +43,21 @@ test.describe("scenes", () => {
 			await expect(scene.locator(".ds-scene__credit"), theme).toHaveText("Natural Earth (public domain), via world-atlas 110m");
 		}
 		expect(errors, errors.join("\n")).toEqual([]);
+	});
+
+	test("renders the hud — the hand-vector route — on both pages: the plate, its dash motion, no text", async ({ page }) => {
+		await page.goto(PAGE);
+		for (const theme of ["light", "dark"]) {
+			const scene = page.locator(`[data-scene-demo="hud-${theme}"]`);
+			await expect(scene, theme).toHaveAttribute("data-scene", "hud");
+			const svg = scene.locator(".ds-scene__frame > svg");
+			await expect(svg, theme).toHaveAttribute("viewBox", "0 0 320 180");
+			await expect(svg.locator('[data-motion="dash"]'), theme).toHaveCount(1);
+			await expect(svg.locator("text"), theme).toHaveCount(0);
+			await expect(scene.locator(".ds-scene__readouts"), theme).toContainText("104.7");
+			const f = await scene.locator(".ds-scene__frame").boundingBox();
+			expect(f && Math.abs(f.width / f.height - 16 / 9) < 0.02, "a 320×180 scene is a 16:9 box").toBe(true);
+		}
 	});
 
 	test("every registered scene is on the page", async ({ page }) => {

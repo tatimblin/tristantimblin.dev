@@ -1108,7 +1108,60 @@ SVG; this is where it goes.
 | **Constructed** | an iso platform, a HUD road, the exploded phone, radar chrome | a source composing the kit's primitives, `iso.ts`, `vanishingGrid` and the glyph recipes (`part()`) — no data | **`phone`** (`/design-system#scenes`) |
 | **Data** | a globe, maps, terrain, ground tracks | `d3-geo` over Natural Earth (`world-atlas` 110m), a graticule, coordinates to a tenth | **`globe`** (`/design-system#scenes`) |
 | **3D → line** | busts, bodies, objects | a `.glb` read directly, vertices welded, plane slices and silhouette edges, a z-buffer for hidden lines, orthographic to the panel | spiked, not ported |
-| **Hand vector** | characters with personality | Figma/Illustrator with a placeholder swatch set, an import that swaps each hex for its `var(--art-*)` token and validates | not spiked |
+| **Hand vector** | characters with personality | Figma/Illustrator with a placeholder swatch set, an import that swaps each hex for its `var(--art-*)` token and validates | **`hud`** (`/design-system#scenes`) |
+
+**The hand-vector route** is implemented: an illustrator draws in Figma or
+Illustrator with the **placeholder swatches** — `tools/scenes/SWATCHES.md`,
+importable as `tools/scenes/swatches.svg`, the table `tools/scenes/lib/swatches.ts`:
+ink `#F6F5EB`, ink-2 `#8B8A86`, lavender `#BCA2E9`, coral `#EE5B2E`, cyan
+`#5A8CEE`, green `#5DE17E`, each its token's dark colour one step off so no
+one types it by accident, plus the plate `#17161C` for the artboard's
+background alone — and exports `tools/scenes/<name>/source.svg`, which the
+scene's `scene.ts` hands to **`importVector(source, { viewBox, fit?,
+strokeScale?, precision?, motion? })`** (`tools/scenes/lib/import-vector.ts`,
+no XML dependency: a small scanner, like the validator's, because an export
+is tags and attributes). It **strips** comments, the prolog, DOCTYPE,
+`<title>`/`<desc>`/`<metadata>`, namespaced elements and attributes
+(sodipodi, inkscape, figma, `xml:space`), ids, `data-*`, classes,
+miterlimits and every def nothing renders; **flattens** groups, pushing
+their paint, opacity and transform down to complete leaves, after
+`style=` and Illustrator's `.st0{…}` rules become attributes; drops a hidden
+layer, and **drops the frame** — the `<g clip-path>` and `<g mask>` whose
+clip or mask is one rect over the whole viewBox, and the plate-swatch
+background rect — because the Scene clips and paints the plate; **maps**
+each swatch hex (any notation) to its `var(--art-*)` token, and a colour
+swatch at a fill opacity ≤ 25% (layer × fill × the colour's alpha) to the
+wash; **weights** a stroke by its width times the element's transform
+scale and `strokeScale` (the refit's scale unless said, so a 2 on a 2×
+640×360 frame is the hair and a 3 the line), snapped to 1 or 1.5 within
+±0.25 with the art class and `vector-effect="non-scaling-stroke"`, and
+snaps a dasharray scaled the same way to `4 4`, `2 6` or `6 3 1 3` within
+±0.75; **refits** the export's viewBox into the scene's, preserving the
+aspect — `contain` (default) centres it whole and letterboxes, `cover`
+fills and lets the frame crop; **bakes** transforms into coordinates
+wherever the shape survives it (paths and lines always, but an arc under
+a skew or reflection; rects, circles and ellipses under an axis-aligned
+scale or a similarity; a rotated rect becomes a path) and otherwise keeps
+a `matrix()` on the leaf, rounds every coordinate to a tenth, writes paths
+absolute with a flat `L` folded to `H`/`V`; and wraps a layer named in
+`motion` (Figma writes a layer's name as its id) in a motion group. It
+**fails loudly**, every problem at once in one `ImportVectorError`: a colour
+that is not a swatch (each listed with its count, first line and nearest
+swatch — a pasted real token hex, SVG's default black on an unfilled
+shape), the plate swatch anywhere but the background, a colour between 25%
+and 100%, a translucent ink or stroke, a gradient or `currentColor`, a
+width or dash that snaps to nothing (saying what to draw), a dashoffset, any
+clip or mask but the frame's, text, images, `<use>`, `foreignObject`, a
+nested `<svg>`, filters, markers, a blend mode, an unknown element or
+attribute, a percentage length, a motion id the export lacks. The bake
+validates the result like any scene; the importer's fixtures are
+`tools/scenes/lib/import-vector.test.ts` (in `bun run test:unit`, which
+collects `./tools`), and since a scene's hash covers only its own
+directory, an importer change is caught by `scenes:check`, not the
+registry test. The proof is **`hud`**: a driving HUD drawn at 2× with
+Figma's cruft (ids, a `style=`, a fill-opacity wash, 2 and 3 strokes, the
+frame's clip and mask, a background rect, an unused gradient, a rotated
+rect, a translated group) and a centre line whose dashes run.
 
 **The constructed route, implemented: `phone`** (`tools/scenes/phone/`).
 A constructed scene composes what the package already draws. The iso
@@ -1140,9 +1193,9 @@ under the drawing) and a README beside the source with the licence and
 the link. The globe's land is Natural Earth, public domain, via
 `world-atlas`; it is credited anyway.
 
-The catalogue's "Scenes" section shows the globe with its readouts on
-both pages (`ThemePage`), glowing on the dark one; `tests/scenes.spec.ts`
-holds it.
+The catalogue's "Scenes" section shows the globe and the hud with their
+readouts on both pages (`ThemePage`), glowing on the dark one;
+`tests/scenes.spec.ts` holds it.
 
 ### Adding one — checklists
 

@@ -1,0 +1,43 @@
+<svg width="640" height="360" viewBox="0 0 640 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- The scene swatches: import into Figma or Illustrator (File → Import / Place) and draw with these colours only. tools/scenes/SWATCHES.md explains each; tools/scenes/lib/swatches.ts is the table the importer reads. -->
+<rect id="plate" width="640" height="360" fill="#17161C"/>
+<text x="24" y="30" fill="#F6F5EB" font-family="monospace" font-size="11">SCENE SWATCHES · draw at 2× — a 640×360 frame for the 320×180 plate, 800×800 for the 400×400 panel</text>
+<rect id="ink" x="24" y="48" width="72" height="72" fill="#F6F5EB"/>
+<text x="24" y="138" fill="#F6F5EB" font-family="monospace" font-size="10">ink</text>
+<text x="24" y="152" fill="#8B8A86" font-family="monospace" font-size="10">#F6F5EB</text>
+<rect id="ink-2" x="124" y="48" width="72" height="72" fill="#8B8A86"/>
+<text x="124" y="138" fill="#F6F5EB" font-family="monospace" font-size="10">ink-2</text>
+<text x="124" y="152" fill="#8B8A86" font-family="monospace" font-size="10">#8B8A86</text>
+<rect id="lavender" x="224" y="48" width="72" height="72" fill="#BCA2E9"/>
+<text x="224" y="138" fill="#F6F5EB" font-family="monospace" font-size="10">lavender</text>
+<text x="224" y="152" fill="#8B8A86" font-family="monospace" font-size="10">#BCA2E9</text>
+<rect id="coral" x="324" y="48" width="72" height="72" fill="#EE5B2E"/>
+<text x="324" y="138" fill="#F6F5EB" font-family="monospace" font-size="10">coral</text>
+<text x="324" y="152" fill="#8B8A86" font-family="monospace" font-size="10">#EE5B2E</text>
+<rect id="cyan" x="424" y="48" width="72" height="72" fill="#5A8CEE"/>
+<text x="424" y="138" fill="#F6F5EB" font-family="monospace" font-size="10">cyan</text>
+<text x="424" y="152" fill="#8B8A86" font-family="monospace" font-size="10">#5A8CEE</text>
+<rect id="green" x="524" y="48" width="72" height="72" fill="#5DE17E"/>
+<text x="524" y="138" fill="#F6F5EB" font-family="monospace" font-size="10">green</text>
+<text x="524" y="152" fill="#8B8A86" font-family="monospace" font-size="10">#5DE17E</text>
+<text x="24" y="178" fill="#8B8A86" font-family="monospace" font-size="10">WASH · a colour at fill-opacity ≤ 0.25 (here 0.14)</text>
+<rect id="lavender wash" x="224" y="188" width="72" height="48" fill="#BCA2E9" fill-opacity="0.14" stroke="#BCA2E9" stroke-width="2"/>
+<rect id="coral wash" x="324" y="188" width="72" height="48" fill="#EE5B2E" fill-opacity="0.14" stroke="#EE5B2E" stroke-width="2"/>
+<rect id="cyan wash" x="424" y="188" width="72" height="48" fill="#5A8CEE" fill-opacity="0.14" stroke="#5A8CEE" stroke-width="2"/>
+<rect id="green wash" x="524" y="188" width="72" height="48" fill="#5DE17E" fill-opacity="0.14" stroke="#5DE17E" stroke-width="2"/>
+<text x="24" y="200" fill="#8B8A86" font-family="monospace" font-size="10">ink and ink-2 never wash;</text>
+<text x="24" y="214" fill="#8B8A86" font-family="monospace" font-size="10">ink-2 is the one dimming</text>
+<text x="24" y="262" fill="#8B8A86" font-family="monospace" font-size="10">WEIGHTS at 2×</text>
+<line id="hair" x1="24" y1="282" x2="264" y2="282" stroke="#F6F5EB" stroke-width="2"/>
+<text x="276" y="286" fill="#F6F5EB" font-family="monospace" font-size="10">2 → hair (1)</text>
+<line id="line" x1="24" y1="306" x2="264" y2="306" stroke="#F6F5EB" stroke-width="3"/>
+<text x="276" y="310" fill="#F6F5EB" font-family="monospace" font-size="10">3 → line (1.5)</text>
+<text x="384" y="262" fill="#8B8A86" font-family="monospace" font-size="10">DASHES at 2×</text>
+<line id="dash 8 8" x1="384" y1="282" x2="480" y2="282" stroke="#F6F5EB" stroke-width="2" stroke-dasharray="8 8"/>
+<text x="492" y="286" fill="#F6F5EB" font-family="monospace" font-size="10">8 8 → 4 4</text>
+<line id="dash 4 12" x1="384" y1="306" x2="480" y2="306" stroke="#F6F5EB" stroke-width="2" stroke-dasharray="4 12"/>
+<text x="492" y="310" fill="#F6F5EB" font-family="monospace" font-size="10">4 12 → 2 6</text>
+<line id="dash 12 6 2 6" x1="384" y1="330" x2="480" y2="330" stroke="#F6F5EB" stroke-width="2" stroke-dasharray="12 6 2 6"/>
+<text x="492" y="334" fill="#F6F5EB" font-family="monospace" font-size="10">12 6 2 6 → dot-dash</text>
+<text x="24" y="344" fill="#8B8A86" font-family="monospace" font-size="10">plate #17161C · the artboard background only: the importer drops it (the frame paints the plate)</text>
+</svg>

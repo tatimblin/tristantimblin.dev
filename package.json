@@ -12,7 +12,7 @@
     "astro": "bunx --bun astro",
     "check": "astro check",
     "test": "playwright test",
-    "test:unit": "bun test ./src ./packages",
+    "test:unit": "bun test ./src ./packages ./tools",
     "validate:art": "bun packages/design-system/scripts/validate-art.mjs",
     "validate:glyph": "bun packages/design-system/scripts/validate-art.mjs --profile glyph",
     "glyphs:bake": "bun packages/design-system/scripts/bake-glyphs.ts",
