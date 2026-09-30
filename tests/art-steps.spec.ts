@@ -262,9 +262,8 @@ test.describe("steps — the driver's signals", () => {
 /**
  * No Honey, We Have a Dashboard at Home: the four jobs a fleet dashboard
  * did — list, twin, actions, signals — dock into the editor one a beat,
- * each lighting a meter pip, the mapping (LIST → TREE VIEW … SIGNALS →
- * TERMINAL, 1/4 … 4/4) a now-mark per beat, no ripple. The still is all
- * four docked, 4/4.
+ * no now-mark and no ripple: the rectangles landing are the whole motion.
+ * The still is all four docked.
  */
 test.describe("steps — the dock", () => {
 	const cell = `[data-cell="post"]:has(a[href="/txt/no-honey-we-have-a-dashboard-at-home/"])`;
@@ -273,7 +272,7 @@ test.describe("steps — the dock", () => {
 		await page.goto("/txt/");
 		const group = page.locator(`${cell} ${STEPS}`);
 		await expect(group).toHaveAttribute("data-beats", "4");
-		expect(await group.locator(":scope > [data-beat] > [data-now]").count()).toBe(4);
+		expect(await group.locator("[data-now]").count()).toBe(0);
 		expect(await group.locator("[data-ripple]").count()).toBe(0);
 
 		const rest = await stateOf(page, cell);
@@ -281,18 +280,16 @@ test.describe("steps — the dock", () => {
 		expect(rest.clock).toBe(0);
 		// Four beats plus two slots of hold, a sixth of the 6s loop each: 6s.
 		expect(parseFloat(rest.duration)).toBeCloseTo(6, 1);
-		finished(rest, 4);
+		finished(rest, 4, 0);
 
 		await page.locator(`${cell} a`).first().hover();
 		await expect.poll(async () => (await stateOf(page, cell)).play).toBe("running");
-		// Mid-dock: the first job has landed, one mapping alone, and not yet the last.
+		// Mid-dock: the first job has landed, and not yet the last.
 		await expect.poll(async () => (await stateOf(page, cell)).clock, { timeout: 5000 }).toBeGreaterThan(2.2 / 6);
 		const mid = await stateOf(page, cell);
 		expect(mid.clock).toBeLessThan(4 / 6);
 		expect(mid.beats[0]).toBe(1);
 		expect(mid.beats[3]).toBeLessThan(1);
-		expect(mid.now.filter((o) => o === 1)).toHaveLength(1);
-		expect(mid.now[3]).toBe(0);
 	});
 
 	test("the post: the mark plays from the start", async ({ page }) => {
@@ -309,6 +306,6 @@ test.describe("steps — the dock", () => {
 		await page.locator(`${cell} a`).first().hover();
 		const s = await stateOf(page, cell);
 		expect(s.duration).toBe("0s");
-		finished(s, 4);
+		finished(s, 4, 0);
 	});
 });
