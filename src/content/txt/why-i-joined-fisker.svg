@@ -1,61 +1,92 @@
-<!-- baked from tools/scenes/posts/why-i-joined-fisker/scene.ts (sources d6dc6001455e254c) — edit the source -->
+<!-- baked from tools/scenes/posts/why-i-joined-fisker/scene.ts (sources eb68130aa4093475) — edit the source -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
-  <clipPath id="why-i-joined-fisker-rim"><path clip-rule="evenodd" d="M 0 0 H 320 V 180 H 0 Z M 46 150 a 54 54 0 1 0 108 0 a 54 54 0 1 0 -108 0 M 52 150 a 48 48 0 1 0 96 0 a 48 48 0 1 0 -96 0" /></clipPath>
-  <g clip-path="url(#why-i-joined-fisker-rim)">
-  <path d="M 38 118 C 38 70 58 58 100 58 C 142 58 162 70 162 118" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="74" cy="88" r="21" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 61.74 98.28 L 59.45 100.21 M 58.35 84.67 L 55.42 84.05 M 66.99 73.62 L 65.67 70.92 M 81.01 73.62 L 82.33 70.92 M 89.65 84.67 L 92.58 84.05 M 86.26 98.28 L 88.55 100.21" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
-  <path d="M 60.59 99.25 L 59.45 100.21 M 58.41 95.94 L 57.07 96.63 M 57.02 92.23 L 55.56 92.6 M 56.5 88.31 L 55 88.33 M 56.88 84.36 L 55.42 84.05 M 58.14 80.6 L 56.78 79.97 M 60.21 77.23 L 59.03 76.3 M 62.99 74.4 L 62.04 73.23 M 66.33 72.27 L 65.67 70.92 M 70.06 70.95 L 69.73 69.49 M 74 70.5 L 74 69 M 77.94 70.95 L 78.27 69.49 M 81.67 72.27 L 82.33 70.92 M 85.01 74.4 L 85.96 73.23 M 87.79 77.23 L 88.97 76.3 M 89.86 80.6 L 91.22 79.97 M 91.12 84.36 L 92.58 84.05 M 91.5 88.31 L 93 88.33 M 90.98 92.23 L 92.44 92.6 M 89.59 95.94 L 90.93 96.63 M 87.41 99.25 L 88.55 100.21" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
-  <path d="M 87.85 83.71 A 14.5 14.5 0 0 1 85.11 97.32 L 83.96 96.36 A 13 13 0 0 0 86.42 84.16 L 87.85 83.71 Z" fill="var(--art-coral)" />
-  <line x1="74" y1="88" x2="64.71" y2="77.53" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="74" cy="88" r="1.6" fill="var(--art-ink)" />
-  <text class="art-caption" x="74" y="96" font-size="3.5" text-anchor="middle" fill="var(--art-ink-2)">PWR</text>
-  <circle cx="126" cy="88" r="21" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 113.74 98.28 L 111.45 100.21 M 110.35 84.67 L 107.42 84.05 M 118.99 73.62 L 117.67 70.92 M 133.01 73.62 L 134.33 70.92 M 141.65 84.67 L 144.58 84.05 M 138.26 98.28 L 140.55 100.21" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
-  <path d="M 112.59 99.25 L 111.45 100.21 M 110.41 95.94 L 109.07 96.63 M 109.02 92.23 L 107.56 92.6 M 108.5 88.31 L 107 88.33 M 108.88 84.36 L 107.42 84.05 M 110.14 80.6 L 108.78 79.97 M 112.21 77.23 L 111.03 76.3 M 114.99 74.4 L 114.04 73.23 M 118.33 72.27 L 117.67 70.92 M 122.06 70.95 L 121.73 69.49 M 126 70.5 L 126 69 M 129.94 70.95 L 130.27 69.49 M 133.67 72.27 L 134.33 70.92 M 137.01 74.4 L 137.96 73.23 M 139.79 77.23 L 140.97 76.3 M 141.86 80.6 L 143.22 79.97 M 143.12 84.36 L 144.58 84.05 M 143.5 88.31 L 145 88.33 M 142.98 92.23 L 144.44 92.6 M 141.59 95.94 L 142.93 96.63 M 139.41 99.25 L 140.55 100.21" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
-  <line x1="126" y1="88" x2="127.27" y2="74.06" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="126" cy="88" r="1.6" fill="var(--art-ink)" />
-  <text class="art-caption" x="126" y="96" font-size="3.5" text-anchor="middle" fill="var(--art-ink-2)">KM/H</text>
+  <path d="M -10 34 L 30 20 H 190 L 204 30 V 44" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <clipPath id="why-i-joined-fisker-road"><polygon points="-10,57 206,57 206,128 144,128 136,118 84,118 76,128 -10,128" /></clipPath>
+  <g clip-path="url(#why-i-joined-fisker-road)">
+  <path d="M 110 40 L 12 128 M 110 40 L 31.6 128 M 110 40 L 51.2 128 M 110 40 L 70.8 128 M 110 40 L 90.4 128 M 110 40 L 110 128 M 110 40 L 129.6 128 M 110 40 L 149.2 128 M 110 40 L 168.8 128 M 110 40 L 188.4 128 M 110 40 L 208 128" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
   </g>
-  <circle cx="100" cy="150" r="54" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="100" cy="150" r="48" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="100" cy="150" r="13" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="100" cy="150" r="7" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <text class="art-title" x="16" y="24" font-size="9" fill="var(--art-ink)">DRIVER_01</text>
-  <text class="art-caption" x="16" y="32" font-size="3.5" fill="var(--art-ink-2)">MAGNA EV PLATFORM // 2023</text>
-  <text class="art-caption" x="204" y="24" font-size="3.5" text-anchor="end" fill="var(--art-ink-2)">0x11A4</text>
-  <line x1="216" y1="16" x2="304" y2="16" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <text class="art-label" x="216" y="21.74" font-size="4.5" fill="var(--art-ink)">SIGNALS // 03</text>
-  <text class="art-label" x="216" y="35.3" font-size="3.5" fill="var(--art-ink)">STEERING</text>
-  <text class="art-label" x="216" y="45.3" font-size="3.5" fill="var(--art-ink)">BRAKING</text>
-  <text class="art-label" x="216" y="55.3" font-size="3.5" fill="var(--art-ink)">ACCEL</text>
-  <line x1="258" y1="34" x2="304" y2="34" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <line x1="258" y1="44" x2="304" y2="44" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <line x1="258" y1="54" x2="304" y2="54" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <line x1="216" y1="70" x2="304" y2="70" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-  <text class="art-label" x="216" y="75.74" font-size="4.5" fill="var(--art-ink)">PIPELINE</text>
-  <text class="art-numeral" x="216" y="108" font-size="32" fill="var(--art-coral)">8</text>
-  <text class="art-caption" x="238.24" y="88.2" font-size="4.5" fill="var(--art-ink)">TB / DAY</text>
-  <text class="art-caption" x="238" y="101" font-size="3.5" fill="var(--art-ink-2)">PARQUET</text>
-  <text class="art-caption" x="238" y="108" font-size="3.5" fill="var(--art-ink-2)">2M MSG/S</text>
+  <g transform="translate(78.8 24.5) scale(1.3)">
+    <path d="M 6 24 V 17.18 M 8.4 24 V 16.33 M 10.8 24 V 15.16 M 13.2 24 V 14.43 M 15.6 24 V 11.9 M 18 24 V 13.16 M 20.4 24 V 16.05 M 22.8 24 V 11.66 M 25.2 24 V 10.99 M 27.6 24 V 13.08 M 30 24 V 13.59 M 32.4 24 V 11.95 M 34.8 24 V 15.42 M 37.2 24 V 14.84 M 39.6 24 V 15.67 M 42 24 V 18.45" fill="none" stroke="var(--art-cyan)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+    <line x1="5" y1="25" x2="43" y2="25" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  <polyline points="-10,128 76,128 84,118 136,118 144,128 206,128" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="104" y="136" width="12" height="13" rx="4" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <text class="art-title" x="110" y="144.8" font-size="6" text-anchor="middle" fill="var(--art-coral)">R</text>
+  <line x1="110" y1="149" x2="110" y2="158" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="110" cy="158" r="2.5" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 92 190 C 98 170 102 162 103 162 H 117 C 118 162 122 170 128 190" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <text class="art-title" x="20" y="68" font-size="6" fill="var(--art-cyan)">STEER</text>
+  <path d="M 15.21 70.84 A 14 14 0 0 1 34 84" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 16.92 75.54 L 15.9 72.72 M 21.17 75.08 L 21.57 72.1 M 25.16 76.63 L 26.88 74.17 M 27.98 79.84 L 30.64 78.46 M 29 84 L 32 84" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" />
+  <text class="art-title" x="174" y="68" font-size="6" fill="var(--art-coral)">BRAKE</text>
+  <path d="M 169.21 70.84 A 14 14 0 0 1 188 84" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 170.92 75.54 L 169.9 72.72 M 175.17 75.08 L 175.57 72.1 M 179.16 76.63 L 180.88 74.17 M 181.98 79.84 L 184.64 78.46 M 183 84 L 186 84" fill="none" stroke="var(--art-coral)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" />
+  <text class="art-title" x="16" y="158.3" font-size="6" fill="var(--art-green)">SIG</text>
+  <path d="M 40 148 V 145 H 79 V 148" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <text class="art-label" x="46.5" y="153" font-size="3.5" text-anchor="middle" fill="var(--art-ink)">STR</text>
+  <text class="art-label" x="59.5" y="153" font-size="3.5" text-anchor="middle" fill="var(--art-ink)">BRK</text>
+  <text class="art-label" x="72.5" y="153" font-size="3.5" text-anchor="middle" fill="var(--art-ink)">ACC</text>
+  <rect x="42" y="156" width="9" height="2.5" fill="var(--art-ink-2)" />
+  <rect x="55" y="156" width="9" height="2.5" fill="var(--art-ink-2)" />
+  <rect x="68" y="156" width="9" height="2.5" fill="var(--art-ink-2)" />
+  <path d="M 156 138 L 156 146 M 164 138 L 164 146 M 172 138 L 172 146 M 180 138 L 180 146" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <circle cx="198" cy="142" r="3" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <text class="art-caption" x="204" y="158" font-size="3.5" text-anchor="end" fill="var(--art-ink-2)">0x11A4</text>
+  <text class="art-title" x="216" y="22.5" font-size="9" fill="var(--art-ink)">DRIVER_01</text>
+  <line x1="216" y1="27" x2="304" y2="27" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <text class="art-caption" x="216" y="34" font-size="3.5" fill="var(--art-ink-2)">MAGNA EV // 2023</text>
+  <text class="art-label" x="216" y="45.96" font-size="4.5" fill="var(--art-ink)">STREAM</text>
+  <text class="art-numeral" x="216" y="72" font-size="32" fill="var(--art-ink)">2M</text>
+  <text class="art-label" x="266" y="55" font-size="4.5" fill="var(--art-ink)">MSG/S</text>
+  <text class="art-caption" x="216" y="80" font-size="3.5" fill="var(--art-ink-2)">OFF THE CARS // LIVE</text>
+  <line x1="216" y1="90" x2="304" y2="90" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
+  <text class="art-label" x="216" y="95.74" font-size="4.5" fill="var(--art-ink)">PIPELINE</text>
+  <text class="art-label" x="216" y="105" font-size="4.5" fill="var(--art-ink)">8 TB / DAY</text>
+  <text class="art-caption" x="216" y="111" font-size="3.5" fill="var(--art-ink-2)">PARQUET</text>
+  <rect x="301.5" y="101" width="2.5" height="5" fill="var(--art-ink)" />
+  <rect x="297.5" y="101" width="2.5" height="5" fill="var(--art-ink)" />
+  <rect x="293.5" y="101" width="2.5" height="5" fill="var(--art-ink)" />
+  <rect x="289.5" y="101" width="2.5" height="5" fill="var(--art-ink)" />
+  <rect x="285.5" y="101" width="2.5" height="5" fill="var(--art-ink)" />
+  <rect x="281.5" y="101" width="2.5" height="5" fill="var(--art-ink)" />
+  <rect x="277.5" y="101" width="2.5" height="5" fill="var(--art-ink)" />
+  <rect x="273.5" y="101" width="2.5" height="5" fill="var(--art-ink)" />
   <line x1="216" y1="124" x2="304" y2="124" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
   <text class="art-label" x="216" y="129.74" font-size="4.5" fill="var(--art-ink)">HEALTH // LSU</text>
-  <text class="art-label" x="216" y="143" font-size="3.5" fill="var(--art-ink)">[ COGNITIVE DECLINE ]</text>
-  <text class="art-caption" x="216" y="151" font-size="3.5" fill="var(--art-ink-2)">DETECTION // SIGNAL DATA</text>
-  <text class="art-caption" x="216" y="164" font-size="3.5" fill="var(--art-ink-2)">ID: 53-8F</text>
-  <text class="art-caption" x="304" y="164" font-size="3.5" text-anchor="end" fill="var(--art-ink-2)">TRAINING</text>
+  <text class="art-label" x="216" y="142" font-size="3.5" fill="var(--art-ink)">[ COGNITIVE DECLINE ]</text>
+  <circle cx="302" cy="140.8" r="1.6" fill="var(--art-coral)" />
+  <text class="art-caption" x="216" y="150" font-size="3.5" fill="var(--art-ink-2)">SIGNAL: DRIVER</text>
+  <text class="art-caption" x="304" y="150" font-size="3.5" text-anchor="end" fill="var(--art-ink-2)">ID: 53-8F</text>
   <g data-motion="steps" data-beats="3">
     <g data-beat="0">
-      <polyline points="258,33.33 259.28,32.78 260.56,32.78 261.83,33.05 263.11,33.14 264.39,32.76 265.67,32.01 266.94,31.27 268.22,31.01 269.5,31.4 270.78,32.23 272.06,33.04 273.33,33.44 274.61,33.37 275.89,33.13 277.17,33.18 278.44,33.78 279.72,34.8 281,35.83 282.28,36.4 283.56,36.35 284.83,35.89 286.11,35.47 287.39,35.45 288.67,35.85 289.94,36.34 291.22,36.46 292.5,35.96 293.78,34.97 295.06,33.93 296.33,33.28 297.61,33.18 298.89,33.4 300.17,33.5 301.44,33.15 302.72,32.36 304,31.5" fill="none" stroke="var(--art-cyan)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-      <path d="M 88.65 156.35 L 63.45 163.6 Q 55.74 165.81 56.69 170.7 M 52.3 155.39 Q 54.09 160.05 61.8 157.84 L 87.02 150.63 M 111.35 143.65 L 136.55 136.4 Q 144.26 134.19 143.31 129.3 M 147.7 144.61 Q 145.91 139.95 138.2 142.16 L 112.98 149.37 M 106.35 161.35 L 113.6 186.55 Q 115.81 194.26 120.7 193.31 M 105.39 197.7 Q 110.05 195.91 107.84 188.2 L 100.63 162.98" data-now="" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <rect x="42" y="156" width="9" height="2.5" fill="var(--art-cyan)" />
+      <g data-now="">
+        <path d="M 36.5 106 H 183.5 M 56.55 88 H 163.45 M 68 77.71 H 152 M 75.41 71.06 H 144.59 M 80.6 66.4 H 139.4 M 84.43 62.96 H 135.57 M 87.38 60.31 H 132.62 M 89.72 58.21 H 130.28" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+        <line x1="20" y1="84" x2="20" y2="76" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="20" cy="84" r="1.8" fill="var(--art-cyan)" />
+        <line x1="174" y1="84" x2="176.74" y2="76.48" fill="none" stroke="var(--art-coral)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="174" cy="84" r="1.8" fill="var(--art-coral)" />
+      </g>
     </g>
     <g data-beat="1">
-      <polyline points="258,44.6 259.28,44.6 260.56,44.6 261.83,44.6 263.11,44.6 264.39,44.6 265.67,44.6 266.94,44.6 268.22,42.8 269.5,42.8 270.78,42.8 272.06,42.8 273.33,42.8 274.61,44.6 275.89,44.6 277.17,44.6 278.44,44.6 279.72,44.6 281,44.6 282.28,44.6 283.56,44.6 284.83,41 286.11,41 287.39,41 288.67,41 289.94,41 291.22,41 292.5,41 293.78,41 295.06,44.6 296.33,44.6 297.61,44.6 298.89,44.6 300.17,44.6 301.44,44.6 302.72,44.6 304,44.6" fill="none" stroke="var(--art-cyan)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-      <path d="M 87.08 151.41 L 61.04 148.24 Q 53.08 147.26 52.05 152.13 M 53.99 136.33 Q 53.81 141.31 61.77 142.29 L 87.8 145.51 M 112.92 148.59 L 138.96 151.76 Q 146.92 152.74 147.95 147.87 M 146.01 163.67 Q 146.19 158.69 138.23 157.71 L 112.2 154.49 M 101.41 162.92 L 98.24 188.96 Q 97.26 196.92 102.13 197.95 M 86.33 196.01 Q 91.31 196.19 92.29 188.23 L 95.51 162.2" data-now="" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <rect x="55" y="156" width="9" height="2.5" fill="var(--art-coral)" />
+      <g data-now="">
+        <path d="M 26 115.43 H 194 M 51.2 92.8 H 168.8 M 64.77 80.62 H 155.23 M 73.25 73 H 146.75 M 79.05 67.79 H 140.95 M 83.27 64 H 136.73 M 86.48 61.12 H 133.52 M 89 58.86 H 131" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+        <line x1="20" y1="84" x2="25.66" y2="78.34" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="20" cy="84" r="1.8" fill="var(--art-cyan)" />
+        <line x1="174" y1="84" x2="181.88" y2="82.61" fill="none" stroke="var(--art-coral)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="174" cy="84" r="1.8" fill="var(--art-coral)" />
+      </g>
     </g>
     <g data-beat="2">
-      <polyline points="258,54.73 259.28,54.41 260.56,53.96 261.83,53.4 263.11,52.79 264.39,52.22 265.67,51.8 266.94,51.61 268.22,51.69 269.5,52.03 270.78,52.56 272.06,53.16 273.33,53.75 274.61,54.24 275.89,54.62 277.17,54.87 278.44,55.03 279.72,55.12 281,55.16 282.28,55.18 283.56,55.19 284.83,55.17 286.11,55.12 287.39,55.01 288.67,54.81 289.94,54.53 291.22,54.2 292.5,53.92 293.78,53.8 295.06,53.89 296.33,54.15 297.61,54.47 298.89,54.77 300.17,54.98 301.44,55.11 302.72,55.17 304,55.19" fill="none" stroke="var(--art-cyan)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-      <path d="M 87.34 152.97 L 61.12 153 Q 53.1 153 52.67 157.96 M 52.67 142.04 Q 53.1 147 61.12 147 L 87.34 147.03 M 112.66 147.03 L 138.88 147 Q 146.9 147 147.33 142.04 M 147.33 157.96 Q 146.9 153 138.88 153 L 112.66 152.97 M 102.97 162.66 L 103 188.88 Q 103 196.9 107.96 197.33 M 92.04 197.33 Q 97 196.9 97 188.88 L 97.03 162.66" data-now="" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <rect x="68" y="156" width="9" height="2.5" fill="var(--art-green)" />
+      <g data-now="">
+        <path d="M 44.67 98.67 H 175.33 M 61 84 H 159 M 70.8 75.2 H 149.2 M 77.33 69.33 H 142.67 M 82 65.14 H 138 M 85.5 62 H 134.5 M 88.22 59.56 H 131.78 M 90.4 57.6 H 129.6" fill="none" stroke="var(--art-green)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+        <line x1="20" y1="84" x2="27.52" y2="81.26" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="20" cy="84" r="1.8" fill="var(--art-cyan)" />
+        <line x1="174" y1="84" x2="178.59" y2="77.45" fill="none" stroke="var(--art-coral)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="174" cy="84" r="1.8" fill="var(--art-coral)" />
+      </g>
     </g>
   </g>
 </svg>
