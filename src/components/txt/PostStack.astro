@@ -1,12 +1,24 @@
 ---
 // PostStack — /txt's list: a ruled two-column table, the date on the left and
 // the title on the right, with one post open at a time. The newest is open
-// on load; pointing at another opens it (a tap on a phone, focus from the
-// keyboard). The open post's body sits in the right half: its category and
-// word count and its excerpt, then — pinned to the foot of the body — a
-// control rail: READ, a solid accent button flush in the corner the column
-// rule makes with the post's bottom hairline, and a faint line from its top
-// edge across the rest of the half, an empty strip for controls to come.
+// on every arrival (a load, a client-router swap, a back/forward restore
+// from the bfcache); pointing at another opens it (a tap or click on a
+// phone or anywhere a closed post is clicked, focus from the keyboard). The
+// open post's body sits in the right half: its excerpt, then — pinned to
+// the foot of the body — a control rail: READ, a solid accent button flush
+// in the corner the column rule makes with the post's bottom hairline, and
+// a faint line from its top edge across the rest of the half, carrying the
+// category and word count.
+//
+// THE CLICK RULE: a title is a link only while its post is open (and is
+// underlined then, to say so). A click (mouse, pen, touch, or Enter) on a
+// post that was CLOSED when the press began — read at pointerdown; at the
+// click itself for a keyboard click — only opens it, anywhere in its header
+// row, date or title. On a desktop the hover has opened the post before the
+// press, so a click on its title navigates at once; a click with no
+// movement first, a tap, or a tap's twin on a pen opens and waits for a
+// second. From the keyboard, focusing a title opens its post, so Enter on
+// it navigates — the same as the hover.
 //
 // THE INVARIANT: opening a post never moves a different post under a still
 // pointer. Two things make that hold:
@@ -69,7 +81,6 @@ const ordered = byDateDesc(posts);
 						<div class="stack__body">
 							<div class="stack__body-inner" data-stack-measure>
 								<div class="stack__text">
-									<Mono class="stack__meta">{meta}</Mono>
 									<Body class="stack__excerpt">{post.data.excerpt}</Body>
 								</div>
 								<div class="stack__rail">
@@ -85,7 +96,9 @@ const ordered = byDateDesc(posts);
 										Read
 										<Icon slot="end-icon" name="external" />
 									</Button>
-									<div class="stack__strip" />
+									<div class="stack__strip">
+										<Mono truncate class="stack__meta">{meta}</Mono>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -128,7 +141,10 @@ const ordered = byDateDesc(posts);
 
 	/* THE HEADER. Identical open and closed: the same size, weight, tracking
 	   and padding in both states, so a title can never rewrap on open. The
-	   ink is the only thing that moves — tertiary closed, primary open. The
+	   ink is the only thing that moves — tertiary closed, primary open — and
+	   the open title's underline, which says it is a link now (a closed
+	   header only opens its post; see the script). The underline is a text
+	   decoration, never a border or padding, so it lays nothing out. The
 	   date is the caps label voice (tabular, from Mono), on the title's first
 	   baseline. */
 	.stack__date,
@@ -158,6 +174,17 @@ const ordered = byDateDesc(posts);
 	.stack__post[data-open] .stack__date,
 	.stack__post[data-open] .stack__title {
 		color: var(--text-primary);
+	}
+	/* The DS Anchor's underline, as a decoration: a 1px hairline in the
+	   text's own ink, clear of the descenders. */
+	.stack__post[data-open] .stack__title {
+		text-decoration-line: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: var(--space-1);
+	}
+	/* A closed header is one target: anywhere on it opens the post. */
+	.stack__post:not([data-open]) .stack__date {
+		cursor: pointer;
 	}
 
 	/* THE BODY. Closed: no height, clipped, hidden to readers. Open: exactly
@@ -204,12 +231,8 @@ const ordered = byDateDesc(posts);
 		align-self: start;
 		display: grid;
 		justify-items: start;
-		gap: var(--space-4);
 		padding-inline-start: var(--stack-inset);
 		padding-block-end: var(--space-6);
-	}
-	.stack__meta {
-		display: block;
 	}
 	.stack__excerpt {
 		max-inline-size: var(--measure-note);
@@ -218,7 +241,9 @@ const ordered = byDateDesc(posts);
 	/* THE RAIL: the right half's foot, edge to edge — READ in the corner
 	   (the column rule on its left, the post's bottom hairline under it),
 	   then the strip: a faint hairline level with READ's top, as tall as
-	   READ, empty. READ is the DS's primary button, the accent fill with
+	   READ, carrying the meta (category · words) a step after READ, centred
+	   on it. The meta is one line that ellipsises rather than wraps, so it
+	   can never make the rail (and so H) taller. READ is the DS's primary button, the accent fill with
 	   --on-accent; squared off here so it sits in a ruled corner, and its
 	   ring drawn inside, where the body's clip can't cut it. Its leading
 	   padding is the text inset, with no border and no caps indent (the
@@ -243,19 +268,34 @@ const ordered = byDateDesc(posts);
 	}
 	.stack__strip {
 		flex: 1;
+		min-inline-size: 0;
+		display: flex;
+		align-items: center;
+		padding-inline: var(--space-4) var(--stack-inset);
 		border-block-start: 1px solid color-mix(in oklab, var(--hairline) 50%, transparent);
+	}
+	.stack__meta {
+		display: block;
+		min-inline-size: 0;
 	}
 
 	/* Phone: one column — the date above the title, no rule between them; the
-	   rail spans the width at the foot of the body. The body bleeds left
-	   through the page gutter (BlogLayout's --container-inset) so READ meets
-	   the viewport edge; the text is inset by that gutter, back on the
+	   rail spans the width at the foot of the body. The list bleeds through
+	   the page gutter (BlogLayout's --container-inset) on both sides, so its
+	   hairlines run to the viewport's edges, and each post pads that gutter
+	   back in: the header stays on the page's x. The body bleeds out again
+	   across the post's padding, so READ meets the viewport's left edge and
+	   the strip its right; the text is inset by the gutter, back on the
 	   title's x. */
 	@media (max-width: 639px) {
+		.stack {
+			margin-inline: calc(-1 * var(--container-inset));
+		}
 		.stack__post {
 			--stack-inset: var(--container-inset);
 			grid-template-columns: minmax(0, 1fr);
 			grid-template-rows: auto auto auto;
+			padding-inline: var(--stack-inset);
 			background: none;
 		}
 		.stack__date {
@@ -276,7 +316,7 @@ const ordered = byDateDesc(posts);
 		.stack__body {
 			grid-column: 1;
 			grid-row: 3;
-			margin-inline-start: calc(-1 * var(--stack-inset));
+			margin-inline: calc(-1 * var(--stack-inset));
 		}
 		.stack__body-inner {
 			grid-template-columns: minmax(0, 1fr);
@@ -284,6 +324,9 @@ const ordered = byDateDesc(posts);
 		.stack__text,
 		.stack__rail {
 			grid-column: 1;
+		}
+		.stack__text {
+			padding-inline-end: var(--stack-inset);
 		}
 	}
 </style>
@@ -382,31 +425,32 @@ const ordered = byDateDesc(posts);
 			{ signal },
 		);
 
-		/* TOUCH: the first tap on a closed post opens it; a tap on the open
-		   post's title (or READ) navigates. Whether the post was open is read
-		   at pointerdown: a tap focuses the link before it clicks, and the
-		   focusin below has opened the post by the time the click arrives. */
-		let touch = false;
-		let downOnOpen = false;
+		/* THE CLICK RULE (the header comment): a click on a post that was
+		   closed when the press began opens it and goes nowhere; on an open
+		   post the title (and READ) navigate. The state is read at
+		   pointerdown, because the press itself focuses the link and the
+		   focusin below has opened the post by the time the click arrives. A
+		   keyboard click has no press, so it reads the state at the click. */
+		let down: { post: HTMLElement | null; open: boolean } | null = null;
 		list.addEventListener(
 			"pointerdown",
 			(e) => {
-				touch = e.pointerType === "touch";
-				downOnOpen = postOf(e.target)?.hasAttribute("data-open") ?? false;
+				const post = postOf(e.target);
+				down = { post, open: post?.hasAttribute("data-open") ?? false };
 			},
 			{ signal },
 		);
 		list.addEventListener(
 			"click",
 			(e) => {
-				const wasTouch = touch;
-				touch = false;
-				if (!wasTouch) return;
+				const press = down;
+				down = null;
 				const post = postOf(e.target);
-				if (post && !downOnOpen) {
-					e.preventDefault();
-					swap(post);
-				}
+				if (!post) return;
+				const wasOpen = press && press.post === post ? press.open : post.hasAttribute("data-open");
+				if (wasOpen) return;
+				e.preventDefault();
+				swap(post);
 			},
 			{ signal },
 		);
@@ -417,6 +461,27 @@ const ordered = byDateDesc(posts);
 			(e) => {
 				const post = postOf(e.target);
 				if (post) swap(post);
+			},
+			{ signal },
+		);
+
+		/* ARRIVAL: a back/forward restore from the bfcache brings the page
+		   back as it was left — the hovered or tapped post open — and fires
+		   no astro:page-load, so the newest is reopened here, at once. The
+		   pointer gate starts over too: the restore's first move only
+		   records, as a load's does. */
+		window.addEventListener(
+			"pageshow",
+			(e) => {
+				if (!e.persisted) return;
+				bodies.forEach((body) => body.getAnimations().forEach((a) => a.cancel()));
+				posts.forEach((post, i) => {
+					if (i === 0) post.setAttribute("data-open", "");
+					else post.removeAttribute("data-open");
+				});
+				last = null;
+				down = null;
+				measure();
 			},
 			{ signal },
 		);

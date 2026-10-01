@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, chromium, type Page } from "@playwright/test";
 
 /**
  * THE BLOG: /txt, ITS TAG PAGES, AND A POST.
@@ -15,8 +15,10 @@ import { test, expect, type Page } from "@playwright/test";
  *     still pointer, and the list's height never changes — every post opens
  *     by the same measured height, so the posts below stay put and the one
  *     under the pointer only grows around it. At 1440 and at 375.
- *  3. INTENT: a still pointer opens nothing; a tap on a phone opens before
- *     it navigates; focus opens.
+ *  3. INTENT: a still pointer opens nothing; a click or tap on a post that
+ *     was closed when it began only opens it, the open title (underlined)
+ *     is the link; focus opens. The newest is open after every arrival — a
+ *     load, a client-router swap, back/forward, a bfcache restore.
  *  4. IT WORKS WITH SCRIPTING OFF: the first post is open, every title a link.
  *  5. NO CATEGORY PAGES are built; TAG PAGES STILL RESOLVE.
  *  6. A POST (the block at the foot of this file) is the RULED page: one
@@ -117,12 +119,15 @@ test.describe("/txt/", () => {
 		// The date column reads month / year.
 		await expect(page.locator(`${POST} time.stack__date`).first()).toHaveText("02 / 26");
 		await expect(page.locator(`${POST} time.stack__date`).first()).toHaveAttribute("datetime", "2026-02-02");
-		// The open body: category · words, the excerpt, READ to the same
-		// place — no reading-time numeral.
+		// The open body: the excerpt, READ to the same place, and category ·
+		// words on the rail beside READ — no reading-time numeral.
 		const body = page.locator(`${OPEN} .stack__body`);
 		await expect(body).toBeVisible();
 		await expect(body.locator(".stack__time, .ds-figure")).toHaveCount(0);
-		await expect(body.locator(".stack__meta")).toHaveText(/^Programming · [\d,]+ words$/);
+		await expect(body.locator(".stack__rail .stack__strip .stack__meta")).toHaveText(
+			/^Programming · [\d,]+ words$/,
+		);
+		await expect(body.locator(".stack__text .stack__meta")).toHaveCount(0);
 		await expect(body.locator(".stack__excerpt")).toHaveText(/\S/);
 		const read = body.locator("a.stack__read");
 		await expect(read).toHaveAttribute("href", "/txt/asserting-on-agent-behavior/");
@@ -187,6 +192,13 @@ test.describe("/txt/", () => {
 					excerpt: textX(post.querySelector(".stack__excerpt")!),
 					label: textX(read),
 					readLeft: read.getBoundingClientRect().left,
+					readRight: read.getBoundingClientRect().right,
+					readMid: (read.getBoundingClientRect().top + read.getBoundingClientRect().bottom) / 2,
+					metaLeft: post.querySelector(".stack__meta")!.getBoundingClientRect().left,
+					metaMid:
+						(post.querySelector(".stack__meta")!.getBoundingClientRect().top +
+							post.querySelector(".stack__meta")!.getBoundingClientRect().bottom) /
+						2,
 					readBottom: read.getBoundingClientRect().bottom,
 					nextTop: post.nextElementSibling!.getBoundingClientRect().top,
 					rule: box.left + box.width / 2,
@@ -200,6 +212,10 @@ test.describe("/txt/", () => {
 			// (phone), its foot on the next post's top.
 			expect(Math.abs(m.readLeft - (width < 640 ? 0 : m.rule))).toBeLessThanOrEqual(1);
 			expect(Math.abs(m.readBottom - m.nextTop)).toBeLessThanOrEqual(1);
+			// The meta follows READ on the rail, a step after it, centred on it.
+			expect(m.metaLeft).toBeGreaterThan(m.readRight);
+			expect(m.metaLeft - m.readRight).toBeLessThanOrEqual(24);
+			expect(Math.abs(m.metaMid - m.readMid)).toBeLessThanOrEqual(1);
 			// The bleed never scrolls the page sideways.
 			expect(m.scrollWidth).toBeLessThanOrEqual(m.clientWidth);
 		});
@@ -280,6 +296,174 @@ test.describe("/txt/", () => {
 		expect(await openPosts(page)).toEqual(["/txt/mega-desk/"]);
 	});
 
+	for (const width of [375, 320]) {
+		test(`phone at ${width}: the rules run edge to edge, the text keeps the gutter, nothing scrolls sideways`, async ({
+			page,
+		}) => {
+			await page.setViewportSize({ width, height: 812 });
+			await page.goto("/txt/");
+			const m = await page.evaluate(() => {
+				const vw = document.documentElement.clientWidth;
+				const stack = document.querySelector("[data-stack]")!;
+				const s = stack.getBoundingClientRect();
+				const posts = Array.from(document.querySelectorAll(".stack__post")).map((p) => {
+					const r = p.getBoundingClientRect();
+					return { left: r.left, right: r.right, top: getComputedStyle(p).borderTopWidth };
+				});
+				const header = document.querySelector(".blog__main h1, h1")!.getBoundingClientRect().left;
+				const title = document.querySelector(".stack__title")!.getBoundingClientRect().left;
+				const meta = document.querySelector(".stack__post[data-open] .stack__meta")!;
+				return {
+					vw,
+					stack: { left: s.left, right: s.right, border: getComputedStyle(stack).borderTopWidth },
+					posts,
+					header,
+					title,
+					metaOneLine: meta.getBoundingClientRect().height <= parseFloat(getComputedStyle(meta).fontSize) * 1.5,
+					scrollWidth: document.documentElement.scrollWidth,
+				};
+			});
+			expect(m.stack.left).toBe(0);
+			expect(Math.abs(m.stack.right - m.vw)).toBeLessThanOrEqual(1);
+			expect(m.stack.border).toBe("1px");
+			for (const [i, p] of m.posts.entries()) {
+				expect(p.left).toBe(0);
+				expect(Math.abs(p.right - m.vw)).toBeLessThanOrEqual(1);
+				if (i > 0) expect(p.top).toBe("1px");
+			}
+			// The title stays on the page's gutter, under the page heading.
+			expect(Math.abs(m.title - m.header)).toBeLessThanOrEqual(1);
+			expect(m.title).toBeGreaterThan(0);
+			// The meta never wraps (it ellipsises), so the rail keeps its height.
+			expect(m.metaOneLine).toBe(true);
+			expect(m.scrollWidth).toBeLessThanOrEqual(m.vw);
+		});
+	}
+
+	test("desktop rules stay in the container", async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/txt/");
+		const m = await page.evaluate(() => {
+			const s = document.querySelector("[data-stack]")!.getBoundingClientRect();
+			const h = document.querySelector("h1")!.getBoundingClientRect();
+			return { left: s.left, headerLeft: h.left };
+		});
+		expect(m.left).toBeGreaterThan(0);
+		expect(Math.abs(m.left - m.headerLeft)).toBeLessThanOrEqual(1);
+	});
+
+	test("the open title is underlined (a link); closed titles are not", async ({ page }) => {
+		for (const width of [1440, 375]) {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto("/txt/");
+			const lines = await page
+				.locator(`${POST} a.stack__title`)
+				.evaluateAll((as) => as.map((a) => getComputedStyle(a).textDecorationLine));
+			expect(lines[0]).toBe("underline");
+			expect(lines.slice(1).every((l) => l === "none"), `closed titles: ${lines}`).toBe(true);
+			// Keyboard-open the third: the underline moves with it, and the
+			// header box does not change.
+			const before = await page.locator(`${POST} a.stack__title`).nth(2).boundingBox();
+			await page.locator(`${POST} a.stack__title`).nth(2).focus();
+			await settle(page);
+			const after = await page
+				.locator(`${POST} a.stack__title`)
+				.evaluateAll((as) => as.map((a) => getComputedStyle(a).textDecorationLine));
+			expect(after).toEqual(after.map((_, i) => (i === 2 ? "underline" : "none")));
+			expect((await page.locator(`${POST} a.stack__title`).nth(2).boundingBox())!.height).toBe(before!.height);
+		}
+	});
+
+	test("mouse: a click on a closed post with no movement first only opens it; a second click navigates", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/txt/");
+		// No prior move: the first pointer event the page sees is this press,
+		// so the hover gate has not opened anything.
+		let { x, y } = await titleCentre(page, 2);
+		await page.mouse.click(x, y);
+		await settle(page);
+		await expect(page).toHaveURL(/\/txt\/$/);
+		expect(await openPosts(page)).toEqual(["/txt/mega-desk/"]);
+		({ x, y } = await titleCentre(page, 2));
+		await page.mouse.click(x, y);
+		await expect(page).toHaveURL(/\/txt\/mega-desk\/$/);
+	});
+
+	test("mouse: a click on a closed post's date opens it and goes nowhere", async ({ page }) => {
+		for (const width of [1440, 375]) {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto("/txt/");
+			await page.locator(`${POST} time.stack__date`).nth(1).click();
+			await settle(page);
+			await expect(page).toHaveURL(/\/txt\/$/);
+			expect(await openPosts(page)).toEqual(["/txt/tahoe-mountain-hair/"]);
+		}
+	});
+
+	test("mouse: hovering opens a post, so a click on its title navigates at once", async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/txt/");
+		await page.mouse.move(1, 1);
+		await moveAndCheck(page, 1);
+		const { x, y } = await titleCentre(page, 1);
+		await page.mouse.click(x, y);
+		await expect(page).toHaveURL(/\/txt\/tahoe-mountain-hair\/$/);
+	});
+
+	test("keyboard: Enter on a focused title navigates (focus has opened it)", async ({ page }) => {
+		await page.goto("/txt/");
+		await page.locator(`${POST} a.stack__title`).nth(1).focus();
+		await settle(page);
+		expect(await openPosts(page)).toEqual(["/txt/tahoe-mountain-hair/"]);
+		await page.keyboard.press("Enter");
+		await expect(page).toHaveURL(/\/txt\/tahoe-mountain-hair\/$/);
+	});
+
+	for (const width of [1440, 375]) {
+		test(`the newest post is open after every arrival at ${width}`, async ({ page }) => {
+			await page.setViewportSize({ width, height: width < 640 ? 812 : 900 });
+			const writing = page.locator('.site-header a[href="/txt/"]').first();
+			const arrived = async (how: string) => {
+				await expect(page).toHaveURL(/\/txt\/$/);
+				// The router moves the URL before it swaps the DOM, and draws the
+				// swap as a view transition: wait out both.
+				await page.waitForFunction(
+					() =>
+						document.querySelector("[data-stack]") &&
+						!document.documentElement.hasAttribute("data-astro-transition"),
+				);
+				await settle(page);
+				expect(await openPosts(page), how).toEqual([NEWEST]);
+				const g = await geometry(page);
+				expect(Math.abs(g.bodies[0] - g.open), how).toBeLessThanOrEqual(1);
+			};
+			// The client router, from the homepage and from a post.
+			await page.goto("/");
+			await writing.click();
+			await arrived("from / by the header link");
+			await page.goto(NO_H2S);
+			await writing.click();
+			await arrived("from a post by the header link");
+			// Back to the list after opening another post and following it.
+			await page.locator(`${POST} time.stack__date`).nth(2).click();
+			await settle(page);
+			expect(await openPosts(page)).toEqual([NO_H2S]);
+			await page.locator(`${OPEN} a.stack__title`).click();
+			await expect(page).toHaveURL(/\/txt\/mega-desk\/$/);
+			await page.goBack();
+			await arrived("back from a post");
+			// A reload with the pointer resting on a later post: nothing has moved.
+			await page.mouse.move(1, 1);
+			await moveAndCheck(page, 3);
+			await page.reload();
+			await arrived("a reload under a resting pointer");
+			await page.waitForTimeout(400);
+			expect(await openPosts(page)).toEqual([NEWEST]);
+		});
+	}
+
 	test("there are no category pages", async ({ page }) => {
 		const res = await page.request.get("/txt/category/programming/");
 		expect(res.status()).toBe(404);
@@ -315,6 +499,37 @@ test.describe("/txt/", () => {
 		await expect(page.locator("h1")).toHaveText("The Mega Desk");
 		await context.close();
 	});
+});
+
+/* A bfcache restore brings a page back exactly as it was left — the post the
+   pointer had opened, still open — and fires no astro:page-load. Playwright's
+   Chromium runs with the bfcache off, and a worker's launch options cannot be
+   changed from a describe, so this test launches its own: the full (new-
+   headless) Chromium, which supports it, with the cache left on. */
+test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) => {
+	const browser = await chromium.launch({
+		channel: "chromium",
+		ignoreDefaultArgs: ["--disable-back-forward-cache"],
+	});
+	try {
+		const page = await browser.newPage({ baseURL, viewport: { width: 1440, height: 900 } });
+		await page.goto("/txt/");
+		await page.evaluate(() => ((window as unknown as { __kept: boolean }).__kept = true));
+		await page.mouse.move(1, 1);
+		await moveAndCheck(page, 3);
+		// Leave by a full navigation (not the client router), then come back.
+		await page.goto("about:blank");
+		await page.goBack({ waitUntil: "commit" });
+		await expect(page).toHaveURL(/\/txt\/$/);
+		// It really was the bfcache: the old document, its globals intact.
+		await expect
+			.poll(() => page.evaluate(() => (window as unknown as { __kept?: boolean }).__kept ?? false))
+			.toBe(true);
+		await settle(page);
+		expect(await openPosts(page)).toEqual([NEWEST]);
+	} finally {
+		await browser.close();
+	}
 });
 
 /**
