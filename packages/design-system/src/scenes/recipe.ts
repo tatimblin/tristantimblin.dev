@@ -51,7 +51,7 @@ import { type BakedHeader, bakedHeader, SCENES_SOURCE } from "./header";
 export { bakedFrom, bakedHeader, SCENES_SOURCE } from "./header";
 export type { BakedHeader } from "./header";
 
-/** The roots the scene profile allows: the post plate, or the square panel. */
+/** The roots the scene profile allows: the 16:9 plate, or the square panel. */
 export type SceneViewBox = "0 0 320 180" | "0 0 400 400";
 
 export interface SceneContext {

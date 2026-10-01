@@ -1,5 +1,5 @@
 /**
- * The type specimen (specimen.ts) is a file a post could ship: it passes
+ * The type specimen (specimen.ts) is a file the art profile accepts: it passes
  * the ART profile — type, a line glyph and the bold shapes on one plate —
  * within the art budget, and bakes the same every time. `bun run test:unit`.
  */

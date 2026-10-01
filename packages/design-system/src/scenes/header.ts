@@ -14,9 +14,9 @@
  */
 
 export interface BakedHeader {
-	/** the source's path under `tools/scenes`, without `/scene.ts`: the scene's name, or `posts/<slug>` for a post's art */
+	/** the source's path under `tools/scenes`, without `/scene.ts`: the scene's name */
 	source: string;
-	/** the file's name — the last segment of `source`: the scene's, or the post's slug */
+	/** the file's name — the last segment of `source` */
 	name: string;
 	/** the hex hash of the source directory the file was baked from */
 	hash: string;

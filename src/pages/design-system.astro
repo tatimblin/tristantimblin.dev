@@ -224,7 +224,7 @@ const instrumentTokens = [
 	["--hairline", "edges and dividers"],
 	["--hairline-strong", "the one outline that must read over the hairlines inside it"],
 	["--focus-ring", "the focus ring, at --focus-ring-offset (or --focus-ring-inset)"],
-	["--bar-width", "every solid edge bar: the pull quote's, a timeline mark, the active result"],
+	["--bar-width", "every solid edge bar: the pull quote's"],
 	["--shadow-3", "the deep shadow, for the few things that float (a control panel)"],
 	["--card-background", "card surface"],
 	["--background", "page"],
@@ -670,7 +670,7 @@ const faces = [
 			</div>
 			<Flex direction="column" gap={5} style="margin-top: var(--space-6);">
 				<DimensionLabel>Entries</DimensionLabel>
-				<DimensionLabel>Timeline · words per post</DimensionLabel>
+				<DimensionLabel>Signal chain</DimensionLabel>
 				<DimensionLabel style="max-inline-size: 16rem;">In focus</DimensionLabel>
 			</Flex>
 		</section>
@@ -943,8 +943,7 @@ const faces = [
 				A row of cells under a hairline, each child a cell with a hairline on its right
 				edge and an equal share of the width — put <code>Stat</code> pairs in
 				it — and the <code>action</code> slot as the last cell, fixed width, filled with
-				the accent and <code>--on-accent</code> on it: give it the link. The bottom strip
-				of the /txt card.
+				the accent and <code>--on-accent</code> on it: give it the link.
 			</p>
 			<Flex direction="column" gap={4} alignItems="stretch">
 				<StatStrip>
@@ -1305,7 +1304,7 @@ assertions:
 			<p class="ds-demo__note">
 				<code>&lt;ArtFrame svg={"{raw}"} label="…" /&gt;</code> inlines the file on the
 				plate (<code>role="img"</code>); with no label, or <code>decorative</code>, it is
-				aria-hidden and the link around it names the post. The box is the file's 16:9
+				aria-hidden and the link around it names it. The box is the file's 16:9
 				and clips (<code>--art-ratio</code> retunes it in scope). Strokes are
 				<code>vector-effect="non-scaling-stroke"</code>, so the line is 1px at 230px
 				and at 720px alike.
@@ -1912,7 +1911,7 @@ assertions:
 		}
 
 		// The art demo: the checkbox sets data-art-play on every demo frame, the
-		// attribute the post page sets on its mark.
+		// attribute ArtFrame's `play` sets.
 		function initArtDemo() {
 			const toggle = document.querySelector<HTMLInputElement>("[data-art-play-toggle]");
 			const frames = document.querySelectorAll<HTMLElement>("[data-art-demo]");

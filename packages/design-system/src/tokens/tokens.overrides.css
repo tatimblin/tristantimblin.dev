@@ -212,8 +212,8 @@
  * packages keep their own handling: they are consumed standalone, so they
  * carry literal fallbacks and their own @media blocks, and this does not reach
  * those. --duration-loop is here too: a zero-length loop is an animation with
- * no active interval, so a post's art holds its still frame — which is the
- * poster it was drawn as — without a reduced-motion rule of its own. */
+ * no active interval, so an artwork or a glyph holds its still frame — which
+ * is the poster it was drawn as — without a reduced-motion rule of its own. */
 @media (prefers-reduced-motion: reduce) {
 	:root {
 		--duration-reveal: 0s;
@@ -426,9 +426,9 @@
 }
 
 /* ART ----------------------------------------------------------------------
- * The illustration language the post art is drawn in (ArtFrame, art-frame.css,
- * the .svg files beside each post and the fillers in src/art/): white 1px line
- * work and flat fills in four colours on a near-black landscape plate. The
+ * The illustration language the art, the scenes and the glyphs are drawn in
+ * (ArtFrame, art-frame.css; src/art/, src/scenes/, src/glyphs/): white 1px
+ * line work and flat fills in four colours on a near-black landscape plate. The
  * plate, line, lavender and coral were sampled from the reference tile sheet;
  * cyan and green were since retuned toward a synth panel's signal neon (a
  * cornflower blue and a bright signal green). An art file may name
@@ -444,8 +444,9 @@
  * faces become dark line work and dark faces (the light metronome reference,
  * with its black lit tiles). Declared on the theme classes, not :root, for
  * two reasons: --art-coral is the site accent, which lives there; and a
- * wrapper element carrying the other theme's class (the art catalogue shows
- * every file in both themes side by side) then re-resolves these in scope. */
+ * wrapper element carrying the other theme's class (the catalogue's
+ * ThemePage shows a drawing in both themes side by side) then re-resolves
+ * these in scope. */
 .maximeheckel-light,
 .maximeheckel-dark {
 	/* The tile: its fill and its 1px edge. Sampled #18181f and #3d3d42. */

@@ -5,8 +5,8 @@
  * glyph and the bold shapes, on a strict grid with air. Built at render
  * time on `kit("art")` (the kit's type and module helpers, `grid`, `ids`)
  * and the glyph recipes through `part()`, and held to the ART profile by
- * its test (specimen.test.ts), so what the catalogue shows is a file a
- * post could ship. Shown on /design-system/glyphs#type-modules.
+ * its test (specimen.test.ts), so what the catalogue shows is a file the
+ * validator would pass. Shown on /design-system/glyphs#type-modules.
  *
  *   import { typeSpecimen } from "@whois/design-system/art/specimen.ts";
  *   <ArtFrame svg={typeSpecimen()} label="…" />

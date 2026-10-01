@@ -154,8 +154,8 @@ const TYPE_ATTRS = Object.freeze({
  * them to 20 KB — a module sheet is many small elements, and each stroked
  * one carries the kit's full stroke discipline (~150 bytes) and each line
  * of type its voice, place and paint (~110): the type specimen's six
- * modules are 100 elements in 17 KB. A sparse post plate stays far under
- * either.
+ * modules are 100 elements in 17 KB. A sparse drawing on the 16:9 plate
+ * stays far under either.
  */
 export const BUDGET = Object.freeze({
 	elements: 120,

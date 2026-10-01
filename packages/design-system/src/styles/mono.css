@@ -48,7 +48,7 @@
 }
 
 /* size. 0 is the label step (default); 1 the next one up, for a value or a
-   label that leads (a stat's value, the search bar's input). */
+   label that leads (a stat's value). */
 .ds-mono--size-1 {
 	font-size: var(--widget-font-sm, var(--font-size-1));
 }

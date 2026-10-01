@@ -9,8 +9,8 @@
  *
  * PAUSED AT REST. The still frame is the poster — a file must read at t=0 —
  * and it runs only under the pointer, under keyboard focus, inside a
- * hovered or focused link, or when the host says data-art-play (the open
- * post's hero, a Glyph's `play`, the catalogue's toggle). Leaving pauses in
+ * hovered or focused link, or when the host says data-art-play (an
+ * ArtFrame's or a Glyph's `play`, the catalogue's toggle). Leaving pauses in
  * place. The two hosts gate it a little differently, below.
  *
  * ONE CLOCK. --duration-loop is one cycle; each kind takes its natural
