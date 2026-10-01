@@ -2,16 +2,18 @@
 // PostStack — /txt's list: a ruled two-column table, the date on the left and
 // the title on the right, with one post open at a time. The newest is open
 // on load; pointing at another opens it (a tap on a phone, focus from the
-// keyboard). The open post shows its category and reading time, its excerpt
-// and a READ button.
+// keyboard). The open post's body spans both columns: its reading time as
+// the widgets' big figure on the left, under the date (`3` MIN); its category
+// and word count, its excerpt and a READ chip on the right.
 //
 // THE INVARIANT: opening a post never moves a different post under a still
 // pointer. Two things make that hold:
 //
 //   1. GEOMETRY. A post's header is laid out identically open and closed —
 //      only its ink changes — and every post's open body is the SAME height
-//      H, measured by the script as the tallest natural body and set as
-//      --stack-open on the list. Exactly one post is open, so the list's
+//      H, measured by the script as the tallest natural body (the numeral
+//      cell included) and set as --stack-open on the list. Exactly one post
+//      is open, so the list's
 //      height is constant and the posts below the open one never move. When
 //      the pointer moves from open post A down to B, A loses H above B's
 //      header while B gains H below it: B's bottom edge stays put and B only
@@ -32,7 +34,8 @@ import type { CollectionEntry } from "astro:content";
 import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
 import Body from "@whois/design-system/Body";
-import Button from "@whois/design-system/Button";
+import Figure from "@whois/design-system/Figure";
+import Chip from "@whois/design-system/Chip";
 import Icon from "@whois/design-system/Icon";
 import { byDateDesc, categories, isoDate, monthYear, postHref, readingStats } from "../../lib/blog";
 
@@ -53,34 +56,35 @@ const ordered = byDateDesc(posts);
 			{ordered.map((post, i) => {
 				const href = postHref(post.id);
 				const cat = post.data.category ? categories[post.data.category] : null;
-				const { minutes } = readingStats(post.body);
+				const { words, minutes } = readingStats(post.body);
+				const meta = [cat?.label, `${words.toLocaleString("en-US")} words`].filter(Boolean).join(" · ");
 				return (
 					<li class="stack__post" data-open={i === 0 ? "" : undefined}>
-						<Text as="time" size={4} responsive class="stack__date" datetime={isoDate(post.data.date)}>
+						<Mono as="time" class="stack__date" datetime={isoDate(post.data.date)}>
 							{monthYear(post.data.date)}
-						</Text>
+						</Mono>
 						<Text as="a" size={4} responsive class="stack__title ds-control" href={href}>
 							{post.data.title}
 						</Text>
 						<div class="stack__body">
 							<div class="stack__body-inner" data-stack-measure>
-								<Mono variant="text" class="stack__meta">
-									{cat ? `${cat.label} · ${minutes} min` : `${minutes} min`}
-								</Mono>
-								<Body class="stack__excerpt">{post.data.excerpt}</Body>
-								{/* The second link to the same place: the title is the tab stop. */}
-								<Button
-									as="a"
-									variant="primary"
-									inverted
-									href={href}
-									tabindex="-1"
-									aria-hidden="true"
-									class="stack__read"
-								>
-									Read
-									<Icon name="external" slot="end-icon" />
-								</Button>
+								<Figure unit="min" class="stack__time">{minutes}</Figure>
+								<div class="stack__text">
+									<Mono class="stack__meta">{meta}</Mono>
+									<Body class="stack__excerpt">{post.data.excerpt}</Body>
+									{/* The second link to the same place: the title is the tab stop. */}
+									<Chip
+										as="a"
+										tone="accent"
+										href={href}
+										tabindex="-1"
+										aria-hidden="true"
+										class="stack__read"
+									>
+										Read
+										<Icon name="external" />
+									</Chip>
+								</div>
 							</div>
 						</div>
 					</li>
@@ -92,8 +96,10 @@ const ordered = byDateDesc(posts);
 
 <style>
 	/* The ruled table: a hairline above and below the list, one between posts,
-	   and the vertical one between the columns drawn by the date cell, which
-	   spans the post's two rows so the rule runs the whole height. */
+	   and the vertical one between the columns. That one is a 1px background
+	   stripe down the post's middle (the columns are equal halves), not a cell
+	   border, so the date can sit on the title's baseline and the open body
+	   can span both columns without breaking the rule. Square, flat, no fill. */
 	.stack {
 		list-style: none;
 		margin: 0;
@@ -103,9 +109,11 @@ const ordered = byDateDesc(posts);
 		overflow-anchor: none;
 	}
 	.stack__post {
+		--stack-gutter: var(--space-5);
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		grid-template-rows: auto auto;
+		background: linear-gradient(var(--hairline), var(--hairline)) 50% 0 / 1px 100% no-repeat;
 	}
 	.stack__post + .stack__post {
 		border-block-start: 1px solid var(--hairline);
@@ -113,27 +121,29 @@ const ordered = byDateDesc(posts);
 
 	/* THE HEADER. Identical open and closed: the same size, weight, tracking
 	   and padding in both states, so a title can never rewrap on open. The
-	   ink is the only thing that moves — tertiary closed, primary open. */
+	   ink is the only thing that moves — tertiary closed, primary open. The
+	   date is the caps label voice (tabular, from Mono), on the title's first
+	   baseline. */
 	.stack__date,
 	.stack__title {
 		display: block;
 		padding-block: var(--space-4);
-		line-height: var(--line-height-ui);
 		color: var(--text-tertiary);
 		transition: color var(--duration-swap) var(--ease-reveal);
 	}
 	.stack__date {
 		grid-column: 1;
-		grid-row: 1 / span 2;
-		padding-inline-end: var(--space-5);
+		grid-row: 1;
+		align-self: baseline;
+		padding-inline-end: var(--stack-gutter);
 		text-align: end;
-		font-variant-numeric: tabular-nums;
-		border-inline-end: 1px solid var(--hairline);
 	}
 	.stack__title {
 		grid-column: 2;
 		grid-row: 1;
-		padding-inline-start: var(--space-5);
+		align-self: baseline;
+		padding-inline-start: var(--stack-gutter);
+		line-height: var(--line-height-ui);
 		/* The control's reset drops the underline; the ring is control.css's,
 		   drawn inside the cell so it never clips on the hairlines. */
 		--control-ring-offset: var(--focus-ring-inset);
@@ -147,10 +157,12 @@ const ordered = byDateDesc(posts);
 	   --stack-open tall (the script's H; auto without it, so the first post
 	   reads with scripting off). The body itself carries no padding, border or
 	   margin — all of that is on the inner, which is what the script measures,
-	   so H is the whole of what opening adds. The script animates the height;
-	   here only visibility waits for the close to finish, and the inner fades. */
+	   so H is the whole of what opening adds. It spans both columns: the
+	   numeral in the left half, the text in the right. The script animates
+	   the height; here only visibility waits for the close to finish, and the
+	   inner fades. */
 	.stack__body {
-		grid-column: 2;
+		grid-column: 1 / -1;
 		grid-row: 2;
 		block-size: 0;
 		overflow: clip;
@@ -164,15 +176,27 @@ const ordered = byDateDesc(posts);
 	}
 	.stack__body-inner {
 		display: grid;
-		justify-items: start;
-		gap: var(--space-4);
-		padding-inline-start: var(--space-5);
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		align-items: start;
 		padding-block-end: var(--space-6);
 		opacity: 0;
 		transition: opacity var(--duration-swap) var(--ease-reveal);
 	}
 	.stack__post[data-open] .stack__body-inner {
 		opacity: 1;
+	}
+	/* The numeral: the widgets' headline figure (`1,551` MILES), in the left
+	   half at the foot of the body, flush to the rule as the date is. */
+	.stack__time {
+		justify-self: end;
+		align-self: end;
+		padding-inline-end: var(--stack-gutter);
+	}
+	.stack__text {
+		display: grid;
+		justify-items: start;
+		gap: var(--space-4);
+		padding-inline-start: var(--stack-gutter);
 	}
 	.stack__meta {
 		display: block;
@@ -181,31 +205,43 @@ const ordered = byDateDesc(posts);
 		max-inline-size: var(--measure-note);
 	}
 
-	/* Phone: one column, the date above the title; no rule between them. */
+	/* Phone: one column — the date above the title, no rule between them; the
+	   numeral heads the body, above the meta. */
 	@media (max-width: 639px) {
 		.stack__post {
 			grid-template-columns: minmax(0, 1fr);
 			grid-template-rows: auto auto auto;
+			background: none;
 		}
 		.stack__date {
 			grid-column: 1;
 			grid-row: 1;
+			align-self: start;
 			padding-inline-end: 0;
 			padding-block-end: 0;
 			text-align: start;
-			border-inline-end: 0;
 		}
 		.stack__title {
 			grid-column: 1;
 			grid-row: 2;
+			align-self: start;
 			padding-inline-start: 0;
-			padding-block-start: var(--space-1);
+			padding-block-start: var(--space-2);
 		}
 		.stack__body {
 			grid-column: 1;
 			grid-row: 3;
 		}
 		.stack__body-inner {
+			grid-template-columns: minmax(0, 1fr);
+			gap: var(--space-4);
+		}
+		.stack__time {
+			justify-self: start;
+			align-self: start;
+			padding-inline-end: 0;
+		}
+		.stack__text {
 			padding-inline-start: 0;
 		}
 	}
