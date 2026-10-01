@@ -9,7 +9,7 @@ the mountain's ridge over a faint blue wash. Standing where the microphone
 stood is an orb: a ringed ball, five holes round a coral core, on a stem. Three blue sliders
 with ring handles sit round it, each with a dimension line and a caps label:
 ELEVATION across the top, HUMIDITY up the right and HARDNESS across the
-bottom, under the bay.
+bottom, under the orb.
 
 It moves in `steps`, four beats. The first is San Francisco's settings (low,
 humid, soft); then the routine turns one control a beat to Tahoe's, with a

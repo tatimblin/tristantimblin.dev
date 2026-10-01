@@ -14,7 +14,7 @@
  * THE CONTROLS are the module's three sliders, each a blue track with a ring
  * handle, a dimension line with arrowheads and a centred caps label:
  * ELEVATION across the top (high: Tahoe's 6,225 ft), HUMIDITY up the right
- * (low: the dry mountain air), HARDNESS across the bottom, under the bay (hard: the mineral
+ * (low: the dry mountain air), HARDNESS across the bottom, under the orb (hard: the mineral
  * water the routine puts back).
  *
  * The motion is `steps`, four beats: San Francisco's settings — low, humid,
@@ -73,7 +73,7 @@ interface Slider {
 const SLIDERS: Slider[] = [
 	{ name: "ELEVATION", axis: "x", at: 28, from: 26, to: 206, dim: 13, sf: 0.06, tahoe: 0.88 },
 	{ name: "HUMIDITY", axis: "y", at: 254, from: 142, to: 44, dim: 273, sf: 0.84, tahoe: 0.14 },
-	{ name: "HARDNESS", axis: "x", at: 158, from: 192, to: 304, dim: 172, sf: 0.1, tahoe: 0.9 },
+	{ name: "HARDNESS", axis: "x", at: 158, from: 16, to: 128, dim: 172, sf: 0.1, tahoe: 0.9 },
 ];
 const HANDLE = 5;
 const TRACK = 3.5;
