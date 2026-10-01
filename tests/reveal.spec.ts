@@ -797,10 +797,10 @@ test.describe("reveal — the /txt index", () => {
 	}) => {
 		// The index is a plain list of links, with no images to wait for. The
 		// reveal is an ASSET-arrival mechanism — it holds a region back until
-		// its image has decoded — so the index carries no targets at all. This pins that: the coordinator has nothing to hold, and
-		// the page is fully visible on a hard load — the path tests 6 and 7 do
-		// not exercise, since ClientRouter tears the reveal down before a swapped
-		// page mounts.
+		// its image has decoded — so the index carries no targets at all. This
+		// pins that: the coordinator has nothing to hold, and the page is fully
+		// visible on a hard load — the path tests 6 and 7 do not exercise, since
+		// ClientRouter tears the reveal down before a swapped page mounts.
 		await page.goto("/txt/");
 		const state = await readReveal(page);
 		expect(state.total, "the index should carry no reveal targets").toBe(0);
