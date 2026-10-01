@@ -1,4 +1,5 @@
 ---
+import type { ComponentProps } from "astro/types";
 import { ClientRouter } from "astro:transitions";
 import "../styles/global.css";
 // Asset-arrival reveal (the motion; the scheduling lives in src/lib/reveal.ts and
@@ -16,47 +17,7 @@ import "@whois/design-system/styles.css";
 import SiteFooter from "../components/SiteFooter.astro";
 import Seo from "../components/Seo.astro";
 
-interface Props {
-	title?: string;
-	description?: string;
-	/** Path or absolute URL to the social card; defaults to /og-small.jpg. */
-	image?: string;
-	/** What the social card shows (og:image:alt). */
-	imageAlt?: string;
-	/** Ask crawlers to skip this page (e.g. scratch/experiments pages). */
-	noindex?: boolean;
-	/** Article SEO surface, forwarded to <Seo />. Defaults keep pages as "website". */
-	type?: "website" | "article";
-	canonical?: string;
-	publishDate?: Date;
-	modifiedDate?: Date | null;
-	tags?: string[];
-	/**
-	 * Media to preload in <head>, highest-value first. Use for an above-the-fold
-	 * asset that JS discovers LATE: <dotted-grid> builds its <video> in
-	 * connectedCallback, so without a preload the clip can't even start downloading
-	 * until the page bundle has been fetched, parsed and executed. The hero clip is
-	 * ~60KB, so the win is in discovery time, not bytes.
-	 *
-	 * Opt-in per page rather than hardcoded here: a preload for an asset the page
-	 * doesn't render is pure waste, and only the homepage has the hero scene.
-	 */
-	preloadMedia?: Array<{ href: string; as: "video" | "image"; type?: string }>;
-}
-
-const {
-	title,
-	description,
-	image,
-	imageAlt,
-	noindex,
-	type,
-	canonical,
-	publishDate,
-	modifiedDate,
-	tags,
-	preloadMedia = [],
-} = Astro.props;
+type Props = ComponentProps<typeof Seo>;
 ---
 
 <!doctype html>
@@ -72,14 +33,6 @@ const {
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		{/* Start above-the-fold media during HTML parse instead of after the page
-		     bundle executes (see the preloadMedia prop). First, so it races the
-		     stylesheet below rather than queueing behind it. */}
-		{
-			preloadMedia.map((m) => (
-				<link rel="preload" href={m.href} as={m.as} type={m.type} />
-			))
-		}
 		{/* The faces that paint above the fold on EVERY page: the body face
 		     (every paragraph), the UI face and its Bold (the header, the hero
 		     lede, every heading) and the hero cut of Migra (the wordmark lockup).
@@ -141,27 +94,20 @@ const {
 			title="Writing — Tristan Timblin"
 			href="/rss.xml"
 		/>
-		<Seo
-			title={title}
-			description={description}
-			image={image}
-			imageAlt={imageAlt}
-			noindex={noindex}
-			type={type}
-			canonical={canonical}
-			publishDate={publishDate}
-			modifiedDate={modifiedDate}
-			tags={tags}
-		/>
+		<Seo {...Astro.props} />
 		{/* No-FOUC theme init: apply the stored choice before first paint, and
-		     re-apply after each view-transition swap. Dark is the fallback. */}
+		     re-apply after each view-transition swap. Dark is the fallback.
+		     window.__setTheme is the one class swap; the footer toggle calls it
+		     too (inline, so it cannot be an import). */}
 		<script is:inline>
 			(function () {
-				function apply() {
-					var t = localStorage.getItem("theme") === "light" ? "light" : "dark";
+				window.__setTheme = function (t) {
 					var r = document.documentElement;
 					r.classList.remove("maximeheckel-light", "maximeheckel-dark");
 					r.classList.add("maximeheckel-" + t);
+				};
+				function apply() {
+					window.__setTheme(localStorage.getItem("theme") === "light" ? "light" : "dark");
 				}
 				apply();
 				document.addEventListener("astro:after-swap", apply);
@@ -224,6 +170,8 @@ const {
 			declare global {
 				interface Window {
 					__lenis?: Lenis;
+				/** Swap the theme class on <html> (defined inline in <head>). */
+				__setTheme: (theme: "light" | "dark") => void;
 				}
 			}
 

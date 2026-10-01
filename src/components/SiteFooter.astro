@@ -89,8 +89,7 @@ const year = new Date().getFullYear();
 			const next = root.classList.contains("maximeheckel-dark")
 				? "light"
 				: "dark";
-			root.classList.remove("maximeheckel-light", "maximeheckel-dark");
-			root.classList.add("maximeheckel-" + next);
+			window.__setTheme(next);
 			localStorage.setItem("theme", next);
 			sync();
 			// Nudge any paused/reduced-motion <dotted-grid> to repaint with the new
