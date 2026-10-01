@@ -10,8 +10,8 @@
  * Each window is a rectangle with a title bar (a rule under three small
  * dots). Some hold a very simple hint of content — a few bars (the list),
  * a green block (the terminal: live signals), a coral block, a bar and a
- * block — and some are empty. The largest holds the bold striped disc: the
- * car, as a node, the digital twin. Ink, green and coral; no words.
+ * block — and some are empty. The largest holds a control panel — a
+ * toggle switched on over three sliders: the actions, as UI. Ink, green and coral; no words.
  *
  * The motion is `steps`, three beats: the FOCUS moves across the tiling —
  * a window's title bar fills solid, its first dot lit coral, while it is the
@@ -20,12 +20,10 @@
  *
  *   bun run scenes:bake      → src/content/txt/no-honey-we-have-a-dashboard-at-home.svg
  *
- * Drawn from the kit and the stripe-disc recipe: no credit.
+ * Drawn from the kit: no credit.
  */
 
-import stripeDisc from "@whois/design-system/glyphs/recipes/stripe-disc";
 import type { Kit } from "@whois/design-system/lib/micro";
-import { part } from "@whois/design-system/scenes/parts";
 import { scene } from "@whois/design-system/scenes/recipe";
 
 /** A window on the plate, and what it holds. */
@@ -94,9 +92,25 @@ function win(k: Kit, w: Win): string[] {
 		case "block":
 			out.push(k.rect(cx, cy, 30, 30, { paint: "none", fill: "ink" }), k.rect(cx + 36, cy, 40, 3, { paint: "none", fill: "ink" }), k.rect(cx + 36, cy + 9, 26, 3, { paint: "none", fill: "dim" }));
 			break;
-		case "twin":
-			out.push(part(k, stripeDisc, { at: [cx + cw / 2, cy + ch / 2], scale: 3.2 }));
+		case "twin": {
+			// A control panel: a toggle switched on, over three sliders, each a
+			// track lit up to its square handle.
+			const [tx, tw] = [cx + 12, cw - 24];
+			out.push(
+				k.pill(tx, cy + 8, 46, 22, { paint: "ink", weight: "line" }),
+				k.dot(tx + 35, cy + 19, 7.5, { paint: "ink" }),
+				...[0.72, 0.38, 0.56].flatMap((v, i) => {
+					const y = cy + 48 + i * 15;
+					const hx = tx + tw * v;
+					return [
+						k.line(tx, y, tx + tw, y, { paint: "dim", weight: "hair", cap: "butt" }),
+						k.rect(tx, y - 1.5, hx - tx, 3, { paint: "none", fill: "ink" }),
+						k.rect(hx - 4, y - 6, 8, 12, { paint: "none", fill: "ink" }),
+					];
+				}),
+			);
 			break;
+		}
 	}
 	return out;
 }
