@@ -14,13 +14,12 @@
 //
 // IT IS AN ARTFRAME. The gate's first rung: the window on the plate, the
 // edge and corner, the clip, the line weights and the motion contract are
-// ArtFrame's, and a scene takes them as they are (`variant` bare / corners
-// too; not `mark`, which retunes the ink for a title's margin). What a
-// scene adds is the readout layer, and that is the reason it is not the
-// frame's own slot: a labelled frame is `role="img"`, whose children are
-// presentational, so text inside it would be lost to a reader. The layer
-// is the frame's SIBLING in one grid cell, over it, and the scene (not the
-// frame) is what hovering plays (motion.css). Readouts are decorative HUD
+// ArtFrame's, and a scene takes them as they are. What a scene adds is the
+// readout layer, and that is the reason it is not the frame's own slot: a
+// labelled frame is `role="img"`, whose children are presentational, so
+// text inside it would be lost to a reader. The layer is the frame's
+// SIBLING in one grid cell, over it, and the scene (not the frame) is what
+// hovering plays (motion.css). Readouts are decorative HUD
 // text as far as the DRAWING's name goes — `label` names the picture, the
 // readouts say what they say — but they are real text: selectable, read.
 //
@@ -56,8 +55,6 @@ interface Props {
 	tone?: "ink" | "dim" | "green" | "red" | "blue" | "lavender";
 	/** The credit under the frame; the file's unless said, `false` for none. */
 	credit?: string | false;
-	/** ArtFrame's window (default), or bare / corners: no plate, edge or corner. */
-	variant?: "frame" | "bare" | "corners";
 	class?: string;
 	[key: string]: unknown;
 }
@@ -71,7 +68,6 @@ const {
 	ratio,
 	tone,
 	credit: creditProp,
-	variant = "frame",
 	class: className,
 	...rest
 } = Astro.props;
@@ -88,7 +84,6 @@ const hasReadouts = Astro.slots.has("default");
 		"ds-scene",
 		glow && "ds-scene--glow-true",
 		tone && tone !== "ink" && `ds-scene--tone-${tone}`,
-		variant !== "frame" && `ds-scene--variant-${variant}`,
 		className,
 	)}
 	data-scene={name}
@@ -101,7 +96,6 @@ const hasReadouts = Astro.slots.has("default");
 		label={label}
 		decorative={decorative}
 		play={play}
-		variant={variant}
 	/>
 	{hasReadouts && (
 		<div class="ds-scene__readouts">

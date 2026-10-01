@@ -38,10 +38,6 @@
 	border-radius: var(--art-radius);
 	color: var(--art-ink);
 }
-.ds-scene--variant-bare .ds-scene__readouts,
-.ds-scene--variant-corners .ds-scene__readouts {
-	border-radius: 0;
-}
 /* tone — the layer's colour: the console's phosphor, or the dimmed ink;
  * a label's own tone overrides it. The same tokens as a label's. */
 .ds-scene--tone-dim .ds-scene__readouts {

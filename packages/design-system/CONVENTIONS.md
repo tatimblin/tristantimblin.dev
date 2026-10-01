@@ -243,12 +243,9 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   edge: hairline at rest, strong under the pointer); `as="button"|"a"` makes
   it a pill button; an `Icon` in the default slot sits before the text.
 - `Chip` — the BOXED chip of the ruled screen: caps in a square hairline box,
-  no fill. `as="a"|"button"` makes it a chip button; `size="sm"` is the key
-  hint's step. SELECTED is read off the chip's own ARIA — `aria-current` or
-  `aria-pressed="true"` — and fills it with the ink. `variant="tab"` is the
-  same caps with NO box — a text tab, the tertiary ink at rest, selected the
-  ink over a 1px accent underline — and `count` a small superscript figure
-  after the label. The readout TAGS (the
+  no fill. `as="a"|"button"` makes it a chip button (the footer's toggles).
+  SELECTED is read off the chip's own ARIA — `aria-current` or
+  `aria-pressed="true"` — and fills it with the ink. The readout TAGS (the
   micrographics' panels): `tone="accent"` draws the box's edge and caps in
   the accent (TELEMATIC), and `variant="arrow"` is a FILLED tag cut to a
   right-pointing chevron by clip-path (a border cannot follow the cut) —
@@ -257,19 +254,14 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
   = pill button; `start-icon`/`end-icon` slots. `IconButton` — `secondary`
   (default, a wash in a hairline) / `outline` (the hairline alone),
-  `size="xs|sm|lg|xl"`, `rounded` = round button, `glyph="−"` a text
-  character in place of an icon (aria-hidden; give the button an
-  `aria-label`).
+  `size="xs|sm|lg|xl"`, `rounded` = round button; give it an `aria-label`.
 
 **Hairline graphics.**
 - `Hairline` — a 1px rule fading at both ends; an `hr`, or `as="span"`.
 - `RuleLabel` — a caps label under a 1px DOTTED hairline (`--hairline-strong`),
   no box: `no` (a leading number in the accent), the label in the default
-  slot, a trailing `meta` slot in the tertiary ink at the far end; `dim` (the
-  row and the number in the tertiary ink), `truncate`
-  (one line, ellipsised; the label wraps without it), `lines={2}` (two
-  lines reserved, the text at their top, so a row of labels holds one
-  height whichever wrap).
+  slot, a trailing `meta` slot in the tertiary ink at the far end;
+  `truncate` (one line, ellipsised; the label wraps without it).
 - `DimensionLabel` — `|—•—•— LABEL —•—•—|`: the caps label in the ink,
   centred on a dimension line (an end tick at each edge, a hairline, dots on
   an even pitch; drawn by `::before`/`::after`, never read out). `as="h2"`
@@ -284,12 +276,9 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   (and its name and tabindex; without the script it stays a picture), and
   leaves vertical touch drags to the page. The script moves the accent with
   `markBar(graph, i)` from `lib/bar-graph` and never selects the bar class.
-- `Legend` — `items=[{label, value?, color?, swatch?, href?}]` or `LegendItem`
+- `Legend` — `items=[{label, value?, color?, swatch?}]` or `LegendItem`
   children (`label`, `value` prop or slot, `color`, `swatch="dot|line|dashed"`
-  for a series drawn as one, `href` — the row as a link, a `ds-control`
-  filling it); dots take `--tone-N` by position. `variant="leaders"` is the
-  spec sheet's KEY: no dot, the label joined to its value by a dotted
-  leader (the strong hairline).
+  for a series drawn as one); dots take `--tone-N` by position.
 - `TileGrid` — `cols`, `rows`, `fit="width|height"`, `cells=[{level?, lit?,
   title?}]` or `Tile` children (`level={0..4}`, `lit`, any attribute — e.g.
   `style="grid-column:…"` to place).
@@ -530,26 +519,13 @@ plate, passing the art profile.
 `aria-hidden`/`focusable="false"` and a slice fit on the root.
 
 ```astro
-<ArtFrame svg={raw} label="The Mega Desk" />          role="img" — a hero, the catalogue
-<ArtFrame svg={raw} decorative />                     aria-hidden — inside a link that names it
-<ArtFrame svg={raw} label="…" play />                 motion running from the start
-<ArtFrame svg={raw} label="…" variant="mark" play />  the MARK: no chrome, the page's ink
-<ArtFrame svg={raw} decorative variant="bare" />      no plate, edge or corner; the art's own inks, still clipped
-<ArtFrame svg={raw} decorative variant="corners" />   bare, with an L-tick at each crop corner
+<ArtFrame svg={raw} label="The globe" />   role="img" — standalone, the catalogue
+<ArtFrame svg={raw} decorative />          aria-hidden — inside a link that names it
+<ArtFrame svg={raw} label="…" play />      motion running from the start
 ```
 
 A frame with no `label` is aria-hidden whether or not it says `decorative`;
 the art is decorative inside a link, and the **link** carries the title.
-`variant="mark"` is the drawing ON the page rather than in a window — no
-plate, edge or corner, and `--art-ink` retuned in scope to `--text-primary`
-(with `--art-ink-2` re-derived from it), so the line work and the "white" faces
-are the same ink as the title it sits beside; the fills keep their colours.
-`variant="bare"` is the window with its chrome taken away — no plate, edge or
-corner — but the art's OWN inks (`--art-ink` follows the theme), still the
-16:9 box and still clipped, so the crop is the only edge: the spec sheet's
-tile under a `RuleLabel`. `variant="corners"` is bare plus a registration
-mark at each crop corner: an 8px (`--space-2`) L of two 1px bars in
-`--text-tertiary`, drawn by the frame's `::after` over the art.
 
 **Motion contract.** A file marks at most one group `<g data-motion="spin |
 drift | slide | blink | dash | steps" data-speed="0.5 | 1 | 2">`; the host owns the
@@ -985,10 +961,9 @@ d3-geo update that moves a coastline), which is why `scenes:check`
 re-bakes; run it before shipping.
 
 **`Scene`** (`styles/scene.css`) — `<Scene name label? decorative? play?
-glow? ratio? tone? credit? variant? …>` — is an **`ArtFrame`** (the gate's
+glow? ratio? tone? credit? …>` — is an **`ArtFrame`** (the gate's
 first rung: the plate, the edge, the clip, the line weights and the
-motion contract are the frame's, with `variant` bare / corners; not
-`mark`) with two things added. A **readout layer** over it: `Scene`'s
+motion contract are the frame's) with two things added. A **readout layer** over it: `Scene`'s
 default slot, a grid-cell sibling of the frame rather than its child,
 because a labelled frame is `role="img"` and an image's children are
 presentational — text inside it would be lost to a reader — so the layer

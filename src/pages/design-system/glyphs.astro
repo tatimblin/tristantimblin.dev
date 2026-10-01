@@ -282,7 +282,7 @@ const kinds = (entries: Entry[]) =>
 			<Flex gap={2} role="group" aria-label="Sheet theme">
 				<Mono variant="text">sheet on</Mono>
 				{(["page", "light", "dark"] as const).map((t) => (
-					<Chip as="button" type="button" size="sm" data-sheet-theme={t} aria-pressed={t === "page" ? "true" : "false"}>
+					<Chip as="button" type="button" data-sheet-theme={t} aria-pressed={t === "page" ? "true" : "false"}>
 						{t === "page" ? "this page" : `${t} page`}
 					</Chip>
 				))}
@@ -314,7 +314,7 @@ const kinds = (entries: Entry[]) =>
 									<span class="glyph-sheet__name">
 										<Mono tone="primary">{g.key}·{no(i)}</Mono> {e.name}
 									</span>
-									<Chip size="sm" title={KIND_NAME[e.kind]}>{e.kind}</Chip>
+									<Chip title={KIND_NAME[e.kind]}>{e.kind}</Chip>
 								</Flex>
 							</GlyphTile>
 						))}

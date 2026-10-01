@@ -5,12 +5,9 @@
 // the file's colours are the --art-* tokens and its motion is this frame's
 // CSS, neither of which reaches an <img>.
 //
-//   <ArtFrame svg={raw} label="The Mega Desk" />        role="img", standalone (a hero, the catalogue)
-//   <ArtFrame svg={raw} decorative />                   aria-hidden: inside a link that names the post, or a filler
-//   <ArtFrame svg={raw} label="…" play />               motion running (the open post)
-//   <ArtFrame svg={raw} label="…" variant="mark" play />       the art as a page MARK: no plate, the page's ink
-//   <ArtFrame svg={raw} decorative variant="bare" />           no plate, edge or corner; the art's own inks
-//   <ArtFrame svg={raw} decorative variant="corners" />        bare, with an L-tick at each crop corner
+//   <ArtFrame svg={raw} label="The globe" />      role="img", standalone
+//   <ArtFrame svg={raw} decorative />             aria-hidden: inside a link that names it
+//   <ArtFrame svg={raw} label="…" play />         motion running from the start
 //
 // The art is decorative inside a link — the LINK carries the title — so a
 // frame with no `label` is aria-hidden whether or not it says `decorative`;
@@ -18,18 +15,8 @@
 // on hover and focus by itself; `play` sets data-art-play, the attribute a
 // script may toggle too. `class` merges; everything else passes through.
 //
-// Four variants. `frame` (the default) is the window on the plate: the tile.
-// `mark` is the art drawn ON the page rather than in a window: no plate,
-// edge or corner, and the line work in the page's own ink — --art-ink
-// retuned to --text-primary in scope, so the drawing reads as a mark beside
-// a title, in the same colour as the title. Small by design: a column of a
-// grid, not a hero. `bare` is the spec sheet's tile: the window with its
-// chrome taken away — no plate, edge or corner — and the art in its own inks
-// (the theme's --art-ink, not the page's text), still clipped to the box, so
-// the crop is the only edge. `corners` is `bare` with a registration mark at
-// each crop corner: four small L-ticks in the tertiary ink, which say where
-// the box is without drawing it. The box is the file's 16:9 (a caller may
-// retune `--art-ratio` in scope) and it clips.
+// The box is the file's 16:9 (a caller may retune `--art-ratio` in scope)
+// and it clips.
 import { cx } from "../lib/cx";
 import { inlineSvg } from "../lib/inline-svg";
 
@@ -42,11 +29,6 @@ interface Props {
 	decorative?: boolean;
 	/** Motion running from the start, not only under the pointer. */
 	play?: boolean;
-	/** `frame` (default) is the window on the plate; `mark` is the drawing on
-	 *  the page in the page's ink, no chrome — a page mark beside a title;
-	 *  `bare` is the window with no plate, edge or corner; `corners` is bare
-	 *  with an L-tick at each crop corner. */
-	variant?: "frame" | "mark" | "bare" | "corners";
 	as?: string;
 	class?: string;
 	[key: string]: unknown;
@@ -57,7 +39,6 @@ const {
 	label,
 	decorative = false,
 	play = false,
-	variant = "frame",
 	as = "div",
 	class: className,
 	...rest
@@ -74,7 +55,7 @@ const inner = inlineSvg(svg, {
 	attrs: { "aria-hidden": "true", focusable: "false", preserveAspectRatio: "xMidYMid slice" },
 });
 
-const cls = cx("ds-art-frame", variant !== "frame" && `ds-art-frame--variant-${variant}`, className);
+const cls = cx("ds-art-frame", className);
 
 const a11y = label && !decorative
 	? { role: "img", "aria-label": label }

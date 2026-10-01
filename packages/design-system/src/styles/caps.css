@@ -40,11 +40,10 @@
 /* A BOX set in the voice — a pill, a chip, a button, the strip's action cell,
    a rule label's full-width row (all of which compose these classes) — keeps the phantom inside its own
    padding: no outer pull on its neighbours, and the same amount indented in
-   front of the letters so they centre between the two. A text tab (a Chip
-   with no box) is not centred in anything: its letters start at its edge. */
+   front of the letters so they centre between the two. */
 .ds-caps:is(.ds-pill, .ds-chip, .ds-button, .ds-stat-strip__action, .ds-rule-label) {
 	margin-inline-end: 0;
 }
-.ds-caps:is(.ds-pill, .ds-chip:not(.ds-chip--variant-tab), .ds-button) {
+.ds-caps:is(.ds-pill, .ds-chip, .ds-button) {
 	text-indent: var(--tracking-caps, 0.14em);
 }

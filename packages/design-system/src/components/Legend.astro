@@ -6,15 +6,10 @@
 //     <LegendItem label="home" value="3" color="var(--tone-2)" />
 //     <LegendItem label="away"><Fragment slot="value">…</Fragment></LegendItem>
 //   </Legend>
-//   <Legend variant="leaders" items={[{ label: "programming", value: "02", href: "/txt/?q=programming" }]} />
 //
 // Pass `items` for the plain case; use LegendItem children when a row needs
 // its own markup or attributes. The first row's dot is the accent unless a
 // `color` says otherwise.
-//
-// `variant="leaders"` is the spec sheet's KEY: no dot, the label and the
-// value joined by a dotted LEADER, the value in the ink. An item with an
-// `href` is a link (the /txt topic key: each category to its query).
 import { cx } from "../lib/cx";
 import LegendItem from "./LegendItem.astro";
 
@@ -23,27 +18,23 @@ interface Item {
 	value?: string | number;
 	color?: string;
 	swatch?: "dot" | "line" | "dashed";
-	/** The row as a link. */
-	href?: string;
 }
 
 interface Props {
 	as?: string;
 	items?: Item[];
-	/** dots (default): the ranked dots. leaders: no dot, a dotted leader to the value. */
-	variant?: "dots" | "leaders";
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "ul", items, variant = "dots", class: className, ...rest } = Astro.props;
+const { as = "ul", items, class: className, ...rest } = Astro.props;
 const Tag = as as any;
 ---
 
-<Tag class={cx("ds-legend", variant === "leaders" && "ds-legend--variant-leaders", className)} {...rest}>
+<Tag class={cx("ds-legend", className)} {...rest}>
 	{
 		items?.map((it: Item) => (
-			<LegendItem label={it.label} value={it.value} color={it.color} swatch={it.swatch} href={it.href} />
+			<LegendItem label={it.label} value={it.value} color={it.color} swatch={it.swatch} />
 		))
 	}
 	<slot />

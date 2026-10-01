@@ -20,54 +20,6 @@
 	/* currentColor inside the art is the ink, so a shape may say so. */
 	color: var(--art-ink);
 }
-/* THE MARK (variant="mark"): the drawing on the page, in the page's ink. No
- * plate, edge or corner, and --art-ink retuned in scope to --text-primary — the
- * title's colour — so the line work and the "white" faces are the page's own
- * ink rather than the plate's, on both themes; the dimmed line follows it, as
- * it is re-derived here from the retuned ink (a custom property substitutes
- * its var()s where it is declared, so the theme's --art-ink-2 would not). The
- * fills keep their colours: coral is the accent, the rest hold on the page as
- * they hold on the plate. Still a 16:9 box that clips, still moving. */
-.ds-art-frame--variant-mark {
-	--art-ink: var(--text-primary);
-	--art-ink-2: color-mix(in oklab, var(--art-ink) 45%, transparent);
-	background: none;
-	border: 0;
-	border-radius: 0;
-	color: var(--art-ink);
-}
-/* BARE (variant="bare") and CORNERS (variant="corners"): the window with its
- * chrome taken away — no plate, edge or corner — for the spec sheet, where the
- * art sits straight on the page under its label. Unlike the mark, the inks
- * stay the art's own (--art-ink follows the theme, so the drawing holds on
- * either page). Still the 16:9 box, still clipped: the crop is the edge.
- * CORNERS adds a registration mark at each crop corner — an L of two 1px
- * bars, --art-frame-corner long, in the tertiary ink — drawn by ::after over the
- * art, eight gradients in one background, so the box reads without a line
- * round it. */
-.ds-art-frame--variant-bare,
-.ds-art-frame--variant-corners {
-	background: none;
-	border: 0;
-	border-radius: 0;
-}
-.ds-art-frame--variant-corners::after {
-	--art-frame-corner: var(--space-2);
-	--art-frame-corner-ink: linear-gradient(var(--text-tertiary), var(--text-tertiary));
-	content: "";
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
-	background:
-		var(--art-frame-corner-ink) left top / var(--art-frame-corner) 1px no-repeat,
-		var(--art-frame-corner-ink) left top / 1px var(--art-frame-corner) no-repeat,
-		var(--art-frame-corner-ink) right top / var(--art-frame-corner) 1px no-repeat,
-		var(--art-frame-corner-ink) right top / 1px var(--art-frame-corner) no-repeat,
-		var(--art-frame-corner-ink) left bottom / var(--art-frame-corner) 1px no-repeat,
-		var(--art-frame-corner-ink) left bottom / 1px var(--art-frame-corner) no-repeat,
-		var(--art-frame-corner-ink) right bottom / var(--art-frame-corner) 1px no-repeat,
-		var(--art-frame-corner-ink) right bottom / 1px var(--art-frame-corner) no-repeat;
-}
 .ds-art-frame > svg {
 	display: block;
 	inline-size: 100%;

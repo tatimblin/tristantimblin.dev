@@ -32,15 +32,6 @@
 	display: flex;
 	z-index: 1;
 }
-/* A text glyph in place of an icon: the UI face at regular weight, on one
-   line, a step under the icon's box at each size (below). */
-.ds-icon-button__glyph {
-	font-family: var(--font-ui);
-	font-weight: var(--font-weight-400);
-	line-height: 1;
-	font-variant-numeric: tabular-nums;
-}
-
 .ds-icon-button:hover:not(:disabled),
 .ds-icon-button:focus-visible {
 	--button-content-scale: 1.06;
@@ -61,8 +52,7 @@
 }
 
 /* variant: outline — a hairline and nothing else until pointed at; the
-   ruled screen's button (the /txt stepper, rounded), where a wash would be
-   a fill. */
+   ruled screen's button, where a wash would be a fill. */
 .ds-icon-button--variant-outline {
 	--button-background: transparent;
 	--button-border: var(--hairline);
@@ -80,8 +70,7 @@
 }
 
 /* size. xs is the pill's height (--space-5), so it sits in a card header's
-   meta slot without making the row taller than its neighbours'. The glyph
-   steps follow the widget scale inside a grid, the type tokens outside. */
+   meta slot without making the row taller than its neighbours'. */
 .ds-icon-button--size-xs {
 	inline-size: var(--space-5);
 	block-size: var(--space-5);
@@ -89,9 +78,6 @@
 .ds-icon-button--size-xs svg {
 	width: 12px;
 	height: 12px;
-}
-.ds-icon-button--size-xs .ds-icon-button__glyph {
-	font-size: var(--widget-font-sm, var(--font-size-1));
 }
 .ds-icon-button--size-sm {
 	inline-size: var(--space-6);
@@ -101,9 +87,6 @@
 	width: 16px;
 	height: 16px;
 }
-.ds-icon-button--size-sm .ds-icon-button__glyph {
-	font-size: var(--widget-font-md, var(--font-size-3));
-}
 .ds-icon-button--size-lg {
 	inline-size: var(--space-7);
 	block-size: var(--space-7);
@@ -112,9 +95,6 @@
 	width: 18px;
 	height: 18px;
 }
-.ds-icon-button--size-lg .ds-icon-button__glyph {
-	font-size: var(--widget-font-lg, var(--font-size-5));
-}
 .ds-icon-button--size-xl {
 	inline-size: var(--space-10);
 	block-size: var(--space-10);
@@ -122,7 +102,4 @@
 .ds-icon-button--size-xl svg {
 	width: 24px;
 	height: 24px;
-}
-.ds-icon-button--size-xl .ds-icon-button__glyph {
-	font-size: var(--widget-font-xl, var(--font-size-6));
 }

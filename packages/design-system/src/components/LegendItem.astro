@@ -2,9 +2,8 @@
 // LegendItem — one row of a Legend: the swatch (a dot; `swatch="line"` or
 // `"dashed"` for a series drawn as one), caps label, value at the end
 // (styles/legend.css). `color` overrides the dot's ranked tone; the `value`
-// slot replaces the value prop when it needs markup. `href` makes the row a
-// LINK (a `ds-control` inside the item, filling it), for a key whose entries
-// go somewhere — the /txt topic key. Everything else passes to the item.
+// slot replaces the value prop when it needs markup. Everything else passes
+// to the item.
 import { cx } from "../lib/cx";
 import Mono from "./Mono.astro";
 
@@ -15,8 +14,6 @@ interface Props {
 	color?: string;
 	/** The key's mark: a dot, or a line / dashed line for a series drawn as one. */
 	swatch?: "dot" | "line" | "dashed";
-	/** The row as a link to here. */
-	href?: string;
 	class?: string;
 	style?: string;
 	[key: string]: unknown;
@@ -28,30 +25,26 @@ const {
 	value,
 	color,
 	swatch = "dot",
-	href,
 	class: className,
 	style,
 	...rest
 } = Astro.props;
 
 const Tag = as as any;
-const Row = href ? "a" : Fragment;
 const hasValueSlot = Astro.slots.has("value");
 const vars = [color && `--legend-color:${color}`, style].filter(Boolean).join(";");
 ---
 
 <Tag class={cx("ds-legend__item", swatch !== "dot" && `ds-legend__item--swatch-${swatch}`, className)} style={vars || undefined} {...rest}>
-	<Row {...(href ? { class: "ds-legend__link ds-control", href } : {})}>
-		<span class="ds-legend__dot" aria-hidden="true"></span>
-		<Mono class="ds-legend__label">{label ?? <slot />}</Mono>
-		{
-			hasValueSlot ? (
-				<Mono variant="value" class="ds-legend__value">
-					<slot name="value" />
-				</Mono>
-			) : value != null ? (
-				<Mono variant="value" class="ds-legend__value">{value}</Mono>
-			) : null
-		}
-	</Row>
+	<span class="ds-legend__dot" aria-hidden="true"></span>
+	<Mono class="ds-legend__label">{label ?? <slot />}</Mono>
+	{
+		hasValueSlot ? (
+			<Mono variant="value" class="ds-legend__value">
+				<slot name="value" />
+			</Mono>
+		) : value != null ? (
+			<Mono variant="value" class="ds-legend__value">{value}</Mono>
+		) : null
+	}
 </Tag>

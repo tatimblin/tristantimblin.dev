@@ -84,11 +84,6 @@ import KnobGroup from "@whois/design-system/KnobGroup";
 import Knob from "@whois/design-system/Knob";
 import ThemePage from "@whois/design-system/ThemePage";
 
-// The demo chips: ALL and the four categories, each a link.
-const chipsDemo = [
-	{ label: "all", query: "", href: "/txt/", count: 5 },
-	...([["programming", 2], ["projects", 1], ["thoughts", 1], ["personal", 1]] as const).map(([c, n]) => ({ label: c, query: c, href: `/txt/?q=${c}`, count: n })),
-];
 // Art tokens, for the swatch row: name → what it is for.
 const artTokens = [
 	["--art-plate", "the tile fill — near-black on dark, bone (--gray-300) on light"],
@@ -663,9 +658,8 @@ const faces = [
 			<p class="ds-demo__note">
 				<code>RuleLabel</code>: a caps label under a 1px dotted hairline — an optional
 				leading <code>no</code> in the accent, the label, an optional trailing
-				<code>meta</code> slot in the tertiary ink. <code>dim</code> takes the row
-				to the tertiary ink (a filler's tag); <code>truncate</code> holds it to one
-				line. <code>DimensionLabel</code>: the label centred on a dimension line —
+				<code>meta</code> slot in the tertiary ink. <code>truncate</code> holds it to
+				one line. <code>DimensionLabel</code>: the label centred on a dimension line —
 				end ticks, a hairline, dots on an even pitch.
 			</p>
 			<div class="ds-demo__rule-labels">
@@ -673,7 +667,6 @@ const faces = [
 				<RuleLabel no="04">Tahoe mountain hair<Mono slot="meta">Latest</Mono></RuleLabel>
 				<RuleLabel no="01" truncate>No honey, we have a dashboard at home</RuleLabel>
 				<RuleLabel no="01">No honey, we have a dashboard at home</RuleLabel>
-				<RuleLabel dim>F_07</RuleLabel>
 			</div>
 			<Flex direction="column" gap={5} style="margin-top: var(--space-6);">
 				<DimensionLabel>Entries</DimensionLabel>
@@ -764,18 +757,11 @@ const faces = [
 				<IconButton size="lg" rounded aria-label="play"><Icon name="play" /></IconButton>
 			</Flex>
 			<p class="ds-demo__note" style="margin-top: var(--space-5);">
-				<code>glyph</code> draws a character in place of an icon — the − and + that step
-				the /txt instrument — aria-hidden, in the UI face, sized to the button; the
-				caller names the button. <code>variant="outline"</code> with <code>rounded</code>
-				is the ruled screen's CIRCLED control — the − / + stepper at the foot of /txt
-				(the search bar's ring is the same drawing, not a button).
+				<code>variant="outline"</code> with <code>rounded</code> is the ruled
+				screen's CIRCLED control: the hairline alone, the wash under the pointer.
 			</p>
 			<Flex gap={3} wrap="wrap" alignItems="center">
-				<IconButton size="lg" rounded glyph="−" aria-label="Previous post" />
-				<IconButton size="lg" rounded glyph="+" aria-label="Next post" />
-				<IconButton size="xs" glyph="+" aria-label="Add" />
-				<IconButton variant="outline" rounded size="sm" glyph="−" aria-label="Previous post" />
-				<IconButton variant="outline" rounded size="sm" glyph="+" aria-label="Next post" />
+				<IconButton variant="outline" rounded size="sm" aria-label="chevron"><Icon name="chevron" /></IconButton>
 				<IconButton variant="outline" rounded size="lg" aria-label="copy"><Icon name="copy" /></IconButton>
 			</Flex>
 		</section>
@@ -827,8 +813,7 @@ const faces = [
 			<p class="ds-demo__note">
 				Caps mono in a capsule. <code>subtle</code> (the default) is the header pill,
 				<code>outline</code> the quiet link or toggle (its edge is the Chip's). As a
-				<code>button</code> or <code>a</code> it is a pill button. (The /txt index's
-				filters are the search bar's tab <code>Chip</code>s, next section.)
+				<code>button</code> or <code>a</code> it is a pill button.
 			</p>
 			<Flex gap={2} wrap="wrap" alignItems="center">
 				<Pill><Icon name="check" />low risk</Pill>
@@ -849,11 +834,7 @@ const faces = [
 				the focus ring). SELECTED is read off the chip's own ARIA —
 				<code>aria-current</code> on a link, <code>aria-pressed="true"</code> on a toggle
 				— and fills it with the ink, so what a reader is told and what is drawn cannot
-				fall out of step. <code>size="sm"</code> is the key hint's step.
-				<code>variant="tab"</code> is the same caps with no box — a text tab, the
-				tertiary ink at rest, selected the ink over an accent underline — and
-				<code>count</code> a small superscript figure after the label: the search
-				bar's quick filters. The readout TAGS (see <a href="#readouts">Readouts</a>): <code>tone="accent"</code> draws the edge and caps in the accent, and <code>variant="arrow"</code> is a filled tag cut to a chevron — the ink, or the accent with <code>tone="accent"</code>.
+				fall out of step. The readout TAGS (see <a href="#readouts">Readouts</a>): <code>tone="accent"</code> draws the edge and caps in the accent, and <code>variant="arrow"</code> is a filled tag cut to a chevron — the ink, or the accent with <code>tone="accent"</code>.
 			</p>
 			<Flex gap={2} wrap="wrap" alignItems="center">
 				<Chip>projects</Chip>
@@ -864,14 +845,6 @@ const faces = [
 				<Chip as="button" type="button">off</Chip>
 				<Chip as="button" type="button" disabled>disabled</Chip>
 				<Chip as="a" href="#">programming <Mono variant="value">2</Mono></Chip>
-				<Chip size="sm" aria-hidden="true">/</Chip>
-			</Flex>
-			<Flex gap={4} wrap="wrap" alignItems="center">
-				{chipsDemo.map((c) => (
-					<Chip variant="tab" as="a" href="#" count={c.count} aria-current={c.query === "" ? "page" : undefined}>{c.label}</Chip>
-				))}
-				<Chip variant="tab" as="button" type="button" aria-pressed="true">on</Chip>
-				<Chip variant="tab" as="button" type="button">off</Chip>
 			</Flex>
 			<Flex gap={2} wrap="wrap" alignItems="center" data-chip-tags>
 				<Chip tone="accent">telematic</Chip>
@@ -919,10 +892,8 @@ const faces = [
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Legend</Heading>
 			<p class="ds-demo__note">
 				Dot · caps label · value. Dots take the rank ramp by position — the first is the
-				accent — unless a row sets <code>color</code>. <code>variant="leaders"</code> is
-				the spec sheet's KEY: no dot, the label joined to its value by a dotted leader;
-				an item with an <code>href</code> is a link (the /txt topic key, each category
-				to its query — the third legend).
+				accent — unless a row sets <code>color</code>; <code>swatch="line"</code> /
+				<code>"dashed"</code> draws a series' line in place of the dot.
 			</p>
 			<Grid templateColumns="repeat(auto-fill, minmax(200px, 1fr))" gap={6}>
 				<Legend items={[
@@ -938,7 +909,10 @@ const faces = [
 					<LegendItem label="custom colour" value="3" color="var(--success)" />
 					<LegendItem label="value slot"><Fragment slot="value">12<Mono variant="text">/mo</Mono></Fragment></LegendItem>
 				</Legend>
-				<Legend variant="leaders" items={chipsDemo.slice(1).map((c) => ({ label: c.label, value: String(c.count).padStart(2, "0"), href: c.href }))} />
+				<Legend>
+					<LegendItem label="Seed" swatch="dashed" color="var(--text-tertiary)" />
+					<LegendItem label="Finish" swatch="line" color="var(--text-primary)" />
+				</Legend>
 			</Grid>
 		</section>
 
@@ -1402,45 +1376,6 @@ assertions:
 				))}
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Bare and corners — the window with no chrome</h2>
-			<p class="ds-demo__note">
-				<code>variant="bare"</code> takes the plate, the edge and the corner away and
-				keeps the art's own inks and the clip: the crop is the only edge (the spec
-				sheet's tiles, under a <code>RuleLabel</code>). <code>variant="corners"</code>
-				is bare with an L-tick at each crop corner in the tertiary ink.
-			</p>
-			<div class="ds-demo__art-themes">
-				{(["light", "dark"] as const).map((t) => (
-					<ThemePage theme={t}>
-						<div class="ds-demo__art-bare">
-							<div>
-								<RuleLabel no="05">bare</RuleLabel>
-								<ArtFrame svg={artTemplate} label={`_template.svg bare on the ${t} page`} variant="bare" />
-							</div>
-							<div>
-								<RuleLabel no="06">corners</RuleLabel>
-								<ArtFrame svg={artTemplate} label={`_template.svg with corner marks on the ${t} page`} variant="corners" />
-							</div>
-						</div>
-					</ThemePage>
-				))}
-			</div>
-
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">The mark — the art on the page, in the page's ink</h2>
-			<p class="ds-demo__note">
-				<code>variant="mark"</code> is the drawing beside a title rather than in a
-				window: no plate, edge or corner, and <code>--art-ink</code> retuned in scope
-				to <code>--text-primary</code>, so the line work is the same ink as the title
-				it sits by, on both pages. The fills keep their colours. Small by design — a
-				column of the post page's grid, playing (<code>play</code>) on the open post.
-			</p>
-			<div class="ds-demo__art-themes">
-				{(["light", "dark"] as const).map((t) => (
-					<ThemePage theme={t}>
-						<ArtFrame svg={artTemplate} label={`_template.svg as a mark on the ${t} page`} variant="mark" style="max-inline-size: 272px" />
-					</ThemePage>
-				))}
-			</div>
 		</section>
 
 		{/* GLYPHS --------------------------------------------------------- */}
@@ -2048,16 +1983,6 @@ assertions:
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
 		gap: var(--space-5) var(--space-6);
-	}
-	.ds-demo__art-bare {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-		gap: var(--space-5);
-	}
-	.ds-demo__art-bare > div {
-		display: grid;
-		gap: var(--space-2);
-		align-content: start;
 	}
 	.ds-demo__h {
 		margin-bottom: var(--space-4);
