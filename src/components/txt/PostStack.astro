@@ -230,6 +230,11 @@ const ordered = byDateDesc(posts);
 		display: flex;
 	}
 	.stack__read {
+		/* A step taller than the DS's fixed --space-6 box (whose ~--space-2 of
+		   slack around the icon is its effective block padding): the height
+		   follows the padding, and the strip follows READ. */
+		block-size: auto;
+		padding-block: var(--space-3);
 		border-radius: 0;
 		border-inline-start-width: 0;
 		padding-inline-start: var(--stack-inset);
