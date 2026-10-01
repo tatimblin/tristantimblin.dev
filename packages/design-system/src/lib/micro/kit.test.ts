@@ -51,11 +51,6 @@ const sheet = (k: Kit): Array<[string, string]> => [
 	["coil", k.coil(6, 16, 36, 5, 5, { paint: "lavender" })],
 	["group", k.group([k.ring(24, 16, 12, { weight: "hair", dash: "dotted" }), k.line(24, 16, 24, 6)], { motion: "spin", speed: 2 })],
 	["group transform+motion", k.group([k.dot(0, 0, 3, { paint: "red" })], { motion: "blink", transform: "translate(24 16)" })],
-	["steps", k.steps([
-		[k.dot(8, 16, 2, { paint: "green" }), k.ring(8, 16, 4, { paint: "green", weight: "hair", mark: "ripple" }), k.group(k.line(8, 24, 8, 28), { mark: "now" })],
-		[k.dot(24, 16, 2, { paint: "green" }), k.ring(24, 16, 4, { paint: "green", weight: "hair", mark: "ripple" }), k.group(k.line(24, 24, 24, 28), { mark: "now" })],
-		[k.dot(40, 16, 2, { paint: "red" }), k.ring(40, 16, 4, { paint: "red", weight: "hair", mark: "ripple" }), k.group(k.line(40, 24, 40, 28), { mark: "now" })],
-	], { speed: 2 })],
 	["isoBox", k.isoBox(24, 28, 12, 12, 10, { right: "blue" })],
 	["isoCylinder", k.isoCylinder(24, 27, 8, 14, { side: "green" })],
 	["isoCylinder x", k.isoCylinder(14, 12, 6, 24, { axis: "x", side: "blue", top: "none" })],
@@ -307,35 +302,5 @@ describe("assembly", () => {
 			"  </g>",
 			"</g>",
 		]);
-	});
-
-	test("steps: data-motion and data-beats on the g, one <g data-beat> per entry in order, the marks as data-ripple / data-now", () => {
-		const s = a.steps([a.dot(10, 10), [a.dot(20, 10), a.ring(20, 10, 6, { mark: "ripple" }), a.group(a.dot(20, 30), { mark: "now" })]], { speed: 0.5 });
-		expect(s.split("\n")).toEqual([
-			'<g data-motion="steps" data-beats="2" data-speed="0.5">',
-			'  <g data-beat="0">',
-			'    <circle cx="10" cy="10" r="2.5" fill="var(--art-ink)" />',
-			"  </g>",
-			'  <g data-beat="1">',
-			'    <circle cx="20" cy="10" r="2.5" fill="var(--art-ink)" />',
-			'    <circle cx="20" cy="10" r="6" data-ripple="" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />',
-			'    <g data-now="">',
-			'      <circle cx="20" cy="30" r="2.5" fill="var(--art-ink)" />',
-			"    </g>",
-			"  </g>",
-			"</g>",
-		]);
-		expect(a.svg({ children: s })).toSatisfy((file: string) => validateSvg(file, { profile: PROFILES.art }).length === 0);
-		// A transform goes on an outer g, as with any motion.
-		expect(a.steps([a.dot(1, 1), a.dot(2, 2)], { transform: "translate(1 2)" })).toStartWith('<g transform="translate(1 2)">\n  <g data-motion="steps" data-beats="2">');
-		// A mark on a dot.
-		expect(a.dot(1, 1, 2, { mark: "now" })).toBe('<circle data-now="" cx="1" cy="1" r="2" fill="var(--art-ink)" />');
-	});
-
-	test("steps: two to eight beats, none empty; group() refuses the kind", () => {
-		expect(() => a.steps([a.dot(1, 1)])).toThrow(/two to eight/);
-		expect(() => a.steps(Array.from({ length: 9 }, () => a.dot(1, 1)))).toThrow(/two to eight/);
-		expect(() => a.steps([a.dot(1, 1), ""])).toThrow(/beat 1 is empty/);
-		expect(() => a.group(a.dot(1, 1), { motion: "steps" as never })).toThrow(/k\.steps/);
 	});
 });

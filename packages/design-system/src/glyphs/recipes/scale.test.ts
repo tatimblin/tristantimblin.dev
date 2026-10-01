@@ -1,8 +1,7 @@
 /**
  * The scale recipe's exported ruler: the recipe is the ruler with its
  * pointer, the ruler alone draws no pointer, and a pointer drawn apart
- * lands on its tick — so a scene's timeline (one pointer copy per beat of
- * a steps motion) is the glyph's drawing. `bun run test:unit`.
+ * lands on its tick — so a scene's timeline is the glyph's drawing. `bun run test:unit`.
  */
 import { describe, expect, test } from "bun:test";
 import { kit } from "../../lib/micro";

@@ -191,20 +191,6 @@ const artMotions: Array<[string, string, string]> = [
 </svg>`,
 		"a dashed trace advancing by one period — stroke-dashoffset, six per loop",
 	],
-	[
-		"steps",
-		`${open}
-	<path d="M -10 90 H 330" ${line2} stroke-dasharray="2 6" />
-	<path d="M 40 140 H 280" ${line2} />
-	<g data-motion="steps" data-beats="4">
-		${[60, 130, 200, 270].map((x, i) => {
-			const c = i === 3 ? "coral" : "green";
-			return `<g data-beat="${i}"><circle cx="${x}" cy="90" r="6" fill="var(--art-${c})" /><circle data-ripple="" cx="${x}" cy="90" r="10" fill="none" stroke="var(--art-${c})" class="art-line" vector-effect="non-scaling-stroke" /><g data-now=""><path d="M ${x} 140 V 128 M ${x - 4} 134 L ${x} 128 L ${x + 4} 134" ${line} /></g></g>`;
-		}).join("\n\t\t")}
-	</g>
-</svg>`,
-		"a sequence landing beat by beat — a ripple on each landing, a now-mark on the current beat; the still frame is the finished walk",
-	],
 ];
 
 // Instrument tokens, for the swatch row: name → what it is for.
@@ -1339,19 +1325,14 @@ assertions:
 				<ArtFrame svg={artLines} label="the two line weights and two dash patterns, at hero size" />
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Motion — six kinds, paused until hovered</h2>
+			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Motion — five kinds, paused until hovered</h2>
 			<p class="ds-demo__note">
 				A file marks one group <code>data-motion</code> and the frame owns the
 				keyframes, timed by <code>--duration-loop</code> (<code>data-speed</code> 0.5 / 1 / 2
 				divides it). Paused at rest — the still frame is the poster — and running on
 				hover, focus, inside a hovered link, or with <code>play</code>
 				(<code>data-art-play</code>). Under reduced motion the loop is 0s and nothing
-				moves. The first frame sits inside a link. <code>steps</code>
-				is the one sequence: <code>data-beats="N"</code> (2–8) over <code>&lt;g data-beat&gt;</code>
-				children the host lands one slot apart off one clock — a sixth of the loop each,
-				plus two of hold — earlier beats faint until theirs, a <code>data-ripple</code>
-				scaling out as its beat lands, a <code>data-now</code> shown only while its beat
-				is current; its still frame is the finished sequence.
+				moves. The first frame sits inside a link.
 			</p>
 			<label class="ds-demo__art-toggle">
 				<input type="checkbox" data-art-play-toggle />

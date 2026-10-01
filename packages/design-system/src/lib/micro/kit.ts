@@ -16,7 +16,7 @@
  */
 
 import { type Point, pointsAttr, polar, round, same, spread, xy } from "./geometry";
-import { type Colour, type Dash, type Fill, type Mark, type Motion, type Paint, type Speed, type Target, type TargetTable, TARGETS, type Wash, WASH_MAX, type Weight } from "./paint";
+import { type Colour, type Dash, type Fill, type Motion, type Paint, type Speed, type Target, type TargetTable, TARGETS, type Wash, WASH_MAX, type Weight } from "./paint";
 import { isoBox, isoCoil, isoCylinder, isoEllipse, isoPlane, isoRoundBox, isoRoundRect, vanishingGrid } from "./iso";
 import type { IsoBoxOpts, IsoCylinderOpts, IsoEllipseOpts, IsoPlaneOpts, IsoRoundBoxOpts, VanishingGridOpts } from "./iso";
 import { bracketLabel, readout, rule, section, text } from "./type";
@@ -33,8 +33,6 @@ export interface StrokeOpts {
 	weight?: Weight;
 	dash?: Dash;
 	cap?: Cap;
-	/** a steps beat's mark on this element: `ripple` or `now` (inside a beat only) */
-	mark?: Mark;
 }
 
 /** The options of a closed shape: its outline (`paint`) and its fill, `none` unless said. `paint: "none"` with a fill is a flat shape; a scene's fill may be a `wash()`. */
@@ -48,8 +46,6 @@ export interface ShapeOpts extends StrokeOpts {
 export interface FillOpts {
 	/** `ink` unless said */
 	paint?: Paint;
-	/** a steps beat's mark on this element: `ripple` or `now` (inside a beat only) */
-	mark?: Mark;
 }
 
 /** What a wire ends in. */
@@ -83,18 +79,10 @@ export interface AngleOpts extends ShapeOpts {
 }
 
 export interface GroupOpts {
-	/** the group's one motion, per the shared data-motion contract (`steps` is `k.steps()`) */
-	motion?: Exclude<Motion, "steps">;
+	/** the group's one motion, per the shared data-motion contract */
+	motion?: Motion;
 	speed?: Speed;
 	/** a transform; with a motion it goes on an outer group, as the contract requires */
-	transform?: string;
-	/** a steps beat's mark on the group: `now` (what shows only while its beat is current), or `ripple` */
-	mark?: Mark;
-}
-
-export interface StepsOpts {
-	speed?: Speed;
-	/** a transform, on an outer group as the contract requires */
 	transform?: string;
 }
 
@@ -167,10 +155,9 @@ export class Kit {
 	 * vector-effect, caps and dash — so the element is valid on its own.
 	 */
 	attrs(o: StrokeOpts & { evenodd?: boolean } = {}, fill: Fill = "none"): string {
-		const { paint = "ink", weight = this.t.weight, dash, cap = "round", mark, evenodd } = o;
+		const { paint = "ink", weight = this.t.weight, dash, cap = "round", evenodd } = o;
 		const out = [`fill="${this.fill(fill)}"`];
 		if (evenodd) out.push('fill-rule="evenodd"');
-		if (mark) out.unshift(markAttr(mark));
 		if (paint !== "none") {
 			const w = this.t.weights[weight];
 			out.push(`stroke="${this.paint(paint)}"`, `stroke-width="${w.width}"`);
@@ -187,8 +174,7 @@ export class Kit {
 
 	/** A filled dot; `r` is the target's terminal dot (1.5 on a glyph, 2.5 on art) unless said. */
 	dot(x: number, y: number, r = this.t.ends.dot, o: FillOpts = {}): string {
-		const mark = o.mark ? `${markAttr(o.mark)} ` : "";
-		return `<circle ${mark}cx="${round(x)}" cy="${round(y)}" r="${round(r)}" fill="${this.paint(o.paint ?? "ink")}" />`;
+		return `<circle cx="${round(x)}" cy="${round(y)}" r="${round(r)}" fill="${this.paint(o.paint ?? "ink")}" />`;
 	}
 
 	/** A hollow dot: a stroked circle with no fill. */
@@ -514,39 +500,12 @@ export class Kit {
 	 * `transform` given with a motion goes on an outer group.
 	 */
 	group(children: string | readonly string[], o: GroupOpts = {}): string {
-		const { motion, speed, transform, mark } = o;
-		if ((motion as Motion) === "steps") throw new Error("a steps group is k.steps(beats, { speed }): its beats are its children");
+		const { motion, speed, transform } = o;
 		const body = indent(join(typeof children === "string" ? [children] : children));
 		const wrap = (attrs: string, inner: string) => `<g${attrs}>${NL}${inner}${NL}</g>`;
-		const markAttrs = mark ? ` ${markAttr(mark)}` : "";
 		const motionAttrs = motion ? ` data-motion="${motion}"${speed !== undefined ? ` data-speed="${speed}"` : ""}` : "";
-		if (motion && transform) return wrap(` transform="${transform}"`, indent(wrap(motionAttrs + markAttrs, body)));
-		return wrap((transform ? ` transform="${transform}"` : motionAttrs) + markAttrs, body);
-	}
-
-	/**
-	 * A STEPS group: a sequence the host lands beat by beat (motion.css) —
-	 * `<g data-motion="steps" data-beats="N">` over one `<g data-beat="i">`
-	 * per entry of `beats`, in order. Two to eight beats, none empty. A
-	 * beat's children may carry a mark — `{ mark: "ripple" }` on a shape
-	 * that scales out and fades as the beat lands, `{ mark: "now" }` on
-	 * what shows only while the beat is the current one (a pointer: one
-	 * copy per beat, so a file carries no number the host has to know).
-	 * The still frame, and the reduced-motion page, is the FINISHED
-	 * sequence: every beat lit, the last beat's now-mark, no ripple — so
-	 * the last beat is where the drawing should read complete.
-	 */
-	steps(beats: readonly (string | readonly string[])[], o: StepsOpts = {}): string {
-		const { speed, transform } = o;
-		if (beats.length < 2 || beats.length > 8) throw new Error(`a steps group has two to eight beats (got ${beats.length})`);
-		const body = indent(join(beats.map((b, i) => {
-			const inner = join(typeof b === "string" ? [b] : b);
-			if (!inner.trim()) throw new Error(`beat ${i} is empty; nothing would land`);
-			return `<g data-beat="${i}">${NL}${indent(inner)}${NL}</g>`;
-		})));
-		const attrs = ` data-motion="steps" data-beats="${beats.length}"${speed !== undefined ? ` data-speed="${speed}"` : ""}`;
-		const g = `<g${attrs}>${NL}${body}${NL}</g>`;
-		return transform ? `<g transform="${transform}">${NL}${indent(g)}${NL}</g>` : g;
+		if (motion && transform) return wrap(` transform="${transform}"`, indent(wrap(motionAttrs, body)));
+		return wrap(transform ? ` transform="${transform}"` : motionAttrs, body);
 	}
 
 	/** A complete file: the header comment, the root with the target's viewBox, the children indented. */
@@ -561,9 +520,6 @@ export class Kit {
 		]) + NL;
 	}
 }
-
-/** A beat mark as the file writes it: `data-ripple=""` / `data-now=""`. */
-const markAttr = (mark: Mark): string => `data-${mark}=""`;
 
 /** The point `r` from `p` towards `q` (or `p` itself when they coincide). */
 function towards(p: Point, q: Point, r: number): Point {

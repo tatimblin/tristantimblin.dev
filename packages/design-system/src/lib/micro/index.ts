@@ -9,7 +9,7 @@
  */
 
 export { kit, Kit } from "./kit";
-export type { AngleOpts, BandOpts, Cap, Corner, End, FillOpts, GroupOpts, NeedleOpts, ShapeOpts, StepsOpts, StrokeOpts, SvgOpts, TicksOpts, WireOpts } from "./kit";
+export type { AngleOpts, BandOpts, Cap, Corner, End, FillOpts, GroupOpts, NeedleOpts, ShapeOpts, StrokeOpts, SvgOpts, TicksOpts, WireOpts } from "./kit";
 // Type and the module sheet (type.ts, layout.ts, ids.ts): words in four voices on a plate, a grid of cells, plausible module strings.
 export { advance, bracketLabel, caps, escapeText, readout, rule, section, sectionDepth, text, TYPE_SCALE, VOICE_DEFAULT, VOICE_SIZES } from "./type";
 export type { Anchor, BracketOpts, ReadoutOpts, RuleOpts, SectionOpts, TextOpts, TypeSize, Voice } from "./type";
@@ -18,7 +18,7 @@ export type { GridCell, GridOpts } from "./layout";
 export { ids, STATES } from "./ids";
 export type { Ids } from "./ids";
 export { TARGETS, WASH_MAX } from "./paint";
-export type { Colour, Dash, Fill, Mark, Motion, Paint, Speed, Target, TargetTable, Wash, Weight } from "./paint";
+export type { Colour, Dash, Fill, Motion, Paint, Speed, Target, TargetTable, Wash, Weight } from "./paint";
 export { onArc, polar, round, snap, spread } from "./geometry";
 export type { Point } from "./geometry";
 export { ISO_X, ISO_Y, ISO_Z, iso, isoBox, isoCoil, isoCylinder, isoEllipse, isoPlane, isoRoundBox, isoRoundRect, vanishingGrid } from "./iso";

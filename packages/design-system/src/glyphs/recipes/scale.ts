@@ -4,8 +4,8 @@
 // at its reading, with that tick in blue.
 //
 // The ruler is exported: a scene's timeline is the same drawing at another
-// length and tick count, with the pointer drawn apart (`rulerPointer`) —
-// one copy per beat of a steps motion, say — or not at all.
+// length and tick count, with the pointer drawn apart (`rulerPointer`) or
+// not at all.
 import type { Kit, Paint } from "../../lib/micro";
 import { recipe } from "../recipe";
 
