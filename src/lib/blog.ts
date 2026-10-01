@@ -1,5 +1,5 @@
 /**
- * The blog's vocabulary: its name, its nav, its categories, and the two small
+ * The blog's vocabulary: its name, its categories, and the two small
  * helpers every /txt page needs (grouping by year, the date line).
  *
  * CATEGORIES, NOT FIRST TAGS. A post carries several free-form `tags` — good
@@ -27,10 +27,6 @@ export const TXT_HREF = "/txt/";
 
 export const BLOG_TITLE = "Writing";
 export const BLOG_DESCRIPTION = "Writing by Tristan Timblin.";
-
-/** The quiet nav in the blog's header. There is no categories page:
- *  /txt/categories 301s to /txt/ (public/_redirects). */
-export const blogNav = [{ label: "Writing", href: TXT_HREF }];
 
 export const categories = {
 	programming: { label: "Programming", icon: "code" },

@@ -1,48 +1,96 @@
 ---
-// BlogLayout — the chrome for the blog's list pages: /txt and /txt/tag/<tag>
-// (and the 404). The site header in the flow, then one column at the reading
-// measure: a page header (kicker, h1 at the page-title step, lede) over
-// whatever the page puts in the slot — a PostIndex.
-//
-// Pages stay thin: they fetch and group, this owns the shell. Wraps
-// Layout.astro (the only html/head).
+// BlogLayout — the blog's shell: the site header in the flow, then one
+// column. By default the column is the reading measure under a page header
+// (kicker, h1, lede) — /txt, /txt/tag/<tag>, the 404. `wide` gives the column
+// the site container and leaves the header to the page (a post: PostLayout).
+import type { ComponentProps } from "astro/types";
 import Layout from "./Layout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import Heading from "@whois/design-system/Heading";
 import Mono from "@whois/design-system/Mono";
 import Body from "@whois/design-system/Body";
-import "../styles/blog.css";
-import { blogNav } from "../lib/blog";
 
-interface Props {
-	/** The document title. */
-	title: string;
-	description?: string;
-	noindex?: boolean;
-	/** The page's h1. */
-	heading: string;
-	/** A small caps label above the h1 ("Category", "Tag"). */
+type Props = ComponentProps<typeof Layout> & {
+	/** The page's h1. Without one, no page header is drawn. */
+	heading?: string;
+	/** A small caps label above the h1 ("Tag", "404 /"). */
 	kicker?: string;
-}
+	/** The site container instead of the reading measure. */
+	wide?: boolean;
+};
 
-const { title, description, noindex, heading, kicker } = Astro.props;
+const { heading, kicker, wide = false, ...layout } = Astro.props;
 const hasLede = Astro.slots.has("lede");
 ---
 
-<Layout title={title} description={description} noindex={noindex}>
+<Layout {...layout}>
 	<div class="blog">
-		<SiteHeader variant="flow" links={blogNav} />
-		<main class="blog__main">
-			<header class="blog__header">
-				{kicker && <Mono class="blog__kicker">{kicker}</Mono>}
-				{/* The page-title step: 44px, 32px below 1024 — the one every
-				     page title on the site takes. */}
-				<Heading as="h1" size={5} responsive>{heading}</Heading>
-				{hasLede && (
-					<Body class="blog__lede"><slot name="lede" /></Body>
-				)}
-			</header>
+		<SiteHeader variant="flow" />
+		<main class:list={["blog__main", wide && "blog__main--wide"]}>
+			{heading && (
+				<header class="blog__header">
+					{kicker && <Mono class="blog__kicker">{kicker}</Mono>}
+					{/* The page-title step: 44px, 32px below 1024. */}
+					<Heading as="h1" size={5} responsive>{heading}</Heading>
+					{hasLede && (
+						<Body class="blog__lede"><slot name="lede" /></Body>
+					)}
+				</header>
+			)}
 			<slot />
 		</main>
 	</div>
 </Layout>
+
+<style is:global>
+	/* The page's headings on the UI face, by retuning the heading tokens in
+	   scope (the heading components read them). Regular: a page title here is
+	   quiet; Prose turns the weight back up for a post's section heads. */
+	.blog {
+		--font-heading: var(--font-ui);
+		--font-heading-weight: var(--font-weight-400);
+		min-height: 100vh;
+		font-family: var(--font-ui);
+	}
+
+	.blog__main {
+		max-width: var(--measure-prose);
+		margin-inline: auto;
+		padding-inline: var(--container-pad);
+		padding-block: var(--space-11) var(--space-12);
+	}
+	/* The site container (.container's inset, restated: the bare gutter above
+	   would tie with the class). A post's first row carries its own distance
+	   from the header. */
+	.blog__main--wide {
+		max-width: none;
+		padding-inline: var(--container-inset);
+		padding-block: 0 var(--space-13);
+	}
+
+	.blog__header {
+		margin-block-end: var(--space-10);
+	}
+	.blog__header > * + * {
+		margin-block-start: var(--space-3);
+	}
+	.blog__kicker {
+		display: block;
+	}
+	.blog__lede {
+		margin-block-start: var(--space-4);
+	}
+
+	@media (max-width: 639px) {
+		.blog__main {
+			padding-block: var(--space-8) var(--space-10);
+		}
+		/* A post starts a step under the header, in the first screen. */
+		.blog__main--wide {
+			padding-block-start: var(--space-5);
+		}
+		.blog__header {
+			margin-block-end: var(--space-6);
+		}
+	}
+</style>
