@@ -1,8 +1,7 @@
 ---
 // /txt/<slug> — one post. Thin: the collection entry, the numbers the layout
-// prints (its chronological number of the total, reading time), its art, its
-// hero and its neighbours' — everything computed here, rendered by
-// PostLayout. The body arrives already cut into sections (the rehype plugin
+// prints (its chronological number of the total, reading time), its hero
+// and its neighbours' — everything computed here, rendered by PostLayout. The body arrives already cut into sections (the rehype plugin
 // in astro.config, src/lib/mdx/post-sections.ts) and mapped onto DS
 // components at the <Content> below.
 import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
@@ -11,7 +10,6 @@ import { render } from "astro:content";
 import PostLayout, { type Neighbour } from "../../layouts/PostLayout.astro";
 import { mdxComponents } from "../../components/mdx-components";
 import { neighbours, postHref, postNumbers, readingStats } from "../../lib/blog";
-import { artFor } from "../../lib/quilt/art";
 import { getPosts } from "../../lib/posts";
 
 export const getStaticPaths = (async () => {
@@ -67,7 +65,6 @@ const ogImage = card ? (await getImage({ src: card, format: "jpg" })).src : unde
 	no={no}
 	total={total}
 	stats={readingStats(post.body)}
-	art={artFor(post.id)}
 	hero={hero}
 	prev={prev}
 	next={next}

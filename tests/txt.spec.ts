@@ -3,31 +3,24 @@ import { test, expect, type Page } from "@playwright/test";
 /**
  * THE BLOG: /txt, ITS TAG PAGES, AND A POST.
  *
- * The index is the INSTRUMENT — one screen whose board is the quilt, a grid
- * of art tiles, one link per post, newest first in DOM order, with fillers
- * that are aria-hidden and carry no link, under the open search bar with
- * its category chips, and over the foot — the topic key, the bar timeline,
- * the post in focus with the stepper (the interaction contract — hover,
- * search, keys, the stepper, the ruler — is pinned in its own spec).
- * The tag pages are still the year-grouped list, and the older
- * /txt/tag/<tag> URLs still resolve. Categories are a closed set and only
- * queries on the quilt (/txt?q=<id>): /txt/category/<id> is simply gone (404),
- * and /txt/categories is a 301 in public/_redirects (Cloudflare Pages only).
+ * The index and the tag pages are the same plain list: the DS PostList,
+ * grouped by year, newest first, one row per post. Categories are a closed
+ * set shown beside each title: /txt/category/<id> is simply gone (404), and
+ * /txt/categories is a 301 in public/_redirects (Cloudflare Pages only).
  * The properties worth pinning:
  *
- *  1. EXACTLY ONE LINK PER POST on the index, newest first; fillers link nothing.
+ *  1. EXACTLY ONE LINK PER POST on the index, newest first.
  *  2. NO CATEGORY PAGES are built.
  *  3. TAG PAGES STILL RESOLVE — they predate the redesign and may be linked.
- *  4. IT WORKS WITH SCRIPTING OFF: tiles, rows and nav are plain links.
+ *  4. IT WORKS WITH SCRIPTING OFF: rows and nav are plain links.
  *  5. A POST (the block at the foot of this file) is the RULED page: one
- *     four-column grid — the status strip, the title with the art as a mark,
- *     the hero as Fig. 01, the body cut into numbered sections with sticky
- *     heads, and an index table naming the tags and the neighbours. No
- *     reading ruler, no contents rail, and the same measure with or
- *     without h2s.
+ *     four-column grid — the status strip, the title and lead, the hero as
+ *     Fig. 01, the body cut into numbered sections with sticky heads, and an
+ *     index table naming the tags and the neighbours. No reading ruler, no
+ *     contents rail, and the same measure with or without h2s.
  */
 
-/** The post links on a list page (a tag): one per PostRow. */
+/** The post links on a list page: one per PostRow, in DOM order. */
 const postLinks = (page: Page) =>
 	page.evaluate(() =>
 		Array.from(document.querySelectorAll<HTMLAnchorElement>("a.ds-post-row__link"))
@@ -35,32 +28,17 @@ const postLinks = (page: Page) =>
 			.filter((h) => h && /^\/txt\/[^/]+\/$/.test(h))
 	);
 
-/** The post links on the quilt: one per post tile, in DOM order. */
-const tileLinks = (page: Page) =>
-	page.evaluate(() =>
-		Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-cell="post"] a'))
-			.map((a) => a.getAttribute("href"))
-			.filter((h) => h && /^\/txt\/[^/]+\/$/.test(h))
-	);
-
 test.describe("/txt/", () => {
-	test("every post is a tile linked exactly once, newest first; fillers link nothing", async ({
-		page,
-	}) => {
+	test("every post is linked exactly once, newest first, grouped by year", async ({ page }) => {
 		await page.goto("/txt/");
-		const links = await tileLinks(page);
-		expect(links.length, "the quilt should link some posts").toBeGreaterThan(0);
+		const links = await postLinks(page);
+		expect(links.length, "the index should link some posts").toBeGreaterThan(0);
 		expect(new Set(links).size, `duplicate post links: ${links}`).toBe(links.length);
-		// DOM order is newest first — the tab order and the phone's list.
 		expect(links.slice(0, 2)).toEqual(["/txt/asserting-on-agent-behavior/", "/txt/tahoe-mountain-hair/"]);
-
-		const fillers = page.locator('[data-cell="filler"]');
-		expect(await fillers.count()).toBeGreaterThan(0);
-		await expect(fillers.first()).toHaveAttribute("aria-hidden", "true");
-		expect(await page.locator('[data-cell="filler"] a').count()).toBe(0);
+		expect(await page.locator(".ds-post-group").count()).toBeGreaterThan(0);
 	});
 
-	test("there are no category pages; a category is a query on the quilt", async ({ page }) => {
+	test("there are no category pages", async ({ page }) => {
 		const res = await page.request.get("/txt/category/programming/");
 		expect(res.status()).toBe(404);
 	});
@@ -74,39 +52,15 @@ test.describe("/txt/", () => {
 		await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 	});
 
-	test("tiles, rows and nav are reachable with scripting off", async ({ browser }) => {
+	test("rows and nav are reachable with scripting off", async ({ browser }) => {
 		const context = await browser.newContext({ javaScriptEnabled: false });
 		const page = await context.newPage();
 		await page.goto("/txt/tag/diy/");
 		await page.locator('.site-header a[href="/txt/"]').click();
 		await expect(page).toHaveURL(/\/txt\/?$/);
-		// The sheet's last row sits under the docked foot in a short window
-		// until it scrolls clear; a reader scrolls, so does this.
-		const tile = page.locator('[data-cell="post"] a[href="/txt/mega-desk/"]');
-		await tile.evaluate((el) => el.scrollIntoView({ block: "center" }));
-		await tile.click();
+		await page.locator('a.ds-post-row__link[href="/txt/mega-desk/"]').click();
 		await expect(page).toHaveURL(/\/txt\/mega-desk\/?$/);
 		await expect(page.locator("h1")).toHaveText("The Mega Desk");
-		await context.close();
-	});
-
-	test("the bar's chips, the topic key and the timeline bars are plain links with scripting off", async ({
-		browser,
-	}) => {
-		const context = await browser.newContext({ javaScriptEnabled: false });
-		const page = await context.newPage();
-		await page.goto("/txt/");
-		// One chip per category in the enum, plus ALL; one tick per post.
-		await expect(page.locator("[data-search-chips] [data-chip]")).toHaveCount(5);
-		await expect(page.locator("[data-quilt-ruler] [data-mark]")).toHaveCount(5);
-		await page.locator('[data-search-chips] [data-chip="thoughts"]').click();
-		await expect(page).toHaveURL(/\/txt\/?\?q=thoughts$/);
-		await expect(page.locator("[data-quilt-key] a")).toHaveCount(4);
-		await page.locator('[data-quilt-key] a[href="/txt/?q=projects"]').click();
-		await expect(page).toHaveURL(/\/txt\/?\?q=projects$/);
-		await page.locator('[data-quilt-ruler] [data-mark][data-no="002"]').click();
-		await expect(page).toHaveURL(/\/txt\/why-i-joined-fisker\/?$/);
-		await expect(page.locator("h1")).toHaveText(/Your Car Knows You.re Getting Sick/);
 		await context.close();
 	});
 });
@@ -172,14 +126,13 @@ const TRANSPARENT = "rgba(0, 0, 0, 0)";
 test.describe("/txt/<slug> — the post page", () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
 
-	test("the status strip: the number, the category as a link to its query, the stats, the date", async ({
+	test("the status strip: the number, the category, the stats, the date", async ({
 		page,
 	}) => {
 		await page.goto(NEWEST);
 		const strip = page.locator("[data-post-strip]");
 		await expect(strip.locator(".post__no")).toHaveText(/txt \/ 005/i);
-		await expect(strip.locator("a.post__category")).toHaveText(/Programming/);
-		await expect(strip.locator("a.post__category")).toHaveAttribute("href", "/txt/?q=programming");
+		await expect(strip.locator(".post__category")).toHaveText(/Programming/);
 		await expect(strip.locator(".post__stats")).toHaveText(/^\s*3 min · \d{3} words\s*$/i);
 		await expect(strip.locator("time.post__date")).toHaveText("02.02.2026");
 		await expect(strip.locator("time.post__date")).toHaveAttribute("datetime", "2026-02-02");
@@ -189,10 +142,6 @@ test.describe("/txt/<slug> — the post page", () => {
 		const no = await box(page, ".post__no");
 		expect(Math.abs(date.x + date.width - (row.x + row.width))).toBeLessThanOrEqual(2);
 		expect(Math.abs(no.x - row.x)).toBeLessThanOrEqual(1);
-
-		await strip.locator("a.post__category").click();
-		await expect(page).toHaveURL(/\/txt\/\?q=programming$/);
-		await expect(page.locator("[data-search-input]")).toHaveValue("programming");
 	});
 
 	test("no reading ruler, no contents rail, no neighbour cards", async ({ page }) => {
@@ -201,11 +150,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator("[data-post-rail]")).toHaveCount(0);
 		await expect(page.getByRole("navigation", { name: "Contents" })).toHaveCount(0);
 		await expect(page.locator(".post__neighbour, .post__neighbours")).toHaveCount(0);
-		// The former hero art in its plate, the stat pairs and the pills are gone too.
-		await expect(page.locator(".post__art, .post__meta, .ds-pill")).toHaveCount(0);
+		// No art (neither the old plate nor the mark), stat pairs or pills.
+		await expect(page.locator(".post__art, .post__mark, .ds-art-frame, .post__meta, .ds-pill")).toHaveCount(0);
 	});
 
-	test("the title across three columns, the lead in two, the art as a mark in the fourth, playing", async ({
+	test("the title across three columns, the lead in two", async ({
 		page,
 	}) => {
 		await page.goto(NEWEST);
@@ -217,34 +166,11 @@ test.describe("/txt/<slug> — the post page", () => {
 
 		const title = await box(page, ".post__title");
 		const lead = await box(page, ".post__lead");
-		const mark = await box(page, ".post__mark");
 		// The title from the first line; the lead from the second column's line.
 		expect(Math.abs(title.x - article.x)).toBeLessThanOrEqual(1);
 		expect(title.width).toBeLessThanOrEqual(3 * col + 2 * gap + 1);
 		expect(Math.abs(lead.x - (article.x + col + gap))).toBeLessThanOrEqual(1);
 		expect(Math.abs(lead.width - (2 * col + gap))).toBeLessThanOrEqual(1);
-		// The mark fills the fourth column and rests on the lead's last line.
-		expect(Math.abs(mark.x - (article.x + 3 * (col + gap)))).toBeLessThanOrEqual(1);
-		expect(Math.abs(mark.width - col)).toBeLessThanOrEqual(1);
-		expect(Math.abs(mark.y + mark.height + 4 - (lead.y + lead.height))).toBeLessThanOrEqual(2);
-
-		// A mark: no plate, edge or corner, named by the title, its motion running.
-		const art = page.locator(
-			'.post__mark.ds-art-frame--variant-mark[role="img"][aria-label="Asserting on Agent Behavior"][data-art-play]',
-		);
-		await expect(art).toHaveCount(1);
-		await expect(art).toHaveCSS("background-color", TRANSPARENT);
-		await expect(art).toHaveCSS("border-top-width", "0px");
-		await expect(art).toHaveCSS("border-top-left-radius", "0px");
-		const motion = art.locator("[data-motion]");
-		await expect(motion).toHaveCount(1);
-		await expect(motion).toHaveCSS("animation-play-state", "running");
-		// The mark is drawn in the page's ink: its colour is the title's.
-		const [markInk, titleInk] = await page.evaluate(() => [
-			getComputedStyle(document.querySelector(".post__mark")!).color,
-			getComputedStyle(document.querySelector(".post__title")!).color,
-		]);
-		expect(markInk).toBe(titleInk);
 	});
 
 	test("the hero: Fig. 01 across three columns with its caption; a post without one shows no figure", async ({
@@ -483,50 +409,28 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator('[data-index-row="next"]')).toHaveText(/002/);
 	});
 
-	test("light theme: the mark is the page's dark ink on no plate, the header row inverts to the ink", async ({
+	test("light theme: the header row inverts to the ink", async ({
 		page,
 	}) => {
 		await page.addInitScript(() => localStorage.setItem("theme", "light"));
 		await page.goto(NEWEST);
 		await expect(page.locator("html")).toHaveClass(/maximeheckel-light/);
-		await expect(page.locator(".post__mark")).toHaveCSS("background-color", TRANSPARENT);
-		expect(await luminance(page, ".post__mark", "color")).toBeLessThan(0.05);
 		expect(await luminance(page, ".ds-index__row--head")).toBeLessThan(0.05);
 		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeGreaterThan(0.85);
 	});
 
-	test("dark theme: the mark is the light ink, the header row the light fill", async ({ page }) => {
+	test("dark theme: the header row is the light fill", async ({ page }) => {
 		await page.goto(NEWEST);
 		await expect(page.locator("html")).toHaveClass(/maximeheckel-dark/);
-		await expect(page.locator(".post__mark")).toHaveCSS("background-color", TRANSPARENT);
-		// The PAGE's ink, not the art's near-white: the mark is drawn in the
-		// title's colour, which on the dark theme is the light grey primary text.
-		expect(await luminance(page, ".post__mark", "color")).toBeGreaterThan(0.7);
 		expect(await luminance(page, ".ds-index__row--head")).toBeGreaterThan(0.7);
 	});
 
-	test("under reduced motion the mark holds its still frame", async ({ browser }) => {
-		const context = await browser.newContext({
-			reducedMotion: "reduce",
-			viewport: { width: 1440, height: 900 },
-		});
-		const page = await context.newPage();
-		await page.goto(NEWEST);
-		const motion = page.locator(".post__mark [data-motion]");
-		await expect(motion).toHaveCount(1);
-		// --duration-loop is 0s under the preference: an animation with no
-		// active interval, so the drawing holds at t=0 whatever the play state.
-		await expect(motion).toHaveCSS("animation-duration", "0s");
-		await context.close();
-	});
-
-	test("accessibility basics: one h1, a labelled index, the mark named, machine-readable dates", async ({
+	test("accessibility basics: one h1, a labelled index, machine-readable dates", async ({
 		page,
 	}) => {
 		await page.goto(NEWEST);
 		await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveCount(1);
 		await expect(page.getByRole("navigation", { name: "Index" })).toHaveCount(1);
-		await expect(page.getByRole("img", { name: "Asserting on Agent Behavior" })).toBeVisible();
 		await expect(page.getByRole("img", { name: /read-order test/ })).toBeVisible();
 		const times = page.locator("article[data-post] time");
 		expect(await times.count()).toBeGreaterThanOrEqual(2);
@@ -537,7 +441,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator(".post__colnos")).toHaveAttribute("aria-hidden", "true");
 	});
 
-	test("at 375px: one column, no horizontal scroll, the heads over their text, the mark after the lead, the hero and the table full width", async ({
+	test("at 375px: one column, no horizontal scroll, the heads over their text, the hero and the table full width", async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 375, height: 800 });
@@ -554,8 +458,7 @@ test.describe("/txt/<slug> — the post page", () => {
 
 		// The title steps down twice on a phone (72 → 44 → 32) and the lead
 		// once (20 → 18); the strip sits right under the header, number and
-		// date on its first line; the lead and the mark stack under the title,
-		// the mark at a modest width; the hero and the index take the whole
+		// date on its first line; the lead stacks under the title; the hero and the index take the whole
 		// column.
 		await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveCSS("font-size", "32px");
 		await expect(page.locator(".post__lead")).toHaveCSS("font-size", "18px");
@@ -567,10 +470,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(date.y).toBeCloseTo(no.y, 0);
 		const title = await box(page, ".post__title");
 		const lead = await box(page, ".post__lead");
-		const mark = await box(page, ".post__mark");
 		expect(lead.y).toBeGreaterThanOrEqual(title.y + title.height);
-		expect(mark.y).toBeGreaterThanOrEqual(lead.y + lead.height);
-		expect(mark.width).toBeLessThanOrEqual(256);
 		const hero = await box(page, "[data-post-hero] img");
 		expect(Math.abs(hero.width - article.width)).toBeLessThanOrEqual(1);
 		await expect(page.locator(".post__colnos")).toBeHidden();
@@ -613,7 +513,6 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator("[data-post-hero] img")).toBeVisible();
 		await expect(page.locator("figure.ds-prose-code")).toHaveCount(1);
 		await expect(page.locator('a[data-neighbour="prev"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair/");
-		await expect(page.locator(".post__mark[data-art-play]")).toHaveCount(1);
 		await context.close();
 	});
 });

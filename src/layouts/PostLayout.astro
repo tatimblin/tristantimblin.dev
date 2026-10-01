@@ -7,10 +7,8 @@
 //      structure voice: `TXT / 005` · the category · `3 MIN · 541 WORDS` ·
 //      the date, `02.02.2026`, on the right edge.
 //   2. The column numbers, `01 02 03 04`, tiny over the columns.
-//   3. The TITLE across the first three columns at the display step, the LEAD
-//      (the excerpt) in the second and third, and the post's art as a MARK in
-//      the fourth — no plate, the page's ink — resting on the lead's last
-//      line, playing (the one page where the art moves without a pointer).
+//   3. The TITLE across the first three columns at the display step, and the
+//      LEAD (the excerpt) in the second and third.
 //   4. The HERO, when the frontmatter names one: a ruled `Fig` — `Fig. 01 /`
 //      in the first column, the image on a hairline across the other three,
 //      its caption under it. The body's figures count on from it.
@@ -27,8 +25,7 @@
 // The grid is `--ruled-columns` / `--ruled-gap` on the article, the tokens
 // the ruled Prose reads too, so the page's rows and the body's sections fall
 // on the same lines. Below 1024 it is one column: the strip two by two, the
-// heads over their text, the mark after the lead at a modest width, the
-// hero and the table full width. The page's headings take the heading face at
+// heads over their text, the hero and the table full width. The page's headings take the heading face at
 // the Bold by retuning the heading tokens in scope, as Prose does.
 //
 // The body arrives via <slot /> already sectioned and mapped to DS
@@ -38,7 +35,6 @@ import type { ImageMetadata } from "astro";
 import ArticleLayout from "./ArticleLayout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import Img from "../components/mdx/Img.astro";
-import ArtFrame from "@whois/design-system/ArtFrame";
 import Anchor from "@whois/design-system/Anchor";
 import Fig from "@whois/design-system/Fig";
 import Grid from "@whois/design-system/Grid";
@@ -56,7 +52,6 @@ import {
 	filedDate,
 	isoDate,
 	padNo,
-	queryHref,
 	tagHref,
 	type CategoryId,
 } from "../lib/blog";
@@ -94,8 +89,6 @@ interface Props {
 	no: number;
 	total: number;
 	stats: { words: number; minutes: number };
-	/** The post's raw art (src/content/txt/<slug>.svg), or null. */
-	art?: string | null;
 	hero?: Hero | null;
 	prev?: Neighbour | null;
 	next?: Neighbour | null;
@@ -113,7 +106,6 @@ const {
 	canonical,
 	no,
 	stats,
-	art = null,
 	hero = null,
 	prev = null,
 	next = null,
@@ -141,18 +133,12 @@ const neighbourRows = [
 >
 	<div class="blog">
 		<SiteHeader variant="flow" links={blogNav} />
-		<main class="blog__main blog__main--wide blog__main--post">
+		<main class="blog__main blog__main--post">
 			<article class="post" data-post>
 				<Grid templateColumns={COLUMNS} gapX={4} class="post__strip" data-post-strip>
 					<Mono tone="primary" class="post__cell post__no">txt / {padNo(no)}</Mono>
 					{cat && category ? (
-						<Mono
-							as="a"
-							href={queryHref(category)}
-							class="post__cell post__category"
-						>
-							{cat.label}
-						</Mono>
+						<Mono class="post__cell post__category">{cat.label}</Mono>
 					) : (
 						<span class="post__cell" />
 					)}
@@ -182,7 +168,6 @@ const neighbourRows = [
 							{description}
 						</Text>
 					)}
-					{art && <ArtFrame svg={art} label={title} variant="mark" play class="post__mark" />}
 				</Grid>
 
 				{hero && (
@@ -258,8 +243,7 @@ const neighbourRows = [
 	}
 
 	/* THE STATUS STRIP. One row between the strong hairlines, the date on
-	   the right edge. The category is a link to its query on the quilt, in
-	   the same voice (Mono's link reset). */
+	   the right edge. */
 	.post__strip {
 		margin-block-start: var(--space-10);
 		border-block: 1px solid var(--hairline-strong);
@@ -277,12 +261,11 @@ const neighbourRows = [
 		margin-block-start: var(--space-8);
 	}
 
-	/* THE TITLE, THE LEAD AND THE MARK. The title at the display step
+	/* THE TITLE AND THE LEAD. The title at the display step
 	   (Heading size 6, responsive: 72px, 44px below 1024) across three
 	   columns at the heading leading (Mondwest's descenders are deep: any
 	   tighter and a g reaches the next line's caps), balanced so two lines share the words; the lead a step
-	   down in the second and third; the mark in the fourth, spanning both
-	   rows and resting on the lead's last line. */
+	   down in the second and third. */
 	.post__title {
 		grid-column: 1 / span 3;
 		grid-row: 1;
@@ -297,12 +280,6 @@ const neighbourRows = [
 		/* The UI leading: a step under the heading it follows, above the body's. */
 		line-height: var(--line-height-ui);
 	}
-	.post__mark {
-		grid-column: 4;
-		grid-row: 1 / span 2;
-		align-self: end;
-		margin-block-end: var(--space-1);
-	}
 
 	/* THE HERO (a ruled Fig) and THE INDEX (an Index): their rows are the
 	   components'; the page places them. */
@@ -315,7 +292,7 @@ const neighbourRows = [
 
 	/* ONE COLUMN, below the desktop step: the strip two by two (the date
 	   still on the right edge), no column numbers, the title a step down,
-	   the mark after the lead at a modest width, the hero and the table full
+	   the hero and the table full
 	   width. The table keeps three columns — label, number, title — and the
 	   FILED cell drops under the title (the header's is not drawn). */
 	@media (max-width: 1023px) {
@@ -351,13 +328,6 @@ const neighbourRows = [
 			grid-column: 1;
 			grid-row: auto;
 			margin-block-start: var(--space-5);
-		}
-		.post__mark {
-			grid-column: 1;
-			grid-row: auto;
-			align-self: start;
-			max-inline-size: var(--space-14);
-			margin-block: var(--space-6) 0;
 		}
 		.post__fig {
 			margin-block-start: var(--space-9);

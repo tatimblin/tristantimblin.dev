@@ -7,8 +7,7 @@
  * of the five posts is "ai", "diy", "vscode", "personal" and "career", which is
  * five labels for five posts and nothing an icon could be drawn for. So a post
  * names ONE `category` from the closed set below, and that is what the index
- * shows beside its title and what the quilt's browse face offers as a query
- * (/txt?q=<id>). Tags stay in the frontmatter and keep their pages
+ * shows beside its title. Tags stay in the frontmatter and keep their pages
  * (/txt/tag/<tag>); they are just no longer the thing the list is organised by.
  *
  * Each category owns an icon from the DS set (packages/design-system/src/icons)
@@ -29,9 +28,8 @@ export const TXT_HREF = "/txt/";
 export const BLOG_TITLE = "Writing";
 export const BLOG_DESCRIPTION = "Writing by Tristan Timblin.";
 
-/** The quiet nav in the blog's header. There is no categories page: a
- *  category is a query on the quilt (/txt/?q=<id>), and /txt/categories 301s to
- *  /txt/ (public/_redirects). */
+/** The quiet nav in the blog's header. There is no categories page:
+ *  /txt/categories 301s to /txt/ (public/_redirects). */
 export const blogNav = [{ label: "Writing", href: TXT_HREF }];
 
 export const categories = {
@@ -46,8 +44,6 @@ export const categoryIds = Object.keys(categories) as [CategoryId, ...CategoryId
 
 export const tagHref = (tag: string) => `/txt/tag/${tag}/`;
 export const postHref = (id: string) => `/txt/${id}/`;
-/** A query on the quilt: `/txt/?q=<words>`. */
-export const queryHref = (q: string) => `${TXT_HREF}?q=${encodeURIComponent(q)}`;
 
 /** The shape this needs off a collection entry, spelled structurally so the
  *  module does not have to import astro:content. */
@@ -94,7 +90,7 @@ export function monthOf(d: Date): { short: string; long: string } {
  * Every post's chronological number, 1-based: the first post ever is 1, so a
  * new post takes the next number and the old ones keep theirs. Keyed by id,
  * over whatever list is given (the rendered one — in PROD the non-draft
- * posts). `padNo` prints it the way the quilt's kicker does (`005`).
+ * posts). `padNo` prints it the way the post page does (`005`).
  */
 export function postNumbers<T extends Dated & { id: string }>(posts: T[]): Map<string, number> {
 	const asc = byDateDesc(posts).reverse();

@@ -1,7 +1,7 @@
 # Cloudflare Pages redirects (https://developers.cloudflare.com/pages/configuration/redirects/)
 #
-# /txt/categories was the old categories index; categories are now queries on
-# the /txt quilt (/txt/?q=<category>). Both spellings, with and without the slash.
+# /txt/categories was the old categories index; /txt now lists every post with
+# its category. Both spellings, with and without the slash.
 /txt/categories /txt/ 301
 /txt/categories/ /txt/ 301
 

@@ -130,9 +130,7 @@ img {
    every contained row on the site sits — the site header and footer, the
    homepage's rows (FullHeroLayout's --hero-inset is the same inset), the
    blog's wide column. Compose the class; never centre a max-width box (the
-   half-scrollbar disagreement the inset's note explains). /txt's instrument
-   rows deliberately take the bare --container-pad gutter instead (blog.css),
-   so the quilt reads as a board edge to edge under a contained header. */
+   half-scrollbar disagreement the inset's note explains). */
 .container {
   padding-inline: var(--container-inset);
 }

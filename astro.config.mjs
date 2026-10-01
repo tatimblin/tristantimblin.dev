@@ -40,8 +40,8 @@ export default defineConfig({
 		// a, …) onto @whois/design-system components via <Content components={…}/>.
 		mdx(),
 		// Keep noindex pages out of the sitemap: the /txt tag lists (thin
-		// archive — the quilt and the posts carry the content), and the
-		// workbenches, /dotgrid and /design-system (with /design-system/art).
+		// archive — /txt and the posts carry the content), and the
+		// workbenches, /dotgrid and /design-system (with /design-system/glyphs).
 		sitemap({
 			filter: (page) => {
 				const { pathname } = new URL(page);
