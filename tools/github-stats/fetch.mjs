@@ -28,10 +28,11 @@
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
-// How many trailing weeks of the calendar to keep in github.json. The widget
-// shows the most recent few of these (a compact, roughly-square grid); keeping a
-// small buffer here means tweaking the displayed column count needs no reseed.
-const WEEKS_TO_KEEP = 12;
+// How many trailing weeks of the calendar to keep in github.json — the whole
+// year. The widget's grid sizes its squares off the height and clips the oldest
+// weeks off the left, so it needs at least as many weeks as the widest tile has
+// room for; too few leaves a gap on the left.
+const WEEKS_TO_KEEP = 53;
 // Languages shown in the breakdown (top N by aggregated byte size).
 const TOP_LANGUAGES = 6;
 // Languages excluded from the breakdown. Linguist counts vendored/generated
