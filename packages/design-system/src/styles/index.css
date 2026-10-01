@@ -5,8 +5,8 @@
  * !important to win, and nothing outside it has to fight it:
  *
  *   ds.components   every component's own rules.
- *   ds.roles        the type ROLES that compose on Text — heading, body, caps,
- *                   numeric. A role is a class on the same element as Text's
+ *   ds.roles        the type ROLES that compose on Text — heading, body, caps.
+ *                   A role is a class on the same element as Text's
  *                   size/spaced/weight variants, so it must beat them at equal
  *                   specificity; a later layer does that by construction.
  *
@@ -40,7 +40,6 @@
 @import "./heading.css" layer(ds.roles);
 @import "./body.css" layer(ds.roles);
 @import "./caps.css" layer(ds.roles);
-@import "./numeric.css" layer(ds.roles);
 /* The instrument voices (after caps.css, which mono.css composes). */
 @import "./mono.css" layer(ds.components);
 @import "./figure.css" layer(ds.components);

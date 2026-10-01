@@ -57,7 +57,7 @@ import Button from "@whois/design-system/Button";
 > rules in `@layer ds.components { … }`, so they land in the same layer.
 
 **2. Cascade layers.** The package's CSS sits in `@layer ds.components, ds.roles`
-(`src/styles/index.css`). The *roles* — heading, body, caps, numeric — compose on
+(`src/styles/index.css`). The *roles* — heading, body, caps — compose on
 `Text` and win over its variants on the same element by layer order, so no rule
 in the package needs a doubled selector or an `!important`. **Site CSS is
 unlayered and always wins over the package**, at any specificity: a page that
@@ -1278,7 +1278,7 @@ with metric-matched fallbacks in `src/styles/fonts.css`):
 | --- | --- | --- |
 | `--font-hero` + `--font-hero-weight` | Migra Bold | the hero lockup only (the wordmark takes the Medium itself) |
 | `--font-heading` + `--font-heading-weight` | Mondwest Bold | every heading: the post title, section heads, DS `H1`–`H4`, a bare `h2`, the hero lede |
-| `--font-ui` | Mondwest Regular | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome; `--font-numeric` aliases it |
+| `--font-ui` | Mondwest Regular | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome |
 | `--font-display` + `--font-display-weight` | Mondwest Thin (200) | the big thin numeral: `Stat variant="numeral"` |
 | `--font-body` + `--font-body-weight/-size/-line-height/-letter-spacing` | Neue Montreal Regular | reading text (`Body`, and the bare `body`) |
 | `--font-code` | the system mono stack | code alone — fenced blocks and inline code; no file is loaded |

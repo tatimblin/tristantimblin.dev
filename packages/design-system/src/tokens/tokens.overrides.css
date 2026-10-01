@@ -154,9 +154,6 @@
 	 * real monospace and what a reader's terminal already looks like. The label
 	 * voice (Mono, the caps) is the UI face. */
 	--font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-	/* The DS's numeric face: the UI face, whose figures are what this role
-	 * wanted (it had borrowed the code stack for want of one). */
-	--font-numeric: var(--font-ui);
 
 	/* MOTION -----------------------------------------------------------------
 	 * The DS ships no easing/duration tokens, so every timing on the site used to
