@@ -1,6 +1,6 @@
-<!-- baked from tools/scenes/posts/tahoe-mountain-hair/scene.ts (sources d43b62efbccae383) — edit the source -->
+<!-- baked from tools/scenes/posts/tahoe-mountain-hair/scene.ts (sources 91429aea0b585bd1) — edit the source -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
-  <path d="M 35.6 40 L 35.6 146 M 51.2 40 L 51.2 146 M 66.8 40 L 66.8 146 M 82.4 40 L 82.4 146 M 98 40 L 98 146 M 113.6 55 L 113.6 146 M 129.2 55 L 129.2 146 M 144.8 55 L 144.8 146 M 160.4 40 L 160.4 146 M 176 40 L 176 146 M 20 55.6 L 176 55.6 M 20 71.2 L 176 71.2 M 20 86.8 L 176 86.8 M 20 102.4 L 176 102.4 M 20 118 L 176 118 M 20 133.6 L 176 133.6" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 35.6 40 L 35.6 146 M 51.2 40 L 51.2 146 M 66.8 40 L 66.8 72.45 M 66.8 103.55 L 66.8 146 M 82.4 40 L 82.4 75.36 M 82.4 100.64 L 82.4 146 M 98 40 L 98 146 M 113.6 55 L 113.6 146 M 129.2 55 L 129.2 146 M 144.8 55 L 144.8 146 M 160.4 40 L 160.4 146 M 176 40 L 176 146 M 20 55.6 L 176 55.6 M 20 71.2 L 176 71.2 M 20 86.8 L 55.66 86.8 M 88.34 86.8 L 176 86.8 M 20 102.4 L 64.02 102.4 M 79.98 102.4 L 176 102.4 M 20 118 L 70 118 M 74 118 L 176 118 M 20 133.6 L 70 133.6 M 74 133.6 L 176 133.6" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
   <clipPath id="tahoe-mountain-hair-walls"><polygon points="-8,40 8,40 20,45.888888888888886 8,51.77777777777778 20,57.66666666666667 8,63.55555555555556 20,69.44444444444444 8,75.33333333333334 20,81.22222222222223 8,87.11111111111111 20,93 8,98.88888888888889 20,104.77777777777779 8,110.66666666666667 20,116.55555555555556 8,122.44444444444446 20,128.33333333333334 8,134.22222222222223 20,140.11111111111111 8,146 -8,146" /><polygon points="192,40 188,40 176,45.888888888888886 188,51.77777777777778 176,57.66666666666667 188,63.55555555555556 176,69.44444444444444 188,75.33333333333334 176,81.22222222222223 188,87.11111111111111 176,93 188,98.88888888888889 176,104.77777777777779 188,110.66666666666667 176,116.55555555555556 188,122.44444444444446 176,128.33333333333334 188,134.22222222222223 176,140.11111111111111 188,146 192,146" /></clipPath>
   <g clip-path="url(#tahoe-mountain-hair-walls)">
   <path d="M -8 -28 L 20 0 M 176 -20 L 192 -4 M -8 -24 L 20 4 M 176 -16 L 192 0 M -8 -20 L 20 8 M 176 -12 L 192 4 M -8 -16 L 20 12 M 176 -8 L 192 8 M -8 -12 L 20 16 M 176 -4 L 192 12 M -8 -8 L 20 20 M 176 0 L 192 16 M -8 -4 L 20 24 M 176 4 L 192 20 M -8 0 L 20 28 M 176 8 L 192 24 M -8 4 L 20 32 M 176 12 L 192 28 M -8 8 L 20 36 M 176 16 L 192 32 M -8 12 L 20 40 M 176 20 L 192 36 M -8 16 L 20 44 M 176 24 L 192 40 M -8 20 L 20 48 M 176 28 L 192 44 M -8 24 L 20 52 M 176 32 L 192 48 M -8 28 L 20 56 M 176 36 L 192 52 M -8 32 L 20 60 M 176 40 L 192 56 M -8 36 L 20 64 M 176 44 L 192 60 M -8 40 L 20 68 M 176 48 L 192 64 M -8 44 L 20 72 M 176 52 L 192 68 M -8 48 L 20 76 M 176 56 L 192 72 M -8 52 L 20 80 M 176 60 L 192 76 M -8 56 L 20 84 M 176 64 L 192 80 M -8 60 L 20 88 M 176 68 L 192 84 M -8 64 L 20 92 M 176 72 L 192 88 M -8 68 L 20 96 M 176 76 L 192 92 M -8 72 L 20 100 M 176 80 L 192 96 M -8 76 L 20 104 M 176 84 L 192 100 M -8 80 L 20 108 M 176 88 L 192 104 M -8 84 L 20 112 M 176 92 L 192 108 M -8 88 L 20 116 M 176 96 L 192 112 M -8 92 L 20 120 M 176 100 L 192 116 M -8 96 L 20 124 M 176 104 L 192 120 M -8 100 L 20 128 M 176 108 L 192 124 M -8 104 L 20 132 M 176 112 L 192 128 M -8 108 L 20 136 M 176 116 L 192 132 M -8 112 L 20 140 M 176 120 L 192 136 M -8 116 L 20 144 M 176 124 L 192 140 M -8 120 L 20 148 M 176 128 L 192 144 M -8 124 L 20 152 M 176 132 L 192 148 M -8 128 L 20 156 M 176 136 L 192 152 M -8 132 L 20 160 M 176 140 L 192 156 M -8 136 L 20 164 M 176 144 L 192 160 M -8 140 L 20 168 M 176 148 L 192 164 M -8 144 L 20 172 M 176 152 L 192 168" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
@@ -13,11 +13,15 @@
   <rect x="-8" y="40" width="240" height="106" rx="3" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
   <path d="M 150 40 L 150 55 M 150 55 L 98 55 M 98 55 L 98 40" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
   <text class="art-title" x="124" y="50.8" font-size="9" text-anchor="middle" fill="var(--art-ink)">TAHOE</text>
-  <rect x="71" y="121.2" width="2" height="24.8" fill="var(--art-ink)" />
-  <g transform="translate(4.8 51.2) scale(1.4)">
-    <ellipse cx="48" cy="50" rx="14" ry="7" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
-    <path d="M 48 57 C 55.33 56.29 62 52.25 62 47.88 C 62 43.5 55.33 39.46 48 38.75 C 40.67 38.04 34 40.67 34 43.63 C 34 46.58 40.67 49.21 48 48.5 C 55.33 47.79 62 43.75 62 39.38 C 62 35 55.33 30.96 48 30.25 C 40.67 29.54 34 32.17 34 35.13 C 34 38.08 40.67 40.71 48 40 C 55.33 39.29 62 35.25 62 30.88 C 62 26.5 55.33 22.46 48 21.75 C 40.67 21.04 34 23.67 34 26.62 C 34 29.58 40.67 32.21 48 31.5 C 55.33 30.79 62 26.75 62 22.37 C 62 18 55.33 13.96 48 13.25 C 40.67 12.54 34 15.17 34 18.12 C 34 21.08 40.67 23.71 48 23" fill="none" stroke="var(--art-coral)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  </g>
+  <rect x="71" y="103" width="2" height="43" fill="var(--art-ink)" />
+  <circle cx="72" cy="88" r="15" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="72" cy="88" r="11.5" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="72" cy="80.8" r="2.6" fill="var(--art-ink)" />
+  <circle cx="78.85" cy="85.78" r="2.6" fill="var(--art-ink)" />
+  <circle cx="76.23" cy="93.82" r="2.6" fill="var(--art-ink)" />
+  <circle cx="67.77" cy="93.82" r="2.6" fill="var(--art-ink)" />
+  <circle cx="65.15" cy="85.78" r="2.6" fill="var(--art-ink)" />
+  <circle cx="72" cy="88" r="3.4" fill="var(--art-coral)" />
   <path d="M 26 9.5 L 26 16.5 M 206 9.5 L 206 16.5 M 27 13 L 88.6 13 M 143.4 13 L 205 13" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
   <polyline points="29.13,11.51 27,13 29.13,14.49" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
   <polyline points="202.87,14.49 205,13 202.87,11.51" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
@@ -28,11 +32,11 @@
   <polyline points="271.51,138.87 273,141 274.49,138.87" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
   <text class="art-label" x="270.9" y="93" font-size="6" text-anchor="middle" fill="var(--art-ink)" transform="rotate(90 270.9 93)">HUMIDITY</text>
   <line x1="254" y1="142" x2="254" y2="44" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 104 168.5 L 104 175.5 M 292 168.5 L 292 175.5 M 105 172 L 173.2 172 M 222.8 172 L 291 172" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <polyline points="107.13,170.51 105,172 107.13,173.49" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <polyline points="288.87,173.49 291,172 288.87,170.51" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <text class="art-label" x="198" y="174.1" font-size="6" text-anchor="middle" fill="var(--art-ink)">HARDNESS</text>
-  <line x1="104" y1="158" x2="292" y2="158" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 192 168.5 L 192 175.5 M 304 168.5 L 304 175.5 M 193 172 L 223.2 172 M 272.8 172 L 303 172" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="195.13,170.51 193,172 195.13,173.49" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="300.87,173.49 303,172 300.87,170.51" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <text class="art-label" x="248" y="174.1" font-size="6" text-anchor="middle" fill="var(--art-ink)">HARDNESS</text>
+  <line x1="192" y1="158" x2="304" y2="158" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
   <g data-motion="steps" data-beats="4">
     <g data-beat="0">
       <g data-now="">
@@ -42,9 +46,9 @@
         <rect x="252.25" y="65.68" width="3.5" height="76.32" rx="1.75" fill="var(--art-cyan)" />
         <circle cx="254" cy="59.68" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
         <circle cx="254" cy="59.68" r="1.8" fill="var(--art-ink)" />
-        <rect x="104" y="156.25" width="12.8" height="3.5" rx="1.75" fill="var(--art-cyan)" />
-        <circle cx="122.8" cy="158" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-        <circle cx="122.8" cy="158" r="1.8" fill="var(--art-ink)" />
+        <rect x="192" y="156.25" width="5.2" height="3.5" rx="1.75" fill="var(--art-cyan)" />
+        <circle cx="203.2" cy="158" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="203.2" cy="158" r="1.8" fill="var(--art-ink)" />
       </g>
     </g>
     <g data-beat="1">
@@ -56,9 +60,9 @@
         <rect x="252.25" y="65.68" width="3.5" height="76.32" rx="1.75" fill="var(--art-cyan)" />
         <circle cx="254" cy="59.68" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
         <circle cx="254" cy="59.68" r="1.8" fill="var(--art-ink)" />
-        <rect x="104" y="156.25" width="12.8" height="3.5" rx="1.75" fill="var(--art-cyan)" />
-        <circle cx="122.8" cy="158" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-        <circle cx="122.8" cy="158" r="1.8" fill="var(--art-ink)" />
+        <rect x="192" y="156.25" width="5.2" height="3.5" rx="1.75" fill="var(--art-cyan)" />
+        <circle cx="203.2" cy="158" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="203.2" cy="158" r="1.8" fill="var(--art-ink)" />
       </g>
     </g>
     <g data-beat="2">
@@ -70,13 +74,13 @@
         <rect x="252.25" y="134.28" width="3.5" height="7.72" rx="1.75" fill="var(--art-cyan)" />
         <circle cx="254" cy="128.28" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
         <circle cx="254" cy="128.28" r="1.8" fill="var(--art-ink)" />
-        <rect x="104" y="156.25" width="12.8" height="3.5" rx="1.75" fill="var(--art-cyan)" />
-        <circle cx="122.8" cy="158" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-        <circle cx="122.8" cy="158" r="1.8" fill="var(--art-ink)" />
+        <rect x="192" y="156.25" width="5.2" height="3.5" rx="1.75" fill="var(--art-cyan)" />
+        <circle cx="203.2" cy="158" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="203.2" cy="158" r="1.8" fill="var(--art-ink)" />
       </g>
     </g>
     <g data-beat="3">
-      <circle cx="273.2" cy="158" r="7" data-ripple="" fill="none" stroke="var(--art-cyan)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="292.8" cy="158" r="7" data-ripple="" fill="none" stroke="var(--art-cyan)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
       <g data-now="">
         <rect x="26" y="26.25" width="152.4" height="3.5" rx="1.75" fill="var(--art-cyan)" />
         <circle cx="184.4" cy="28" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
@@ -84,9 +88,9 @@
         <rect x="252.25" y="134.28" width="3.5" height="7.72" rx="1.75" fill="var(--art-cyan)" />
         <circle cx="254" cy="128.28" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
         <circle cx="254" cy="128.28" r="1.8" fill="var(--art-ink)" />
-        <rect x="104" y="156.25" width="163.2" height="3.5" rx="1.75" fill="var(--art-cyan)" />
-        <circle cx="273.2" cy="158" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-        <circle cx="273.2" cy="158" r="1.8" fill="var(--art-ink)" />
+        <rect x="192" y="156.25" width="94.8" height="3.5" rx="1.75" fill="var(--art-cyan)" />
+        <circle cx="292.8" cy="158" r="5" fill="none" stroke="var(--art-ink)" stroke-width="1.5" class="art-line--2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="292.8" cy="158" r="1.8" fill="var(--art-ink)" />
       </g>
     </g>
   </g>

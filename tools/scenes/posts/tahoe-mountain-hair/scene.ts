@@ -8,12 +8,13 @@
  * and the right, a dim tiled grid between them (a shower's tiles), a label
  * plate hanging from the top reading TAHOE, a side bay with the mountain's
  * ridge in it — the elevation, drawn once. Standing in it where the
- * microphone stood is THE CURL: the `spring` glyph, coral, on a stem.
+ * microphone stood is THE ORB: a ringed ball, five holes round a coral
+ * core, on a stem.
  *
  * THE CONTROLS are the module's three sliders, each a blue track with a ring
  * handle, a dimension line with arrowheads and a centred caps label:
  * ELEVATION across the top (high: Tahoe's 6,225 ft), HUMIDITY up the right
- * (low: the dry mountain air), HARDNESS across the bottom (hard: the mineral
+ * (low: the dry mountain air), HARDNESS across the bottom, under the bay (hard: the mineral
  * water the routine puts back).
  *
  * The motion is `steps`, four beats: San Francisco's settings — low, humid,
@@ -23,12 +24,10 @@
  *
  *   bun run scenes:bake      → src/content/txt/tahoe-mountain-hair.svg
  *
- * Drawn from the kit and the spring recipe: no credit.
+ * Drawn from the kit: no credit.
  */
 
-import spring from "@whois/design-system/glyphs/recipes/spring";
 import { clipOutside, edges, type Kit, type Point, type Segment, segmentsD } from "@whois/design-system/lib/micro";
-import { part } from "@whois/design-system/scenes/parts";
 import { scene } from "@whois/design-system/scenes/recipe";
 
 // --- The room ------------------------------------------------------------------
@@ -44,6 +43,9 @@ const TEETH = 9;
 const PITCH = (ROOM.y1 - ROOM.y0) / TEETH;
 /** The tiles: the grid between the walls. */
 const TILE = 15.6;
+/** The orb, where the microphone stood: its centre and radius. */
+const ORB: Point = [72, 88];
+const ORB_R = 15;
 /** The label plate, hanging from the top. */
 const PLATE = { x0: 98, x1: 150, y0: ROOM.y0, y1: ROOM.y0 + 15 };
 
@@ -71,7 +73,7 @@ interface Slider {
 const SLIDERS: Slider[] = [
 	{ name: "ELEVATION", axis: "x", at: 28, from: 26, to: 206, dim: 13, sf: 0.06, tahoe: 0.88 },
 	{ name: "HUMIDITY", axis: "y", at: 254, from: 142, to: 44, dim: 273, sf: 0.84, tahoe: 0.14 },
-	{ name: "HARDNESS", axis: "x", at: 158, from: 104, to: 292, dim: 172, sf: 0.1, tahoe: 0.9 },
+	{ name: "HARDNESS", axis: "x", at: 158, from: 192, to: 304, dim: 172, sf: 0.1, tahoe: 0.9 },
 ];
 const HANDLE = 5;
 const TRACK = 3.5;
@@ -129,7 +131,10 @@ export default scene({
 		const grid: Segment[] = [];
 		for (let x = WALL_L.tip + TILE; x < WALL_R.tip; x += TILE) grid.push([[x, ROOM.y0], [x, ROOM.y1]]);
 		for (let y = ROOM.y0 + TILE; y < ROOM.y1; y += TILE) grid.push([[WALL_L.tip, y], [WALL_R.tip, y]]);
-		out.push(k.path(segmentsD(clipOutside(grid, plate)), { paint: "dim", ...hair }));
+		// The orb stands in front of the tiles: cut them round its ball (a 24-gon) and its stem.
+		const ball: Point[] = Array.from({ length: 24 }, (_, i) => [ORB[0] + Math.cos((i * Math.PI) / 12) * (ORB_R + 1.5), ORB[1] + Math.sin((i * Math.PI) / 12) * (ORB_R + 1.5)] as Point);
+		const stem: Point[] = [[ORB[0] - 2, ORB[1]], [ORB[0] + 2, ORB[1]], [ORB[0] + 2, ROOM.y1], [ORB[0] - 2, ROOM.y1]];
+		out.push(k.path(segmentsD(clipOutside(clipOutside(clipOutside(grid, plate), ball), stem)), { paint: "dim", ...hair }));
 
 		// The walls: hatched between the room's edge and the zigzag, under one clip.
 		const left = zigzag(WALL_L);
@@ -166,12 +171,17 @@ export default scene({
 			k.text((PLATE.x0 + PLATE.x1) / 2, PLATE.y1 - 4.2, "TAHOE", { role: "title", size: 9, anchor: "middle" }),
 		);
 
-		// The curl, where the microphone stood: the spring on a stem.
-		const CURL: Point = [72, 96];
-		const sc = 1.4;
+		// The orb, where the microphone stood: a ringed ball, five holes round a
+		// coral core, on a stem to the floor.
 		out.push(
-			k.rect(CURL[0] - 1, CURL[1] + 18 * sc, 2, ROOM.y1 - CURL[1] - 18 * sc, { paint: "none", fill: "ink" }),
-			part(k, spring, { at: CURL, scale: sc }),
+			k.rect(ORB[0] - 1, ORB[1] + ORB_R, 2, ROOM.y1 - ORB[1] - ORB_R, { paint: "none", fill: "ink" }),
+			k.ring(ORB[0], ORB[1], ORB_R, { paint: "ink", weight: "line", fill: "none" }),
+			k.ring(ORB[0], ORB[1], ORB_R - 3.5, { paint: "ink", ...hair, fill: "none" }),
+			...[0, 72, 144, 216, 288].map((a) => {
+				const t = (a * Math.PI) / 180;
+				return k.dot(ORB[0] + Math.sin(t) * 7.2, ORB[1] - Math.cos(t) * 7.2, 2.6, { paint: "ink" });
+			}),
+			k.dot(ORB[0], ORB[1], 3.4, { paint: "red" }),
 		);
 
 		// The controls: each slider's dimension line and its dim rail.
