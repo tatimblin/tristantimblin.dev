@@ -1,46 +1,22 @@
-# Astro Starter Kit: Basics
+# tristantimblin.dev
+
+Tristan Timblin's personal site — an Astro static site, with its design system
+and Web Components as Bun workspace packages under `packages/`.
+
+## Develop
 
 ```sh
-npm create astro@latest -- --template basics
+bun install
+bunx astro dev        # Node — not `bunx --bun astro dev`, which breaks HMR
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Build and test
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+```sh
+bun run build         # the fleet-demo embed, then astro build
+bun run test          # Playwright, against the built site
+bun run test:unit     # unit tests beside the code
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+See [AGENTS.md](AGENTS.md) for the repo layout, the build chain, and the design
+system rules.

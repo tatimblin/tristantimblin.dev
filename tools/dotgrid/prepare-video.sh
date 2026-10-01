@@ -47,7 +47,8 @@
 # Usage:
 #   prepare-video.sh [-i in] [-o out] [-w width] [-f fps] [-q crf] [-W webmcrf] [-t] [-n] [-m luma]
 #
-#   -i  input file      (default: public/videos/fabric.mp4)
+#   -i  input file      (default: tools/dotgrid/fabric.mp4 — the source, kept
+#                        out of public/ so it never ships)
 #   -o  output file     (default: public/videos/fabric.web.mp4; the WebM
 #                        companion is the same path with a .webm extension)
 #   -w  target width    (default: 480; height auto to preserve aspect)
@@ -73,7 +74,7 @@
 # hero (the shader only reads luminance); revisit if a zscale build is available.
 set -euo pipefail
 
-IN="public/videos/fabric.mp4"
+IN="tools/dotgrid/fabric.mp4"
 OUT="public/videos/fabric.web.mp4"
 WIDTH=480
 FPS=0
