@@ -1,17 +1,26 @@
+<!-- filler-05 — a board: a bus of traces dropping in from the top, a coral burst where it turns into a chip, the die a warped checker, coral pads -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
-  <g>
-    <path d="M 140 -10 V 40 H 220 V 100 H 330 M 180 190 V 140 H 260 V 60 H 330" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
-    <rect x="217" y="37" width="6" height="6" fill="var(--art-coral)" />
-    <rect x="257" y="97" width="6" height="6" fill="var(--art-coral)" />
-    <rect x="177" y="137" width="6" height="6" fill="var(--art-ink)" />
-    <circle cx="140" cy="40" r="2.5" fill="var(--art-ink)" />
-    <circle cx="300" cy="30" r="3" fill="var(--art-coral)" />
-    <circle cx="160" cy="90" r="2" fill="var(--art-ink)" />
-    <rect x="287" y="147" width="6" height="6" fill="var(--art-coral)" />
-    <circle cx="320" cy="120" r="3" fill="var(--art-coral)" />
-    <circle cx="110" cy="150" r="1.5" fill="var(--art-ink)" />
-    <circle cx="240" cy="160" r="1.5" fill="var(--art-ink)" />
-    <rect x="97" y="57" width="6" height="6" fill="var(--art-lavender)" />
-    <circle cx="200" cy="80" r="1.5" fill="var(--art-coral)" />
+  <path d="M 112 -10 L 112 51 Q 112 59 120 59 L 188 59" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <path d="M 119 -10 L 119 58 Q 119 66 127 66 L 188 66" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <path d="M 126 -10 L 126 65 Q 126 73 134 73 L 188 73" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <path d="M 262 59 L 284 59 Q 292 59 292 67 L 292 142 Q 292 150 300 150 L 330 150" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <path d="M 262 66 L 277 66 Q 285 66 285 74 L 285 149 Q 285 157 293 157 L 330 157" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <path d="M 262 73 L 270 73 Q 278 73 278 81 L 278 156 Q 278 164 286 164 L 330 164" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <path d="M 214 102 L 214 134 Q 214 140 208 140 L 174 140 Q 168 140 168 146 L 168 190" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <rect x="188" y="50" width="74" height="46" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 197 50 V 44 M 197 96 V 102 M 205 50 V 44 M 205 96 V 102 M 213 50 V 44 M 213 96 V 102 M 221 50 V 44 M 221 96 V 102 M 229 50 V 44 M 229 96 V 102 M 237 50 V 44 M 237 96 V 102 M 245 50 V 44 M 245 96 V 102 M 253 50 V 44 M 253 96 V 102" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <g transform="translate(189 49) scale(1.5)">
+    <path d="M12 4L13.03 4L12.79 4.79L12 5.03ZM15.75 4L19.59 4L19.42 4.51L15.47 4.62ZM24 4L28.41 4L28.58 4.51L24 4.48ZM32.25 4L34.97 4L35.21 4.79L32.53 4.62ZM12.79 4.79L15.47 4.62L15.28 7.28L12.62 7.47ZM19.42 4.51L24 4.48L24 7.12L19.3 7.16ZM28.58 4.51L32.53 4.62L32.72 7.28L28.7 7.16ZM35.21 4.79L36 5.03L36 7.75L35.38 7.47ZM12 7.75L12.62 7.47L12.51 11.42L12 11.59ZM15.28 7.28L19.3 7.16L19.22 11.22L15.16 11.3ZM24 7.12L28.7 7.16L28.78 11.22L24 11.2ZM32.72 7.28L35.38 7.47L35.49 11.42L32.84 11.3ZM12.51 11.42L15.16 11.3L15.12 16L12.48 16ZM19.22 11.22L24 11.2L24 16L19.2 16ZM28.78 11.22L32.84 11.3L32.88 16L28.8 16ZM35.49 11.42L36 11.59L36 16L35.52 16ZM12 16L12.48 16L12.51 20.58L12 20.41ZM15.12 16L19.2 16L19.22 20.78L15.16 20.7ZM24 16L28.8 16L28.78 20.78L24 20.8ZM32.88 16L35.52 16L35.49 20.58L32.84 20.7ZM12.51 20.58L15.16 20.7L15.28 24.72L12.62 24.53ZM19.22 20.78L24 20.8L24 24.88L19.3 24.84ZM28.78 20.78L32.84 20.7L32.72 24.72L28.7 24.84ZM35.49 20.58L36 20.41L36 24.25L35.38 24.53ZM12 24.25L12.62 24.53L12.79 27.21L12 26.97ZM15.28 24.72L19.3 24.84L19.42 27.49L15.47 27.38ZM24 24.88L28.7 24.84L28.58 27.49L24 27.52ZM32.72 24.72L35.38 24.53L35.21 27.21L32.53 27.38ZM12.79 27.21L15.47 27.38L15.75 28L13.03 28ZM19.42 27.49L24 27.52L24 28L19.59 28ZM28.58 27.49L32.53 27.38L32.25 28L28.41 28ZM35.21 27.21L36 26.97L36 28L34.97 28Z" fill="var(--art-ink)" />
   </g>
+  <circle cx="193" cy="55" r="1.5" fill="var(--art-ink)" />
+  <g transform="translate(78.2 38.8) scale(1.7)">
+    <polygon points="25.29,5.53 25.78,11.87 30.79,7.83 27.73,13.49 34.42,12.7 28.5,15.91 34.48,18.84 27.84,18.35 31.98,24.83 25.95,20.05 25.73,26.51 23.45,20.47 20.5,24.1 21.12,19.46 15.18,21.93 19.71,17.36 13.07,16.23 19.66,14.82 15.22,10.61 20.98,12.66 19.48,6.61 23.27,11.56" fill="var(--art-coral)" />
+  </g>
+  <rect x="279" y="156" width="14" height="14" fill="var(--art-coral)" />
+  <rect x="161" y="133" width="14" height="14" fill="var(--art-coral)" />
+  <rect x="52" y="112" width="8" height="8" fill="var(--art-lavender)" />
+  <circle cx="300" cy="26" r="3" fill="var(--art-coral)" />
+  <circle cx="96" cy="152" r="1.5" fill="var(--art-ink)" />
+  <circle cx="250" cy="128" r="1.5" fill="var(--art-ink)" />
+  <circle cx="40" cy="54" r="1.5" fill="var(--art-ink)" />
 </svg>
