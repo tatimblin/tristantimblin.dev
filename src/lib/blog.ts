@@ -127,6 +127,15 @@ export const dottedDate = (d: Date) => {
 	return `${day}.${month}.${date.getUTCFullYear()}`;
 };
 
+/** The /txt stack's date column: `02 / 26` — zero-padded month, two-digit
+ *  year; UTC like the rest. */
+export const monthYear = (d: Date) => {
+	const date = new Date(d);
+	const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+	const year = String(date.getUTCFullYear() % 100).padStart(2, "0");
+	return `${month} / ${year}`;
+};
+
 /** The index table's FILED column: `jun 2025` (the caps voice uppercases it). */
 export const filedDate = (d: Date) =>
 	`${monthOf(d).short} ${new Date(d).getUTCFullYear()}`;

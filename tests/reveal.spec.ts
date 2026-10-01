@@ -805,6 +805,6 @@ test.describe("reveal — the /txt index", () => {
 		const state = await readReveal(page);
 		expect(state.total, "the index should carry no reveal targets").toBe(0);
 		expect(state.faded).toBe(0);
-		await expect(page.locator("a.ds-post-row__link").first()).toBeVisible();
+		await expect(page.locator("a.stack__title").first()).toBeVisible();
 	});
 });

@@ -1,8 +1,8 @@
 ---
-// /txt — every post, by year, newest first: the default BlogLayout shell over
-// the DS post list (PostIndex). Deliberately plain — a base to build on.
+// /txt — every post, newest first: the default BlogLayout shell over the
+// expanding post stack (PostStack): the newest open, the rest a ruled list.
 import BlogLayout from "../../layouts/BlogLayout.astro";
-import PostIndex from "../../components/txt/PostIndex.astro";
+import PostStack from "../../components/txt/PostStack.astro";
 import { BLOG_DESCRIPTION, BLOG_TITLE } from "../../lib/blog";
 import { getPosts } from "../../lib/posts";
 
@@ -14,5 +14,5 @@ const posts = await getPosts();
 	description={BLOG_DESCRIPTION}
 	heading={BLOG_TITLE}
 >
-	<PostIndex posts={posts} />
+	<PostStack posts={posts} />
 </BlogLayout>

@@ -3,39 +3,237 @@ import { test, expect, type Page } from "@playwright/test";
 /**
  * THE BLOG: /txt, ITS TAG PAGES, AND A POST.
  *
- * The index and the tag pages are the same plain list: the DS PostList,
- * grouped by year, newest first, one row per post. Categories are a closed
- * set shown beside each title: /txt/category/<id> is simply gone (404), and
- * /txt/categories is a 301 in public/_redirects (Cloudflare Pages only).
- * The properties worth pinning:
+ * /txt is the POST STACK (src/components/txt/PostStack.astro): a ruled two-
+ * column list, the date on the left and the title on the right, one post
+ * open at a time — the newest on load, the pointed-at one after. The tag
+ * pages keep the plain DS PostList, grouped by year. Categories are a closed
+ * set: /txt/category/<id> is simply gone (404), and /txt/categories is a 301
+ * in public/_redirects (Cloudflare Pages only). The properties worth pinning:
  *
- *  1. EXACTLY ONE LINK PER POST on the index, newest first.
- *  2. NO CATEGORY PAGES are built.
- *  3. TAG PAGES STILL RESOLVE — they predate the redesign and may be linked.
- *  4. IT WORKS WITH SCRIPTING OFF: rows and nav are plain links.
- *  5. A POST (the block at the foot of this file) is the RULED page: one
+ *  1. EXACTLY ONE LINK PER POST on the index, newest first; ONE post open.
+ *  2. NO POINTER JUMP: opening a post never moves a different post under a
+ *     still pointer, and the list's height never changes — every post opens
+ *     by the same measured height, so the posts below stay put and the one
+ *     under the pointer only grows around it. At 1440 and at 375.
+ *  3. INTENT: a still pointer opens nothing; a tap on a phone opens before
+ *     it navigates; focus opens.
+ *  4. IT WORKS WITH SCRIPTING OFF: the first post is open, every title a link.
+ *  5. NO CATEGORY PAGES are built; TAG PAGES STILL RESOLVE.
+ *  6. A POST (the block at the foot of this file) is the RULED page: one
  *     four-column grid — the status strip, the title and lead, the hero as
  *     Fig. 01, the body cut into numbered sections with sticky heads, and an
  *     index table naming the tags and the neighbours. No reading ruler, no
  *     contents rail, and the same measure with or without h2s.
  */
 
-/** The post links on a list page: one per PostRow, in DOM order. */
+/** The post links on a list page, in DOM order: the stack's titles on /txt,
+ *  the PostRows on a tag page. */
 const postLinks = (page: Page) =>
 	page.evaluate(() =>
-		Array.from(document.querySelectorAll<HTMLAnchorElement>("a.ds-post-row__link"))
+		Array.from(document.querySelectorAll<HTMLAnchorElement>("a.stack__title, a.ds-post-row__link"))
 			.map((a) => a.getAttribute("href"))
 			.filter((h) => h && /^\/txt\/[^/]+\/$/.test(h))
 	);
 
+const POST = ".stack__post";
+const OPEN = ".stack__post[data-open]";
+
+/** The hrefs of the open posts (there should be exactly one). */
+const openPosts = (page: Page) =>
+	page.locator(`${OPEN} a.stack__title`).evaluateAll((as) => as.map((a) => a.getAttribute("href")));
+
+/** The list's height and every body's height, in px. */
+const geometry = (page: Page) =>
+	page.evaluate(() => ({
+		list: document.querySelector("[data-stack]")!.getBoundingClientRect().height,
+		bodies: Array.from(document.querySelectorAll(".stack__body")).map(
+			(el) => el.getBoundingClientRect().height,
+		),
+		open: parseFloat(getComputedStyle(document.querySelector("[data-stack]")!).getPropertyValue("--stack-open")),
+	}));
+
+/** Which post (its index in the list) is under the viewport point. */
+const postAt = (page: Page, x: number, y: number) =>
+	page.evaluate(
+		([x, y]) => {
+			const el = document.elementFromPoint(x, y);
+			const post = el?.closest(".stack__post");
+			return post ? Array.from(document.querySelectorAll(".stack__post")).indexOf(post) : -1;
+		},
+		[x, y] as const,
+	);
+
+/** Wait for every swap animation on the bodies to end. */
+const settle = (page: Page) =>
+	page.waitForFunction(
+		() =>
+			Array.from(document.querySelectorAll(".stack__body")).every(
+				(el) => el.getAnimations().length === 0,
+			),
+		undefined,
+		{ timeout: 5000 },
+	);
+
+/** The centre of the nth post's title, in viewport coordinates. */
+const titleCentre = async (page: Page, n: number) => {
+	const b = (await page.locator(`${POST} a.stack__title`).nth(n).boundingBox())!;
+	return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+};
+
+/**
+ * Move the pointer onto the nth post's title and wait out the swap without
+ * moving again; then the post under the pointer must still be that one, it
+ * must be the open one, and the list must be the height it was.
+ */
+async function moveAndCheck(page: Page, n: number) {
+	const before = await geometry(page);
+	const { x, y } = await titleCentre(page, n);
+	// A few steps, as a real hand moves: the intermediate posts open and
+	// close along the way, which is the retargeting case worth exercising.
+	await page.mouse.move(x, y, { steps: 4 });
+	await settle(page);
+	expect(await postAt(page, x, y), `post ${n} should still be under the pointer`).toBe(n);
+	expect(await page.locator(OPEN).count()).toBe(1);
+	expect(await page.locator(POST).nth(n).getAttribute("data-open")).not.toBeNull();
+	const after = await geometry(page);
+	expect(Math.abs(after.list - before.list)).toBeLessThanOrEqual(1);
+	// Exactly one body is H tall, the rest are closed.
+	expect(after.bodies.filter((h) => Math.abs(h - after.open) <= 1)).toHaveLength(1);
+	expect(after.bodies.filter((h) => h === 0)).toHaveLength(after.bodies.length - 1);
+}
+
 test.describe("/txt/", () => {
-	test("every post is linked exactly once, newest first, grouped by year", async ({ page }) => {
+	test("every post is linked exactly once, newest first; the first is open, and only it", async ({
+		page,
+	}) => {
 		await page.goto("/txt/");
 		const links = await postLinks(page);
 		expect(links.length, "the index should link some posts").toBeGreaterThan(0);
 		expect(new Set(links).size, `duplicate post links: ${links}`).toBe(links.length);
 		expect(links.slice(0, 2)).toEqual(["/txt/asserting-on-agent-behavior/", "/txt/tahoe-mountain-hair/"]);
-		expect(await page.locator(".ds-post-group").count()).toBeGreaterThan(0);
+		// No year groups, no PostList: the stack alone.
+		await expect(page.locator(".ds-post-group, .ds-post-list")).toHaveCount(0);
+		expect(await openPosts(page)).toEqual(["/txt/asserting-on-agent-behavior/"]);
+		// The date column reads month / year.
+		await expect(page.locator(`${POST} time.stack__date`).first()).toHaveText("02 / 26");
+		await expect(page.locator(`${POST} time.stack__date`).first()).toHaveAttribute("datetime", "2026-02-02");
+		// The open body: category · minutes, the excerpt, READ to the same place.
+		const body = page.locator(`${OPEN} .stack__body`);
+		await expect(body).toBeVisible();
+		await expect(body.locator(".stack__meta")).toHaveText(/^Programming · \d+ min$/);
+		await expect(body.locator(".stack__excerpt")).toHaveText(/\S/);
+		const read = body.locator("a.stack__read");
+		await expect(read).toHaveAttribute("href", "/txt/asserting-on-agent-behavior/");
+		await expect(read).toHaveAttribute("tabindex", "-1");
+		await expect(read).toHaveAttribute("aria-hidden", "true");
+		// Closed bodies are hidden, and the script has measured H.
+		await expect(page.locator(`${POST}:not([data-open]) .stack__body`).first()).toBeHidden();
+		const g = await geometry(page);
+		expect(g.open).toBeGreaterThan(0);
+		expect(Math.abs(g.bodies[0] - g.open)).toBeLessThanOrEqual(1);
+	});
+
+	for (const width of [1440, 375]) {
+		test(`no pointer jump at ${width}: a post below the open one, then one above`, async ({
+			page,
+		}) => {
+			await page.setViewportSize({ width, height: width < 640 ? 812 : 900 });
+			await page.goto("/txt/");
+			await page.locator("[data-stack]").scrollIntoViewIfNeeded();
+			await settle(page);
+			// Every title is laid out the same open and closed: pin the header
+			// geometry before any swap, then compare after.
+			const heads = () =>
+				page.locator(`${POST} a.stack__title`).evaluateAll((as) =>
+					as.map((a) => a.getBoundingClientRect().height),
+				);
+			const headsBefore = await heads();
+			// Prime the intent gate (the first move only records coordinates)
+			// from a point outside the list.
+			await page.mouse.move(1, 1);
+			// Down to the third post (two below the open first one).
+			await moveAndCheck(page, 2);
+			// Up to the second: the one between the open one and the top.
+			await moveAndCheck(page, 1);
+			// And up past it to the first.
+			await moveAndCheck(page, 0);
+			expect(await heads()).toEqual(headsBefore);
+		});
+	}
+
+	test("a still pointer opens nothing: the open post changes only when the pointer moves", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/txt/");
+		await page.mouse.move(1, 1);
+		await moveAndCheck(page, 1);
+		// Open the fourth post from the keyboard while the pointer rests on the
+		// second: the second slides (its body closes, the fourth's opens below
+		// the pointer, which is above both). Nothing moved the pointer, so the
+		// fourth stays open — no pointerenter / mouseover reopens the second.
+		await page.locator(`${POST} a.stack__title`).nth(3).focus();
+		await settle(page);
+		expect(await openPosts(page)).toEqual(["/txt/why-i-joined-fisker/"]);
+		// Give a synthetic hover update every chance to fire.
+		await page.waitForTimeout(400);
+		expect(await openPosts(page)).toEqual(["/txt/why-i-joined-fisker/"]);
+		// The pointer never left the second post, which is now closed.
+		const { x, y } = await titleCentre(page, 1);
+		expect(await postAt(page, x, y)).toBe(1);
+	});
+
+	test("touch: a tap on a closed post opens it; a second tap on its title navigates", async ({
+		browser,
+	}) => {
+		const context = await browser.newContext({
+			viewport: { width: 375, height: 812 },
+			hasTouch: true,
+			isMobile: true,
+		});
+		const page = await context.newPage();
+		await page.goto("/txt/");
+		await page.locator("[data-stack]").scrollIntoViewIfNeeded();
+		let { x, y } = await titleCentre(page, 1);
+		await page.touchscreen.tap(x, y);
+		await settle(page);
+		await expect(page).toHaveURL(/\/txt\/$/);
+		expect(await openPosts(page)).toEqual(["/txt/tahoe-mountain-hair/"]);
+		// The title may have moved up (the first post's body closed above it):
+		// tap where it is now.
+		({ x, y } = await titleCentre(page, 1));
+		await page.touchscreen.tap(x, y);
+		await expect(page).toHaveURL(/\/txt\/tahoe-mountain-hair\/$/);
+		await context.close();
+	});
+
+	test("keyboard: tabbing to the second title opens it", async ({ page }) => {
+		await page.goto("/txt/");
+		await page.locator(`${POST} a.stack__title`).first().focus();
+		// READ is tabindex -1, so the next stop is the second post's title.
+		await page.keyboard.press("Tab");
+		await expect(page.locator(`${POST} a.stack__title`).nth(1)).toBeFocused();
+		await settle(page);
+		expect(await openPosts(page)).toEqual(["/txt/tahoe-mountain-hair/"]);
+	});
+
+	test("reduced motion: the swap is instant", async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: "reduce" });
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/txt/");
+		await page.mouse.move(1, 1);
+		const { x, y } = await titleCentre(page, 2);
+		await page.mouse.move(x, y, { steps: 2 });
+		// No wait: the end state is simply present, with nothing animating.
+		const g = await geometry(page);
+		expect(Math.abs(g.bodies[2] - g.open)).toBeLessThanOrEqual(1);
+		expect(g.bodies.filter((h) => h === 0)).toHaveLength(g.bodies.length - 1);
+		expect(
+			await page.evaluate(() =>
+				Array.from(document.querySelectorAll(".stack__body")).reduce((n, el) => n + el.getAnimations().length, 0),
+			),
+		).toBe(0);
+		expect(await openPosts(page)).toEqual(["/txt/mega-desk/"]);
 	});
 
 	test("there are no category pages", async ({ page }) => {
@@ -52,13 +250,23 @@ test.describe("/txt/", () => {
 		await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 	});
 
-	test("rows and nav are reachable with scripting off", async ({ browser }) => {
+	test("the stack and nav are reachable with scripting off: the first post open, every title a link", async ({
+		browser,
+	}) => {
 		const context = await browser.newContext({ javaScriptEnabled: false });
 		const page = await context.newPage();
 		await page.goto("/txt/tag/diy/");
 		await page.locator('.site-header a[href="/txt/"]').click();
 		await expect(page).toHaveURL(/\/txt\/?$/);
-		await page.locator('a.ds-post-row__link[href="/txt/mega-desk/"]').click();
+		// The server renders the first post open, its body at its natural height.
+		expect(await openPosts(page)).toEqual(["/txt/asserting-on-agent-behavior/"]);
+		await expect(page.locator(`${OPEN} .stack__body`)).toBeVisible();
+		await expect(page.locator(`${OPEN} .stack__excerpt`)).toBeVisible();
+		expect((await geometry(page)).bodies[0]).toBeGreaterThan(0);
+		// Every title is a plain link, open or not.
+		const links = await postLinks(page);
+		expect(links.length).toBeGreaterThan(1);
+		await page.locator('a.stack__title[href="/txt/mega-desk/"]').click();
 		await expect(page).toHaveURL(/\/txt\/mega-desk\/?$/);
 		await expect(page.locator("h1")).toHaveText("The Mega Desk");
 		await context.close();

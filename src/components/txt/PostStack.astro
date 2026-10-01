@@ -1,0 +1,349 @@
+---
+// PostStack — /txt's list: a ruled two-column table, the date on the left and
+// the title on the right, with one post open at a time. The newest is open
+// on load; pointing at another opens it (a tap on a phone, focus from the
+// keyboard). The open post shows its category and reading time, its excerpt
+// and a READ button.
+//
+// THE INVARIANT: opening a post never moves a different post under a still
+// pointer. Two things make that hold:
+//
+//   1. GEOMETRY. A post's header is laid out identically open and closed —
+//      only its ink changes — and every post's open body is the SAME height
+//      H, measured by the script as the tallest natural body and set as
+//      --stack-open on the list. Exactly one post is open, so the list's
+//      height is constant and the posts below the open one never move. When
+//      the pointer moves from open post A down to B, A loses H above B's
+//      header while B gains H below it: B's bottom edge stays put and B only
+//      grows around the pointer. The swap is animated from the current heights
+//      of EVERY body to its target on one clock (the same duration and easing,
+//      started in one task), so the sum is constant on every frame too — even
+//      when a third post is pointed at mid-swap, which plain CSS transitions
+//      cannot promise (a reversed transition is shortened).
+//   2. INTENT. Only a pointermove whose coordinates differ from the last one
+//      opens a post. pointerenter / mouseover (which fire when content slides
+//      under a still pointer) never do, and leaving the list leaves the open
+//      post open. overflow-anchor: none keeps scroll anchoring out of it.
+//
+// One consumer, so a site component built from DS pieces and tokens, not a DS
+// component (extract it if a second appears). PostIndex still draws the tag
+// pages.
+import type { CollectionEntry } from "astro:content";
+import Text from "@whois/design-system/Text";
+import Mono from "@whois/design-system/Mono";
+import Body from "@whois/design-system/Body";
+import Button from "@whois/design-system/Button";
+import Icon from "@whois/design-system/Icon";
+import { byDateDesc, categories, isoDate, monthYear, postHref, readingStats } from "../../lib/blog";
+
+interface Props {
+	posts: CollectionEntry<"txt">[];
+	label?: string;
+}
+
+const { posts, label = "Posts" } = Astro.props;
+const ordered = byDateDesc(posts);
+---
+
+{
+	ordered.length === 0 ? (
+		<Body variant="tertiary">Nothing here yet.</Body>
+	) : (
+		<ol class="stack" aria-label={label} data-stack>
+			{ordered.map((post, i) => {
+				const href = postHref(post.id);
+				const cat = post.data.category ? categories[post.data.category] : null;
+				const { minutes } = readingStats(post.body);
+				return (
+					<li class="stack__post" data-open={i === 0 ? "" : undefined}>
+						<Text as="time" size={4} responsive class="stack__date" datetime={isoDate(post.data.date)}>
+							{monthYear(post.data.date)}
+						</Text>
+						<Text as="a" size={4} responsive class="stack__title ds-control" href={href}>
+							{post.data.title}
+						</Text>
+						<div class="stack__body">
+							<div class="stack__body-inner" data-stack-measure>
+								<Mono variant="text" class="stack__meta">
+									{cat ? `${cat.label} · ${minutes} min` : `${minutes} min`}
+								</Mono>
+								<Body class="stack__excerpt">{post.data.excerpt}</Body>
+								{/* The second link to the same place: the title is the tab stop. */}
+								<Button
+									as="a"
+									variant="primary"
+									inverted
+									href={href}
+									tabindex="-1"
+									aria-hidden="true"
+									class="stack__read"
+								>
+									Read
+									<Icon name="external" slot="end-icon" />
+								</Button>
+							</div>
+						</div>
+					</li>
+				);
+			})}
+		</ol>
+	)
+}
+
+<style>
+	/* The ruled table: a hairline above and below the list, one between posts,
+	   and the vertical one between the columns drawn by the date cell, which
+	   spans the post's two rows so the rule runs the whole height. */
+	.stack {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		border-block: 1px solid var(--hairline);
+		/* Scroll anchoring must not shift the page while a swap runs. */
+		overflow-anchor: none;
+	}
+	.stack__post {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+		grid-template-rows: auto auto;
+	}
+	.stack__post + .stack__post {
+		border-block-start: 1px solid var(--hairline);
+	}
+
+	/* THE HEADER. Identical open and closed: the same size, weight, tracking
+	   and padding in both states, so a title can never rewrap on open. The
+	   ink is the only thing that moves — tertiary closed, primary open. */
+	.stack__date,
+	.stack__title {
+		display: block;
+		padding-block: var(--space-4);
+		line-height: var(--line-height-ui);
+		color: var(--text-tertiary);
+		transition: color var(--duration-swap) var(--ease-reveal);
+	}
+	.stack__date {
+		grid-column: 1;
+		grid-row: 1 / span 2;
+		padding-inline-end: var(--space-5);
+		text-align: end;
+		font-variant-numeric: tabular-nums;
+		border-inline-end: 1px solid var(--hairline);
+	}
+	.stack__title {
+		grid-column: 2;
+		grid-row: 1;
+		padding-inline-start: var(--space-5);
+		/* The control's reset drops the underline; the ring is control.css's,
+		   drawn inside the cell so it never clips on the hairlines. */
+		--control-ring-offset: var(--focus-ring-inset);
+	}
+	.stack__post[data-open] .stack__date,
+	.stack__post[data-open] .stack__title {
+		color: var(--text-primary);
+	}
+
+	/* THE BODY. Closed: no height, clipped, hidden to readers. Open: exactly
+	   --stack-open tall (the script's H; auto without it, so the first post
+	   reads with scripting off). The body itself carries no padding, border or
+	   margin — all of that is on the inner, which is what the script measures,
+	   so H is the whole of what opening adds. The script animates the height;
+	   here only visibility waits for the close to finish, and the inner fades. */
+	.stack__body {
+		grid-column: 2;
+		grid-row: 2;
+		block-size: 0;
+		overflow: clip;
+		visibility: hidden;
+		transition: visibility 0s linear var(--duration-swap);
+	}
+	.stack__post[data-open] .stack__body {
+		block-size: var(--stack-open, auto);
+		visibility: visible;
+		transition: none;
+	}
+	.stack__body-inner {
+		display: grid;
+		justify-items: start;
+		gap: var(--space-4);
+		padding-inline-start: var(--space-5);
+		padding-block-end: var(--space-6);
+		opacity: 0;
+		transition: opacity var(--duration-swap) var(--ease-reveal);
+	}
+	.stack__post[data-open] .stack__body-inner {
+		opacity: 1;
+	}
+	.stack__meta {
+		display: block;
+	}
+	.stack__excerpt {
+		max-inline-size: var(--measure-note);
+	}
+
+	/* Phone: one column, the date above the title; no rule between them. */
+	@media (max-width: 639px) {
+		.stack__post {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: auto auto auto;
+		}
+		.stack__date {
+			grid-column: 1;
+			grid-row: 1;
+			padding-inline-end: 0;
+			padding-block-end: 0;
+			text-align: start;
+			border-inline-end: 0;
+		}
+		.stack__title {
+			grid-column: 1;
+			grid-row: 2;
+			padding-inline-start: 0;
+			padding-block-start: var(--space-1);
+		}
+		.stack__body {
+			grid-column: 1;
+			grid-row: 3;
+		}
+		.stack__body-inner {
+			padding-inline-start: 0;
+		}
+	}
+</style>
+
+<script>
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+
+	const POST = ".stack__post";
+
+	/** "260ms" | "0s" → milliseconds. */
+	const ms = (value: string): number => {
+		const m = /^\s*([\d.]+)\s*(ms|s)\s*$/.exec(value);
+		return m ? parseFloat(m[1]) * (m[2] === "s" ? 1000 : 1) : 0;
+	};
+
+	function bind(list: HTMLElement) {
+		const posts = Array.from(list.querySelectorAll<HTMLElement>(POST));
+		const bodies = posts.map((post) => post.querySelector<HTMLElement>(".stack__body")!);
+		const inners = posts.map((post) => post.querySelector<HTMLElement>("[data-stack-measure]")!);
+		const controller = new AbortController();
+		const { signal } = controller;
+
+		/* H: the tallest natural body. Set once up front and again whenever a
+		   body's content or the column's width changes (a font arriving, a
+		   resize), so every post opens by the same amount. */
+		let open = 0;
+		const measure = () => {
+			const next = Math.max(0, ...inners.map((el) => el.getBoundingClientRect().height));
+			if (next === open) return;
+			open = next;
+			list.style.setProperty("--stack-open", `${next}px`);
+		};
+		measure();
+		const ro = new ResizeObserver(measure);
+		ro.observe(list);
+		inners.forEach((el) => ro.observe(el));
+		document.fonts?.ready.then(() => {
+			if (!signal.aborted) measure();
+		});
+
+		/* The swap. Every body goes from its CURRENT height (mid-flight or at
+		   rest) to its target on one clock, so at any instant the heights sum
+		   to H and nothing below the pointer's post moves. The CSS resting
+		   values equal the targets, so the animations simply end. */
+		const swap = (target: HTMLElement) => {
+			if (target.hasAttribute("data-open")) return;
+			const style = getComputedStyle(list);
+			const duration = ms(style.getPropertyValue("--duration-swap"));
+			const easing = style.getPropertyValue("--ease-reveal").trim() || "ease";
+			const current = bodies.map((body) => body.getBoundingClientRect().height);
+			bodies.forEach((body) => body.getAnimations().forEach((a) => a.cancel()));
+			posts.forEach((post) => {
+				if (post === target) post.setAttribute("data-open", "");
+				else post.removeAttribute("data-open");
+			});
+			if (duration <= 0) return;
+			bodies.forEach((body, i) => {
+				const to = posts[i] === target ? open : 0;
+				if (current[i] === to) return;
+				body.animate([{ blockSize: `${current[i]}px` }, { blockSize: `${to}px` }], {
+					duration,
+					easing,
+				});
+			});
+		};
+
+		const postOf = (node: EventTarget | null) =>
+			node instanceof Element ? node.closest<HTMLElement>(POST) : null;
+
+		/* INTENT: a pointermove whose coordinates changed. The coordinates are
+		   tracked on the whole document, not just the list, so the synthetic
+		   move a browser sends after a scroll or a layout change (content
+		   sliding under a still pointer, even one that was resting outside the
+		   list) repeats the last position and never counts. The first move
+		   seen only records it. */
+		let last: { x: number; y: number } | null = null;
+		document.addEventListener(
+			"pointermove",
+			(e) => {
+				if (e.pointerType === "touch") return;
+				const moved = last !== null && (e.clientX !== last.x || e.clientY !== last.y);
+				last = { x: e.clientX, y: e.clientY };
+				if (!moved) return;
+				const post = postOf(e.target);
+				if (post && list.contains(post)) swap(post);
+			},
+			{ signal },
+		);
+
+		/* TOUCH: the first tap on a closed post opens it; a tap on the open
+		   post's title (or READ) navigates. Whether the post was open is read
+		   at pointerdown: a tap focuses the link before it clicks, and the
+		   focusin below has opened the post by the time the click arrives. */
+		let touch = false;
+		let downOnOpen = false;
+		list.addEventListener(
+			"pointerdown",
+			(e) => {
+				touch = e.pointerType === "touch";
+				downOnOpen = postOf(e.target)?.hasAttribute("data-open") ?? false;
+			},
+			{ signal },
+		);
+		list.addEventListener(
+			"click",
+			(e) => {
+				const wasTouch = touch;
+				touch = false;
+				if (!wasTouch) return;
+				const post = postOf(e.target);
+				if (post && !downOnOpen) {
+					e.preventDefault();
+					swap(post);
+				}
+			},
+			{ signal },
+		);
+
+		/* KEYBOARD: focus on a post's title opens it. */
+		list.addEventListener(
+			"focusin",
+			(e) => {
+				const post = postOf(e.target);
+				if (post) swap(post);
+			},
+			{ signal },
+		);
+
+		return () => {
+			controller.abort();
+			ro.disconnect();
+			bodies.forEach((body) => body.getAnimations().forEach((a) => a.cancel()));
+		};
+	}
+
+	onPage(() => {
+		const list = document.querySelector<HTMLElement>("[data-stack]");
+		if (list) return bind(list);
+	});
+</script>
