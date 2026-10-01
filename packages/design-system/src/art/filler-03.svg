@@ -1,12 +1,16 @@
+<!-- filler-03 — a fan of flow lines converging on a petal hub (an ink flower, a green heart), green capsules riding the lines, one toggle, a dashed line on out -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
-  <g>
-    <path d="M -10 10 C 130 10 170 70 250 70 M -10 40 C 130 40 170 70 250 70 M -10 70 H 250 M -10 100 C 130 100 170 70 250 70 M -10 130 C 130 130 170 70 250 70 M -10 160 C 130 160 170 70 250 70" fill="none" stroke="var(--art-ink)" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
-    <circle cx="256" cy="70" r="6" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 262 70 H 330" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="4 4" class="art-line" vector-effect="non-scaling-stroke" />
-    <rect x="30" y="5" width="24" height="10" rx="5" fill="var(--art-lavender)" />
-    <rect x="70" y="95" width="24" height="10" rx="5" fill="var(--art-lavender)" />
-    <rect x="20" y="155" width="24" height="10" rx="5" fill="var(--art-lavender)" />
-    <rect x="110" y="65" width="24" height="10" rx="5" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <rect x="110" y="65" width="10" height="10" rx="5" fill="var(--art-ink)" />
+  <path d="M -10 -6 C 110 -6 150 84 226 84 M -10 26 C 110 26 150 84 226 84 M -10 58 C 110 58 150 84 226 84 M -10 84 H 226 M -10 110 C 110 110 150 84 226 84 M -10 142 C 110 142 150 84 226 84 M -10 186 C 110 186 150 84 226 84" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="30" y="18" width="40" height="16" rx="8" fill="var(--art-green)" />
+  <rect x="66" y="102" width="40" height="16" rx="8" fill="var(--art-green)" />
+  <rect x="12" y="134" width="40" height="16" rx="8" fill="var(--art-green)" />
+  <rect x="52" y="50" width="40" height="16" rx="8" fill="var(--art-green)" />
+  <rect x="96" y="76" width="40" height="16" rx="8" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="104" cy="84" r="5.5" fill="var(--art-ink)" />
+  <g transform="translate(189.6 50.4) scale(2.1)">
+    <path d="M19.29 7.83A5 5 0 0 1 28.71 7.83A5 5 0 0 1 33.43 16A5 5 0 0 1 28.71 24.17A5 5 0 0 1 19.29 24.17A5 5 0 0 1 14.57 16A5 5 0 0 1 19.29 7.83ZM21.5 16A2.5 2.5 0 1 0 26.5 16A2.5 2.5 0 1 0 21.5 16Z" fill="var(--art-ink)" fill-rule="evenodd" />
   </g>
+  <circle cx="240" cy="84" r="3" fill="var(--art-green)" />
+  <line x1="260" y1="84" x2="330" y2="84" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4" />
+  <circle cx="296" cy="150" r="1.5" fill="var(--art-ink)" />
 </svg>

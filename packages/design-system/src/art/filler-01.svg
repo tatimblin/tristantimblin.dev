@@ -1,15 +1,28 @@
+<!-- filler-01 — a module grid off the top-right: a few cells lit (a coral cell, a coral burst, a warped checker, a striped iso cube cropped at the top, a pip matrix), a trace running in from the left -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
-  <g>
-    <path d="M 170 -10 H 330 M 170 10 H 330 M 170 30 H 330 M 170 50 H 330 M 170 70 H 330 M 170 90 H 330 M 170 110 H 330 M 170 -10 V 110 M 190 -10 V 110 M 210 -10 V 110 M 230 -10 V 110 M 250 -10 V 110 M 270 -10 V 110 M 290 -10 V 110 M 310 -10 V 110" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M -10 130 H 110 V 70 H 170" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <circle cx="170" cy="70" r="2.5" fill="var(--art-ink)" />
-    <path d="M 250 110 V 190" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="2 6" stroke-linecap="round" class="art-line" vector-effect="non-scaling-stroke" />
-    <circle cx="200" cy="20" r="4" fill="var(--art-coral)" />
-    <circle cx="260" cy="60" r="4" fill="var(--art-coral)" />
-    <circle cx="220" cy="80" r="4" fill="var(--art-coral)" />
-    <circle cx="300" cy="100" r="4" fill="var(--art-coral)" />
-    <circle cx="280" cy="20" r="4" fill="var(--art-ink)" />
-    <circle cx="240" cy="40" r="4" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <circle cx="60" cy="40" r="1.5" fill="var(--art-ink)" />
+  <path d="M 194 -10 V 118 M 240 -10 V 118 M 286 -10 V 118 M 332 -10 V 118 M 148 26 H 330 M 148 72 H 330" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="148,-10 148,118 330,118" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="291" y="31" width="46" height="36" fill="var(--art-coral)" />
+  <g transform="translate(132.6 69.4) scale(1.6)">
+    <polygon points="25.29,5.53 25.78,11.87 30.79,7.83 27.73,13.49 34.42,12.7 28.5,15.91 34.48,18.84 27.84,18.35 31.98,24.83 25.95,20.05 25.73,26.51 23.45,20.47 20.5,24.1 21.12,19.46 15.18,21.93 19.71,17.36 13.07,16.23 19.66,14.82 15.22,10.61 20.98,12.66 19.48,6.61 23.27,11.56" fill="var(--art-coral)" />
   </g>
+  <g transform="translate(179.8 24.2) scale(1.55)">
+    <path d="M12 4L13.03 4L12.79 4.79L12 5.03ZM15.75 4L19.59 4L19.42 4.51L15.47 4.62ZM24 4L28.41 4L28.58 4.51L24 4.48ZM32.25 4L34.97 4L35.21 4.79L32.53 4.62ZM12.79 4.79L15.47 4.62L15.28 7.28L12.62 7.47ZM19.42 4.51L24 4.48L24 7.12L19.3 7.16ZM28.58 4.51L32.53 4.62L32.72 7.28L28.7 7.16ZM35.21 4.79L36 5.03L36 7.75L35.38 7.47ZM12 7.75L12.62 7.47L12.51 11.42L12 11.59ZM15.28 7.28L19.3 7.16L19.22 11.22L15.16 11.3ZM24 7.12L28.7 7.16L28.78 11.22L24 11.2ZM32.72 7.28L35.38 7.47L35.49 11.42L32.84 11.3ZM12.51 11.42L15.16 11.3L15.12 16L12.48 16ZM19.22 11.22L24 11.2L24 16L19.2 16ZM28.78 11.22L32.84 11.3L32.88 16L28.8 16ZM35.49 11.42L36 11.59L36 16L35.52 16ZM12 16L12.48 16L12.51 20.58L12 20.41ZM15.12 16L19.2 16L19.22 20.78L15.16 20.7ZM24 16L28.8 16L28.78 20.78L24 20.8ZM32.88 16L35.52 16L35.49 20.58L32.84 20.7ZM12.51 20.58L15.16 20.7L15.28 24.72L12.62 24.53ZM19.22 20.78L24 20.8L24 24.88L19.3 24.84ZM28.78 20.78L32.84 20.7L32.72 24.72L28.7 24.84ZM35.49 20.58L36 20.41L36 24.25L35.38 24.53ZM12 24.25L12.62 24.53L12.79 27.21L12 26.97ZM15.28 24.72L19.3 24.84L19.42 27.49L15.47 27.38ZM24 24.88L28.7 24.84L28.58 27.49L24 27.52ZM32.72 24.72L35.38 24.53L35.21 27.21L32.53 27.38ZM12.79 27.21L15.47 27.38L15.75 28L13.03 28ZM19.42 27.49L24 27.52L24 28L19.59 28ZM28.58 27.49L32.53 27.38L32.25 28L28.41 28ZM35.21 27.21L36 26.97L36 28L34.97 28Z" fill="var(--art-ink)" />
+  </g>
+  <g transform="translate(225.8 -15.8) scale(1.55)">
+    <path d="M33.96 21.75L32.75 22.45L32.75 10.45L33.96 9.75ZM14.04 21.75L15.25 22.45L15.25 10.45L14.04 9.75ZM24.44 3.75L25.64 4.45L15.25 10.45L14.04 9.75ZM31.88 22.95L30.67 23.65L30.67 11.65L31.88 10.95ZM16.12 22.95L17.33 23.65L17.33 11.65L16.12 10.95ZM26.51 4.95L27.72 5.65L17.33 11.65L16.12 10.95ZM29.8 24.15L28.59 24.85L28.59 12.85L29.8 12.15ZM18.2 24.15L19.41 24.85L19.41 12.85L18.2 12.15ZM28.59 6.15L29.8 6.85L19.41 12.85L18.2 12.15ZM27.72 25.35L26.51 26.05L26.51 14.05L27.72 13.35ZM20.28 25.35L21.49 26.05L21.49 14.05L20.28 13.35ZM30.67 7.35L31.88 8.05L21.49 14.05L20.28 13.35ZM25.64 26.55L24.44 27.25L24.44 15.25L25.64 14.55ZM22.36 26.55L23.56 27.25L23.56 15.25L22.36 14.55ZM32.75 8.55L33.96 9.25L23.56 15.25L22.36 14.55Z" fill="var(--art-ink)" />
+  </g>
+  <circle cx="251" cy="83" r="3.2" fill="var(--art-ink)" />
+  <circle cx="251" cy="95" r="3.2" fill="var(--art-ink)" />
+  <circle cx="251" cy="107" r="3.2" fill="var(--art-ink)" />
+  <circle cx="263" cy="83" r="3.2" fill="var(--art-ink)" />
+  <circle cx="263" cy="95" r="3.2" fill="var(--art-ink)" />
+  <circle cx="263" cy="107" r="3.2" fill="var(--art-ink)" />
+  <circle cx="275" cy="83" r="3.2" fill="var(--art-ink)" />
+  <circle cx="275" cy="95" r="3.2" fill="var(--art-ink)" />
+  <circle cx="275" cy="107" r="3.2" fill="var(--art-coral)" />
+  <path d="M -10 150 L 90 150 Q 96 150 96 144 L 96 101 Q 96 95 102 95 L 148 95" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" />
+  <circle cx="148" cy="95" r="3" fill="var(--art-ink)" />
+  <line x1="309" y1="118" x2="309" y2="190" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />
+  <circle cx="52" cy="50" r="1.5" fill="var(--art-ink)" />
 </svg>
