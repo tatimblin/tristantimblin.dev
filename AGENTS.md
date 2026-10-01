@@ -7,8 +7,8 @@ Guidance for AI agents working in this repo.
 - **`src/`** — the Astro site (static output). Pages in `src/pages/`, shared
   shell in `src/layouts/Layout.astro` (the blog's in `BlogLayout` /
   `PostLayout`), global CSS in `src/styles/global.css`, the homepage's tiles in
-  `src/widgets/`, posts as `src/content/txt/<slug>.mdx` with their art
-  (`<slug>.svg`) and images (`images/`) beside them.
+  `src/widgets/`, posts as `src/content/txt/<slug>.mdx` with their images
+  (`images/`) beside them.
 - **`packages/*`** — workspace packages (Bun workspaces, consumed as `@whois/*`,
   source exports, no build step):
   - `@whois/design-system` — the design system (tokens + Astro/CSS components).
@@ -66,11 +66,9 @@ and [`packages/vscode-fleet-demo/README.md`](packages/vscode-fleet-demo/README.m
 **Baked drawings are committed** — the glyphs (`bun run glyphs:bake` from
 `packages/design-system/src/glyphs/recipes/`) and the scenes (`bun run
 scenes:bake` from `tools/scenes/<name>/scene.ts`, whose heavy deps — d3-geo,
-world-atlas — are root devDependencies that never ship; a post's art may be
-one too, `tools/scenes/posts/<slug>/scene.ts` → `src/content/txt/<slug>.svg`)
-— so `build` does not bake; `glyphs:check` / `scenes:check` fail when a
-source and its file have drifted, and the unit tests (and
-`tests/post-art.spec.ts` for a baked post) hold the same line.
+world-atlas — are root devDependencies that never ship) — so `build` does
+not bake; `glyphs:check` / `scenes:check` fail when a source and its file
+have drifted, and the unit tests hold the same line.
 
 ## Design system — read before writing UI CSS
 

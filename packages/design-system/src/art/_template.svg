@@ -1,8 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
   <!--
-    THE STARTING FILE for a post's art. Copy it to src/content/txt/<slug>.svg
-    (a filler goes beside this file as filler-NN.svg), replace the drawing,
-    keep the rules. The frame (ArtFrame) supplies the plate, the edge and the
+    THE STARTING FILE for an art plate. Copy it, replace the drawing, keep
+    the rules. The frame (ArtFrame) supplies the plate, the edge and the
     corner: draw nothing behind the shapes. Comments are stripped on render.
 
     GRID. viewBox 0 0 320 180, a 10-unit grid: sit points on multiples of 10

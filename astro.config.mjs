@@ -11,7 +11,7 @@ export default defineConfig({
 	// Every page is a directory (dist/<page>/index.html), which Cloudflare Pages
 	// serves at the slashed URL and 308s the bare one to. So the site links,
 	// canonicalises and serves one form: with the slash. The hrefs come from
-	// src/lib/blog.ts (postHref, tagHref, queryHref, TXT_HREF).
+	// src/lib/blog.ts (postHref, tagHref, TXT_HREF).
 	trailingSlash: 'always',
 	markdown: {
 		// Emit CSS-variable-driven token colors instead of a hardcoded theme, so

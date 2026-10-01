@@ -73,20 +73,19 @@ such rules off DS elements (`h2:where(:not(.ds-heading))`, global.css).
 
 **4. The live catalogue is the reference.** `src/pages/design-system.astro`
 (served at `/design-system`) renders **every component in every variant/size/state**
-— including columns/gutters/breakpoints for `Grid` — and `/design-system/art`
-every artwork on both pages. Open it instead of guessing a prop; this doc
+— including columns/gutters/breakpoints for `Grid`. Open it instead of guessing a prop; this doc
 deliberately does not duplicate per-component API tables.
 
-**Components available (67):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (62):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Pill`, `Chip`, `Anchor`, `List`, `ListItem`, `Icon`,
 `VisuallyHidden`, `WidgetGrid`, `Widget`, `WidgetEmpty`, `HitArea` — the
 instrument UI (next section): `Mono`, `Figure`, `Stat`, `StatStrip`,
-`Hairline`, `RuleLabel`, `DimensionLabel`, `TickRuler`, `TimeRuler`,
+`Hairline`, `RuleLabel`, `DimensionLabel`, `TickRuler`,
 `BarGraph`, `Legend`, `LegendItem`,
 `TileGrid`, `Tile`, `Faces`, `Face` — the reading UI (the section after it):
 `PostList`, `PostGroup`, `PostRow`, `Prose`, `Blockquote`, `Fig`, `Index`,
-`IndexRow`, `Quilt`, `QuiltCell`, `QuiltPanel`, `SearchBar` — the art:
+`IndexRow` — the art:
 `ArtFrame`, the micrographics `Glyph`, `GlyphTile`, and their readouts
 `ReadoutStack`, `Formula`, `NumberStream` — and the catalogue's
 tooling: `Knobs`, `KnobGroup`, `Knob`, `ThemePage`.
@@ -160,19 +159,19 @@ noted):
 | `--lit` | a step/tile/key that is ON — the accent on dark, the **ink** on light. Use for binary on/off; use `--accent` for things that must be orange in both themes. |
 | `--wash-1/2/3` | the ink at 7 / 16 / 30 % — unlit tile & subtle pill fill; two stronger steps. |
 | `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
-| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour; the STRONG edge (the ink at `--wash-3`) for the one outline on a ruled screen that must read over the plain hairlines inside it — the search bar's underline and ring, the card's border, a chip under the pointer; the divider gradient that fades at both ends. The package reads `--hairline`, never `--border-color`. |
-| `--bar-width` (`:root`, 2px) | every solid edge bar: the pull quote's, a post's mark on the tick timeline, the active result's, the /txt progress bar. |
+| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour; the STRONG edge (the ink at `--wash-3`) for the one outline on a ruled screen that must read over the plain hairlines inside it — the card's border, a chip under the pointer; the divider gradient that fades at both ends. The package reads `--hairline`, never `--border-color`. |
+| `--bar-width` (`:root`, 2px) | every solid edge bar: the pull quote's. |
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px) — `:root` | the steps below the generated scales. |
 | `--ticks-image`, `--ticks-image-ink` | the tick ruler as a gradient (hairlines on `--tick-pitch`) in currentColor, and in the ink — for a box that should read as a ruler and cannot take the classes (the player's progress bar). TickRuler draws its own on the same pitch. |
 | `--focus-ring`, `--focus-ring-offset`, `--focus-ring-inset` | the focus ring for everything focusable that is not a native control, drawn by `control.css` for every `ds-control`; the offset, and the inset form of it for a control that rings inside its box (set `--control-ring-offset: var(--focus-ring-inset)` in scope). |
-| `--playhead-dot` | the playhead's dot (`playhead.css`, the one accent line-and-dot TimeRuler draws). |
+| `--playhead-dot` | a playhead's dot — the Volo season track's, the video carousel's. |
 | `--shadow-1..3` | the upstream shadow scale on the theme's `--shadow-color`, for the few things that float — a control panel. Cards are flat and take none. |
 | `--voice-mono-*`, `--voice-figure-*` | the label voice (family, size, tracking) and the figure voice (family, weight, tracking, size) as custom properties, for a shadow-DOM consumer styled through `::part()`. Mono and Figure read them; a WidgetGrid redefines the sizes on its scale. |
 | `--duration-reveal / -settle / -swap / -quick / -loop`, `--ease-reveal` | the motion vocabulary; all `0s` under `prefers-reduced-motion: reduce`, so a transition timed by a token is a cut for that visitor and no component needs a reduced-motion block of its own. |
 | light-theme `--gray-*` | retuned warm (hue 80, stone/bone). Page, card, hairline and inks all follow. |
 
 **Controls.** Every control — Button, IconButton, a Pill or Chip as a button or
-link, Anchor, PostRow's link, a quilt tile's link, a TimeRuler mark, HitArea —
+link, Anchor, PostRow's link, HitArea —
 composes the `ds-control` class (`control.css`): the native reset, the pointer,
 `:disabled` and the focus ring, once. A control that must ring inside its box
 sets `--control-ring-offset: var(--focus-ring-inset)`.
@@ -239,8 +238,7 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
 - `StatStrip` — a row of hairline-cut cells under a hairline: every child is
   a cell (an equal share of the width, a hairline on its right edge — put
   `Stat`s in it), and the `action` slot is the last cell, a fixed width
-  filled with the accent and `--on-accent` on it: give it the link. The
-  bottom strip of the /txt card.
+  filled with the accent and `--on-accent` on it: give it the link.
 - `Pill` — `variant="subtle"` (default, the wash) `| "outline"` (the Chip's
   edge: hairline at rest, strong under the pointer); `as="button"|"a"` makes
   it a pill button; an `Icon` in the default slot sits before the text.
@@ -250,7 +248,7 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   `aria-pressed="true"` — and fills it with the ink. `variant="tab"` is the
   same caps with NO box — a text tab, the tertiary ink at rest, selected the
   ink over a 1px accent underline — and `count` a small superscript figure
-  after the label (the search bar's quick filters). The readout TAGS (the
+  after the label. The readout TAGS (the
   micrographics' panels): `tone="accent"` draws the box's edge and caps in
   the accent (TELEMATIC), and `variant="arrow"` is a FILLED tag cut to a
   right-pointing chevron by clip-path (a border cannot follow the cut) —
@@ -261,42 +259,23 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   (default, a wash in a hairline) / `outline` (the hairline alone),
   `size="xs|sm|lg|xl"`, `rounded` = round button, `glyph="−"` a text
   character in place of an icon (aria-hidden; give the button an
-  `aria-label`). `variant="outline" rounded size="sm"` is the ruled screen's
-  CIRCLED control — the − / + stepper at the foot of /txt, the size of the
-  search bar's ring.
+  `aria-label`).
 
 **Hairline graphics.**
 - `Hairline` — a 1px rule fading at both ends; an `hr`, or `as="span"`.
 - `RuleLabel` — a caps label under a 1px DOTTED hairline (`--hairline-strong`),
   no box: `no` (a leading number in the accent), the label in the default
   slot, a trailing `meta` slot in the tertiary ink at the far end; `dim` (the
-  row and the number in the tertiary ink — a filler's `F_07`), `truncate`
+  row and the number in the tertiary ink), `truncate`
   (one line, ellipsised; the label wraps without it), `lines={2}` (two
   lines reserved, the text at their top, so a row of labels holds one
-  height whichever wrap). A quilt entry's title row.
+  height whichever wrap).
 - `DimensionLabel` — `|—•—•— LABEL —•—•—|`: the caps label in the ink,
   centred on a dimension line (an end tick at each edge, a hairline, dots on
   an even pitch; drawn by `::before`/`::after`, never read out). `as="h2"`
   when it heads the section it spans.
 - `TickRuler` — `segments=[{share, color?}]` (colours default to `--tone-N` by
   order): a share bar, or a plain stretch.
-- `TimeRuler` — a ruler on a time scale: `from`/`to` (`YYYY-MM`,
-  inclusive), one slot per month, the year under each January
-  (`--k`/`--months` position the labels), and `marks=[{month, label, href,
-  no?, dim?, value?, focus?}]` — one per post, a real `<a>` to it, named by
-  `label`, filling its month's column so the column is the hit area. Two
-  drawings: TICKS (the default) — a tick per month, a taller lit one per
-  mark (a `--bar-width` bar), `playhead="YYYY-MM"` the `.ds-playhead`
-  (accent line and dot), `label` (default `timeline`) the caps line above;
-  BARS (`variant="bars"`, the spec sheet's chart) — a mark is an OUTLINED
-  bar its `value` tall against `max` (words per post), the mark in `focus`
-  filled with the accent (the playhead's job here; no line is drawn), an
-  empty month a tiny tick, a hairline baseline, a SCALE at the right edge
-  (`max` … 0), and `label` on a `DimensionLabel` above. The contract a
-  script drives: `--at` on the root (the playhead glides), `data-month` on
-  every column, `data-mark`/`data-no` on a mark, `data-dim` +
-  `aria-disabled` on one outside the filter, `data-focus` on the one in
-  focus (bars), `--time-ruler-value` on a mark (bars, its fraction).
 - `BarGraph` — `values`, `max`, `mark={i|"last"|"max"}` (the one bar in the
   accent, `data-mark`; an index, where Tile's `lit` is a boolean), `height`,
   `label` (its accessible name; without one it is `aria-hidden`);
@@ -310,8 +289,7 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   for a series drawn as one, `href` — the row as a link, a `ds-control`
   filling it); dots take `--tone-N` by position. `variant="leaders"` is the
   spec sheet's KEY: no dot, the label joined to its value by a dotted
-  leader (the strong hairline) — the /txt topic key, each category a link
-  to its query.
+  leader (the strong hairline).
 - `TileGrid` — `cols`, `rows`, `fit="width|height"`, `cells=[{level?, lit?,
   title?}]` or `Tile` children (`level={0..4}`, `lit`, any attribute — e.g.
   `style="grid-column:…"` to place).
@@ -363,7 +341,7 @@ the UI face, where the accent appears once, on a hovered title.
   title in the default slot, an optional `meta` slot (an `Icon` and a category,
   a count) in a column that lines up down the group, an arrow at the right.
   Hairlines between rows run under the right column only. The tag pages
-  (`/txt/tag/<tag>`) are built from it.
+  (`/txt`, `/txt/tag/<tag>`) are built from it.
 - `Prose` — the reading container around rendered markdown. It spaces the
   blocks, and restates `--font-heading` / `--font-heading-weight` IN SCOPE (the
   heading face at its Bold, with a hairline under each h2) — the token layer
@@ -419,15 +397,13 @@ article, the tokens the ruled `Prose`, `Fig` and `Index` read, so the page's
 rows and the body's sections fall on the same lines — under the site header:
 
 1. the STATUS STRIP, one `Grid` row between two `--hairline-strong` rules in
-   the caps `Mono`: `TXT / 005` (the ink) · the category (a link to its
-   query on the quilt) · `3 MIN · 541 WORDS` · the date `02.02.2026` on the
+   the caps `Mono`: `TXT / 005` (the ink) · the category · `3 MIN · 541 WORDS` · the date `02.02.2026` on the
    right edge (the ink, a `time`);
 2. the column numbers `01 02 03 04`, aria-hidden;
 3. the TITLE (`Heading as="h1" size={6} responsive` — 72px, 44px below 1024)
    across the first three columns, `--line-height-heading` retuned to 0.95 in
    scope; the LEAD — the excerpt, `Text` at size 5 in the primary ink — in
-   the second and third; the art as a MARK (`ArtFrame variant="mark" play`)
-   in the fourth, resting on the lead's last line;
+   the second and third;
 4. the HERO, when the frontmatter has one (`hero: { src, alt, caption? }`,
    `src` an image beside the post through the schema's `image()`): a ruled
    `Fig no="01"` around a `<Picture>`;
@@ -440,158 +416,14 @@ rows and the body's sections fall on the same lines — under the site header:
    `Nothing older` / `Nothing newer`.
 
 Below 1024 it is one column: the strip two by two, no column numbers, the
-title at 44px, the mark after the lead at 16rem, the hero and the index
+title at 44px, the hero and the index
 full width (the Fig and the Index collapse themselves).
-
-### Quilt — the index as a spec sheet of art entries
-
-`/txt` is a **quilt**: the spec sheet's grid of entries on the page, cut by
-gap tokens and no lines — each a caps LABEL over a dotted rule (the post's
-number in the accent, its title) with its art BARE under it (no plate, edge
-or corner; the crop is the only edge) — one per post, the newest the 2×2
-LEAD at the top-left with its excerpt, the leftover cells fillers tagged
-`F_NN`, under the open search bar. Hovering or focusing a post scatters
-the others and the ruled card takes a freed 3×2 block; typing filters the
-same grid; a chip in the bar is a search shortcut. The package holds the
-**markup, the geometry and the state contract** (`styles/quilt.css`,
-`quilt-panel.css`, `search-bar.css`); every decision — which cells scatter,
-where the block goes, what the search found, which cells are the lead's —
-is the site's (`src/lib/quilt/engine.ts`, pure; `src/lib/quilt/index.ts`,
-the DOM wiring), which paints the attributes below. Nothing here ships JS.
-
-```astro
-<SearchBar id="quilt-search" label="Search" placeholder="Search a title, a topic, a year…"
-           count="5 posts" readout="05" hint="/" controls="quilt-panel-results">
-  <Chip slot="chips" variant="tab" count={5} as="a" href="/txt" data-chip="" aria-current="page">all</Chip>
-  <Chip slot="chips" variant="tab" count={1} as="a" href="/txt?q=projects" data-chip="projects">projects</Chip>
-</SearchBar>
-<Quilt cols={5} rows={3} colsMd={3} rowsMd={4} aria-label="Posts">
-  <QuiltCell col={1} row={1} colMd={1} rowMd={1} span={[2, 2]} href="/txt/asserting-on-agent-behavior"
-             label="Asserting on Agent Behavior" no="005" numeral="05" excerpt="I built Aptitude — …">
-    <ArtFrame svg={raw} decorative variant="bare" />
-  </QuiltCell>
-  <QuiltCell col={3} row={2} colMd={3} rowMd={1} href="/txt/mega-desk"
-             label="The Mega Desk" no="003" numeral="03">
-    <ArtFrame svg={raw} decorative variant="bare" />
-  </QuiltCell>
-  <QuiltCell col={4} row={1} colMd={1} rowMd={3} filler file={7}><ArtFrame svg={filler} decorative variant="bare" /></QuiltCell>
-  <QuiltPanel id="quilt-panel" mode="hidden" col={3} row={2}
-              card={…} browse={…} results={…} nothing={…} />
-</Quilt>
-```
-
-- `Quilt` — the grid: `cols`/`rows` for ≥ 1024, `colsMd`/`rowsMd` for
-  640–1023 (the engine's rows: at least 3, and 4 on the tablet grid, where
-  the block cannot sit beside the lead and needs two rows under it; explicit
-  so the block always has lines). The cells sit `--quilt-gap` apart across
-  — `--space-4` on the desktop board, `--space-3` below 1024 — and
-  `--quilt-row-gap` (`--space-5`) down, the room a label's rule needs over
-  it, with no line between or round them. Rows size to their content: every
-  cell in a row is a two-line label over the same 16:9 box, so the arts in
-  a row line up. A state fades the cell's contents (a post's link — label,
-  art, excerpt as one; a filler's label and art on the same delay), never
-  the cell. `position: relative`, `role="group"`, `data-quilt`. Under 640 it
-  is two columns of entries in DOM order, the lead across both.
-- `QuiltCell` — a post (`href`; `label` = the link's accessible name and the
-  label row's title; `no` = `data-no`, the script's key (`005`); `numeral` =
-  the number as the label draws it (`05`); `span={[2, 2]}` the lead's
-  footprint, as `--cell-cols`/`--cell-rows` and `data-span`; `excerpt`, the
-  lead's, under the art at ≥ 640 in `Body`'s voice a step down, 52ch, three
-  lines — not drawn on a phone; a decorative bare `ArtFrame` in the slot,
-  filling the cell's width) or a `filler` (`file` → the dim `F_07` tag;
-  aria-hidden; its art a step back at rest — `--quilt-dim`, grey — and
-  never brighter). Placement is `col`/`row` and `colMd`/`rowMd`, set inline
-  as `--cell-col`/`--cell-row`/`--cell-col-md`/`--cell-row-md`; a filler
-  with no tablet slot is dropped there, and every filler is dropped on a
-  phone. Renders `data-cell="post | filler"`, `data-no`, `data-span`,
-  `data-lg` / `data-md`; the label is a `RuleLabel lines={2}`
-  (`.ds-quilt-cell__label`), the art sits in `.ds-quilt-cell__art`, which
-  draws the active ring. The link is a `ds-control`.
-- `QuiltPanel` — four faces, every one rendered, each the page colour inside
-  the strong hairline, square, no fill, filling the block. `card` is the
-  RULED CARD: `{ no, category, minutes, words, month, year, rate, title,
-  blurb, why?, href }` — a top strip (the category as a `Chip`, `[INDEX]
-  000005 · LOG_005.TXT`) over a hairline; the big number (Mono's value voice
-  at the display step) with three small readouts under it beside the title
-  and the excerpt; and a `StatStrip` on the bottom edge ending in the accent
-  `READ →` cell, the link. `browse`, `results` (`role="listbox"`, hairline-cut
-  `role="option"` rows, the active row's `--bar-width` accent bar), `nothing`.
-  Hooks let a script refill in place: `data-card="no | index | category | node
-  | rate | minutes | words | month | year | title | blurb | why | link"`,
-  `data-results="label | list"`, `data-none="query | suggestions"`, and a
-  `<template data-result-template>`. `flow` renders it in flow (the phone
-  rendering) anywhere.
-- `SearchBar` — the OPEN BAR: no box, no fill; `role="search"`; the label
-  visually hidden and the search `Icon` in a round outlined RING (the
-  stepper's size, `--hairline-strong`, not a control) in its place; the input
-  `type="search" role="combobox" aria-autocomplete="list"
-  aria-controls={controls}` in the label voice (`name` defaults to `q`) on
-  one `--hairline-strong` UNDERLINE that takes the accent on focus, 16px
-  under 640 (iOS zooms a smaller field on focus); the `readout` — the count
-  as DRAWN, `05` / `2 / 5`, a small value `Mono` at the row's right
-  (`data-search-readout`, aria-hidden); `hint` as a small `Chip`, not drawn
-  without a keyboard. No stepper: the − / + sit with the in-focus readout
-  at the foot (below). Under that row the `chips` slot, a `<nav>` named
-  `chipsLabel` (hook
-  `data-search-chips`) of the caller's `Chip variant="tab"` links, each with
-  its `count`; under 1024 it holds one line, scrolls sideways (no
-  scrollbar) and fades at its right edge. `count` is the live region a
-  reader hears in full (`aria-live="polite"`, `data-search-count`, visually
-  hidden). `value` and `expanded` render a state statically.
-
-**The state contract** — what the script sets, and all it sets:
-
-| On | Attribute / property | Meaning |
-| --- | --- | --- |
-| a cell | `data-state="lit \| faint \| gone"` | rest; the ghost (`--quilt-faint` opacity, greyscale on a desktop with a pointer); invisible and pointer-less — but a post stays focusable, so Tab still reaches it. On a phone `gone` renders as `faint`. A **filler is never brighter than its rest** (`--quilt-dim`). The label and the art fade together. |
-| a cell | `--scatter-delay` (ms) | the stagger into faint/gone (0–240); the return to lit has none |
-| a post cell | `data-active` | the 1px accent outline round the art (the art wrapper's `::after`, over the crop's edge; the label is left alone) |
-| a chip | `aria-current="page"` | the chip whose word is the query (ALL when it is empty) |
-| the panel | `data-mode="card \| browse \| results \| none \| hidden"` | which face shows; the others are `visibility: hidden` |
-| the panel | `--panel-col`, `--panel-row` | the block's top-left cell, 1-based; the block is `--panel-cols` × `--panel-rows` (3 × 2) |
-| a result row | `aria-selected="true"` | the active row (accent bar + `--wash-1`); mirror it as `aria-activedescendant` on the input |
-| the input | `aria-expanded`, `aria-activedescendant` | whether the panel shows; the active option's id |
-| the count | `data-search-count` text | the live region, in full: `5 posts`, `2 of 5 posts` |
-| the readout | `data-search-readout` text | the count as drawn: `05` at rest, `2 / 5` while a query filters |
-
-Transitions run on `--duration-settle` (the scatter) and `--duration-swap`
-(faces), both `0s` under reduced motion. The panel is an **absolutely
-positioned grid item**, a size query container, and the card fits its block
-(the container queries in `quilt-panel.css`) rather than clip.
-
-**Geometry.** On `/txt` the quilt is the board row of the instrument
-(`BlogLayout` with `bar` and `foot`): the search bar, the board and the
-FOOT straight on the page under the site header, the rows stacked
-`--space-3` apart. The foot (`src/styles/blog.css`, the layout's — the
-page only computes and passes its data) is one grid in three parts: the
-TOPIC KEY (a `RuleLabel` over a `Legend variant="leaders"` of links to
-`?q=<category>`, hook `data-quilt-key`; the script sets the query in place
-as it does for a chip) | the TIMELINE (`TimeRuler variant="bars"`, words
-per post, hook `data-quilt-ruler`) | IN FOCUS (a `RuleLabel` with the
-post's place among the posts in its `meta` — `5 / 5` — over a `Stat
-variant="numeral"`: the two-digit number, the title in the ink and `feb
-2026 · 554 w` a step back in its label, and the circled − / + `IconButton`s,
-`data-step="older|newer"`); under them the corner marks — a `--bar-width`
-PROGRESS BAR at the left (`--progress`, the place as a fraction) and the
-sheet code at the right. Every readout hook is `data-focus="no | title |
-meta | position | progress"`, and the script writes every copy of each. On
-a desktop (≥ 1024) the foot is DOCKED: `position: sticky` to the window's
-bottom edge on the page colour (a hairline on its top edge only while it is
-stuck, via a `scroll-state` container query). On a tablet it stacks — the
-key and the focus side by side, the timeline full width under — and sits
-in the flow. On a phone the key and the progress go, the focus keeps its
-readout but not its stepper (`display: none`, out of the tab order), and a
-DOCK (`data-quilt-dock`) sticks to the window's bottom instead: the
-progress line, −, the post in focus on one line (`05 · Title`, ellipsised),
-+. The stepper is rendered twice; one copy is drawn per viewport, and the
-script binds both.
 
 ---
 
 ## Art — the illustration language and its frame
 
-Every post has its own hand-drawn SVG, and the quilt on `/txt` pads the grid
-with fillers, all in one language taken from the reference tile sheet
+The art plates and scenes are drawn in one language taken from the reference tile sheet
 (`.playwright-mcp/refs/illustration-style.jpg`, gitignored — local only): **white 1px line work and flat
 fills in four colours on a near-black landscape plate** — circuits with
 right-angle bends and terminal dots, isometric solids, concentric rings, flow
@@ -599,8 +431,7 @@ lines, dashed paths, dot fields; systems metaphors, lettered (if at all) in
 the module sheet's small type voices, compositions that
 crop off the tile's edges. The language is centralised so a file carries only
 its drawing: the **tokens** name every colour, the **frame** owns the plate and
-the motion, a **validator** holds the rules, and the `post-art` skill
-(`.claude/skills/post-art/`) is how an AI session draws one.
+the motion, and a **validator** holds the rules.
 
 **Tokens** (`tokens.overrides.css` → ART, on the theme classes). **The plate
 follows the theme.** The values below are the dark palette the language was
@@ -620,15 +451,14 @@ rather than black windows: the same drawing, inverted.
 | `--duration-loop` | `6s` (MOTION; `0s` under reduced motion) | — | one cycle of an art animation |
 
 Draw for both: **`--art-ink` is dark on a light page**, so never rely on a
-"white" face being white or on a dark cut being dark. Check a new file in both
-columns of `/design-system/art`.
+"white" face being white or on a dark cut being dark. Check a new file on
+both theme pages (`ThemePage`).
 
 A file's every `fill`/`stroke` is `none`, `currentColor` (the ink) or one of
 these — never a literal, never an `opacity` attribute. The ink plus at most
 three of the four colours per file; one dominates.
 
-**Files.** A post's art is `src/content/txt/<slug>.svg` beside its `.mdx`;
-fillers are `packages/design-system/src/art/filler-NN.svg`. Every file starts
+**Files.** Every art file starts
 from **`packages/design-system/src/art/_template.svg`**, whose comments carry
 the rules (they are stripped on render): `viewBox="0 0 320 180"` on a 10-unit
 grid, a 16-unit safe area, at least one shape running out of frame; every
@@ -639,18 +469,16 @@ one emphasis outline); dashes `4 4` or `2 6`; isometrics at true 30°; no
 prefixed with the slug; type only in the four voices (below); ≤ 120
 elements, ≤ 20 KB. The validator
 (`scripts/validate-art.mjs`, `bun run validate:art <file>`) and
-`tests/post-art.spec.ts` enforce all of it. Import a file with `?raw`; it must
+`src/lib/validate-art.test.ts` enforce all of it. Import a file with `?raw`; it must
 be inlined, since its colours are tokens and its motion is the frame's CSS.
-A post's art may instead be **baked** from a scene source — the same file,
-under the scene profile (*Micrographics → L4 → Post art as a scene*).
 
 **Profiles.** The validator is one scanner with three profiles
 (`PROFILES.art`, `PROFILES.glyph`, `PROFILES.scene`; `validateSvg(source, {
 profile })`, `validateArt` is the art one). **`art`** is everything above.
 **`scene`** is art's language with room for a whole illustration (see
-*Micrographics → L4 — scenes*); a post file that carries a scene bake's
+*Micrographics → L4 — scenes*); a file that carries a scene bake's
 header is held to it — the validator's CLI reads the header
-(`profileOf`), and so does `tests/post-art.spec.ts`. **`glyph`** is for
+(`profileOf`). **`glyph`** is for
 the micrographics in `src/glyphs/` (`bun run validate:glyph <file>`): viewBox
 `0 0 48 32`, or `0 0 96 32` / `0 0 96 64` wide; no `clipPath`/`defs`/`use`,
 no ids, no `class`, no type (a glyph's words are HTML beside it) — every stroked shape states `stroke-width` 1 or 1.5; line
@@ -666,7 +494,7 @@ the HUD module sheet's labels, IDs, bracketed states and big thin
 numerals, the infographic's section heads and "14 SPEAKERS" — as
 `<text>` (with `<tspan>` runs) in one of four **voices**, each a class
 whose CSS (`art-frame.css`, `.ds-art-frame .art-label` …, so it reaches the
-inline SVG in `ArtFrame`, `Scene` and the quilt) sets the face, weight
+inline SVG in `ArtFrame` and `Scene`) sets the face, weight
 and tracking by role:
 
 | Class | Voice | Face | Sizes (viewBox units) |
@@ -688,9 +516,8 @@ retunes in one place. Figures are tabular in every voice. Words are
 written in **caps** (the kit's module helpers case them; there is no CSS
 `text-transform`, so `0x7B8A` and `12ms` keep their lower case), with
 `&amp;` for an ampersand. The validator's rule is **`type`**
-(`TYPE_SCALE`, `TYPE_SIZES`); its fixtures are in `tests/post-art.spec.ts`.
-Type is lettering: on a post's art it is decorative under the title the
-link carries, and a scene's readable text stays `SceneLabel`s over the
+(`TYPE_SCALE`, `TYPE_SIZES`); its fixtures are in `src/lib/validate-art.test.ts`.
+Type is lettering: a scene's readable text stays `SceneLabel`s over the
 frame. The byte budget is 20 KB for it (was 12: a line of type is ~110
 bytes, a stroked mark ~150); the element cap, 120, still keeps a plate
 sparse. The proof is the **type specimen** (`src/art/specimen.ts`, on
@@ -699,15 +526,14 @@ plate, passing the art profile.
 
 **`ArtFrame`** — the window every artwork renders through
 (`styles/art-frame.css`, class `ds-art-frame`): the plate, the edge, the corner,
-`overflow: hidden` and the 16:9 box (`--art-ratio` retunes it in scope; the
-quilt's cells do); it strips the file's prolog and comments and puts
+`overflow: hidden` and the 16:9 box (`--art-ratio` retunes it in scope); it strips the file's prolog and comments and puts
 `aria-hidden`/`focusable="false"` and a slice fit on the root.
 
 ```astro
 <ArtFrame svg={raw} label="The Mega Desk" />          role="img" — a hero, the catalogue
-<ArtFrame svg={raw} decorative />                     aria-hidden — inside the link that names the post, or a filler
-<ArtFrame svg={raw} label="…" play />                 motion running from the start (the open post)
-<ArtFrame svg={raw} label="…" variant="mark" play />  the MARK: no chrome, the page's ink (the open post)
+<ArtFrame svg={raw} decorative />                     aria-hidden — inside a link that names it
+<ArtFrame svg={raw} label="…" play />                 motion running from the start
+<ArtFrame svg={raw} label="…" variant="mark" play />  the MARK: no chrome, the page's ink
 <ArtFrame svg={raw} decorative variant="bare" />      no plate, edge or corner; the art's own inks, still clipped
 <ArtFrame svg={raw} decorative variant="corners" />   bare, with an L-tick at each crop corner
 ```
@@ -1145,36 +971,6 @@ same sources give the same bytes (round every coordinate — the globe's
 paths to a tenth — never `Math.random` or the clock), because the check
 compares bytes. The scenes are committed; the site's build does not bake.
 
-**Post art as a scene.** A post's picture that the hand-drawn language
-cannot hold — a washed band, a board cut by a clipPath, a walk in
-`steps` beside a second motion — is a scene source at
-**`tools/scenes/posts/<slug>/scene.ts`** (the `posts` collection;
-`loadScenes(root, POST_SCENES)`), on the plate (`viewBox: "0 0 320
-180"`, which the bake insists on: the frame and the quilt's cells are
-16:9), baked by the same `bun run scenes:bake` to the post's own
-**`src/content/txt/<slug>.svg`** — the file `src/lib/quilt/art.ts` already
-globs, so the quilt tile (`ArtFrame variant="bare"`) and the post's mark
-(`variant="mark" play`) render it as they render any art, its motions
-playing on hover and from the start on the post; there is no `Scene`
-host and no readout layer, since a post's art is decorative under its
-title. The header is the same, `<!-- baked from
-tools/scenes/posts/<slug>/scene.ts (sources <hash>) — edit the source
--->` (`bakedFrom` reads `source` and `name`; `isPostScene` tells the
-collection), and it is what tells the gate a baked post from a hand-drawn
-one: `bun run validate:art src/content/txt/*.svg` holds a file with the
-header to the scene profile and one without to art's, and
-`tests/post-art.spec.ts` does the same and adds freshness — the header's
-hash against `tools/scenes/posts/<slug>/` today — and that every post
-source has been baked. `scenes:check` re-bakes the collection with the
-package's. A hand-drawn post art has no header and the bake never
-touches it; a baked one whose source is gone is removed like any orphan,
-and the spec then says the post has no art. The clipPath ids are
-prefixed with the slug, as art's are. The first is
-`asserting-on-agent-behavior`: the assertion board, six footprints landing
-in `steps`, the `scale` glyph's ruler as its timeline. The second is `mega-desk`: the drafting sheet, the desk rising in
-four `steps` beats, what stands under the slab cut outside its silhouette
-with `clipOutside`.
-
 **The registry** (`src/scenes/scenes.ts`, `import { sceneSvg,
 sceneCredit, SCENE_NAMES } from "@whois/design-system/scenes"`) is an
 eager `?raw` glob plus `SCENE_NAMES` (`names.ts`, the `SceneName` type —
@@ -1407,13 +1203,6 @@ dark one; `tests/scenes.spec.ts` holds them.
    its `SceneLabel`s on `/design-system#scenes` in both themes, hovered
    (the motion) and under reduced motion (still).
 
-**A post's art as a scene:** the same, at `tools/scenes/posts/<slug>/scene.ts`
-on the plate; `bun run scenes:bake` writes `src/content/txt/<slug>.svg`
-(no registry name — the quilt globs it); then `bun run validate:art
-src/content/txt/<slug>.svg`, `bunx playwright test tests/post-art.spec.ts`,
-and look at it on `/txt` (hover the tile) and `/txt/<slug>` in both
-themes. Commit the source and the baked file together.
-
 ---
 
 ## Catalogue tooling
@@ -1455,7 +1244,7 @@ site uses. The file layout, class naming and `.astro` shape still apply.
   `.ds-button--variant-primary`, `.ds-flex--gap-3`. Boolean variants
   `ds-<name>--<key>-true`; emit the class only for values that carry rules.
 - **Shared classes** a component composes in its template: `ds-control` (every
-  control), `ds-mono ds-caps` (the caps voice), `ds-playhead`.
+  control), `ds-mono ds-caps` (the caps voice).
 - **Private custom properties** are prefixed with the component
   (`--button-color`, `--anchor-icon`, `--tick-share`, `--bar-value`), never
   bare (`--color`, `--size`), so nothing leaks between components or into a
@@ -1525,7 +1314,7 @@ a knockout); site code reaches for the DS token.
 step at 900** (above). **Direction:** a rule that *takes something away* as the
 viewport narrows is written `max-width` (`(max-width: 1023px)`: the ruled grid
 collapses); a rule that *adds* as it widens is `min-width` (`(min-width:
-1024px)`: the quilt's desktop gap). The two spellings of one step differ by 1px
+1024px)`: a wider gap). The two spellings of one step differ by 1px
 (`max-width: 900px` / `min-width: 901px`). A rule about a CELL, not the
 viewport, is a container query on the grid (`@container widget`).
 
@@ -1569,8 +1358,7 @@ visual or a new token in `tokens.overrides.css` with its reason.
 | `Fig` | default (the image), `caption` |
 | `GlyphTile` | default (the glyph), `label`, `readout` |
 | `Knobs` | default, `meta`, `note`, `actions` |
-| `SearchBar` | `chips` |
-| `DimensionLabel`, `TileGrid`, `Faces`, `Index`, `IndexRow`, `Prose`, `Blockquote`, `HitArea`, `ThemePage`, `Quilt`, `QuiltCell` | default |
+| `DimensionLabel`, `TileGrid`, `Faces`, `Index`, `IndexRow`, `Prose`, `Blockquote`, `HitArea`, `ThemePage` | default |
 
 ### After adding a component
 

@@ -1,5 +1,5 @@
 /**
- * Iso and perspective: the axes are the post-art language's true 30°, the
+ * Iso and perspective: the axes are the art language's true 30°, the
  * solids draw their three visible faces, the grid foreshortens. Their
  * validity per target is in kit.test.ts. `bun run test:unit`.
  */

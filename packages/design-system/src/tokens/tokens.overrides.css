@@ -278,6 +278,10 @@
 	 * pull quote's accent bar. One width, so the bars agree. */
 	--bar-width: 2px;
 
+	/* The playhead's dot: small — a marker, not a control — and sized off
+	 * a ruler's headroom (--space-2) so the two agree. */
+	--playhead-dot: calc(var(--space-2) * 0.75);
+
 	/* THE VOICES, as custom properties, for a consumer that cannot take the
 	 * classes — a web component's shadow DOM styled through ::part(), a
 	 * canvas: the LABEL voice (Mono's caps/text voice — the UI face, small;

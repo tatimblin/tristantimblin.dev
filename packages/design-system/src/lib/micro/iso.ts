@@ -1,6 +1,5 @@
 /**
- * Isometric and one-point perspective, in the post-art language's terms
- * (.claude/skills/post-art/references/language.md, "Geometry"): a true
+ * Isometric and one-point perspective, in the art language's terms: a true
  * 30° projection whose right axis is (0.866, 0.5), left axis (−0.866, 0.5)
  * and up (0, −1). The solids draw their three visible faces only — the
  * standard view from the front and above — never a wireframe.
