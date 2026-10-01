@@ -154,46 +154,40 @@ test.describe("steps — the mega desk", () => {
 });
 
 /**
- * Tahoe Mountain Hair: the water cycle in simple shapes, five beats round
- * the loop — vapour, snow, melt, minerals, lake — each putting the drop at
- * its stage (a now-mark). No ripple. The still is the drop in the lake.
+ * Tahoe Mountain Hair: the room as a reverb module, its three sliders turned
+ * from San Francisco's settings to Tahoe's in four beats — SF, then
+ * ELEVATION, HUMIDITY, HARDNESS one a beat, a ripple at the handle that
+ * moved. Each beat's now-mark is all three handles at that moment, so one
+ * set shows at a time; the still is Tahoe, dialled in.
  */
-test.describe("steps — the water cycle", () => {
+test.describe("steps — the climate dialled in", () => {
 	const cell = `[data-cell="post"]:has(a[href="/txt/tahoe-mountain-hair/"])`;
-	/** The now-marks in document order: one drop per beat. */
-	const NOW_BEAT = [0, 1, 2, 3, 4];
-	const cycled = (s: State) => {
-		expect(s.beats, "every beat lit").toEqual(Array(5).fill(1));
-		expect(s.now, "only the last beat's drop").toEqual(NOW_BEAT.map((b) => (b === 4 ? 1 : 0)));
-		expect(s.ripples.every((o) => o === 0), "no ripple").toBe(true);
-	};
 
-	test("the quilt tile: the whole cycle, paused at rest, going round beat by beat under the pointer", async ({ page }) => {
+	test("the quilt tile: Tahoe's settings, paused at rest, turned beat by beat under the pointer", async ({ page }) => {
 		await page.goto("/txt/");
 		const group = page.locator(`${cell} ${STEPS}`);
-		await expect(group).toHaveAttribute("data-beats", "5");
-		expect(await group.locator(":scope > [data-beat]").count()).toBe(5);
-		expect(await group.locator("[data-now]").count()).toBe(NOW_BEAT.length);
-		expect(await group.locator("[data-ripple]").count()).toBe(0);
+		await expect(group).toHaveAttribute("data-beats", "4");
+		expect(await group.locator(":scope > [data-beat] > [data-now]").count()).toBe(4);
+		// A ripple for each control turned; none on San Francisco's beat.
+		expect(await group.locator("[data-ripple]").count()).toBe(3);
+		expect(await group.locator(':scope > [data-beat="0"] [data-ripple]').count()).toBe(0);
 
 		const rest = await stateOf(page, cell);
 		expect(rest.play).toBe("paused");
 		expect(rest.clock).toBe(0);
-		// Five beats plus two slots of hold, a sixth of the 6s loop each: 7s.
-		expect(parseFloat(rest.duration)).toBeCloseTo(7, 1);
-		cycled(rest);
+		// Four beats plus two slots of hold, a sixth of the 6s loop each: 6s.
+		expect(parseFloat(rest.duration)).toBeCloseTo(6, 1);
+		finished(rest, 4);
 
 		await page.locator(`${cell} a`).first().hover();
 		await expect.poll(async () => (await stateOf(page, cell)).play).toBe("running");
-		// Mid-cycle: the first beat has landed and stays, the last is faint, one beat's drop alone.
-		await expect.poll(async () => (await stateOf(page, cell)).clock, { timeout: 5000 }).toBeGreaterThan(3.2 / 7);
+		// Mid-turn: the first beat has landed, one set of handles alone, and not yet Tahoe's.
+		await expect.poll(async () => (await stateOf(page, cell)).clock, { timeout: 5000 }).toBeGreaterThan(2.2 / 6);
 		const mid = await stateOf(page, cell);
-		expect(mid.clock).toBeLessThan(5 / 7);
+		expect(mid.clock).toBeLessThan(4 / 6);
 		expect(mid.beats[0]).toBe(1);
-		expect(mid.beats[4]).toBeLessThan(1);
-		const lit = new Set(NOW_BEAT.filter((_, i) => mid.now[i] === 1));
-		expect(lit.size).toBe(1);
-		expect(lit.has(4)).toBe(false);
+		expect(mid.now.filter((o) => o === 1)).toHaveLength(1);
+		expect(mid.now[3]).toBe(0);
 	});
 
 	test("the post: the mark plays from the start", async ({ page }) => {
@@ -204,13 +198,13 @@ test.describe("steps — the water cycle", () => {
 		await expect.poll(async () => (await stateOf(page, mark)).clock).toBeGreaterThan(0);
 	});
 
-	test("reduced motion: the loop is 0s and the whole cycle is all that shows", async ({ page }) => {
+	test("reduced motion: the loop is 0s and Tahoe's settings are all that show", async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: "reduce" });
 		await page.goto("/txt/");
 		await page.locator(`${cell} a`).first().hover();
 		const s = await stateOf(page, cell);
 		expect(s.duration).toBe("0s");
-		cycled(s);
+		finished(s, 4);
 	});
 });
 

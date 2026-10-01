@@ -1,91 +1,194 @@
 /**
- * Tahoe Mountain Hair — the post's art, as a baked scene: THE GRAPHIC
- * ALONE, in simple shapes. The post chases the hair a trip to Tahoe gave —
- * snowmelt off granite, carrying minerals into hard water — so the plate is
- * that water cycle drawn as three plain things and one loop, filling it:
+ * Tahoe Mountain Hair — the post's art, as a baked scene: THE ROOM, AS A
+ * REVERB. A synth's reverb module draws its room face-on with sliders round
+ * it; this one draws the climate a head of hair lives in, and the routine is
+ * the hand on its controls. A teaser, not a sheet: a module front panel.
  *
- * the MOUNTAIN is the bold `tri-bands` shape — a solid ink cap (the snow)
- * over cyan bands (the melt) — bleeding off the left edge; the LAKE is one
- * long cyan bar continuing its lowest band along the ground and off the right; the MINERALS
- * are small coral hexes, a pair on the flank and three in the lake; and the
- * water is a few cyan pips on a dotted loop that rises off the lake
- * (vapour), runs over the top and falls onto the peak (snow). No words: a
- * teaser, not a sheet.
+ * THE ROOM is the reverb's: zigzag walls hatched on the left (off the plate)
+ * and the right, a dim tiled grid between them (a shower's tiles), a label
+ * plate hanging from the top reading TAHOE, a side bay with the mountain's
+ * ridge in it — the elevation, drawn once. Standing in it where the
+ * microphone stood is THE CURL: the `spring` glyph, coral, on a stem.
  *
- * The motion is `steps`, five beats round the cycle — vapour, snow, melt,
- * minerals, lake: each beat's now-mark is the drop (a ring and a cyan pip)
- * at that stage. The still is the last beat: the drop in the lake.
+ * THE CONTROLS are the module's three sliders, each a blue track with a ring
+ * handle, a dimension line with arrowheads and a centred caps label:
+ * ELEVATION across the top (high: Tahoe's 6,225 ft), HUMIDITY up the right
+ * (low: the dry mountain air), HARDNESS across the bottom (hard: the mineral
+ * water the routine puts back).
+ *
+ * The motion is `steps`, four beats: San Francisco's settings — low, humid,
+ * soft — then the routine turning one control a beat to Tahoe's, a ripple at
+ * the handle it moved. Each beat's now-mark is the three handles and their
+ * lit tracks at that moment. The still is the last beat: Tahoe, dialled in.
  *
  *   bun run scenes:bake      → src/content/txt/tahoe-mountain-hair.svg
  *
- * Drawn from the kit and the tri-bands recipe: no credit.
+ * Drawn from the kit and the spring recipe: no credit.
  */
 
-import triBands from "@whois/design-system/glyphs/recipes/tri-bands";
-import type { Point } from "@whois/design-system/lib/micro";
+import spring from "@whois/design-system/glyphs/recipes/spring";
+import { clipOutside, edges, type Kit, type Point, type Segment, segmentsD } from "@whois/design-system/lib/micro";
 import { part } from "@whois/design-system/scenes/parts";
 import { scene } from "@whois/design-system/scenes/recipe";
 
-// --- The mountain: tri-bands at scale, its tile centre at M ------------------
+// --- The room ------------------------------------------------------------------
 
-const SCALE = 5.2;
-/** The ground, where the mountain stands and the lake lies. */
-const BASE = 156;
-const M: Point = [68, BASE - 12 * SCALE];
-/** The recipe's triangle on its 48×32 tile: apex at 4, base at 28, equilateral. */
-const APEX: Point = [M[0], M[1] - 12 * SCALE];
-const HALF = (24 / Math.sqrt(3)) * SCALE;
-/** The lowest band's depth on the plate: the lake is that band carried on. */
-const BAND = 1.75 * SCALE;
+/** The module's outline: off the left edge, the bay on its right. */
+const ROOM = { x0: -8, x1: 232, y0: 40, y1: 146 };
+/** The walls: the zigzag's teeth run between these x, a tooth every PITCH down. */
+const WALL_L = { back: 8, tip: 20 };
+const WALL_R = { back: 188, tip: 176 };
+/** The right wall's back, and the bay beyond it. */
+const BAY = 192;
+const TEETH = 9;
+const PITCH = (ROOM.y1 - ROOM.y0) / TEETH;
+/** The tiles: the grid between the walls. */
+const TILE = 15.6;
+/** The label plate, hanging from the top. */
+const PLATE = { x0: 98, x1: 150, y0: ROOM.y0, y1: ROOM.y0 + 15 };
 
-/** A point on the right flank, `t` from the apex (0) to the foot (1), `off` out from it. */
-const flank = (t: number, off = 0): Point => {
-	const [dx, dy] = [HALF, BASE - APEX[1]];
-	const len = Math.hypot(dx, dy);
-	return [APEX[0] + dx * t + (dy / len) * off, APEX[1] + dy * t - (dx / len) * off];
+/** A zigzag wall from the top to the bottom, its teeth pointing in. */
+const zigzag = ({ back, tip }: { back: number; tip: number }): Point[] =>
+	Array.from({ length: TEETH * 2 + 1 }, (_, i) => [i % 2 ? tip : back, ROOM.y0 + (i * PITCH) / 2] as Point);
+
+// --- The controls ----------------------------------------------------------------
+
+type Axis = "x" | "y";
+interface Slider {
+	name: string;
+	axis: Axis;
+	/** the track's fixed coordinate, and its run from the low end to the high end */
+	at: number;
+	from: number;
+	to: number;
+	/** where the dimension line runs, beside the track */
+	dim: number;
+	/** San Francisco's setting and Tahoe's, 0–1 along the run */
+	sf: number;
+	tahoe: number;
+}
+
+const SLIDERS: Slider[] = [
+	{ name: "ELEVATION", axis: "x", at: 28, from: 26, to: 206, dim: 13, sf: 0.06, tahoe: 0.88 },
+	{ name: "HUMIDITY", axis: "y", at: 254, from: 142, to: 44, dim: 273, sf: 0.84, tahoe: 0.14 },
+	{ name: "HARDNESS", axis: "x", at: 158, from: 104, to: 292, dim: 172, sf: 0.1, tahoe: 0.9 },
+];
+const HANDLE = 5;
+const TRACK = 3.5;
+
+/** A point on a slider's run, `t` from its low end. */
+const on = (s: Slider, t: number): Point => {
+	const v = s.from + (s.to - s.from) * t;
+	return s.axis === "x" ? [v, s.at] : [s.at, v];
 };
 
-// --- The lake and the loop ----------------------------------------------------
+/** The dimension line: end ticks, a line each side of the centred label, an arrowhead at each end. */
+function dimension(k: Kit, s: Slider): string[] {
+	const [a, b] = [Math.min(s.from, s.to), Math.max(s.from, s.to)];
+	const mid = (a + b) / 2;
+	const gap = s.name.length * 2.6 + 4;
+	const P = (u: number, v = 0): Point => (s.axis === "x" ? [u, s.dim + v] : [s.dim + v, u]);
+	const segs: Segment[] = [
+		[P(a, -3.5), P(a, 3.5)],
+		[P(b, -3.5), P(b, 3.5)],
+		[P(a + 1, 0), P(mid - gap, 0)],
+		[P(mid + gap, 0), P(b - 1, 0)],
+	];
+	const [ax, ay] = P(a + 1);
+	const [bx, by] = P(b - 1);
+	const [lx, ly] = P(mid);
+	return [
+		k.path(segmentsD(segs), { paint: "ink", weight: "hair" }),
+		k.arrowhead(ax, ay, s.axis === "x" ? 270 : 0, 2.6, { paint: "ink", weight: "hair" }),
+		k.arrowhead(bx, by, s.axis === "x" ? 90 : 180, 2.6, { paint: "ink", weight: "hair" }),
+		s.axis === "x"
+			? k.text(lx, ly + 2.1, s.name, { size: 6, anchor: "middle" })
+			: k.text(lx - 2.1, ly, s.name, { size: 6, anchor: "middle", turn: 90 }),
+	];
+}
 
-const LAKE = { x0: M[0] + HALF + 8, x1: 324 };
-/** The loop: up off the lake, across the top, down onto the peak. */
-const RISE = 240;
-const TOP = 13;
-const LOOP: Point[] = [[RISE, BASE - BAND - 4], [RISE, TOP], [APEX[0], TOP], [APEX[0], APEX[1] - 7]];
-
-/** The five stages round the cycle — vapour, snow, melt, minerals, lake: where the drop is. */
-const STAGES: Point[] = [[RISE, 100], [APEX[0], TOP + 11], flank(0.58, 10), flank(0.82, 12), [LAKE.x0 + 34, BASE - BAND / 2]];
+/** A slider set to `t`: the track lit blue from its low end to the handle, and the handle — a ring and its dot. */
+function handle(k: Kit, s: Slider, t: number): string[] {
+	const [hx, hy] = on(s, t);
+	const [x0, y0] = on(s, 0);
+	const lit =
+		s.axis === "x"
+			? k.pill(x0, s.at - TRACK / 2, Math.max(TRACK, hx - HANDLE - 1 - x0), TRACK, { paint: "none", fill: "blue" })
+			: k.pill(s.at - TRACK / 2, hy + HANDLE + 1, TRACK, Math.max(TRACK, y0 - hy - HANDLE - 1), { paint: "none", fill: "blue" });
+	return [lit, k.ring(hx, hy, HANDLE, { paint: "ink", weight: "line", fill: "none" }), k.dot(hx, hy, 1.8, { paint: "ink" })];
+}
 
 export default scene({
 	viewBox: "0 0 320 180",
-	draw(k) {
+	draw(k, ctx) {
 		const hair = { weight: "hair" } as const;
 		const out: string[] = [];
 
-		// The loop, dotted, with an arrow on each leg; the ground a dim hair under it all.
+		// The tiles: a dim grid between the walls, cut round the label plate.
+		const plate: Point[] = [[PLATE.x0, PLATE.y0], [PLATE.x1, PLATE.y0], [PLATE.x1, PLATE.y1], [PLATE.x0, PLATE.y1]];
+		const grid: Segment[] = [];
+		for (let x = WALL_L.tip + TILE; x < WALL_R.tip; x += TILE) grid.push([[x, ROOM.y0], [x, ROOM.y1]]);
+		for (let y = ROOM.y0 + TILE; y < ROOM.y1; y += TILE) grid.push([[WALL_L.tip, y], [WALL_R.tip, y]]);
+		out.push(k.path(segmentsD(clipOutside(grid, plate)), { paint: "dim", ...hair }));
+
+		// The walls: hatched between the room's edge and the zigzag, under one clip.
+		const left = zigzag(WALL_L);
+		const right = zigzag(WALL_R);
+		const wallL: Point[] = [[ROOM.x0, ROOM.y0], ...left, [ROOM.x0, ROOM.y1]];
+		const wallR: Point[] = [[BAY, ROOM.y0], ...right, [BAY, ROOM.y1]];
+		const clip = `${ctx.name}-walls`;
+		const hatch: Segment[] = [];
+		for (let c = ROOM.y0 - 60; c < ROOM.y1 + 10; c += 4) {
+			hatch.push([[ROOM.x0, c + ROOM.x0], [WALL_L.tip, c + WALL_L.tip]], [[WALL_R.tip, c], [BAY, c + (BAY - WALL_R.tip)]]);
+		}
+		const poly = (p: Point[]) => `<polygon points="${p.map((q) => q.join(",")).join(" ")}" />`;
 		out.push(
-			k.wire(LOOP, { radius: 14, paint: "dim", ...hair, dash: "dotted" }),
-			k.arrowhead(RISE, 74, 0, 3, { paint: "dim", ...hair }),
-			k.arrowhead(160, TOP, 270, 3, { paint: "dim", ...hair }),
-			k.arrowhead(APEX[0], APEX[1] - 7, 180, 3, { paint: "dim", ...hair }),
-			k.line(-4, BASE + 0.5, 324, BASE + 0.5, { paint: "dim", ...hair }),
+			`<clipPath id="${clip}">${poly(wallL)}${poly(wallR)}</clipPath>`,
+			`<g clip-path="url(#${clip})">`,
+			k.path(segmentsD(hatch), { paint: "dim", ...hair }),
+			`</g>`,
+			k.polyline(left, { paint: "ink", weight: "line" }),
+			k.polyline(right, { paint: "ink", weight: "line" }),
+			k.line(BAY, ROOM.y0, BAY, ROOM.y1, { paint: "ink", weight: "line" }),
 		);
-		// The water on its way: a few cyan pips on the loop.
-		for (const [x, y] of [[RISE, 124], [RISE, 36], [202, TOP], [114, TOP]] as Point[]) out.push(k.dot(x, y, 1.6, { paint: "blue" }));
 
-		// The mountain: the bold shape, snow over melt.
-		out.push(part(k, triBands, { at: M, scale: SCALE }));
-		// The lake: the lowest band carried on along the ground.
-		out.push(k.rect(LAKE.x0, BASE - BAND, LAKE.x1 - LAKE.x0, BAND, { paint: "none", fill: "blue" }));
-		// The minerals: coral hexes on the flank, and dissolved in the lake.
-		const mineral = ([x, y]: Point) => k.hex(x, y, 2.5, { paint: "none", fill: "red" });
-		out.push(...[flank(0.74, 5), flank(0.9, 5)].map(mineral));
-		out.push(...[LAKE.x0 + 12, LAKE.x0 + 64, LAKE.x0 + 104].map((x) => mineral([x, BASE - BAND / 2])));
+		// The bay: the mountain's ridge, the elevation drawn once.
+		const RIDGE: Point[] = [[BAY, 122], [201, 108], [208, 113], [219, 90], [232, 106]];
+		out.push(
+			k.polygon([...RIDGE, [ROOM.x1, ROOM.y1], [BAY, ROOM.y1]], { paint: "none", fill: k.wash("blue", 16) }),
+			k.polyline(RIDGE, { paint: "ink", ...hair }),
+		);
 
-		// --- the motion: a beat per stage, the drop there ---
-		const beats = STAGES.map(([x, y], i) => [
-			k.group([k.ring(x, y, 4.6, { paint: "ink", ...hair, fill: "none" }), k.dot(x, y, 2, { paint: i === 4 ? "ink" : "blue" })], { mark: "now" }),
-		]);
+		// The module's outline over it all, and the label plate.
+		out.push(
+			k.roundRect(ROOM.x0, ROOM.y0, ROOM.x1 - ROOM.x0, ROOM.y1 - ROOM.y0, 3, { paint: "ink", ...hair, fill: "none" }),
+			k.path(segmentsD(edges(plate).slice(1, 4)), { paint: "dim", ...hair }),
+			k.text((PLATE.x0 + PLATE.x1) / 2, PLATE.y1 - 4.2, "TAHOE", { role: "title", size: 9, anchor: "middle" }),
+		);
+
+		// The curl, where the microphone stood: the spring on a stem.
+		const CURL: Point = [72, 96];
+		const sc = 1.4;
+		out.push(
+			k.rect(CURL[0] - 1, CURL[1] + 18 * sc, 2, ROOM.y1 - CURL[1] - 18 * sc, { paint: "none", fill: "ink" }),
+			part(k, spring, { at: CURL, scale: sc }),
+		);
+
+		// The controls: each slider's dimension line and its dim rail.
+		for (const s of SLIDERS) {
+			const [a, b] = [on(s, 0), on(s, 1)];
+			out.push(...dimension(k, s), k.line(a[0], a[1], b[0], b[1], { paint: "dim", ...hair }));
+		}
+
+		// The routine: SF's settings, then one control a beat turned to Tahoe's.
+		const state = (n: number) => SLIDERS.map((s, i) => (i < n ? s.tahoe : s.sf));
+		const beats = [0, 1, 2, 3].map((n) => {
+			const ts = state(n);
+			const now = k.group(SLIDERS.flatMap((s, i) => handle(k, s, ts[i])), { mark: "now" });
+			if (n === 0) return [now];
+			const [rx, ry] = on(SLIDERS[n - 1], ts[n - 1]);
+			return [k.ring(rx, ry, HANDLE + 2, { paint: "blue", ...hair, fill: "none", mark: "ripple" }), now];
+		});
 
 		return [...out, k.steps(beats)];
 	},

@@ -1,16 +1,20 @@
 # tahoe-mountain-hair
 
-The post art for *Tahoe Mountain Hair*: the graphic alone, in simple shapes.
-The water cycle as three plain things and one loop, filling the plate: the
-mountain is the bold `tri-bands` shape (a solid ink cap over cyan bands)
-bleeding off the left edge, the lake one long cyan bar carrying its lowest
-band along the ground, the minerals small coral hexes on the flank and in
-the lake, and the water a few cyan pips on a dotted loop that rises off the
-lake, runs over the top and falls onto the peak. No words: a teaser, not a
-sheet. It moves in `steps`, five beats round the cycle — vapour, snow,
-melt, minerals, lake — the drop at each stage while it is current; the
-still is the drop in the lake.
+The post art for *Tahoe Mountain Hair*: the room, as a reverb. A synth's
+reverb module draws its room face-on with sliders round it; this one draws
+the climate a head of hair lives in. The room has zigzag walls, hatched,
+running off the left edge, and a dim tiled grid between them (a shower's
+tiles). A label plate hanging from the top reads TAHOE, and a side bay holds
+the mountain's ridge over a faint blue wash. Standing where the microphone
+stood is the curl, the `spring` glyph in coral on a stem. Three blue sliders
+with ring handles sit round it, each with a dimension line and a caps label:
+ELEVATION across the top, HUMIDITY up the right and HARDNESS across the
+bottom.
+
+It moves in `steps`, four beats. The first is San Francisco's settings (low,
+humid, soft); then the routine turns one control a beat to Tahoe's, with a
+ripple at the handle it moved. The still is the last beat: high, dry, hard.
 
 `scene.ts` is the source; `bun run scenes:bake` writes
-`src/content/txt/tahoe-mountain-hair.svg`. Drawn from the kit and the
-tri-bands recipe: no external data, no credit.
+`src/content/txt/tahoe-mountain-hair.svg`. It is drawn from the kit and the
+spring recipe, with no external data and no credit.
