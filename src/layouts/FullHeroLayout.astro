@@ -48,55 +48,32 @@ const { title, description, image } = Astro.props;
 	</div>
 </Layout>
 
-{
-	/* DEV-ONLY FOLD ASSERTION. tests/hero-fold.spec.ts proves the fold arithmetic
-	   across a viewport × content × preference matrix, but headless Chromium reports
-	   svh == lvh == innerHeight at every size, so it structurally cannot reproduce
-	   the two states that actually bite on a phone: the URL bar collapsing (which
-	   moves lvh but not svh) and OS-level dynamic type. This warns when the invariant
-	   breaks in a real browser, on a real device, during development. Stripped from
-	   production by the import.meta.env.DEV guard. */
-	import.meta.env.DEV && (
-		<script is:inline>
-			{`
-			(() => {
-				const check = () => {
-					const fh = document.querySelector(".fh");
-					if (!fh) return;
-					// The scene's own bottom-anchored UI, if any (a plain background scene
-					// has none and cannot collide with anything).
-					const ui = [...fh.querySelectorAll(".fh__scene .vc__ruler, .fh__scene .vc__caption")]
-						.map((el) => el.getBoundingClientRect())
-						.filter((r) => r.height > 0);
-					if (!ui.length) return;
-					const uiTop = Math.min(...ui.map((r) => r.top));
-					const group = [...fh.querySelectorAll(".fh__heading .sh__sub, .fh__heading .sh__heading")]
-						.map((el) => el.getBoundingClientRect())
-						.filter((r) => r.height > 0);
-					if (!group.length) return;
-					const groupBottom = Math.max(...group.map((r) => r.bottom));
-					const clearance = uiTop - groupBottom;
-					if (clearance < 0) {
-						console.warn(
-							"[hero fold] the heading group overlaps the scene's bottom UI by " +
-								Math.abs(clearance).toFixed(1) +
-								"px. --sh-group-h/--hero-floor are likely stale or unpublished.",
-							{ uiTop, groupBottom }
-						);
-					}
-				};
-				// After layout settles, and again whenever the viewport changes (the
-				// URL-bar case) — but only at rest, so a scroll-driven transform mid-fade
-				// isn't mistaken for a layout fault.
-				const run = () => requestAnimationFrame(() => setTimeout(check, 200));
-				run();
-				addEventListener("resize", run, { passive: true });
-				document.addEventListener("astro:page-load", run);
-			})();
-			`}
-		</script>
-	)
-}
+<script>
+	// THE FLOOR. A scene whose own UI hugs its bottom edge (the carousel's date
+	// scrubber + caption) publishes how much of that edge it occupies as
+	// --vc-bottom-ui-extent on itself and announces each change with a bubbling
+	// `video-carousel:metrics`; custom properties inherit downward only, so it is
+	// relayed onto .fh here as --hero-floor for the fold arithmetic below. Read
+	// from the element's computed style, not the event, so a measurement published
+	// before this module ran still lands. A hidden scene (display: none above the
+	// breakpoint that shows it) measures 0 and reserves nothing. Delegated to the
+	// document, so view transitions need no rebinding.
+	const SCENE = ".fh__scene video-carousel";
+	const relay = (scene: HTMLElement) => {
+		const fh = scene.closest<HTMLElement>(".fh");
+		if (!fh) return;
+		const extent = parseFloat(
+			getComputedStyle(scene).getPropertyValue("--vc-bottom-ui-extent")
+		);
+		if (extent > 0) fh.style.setProperty("--hero-floor", `${extent.toFixed(1)}px`);
+		else fh.style.removeProperty("--hero-floor");
+	};
+	document.addEventListener("video-carousel:metrics", (e) => {
+		const scene = e.target as HTMLElement;
+		if (scene.matches(SCENE)) relay(scene);
+	});
+	document.querySelectorAll<HTMLElement>(SCENE).forEach(relay);
+</script>
 
 <style>
 	.fh {

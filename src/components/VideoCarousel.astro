@@ -31,6 +31,13 @@ interface Props {
 	 * element's `fill` attribute; see the package's styles.css).
 	 */
 	fill?: boolean;
+	/**
+	 * The carousel as a full-bleed background scene: the host fills the box it is
+	 * given, the clip cover-fills it and dissolves into the ruler, which sits along
+	 * the bottom edge above the caption (the element's `scene` attribute; see the
+	 * package's styles.css). Pair with `orientation="horizontal"`.
+	 */
+	scene?: boolean;
 	/** Extra class(es) forwarded to the <video-carousel> host. */
 	class?: string;
 	/**
@@ -145,6 +152,7 @@ const {
 	rulerSide = "left",
 	orientation,
 	fill = false,
+	scene = false,
 	class: className,
 	intro,
 	introDelay,
@@ -182,6 +190,7 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 		ruler-side={rulerSide}
 	orientation={orientation}
 	fill={fill ? "" : undefined}
+	scene={scene ? "" : undefined}
 	caption-overlay={captionOverlay ? "" : undefined}
 >
 	{/* Ruler + video share a row so the ruler's height tracks the VIDEO box only
