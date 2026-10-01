@@ -107,12 +107,21 @@ function focus(k: Kit, w: Win): string {
 	return k.group([k.rect(w.x, w.y, w.w, BAR, { paint: "none", fill: "ink" }), k.dot(x, y, DOT + 0.4, { paint: "red" })], { mark: "now" });
 }
 
+/**
+ * The tiling is turned: rotated TILT degrees about the plate's centre and
+ * scaled by GROW so its extents (x −12…332, y −14…196) still cover every
+ * corner of the plate — at −14° the plate's corners land within ±177 × ±126
+ * of the centre in the tiling's frame, and 1.25 × its half-extents (172,
+ * 104) clears both. Strokes are non-scaling, so the hairlines hold.
+ */
+const [TILT, GROW] = [-14, 1.25];
+
 export default scene({
 	viewBox: "0 0 320 180",
 	draw(k) {
 		const out = WINS.flatMap((w) => win(k, w));
 		// The focus moves: one window's title bar solid a beat, ending on the twin.
 		out.push(k.steps(FOCUS.map((i) => [focus(k, WINS[i])])));
-		return out;
+		return [k.group(out, { transform: `translate(160 90) rotate(${TILT}) scale(${GROW}) translate(-160 -90)` })];
 	},
 });
