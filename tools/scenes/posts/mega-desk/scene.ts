@@ -28,9 +28,9 @@ import { scene } from "@whois/design-system/scenes/recipe";
 
 // --- The desk, in world units: x along the 8 ft, y its depth, z up ----------
 
-/** The drawing's scale on the plate, and where the far corner of the floor lands. */
-const G = 1.4;
-const O: Point = [120, 71];
+/** The drawing's scale on the plate, and where the far corner of the floor lands: sized so the whole desk, at every height, sits in y 30–150 — the band a wide quilt tile (the plate sliced to ~2.4:1) keeps. */
+const G = 1.05;
+const O: Point = [125, 76];
 const S = (x: number, y: number, z: number): Point => iso(x * G, y * G, z * G, O);
 
 /** The top: L long, D deep, T thick. */
