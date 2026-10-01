@@ -39,8 +39,8 @@ const year = new Date().getFullYear();
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: var(--space-4, 1rem);
-		padding-block: var(--space-5, 1.5rem);
+		gap: var(--space-4);
+		padding-block: var(--space-5);
 		border-top: 1px solid var(--hairline);
 		background: var(--background);
 		color: var(--text-primary);
@@ -63,87 +63,81 @@ const year = new Date().getFullYear();
 </style>
 
 <script>
-	// Bind the toggle each time the DOM is (re)painted. astro:page-load fires on
-	// the initial load AND after every view-transition navigation, so the handler
-	// survives ClientRouter swaps.
-	function bind() {
-		const btn = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
-		if (!btn || btn.dataset.bound === "1") return;
-		btn.dataset.bound = "1";
+	import { onPage } from "@whois/design-system/lib/lifecycle";
 
-		const label = btn.querySelector<HTMLElement>("[data-theme-toggle-label]");
-		const root = document.documentElement;
+	/** Bind a footer chip, [data-<name>-toggle], on every page load: a click
+	 *  runs `flip`, then aria-pressed, the aria-label and the visible label
+	 *  ([data-<name>-toggle-label]) are re-read from `isOn` via `text`. */
+	function bindToggle(
+		name: string,
+		isOn: () => boolean,
+		flip: () => void,
+		text: (on: boolean) => { label: string; aria: string },
+	) {
+		onPage(() => {
+			const btn = document.querySelector<HTMLButtonElement>(`[data-${name}-toggle]`);
+			if (!btn) return;
+			const label = btn.querySelector<HTMLElement>(`[data-${name}-toggle-label]`);
+			const sync = () => {
+				const on = isOn();
+				const t = text(on);
+				btn.setAttribute("aria-pressed", String(on));
+				btn.setAttribute("aria-label", t.aria);
+				if (label) label.textContent = t.label;
+			};
+			const onClick = () => {
+				flip();
+				sync();
+			};
+			btn.addEventListener("click", onClick);
+			sync();
+			return () => btn.removeEventListener("click", onClick);
+		});
+	}
 
-		const sync = () => {
-			const isDark = root.classList.contains("maximeheckel-dark");
-			// aria-pressed reflects "light active"; label/aria-label name the target.
-			btn.setAttribute("aria-pressed", String(!isDark));
-			btn.setAttribute(
-				"aria-label",
-				isDark ? "Switch to light theme" : "Switch to dark theme"
-			);
-			if (label) label.textContent = isDark ? "Light" : "Dark";
-		};
-
-		btn.addEventListener("click", () => {
-			const next = root.classList.contains("maximeheckel-dark")
-				? "light"
-				: "dark";
+	// Theme: pressed = light. The label names the theme a click switches to.
+	// `themechange` nudges a paused/reduced-motion <dotted-grid> to repaint
+	// (the animating path already re-tints every frame).
+	const isLight = () => !document.documentElement.classList.contains("maximeheckel-dark");
+	bindToggle(
+		"theme",
+		isLight,
+		() => {
+			const next = isLight() ? "dark" : "light";
 			window.__setTheme(next);
 			localStorage.setItem("theme", next);
-			sync();
-			// Nudge any paused/reduced-motion <dotted-grid> to repaint with the new
-			// tokens (the animating default path already re-tints every frame).
 			document.dispatchEvent(new Event("themechange"));
-		});
+		},
+		(light) =>
+			light
+				? { label: "Dark", aria: "Switch to dark theme" }
+				: { label: "Light", aria: "Switch to light theme" },
+	);
 
-		sync();
-	}
-
-	// Sound on/off for the video-carousel ruler ticks. Persists to localStorage
-	// (`sound`: "on"/absent = unmuted, "off" = muted) and broadcasts `soundchange`
-	// so the <video-carousel> refreshes its mute state live. Same rebind guard as
-	// the theme toggle so it survives ClientRouter view-transition swaps.
-	function bindSound() {
-		const btn = document.querySelector<HTMLButtonElement>("[data-sound-toggle]");
-		if (!btn || btn.dataset.bound === "1") return;
-		btn.dataset.bound = "1";
-
-		const label = btn.querySelector<HTMLElement>("[data-sound-toggle-label]");
-
-		const isMuted = () => {
+	// Sound for the video-carousel ruler ticks: pressed = muted. Persists
+	// `sound` ("off" = muted) and broadcasts `soundchange` so the carousel
+	// updates live, even when storage is unavailable.
+	const isMuted = () => {
+		try {
+			return localStorage.getItem("sound") === "off";
+		} catch {
+			return false;
+		}
+	};
+	bindToggle(
+		"sound",
+		isMuted,
+		() => {
 			try {
-				return localStorage.getItem("sound") === "off";
+				localStorage.setItem("sound", isMuted() ? "on" : "off");
 			} catch {
-				return false;
+				/* storage unavailable */
 			}
-		};
-
-		const sync = () => {
-			const muted = isMuted();
-			// aria-pressed reflects "muted"; label names the current state.
-			btn.setAttribute("aria-pressed", String(muted));
-			btn.setAttribute(
-				"aria-label",
-				muted ? "Unmute ruler sounds" : "Mute ruler sounds"
-			);
-			if (label) label.textContent = muted ? "Muted" : "Sound";
-		};
-
-		btn.addEventListener("click", () => {
-			const next = isMuted() ? "on" : "off";
-			try {
-				localStorage.setItem("sound", next);
-			} catch {
-				/* storage unavailable — the event still updates live listeners */
-			}
-			sync();
 			document.dispatchEvent(new Event("soundchange"));
-		});
-
-		sync();
-	}
-
-	document.addEventListener("astro:page-load", bind);
-	document.addEventListener("astro:page-load", bindSound);
+		},
+		(muted) =>
+			muted
+				? { label: "Muted", aria: "Unmute ruler sounds" }
+				: { label: "Sound", aria: "Mute ruler sounds" },
+	);
 </script>
