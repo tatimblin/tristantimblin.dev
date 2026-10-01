@@ -2,8 +2,8 @@
 // RuleLabel — a label on a dotted rule, the spec sheet's caption (styles/
 // rule-label.css): a 1px DOTTED hairline with a small caps label under it —
 // an optional leading number in the accent, the label, and an optional
-// trailing `meta` in the tertiary ink at the far end. A quilt tile's title
-// row (`05 ASSERTING ON AGENT BEHAVIOR`), a filler's file tag (`F_07`, dim).
+// trailing `meta` in the tertiary ink at the far end — a tile's title row
+// (`05 ASSERTING ON AGENT BEHAVIOR`), a file tag (`F_07`, dim).
 // No box: the rule is the only line.
 //
 //   <RuleLabel no="05">Asserting on agent behavior</RuleLabel>
@@ -11,12 +11,11 @@
 //   <RuleLabel no="05">Title<Mono slot="meta">Latest</Mono></RuleLabel>
 //   <RuleLabel dim>F_07</RuleLabel>
 //
-// `dim` takes the whole row to the tertiary ink, the number with it (a
-// filler is texture, not an entry). `truncate` holds the label to one line
+// `dim` takes the whole row to the tertiary ink, the number with it (texture,
+// not an entry). `truncate` holds the label to one line
 // and ellipsises it; without it the label wraps. `lines={2}` RESERVES two
 // lines whether the label fills them or not, with the row's text at its
-// top: a row of quilt cells keeps its arts on one line whichever titles
-// wrap. Polymorphic `as`; `class` merges; everything else passes through.
+// top: a row of tiles keeps its art on one line whichever titles wrap. Polymorphic `as`; `class` merges; everything else passes through.
 import { cx } from "../lib/cx";
 
 interface Props {

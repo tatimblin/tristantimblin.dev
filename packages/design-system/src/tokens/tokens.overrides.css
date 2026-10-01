@@ -30,7 +30,7 @@
 	 *   heading   Mondwest Bold — every heading: the post title at 72px, the
 	 *             section heads, the catalogue's, a bare <h2>.
 	 *   ui        Mondwest Regular — the interface: widget chrome, labels, the
-	 *             caps voice, the figures, the blog's chrome, the search bar.
+	 *             caps voice, the figures, the blog's chrome.
 	 *   body      Neue Montreal Regular — reading text.
 	 *   display   Mondwest Thin — the big thin numeral (Stat's `numeral`
 	 *             variant): a count or an index set large, where the Regular's
@@ -275,13 +275,8 @@
 	--focus-ring-inset: calc(-1 * var(--focus-ring-offset));
 
 	/* The BAR: the width of every solid edge bar the instrument draws — the
-	 * pull quote's accent bar, a post's mark on the time ruler, the active
-	 * row's bar in the search results. One width, so the bars agree. */
+	 * pull quote's accent bar. One width, so the bars agree. */
 	--bar-width: 2px;
-
-	/* The playhead's dot (playhead.css): small — a marker, not a control —
-	 * and sized off the ruler's headroom (--space-2) so the two agree. */
-	--playhead-dot: calc(var(--space-2) * 0.75);
 
 	/* THE VOICES, as custom properties, for a consumer that cannot take the
 	 * classes — a web component's shadow DOM styled through ::part(), a
@@ -307,7 +302,7 @@
 	 * gradient so any 1px box becomes one. */
 	--hairline: var(--border-color);
 	/* The STRONG hairline: the ink at the third wash, for the one edge on a
-	   ruled screen that must read over the others — the search bar's frame,
+	   ruled screen that must read over the others —
 	   the card's border, a chip's box. The plain hairline cuts the rows
 	   inside them; this is the outline of the thing itself. */
 	--hairline-strong: var(--wash-3);

@@ -2,7 +2,7 @@
  *
  * A control is anything the pointer or the keyboard operates: Button and
  * IconButton, a Pill or a Chip rendered as a button or a link, the archive's
- * row link, a quilt tile's link, a mark on the time ruler, a hit area. Each
+ * row link, a hit area. Each
  * of them composes the `ds-control` class (in its .astro), so the native
  * chrome reset, the pointer, the disabled state and above all the FOCUS RING
  * are declared here and nowhere else: one ring, at one offset, on every

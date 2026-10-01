@@ -35,7 +35,6 @@ import Hairline from "@whois/design-system/Hairline";
 import RuleLabel from "@whois/design-system/RuleLabel";
 import DimensionLabel from "@whois/design-system/DimensionLabel";
 import TickRuler from "@whois/design-system/TickRuler";
-import TimeRuler from "@whois/design-system/TimeRuler";
 // The ruled screen: the boxed chip and the stat strip.
 import Chip from "@whois/design-system/Chip";
 import StatStrip from "@whois/design-system/StatStrip";
@@ -71,11 +70,6 @@ import Formula from "@whois/design-system/Formula";
 import NumberStream from "@whois/design-system/NumberStream";
 import Scene from "@whois/design-system/Scene";
 import SceneLabel from "@whois/design-system/SceneLabel";
-// The quilt: the grid, its cells, the panel, and the search bar above it.
-import Quilt from "@whois/design-system/Quilt";
-import QuiltCell from "@whois/design-system/QuiltCell";
-import QuiltPanel from "@whois/design-system/QuiltPanel";
-import SearchBar from "@whois/design-system/SearchBar";
 // The new primitives.
 import Fig from "@whois/design-system/Fig";
 import Img from "../components/mdx/Img.astro";
@@ -90,187 +84,11 @@ import KnobGroup from "@whois/design-system/KnobGroup";
 import Knob from "@whois/design-system/Knob";
 import ThemePage from "@whois/design-system/ThemePage";
 
-// THE QUILT DEMOS. The five posts' real art and ten fillers on the 5×3 grid,
-// in the states the site's script drives (each set by hand here: the
-// components render a state; deciding one is the engine's job). Slots and
-// scatter are made up to show the contract, not computed.
-const quiltArt = import.meta.glob<string>("../content/txt/*.svg", {
-	query: "?raw",
-	import: "default",
-	eager: true,
-});
-const quiltFillers = Object.entries(
-	import.meta.glob<string>("../../packages/design-system/src/art/filler-*.svg", {
-		query: "?raw",
-		import: "default",
-		eager: true,
-	}),
-)
-	.sort(([a], [b]) => a.localeCompare(b))
-	.map(([, svg]) => svg);
-const artOf = (slug: string) =>
-	quiltArt[`../content/txt/${slug}.svg`] ?? artTemplate;
-
-interface QuiltPost {
-	slug: string;
-	title: string;
-	blurb: string;
-	cat: string;
-	no: string;
-	month: string;
-	year: string;
-	min: number;
-	col: number;
-	row: number;
-	colMd: number;
-	rowMd: number;
-	/** The lead's 2×2 footprint. */
-	span?: [number, number];
-}
-const quiltPosts: QuiltPost[] = [
-	{ slug: "asserting-on-agent-behavior", title: "Asserting on Agent Behavior", blurb: "I built Aptitude — a test harness that lets you run cognitive tests against agent behavior by asserting on tool calls, parameters, and ordering.", cat: "programming", no: "005", month: "feb", year: "2026", min: 3, col: 1, row: 1, colMd: 1, rowMd: 1, span: [2, 2] },
-	{ slug: "tahoe-mountain-hair", title: "Tahoe Mountain Hair", blurb: "A hair care routine to reproduce Tahoe's mineral-rich water and dry air in San Francisco's soft water and humidity.", cat: "personal", no: "004", month: "jun", year: "2025", min: 2, col: 5, row: 1, colMd: 3, rowMd: 1 },
-	{ slug: "mega-desk", title: "The Mega Desk", blurb: "Building an 8-foot hardwood standing desk for a shared home office — from sourcing burnt ash in Berkeley to finding an extension cable on Etsy.", cat: "projects", no: "003", month: "apr", year: "2025", min: 4, col: 3, row: 2, colMd: 3, rowMd: 2 },
-	{ slug: "why-i-joined-fisker", title: "Your Car Knows You're Getting Sick", blurb: "I joined Fisker to build a health product from vehicle signal data — steering patterns, braking behavior, and acceleration habits can detect cognitive decline.", cat: "thoughts", no: "002", month: "jul", year: "2024", min: 4, col: 1, row: 3, colMd: 1, rowMd: 3 },
-	{ slug: "no-honey-we-have-a-dashboard-at-home", title: "No Honey, We Have a Dashboard at Home", blurb: "Internal tools teams spend months building dashboards that are worse versions of things VS Code already provides out of the box.", cat: "programming", no: "001", month: "may", year: "2023", min: 3, col: 4, row: 3, colMd: 3, rowMd: 3 },
-];
-// The seven cells the lead and the posts leave on the 5×3 grid, in reading
-// order; the first four also have a slot on the 3×4 tablet grid (which has
-// four of its own to fill).
-const quiltFillerSlots: Array<[number, number, number?, number?]> = [
-	[3, 1, 2, 3], [4, 1, 1, 4], [4, 2, 2, 4], [5, 2, 3, 4],
-	[2, 3], [3, 3], [5, 3],
-];
-const metaOf = (p: QuiltPost) => `${p.month} ${p.year} · ${p.cat}`;
-const cardOf = (p: QuiltPost, why?: string) => ({
-	no: p.no,
-	category: p.cat,
-	minutes: p.min,
-	words: p.min * 180 + 1,
-	month: p.month,
-	year: p.year,
-	rate: Math.round((p.min * 180 + 1) / p.min),
-	title: p.title,
-	blurb: p.blurb,
-	why,
-	href: `/txt/${p.slug}/`,
-});
-// The bar's quick filters: ALL and the four categories, each a link to ?q=.
+// The demo chips: ALL and the four categories, each a link.
 const chipsDemo = [
 	{ label: "all", query: "", href: "/txt/", count: 5 },
 	...([["programming", 2], ["projects", 1], ["thoughts", 1], ["personal", 1]] as const).map(([c, n]) => ({ label: c, query: c, href: `/txt/?q=${c}`, count: n })),
 ];
-// The timeline demo: one tick per month over the posts' years, the five as marks.
-const monthNo: Record<string, string> = { jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06", jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12" };
-const rulerMarks = quiltPosts.map((p) => ({
-	month: `${p.year}-${monthNo[p.month]}`,
-	label: `${p.title}, ${p.month} ${p.year}`,
-	href: `/txt/${p.slug}/`,
-	no: p.no,
-	value: p.min * 180 + 1,
-}));
-const browseDemo = {
-	categories: [
-		{ label: "programming", count: 2, href: "/txt/?q=programming" },
-		{ label: "projects", count: 1, href: "/txt/?q=projects" },
-		{ label: "thoughts", count: 1, href: "/txt/?q=thoughts" },
-		{ label: "personal", count: 1, href: "/txt/?q=personal" },
-	],
-	years: ["2026", "2025", "2024", "2023"].map((y) => ({ label: y, href: `/txt/?q=${y}` })),
-	latest: { title: quiltPosts[0].title, href: `/txt/${quiltPosts[0].slug}/` },
-};
-const resultsDemo = {
-	label: "2 posts for “home”",
-	items: [
-		{
-			href: `/txt/${quiltPosts[4].slug}/`,
-			title: [
-				{ text: "No Honey, We Have a Dashboard at ", hl: false },
-				{ text: "Home", hl: true },
-			],
-			meta: metaOf(quiltPosts[4]),
-		},
-		{
-			href: `/txt/${quiltPosts[2].slug}/`,
-			title: quiltPosts[2].title,
-			meta: metaOf(quiltPosts[2]),
-			why: "matched tag · home office",
-		},
-	],
-	active: 0,
-};
-const nothingDemo = {
-	query: "recipes",
-	suggestions: ["agents", "desk", "vscode", "health", "projects", "2025"].map((w) => ({
-		label: w,
-		href: `/txt/?q=${w}`,
-	})),
-};
-
-type QuiltCellState = "lit" | "faint" | "gone";
-interface QuiltDemo {
-	id: string;
-	title: string;
-	note: string;
-	search: { value?: string; count: string; readout: string; expanded?: boolean };
-	panel: { mode: "hidden" | "card" | "browse" | "results" | "none"; col: number; row: number };
-	/** Posts that stay lit; everything else scatters. Unset: nothing scatters. */
-	lit?: string[];
-	/** Fillers only go faint (the browse state). */
-	fillersFaint?: boolean;
-	active?: string;
-	card?: QuiltPost;
-}
-const quiltDemos: QuiltDemo[] = [
-	{
-		id: "rest",
-		title: "Rest — every cell lit, the panel hidden",
-		note: "Five posts — the newest the 2×2 lead — and seven fillers; data-state=\"lit\" on every cell and data-mode=\"hidden\" on the panel, which still holds its block (3 / 2 here) so nothing moves when it opens.",
-		search: { count: "5 posts", readout: "05" },
-		panel: { mode: "hidden", col: 3, row: 2 },
-	},
-	{
-		id: "hover",
-		title: "Hovered — one post lit, the rest scattered, the card in the freed block",
-		note: "Pointer (or focus) on the post at 1 / 3: the block that avoids it and sits farthest away is 3 / 1, its cells go gone, every other cell rolls faint or gone with its own --scatter-delay, and the panel shows the card face.",
-		search: { count: "5 posts", readout: "05" },
-		panel: { mode: "card", col: 3, row: 1 },
-		lit: ["why-i-joined-fisker"],
-		card: quiltPosts[3],
-	},
-	{
-		id: "browse",
-		title: "Browse — the bar focused and empty",
-		note: "Posts stay lit, fillers go faint, and the block farthest from the bar's left end (3 / 2) opens on the browse face: categories with counts, years, the latest post — each a real link to ?q=.",
-		search: { count: "5 posts", readout: "05", expanded: true },
-		panel: { mode: "browse", col: 3, row: 2 },
-		lit: quiltPosts.map((p) => p.slug),
-		fillersFaint: true,
-	},
-	{
-		id: "results",
-		title: "Results — two hits, the active one ringed",
-		note: "“home” matches two posts. The block hiding the fewest matches that avoids the active post (4 / 3) is 1 / 1, which covers the lead — a block over any of a spanned post's cells takes the whole of it out; the active tile carries data-active, the accent ring; the list marks the query and says why the other matched.",
-		search: { value: "home", count: "2 of 5 posts", readout: "2 / 5", expanded: true },
-		panel: { mode: "results", col: 1, row: 1 },
-		lit: ["no-honey-we-have-a-dashboard-at-home", "mega-desk"],
-		active: "no-honey-we-have-a-dashboard-at-home",
-	},
-];
-const inBlock = (d: QuiltDemo, c: number, r: number, span: [number, number] = [1, 1]) =>
-	d.panel.mode !== "hidden" &&
-	c < d.panel.col + 3 && d.panel.col < c + span[0] && r < d.panel.row + 2 && d.panel.row < r + span[1];
-// A made-up scatter, deterministic per cell, standing in for the engine's.
-const roll = (c: number, r: number, salt: number) => (((r * 5 + c) * 7919 + salt * 104729) % 97) / 97;
-const cellState = (d: QuiltDemo, c: number, r: number, slug?: string, span?: [number, number]): { state: QuiltCellState; delay: number } => {
-	if (!d.lit) return { state: "lit", delay: 0 };
-	if (inBlock(d, c, r, span)) return { state: "gone", delay: Math.round(roll(c, r, 1) * 240) };
-	if (slug && d.lit.includes(slug)) return { state: "lit", delay: 0 };
-	if (!slug && d.fillersFaint) return { state: "faint", delay: Math.round(roll(c, r, 1) * 240) };
-	if (slug && d.fillersFaint) return { state: "lit", delay: 0 };
-	return { state: roll(c, r, 2) < 0.5 ? "gone" : "faint", delay: Math.round(roll(c, r, 1) * 240) };
-};
-
 // Art tokens, for the swatch row: name → what it is for.
 const artTokens = [
 	["--art-plate", "the tile fill — near-black on dark, bone (--gray-300) on light"],
@@ -286,8 +104,7 @@ const artTokens = [
 ] as const;
 
 // Small drawings in the language, one per thing the frame owns. Written here
-// rather than as files in the package, so the art folder holds only what the
-// quilt ships. Each is the template's shape: viewBox 0 0 320 180, token
+// rather than as files in the package. Each is the template's shape: viewBox 0 0 320 180, token
 // colours only, non-scaling strokes, at most one data-motion group.
 const line = 'fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke"';
 const line2 = 'fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke"';
@@ -1146,51 +963,6 @@ const faces = [
 			</Flex>
 		</section>
 
-		<section class="ds-demo__section" id="time-ruler">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">TimeRuler — a ruler on a time scale: ticks, or bars</Heading>
-			<p class="ds-demo__note">
-				One slot per month from <code>from</code> to <code>to</code> (YYYY-MM), the year
-				under each January, and a MARK for every post — a real link to it, named by its
-				title and date, whose hit area is the whole month column. <b>Ticks</b> (the
-				default): a tick per month, a taller lit one per mark, the accent playhead on
-				<code>playhead</code>'s month (a script glides it by setting <code>--at</code>
-				on the root). <b>Bars</b> (<code>variant="bars"</code>): the spec sheet's chart —
-				a mark is an OUTLINED bar its <code>value</code> tall against <code>max</code>
-				(words per post), the mark in <code>focus</code> filled with the accent (the
-				playhead's job; a script moves <code>data-focus</code>), an empty month a tiny
-				tick, a baseline, a scale at the right (<code>max</code> … 0), and the
-				<code>label</code> on a dimension line above. Either way a script dims a mark
-				out of the filter with <code>data-dim</code>. Click a mark here: it is a link.
-				The second of each pair has marks dimmed, as under a filter.
-			</p>
-			<Flex direction="column" gap={6} alignItems="stretch">
-				<TimeRuler from="2023-01" to="2026-12" playhead="2026-02" marks={rulerMarks} />
-				<TimeRuler
-					from="2023-01"
-					to="2026-12"
-					playhead="2025-04"
-					marks={rulerMarks.map((m) => ({ ...m, dim: m.no === "004" || m.no === "002" }))}
-				/>
-				<TimeRuler from="2025-06" to="2026-12" label="since" marks={rulerMarks.filter((m) => m.month >= "2025-06")} />
-				<TimeRuler
-					variant="bars"
-					from="2023-01"
-					to="2026-12"
-					max={1000}
-					label="Timeline · words per post"
-					marks={rulerMarks.map((m) => ({ ...m, focus: m.no === "005" }))}
-				/>
-				<TimeRuler
-					variant="bars"
-					from="2023-01"
-					to="2026-12"
-					max={1000}
-					label="Timeline · words per post"
-					marks={rulerMarks.map((m) => ({ ...m, focus: m.no === "001", dim: m.no !== "001" && m.no !== "005" }))}
-				/>
-			</Flex>
-		</section>
-
 		<section class="ds-demo__section" id="stat-strip">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">StatStrip — hairline-cut stat cells and the accent action</Heading>
 			<p class="ds-demo__note">
@@ -1527,7 +1299,7 @@ assertions:
 		<section class="ds-demo__section" id="art">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Art — tokens and the frame</Heading>
 			<p class="ds-demo__note">
-				The illustration language the post art is drawn in (tokens.overrides.css →
+				The illustration language the plates are drawn in (tokens.overrides.css →
 				ART; <code>ArtFrame</code>; art-frame.css): white 1px line work and flat fills
 				in four colours on a near-black landscape plate. The plate follows the
 				theme: on the light page it is bone (<code>--gray-300</code>) and the ink is
@@ -1536,11 +1308,6 @@ assertions:
 				plate, the edge, the corner, the line weights and the motion, so the whole
 				language retunes in one place. Every file starts from
 				<code>packages/design-system/src/art/_template.svg</code>.
-			</p>
-			<p class="ds-demo__note">
-				<Anchor href="/design-system/art/" arrow="right">The art catalogue</Anchor> shows
-				every post's art and every filler in both themes, with bytes, element count and
-				a play toggle; one piece is <code>/design-system/art#&lt;slug&gt;</code>.
 			</p>
 			<div class="ds-demo__swatches">
 				{artTokens.map(([name, note]) => (
@@ -1606,7 +1373,7 @@ assertions:
 				divides it). Paused at rest — the still frame is the poster — and running on
 				hover, focus, inside a hovered link, or with <code>play</code>
 				(<code>data-art-play</code>). Under reduced motion the loop is 0s and nothing
-				moves. The first frame sits inside a link, the quilt's case. <code>steps</code>
+				moves. The first frame sits inside a link. <code>steps</code>
 				is the one sequence: <code>data-beats="N"</code> (2–8) over <code>&lt;g data-beat&gt;</code>
 				children the host lands one slot apart off one clock — a sixth of the loop each,
 				plus two of hold — earlier beats faint until theirs, a <code>data-ripple</code>
@@ -1893,177 +1660,6 @@ assertions:
 					</ThemePage>
 				))}
 			</div>
-		</section>
-
-		{/* QUILT ---------------------------------------------------------- */}
-		<section class="ds-demo__section" id="quilt">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Quilt · QuiltCell — the grid of art tiles and its states</Heading>
-			<p class="ds-demo__note">
-				<code>&lt;Quilt cols rows colsMd rowsMd&gt;</code> is the grid (quilt.css): the
-				spec sheet's entries on the page, cut by the <code>--quilt-gap</code> /
-				<code>--quilt-row-gap</code> tokens (<code>--space-4</code> / <code>--space-5</code>
-				at ≥ 1024, <code>--space-3</code> / <code>--space-5</code> below), no lines between or
-				round them — five across at ≥ 1024, three at 640–1023 (a cell takes its
-				<code>colMd</code>/<code>rowMd</code> slot; a filler without one drops), and on a
-				phone two columns in DOM order with no fillers.
-				<code>&lt;QuiltCell col row span href label no numeral excerpt&gt;</code> is a post: a
-				link named by its title around a <code>RuleLabel</code> (the number in the accent, the
-				title in caps, two lines reserved so a row's arts line up) and a decorative
-				<code>ArtFrame variant="bare"</code> — no plate, edge or corner. The newest post is
-				the LEAD, <code>span={[2, 2]}</code> at the top-left with its <code>excerpt</code>
-				under the art (at ≥ 640; the full width of a phone, no excerpt); <code>filler
-				file</code> is the same row with a dim <code>F_NN</code> tag over art a step back
-				(<code>--quilt-dim</code>, grey), aria-hidden. The script's contract on a cell:
-				<code>data-state="lit | faint | gone"</code> (the label and the art fade as one),
-				<code>--scatter-delay</code>, <code>data-active</code> (the 1px accent outline round
-				the art). Every state below is set by hand; <code>src/lib/quilt/engine.ts</code>
-				decides them on the page. Resize to 768 and 390 for the other two grids.
-			</p>
-			{quiltDemos.map((d) => (
-				<figure class="ds-demo__quilt" id={`quilt-${d.id}`}>
-					<figcaption class="ds-demo__quilt-cap">
-						<Mono variant="value">{d.title}</Mono>
-						<Mono variant="text">{d.note}</Mono>
-					</figcaption>
-					<SearchBar
-						id={`quilt-${d.id}-search`}
-						label="search"
-						count={d.search.count}
-						readout={d.search.readout}
-						value={d.search.value}
-						expanded={d.search.expanded}
-						hint="/"
-						controls={`quilt-${d.id}-panel-results`}
-					>
-						{chipsDemo.map((c) => (
-							<Chip slot="chips" variant="tab" count={c.count} as="a" href={c.href} data-chip={c.query} aria-current={(d.search.value ?? "") === c.query ? "page" : undefined}>
-								{c.label}
-							</Chip>
-						))}
-					</SearchBar>
-					<Quilt cols={5} rows={3} colsMd={3} rowsMd={4} aria-label={`quilt demo: ${d.id}`}>
-						{quiltPosts.map((p) => {
-							const s = cellState(d, p.col, p.row, p.slug, p.span);
-							return (
-								<QuiltCell
-									col={p.col}
-									row={p.row}
-									colMd={p.colMd}
-									rowMd={p.rowMd}
-									span={p.span}
-									href={`/txt/${p.slug}/`}
-									label={p.title}
-									no={p.no}
-									numeral={p.no.slice(1)}
-									excerpt={p.span ? p.blurb : undefined}
-									state={s.state}
-									delay={s.delay}
-									active={d.active === p.slug}
-								>
-									<ArtFrame svg={artOf(p.slug)} decorative variant="bare" />
-								</QuiltCell>
-							);
-						})}
-						{quiltFillerSlots.map(([c, r, cMd, rMd], i) => {
-							const s = cellState(d, c, r);
-							return (
-								<QuiltCell col={c} row={r} colMd={cMd} rowMd={rMd} filler file={(i % quiltFillers.length) + 1} state={s.state} delay={s.delay}>
-									<ArtFrame svg={quiltFillers[i % quiltFillers.length]} decorative variant="bare" />
-								</QuiltCell>
-							);
-						})}
-						<QuiltPanel
-							id={`quilt-${d.id}-panel`}
-							mode={d.panel.mode}
-							col={d.panel.col}
-							row={d.panel.row}
-							card={d.card ? cardOf(d.card) : cardOf(quiltPosts[0])}
-							browse={browseDemo}
-							results={resultsDemo}
-							nothing={nothingDemo}
-						/>
-					</Quilt>
-				</figure>
-			))}
-		</section>
-
-		<section class="ds-demo__section" id="quilt-panel">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">QuiltPanel — the four faces</Heading>
-			<p class="ds-demo__note">
-				One panel, four faces, <code>data-mode</code> picks: <code>card</code> (a hovered
-				post, or the single hit with its <code>why</code>) — the RULED CARD: the top
-				strip (the category as a <code>Chip</code>, <code>[INDEX] 000005 ·
-				LOG_005.TXT</code>), the big mono number with its readouts beside the title and
-				excerpt, the <code>StatStrip</code> ending in the accent <code>READ →</code> —
-				<code>browse</code>, <code>results</code> (a listbox; the active option is
-				<code>aria-selected</code>), <code>none</code>; <code>hidden</code> fades it out.
-				Every face is the page colour inside the strong hairline, square, no fill.
-				Inside a Quilt it is absolutely positioned on the 3×2 block at
-				<code>--panel-col</code> / <code>--panel-row</code>; here, and on a phone, it is in
-				flow (<code>flow</code>). Text is filled through hooks
-				(<code>data-card="no | index | category | node | rate | minutes | words | month
-				| year | title | blurb | why | link"</code>, <code>data-results</code>,
-				<code>data-none</code>) and a <code>&lt;template data-result-template&gt;</code>
-				holds one empty row.
-			</p>
-			<div class="ds-demo__panels">
-				{(
-					[
-						["card", "card — a single hit, with why"],
-						["browse", "browse"],
-						["results", "results"],
-						["none", "none"],
-					] as const
-				).map(([mode, label]) => (
-					<div class="ds-demo__panel">
-						<Mono variant="value">data-mode="{mode}" — {label}</Mono>
-						<QuiltPanel
-							id={`panel-${mode}`}
-							mode={mode}
-							flow
-							card={cardOf(quiltPosts[1], "matched tag · hair care")}
-							browse={browseDemo}
-							results={resultsDemo}
-							nothing={nothingDemo}
-						/>
-					</div>
-				))}
-			</div>
-		</section>
-
-		<section class="ds-demo__section" id="search-bar">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">SearchBar — the open bar</Heading>
-			<p class="ds-demo__note">
-				<code>&lt;SearchBar id label placeholder count readout hint controls&gt;</code>: no
-				box, no stepper (the − / + sit with the in-focus readout at the foot of /txt). The input row — the search icon in a round outlined ring, a native
-				<code>type="search"</code> input (a combobox over the panel's results listbox,
-				in the mono) on one hairline underline that takes the accent on focus (click
-				into a bar), the <code>readout</code> (the count as drawn: <code>05</code>,
-				<code>2 / 5</code>; <code>data-search-readout</code>, aria-hidden) and the key
-				hint (not drawn without a keyboard) — over the <code>chips</code> slot, a nav of
-				quick filters: each a
-				<code>Chip variant="tab"</code> link to <code>?q=</code> with
-				<code>data-chip</code> and its <code>count</code>, so it is a SEARCH SHORTCUT
-				with scripting off and the script sets the query in place and marks the
-				current one <code>aria-current</code> (the accent underline). <code>count</code>
-				is the live region a reader hears, in full (<code>aria-live="polite"</code>,
-				<code>data-search-count</code>, visually hidden). <code>value</code> and
-				<code>expanded</code> render a state statically. Under 1024 the tabs scroll
-				sideways under a fade at the right edge; under 640 the input is 16px.
-			</p>
-			<Flex direction="column" gap={6} alignItems="stretch">
-				<SearchBar id="search-rest" count="5 posts" readout="05" hint="/">
-					{chipsDemo.map((c) => (
-						<Chip slot="chips" variant="tab" count={c.count} as="a" href={c.href} data-chip={c.query} aria-current={c.query === "" ? "page" : undefined}>{c.label}</Chip>
-					))}
-				</SearchBar>
-				<SearchBar id="search-typed" value="projects" count="1 of 5 posts" readout="1 / 5" hint="/" expanded>
-					{chipsDemo.map((c) => (
-						<Chip slot="chips" variant="tab" count={c.count} as="a" href={c.href} data-chip={c.query} aria-current={c.query === "projects" ? "page" : undefined}>{c.label}</Chip>
-					))}
-				</SearchBar>
-				<SearchBar id="search-plain" label="find" placeholder="no chips, no hint" />
-			</Flex>
 		</section>
 
 		<section class="ds-demo__section">
@@ -2508,7 +2104,7 @@ assertions:
 		border-radius: var(--border-radius-tile);
 		background: var(--swatch);
 	}
-	/* A quilt tile (~230px at the 1200px container, five across) beside a
+	/* A small (230px) frame beside a
 	   hero-width frame: the same file, the same 1px line. */
 	.ds-demo__art-sizes {
 		display: grid;
@@ -2572,45 +2168,6 @@ assertions:
 		.ds-demo__art-sizes {
 			grid-template-columns: minmax(0, 1fr);
 		}
-	}
-
-	/* The quilt demos: a bar over a grid, the pair stacked with the page's
-	   own rhythm; the panel demos side by side, each on the page surface. */
-	.ds-demo__quilt {
-		margin: 0 0 var(--space-8);
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-5);
-	}
-	/* The quilt wants the site's 1200px container, and the catalogue's column
-	   is 624px at 1440 once the fixed token panel has its clearance — so the
-	   figure runs past the column, up to the panel's edge (its width, its
-	   inset and a gap), and stops at the container width. */
-	@media (min-width: 901px) {
-		.ds-demo__quilt {
-			inline-size: min(
-				var(--container-max, 1200px),
-				calc(100vw - var(--demo-panel) - var(--space-4) - var(--space-6) - var(--space-5))
-			);
-		}
-	}
-	.ds-demo__quilt-cap {
-		display: grid;
-		gap: var(--space-2);
-		max-width: var(--measure-note);
-	}
-	.ds-demo__panels {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-		gap: var(--space-4);
-	}
-	.ds-demo__panel {
-		display: grid;
-		align-content: start;
-		gap: var(--space-4);
-		padding: var(--space-4);
-		border: 1px solid var(--hairline);
-		border-radius: var(--border-radius-1);
 	}
 
 	.ds-demo__note {

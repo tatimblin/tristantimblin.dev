@@ -4,7 +4,7 @@
  * the wash, the dot-dash and the second motion group it adds over art
  * pass, and each rule where a scene differs from art (or keeps art's
  * limit) still fires. The glyph fixtures are validate-glyph.test.ts, the
- * art ones tests/post-art.spec.ts. `bun run test:unit`.
+ * art ones validate-art.test.ts. `bun run test:unit`.
  */
 import { describe, expect, test } from "bun:test";
 import { PROFILES, RULES, SCENE_VIEWBOXES, validateArt, validateSvg } from "../../scripts/validate-art.mjs";
@@ -48,7 +48,7 @@ const fixtures: Array<[string, string, string]> = [
 	["a wide panel", RULES.root, wrap("", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">')],
 	["width and height on the root", RULES.root, wrap("", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">')],
 	// element: art's list, nothing more
-	// type: art's voices (a scene's plate may set words; tests/post-art.spec.ts holds a fixture per type rule)
+	// type: art's voices (a scene's plate may set words; validate-art.test.ts holds a fixture per type rule)
 	["a <text> with no voice", RULES.type, wrap('<text x="1" y="1" font-size="4.5" fill="var(--art-ink)">300.733 MHZ</text>')],
 	["a <text> off the scale", RULES.type, wrap('<text class="art-label" x="1" y="1" font-size="5" fill="var(--art-ink)">300.733 MHZ</text>')],
 	["a <text> that names its face", RULES.type, wrap('<text class="art-label" x="1" y="1" font-size="4.5" font-family="Mondwest" fill="var(--art-ink)">300.733 MHZ</text>')],

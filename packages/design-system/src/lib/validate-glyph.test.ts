@@ -3,7 +3,7 @@
  * (packages/design-system/scripts/validate-art.mjs): a clean glyph passes,
  * and each rule where a glyph differs from art still fires — a validator that
  * passes everything is the silent failure. The art profile's fixtures are
- * tests/post-art.spec.ts. `bun run test:unit`.
+ * validate-art.test.ts. `bun run test:unit`.
  */
 import { describe, expect, test } from "bun:test";
 import {

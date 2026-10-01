@@ -11,16 +11,6 @@
  * credit the page shows beside the scene (Scene.astro reads it through the
  * registry). Pure string functions, no node imports, so the registry that
  * ships can use them.
- *
- * A POST'S ART may be a baked scene too: its source is
- * `tools/scenes/posts/<slug>/scene.ts` and its file is the post's own
- * `src/content/txt/<slug>.svg`, under the same header —
- *
- *   <!-- baked from tools/scenes/posts/asserting-on-agent-behavior/scene.ts (sources …) — edit the source -->
- *
- * — which is how the post-art gate (tests/post-art.spec.ts, `validate:art`)
- * tells a baked post from a hand-drawn one and holds it to the scene
- * profile instead.
  */
 
 export interface BakedHeader {
@@ -36,10 +26,8 @@ export interface BakedHeader {
 
 /** Where the sources live, relative to the repo root. */
 export const SCENES_SOURCE = "tools/scenes";
-/** The collection under it whose sources bake to a post's art, `src/content/txt/<slug>.svg`. */
-export const POST_SCENES = "posts";
 
-const FROM = /^\s*<!-- baked from tools\/scenes\/((?:posts\/)?[\w-]+)\/scene\.ts \(sources ([0-9a-f]+)\) — edit the source -->/;
+const FROM = /^\s*<!-- baked from tools\/scenes\/([\w-]+)\/scene\.ts \(sources ([0-9a-f]+)\) — edit the source -->/;
 const CREDIT = /^\s*<!-- credit: (.+?) -->/m;
 
 /** The header lines for a bake. */
@@ -58,6 +46,3 @@ export function bakedFrom(source: string): BakedHeader | null {
 	const name = from.slice(from.lastIndexOf("/") + 1);
 	return credit ? { source: from, name, hash: m[2], credit } : { source: from, name, hash: m[2] };
 }
-
-/** Whether a baked header's source is a post's art (`posts/<slug>`). */
-export const isPostScene = (h: BakedHeader): boolean => h.source === `${POST_SCENES}/${h.name}`;

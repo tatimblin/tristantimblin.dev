@@ -37,14 +37,6 @@
  * see is a dependency's version (a d3-geo update that moves a coastline
  * by a tenth), which is what `bun run scenes:check` is for.
  *
- * A POST'S ART as a scene: the same recipe on the plate (`viewBox: "0 0
- * 320 180"`), at `tools/scenes/posts/<slug>/scene.ts`, bakes to the post's
- * own `src/content/txt/<slug>.svg` — the file the quilt tile and the post
- * page already load — for a panel the hand-drawn art language cannot hold
- * (a wash, a clipPath, a steps walk). `loadScenes(root, POST_SCENES)`
- * lists those; the bake writes them under the same header; the post-art
- * gate reads the header and holds the file to the scene profile.
- *
  * Node-only: the loader reads the sources directory, so nothing that
  * ships imports this module.
  */
@@ -56,7 +48,7 @@ import { pathToFileURL } from "node:url";
 import { type Kit, kit } from "../lib/micro";
 import { type BakedHeader, bakedHeader, SCENES_SOURCE } from "./header";
 
-export { bakedFrom, bakedHeader, isPostScene, POST_SCENES, SCENES_SOURCE } from "./header";
+export { bakedFrom, bakedHeader, SCENES_SOURCE } from "./header";
 export type { BakedHeader } from "./header";
 
 /** The roots the scene profile allows: the post plate, or the square panel. */
@@ -109,9 +101,9 @@ export interface SceneSource {
 	recipe: SceneRecipe;
 	/** the absolute path of the source's directory */
 	dir: string;
-	/** the file's name: the scene's, or the post's slug */
+	/** the file's name: the scene's */
 	name: string;
-	/** the source's path under `tools/scenes`: `name`, or `posts/<name>` */
+	/** the source's path under `tools/scenes`: its name */
 	source: string;
 }
 
@@ -126,18 +118,16 @@ export async function bake({ recipe, dir, name, source }: SceneSource): Promise<
 
 /**
  * Every scene under `root` (`tools/scenes`): each `<name>/scene.ts`, by
- * name, sorted — or, with a `collection` (`POST_SCENES`), each
- * `<collection>/<name>/scene.ts`, the sources that bake to a post's art.
+ * name, sorted.
  */
-export async function loadScenes(root: string, collection?: string): Promise<Map<string, SceneSource>> {
+export async function loadScenes(root: string): Promise<Map<string, SceneSource>> {
 	const out = new Map<string, SceneSource>();
-	const base = collection ? join(root, collection) : root;
-	if (!existsSync(base)) return out;
-	for (const name of readdirSync(base).sort()) {
-		const dir = join(base, name);
+	if (!existsSync(root)) return out;
+	for (const name of readdirSync(root).sort()) {
+		const dir = join(root, name);
 		const file = join(dir, "scene.ts");
 		if (!statSync(dir).isDirectory() || !existsSync(file)) continue;
-		const source = collection ? `${collection}/${name}` : name;
+		const source = name;
 		const mod = await import(pathToFileURL(file).href);
 		const r = mod.default;
 		if (!r || typeof r.draw !== "function" || typeof r.viewBox !== "string") {

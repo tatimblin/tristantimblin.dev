@@ -6,10 +6,10 @@
 // Three languages share one scanner and one set of rules, and differ only in
 // their constants, which a PROFILE holds:
 //
-//   art    — the 320×180 post-art plates (src/content/txt/<slug>.svg, the
-//            fillers in src/art/), rendered through ArtFrame. The rules are the
-//            CONVENTIONS "Art" section and the comment in src/art/_template.svg,
-//            made mechanical; tests/post-art.spec.ts holds a fixture per rule.
+//   art    — the 320×180 plates (src/art/: the template, the type specimen),
+//            rendered through ArtFrame. The rules are the CONVENTIONS "Art"
+//            section and the comment in src/art/_template.svg, made
+//            mechanical; src/lib/validate-art.test.ts holds a fixture per rule.
 //            A plate may carry TYPE — <text>/<tspan> in one of four voices,
 //            a class that the frame's CSS sets the face from (TYPE below).
 //   glyph  — the micrographics (src/glyphs/<name>.svg): 48×32 or 96-wide
@@ -30,15 +30,13 @@
 //   validateArt(source, { slug: "mega-desk" }) → string[]         // the art profile
 //
 //   bun packages/design-system/scripts/validate-art.mjs [--profile glyph|scene] <file…>
-//   bun run validate:art src/content/txt/mega-desk.svg      // exit 1 on a violation
+//   bun run validate:art packages/design-system/src/art/_template.svg   // exit 1 on a violation
 //   bun run validate:glyph packages/design-system/src/glyphs/*.svg
 //   bun run validate:scene packages/design-system/src/scenes/*.svg
 //
-// Without --profile the CLI reads a file's BAKE HEADER: a post's art baked
-// from tools/scenes/posts/<slug>/scene.ts carries the scene bake's header
-// and is held to the scene profile (`profileOf`); a file with no header is
-// art. So `validate:art src/content/txt/*.svg` is the gate for every post
-// file, baked or hand-drawn.
+// Without --profile the CLI reads a file's BAKE HEADER: a baked scene or
+// glyph is held to its own profile (`profileOf`); a file with no header is
+// art.
 //
 // Every violation is one line, `<rule>: <element> line N: <what>`, where
 // <rule> is one of RULES below, so a reader (or the spec) knows which rule

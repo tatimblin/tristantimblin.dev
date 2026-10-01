@@ -328,7 +328,7 @@ const kinds = (entries: Entry[]) =>
 					<Mono slot="meta" variant="text">one art plate · the kit's type + module helpers</Mono>
 				</RuleLabel>
 				<p class="glyph-sheet-page__note">
-					Six modules of a HUD module sheet on one 320×180 art plate, drawn with <code>kit("art")</code>: a node label over a rule (<code>k.text</code>, <code>k.rule</code>, <code>ids</code>), a big thin numeral (<code>art-numeral</code>), a bracketed state and a routed pill (<code>k.bracketLabel</code>), a section head over a dotted rule with a readout (<code>k.section</code>, <code>k.readout</code>), a line glyph with its fields (<code>part()</code>), and the bold shapes, placed on <code>grid(3, 2, 12, 14)</code>. It passes the art profile. At the hero width and at a quilt tile's, on each page.
+					Six modules of a HUD module sheet on one 320×180 art plate, drawn with <code>kit("art")</code>: a node label over a rule (<code>k.text</code>, <code>k.rule</code>, <code>ids</code>), a big thin numeral (<code>art-numeral</code>), a bracketed state and a routed pill (<code>k.bracketLabel</code>), a section head over a dotted rule with a readout (<code>k.section</code>, <code>k.readout</code>), a line glyph with its fields (<code>part()</code>), and the bold shapes, placed on <code>grid(3, 2, 12, 14)</code>. It passes the art profile. At the hero width and at a small tile's, on each page.
 				</p>
 				<div class="glyph-specimen">
 					{(["dark", "light"] as const).map((t) => (
@@ -527,8 +527,8 @@ const kinds = (entries: Entry[]) =>
 		text-overflow: ellipsis;
 	}
 
-	/* THE TYPE SPECIMEN — the plate at the hero width (the art catalogue's
-	 * 720) and at a quilt tile's (230), side by side where there is room. */
+	/* THE TYPE SPECIMEN — the plate at the hero width (720) and at a
+	 * small tile's (230), side by side where there is room. */
 	.glyph-specimen {
 		display: grid;
 		gap: var(--space-5);

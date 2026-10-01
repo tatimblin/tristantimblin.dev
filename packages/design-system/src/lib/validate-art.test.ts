@@ -1,131 +1,15 @@
-import { test, expect } from "@playwright/test";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import {
-	validateArt,
-	validateSvg,
-	profileOf,
-	slugOf,
-	PROFILES,
-	RULES,
-	BUDGET,
-	TYPE_SIZES,
-	VIEWBOX,
-} from "../packages/design-system/scripts/validate-art.mjs";
-import { bakedFrom, isPostScene, POST_SCENES, SCENES_SOURCE, sourceHash } from "../packages/design-system/src/scenes/recipe";
-
 /**
- * POST ART.
- *
- * Every artwork — a post's `src/content/txt/<slug>.svg`, a filler in the
- * design-system package — is a drawing in one language, and the frame, the
- * tokens and the motion CSS assume it: a file that carries its own colours,
- * its own <style> or an <animate> renders, but outside the language, and the
- * page has no way to say so. The validator
- * (packages/design-system/scripts/validate-art.mjs) is that way; this spec
- * runs it over every file that ships and, with one fixture per rule, checks
- * that each rule still fires — a validator that passes everything is the
- * silent failure here.
- *
- * A post's art may be a BAKED SCENE — `tools/scenes/posts/<slug>/scene.ts`
- * baked by `bun run scenes:bake` to the same `<slug>.svg` — which its bake
- * header says. Such a file is held to the scene profile (a wash, a
- * clipPath, two motions) on the plate, and to freshness: the header's hash
- * is the hash of its source directory today, so an edited source fails
- * here until it is re-baked. A file with no header is hand-drawn art.
- *
- * Static checks on the source: no browser, no page.
+ * The art profile of the SVG validator
+ * (packages/design-system/scripts/validate-art.mjs): one fixture per rule,
+ * each of which must fire — and only it — so a validator that passes
+ * everything cannot slip by. The glyph fixtures are validate-glyph.test.ts,
+ * the scene ones validate-scene.test.ts. `bun run test:unit`.
  */
-
-const POSTS = "src/content/txt";
-const FILLERS = "packages/design-system/src/art";
-const POST_SOURCES = join(SCENES_SOURCE, POST_SCENES);
-
-const svgsIn = (dir: string) =>
-	readdirSync(dir)
-		.filter((f) => f.endsWith(".svg"))
-		.sort()
-		.map((f) => join(dir, f));
+import { describe, expect, test } from "bun:test";
+import { BUDGET, PROFILES, RULES, TYPE_SIZES, validateArt, validateSvg } from "../../scripts/validate-art.mjs";
 
 /** A violation's rule is the text before its first colon. */
 const ruleOf = (violation: string) => violation.slice(0, violation.indexOf(":"));
-
-test.describe("post art: the files that ship", () => {
-	const files = [...svgsIn(POSTS), ...svgsIn(FILLERS)];
-
-	test("there is art to validate", () => {
-		// The template at least — the glob must never quietly meet nothing.
-		expect(files).toContain(join(FILLERS, "_template.svg"));
-	});
-
-	for (const file of files) {
-		test(`${file} passes the validator`, () => {
-			const source = readFileSync(file, "utf8");
-			const baked = profileOf(source);
-			const violations = baked
-				? validateSvg(source, { profile: baked, slug: slugOf(file) })
-				: validateArt(source, { slug: slugOf(file) });
-			expect(violations, violations.join("\n")).toEqual([]);
-		});
-	}
-});
-
-test.describe("post art: a baked scene is a post's art too", () => {
-	const baked = svgsIn(POSTS)
-		.map((file) => ({ file, source: readFileSync(file, "utf8") }))
-		.filter(({ source }) => bakedFrom(source) !== null);
-	const sources = existsSync(POST_SOURCES)
-		? readdirSync(POST_SOURCES).filter((d) => existsSync(join(POST_SOURCES, d, "scene.ts"))).sort()
-		: [];
-
-	for (const { file, source } of baked) {
-		test(`${file} is a fresh bake of ${POST_SOURCES}/${slugOf(file)}/, on the plate, under the scene profile`, () => {
-			const from = bakedFrom(source)!;
-			expect(from.name).toBe(slugOf(file));
-			expect(isPostScene(from), `${file} says it was baked from ${from.source}, not the posts collection`).toBe(true);
-			expect(profileOf(source)).toBe(PROFILES.scene);
-			// A post's art is the plate: the frame and the quilt's cells are 16:9.
-			expect(/viewBox="([^"]+)"/.exec(source)?.[1]).toBe(VIEWBOX);
-			const dir = join(POST_SOURCES, from.name);
-			expect(existsSync(join(dir, "scene.ts")), `${file} says it was baked from ${dir}/scene.ts, which does not exist (orphaned; \`bun run scenes:bake\`)`).toBe(true);
-			expect(from.hash, `${file} is stale: ${dir}/ changed since it was baked (\`bun run scenes:bake\`)`).toBe(sourceHash(dir));
-		});
-	}
-
-	test("every post scene source has been baked", () => {
-		const names = baked.map(({ file }) => slugOf(file));
-		for (const name of sources) {
-			expect(names, `${POST_SOURCES}/${name}/scene.ts has no ${POSTS}/${name}.svg (\`bun run scenes:bake\`)`).toContain(name);
-		}
-	});
-
-	test("a hand-drawn post art is art, a baked one a scene: the header decides", () => {
-		const plain = wrap("");
-		expect(profileOf(plain)).toBeNull();
-		const header = "<!-- baked from tools/scenes/posts/fx/scene.ts (sources 0123456789abcdef) — edit the source -->\n";
-		expect(profileOf(header + plain)).toBe(PROFILES.scene);
-		expect(bakedFrom(header + plain)).toEqual({ source: "posts/fx", name: "fx", hash: "0123456789abcdef" });
-		// A baked post file may carry what art refuses: the wash, and two motions.
-		const scene = header + wrap(`<rect x="0" y="0" width="60" height="180" fill="color-mix(in oklab, var(--art-green) 18%, transparent)" /><g data-motion="blink"><circle cx="90" cy="30" r="3" fill="var(--art-coral)" /></g><g data-motion="steps" data-beats="2">${beat(0)}${beat(1)}</g>`);
-		expect(validateSvg(scene, { profile: profileOf(scene)!, slug: SLUG })).toEqual([]);
-		expect(validateArt(scene, { slug: SLUG }).length).toBeGreaterThan(0);
-	});
-});
-
-test.describe("post art: every published post has its art", () => {
-	test("every non-draft post has a sibling .svg", () => {
-		const posts = readdirSync(POSTS)
-			.filter((f) => f.endsWith(".mdx"))
-			.sort()
-			.filter((f) => {
-				const head = readFileSync(join(POSTS, f), "utf8").split(/^---\s*$/m)[1] ?? "";
-				return !/^\s*draft:\s*true\s*$/m.test(head);
-			});
-		const missing = posts.filter((f) => !existsSync(join(POSTS, f.replace(/\.mdx$/, ".svg"))));
-
-		expect(missing, `no art for: ${missing.join(", ")}`).toEqual([]);
-	});
-});
 
 // --- One fixture per rule ---------------------------------------------------
 
@@ -273,7 +157,7 @@ const fixtures: Array<[string, string, string]> = [
 	["character data between tags", RULES.markup, wrap("stray words")],
 ];
 
-test.describe("post art: each rule fires, and only it", () => {
+describe("the art profile: each rule fires, and only it", () => {
 	test("the clean fixture passes", () => {
 		expect(validateArt(wrap(""), { slug: SLUG })).toEqual([]);
 	});

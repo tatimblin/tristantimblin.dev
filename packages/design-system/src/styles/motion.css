@@ -146,7 +146,7 @@
 }
 
 /* THE ART FRAME plays under the pointer, under focus within it, inside a
- * hovered or focused link (the quilt's cells), or with data-art-play on the
+ * hovered or focused link, or with data-art-play on the
  * frame. */
 .ds-art-frame:hover [data-motion],
 .ds-art-frame:focus-within [data-motion],

@@ -5,13 +5,6 @@
 // and a violation is exit 1 with nothing changed. A file in src/scenes/
 // with no header is not the bake's and is never touched.
 //
-// The POSTS collection bakes the same way to the site's post art: every
-// tools/scenes/posts/<slug>/scene.ts becomes src/content/txt/<slug>.svg —
-// the file the quilt and the post page load — on the plate (a post's art
-// is 320×180), under the same header. A hand-drawn post art there has no
-// header and is never touched; a baked one whose source is gone is removed
-// like any orphan (and the post-art spec then says the post has no art).
-//
 //   bun run scenes:bake            write what is stale; remove a baked file whose source is gone
 //   bun run scenes:check           exit 1 if any baked file is stale or orphaned, writing nothing
 //
@@ -26,45 +19,24 @@
 import { readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { bake, bakedFrom, loadScenes, POST_SCENES, SCENES_SOURCE, type SceneSource } from "../src/scenes/recipe";
-import { PROFILES, VIEWBOX, validateSvg } from "./validate-art.mjs";
+import { bake, bakedFrom, loadScenes, SCENES_SOURCE } from "../src/scenes/recipe";
+import { PROFILES, validateSvg } from "./validate-art.mjs";
 
 const ROOT = resolve(fileURLToPath(import.meta.url), "../../../..");
 const SCENES = resolve(fileURLToPath(import.meta.url), "../../src/scenes");
 const SOURCES = resolve(ROOT, SCENES_SOURCE);
-/** Where a post's art lives: the collection's own directory, beside the post. */
-export const POST_ART = "src/content/txt";
 const rel = (file: string) => relative(process.cwd(), file);
-
-/** One bake: a set of sources and the directory their files go to. */
-interface Collection {
-	sources: Map<string, SceneSource>;
-	out: string;
-	/** a post's art is the plate; a package scene is the plate or the panel */
-	plateOnly: boolean;
-}
 
 export async function main(args: string[]): Promise<number> {
 	const check = args.includes("--check");
-	const collections: Collection[] = [
-		{ sources: await loadScenes(SOURCES), out: SCENES, plateOnly: false },
-		{ sources: await loadScenes(SOURCES, POST_SCENES), out: resolve(ROOT, POST_ART), plateOnly: true },
-	];
-	let code = 0;
-	for (const c of collections) code = Math.max(code, await bakeCollection(c, check));
-	return code;
-}
-
-async function bakeCollection({ sources, out, plateOnly }: Collection, check: boolean): Promise<number> {
+	const sources = await loadScenes(SOURCES);
+	const out = SCENES;
 	// Bake every source in memory and validate before touching the disk.
 	const baked = new Map<string, string>();
 	let bad = 0;
 	for (const [name, source] of sources) {
 		const svg = await bake(source);
 		const violations = validateSvg(svg, { profile: PROFILES.scene, slug: name });
-		if (plateOnly && source.recipe.viewBox !== VIEWBOX) {
-			violations.push(`root: <svg> line 1: a post's art is the plate, viewBox "${VIEWBOX}" (got "${source.recipe.viewBox}"); the frame and the quilt's cells are 16:9`);
-		}
 		if (violations.length) {
 			bad++;
 			console.log(`FAIL  ${SCENES_SOURCE}/${source.source}/scene.ts\n${violations.map((v) => `  ${v}`).join("\n")}`);
