@@ -1,12 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <!--
+    A fat coral ribbon of three bands runs in from the left and folds back
+    on itself; an ink puck rides the outer band, and a dashed lead runs out
+    of the fold's heart to an ink spark. Coral-led.
+  -->
   <g>
-    <path d="M -10 70 H 180 A 40 40 0 0 1 180 150 H -10 V 144 H 180 A 34 34 0 0 0 180 76 H -10 Z" fill="var(--art-coral)" />
-    <path d="M -10 94 H 180 A 16 16 0 0 1 180 126 H -10" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
-    <circle cx="100" cy="73" r="5" fill="var(--art-ink)" />
-    <path d="M 220 110 H 330" fill="none" stroke="var(--art-ink-2)" stroke-dasharray="4 4" class="art-line" vector-effect="non-scaling-stroke" />
-    <circle cx="220" cy="110" r="2.5" fill="var(--art-ink)" />
-    <circle cx="260" cy="40" r="2" fill="var(--art-ink)" />
-    <circle cx="300" cy="150" r="3" fill="var(--art-coral)" />
-    <circle cx="60" cy="30" r="1.5" fill="var(--art-ink)" />
+    <path d="M -10 54 H 176 A 50 50 0 0 1 176 154 H -10 V 147 H 176 A 43 43 0 0 0 176 61 H -10 Z M -10 68 H 176 A 36 36 0 0 1 176 140 H -10 V 133 H 176 A 29 29 0 0 0 176 75 H -10 Z M -10 82 H 176 A 22 22 0 0 1 176 126 H -10 V 119 H 176 A 15 15 0 0 0 176 89 H -10 Z" fill="var(--art-coral)" />
+    <path d="M 89 59 a 7 7 0 1 0 14 0 a 7 7 0 1 0 -14 0 Z M 93.5 59 a 2.5 2.5 0 1 0 5 0 a 2.5 2.5 0 1 0 -5 0 Z" fill="var(--art-ink)" fill-rule="evenodd" />
+    <line x1="180" y1="104" x2="262" y2="104" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4" />
+    <circle cx="176" cy="104" r="2.5" fill="var(--art-ink)" />
+    <g transform="translate(241.2 76.8) scale(1.7)">
+      <polygon points="25.29,5.53 25.78,11.87 30.79,7.83 27.73,13.49 34.42,12.7 28.5,15.91 34.48,18.84 27.84,18.35 31.98,24.83 25.95,20.05 25.73,26.51 23.45,20.47 20.5,24.1 21.12,19.46 15.18,21.93 19.71,17.36 13.07,16.23 19.66,14.82 15.22,10.61 20.98,12.66 19.48,6.61 23.27,11.56" fill="var(--art-ink)" />
+    </g>
+    <circle cx="250" cy="36" r="1.5" fill="var(--art-ink)" />
+    <circle cx="46" cy="158" r="3" fill="var(--art-coral)" />
   </g>
 </svg>
