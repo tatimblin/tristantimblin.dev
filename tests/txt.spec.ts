@@ -163,6 +163,48 @@ test.describe("/txt/", () => {
 		});
 	}
 
+	for (const width of [1440, 375]) {
+		test(`READ's label starts on the title's and the excerpt's x at ${width}${width < 640 ? ", READ bleeding to the viewport edge" : ""}`, async ({
+			page,
+		}) => {
+			await page.setViewportSize({ width, height: width < 640 ? 812 : 900 });
+			await page.goto("/txt/");
+			const m = await page.evaluate(() => {
+				/** The left x of an element's first non-blank text node. */
+				const textX = (el: Element) => {
+					const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+						acceptNode: (n) => (n.textContent!.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP),
+					});
+					const range = document.createRange();
+					range.selectNodeContents(walker.nextNode()!);
+					return range.getClientRects()[0].left;
+				};
+				const post = document.querySelector(".stack__post[data-open]")!;
+				const box = post.getBoundingClientRect();
+				const read = post.querySelector(".stack__read")!;
+				return {
+					title: textX(post.querySelector(".stack__title")!),
+					excerpt: textX(post.querySelector(".stack__excerpt")!),
+					label: textX(read),
+					readLeft: read.getBoundingClientRect().left,
+					readBottom: read.getBoundingClientRect().bottom,
+					nextTop: post.nextElementSibling!.getBoundingClientRect().top,
+					rule: box.left + box.width / 2,
+					scrollWidth: document.documentElement.scrollWidth,
+					clientWidth: document.documentElement.clientWidth,
+				};
+			});
+			expect(Math.abs(m.excerpt - m.title)).toBeLessThanOrEqual(1);
+			expect(Math.abs(m.label - m.title)).toBeLessThanOrEqual(1);
+			// READ sits on the column rule (desktop) or the viewport's edge
+			// (phone), its foot on the next post's top.
+			expect(Math.abs(m.readLeft - (width < 640 ? 0 : m.rule))).toBeLessThanOrEqual(1);
+			expect(Math.abs(m.readBottom - m.nextTop)).toBeLessThanOrEqual(1);
+			// The bleed never scrolls the page sideways.
+			expect(m.scrollWidth).toBeLessThanOrEqual(m.clientWidth);
+		});
+	}
+
 	test("a still pointer opens nothing: the open post changes only when the pointer moves", async ({
 		page,
 	}) => {
