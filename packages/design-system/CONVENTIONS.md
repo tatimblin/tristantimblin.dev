@@ -46,10 +46,15 @@ import Button from "@whois/design-system/Button";
 </Grid>
 ```
 
-> **The CSS is global, once.** `Layout.astro` imports
+> **The CSS is global, once — mostly.** `Layout.astro` imports
 > `@whois/design-system/tokens.css` and then `@whois/design-system/styles.css`;
-> no page or layout imports either again. Every page renders with the whole
-> package's styles, in two cascade layers (below).
+> no page or layout imports either again. Every page renders with the
+> package's shared styles, in two cascade layers (below). The exception is
+> CSS whose components only the catalogue and the playgrounds render (the
+> micrographics, the spec-sheet labels, `StatStrip`, `Button`, `Knobs`,
+> `ThemePage`): each such component imports its own file in its frontmatter,
+> so Astro ships it only on a page that renders one. Those files wrap their
+> rules in `@layer ds.components { … }`, so they land in the same layer.
 
 **2. Cascade layers.** The package's CSS sits in `@layer ds.components, ds.roles`
 (`src/styles/index.css`). The *roles* — heading, body, caps, numeric — compose on
@@ -132,7 +137,7 @@ Work top-down. Stop at the first rule that matches.
 | `src/tokens/tokens.generated.css` | **Never hand-edit.** It's generated from the upstream package. Regenerate with `bun scripts/gen-tokens.mjs` after `bun update @maximeheckel/design-system`. |
 | `src/tokens/tokens.overrides.css` | The **only** place to retune DS token *values* for this site (it wins over generated), and where the site's own tokens live: the type roles and scale steps, the motion vocabulary, the INSTRUMENT UI block (on the theme classes), the ART block. |
 | `src/tokens/bridge.css` | Edit to add a legacy-name alias (e.g. mapping a site/Web-Component `--color-*` name onto a DS token). |
-| `src/components/*.astro`, `src/styles/*.css` | Edit freely: the package is this site's. For a component that is still a port (`Grid`, `Flex`, `List`, `Anchor`, `Icon`, `VisuallyHidden`) keep the prop names. New component ⇒ add its `@import` to `src/styles/index.css` (in a layer) **and** a section to the catalogue page. |
+| `src/components/*.astro`, `src/styles/*.css` | Edit freely: the package is this site's. For a component that is still a port (`Grid`, `Flex`, `List`, `Anchor`, `Icon`, `VisuallyHidden`) keep the prop names. New component ⇒ add its `@import` to `src/styles/index.css` (in a layer) — or, while only the catalogue renders it, import the file from the component wrapped in `@layer ds.components` — **and** a section to the catalogue page. |
 | `src/lib/*.ts` | Client helpers a widget's script imports; keep them DOM-free at import time. |
 
 ---
@@ -1309,7 +1314,9 @@ visual or a new token in `tokens.overrides.css` with its reason.
 
 ### After adding a component
 
-1. Add `@import "./<name>.css" layer(ds.components);` to `src/styles/index.css`.
+1. Add `@import "./<name>.css" layer(ds.components);` to `src/styles/index.css`
+   (or, for a catalogue-only component, `import "../styles/<name>.css";` in
+   its frontmatter with the file's rules in `@layer ds.components { … }`).
 2. Add a labeled section to `src/pages/design-system.astro` showing every variant.
 3. Add it to the components list and, if it takes slots, the inventory above.
 4. Verify in the browser (`/design-system`, both themes) and confirm no

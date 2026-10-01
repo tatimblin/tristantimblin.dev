@@ -14,92 +14,95 @@
  * and the disabled state are control.css's. This file is the box and the
  * colour. The prop API — variant, inverted, rounded, the icon slots — is
  * the DS's, unchanged. */
+/* Imported by its component, not by styles/index.css, so it ships only
+ * on the pages that render one; in ds.components as if it were. */
+@layer ds.components {
+	.ds-button {
+		user-select: none;
+		display: inline-flex;
+		justify-content: center;
+		align-items: center;
+		gap: var(--space-1);
+		flex-shrink: 0;
+		box-sizing: border-box;
+		border: 1px solid transparent;
+		white-space: nowrap;
+		block-size: var(--space-6);
+		inline-size: max-content;
+		padding: 0 var(--space-4);
+		border-radius: var(--border-radius-1);
+		transition:
+			background var(--duration-swap) var(--ease-reveal),
+			color var(--duration-swap) var(--ease-reveal),
+			transform var(--duration-swap) var(--ease-reveal);
 
-.ds-button {
-	user-select: none;
-	display: inline-flex;
-	justify-content: center;
-	align-items: center;
-	gap: var(--space-1);
-	flex-shrink: 0;
-	box-sizing: border-box;
-	border: 1px solid transparent;
-	white-space: nowrap;
-	block-size: var(--space-6);
-	inline-size: max-content;
-	padding: 0 var(--space-4);
-	border-radius: var(--border-radius-1);
-	transition:
-		background var(--duration-swap) var(--ease-reveal),
-		color var(--duration-swap) var(--ease-reveal),
-		transform var(--duration-swap) var(--ease-reveal);
+		background: var(--button-background, transparent);
+		color: var(--button-color, var(--text-primary));
+		transform: scale(var(--button-scale, 1)) translateZ(0);
+	}
 
-	background: var(--button-background, transparent);
-	color: var(--button-color, var(--text-primary));
-	transform: scale(var(--button-scale, 1)) translateZ(0);
-}
+	.ds-button svg {
+		width: 1.25em;
+		height: 1.25em;
+	}
 
-.ds-button svg {
-	width: 1.25em;
-	height: 1.25em;
-}
+	.ds-button:active:not(:disabled) {
+		--button-scale: 0.97;
+	}
 
-.ds-button:active:not(:disabled) {
-	--button-scale: 0.97;
-}
+	/* Icon wrappers (Button.tsx wraps start/endIcon in a Flex). */
+	.ds-button__start-icon,
+	.ds-button__end-icon {
+		display: flex;
+	}
 
-/* Icon wrappers (Button.tsx wraps start/endIcon in a Flex). */
-.ds-button__start-icon,
-.ds-button__end-icon {
-	display: flex;
-}
+	/* hasIcon: the icon side pulls in a step so the icon sits optically flush. */
+	.ds-button--has-icon-startIcon {
+		padding-inline-start: var(--space-3);
+	}
+	.ds-button--has-icon-endIcon {
+		padding-inline-end: var(--space-3);
+	}
 
-/* hasIcon: the icon side pulls in a step so the icon sits optically flush. */
-.ds-button--has-icon-startIcon {
-	padding-inline-start: var(--space-3);
-}
-.ds-button--has-icon-endIcon {
-	padding-inline-end: var(--space-3);
-}
+	/* variant: primary */
+	.ds-button--variant-primary {
+		--button-background: var(--accent);
+		--button-color: var(--on-accent);
+	}
+	.ds-button--variant-primary:hover:not(:disabled),
+	.ds-button--variant-primary:focus-visible {
+		--button-background: var(--accent-hover);
+	}
 
-/* variant: primary */
-.ds-button--variant-primary {
-	--button-background: var(--accent);
-	--button-color: var(--on-accent);
-}
-.ds-button--variant-primary:hover:not(:disabled),
-.ds-button--variant-primary:focus-visible {
-	--button-background: var(--accent-hover);
-}
+	/* variant: secondary */
+	.ds-button--variant-secondary {
+		--button-background: var(--wash-2);
+		--button-color: var(--text-primary);
+	}
+	.ds-button--variant-secondary:hover:not(:disabled),
+	.ds-button--variant-secondary:focus-visible {
+		--button-background: var(--wash-3);
+	}
 
-/* variant: secondary */
-.ds-button--variant-secondary {
-	--button-background: var(--wash-2);
-	--button-color: var(--text-primary);
-}
-.ds-button--variant-secondary:hover:not(:disabled),
-.ds-button--variant-secondary:focus-visible {
-	--button-background: var(--wash-3);
-}
+	/* variant: tertiary */
+	.ds-button--variant-tertiary {
+		--button-background: transparent;
+		--button-color: var(--text-secondary);
+	}
+	.ds-button--variant-tertiary:hover:not(:disabled),
+	.ds-button--variant-tertiary:focus-visible {
+		--button-background: var(--wash-1);
+		--button-color: var(--text-primary);
+	}
 
-/* variant: tertiary */
-.ds-button--variant-tertiary {
-	--button-background: transparent;
-	--button-color: var(--text-secondary);
-}
-.ds-button--variant-tertiary:hover:not(:disabled),
-.ds-button--variant-tertiary:focus-visible {
-	--button-background: var(--wash-1);
-	--button-color: var(--text-primary);
-}
+	/* rounded → a pill button */
+	.ds-button--rounded-true {
+		border-radius: var(--border-radius-pill);
+	}
 
-/* rounded → a pill button */
-.ds-button--rounded-true {
-	border-radius: var(--border-radius-pill);
-}
-
-/* compoundVariants */
-.ds-button--variant-primary.ds-button--inverted-true {
-	--button-background: var(--text-primary);
-	--button-color: var(--background);
+	/* compoundVariants */
+	.ds-button--variant-primary.ds-button--inverted-true {
+		--button-background: var(--text-primary);
+		--button-color: var(--background);
+	}
 }

@@ -1,141 +1,145 @@
 /* Knobs · KnobGroup · Knob — the control panel of a playground. A card
  * surface in the hairline with the deep shadow (it floats over the page), the
  * UI face at the small step. The page places it, or says `floating`. */
-.ds-knobs {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-3);
-	box-sizing: border-box;
-	max-block-size: 100%;
-	padding: var(--space-4);
-	background: var(--card-background);
-	border: 1px solid var(--hairline);
-	border-radius: var(--border-radius-2);
-	box-shadow: var(--shadow-3);
-	color: var(--text-primary);
-	font-family: var(--font-ui);
-	font-size: var(--font-size-1);
-}
-/* floating — the playground's panel: fixed to the top-right corner, a
- * --space-14 column as tall as the viewport lets it be (the body scrolls);
- * at the compact step (the widget grid's 900) a sheet docked across the
- * bottom, its top corners rounded. A page that must keep its content clear
- * of the panel pads by --space-14 plus the inset. */
-.ds-knobs--floating-true {
-	position: fixed;
-	inset-block-start: var(--space-4);
-	inset-inline-end: var(--space-4);
-	z-index: 20;
-	inline-size: var(--space-14);
-	max-block-size: calc(100vh - var(--space-8));
-}
-@media (max-width: 900px) {
-	.ds-knobs--floating-true {
-		inset: auto 0 0;
-		inline-size: auto;
-		max-block-size: 45vh;
-		border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
+/* Imported by its component, not by styles/index.css, so it ships only
+ * on the pages that render one; in ds.components as if it were. */
+@layer ds.components {
+	.ds-knobs {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		box-sizing: border-box;
+		max-block-size: 100%;
+		padding: var(--space-4);
+		background: var(--card-background);
+		border: 1px solid var(--hairline);
+		border-radius: var(--border-radius-2);
+		box-shadow: var(--shadow-3);
+		color: var(--text-primary);
+		font-family: var(--font-ui);
+		font-size: var(--font-size-1);
 	}
-}
-.ds-knobs__head {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: var(--space-2);
-}
-.ds-knobs__note {
-	margin: 0;
-}
-.ds-knobs__body {
-	flex: 1 1 auto;
-	min-block-size: 0;
-	overflow-y: auto;
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-3);
-	padding-inline-end: var(--space-1);
-}
-.ds-knobs__actions {
-	display: flex;
-	gap: var(--space-2);
-	padding-block-start: var(--space-3);
-	border-block-start: 1px solid var(--hairline);
-}
-.ds-knobs__actions > * {
-	flex: 1 1 0;
-}
+	/* floating — the playground's panel: fixed to the top-right corner, a
+	 * --space-14 column as tall as the viewport lets it be (the body scrolls);
+	 * at the compact step (the widget grid's 900) a sheet docked across the
+	 * bottom, its top corners rounded. A page that must keep its content clear
+	 * of the panel pads by --space-14 plus the inset. */
+	.ds-knobs--floating-true {
+		position: fixed;
+		inset-block-start: var(--space-4);
+		inset-inline-end: var(--space-4);
+		z-index: 20;
+		inline-size: var(--space-14);
+		max-block-size: calc(100vh - var(--space-8));
+	}
+	@media (max-width: 900px) {
+		.ds-knobs--floating-true {
+			inset: auto 0 0;
+			inline-size: auto;
+			max-block-size: 45vh;
+			border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
+		}
+	}
+	.ds-knobs__head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-2);
+	}
+	.ds-knobs__note {
+		margin: 0;
+	}
+	.ds-knobs__body {
+		flex: 1 1 auto;
+		min-block-size: 0;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		padding-inline-end: var(--space-1);
+	}
+	.ds-knobs__actions {
+		display: flex;
+		gap: var(--space-2);
+		padding-block-start: var(--space-3);
+		border-block-start: 1px solid var(--hairline);
+	}
+	.ds-knobs__actions > * {
+		flex: 1 1 0;
+	}
 
-/* A group: a fieldset stripped of its chrome, cut off above by a hairline. */
-.ds-knob-group {
-	margin: 0;
-	padding: var(--space-2) 0 0;
-	min-inline-size: 0;
-	border: 0;
-	border-block-start: 1px solid var(--hairline);
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-2);
-}
-.ds-knob-group__legend {
-	padding: 0;
-}
+	/* A group: a fieldset stripped of its chrome, cut off above by a hairline. */
+	.ds-knob-group {
+		margin: 0;
+		padding: var(--space-2) 0 0;
+		min-inline-size: 0;
+		border: 0;
+		border-block-start: 1px solid var(--hairline);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+	.ds-knob-group__legend {
+		padding: 0;
+	}
 
-/* A row: the label over its control; a checkbox row is the two side by side. */
-.ds-knob {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-1);
-	min-inline-size: 0;
-	cursor: pointer;
-}
-.ds-knob__label {
-	display: flex;
-	justify-content: space-between;
-	gap: var(--space-2);
-	color: var(--text-secondary);
-	line-height: var(--line-height-ui);
-}
-.ds-knob__label output {
-	font-variant-numeric: tabular-nums;
-	color: var(--text-tertiary);
-}
-.ds-knob__field {
-	display: flex;
-	align-items: center;
-	gap: var(--space-2);
-}
-.ds-knob input[type="range"] {
-	inline-size: 100%;
-	margin: 0;
-	accent-color: var(--accent);
-}
-.ds-knob input[type="color"] {
-	inline-size: var(--space-7);
-	block-size: var(--space-5);
-	flex: none;
-	padding: 0;
-	border: 1px solid var(--hairline);
-	border-radius: var(--border-radius-0);
-	background: none;
-	cursor: pointer;
-}
-.ds-knob input[type="text"] {
-	flex: 1 1 auto;
-	min-inline-size: 0;
-	padding: var(--space-1) var(--space-2);
-	border: 1px solid var(--input-border);
-	border-radius: var(--border-radius-0);
-	background: var(--input-background);
-	color: var(--text-primary);
-	font: inherit;
-	font-family: var(--font-code);
-}
-.ds-knob--type-checkbox {
-	flex-direction: row;
-	align-items: center;
-	gap: var(--space-2);
-}
-.ds-knob--type-checkbox input {
-	margin: 0;
-	accent-color: var(--accent);
+	/* A row: the label over its control; a checkbox row is the two side by side. */
+	.ds-knob {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		min-inline-size: 0;
+		cursor: pointer;
+	}
+	.ds-knob__label {
+		display: flex;
+		justify-content: space-between;
+		gap: var(--space-2);
+		color: var(--text-secondary);
+		line-height: var(--line-height-ui);
+	}
+	.ds-knob__label output {
+		font-variant-numeric: tabular-nums;
+		color: var(--text-tertiary);
+	}
+	.ds-knob__field {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+	.ds-knob input[type="range"] {
+		inline-size: 100%;
+		margin: 0;
+		accent-color: var(--accent);
+	}
+	.ds-knob input[type="color"] {
+		inline-size: var(--space-7);
+		block-size: var(--space-5);
+		flex: none;
+		padding: 0;
+		border: 1px solid var(--hairline);
+		border-radius: var(--border-radius-0);
+		background: none;
+		cursor: pointer;
+	}
+	.ds-knob input[type="text"] {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		padding: var(--space-1) var(--space-2);
+		border: 1px solid var(--input-border);
+		border-radius: var(--border-radius-0);
+		background: var(--input-background);
+		color: var(--text-primary);
+		font: inherit;
+		font-family: var(--font-code);
+	}
+	.ds-knob--type-checkbox {
+		flex-direction: row;
+		align-items: center;
+		gap: var(--space-2);
+	}
+	.ds-knob--type-checkbox input {
+		margin: 0;
+		accent-color: var(--accent);
+	}
 }

@@ -15,7 +15,19 @@
  * specificity — a page that sets a property on a DS element gets it, no
  * chaining required. The one thing to watch: a bare element rule on the site
  * (`h2 { font-size }`) also beats a DS class now, so the site keeps such
- * rules off DS elements (`:not(.ds-heading)`). */
+ * rules off DS elements (`:not(.ds-heading)`).
+ *
+ * NOT EVERY COMPONENT IS HERE. What only the catalogue pages and the
+ * playgrounds render — the micrographics (art-frame, glyph, motion, scene,
+ * readout-stack, formula, number-stream), the spec sheet's labels
+ * (rule-label, dimension-label), stat-strip, button, and the tooling (knobs,
+ * theme-page) — is imported by its component's frontmatter instead, so Astro
+ * bundles it only on a page that uses one, and every page does not pay for
+ * it. Each such file wraps itself in `@layer ds.components { … }` and lands
+ * in the same layer as this list; the order statement below comes first on
+ * every page (Layout imports this file before any page renders a
+ * component). A component whose first consumer is an ordinary page moves
+ * back here. */
 @layer ds.components, ds.roles;
 
 /* What every control shares, before the components. */
@@ -33,8 +45,6 @@
 @import "./mono.css" layer(ds.components);
 @import "./figure.css" layer(ds.components);
 @import "./stat.css" layer(ds.components);
-@import "./stat-strip.css" layer(ds.components);
-@import "./button.css" layer(ds.components);
 @import "./icon-button.css" layer(ds.components);
 @import "./card.css" layer(ds.components);
 @import "./faces.css" layer(ds.components);
@@ -52,26 +62,9 @@
 @import "./bar-graph.css" layer(ds.components);
 @import "./legend.css" layer(ds.components);
 @import "./tile-grid.css" layer(ds.components);
-/* The spec sheet's labels: on a dotted rule, on a dimension line. */
-@import "./rule-label.css" layer(ds.components);
-@import "./dimension-label.css" layer(ds.components);
 /* The reading UI: the archive and the reading column. */
 @import "./post-list.css" layer(ds.components);
 @import "./prose.css" layer(ds.components);
 @import "./blockquote.css" layer(ds.components);
 @import "./fig.css" layer(ds.components);
 @import "./index-table.css" layer(ds.components);
-/* The art: the frame every artwork renders through, the glyphs and their
- * tiles, and the motion contract both hosts share. */
-@import "./art-frame.css" layer(ds.components);
-@import "./glyph.css" layer(ds.components);
-@import "./motion.css" layer(ds.components);
-/* The scenes: a baked illustration on the frame, its readouts over it. */
-@import "./scene.css" layer(ds.components);
-/* The readouts beside the marks: HTML text, not SVG. */
-@import "./readout-stack.css" layer(ds.components);
-@import "./formula.css" layer(ds.components);
-@import "./number-stream.css" layer(ds.components);
-/* The catalogue's and the playgrounds' tooling. */
-@import "./knobs.css" layer(ds.components);
-@import "./theme-page.css" layer(ds.components);

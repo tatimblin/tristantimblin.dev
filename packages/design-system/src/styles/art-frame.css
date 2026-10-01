@@ -8,80 +8,84 @@
  * language expects shapes to run out of frame, and a hero that asks for a
  * different `ratio` crops the same drawing rather than letterboxing it — the
  * component sets preserveAspectRatio to slice on the root for that. */
-.ds-art-frame {
-	position: relative;
-	display: block;
-	inline-size: 100%;
-	aspect-ratio: var(--art-ratio, 16 / 9);
-	overflow: hidden;
-	background: var(--art-plate);
-	border: 1px solid var(--art-edge);
-	border-radius: var(--art-radius);
-	/* currentColor inside the art is the ink, so a shape may say so. */
-	color: var(--art-ink);
-}
-.ds-art-frame > svg {
-	display: block;
-	inline-size: 100%;
-	block-size: 100%;
-	/* The default line: 1 unit, which vector-effect="non-scaling-stroke" on
-	 * each shape makes 1px on screen at any render size — the same hairline
-	 * in a 230px tile and a 720px hero, as in the reference. Inherited, so a
-	 * shape needs no class to take it. */
-	stroke-width: 1;
-}
+/* Imported by its component, not by styles/index.css, so it ships only
+ * on the pages that render one; in ds.components as if it were. */
+@layer ds.components {
+	.ds-art-frame {
+		position: relative;
+		display: block;
+		inline-size: 100%;
+		aspect-ratio: var(--art-ratio, 16 / 9);
+		overflow: hidden;
+		background: var(--art-plate);
+		border: 1px solid var(--art-edge);
+		border-radius: var(--art-radius);
+		/* currentColor inside the art is the ink, so a shape may say so. */
+		color: var(--art-ink);
+	}
+	.ds-art-frame > svg {
+		display: block;
+		inline-size: 100%;
+		block-size: 100%;
+		/* The default line: 1 unit, which vector-effect="non-scaling-stroke" on
+		 * each shape makes 1px on screen at any render size — the same hairline
+		 * in a 230px tile and a 720px hero, as in the reference. Inherited, so a
+		 * shape needs no class to take it. */
+		stroke-width: 1;
+	}
 
-/* LINE WEIGHTS. The two the language has, as classes so the file names its
- * intent rather than a number: .art-line is the line (the inherited default,
- * spelled out), .art-line--2 the one emphasis outline a tile may carry. */
-.ds-art-frame .art-line {
-	stroke-width: 1;
-}
-.ds-art-frame .art-line--2 {
-	stroke-width: 1.5;
-}
+	/* LINE WEIGHTS. The two the language has, as classes so the file names its
+	 * intent rather than a number: .art-line is the line (the inherited default,
+	 * spelled out), .art-line--2 the one emphasis outline a tile may carry. */
+	.ds-art-frame .art-line {
+		stroke-width: 1;
+	}
+	.ds-art-frame .art-line--2 {
+		stroke-width: 1.5;
+	}
 
-/* TYPE: the four voices a plate may set words in (the validator's TYPE,
- * scripts/validate-art.mjs). The file says where, how big (font-size in
- * viewBox units, so the words scale with the drawing as its line work
- * doesn't) and which token fills it; the VOICE — face, weight, tracking —
- * is only ever here, so a file never names a font and the whole language's
- * type retunes in one place. Fill is not touched: the file's token is the
- * colour (a caption is the dimmed ink by the kit's default, not by force).
- * Figures are tabular in every voice, so a column of IDs or a readout that
- * changes holds its width. No case change: the voice is written in caps
- * (the kit's helpers write it so), because `0x7B8A` and `12ms` must keep
- * their lower case. */
-.ds-art-frame :is(.art-label, .art-caption, .art-numeral, .art-title) {
-	font-variant-numeric: tabular-nums;
-	font-kerning: normal;
-}
-/* the label: the label voice (Mono's), tracked as caps are */
-.ds-art-frame .art-label {
-	font-family: var(--voice-mono-family);
-	font-weight: var(--font-weight-400);
-	letter-spacing: var(--tracking-caps);
-}
-/* the caption: the same face, a size down, the mono tracking */
-.ds-art-frame .art-caption {
-	font-family: var(--voice-mono-family);
-	font-weight: var(--font-weight-400);
-	letter-spacing: var(--tracking-mono);
-}
-/* the numeral: the display role, Mondwest Thin — Stat's numeral */
-.ds-art-frame .art-numeral {
-	font-family: var(--font-display);
-	font-weight: var(--font-display-weight);
-	letter-spacing: var(--tracking-heading);
-}
-/* the title: a module's heading, the heading role (Mondwest Bold) */
-.ds-art-frame .art-title {
-	font-family: var(--font-heading);
-	font-weight: var(--font-heading-weight);
-	letter-spacing: var(--tracking-heading);
-}
+	/* TYPE: the four voices a plate may set words in (the validator's TYPE,
+	 * scripts/validate-art.mjs). The file says where, how big (font-size in
+	 * viewBox units, so the words scale with the drawing as its line work
+	 * doesn't) and which token fills it; the VOICE — face, weight, tracking —
+	 * is only ever here, so a file never names a font and the whole language's
+	 * type retunes in one place. Fill is not touched: the file's token is the
+	 * colour (a caption is the dimmed ink by the kit's default, not by force).
+	 * Figures are tabular in every voice, so a column of IDs or a readout that
+	 * changes holds its width. No case change: the voice is written in caps
+	 * (the kit's helpers write it so), because `0x7B8A` and `12ms` must keep
+	 * their lower case. */
+	.ds-art-frame :is(.art-label, .art-caption, .art-numeral, .art-title) {
+		font-variant-numeric: tabular-nums;
+		font-kerning: normal;
+	}
+	/* the label: the label voice (Mono's), tracked as caps are */
+	.ds-art-frame .art-label {
+		font-family: var(--voice-mono-family);
+		font-weight: var(--font-weight-400);
+		letter-spacing: var(--tracking-caps);
+	}
+	/* the caption: the same face, a size down, the mono tracking */
+	.ds-art-frame .art-caption {
+		font-family: var(--voice-mono-family);
+		font-weight: var(--font-weight-400);
+		letter-spacing: var(--tracking-mono);
+	}
+	/* the numeral: the display role, Mondwest Thin — Stat's numeral */
+	.ds-art-frame .art-numeral {
+		font-family: var(--font-display);
+		font-weight: var(--font-display-weight);
+		letter-spacing: var(--tracking-heading);
+	}
+	/* the title: a module's heading, the heading role (Mondwest Bold) */
+	.ds-art-frame .art-title {
+		font-family: var(--font-heading);
+		font-weight: var(--font-heading-weight);
+		letter-spacing: var(--tracking-heading);
+	}
 
-/* MOTION: the data-motion contract — the keyframes, the pause at rest and
- * the play gating — is motion.css, shared with the glyphs (a frame plays
- * on :hover, :focus-within, inside a hovered or focused link, or with
- * data-art-play). Nothing about motion is spelled here. */
+	/* MOTION: the data-motion contract — the keyframes, the pause at rest and
+	 * the play gating — is motion.css, shared with the glyphs (a frame plays
+	 * on :hover, :focus-within, inside a hovered or focused link, or with
+	 * data-art-play). Nothing about motion is spelled here. */
+}

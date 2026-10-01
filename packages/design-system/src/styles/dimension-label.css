@@ -6,44 +6,48 @@
  * mirrored, so both run from their tick inwards and the dots sit symmetric
  * about the label. The line and the tick are the tertiary ink, the dots a
  * step up (the secondary). */
-.ds-dimension-label {
-	--dimension-label-tick: var(--space-2);
-	--dimension-label-pitch: var(--space-5);
-	--dimension-label-dot: 1px;
-	display: flex;
-	align-items: center;
-	gap: var(--space-3);
-	/* It spans what it names, in a column flex of any alignment too. */
-	box-sizing: border-box;
-	inline-size: 100%;
-	margin: 0;
-}
-.ds-dimension-label__text {
-	flex: none;
-	color: var(--text-primary);
-}
-.ds-dimension-label::before,
-.ds-dimension-label::after {
-	content: "";
-	flex: 1;
-	min-inline-size: var(--dimension-label-pitch);
-	block-size: var(--dimension-label-tick);
-	background:
-		/* the end tick */
-		linear-gradient(var(--text-tertiary), var(--text-tertiary)) left center /
-			1px var(--dimension-label-tick) no-repeat,
-		/* the dots, the first half a pitch in from the tick */
-		radial-gradient(
-				circle,
-				var(--text-secondary) var(--dimension-label-dot),
-				transparent calc(var(--dimension-label-dot) + 0.5px)
-			)
-			left center /
-			var(--dimension-label-pitch) var(--dimension-label-tick) repeat-x,
-		/* the hairline */
-		linear-gradient(var(--text-tertiary), var(--text-tertiary)) center / 100% 1px
-			no-repeat;
-}
-.ds-dimension-label::after {
-	transform: scaleX(-1);
+/* Imported by its component, not by styles/index.css, so it ships only
+ * on the pages that render one; in ds.components as if it were. */
+@layer ds.components {
+	.ds-dimension-label {
+		--dimension-label-tick: var(--space-2);
+		--dimension-label-pitch: var(--space-5);
+		--dimension-label-dot: 1px;
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		/* It spans what it names, in a column flex of any alignment too. */
+		box-sizing: border-box;
+		inline-size: 100%;
+		margin: 0;
+	}
+	.ds-dimension-label__text {
+		flex: none;
+		color: var(--text-primary);
+	}
+	.ds-dimension-label::before,
+	.ds-dimension-label::after {
+		content: "";
+		flex: 1;
+		min-inline-size: var(--dimension-label-pitch);
+		block-size: var(--dimension-label-tick);
+		background:
+			/* the end tick */
+			linear-gradient(var(--text-tertiary), var(--text-tertiary)) left center /
+				1px var(--dimension-label-tick) no-repeat,
+			/* the dots, the first half a pitch in from the tick */
+			radial-gradient(
+					circle,
+					var(--text-secondary) var(--dimension-label-dot),
+					transparent calc(var(--dimension-label-dot) + 0.5px)
+				)
+				left center /
+				var(--dimension-label-pitch) var(--dimension-label-tick) repeat-x,
+			/* the hairline */
+			linear-gradient(var(--text-tertiary), var(--text-tertiary)) center / 100% 1px
+				no-repeat;
+	}
+	.ds-dimension-label::after {
+		transform: scaleX(-1);
+	}
 }

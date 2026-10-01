@@ -2,46 +2,50 @@
  * label step, tabular so the columns hold), the secondary ink, a row on
  * each line. The box is exactly `rows` lines tall and clips, so the doubled
  * rows of `motion` stay out of sight. */
-.ds-number-stream {
-	--number-stream-line: calc(var(--line-height-ui) * 1em);
-	display: inline-block;
-	block-size: calc(var(--number-stream-rows, 2) * var(--number-stream-line));
-	overflow: hidden;
-	font-family: var(--voice-mono-family);
-	font-size: var(--voice-mono-size);
-	font-weight: var(--font-weight-400);
-	font-variant-numeric: tabular-nums;
-	letter-spacing: var(--tracking-mono);
-	line-height: var(--number-stream-line);
-	white-space: nowrap;
-	color: var(--text-secondary);
-}
-.ds-number-stream__rows,
-.ds-number-stream__row {
-	display: block;
-}
+/* Imported by its component, not by styles/index.css, so it ships only
+ * on the pages that render one; in ds.components as if it were. */
+@layer ds.components {
+	.ds-number-stream {
+		--number-stream-line: calc(var(--line-height-ui) * 1em);
+		display: inline-block;
+		block-size: calc(var(--number-stream-rows, 2) * var(--number-stream-line));
+		overflow: hidden;
+		font-family: var(--voice-mono-family);
+		font-size: var(--voice-mono-size);
+		font-weight: var(--font-weight-400);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: var(--tracking-mono);
+		line-height: var(--number-stream-line);
+		white-space: nowrap;
+		color: var(--text-secondary);
+	}
+	.ds-number-stream__rows,
+	.ds-number-stream__row {
+		display: block;
+	}
 
-/* MOTION — the rows step up one line at a time, by exactly the first copy's
- * height (a seamless loop), on the art's clock: --duration-loop per two
- * rows, which is 0s under reduced motion (no active interval, the poster
- * holds). Paused at rest; it runs where a glyph's motion runs (motion.css):
- * under the pointer, in a hovered or focused link, with data-art-play on
- * itself or an ancestor. Transform only. */
-.ds-number-stream--motion-true .ds-number-stream__rows {
-	animation: ds-number-stream-step
-		calc(var(--duration-loop) * var(--number-stream-rows, 2) / 2)
-		steps(var(--number-stream-rows, 2), end) infinite paused;
-}
-.ds-number-stream--motion-true:hover .ds-number-stream__rows,
-.ds-glyph-tile:hover .ds-number-stream--motion-true .ds-number-stream__rows,
-.ds-number-stream--motion-true[data-art-play] .ds-number-stream__rows,
-[data-art-play] .ds-number-stream--motion-true .ds-number-stream__rows,
-a:hover .ds-number-stream--motion-true .ds-number-stream__rows,
-a:focus-visible .ds-number-stream--motion-true .ds-number-stream__rows {
-	animation-play-state: running;
-}
-@keyframes ds-number-stream-step {
-	to {
-		transform: translateY(calc(var(--number-stream-rows, 2) * var(--number-stream-line) * -1));
+	/* MOTION — the rows step up one line at a time, by exactly the first copy's
+	 * height (a seamless loop), on the art's clock: --duration-loop per two
+	 * rows, which is 0s under reduced motion (no active interval, the poster
+	 * holds). Paused at rest; it runs where a glyph's motion runs (motion.css):
+	 * under the pointer, in a hovered or focused link, with data-art-play on
+	 * itself or an ancestor. Transform only. */
+	.ds-number-stream--motion-true .ds-number-stream__rows {
+		animation: ds-number-stream-step
+			calc(var(--duration-loop) * var(--number-stream-rows, 2) / 2)
+			steps(var(--number-stream-rows, 2), end) infinite paused;
+	}
+	.ds-number-stream--motion-true:hover .ds-number-stream__rows,
+	.ds-glyph-tile:hover .ds-number-stream--motion-true .ds-number-stream__rows,
+	.ds-number-stream--motion-true[data-art-play] .ds-number-stream__rows,
+	[data-art-play] .ds-number-stream--motion-true .ds-number-stream__rows,
+	a:hover .ds-number-stream--motion-true .ds-number-stream__rows,
+	a:focus-visible .ds-number-stream--motion-true .ds-number-stream__rows {
+		animation-play-state: running;
+	}
+	@keyframes ds-number-stream-step {
+		to {
+			transform: translateY(calc(var(--number-stream-rows, 2) * var(--number-stream-line) * -1));
+		}
 	}
 }
