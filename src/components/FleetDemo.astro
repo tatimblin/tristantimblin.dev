@@ -55,14 +55,15 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 		   stands alone); this site's DS publishes --accent/--border-color/
 		   --text-tertiary. Aliasing here beats overriding element.css rule by
 		   rule — one hop, and the element keeps owning its own appearance. */
-		--color-accent: var(--accent, #5686f5);
-		--color-border: var(--border-color, rgba(128, 128, 128, 0.35));
+		--color-accent: var(--accent);
+		--color-border: var(--border-color);
 		/* --color-muted (the caption) is deliberately NOT bridged onto
 		   --text-tertiary. That token flips with the site theme, but what the
 		   caption sits on does not: the poster is a Dark Modern screenshot in
 		   both themes, so in light mode the "correct" tertiary would be dark
-		   grey on a near-black image. The caption gets a fixed light value. */
-		--color-muted: rgba(235, 238, 245, 0.86);
+		   grey on a near-black image. --blue-400 is the dark theme's primary
+		   ink and the one pale step the two themes share, so it does not flip. */
+		--color-muted: color-mix(in oklch, var(--blue-400) 86%, transparent);
 
 		/* THE ROW. The post's text sits in two of the page's four columns; a
 		   workbench needs more than that, so the element says data-prose-bleed
@@ -75,7 +76,7 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 		width: 100%;
 		margin: 0;
 		border-radius: 0;
-		border-color: var(--hairline, var(--color-border));
+		border-color: var(--hairline);
 	}
 
 	/* The poster's <picture> wrapper contributes no box: the overlay is a flex
@@ -104,9 +105,9 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 	   second step, the one thing on the ruled page that floats) is what lifts
 	   it off a busy editor background. */
 	.fleet-demo [data-launch] {
-		font-family: var(--font-ui, inherit);
-		font-size: var(--font-size-3, 16px);
-		font-weight: var(--font-weight-500, 500);
+		font-family: var(--font-ui);
+		font-size: var(--font-size-3);
+		font-weight: var(--font-weight-500);
 		box-shadow: var(--shadow-2);
 	}
 
@@ -115,8 +116,8 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 	   it puts it back in the same painting layer as the button above it. */
 	.fleet-demo [data-caption] {
 		position: relative;
-		font-family: var(--font-ui, inherit);
-				max-width: 34ch;
+		font-family: var(--font-ui);
+		max-width: 34ch;
 		line-height: var(--line-height-ui);
 		text-wrap: balance;
 	}

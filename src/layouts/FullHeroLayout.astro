@@ -79,14 +79,6 @@ const { title, description, image } = Astro.props;
 	.fh {
 		/* Positioning context for the absolute scene layer below. */
 		position: relative;
-		/* FIXED type steps (not vw-clamps): the lockup heading changes size only at
-		   breakpoints. The overlap formulas in the slotted heading are ratios of
-		   these sizes, so a fixed input yields a clean fixed overlap per step; a
-		   JS parallax measures real positions and adapts automatically. Base
-		   (mobile-first) values here; larger steps in the media queries below.
-		   (The "tristan" wordmark is now a full-width SVG that fills the gutters at
-		   any size, so it no longer has a fixed type step here.) */
-		--heading-size: 2rem;
 		/* Contained: the heading region sits in the same box as every .container
 		   row — the site's one --container-inset (global.css), so the lockup lines
 		   up with the header above it and the content rows below. The scene stays
@@ -159,25 +151,6 @@ const { title, description, image } = Astro.props;
 		   lead short and the fold high, which fails toward empty space at the bottom
 		   instead of toward printing the intro over the scene's bottom UI. */
 		--sh-group-h: calc(2 * var(--hero-split) + 42svh);
-	}
-
-	/* Fixed heading steps at the DS breakpoints (sm 640 / lg 1024 / xl 1280). A
-	   slotted <stories-heading> steps --sh-amp-size / --sh-heading-size in lockstep
-	   from its own stylesheet. */
-	@media (min-width: 640px) {
-		.fh {
-			--heading-size: 2.5rem;
-		}
-	}
-	@media (min-width: 1024px) {
-		.fh {
-			--heading-size: 3rem;
-		}
-	}
-	@media (min-width: 1280px) {
-		.fh {
-			--heading-size: 3.25rem;
-		}
 	}
 
 	/* SCENE: a full-viewport BACKGROUND layer, pinned to the top of .fh. The

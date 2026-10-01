@@ -19,7 +19,6 @@ interface Clip {
 }
 
 interface Props {
-	clips?: Clip[];
 	/** Which side the date ruler sits on relative to the video card. */
 	rulerSide?: "left" | "right";
 		/** Pin the ruler axis (bypasses the ≤640px auto-flip). Omit for responsive. */
@@ -138,7 +137,7 @@ interface Props {
 	captionOverlay?: boolean;
 }
 
-// The default clips are DATA, in src/data/video-clips.json: real footage
+// The clips are DATA, in src/data/video-clips.json: real footage
 // prepared by tools/dotgrid/prepare-video.sh into
 // /public/videos/website-carousel/web (960px, audio-stripped, faststart H.264;
 // iPhone HLG sources tonemapped + brightness-normalized for the halftone look).
@@ -146,7 +145,7 @@ interface Props {
 // geocoded); descriptions are read from the footage. Ordered oldest→newest so
 // autoplay steps forward in time along the date ruler. Typed here, so a row
 // missing a field fails the build rather than rendering an empty caption.
-const defaultClips: Clip[] = clipsData;
+const clips: Clip[] = clipsData;
 
 const {
 	rulerSide = "left",
@@ -172,7 +171,6 @@ const {
 	denoise,
 	crosshatch,
 	light = {},
-	clips = defaultClips,
 } = Astro.props;
 
 const first = clips[0];
