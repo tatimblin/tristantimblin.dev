@@ -117,11 +117,11 @@ test.describe("/txt/", () => {
 		// The date column reads month / year.
 		await expect(page.locator(`${POST} time.stack__date`).first()).toHaveText("02 / 26");
 		await expect(page.locator(`${POST} time.stack__date`).first()).toHaveAttribute("datetime", "2026-02-02");
-		// The open body: the reading time as the numeral, category · words,
-		// the excerpt, READ to the same place.
+		// The open body: category · words, the excerpt, READ to the same
+		// place — no reading-time numeral.
 		const body = page.locator(`${OPEN} .stack__body`);
 		await expect(body).toBeVisible();
-		await expect(body.locator(".stack__time")).toHaveText(/^\s*\d+\s*min\s*$/i);
+		await expect(body.locator(".stack__time, .ds-figure")).toHaveCount(0);
 		await expect(body.locator(".stack__meta")).toHaveText(/^Programming · [\d,]+ words$/);
 		await expect(body.locator(".stack__excerpt")).toHaveText(/\S/);
 		const read = body.locator("a.stack__read");

@@ -2,19 +2,20 @@
 // PostStack — /txt's list: a ruled two-column table, the date on the left and
 // the title on the right, with one post open at a time. The newest is open
 // on load; pointing at another opens it (a tap on a phone, focus from the
-// keyboard). The open post's body spans both columns: its reading time as
-// the widgets' big figure on the left, under the date (`3` MIN); its category
-// and word count, its excerpt and a READ chip on the right.
+// keyboard). The open post's body sits in the right half: its category and
+// word count and its excerpt, then — pinned to the foot of the body — a
+// control rail: READ, a solid accent button flush in the corner the column
+// rule makes with the post's bottom hairline, and a faint line from its top
+// edge across the rest of the half, an empty strip for controls to come.
 //
 // THE INVARIANT: opening a post never moves a different post under a still
 // pointer. Two things make that hold:
 //
 //   1. GEOMETRY. A post's header is laid out identically open and closed —
 //      only its ink changes — and every post's open body is the SAME height
-//      H, measured by the script as the tallest natural body (the numeral
-//      cell included) and set as --stack-open on the list. Exactly one post
-//      is open, so the list's
-//      height is constant and the posts below the open one never move. When
+//      H, measured by the script as the tallest natural body (the rail
+//      included) and set as --stack-open on the list. Exactly one post is
+//      open, so the list's height is constant and the posts below the open one never move. When
 //      the pointer moves from open post A down to B, A loses H above B's
 //      header while B gains H below it: B's bottom edge stays put and B only
 //      grows around the pointer. The swap is animated from the current heights
@@ -34,8 +35,7 @@ import type { CollectionEntry } from "astro:content";
 import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
 import Body from "@whois/design-system/Body";
-import Figure from "@whois/design-system/Figure";
-import Chip from "@whois/design-system/Chip";
+import Button from "@whois/design-system/Button";
 import Icon from "@whois/design-system/Icon";
 import { byDateDesc, categories, isoDate, monthYear, postHref, readingStats } from "../../lib/blog";
 
@@ -56,7 +56,7 @@ const ordered = byDateDesc(posts);
 			{ordered.map((post, i) => {
 				const href = postHref(post.id);
 				const cat = post.data.category ? categories[post.data.category] : null;
-				const { words, minutes } = readingStats(post.body);
+				const { words } = readingStats(post.body);
 				const meta = [cat?.label, `${words.toLocaleString("en-US")} words`].filter(Boolean).join(" · ");
 				return (
 					<li class="stack__post" data-open={i === 0 ? "" : undefined}>
@@ -68,22 +68,24 @@ const ordered = byDateDesc(posts);
 						</Text>
 						<div class="stack__body">
 							<div class="stack__body-inner" data-stack-measure>
-								<Figure unit="min" class="stack__time">{minutes}</Figure>
 								<div class="stack__text">
 									<Mono class="stack__meta">{meta}</Mono>
 									<Body class="stack__excerpt">{post.data.excerpt}</Body>
+								</div>
+								<div class="stack__rail">
 									{/* The second link to the same place: the title is the tab stop. */}
-									<Chip
+									<Button
 										as="a"
-										tone="accent"
+										variant="primary"
 										href={href}
 										tabindex="-1"
 										aria-hidden="true"
 										class="stack__read"
 									>
 										Read
-										<Icon name="external" />
-									</Chip>
+										<Icon slot="end-icon" name="external" />
+									</Button>
+									<div class="stack__strip" />
 								</div>
 							</div>
 						</div>
@@ -157,10 +159,13 @@ const ordered = byDateDesc(posts);
 	   --stack-open tall (the script's H; auto without it, so the first post
 	   reads with scripting off). The body itself carries no padding, border or
 	   margin — all of that is on the inner, which is what the script measures,
-	   so H is the whole of what opening adds. It spans both columns: the
-	   numeral in the left half, the text in the right. The script animates
-	   the height; here only visibility waits for the close to finish, and the
-	   inner fades. */
+	   so H is the whole of what opening adds. The inner is at least H tall
+	   (the script lifts that floor while it measures, so H is the natural
+	   height), with the text in the right half's first row and the rail in
+	   its last: the slack collects between them and the rail sits on the
+	   foot of the H box, where the clip reveals it rather than carrying it.
+	   The script animates the height; here only visibility waits for the
+	   close to finish, and the inner fades. */
 	.stack__body {
 		grid-column: 1 / -1;
 		grid-row: 2;
@@ -177,26 +182,26 @@ const ordered = byDateDesc(posts);
 	.stack__body-inner {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		align-items: start;
-		padding-block-end: var(--space-6);
+		grid-template-rows: 1fr auto;
+		min-block-size: var(--stack-open, auto);
 		opacity: 0;
 		transition: opacity var(--duration-swap) var(--ease-reveal);
+	}
+	.stack[data-stack-measuring] .stack__body-inner {
+		min-block-size: 0;
 	}
 	.stack__post[data-open] .stack__body-inner {
 		opacity: 1;
 	}
-	/* The numeral: the widgets' headline figure (`1,551` MILES), in the left
-	   half at the foot of the body, flush to the rule as the date is. */
-	.stack__time {
-		justify-self: end;
-		align-self: end;
-		padding-inline-end: var(--stack-gutter);
-	}
 	.stack__text {
+		grid-column: 2;
+		grid-row: 1;
+		align-self: start;
 		display: grid;
 		justify-items: start;
 		gap: var(--space-4);
 		padding-inline-start: var(--stack-gutter);
+		padding-block-end: var(--space-6);
 	}
 	.stack__meta {
 		display: block;
@@ -205,8 +210,28 @@ const ordered = byDateDesc(posts);
 		max-inline-size: var(--measure-note);
 	}
 
+	/* THE RAIL: the right half's foot, edge to edge — READ in the corner
+	   (the column rule on its left, the post's bottom hairline under it),
+	   then the strip: a faint hairline level with READ's top, as tall as
+	   READ, empty. READ is the DS's primary button, the accent fill with
+	   --on-accent; squared off here so it sits in a ruled corner, and its
+	   ring drawn inside, where the body's clip can't cut it. */
+	.stack__rail {
+		grid-column: 2;
+		grid-row: 2;
+		display: flex;
+	}
+	.stack__read {
+		border-radius: 0;
+		--control-ring-offset: var(--focus-ring-inset);
+	}
+	.stack__strip {
+		flex: 1;
+		border-block-start: 1px solid color-mix(in oklab, var(--hairline) 50%, transparent);
+	}
+
 	/* Phone: one column — the date above the title, no rule between them; the
-	   numeral heads the body, above the meta. */
+	   rail spans the width at the foot of the body. */
 	@media (max-width: 639px) {
 		.stack__post {
 			grid-template-columns: minmax(0, 1fr);
@@ -234,12 +259,10 @@ const ordered = byDateDesc(posts);
 		}
 		.stack__body-inner {
 			grid-template-columns: minmax(0, 1fr);
-			gap: var(--space-4);
 		}
-		.stack__time {
-			justify-self: start;
-			align-self: start;
-			padding-inline-end: 0;
+		.stack__text,
+		.stack__rail {
+			grid-column: 1;
 		}
 		.stack__text {
 			padding-inline-start: 0;
@@ -267,10 +290,16 @@ const ordered = byDateDesc(posts);
 
 		/* H: the tallest natural body. Set once up front and again whenever a
 		   body's content or the column's width changes (a font arriving, a
-		   resize), so every post opens by the same amount. */
+		   resize), so every post opens by the same amount. The inners are
+		   floored at H, so the floor is lifted for the read and restored in
+		   the same task: nothing is painted in between. The texts are
+		   observed too, since a floored inner doesn't resize when its text
+		   shrinks. */
 		let open = 0;
 		const measure = () => {
+			list.setAttribute("data-stack-measuring", "");
 			const next = Math.max(0, ...inners.map((el) => el.getBoundingClientRect().height));
+			list.removeAttribute("data-stack-measuring");
 			if (next === open) return;
 			open = next;
 			list.style.setProperty("--stack-open", `${next}px`);
@@ -278,7 +307,10 @@ const ordered = byDateDesc(posts);
 		measure();
 		const ro = new ResizeObserver(measure);
 		ro.observe(list);
-		inners.forEach((el) => ro.observe(el));
+		inners.forEach((el) => {
+			ro.observe(el);
+			ro.observe(el.querySelector(".stack__text")!);
+		});
 		document.fonts?.ready.then(() => {
 			if (!signal.aborted) measure();
 		});
