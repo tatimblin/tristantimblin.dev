@@ -400,13 +400,17 @@ const kinds = (entries: Entry[]) =>
 		</div>
 	</main>
 	<script>
+		import { onPage } from "@whois/design-system/lib/lifecycle";
+
 		// The sheet's theme (the theme class on the sheet, re-resolving every
 		// themed token inside, as ThemePage does) and play-all (data-art-play on
-		// the sheet, which every glyph under it obeys). Re-bound on each
-		// navigation: the site uses the client router.
+		// the sheet, which every glyph under it obeys). Bound with onPage: the
+		// site uses the client router, and the teardown drops the listeners.
 		function bindGlyphSheet() {
 			const sheet = document.querySelector<HTMLElement>("[data-glyph-sheet]");
 			if (!sheet) return;
+			const ac = new AbortController();
+			const { signal } = ac;
 			const buttons = document.querySelectorAll<HTMLButtonElement>("[data-sheet-theme]");
 			for (const b of buttons) {
 				b.addEventListener("click", () => {
@@ -415,12 +419,13 @@ const kinds = (entries: Entry[]) =>
 					if (t === "light" || t === "dark") sheet.classList.add(`maximeheckel-${t}`);
 					sheet.toggleAttribute("data-themed", t !== "page");
 					for (const o of buttons) o.setAttribute("aria-pressed", String(o === b));
-				});
+				}, { signal });
 			}
 			const play = document.querySelector<HTMLInputElement>("[data-sheet-play]");
-			play?.addEventListener("change", () => sheet.toggleAttribute("data-art-play", play.checked));
+			play?.addEventListener("change", () => sheet.toggleAttribute("data-art-play", play.checked), { signal });
+			return () => ac.abort();
 		}
-		document.addEventListener("astro:page-load", bindGlyphSheet);
+		onPage(bindGlyphSheet);
 	</script>
 </Layout>
 

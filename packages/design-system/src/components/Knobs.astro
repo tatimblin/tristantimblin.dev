@@ -4,10 +4,12 @@
 // catalogue's token editor. A card surface in the hairline with a shadow (it
 // floats over a page), the UI face at the small step; a title row, a note,
 // a scrolling body of Knob rows (grouped with KnobGroup), and an actions
-// footer of DS Buttons. Where it sits (fixed to a corner, docked to the
-// bottom on a phone) is the page's decision.
+// footer of DS Buttons. `floating` is the playground's placement: fixed to
+// the top-right corner, a --space-14 column as tall as the viewport lets it
+// be (the body scrolls), and at the compact step (900) a sheet docked across
+// the bottom. Without it the page places the panel.
 //
-//   <Knobs title="tokens" aria-label="design token controls" class="page__knobs">
+//   <Knobs title="tokens" aria-label="design token controls" floating>
 //     <Mono slot="meta" tone="accent">dark</Mono>
 //     <Fragment slot="note">Drag to preview.</Fragment>
 //     <KnobGroup legend="Spacing">
@@ -21,18 +23,20 @@ import Mono from "./Mono.astro";
 interface Props {
 	as?: string;
 	title?: string;
+	/** Fixed to the top-right corner; a bottom sheet at the compact step. */
+	floating?: boolean;
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "aside", title, class: className, ...rest } = Astro.props;
+const { as = "aside", title, floating = false, class: className, ...rest } = Astro.props;
 const Tag = as as any;
 const hasMeta = Astro.slots.has("meta");
 const hasNote = Astro.slots.has("note");
 const hasActions = Astro.slots.has("actions");
 ---
 
-<Tag class={cx("ds-knobs", className)} {...rest}>
+<Tag class={cx("ds-knobs", floating && "ds-knobs--floating-true", className)} {...rest}>
 	{(title || hasMeta) && (
 		<header class="ds-knobs__head">
 			{title && <Mono tone="primary" class="ds-knobs__title">{title}</Mono>}

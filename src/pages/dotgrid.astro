@@ -1,7 +1,7 @@
 ---
 // /dotgrid — the playground for the <dotted-grid> web component: the hero
-// grid full-viewport, driven live by a Knobs panel (the design system's
-// control panel) fixed to the corner.
+// grid full-viewport, driven live by a floating Knobs panel (the design
+// system's control panel).
 import Layout from "../layouts/Layout.astro";
 import Knobs from "@whois/design-system/Knobs";
 import KnobGroup from "@whois/design-system/KnobGroup";
@@ -51,7 +51,7 @@ const knobs = [
 		{/* Full-viewport hero preview, driven live by the control panel. */}
 		<dotted-grid data-hero src={SRC} src-webm={SRC_WEBM}></dotted-grid>
 
-		<Knobs title="<dotted-grid>" class="dotgrid-demo__knobs" data-controls aria-label="dotted-grid controls">
+		<Knobs title="<dotted-grid>" floating data-controls aria-label="dotted-grid controls">
 			<KnobGroup legend="source" class="dotgrid-demo__sources">
 				{SOURCES.map((s, i) => (
 					<Chip as="button" type="button" data-src={s.src} data-webm={s.webm} aria-pressed={i === 0 ? "true" : "false"}>
@@ -95,6 +95,7 @@ const knobs = [
 	</main>
 	<script>
 		import "@whois/dotted-grid";
+		import { onPage } from "@whois/design-system/lib/lifecycle";
 
 		// Live controls: reflect each input onto the hero <dotted-grid> attributes.
 		// Boolean attrs (invert/paused) toggle presence; the rest set a value.
@@ -105,14 +106,17 @@ const knobs = [
 		// node while the visible one ignored them.
 		const hero = () => document.querySelector<HTMLElement>("[data-hero]");
 
-		// Wired on astro:page-load, which ClientRouter fires for the first load AND
-		// after every navigation: a module script runs once per session, so wiring
-		// at its top level would leave the controls dead after navigating here from
-		// another page. The marker keeps a second page-load on the same panel a no-op.
+		// Wired with onPage (bound on every astro:page-load, which ClientRouter
+		// fires for the first load AND after every navigation): a module script
+		// runs once per session, so wiring at its top level would leave the
+		// controls dead after navigating here from another page. Every listener
+		// takes the bind's signal, so the teardown before a swap — or before a
+		// second load on the same panel — removes them all.
 		function wireControls() {
 			const panel = document.querySelector<HTMLElement>("[data-controls]");
-			if (!hero() || !panel || panel.dataset.wired) return;
-			panel.dataset.wired = "true";
+			if (!hero() || !panel) return;
+			const ac = new AbortController();
+			const { signal } = ac;
 			const sync = (input: HTMLInputElement) => {
 				const attr = input.dataset.attr;
 				// The intro delay/duration sliders have no data-attr: they feed the replay
@@ -139,7 +143,7 @@ const knobs = [
 				if (out) out.textContent = input.value;
 			};
 			panel.querySelectorAll<HTMLInputElement>("input").forEach((input) => {
-				input.addEventListener("input", () => sync(input));
+				input.addEventListener("input", () => sync(input), { signal });
 				sync(input); // apply initial state on load
 			});
 
@@ -161,7 +165,7 @@ const knobs = [
 				fresh.setAttribute("intro-delay", delayInput?.value ?? "600");
 				fresh.setAttribute("intro", msInput?.value ?? "3200");
 				current.replaceWith(fresh);
-			});
+			}, { signal });
 
 			// Source switcher: swap the video the effect samples. The chips are
 			// toggles; the pressed one is the source playing.
@@ -177,11 +181,13 @@ const knobs = [
 					panel
 						.querySelectorAll("[data-src]")
 						.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
-				});
+				}, { signal });
 			});
+
+			return () => ac.abort();
 		}
 
-		document.addEventListener("astro:page-load", wireControls);
+		onPage(wireControls);
 	</script>
 </Layout>
 
@@ -197,16 +203,6 @@ const knobs = [
 		--dotted-grid-height: 100vh;
 	}
 
-	/* The panel: fixed to the top-right corner, as tall as the viewport lets
-	   it be (the Knobs body scrolls); on a phone across the bottom instead. */
-	.dotgrid-demo__knobs {
-		position: fixed;
-		top: var(--space-4);
-		right: var(--space-4);
-		z-index: 10;
-		width: 264px;
-		max-height: calc(100vh - var(--space-8));
-	}
 	.dotgrid-demo__sources,
 	.dotgrid-demo__row {
 		flex-direction: row;
@@ -219,17 +215,5 @@ const knobs = [
 	}
 	.dotgrid-demo__row > :global(.ds-knob) {
 		flex: 1 1 0;
-	}
-
-	@media (max-width: 640px) {
-		.dotgrid-demo__knobs {
-			top: auto;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			width: auto;
-			max-height: 45vh;
-			border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
-		}
 	}
 </style>

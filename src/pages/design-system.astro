@@ -388,7 +388,7 @@ const faces = [
 	     every component in the catalogue re-renders instantly. "Copy config"
 	     exports the changed tokens as JSON for the agent to apply to
 	     tokens.overrides.css. */}
-	<Knobs title="tokens" class="ds-demo__knobs" data-token-controls aria-label="design token controls">
+	<Knobs title="tokens" floating data-token-controls aria-label="design token controls">
 		<Mono slot="meta" tone="accent" data-theme-name />
 		<Fragment slot="note">
 			Color edits apply to the current theme. Drag to preview; Copy config
@@ -913,7 +913,7 @@ const faces = [
 			<Flex direction="column" gap={5} alignItems="stretch">
 				<TileGrid cols={16} cells={steps.map((on) => ({ lit: on }))} />
 				<TileGrid cols={16} cells={[0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 0, 1, 1, 2, 4].map((level) => ({ level: level as 0 | 1 | 2 | 3 | 4 }))} />
-				<div style="block-size: 96px; display: flex;">
+				<div style="block-size: var(--space-12); display: flex;">
 					<TileGrid cols={12} rows={7} fit="height">
 						{Array.from({ length: 84 }, (_, i) => (
 							<Tile level={((i * 7) % 5) as 0 | 1 | 2 | 3 | 4} />
@@ -1067,7 +1067,7 @@ const faces = [
 				<Body>After a rule. <del>Struck text</del> steps back to the tertiary ink.</Body>
 			</Prose>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Prose — ruled: sections on the four-column grid</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">Prose — ruled: sections on the four-column grid</h2>
 			<p class="ds-demo__note">
 				<code>variant="ruled"</code> is the post page's column: the body cut into
 				sections at each h2, each a grid row under a hairline with its number and
@@ -1235,7 +1235,7 @@ assertions:
 				legend; the <code>actions</code> slot takes DS Buttons. Where it sits is the
 				page's decision.
 			</p>
-			<Knobs title="sample" aria-label="sample controls" style="max-inline-size: 264px;">
+			<Knobs title="sample" aria-label="sample controls" style="max-inline-size: var(--space-14);">
 				<Mono slot="meta" tone="accent">live</Mono>
 				<Fragment slot="note">Nothing here is wired; it shows the rows.</Fragment>
 				<KnobGroup legend="halftone">
@@ -1286,7 +1286,7 @@ assertions:
 				))}
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">The frame — the template at tile size and hero size</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">The frame — the template at tile size and hero size</h2>
 			<p class="ds-demo__note">
 				<code>&lt;ArtFrame svg={"{raw}"} label="…" /&gt;</code> inlines the file on the
 				plate (<code>role="img"</code>); with no label, or <code>decorative</code>, it is
@@ -1300,7 +1300,7 @@ assertions:
 				<ArtFrame svg={artTemplate} label="_template.svg at hero size" />
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Both themes — the plate follows the page</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">Both themes — the plate follows the page</h2>
 			<p class="ds-demo__note">
 				The same file on each theme's page (<code>ThemePage</code>): the near-black
 				plate and white line on the dark page, bone and the dark ink on the light one.
@@ -1313,7 +1313,7 @@ assertions:
 				))}
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Line weights</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">Line weights</h2>
 			<p class="ds-demo__note">
 				Top to bottom: <code>.art-line</code> (1, the inherited default),
 				<code>.art-line--2</code> (1.5, one emphasis outline), <code>--art-ink-2</code>
@@ -1325,7 +1325,7 @@ assertions:
 				<ArtFrame svg={artLines} label="the two line weights and two dash patterns, at hero size" />
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Motion — five kinds, paused until hovered</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">Motion — five kinds, paused until hovered</h2>
 			<p class="ds-demo__note">
 				A file marks one group <code>data-motion</code> and the frame owns the
 				keyframes, timed by <code>--duration-loop</code> (<code>data-speed</code> 0.5 / 1 / 2
@@ -1376,7 +1376,7 @@ assertions:
 				<Anchor href="/design-system/glyphs/" arrow="right">The glyph tile sheet</Anchor> shows every glyph and a spread of every generator in tiles, grouped by family (A waves to I bold shapes), a type &amp; modules specimen, with the L3 signal chain and a readouts panel; one tile is <code>/design-system/glyphs#glyph-&lt;name&gt;</code>.
 			</p>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Inline — in a line of text, and on the size scale</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">Inline — in a line of text, and on the size scale</h2>
 			<p class="ds-demo__note"> <code>&lt;Glyph name /&gt;</code> in text is 1em tall, as wide as the viewBox
 				makes it (3:2), centred on the x-height, in the text's ink. <code>size</code> is its height on the space scale, numbered as <code>Icon</code>'s size is: 6 (32px, the viewBox at 1×), 8, 10 (2×), 12 (3×).
 			</p>
@@ -1398,7 +1398,7 @@ assertions:
 				</figure>
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Tiles — the keycap, on both pages</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">Tiles — the keycap, on both pages</h2>
 			<p class="ds-demo__note"> <code>&lt;GlyphTile label&gt;</code>: a 3:2 cap in the rim's hairline
 				(<code>--art-edge</code>) on a wash, the caps label under it (a prop, or the <code>label</code> slot), and a <code>readout</code> slot drawn over the mark in
 				the thin numeral. The tile sizes the glyph and fills its column, so a row of
@@ -1420,7 +1420,7 @@ assertions:
 				))}
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Generators — a mark drawn from props, one per family</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">Generators — a mark drawn from props, one per family</h2>
 			<p class="ds-demo__note"> A generator (<code>Wave</code>, <code>Envelope</code>, <code>Filter</code>, <code>Curve</code>, <code>Gauge</code>, <code>Dial</code>, <code>Ladder</code>, <code>Segments</code>, <code>Selector</code>, <code>Fan</code>, <code>Rings</code>, <code>Matrix</code>) is a pure function in <code>lib/micro/gen/</code> behind a thin component, rendered through the same host as <code>Glyph</code>: the same size, label, play and ARIA. A labelled <code>Gauge</code>, <code>Dial</code> or <code>Ladder</code> is a <code>role="meter"</code>. Every variant is on the sheet.
 			</p>
 			<Grid templateColumns="repeat(auto-fill, minmax(calc(var(--space-12) * 1.5), 1fr))" gap={4} data-glyph-generators>
@@ -1438,7 +1438,7 @@ assertions:
 				The synth panel pairs its marks with small typographic readouts, and they are HTML text, never inside an SVG (family G on the <Anchor href="/design-system/glyphs/#family-G">glyph sheet</Anchor>). Label and thin numeral is <code>Stat variant="numeral"</code>; the boxed and arrow tags are <code>Chip</code>'s <code>tone="accent"</code> and <code>variant="arrow"</code>. The three below are new: each sits centred in a <code>GlyphTile</code>'s cap where a glyph would.
 			</p>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">ReadoutStack — values, one emphasised</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">ReadoutStack — values, one emphasised</h2>
 			<p class="ds-demo__note">
 				<code>&lt;ReadoutStack values active&gt;</code>: a list, the emphasised value <code>aria-current="true"</code> — drawn in the thin numeral (<code>--font-display</code> at <code>--font-size-6</code>), the rest the label voice in the tertiary ink. <code>active</code> is an index, clamped. Name it with <code>aria-label</code>.
 			</p>
@@ -1448,7 +1448,7 @@ assertions:
 				<ReadoutStack values={["lo", "mid", "hi", "air"]} active={3} aria-label="Band" />
 			</Flex>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">Formula — real superscripts and subscripts</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">Formula — real superscripts and subscripts</h2>
 			<p class="ds-demo__note">
 				<code>&lt;Formula value&gt;</code>: <code>^</code> raises and <code>_</code> lowers the next run (a <code>{"{…}"}</code> group, or a sign and letters or digits); a hyphen is a minus. The drawing is aria-hidden and a visually hidden twin says <code>label</code>, or the formula spoken — "z to the minus 1".
 			</p>
@@ -1460,7 +1460,7 @@ assertions:
 				<Formula value="1/(1-z^-1)" />
 			</Flex>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">NumberStream — rows of digits from a seed</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">NumberStream — rows of digits from a seed</h2>
 			<p class="ds-demo__note">
 				<code>&lt;NumberStream seed rows digits&gt;</code>: the label voice, tabular, the same digits for the same seed. Decorative (aria-hidden) unless it has a <code>label</code>. <code>motion</code> steps the rows up on the art's clock and gating — paused at rest, running under the pointer or with <code>play</code>; still under reduced motion.
 			</p>
@@ -1470,7 +1470,7 @@ assertions:
 				<NumberStream motion play rows={3} label="Packet counter" />
 			</Flex>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">In tiles, on both pages</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">In tiles, on both pages</h2>
 			<div class="ds-demo__art-themes">
 				{(["light", "dark"] as const).map((t) => (
 					<ThemePage theme={t}>
@@ -1514,7 +1514,7 @@ assertions:
 				))}
 			</div>
 
-			<h2 class="ds-demo__h" style="margin-top: var(--space-7);">hud — the hand-vector route</h2>
+			<h2 class="ds-demo__h ds-demo__h--sub">hud — the hand-vector route</h2>
 			<p class="ds-demo__note">
 				Drawn in an editor with the placeholder swatches (<code>tools/scenes/SWATCHES.md</code>, importable as <code>swatches.svg</code>) and exported as <code>tools/scenes/hud/source.svg</code> — a Figma frame at 2×, ids, a <code>style=</code>, the frame's clip and mask and all — then imported by <code>tools/scenes/lib/import-vector.ts</code>: stripped, flattened, each swatch swapped for its <code>--art-*</code> token, a fill opacity ≤ 25% made a wash, the 2 and 3 strokes made 1 and 1.5, the dashes snapped, refitted to the plate and rounded. The centre line's dashes run under the dash motion. The readouts are HTML: the two tuners' FREQ and <code>Dial</code>, blue and red, FF, and the <code>colour-bars</code> glyph.
 			</p>
@@ -1620,7 +1620,7 @@ assertions:
 					</Flex>
 				))}
 			</Flex>
-			<h2 class="ds-demo__h" style="margin-top:24px;">Icon — variants (colors)</h2>
+			<h2 class="ds-demo__h" style="margin-top: var(--space-5);">Icon — variants (colors)</h2>
 			<Flex gap={4} wrap="wrap" alignItems="center">
 				{iconVariants.map((v) => (
 					<Icon name="info" size={6} variant={v} />
@@ -1632,10 +1632,10 @@ assertions:
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Box / Flex (foundation)</Heading>
 			<Flex gap={2} justifyContent="space-between"
-				style="border:1px solid var(--border-color); padding:8px;">
-				<Box style="background:var(--blue-400); padding:8px;">flex a</Box>
-				<Box style="background:var(--blue-500); padding:8px;">flex b</Box>
-				<Box style="background:var(--blue-600); padding:8px;">flex c</Box>
+				style="border:1px solid var(--border-color); padding: var(--space-2);">
+				<Box style="background:var(--blue-400); padding: var(--space-2);">flex a</Box>
+				<Box style="background:var(--blue-500); padding: var(--space-2);">flex b</Box>
+				<Box style="background:var(--blue-600); padding: var(--space-2);">flex c</Box>
 			</Flex>
 		</section>
 
@@ -1646,7 +1646,7 @@ assertions:
 				A 12-track grid. GridItem <code>colSpan</code> maps to
 				<code>grid-column: span N</code>. Spans in each row sum to 12.
 			</Text>
-			<Grid templateColumns="repeat(12, 1fr)" gap={3} style="margin-top:12px;">
+			<Grid templateColumns="repeat(12, 1fr)" gap={3} style="margin-top: var(--space-3);">
 				{Array.from({ length: 12 }).map((_, i) => (
 					<GridItem class="ds-cell ds-cell--head">{i + 1}</GridItem>
 				))}
@@ -1671,7 +1671,7 @@ assertions:
 				thing changing.
 			</Text>
 			{([2, 4, 6, 8] as const).map((g) => (
-				<div style="margin-top:16px;">
+				<div style="margin-top: var(--space-4);">
 					<Text size={1} variant="secondary">
 						gap={g} → var(--space-{g})
 					</Text>
@@ -1683,7 +1683,7 @@ assertions:
 					</Grid>
 				</div>
 			))}
-			<div style="margin-top:16px;">
+			<div style="margin-top: var(--space-4);">
 				<Text size={1} variant="secondary">
 					asymmetric: gapX={8} (column) · gapY={2} (row)
 				</Text>
@@ -1705,7 +1705,7 @@ assertions:
 				768 · lg 1024).
 			</Text>
 
-			<Text size={1} variant="secondary" style="margin-top:16px; display:block;">
+			<Text size={1} variant="secondary" style="margin-top: var(--space-4); display:block;">
 				auto-fill, minmax(120px, 1fr) — reflows continuously
 			</Text>
 			<Grid templateColumns="repeat(auto-fill, minmax(120px, 1fr))" gap={4}
@@ -1723,7 +1723,7 @@ assertions:
 					<GridItem class="ds-cell">{i + 1}</GridItem>
 				))}
 			</Grid>
-			<Text size={1} variant="tertiary" style="margin-top:8px; display:block;">
+			<Text size={1} variant="tertiary" style="margin-top: var(--space-2); display:block;">
 				current: <span class="ds-bp-readout"></span>
 			</Text>
 		</section>
@@ -1735,16 +1735,17 @@ assertions:
 		</section>
 	</main>
 	<script>
+		import { onPage } from "@whois/design-system/lib/lifecycle";
+
 		// Live token editor: reflect each control onto an inline custom property on
 		// <html>, which overrides the class-scoped stylesheet so the catalogue below
 		// updates instantly. "Copy config" exports only the changed tokens as JSON,
 		// split into root/themed so the agent can drop them into tokens.overrides.css.
-		function initTokenControls() {
+		function initTokenControls(signal: AbortSignal) {
 			const panelEl = document.querySelector<HTMLElement>("[data-token-controls]");
-			if (!panelEl || panelEl.dataset.bound === "true") return;
+			if (!panelEl) return;
 			// Rebound so the narrowing reaches the nested function declarations.
 			const panel = panelEl;
-			panel.dataset.bound = "true";
 
 			const root = document.documentElement;
 			const scopeOf = (varName: string): "root" | "themed" => {
@@ -1843,7 +1844,7 @@ assertions:
 						if (swatch && hex) swatch.value = hex;
 						apply(varName, input.value);
 					}
-				});
+				}, { signal });
 			});
 
 			const copyBtn = panel.querySelector<HTMLButtonElement>("[data-copy]");
@@ -1869,84 +1870,66 @@ assertions:
 				const label = copyBtn.textContent;
 				copyBtn.textContent = changed.size ? "Copied!" : "No changes";
 				setTimeout(() => (copyBtn.textContent = label), 1200);
-			});
+			}, { signal });
 
 			panel
 				.querySelector<HTMLButtonElement>("[data-reset]")
-				?.addEventListener("click", () => seed());
+				?.addEventListener("click", () => seed(), { signal });
 
 			seed();
 			// Re-seed when the site theme toggles (SiteFooter dispatches themechange).
-			document.addEventListener("themechange", () => seed());
+			document.addEventListener("themechange", () => seed(), { signal });
 		}
 
 		// The Faces demo: the pill moves aria-hidden between the two faces.
-		function initFacesDemo() {
+		function initFacesDemo(signal: AbortSignal) {
 			const button = document.querySelector<HTMLButtonElement>("[data-faces-demo]");
 			const faces = document.querySelectorAll<HTMLElement>("[data-faces-demo-stack] > .ds-face");
 			button?.addEventListener("click", () => {
 				for (const face of faces) {
 					face.setAttribute("aria-hidden", String(face.getAttribute("aria-hidden") !== "true"));
 				}
-			});
+			}, { signal });
 		}
 
 		// The art demo: the checkbox sets data-art-play on every demo frame, the
 		// attribute ArtFrame's `play` sets.
-		function initArtDemo() {
+		function initArtDemo(signal: AbortSignal) {
 			const toggle = document.querySelector<HTMLInputElement>("[data-art-play-toggle]");
 			const frames = document.querySelectorAll<HTMLElement>("[data-art-demo]");
 			toggle?.addEventListener("change", () => {
 				for (const frame of frames) frame.toggleAttribute("data-art-play", toggle.checked);
-			});
+			}, { signal });
 		}
 
-		document.addEventListener("astro:page-load", () => {
-			initTokenControls();
-			initFacesDemo();
-			initArtDemo();
+		// Bound with onPage: on every page load (the client router swaps the
+		// DOM), every listener on the bind's signal, so the teardown before a
+		// swap removes them — the themechange one on the document included.
+		onPage(() => {
+			const ac = new AbortController();
+			initTokenControls(ac.signal);
+			initFacesDemo(ac.signal);
+			initArtDemo(ac.signal);
+			return () => ac.abort();
 		});
 	</script>
 </Layout>
 
 <style>
-	/* The page's one knob: the token panel's width (the Knobs is placed by the
-	   page). A layout knob, not a token — no DS step names a panel width. The
-	   catalogue itself is the site container wide. */
+	/* The catalogue is the site container wide. */
 	.ds-demo {
-		--demo-panel: 264px;
 		max-width: var(--container-max);
 		margin-inline: auto;
 		padding: var(--space-10) var(--space-6);
 		color: var(--text-primary);
 	}
-	/* Keep the catalogue clear of the fixed panel on wide screens. */
+	/* Keep the catalogue clear of the floating token panel (a Knobs, a
+	   --space-14 column inset by --space-4) above the compact step, where it
+	   docks to the bottom instead. */
 	@media (min-width: 901px) {
 		.ds-demo {
 			margin-inline: 0 auto;
-			padding-right: calc(var(--demo-panel) + var(--space-4) + var(--space-8));
-		}
-	}
-
-	/* THE TOKEN PANEL (a Knobs): fixed to the top-right corner on a wide
-	   screen; docked to the bottom as a scrollable sheet on a narrow one. */
-	.ds-demo__knobs {
-		position: fixed;
-		top: var(--space-4);
-		right: var(--space-4);
-		z-index: 20;
-		width: var(--demo-panel, 264px);
-		max-height: calc(100vh - var(--space-8));
-	}
-	@media (max-width: 900px) {
-		.ds-demo__knobs {
-			top: auto;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			width: auto;
-			max-height: 45vh;
-			border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
+			padding-right: calc(var(--space-14) + var(--space-4) + var(--space-8));
 		}
 	}
 	/* The catalogue's own headings are DS Headings — the page title at the
@@ -1966,6 +1949,10 @@ assertions:
 	}
 	.ds-demo__h {
 		margin-bottom: var(--space-4);
+	}
+	/* A sub-heading inside a section: the next block of the same section. */
+	.ds-demo__h--sub {
+		margin-top: var(--space-7);
 	}
 
 	/* Instrument token swatches: a square of the token beside its name and job. */

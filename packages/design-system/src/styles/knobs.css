@@ -1,6 +1,6 @@
 /* Knobs · KnobGroup · Knob — the control panel of a playground. A card
  * surface in the hairline with the deep shadow (it floats over the page), the
- * UI face at the small step. The page places it. */
+ * UI face at the small step. The page places it, or says `floating`. */
 .ds-knobs {
 	display: flex;
 	flex-direction: column;
@@ -15,6 +15,27 @@
 	color: var(--text-primary);
 	font-family: var(--font-ui);
 	font-size: var(--font-size-1);
+}
+/* floating — the playground's panel: fixed to the top-right corner, a
+ * --space-14 column as tall as the viewport lets it be (the body scrolls);
+ * at the compact step (the widget grid's 900) a sheet docked across the
+ * bottom, its top corners rounded. A page that must keep its content clear
+ * of the panel pads by --space-14 plus the inset. */
+.ds-knobs--floating-true {
+	position: fixed;
+	inset-block-start: var(--space-4);
+	inset-inline-end: var(--space-4);
+	z-index: 20;
+	inline-size: var(--space-14);
+	max-block-size: calc(100vh - var(--space-8));
+}
+@media (max-width: 900px) {
+	.ds-knobs--floating-true {
+		inset: auto 0 0;
+		inline-size: auto;
+		max-block-size: 45vh;
+		border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
+	}
 }
 .ds-knobs__head {
 	display: flex;

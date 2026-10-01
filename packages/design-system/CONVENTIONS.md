@@ -1160,8 +1160,11 @@ dark one; `tests/scenes.spec.ts` holds them.
   slot, a scrolling body of `Knob` rows (`label`, `type="range|color|checkbox|
   text"`, `out` for a live `<output data-out>`, the default slot for a row
   that holds its own inputs; every other prop goes to the input) in
-  `KnobGroup` fieldsets (`legend`), and an `actions` slot of Buttons. The
-  page places it (`/dotgrid`, the catalogue's token editor).
+  `KnobGroup` fieldsets (`legend`), and an `actions` slot of Buttons.
+  `floating` is the playground's placement (`/dotgrid`, the catalogue's token
+  editor): fixed to the top-right corner, a `--space-14` column as tall as
+  the viewport allows, and at the compact step (900) a sheet docked across
+  the bottom; without it the page places the panel.
 
 ---
 
