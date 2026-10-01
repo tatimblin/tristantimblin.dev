@@ -165,10 +165,10 @@ noted):
 | `--ticks-image`, `--ticks-image-ink` | the tick ruler as a gradient (hairlines on `--tick-pitch`) in currentColor, and in the ink — for a box that should read as a ruler and cannot take the classes (the player's progress bar). TickRuler draws its own on the same pitch. |
 | `--focus-ring`, `--focus-ring-offset`, `--focus-ring-inset` | the focus ring for everything focusable that is not a native control, drawn by `control.css` for every `ds-control`; the offset, and the inset form of it for a control that rings inside its box (set `--control-ring-offset: var(--focus-ring-inset)` in scope). |
 | `--playhead-dot` | a playhead's dot — the Volo season track's, the video carousel's. |
-| `--shadow-1..3` | the upstream shadow scale on the theme's `--shadow-color`, for the few things that float — a control panel. Cards are flat and take none. |
+| `--shadow-2`, `--shadow-3` | the upstream shadow scale on the theme's `--shadow-color`, for the few things that float — a control panel. Cards are flat and take none. |
 | `--voice-mono-*`, `--voice-figure-*` | the label voice (family, size, tracking) and the figure voice (family, weight, tracking, size) as custom properties, for a shadow-DOM consumer styled through `::part()`. Mono and Figure read them; a WidgetGrid redefines the sizes on its scale. |
 | `--duration-reveal / -settle / -swap / -quick / -loop`, `--ease-reveal` | the motion vocabulary; all `0s` under `prefers-reduced-motion: reduce`, so a transition timed by a token is a cut for that visitor and no component needs a reduced-motion block of its own. |
-| light-theme `--gray-*` | retuned warm (hue 80, stone/bone). Page, card, hairline and inks all follow. |
+| light-theme `--gray-*` | retuned warm (hue 80, stone/bone). Page, card, hairline and inks all follow. (`-700` / `-800` stay generated: nothing reads them.) |
 
 **Controls.** Every control — Button, IconButton, a Pill or Chip as a button or
 link, Anchor, PostRow's link, HitArea —
@@ -1245,7 +1245,7 @@ the trackings `--tracking-heading` (0, a bitmap face), `--tracking-caps` (0.1em)
 orange/pink-*` scales, `--hyperlink`, the `--token-*` code palette, and
 `--shadow-color`; plus the instrument tokens (previous section: `--lit`,
 `--wash-*`, `--tone-*`, `--hairline*`, `--bar-width`, `--tick-pitch`,
-`--ticks-image*`, `--focus-ring*`, `--playhead-dot`, `--shadow-1..3`, the
+`--ticks-image*`, `--focus-ring*`, `--playhead-dot`, `--shadow-2/-3`, the
 voices, the durations, `--ease-reveal` and the reveal's
 `--reveal-rise` / `--reveal-stagger`), `--tracking-hero` (the hero
 face's display tracking, the lockup's) and the two measures, `--measure-prose`
@@ -1273,7 +1273,7 @@ with metric-matched fallbacks in `src/styles/fonts.css`):
 | `--font-ui` | Mondwest Regular | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome; `--font-numeric` aliases it |
 | `--font-display` + `--font-display-weight` | Mondwest Thin (200) | the big thin numeral: `Stat variant="numeral"` |
 | `--font-body` + `--font-body-weight/-size/-line-height/-letter-spacing` | Neue Montreal Regular | reading text (`Body`, and the bare `body`) |
-| `--font-code` | the system mono stack | code alone — fenced blocks and inline code; no file is loaded (`--font-mono` is its legacy name) |
+| `--font-code` | the system mono stack | code alone — fenced blocks and inline code; no file is loaded |
 
 Migra and Mondwest are ONE family each with discrete cuts (Migra 500/700;
 Mondwest 200/300/400/700), so a role that uses one names the family AND the
