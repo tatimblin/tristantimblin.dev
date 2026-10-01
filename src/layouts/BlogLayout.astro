@@ -2,7 +2,8 @@
 // BlogLayout — the blog's shell: the site header in the flow, then one
 // column. By default the column is the reading measure under a page header
 // (kicker, h1, lede) — /txt, /txt/tag/<tag>, the 404. `wide` gives the column
-// the site container and leaves the header to the page (a post: PostLayout).
+// the site container (/txt's list, a post). Without a heading the page draws
+// its own header and its first row its own top distance (a post: PostLayout).
 import type { ComponentProps } from "astro/types";
 import Layout from "./Layout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
@@ -26,7 +27,13 @@ const hasLede = Astro.slots.has("lede");
 <Layout {...layout}>
 	<div class="blog">
 		<SiteHeader variant="flow" />
-		<main class:list={["blog__main", wide && "blog__main--wide"]}>
+		<main
+			class:list={[
+				"blog__main",
+				wide && "blog__main--wide",
+				!heading && "blog__main--headless",
+			]}
+		>
 			{heading && (
 				<header class="blog__header">
 					{kicker && <Mono class="blog__kicker">{kicker}</Mono>}
@@ -60,11 +67,14 @@ const hasLede = Astro.slots.has("lede");
 		padding-block: var(--space-11) var(--space-12);
 	}
 	/* The site container (.container's inset, restated: the bare gutter above
-	   would tie with the class). A post's first row carries its own distance
-	   from the header. */
+	   would tie with the class). */
 	.blog__main--wide {
 		max-width: none;
 		padding-inline: var(--container-inset);
+	}
+	/* No page header: the page's first row carries its own distance from the
+	   site header. */
+	.blog__main--headless {
 		padding-block: 0 var(--space-13);
 	}
 
@@ -86,7 +96,7 @@ const hasLede = Astro.slots.has("lede");
 			padding-block: var(--space-8) var(--space-10);
 		}
 		/* A post starts a step under the header, in the first screen. */
-		.blog__main--wide {
+		.blog__main--headless {
 			padding-block-start: var(--space-5);
 		}
 		.blog__header {

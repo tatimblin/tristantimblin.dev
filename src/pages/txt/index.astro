@@ -1,6 +1,6 @@
 ---
-// /txt — every post, newest first: the default BlogLayout shell over the
-// expanding post stack (PostStack): the newest open, the rest a ruled list.
+// /txt — every post, newest first: the BlogLayout shell, on the site
+// container, over the expanding post stack (PostStack): the newest open, the rest a ruled list.
 import BlogLayout from "../../layouts/BlogLayout.astro";
 import PostStack from "../../components/txt/PostStack.astro";
 import { BLOG_DESCRIPTION, BLOG_TITLE } from "../../lib/blog";
@@ -10,6 +10,7 @@ const posts = await getPosts();
 ---
 
 <BlogLayout
+	wide
 	title={`${BLOG_TITLE} — Tristan Timblin`}
 	description={BLOG_DESCRIPTION}
 	heading={BLOG_TITLE}
