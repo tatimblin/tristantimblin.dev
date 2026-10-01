@@ -1,16 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <!-- filler-11 — cards on a rail: a row of upright iso cards standing across two dim rails, marching down-right off the plate; two faces solid lavender, one ink printed with the lavender petals, one printed with a lavender burst. -->
   <g>
-    <path d="M 60 -10 L 330 145.9 M -10 80 L 190 195.5" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 160 44 L 186 29 V 59 L 160 74 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 150 50 L 176 35 V 65 L 150 80 Z" fill="var(--art-lavender)" />
-    <path d="M 220 84 L 246 69 V 99 L 220 114 Z" fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 210 90 L 236 75 V 105 L 210 120 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 290 134 L 316 119 V 149 L 290 164 Z" fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke" />
-    <path d="M 280 140 L 306 125 V 155 L 280 170 Z" fill="var(--art-lavender)" />
-    <path d="M 240 -10 L 266 -25 V 5 L 240 20 Z" fill="var(--art-lavender)" />
-    <path d="M 70 140 L 96 125 V 155 L 70 170 Z" fill="var(--art-ink)" />
-    <circle cx="60" cy="50" r="2" fill="var(--art-lavender)" />
-    <circle cx="110" cy="100" r="1.5" fill="var(--art-ink)" />
-    <circle cx="300" cy="60" r="1.5" fill="var(--art-ink)" />
+    <line x1="-6.77" y1="-23" x2="339.64" y2="177" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+    <line x1="-48.33" y1="1" x2="298.08" y2="201" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 43.46 12 L 12.29 30 L 12.29 -16 L 43.46 -34 ZM 40 -36 L 43.46 -34 L 12.29 -16 L 8.82 -18 ZM 8.82 28 L 12.29 30 L 12.29 -16 L 8.82 -18 Z" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 85.03 36 L 53.86 54 L 53.86 8 L 85.03 -10 Z" fill="var(--art-lavender)" />
+    <path d="M 81.57 -12 L 85.03 -10 L 53.86 8 L 50.39 6 ZM 50.39 52 L 53.86 54 L 53.86 8 L 50.39 6 Z" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 126.6 60 L 95.43 78 L 95.43 32 L 126.6 14 Z" fill="var(--art-ink)" />
+    <path d="M 123.14 12 L 126.6 14 L 95.43 32 L 91.96 30 ZM 91.96 76 L 95.43 78 L 95.43 32 L 91.96 30 Z" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+    <g transform="matrix(1.21 -0.7 0 1.4 81.91 40.4)">
+      <path d="M19.29 7.83A5 5 0 0 1 28.71 7.83A5 5 0 0 1 33.43 16A5 5 0 0 1 28.71 24.17A5 5 0 0 1 19.29 24.17A5 5 0 0 1 14.57 16A5 5 0 0 1 19.29 7.83ZM21.5 16A2.5 2.5 0 1 0 26.5 16A2.5 2.5 0 1 0 21.5 16Z" fill="var(--art-lavender)" fill-rule="evenodd" />
+    </g>
+    <path d="M 168.17 84 L 136.99 102 L 136.99 56 L 168.17 38 ZM 164.71 36 L 168.17 38 L 136.99 56 L 133.53 54 ZM 133.53 100 L 136.99 102 L 136.99 56 L 133.53 54 Z" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+    <g transform="matrix(1.21 -0.7 0 1.4 123.48 64.4)">
+      <polygon points="25.29,5.53 25.78,11.87 30.79,7.83 27.73,13.49 34.42,12.7 28.5,15.91 34.48,18.84 27.84,18.35 31.98,24.83 25.95,20.05 25.73,26.51 23.45,20.47 20.5,24.1 21.12,19.46 15.18,21.93 19.71,17.36 13.07,16.23 19.66,14.82 15.22,10.61 20.98,12.66 19.48,6.61 23.27,11.56" fill="var(--art-lavender)" />
+    </g>
+    <path d="M 209.74 108 L 178.56 126 L 178.56 80 L 209.74 62 Z" fill="var(--art-lavender)" />
+    <path d="M 206.28 60 L 209.74 62 L 178.56 80 L 175.1 78 ZM 175.1 124 L 178.56 126 L 178.56 80 L 175.1 78 Z" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 251.31 132 L 220.13 150 L 220.13 104 L 251.31 86 ZM 247.85 84 L 251.31 86 L 220.13 104 L 216.67 102 ZM 216.67 148 L 220.13 150 L 220.13 104 L 216.67 102 Z" fill="none" stroke="var(--art-ink)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
   </g>
 </svg>
