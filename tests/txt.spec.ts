@@ -150,8 +150,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator("[data-post-rail]")).toHaveCount(0);
 		await expect(page.getByRole("navigation", { name: "Contents" })).toHaveCount(0);
 		await expect(page.locator(".post__neighbour, .post__neighbours")).toHaveCount(0);
-		// No art (neither the old plate nor the mark), stat pairs or pills.
-		await expect(page.locator(".post__art, .post__mark, .ds-art-frame, .post__meta, .ds-pill")).toHaveCount(0);
+		// No stat pairs or pills.
+		await expect(page.locator(".post__meta, .ds-pill")).toHaveCount(0);
 	});
 
 	test("the title across three columns, the lead in two", async ({

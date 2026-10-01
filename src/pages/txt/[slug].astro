@@ -1,9 +1,10 @@
 ---
 // /txt/<slug> — one post. Thin: the collection entry, the numbers the layout
 // prints (its chronological number of the total, reading time), its hero
-// and its neighbours' — everything computed here, rendered by PostLayout. The body arrives already cut into sections (the rehype plugin
-// in astro.config, src/lib/mdx/post-sections.ts) and mapped onto DS
-// components at the <Content> below.
+// and its neighbours' — everything computed here, rendered by PostLayout.
+// The body arrives already cut into sections (the rehype plugin in
+// astro.config, src/lib/mdx/post-sections.ts) and mapped onto DS components
+// at the <Content> below.
 import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
 import { getImage } from "astro:assets";
 import { render } from "astro:content";

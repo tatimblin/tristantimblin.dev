@@ -33,26 +33,11 @@ type Props = ComponentProps<typeof Seo>;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		{/* The faces that paint above the fold on EVERY page: the body face
-		     (every paragraph), the UI face and its Bold (the header, the hero
-		     lede, every heading) and the hero cut of Migra (the wordmark lockup).
-		     They are @font-face'd in src/styles/fonts.css, which the browser only
-		     discovers after the stylesheet parses — preloading starts the fetch
-		     during HTML parse instead, so the swap happens before first scroll
-		     rather than after it.
-
-		     `crossorigin` is REQUIRED even though these are same-origin: fonts are
-		     always fetched in CORS mode, and a preload without it is treated as a
-		     different request, discarded, and fetched a second time.
-
-		     BOTH Migra cuts are here because the hero lockup uses both: the wordmark
-		     is set in the medium and the "&" / "other stories" in the bold. Missing
-		     either one leaves half the lockup swapping late.
-
-		     Mondwest's Light and Thin are NOT preloaded: they are served but hold no
-		     role, so nothing requests them and a preload would be a wasted fetch
-		     the browser warns about. Neue Montreal's Semibold is left to normal
-		     discovery for the same reason. */}
+		{/* Preload the faces every page paints above the fold, so the swap lands
+		     before first scroll rather than after fonts.css is parsed. Both Migra
+		     cuts: the hero lockup uses both. `crossorigin` is required even
+		     same-origin — fonts fetch in CORS mode, and a preload without it is
+		     discarded and fetched twice. Unused cuts are left out on purpose. */}
 		<link
 			rel="preload"
 			href="/fonts/neue-montreal-regular.woff2"
@@ -113,23 +98,11 @@ type Props = ComponentProps<typeof Seo>;
 				document.addEventListener("astro:after-swap", apply);
 			})();
 		</script>
-		{/* ARM THE ASSET REVEAL. src/styles/reveal.css only hides a [data-reveal]
-		     element while this class is present, so the class IS the opt-in and its
-		     removal is the universal escape hatch.
-
-		     Deliberately inline, dependency-free, and in <head>: every page bundles
-		     its custom elements into one module, so a single parse error there would
-		     take out the coordinator too. The timeout below is the only part of the
-		     mechanism outside that blast radius — it guarantees content appears even
-		     if no module ever runs. It must never be turned into an import.
-
-		     Not armed at all when the visitor asked for less motion or less data, or
-		     when IntersectionObserver is missing (the coordinator gates on it), so
-		     those visitors get the content immediately with no machinery involved.
-
-		     Armed on the initial hard load ONLY — no astro:after-swap hook, unlike
-		     the theme script above. Internal navigations run against warm caches, so
-		     re-arming would blink already-decoded content on every click. */}
+		{/* Arm the asset reveal: reveal.css hides [data-reveal] only while
+		     .reveal-armed is on <html>. Inline and import-free on purpose, so a
+		     broken bundle can't strand the page — the timeout always disarms.
+		     Skipped for reduced motion, save-data or no IntersectionObserver.
+		     Hard loads only: re-arming on a swap would blink cached content. */}
 		<script is:inline>
 			(function () {
 				if (window.__revealArmed) return;
@@ -170,8 +143,8 @@ type Props = ComponentProps<typeof Seo>;
 			declare global {
 				interface Window {
 					__lenis?: Lenis;
-				/** Swap the theme class on <html> (defined inline in <head>). */
-				__setTheme: (theme: "light" | "dark") => void;
+					/** Swap the theme class on <html> (defined inline in <head>). */
+					__setTheme: (theme: "light" | "dark") => void;
 				}
 			}
 

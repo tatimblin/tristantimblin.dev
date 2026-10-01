@@ -1,6 +1,6 @@
 /**
- * The blog's vocabulary: its name, its categories, and the two small
- * helpers every /txt page needs (grouping by year, the date line).
+ * The blog's vocabulary: its name, its categories, and the helpers the /txt
+ * pages share (ordering, numbering, neighbours, reading time, dates).
  *
  * CATEGORIES, NOT FIRST TAGS. A post carries several free-form `tags` — good
  * for search and for `article:tag` meta, useless as a taxonomy: the first tag
@@ -75,7 +75,7 @@ export const isoDate = (d: Date) => new Date(d).toISOString().split("T")[0];
  *  YYYY-MM-DD, which parse as UTC midnight, and formatting those locally
  *  prints the day BEFORE anywhere west of UTC while the datetime attribute
  *  still says the right one. */
-export function monthOf(d: Date): { short: string; long: string } {
+function monthOf(d: Date): { short: string; long: string } {
 	const date = new Date(d);
 	const of = (month: "short" | "long") =>
 		date.toLocaleDateString("en-US", { month, timeZone: "UTC" }).toLowerCase();

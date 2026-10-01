@@ -1,36 +1,12 @@
 ---
-// PostLayout — the reading page for a /txt post, RULED: the site header, then
-// one four-column grid in the site container that every row of the page is
-// laid on, top to bottom:
+// PostLayout — the reading page for a /txt post, on BlogLayout's wide
+// column: one four-column grid (--ruled-columns / --ruled-gap, the tokens the
+// ruled Prose reads too, so the page's rows and the body's sections fall on
+// the same lines), one column below 1024.
 //
-//   1. The STATUS STRIP — one line between two strong hairlines, in the
-//      structure voice: `TXT / 005` · the category · `3 MIN · 541 WORDS` ·
-//      the date, `02.02.2026`, on the right edge.
-//   2. The column numbers, `01 02 03 04`, tiny over the columns.
-//   3. The TITLE across the first three columns at the display step, and the
-//      LEAD (the excerpt) in the second and third.
-//   4. The HERO, when the frontmatter names one: a ruled `Fig` — `Fig. 01 /`
-//      in the first column, the image on a hairline across the other three,
-//      its caption under it. The body's figures count on from it.
-//   5. The SECTIONS: the body, cut at each h2 by the rehype plugin and drawn
-//      by Prose `ruled` — each a row under a hairline, its number and heading
-//      sticky in the first column, its text in the next two, the fourth air.
-//      A post with no h2s is one section, `00 / Intro`, its text at the same
-//      measure as any other.
-//   6. The INDEX: an `Index` at the foot, its head row the ink with the page
-//      colour on it — `INDEX · NO. · TITLE · FILED` — then the tags, the
-//      previous (older) post and the next (newer) as hairline-cut rows; an
-//      end with nothing beyond it is a dim row saying so.
-//
-// The grid is `--ruled-columns` / `--ruled-gap` on the article, the tokens
-// the ruled Prose reads too, so the page's rows and the body's sections fall
-// on the same lines. Below 1024 it is one column: the strip two by two, the
-// heads over their text, the hero and the table full width. The page's headings take the heading face at
-// the Bold by retuning the heading tokens in scope, as Prose does.
-//
-// The body arrives via <slot /> already sectioned and mapped to DS
-// components (src/components/mdx-components.ts, applied at the <Content>
-// render site in txt/[slug].astro). `image` is the social card only.
+// The body arrives via <slot /> already sectioned and mapped to DS components
+// (src/components/mdx-components.ts, applied in txt/[slug].astro). `image` is
+// the social card only; `hero` is the figure on the page.
 import type { ImageMetadata } from "astro";
 import BlogLayout from "./BlogLayout.astro";
 import Img from "../components/mdx/Img.astro";
@@ -255,11 +231,9 @@ const neighbourRows = [
 		margin-block-start: var(--space-8);
 	}
 
-	/* THE TITLE AND THE LEAD. The title at the display step
-	   (Heading size 6, responsive: 72px, 44px below 1024) across three
-	   columns at the heading leading (Mondwest's descenders are deep: any
-	   tighter and a g reaches the next line's caps), balanced so two lines share the words; the lead a step
-	   down in the second and third. */
+	/* THE TITLE AND THE LEAD. The title at the display step (72px, 44px
+	   below 1024) across three columns, balanced so two lines share the
+	   words; the lead a step down in the second and third. */
 	.post__title {
 		grid-column: 1 / span 3;
 		grid-row: 1;
