@@ -1,24 +1,11 @@
 ---
-// FullHeroLayout — a reusable page shell with three drop-in regions:
-//
-//   scene    (slot="scene")   full-viewport BACKGROUND layer (100svh, absolute),
-//                             faded top+bottom; owns --hero-height. The
-//                             direct-WebGL <dotted-grid> drops in here (any
-//                             full-bleed visual works — the Layout is
-//                             scene-agnostic). Heading + content flow OVER it.
-//   heading  (slot="heading") the large heading region, inset to the gutter but
-//                             full-width within it. Its slotted content
-//                             self-manages: it may ANIMATE (drop in
-//                             <stories-heading> with the full-width wordmark +
-//                             its own pin/parallax/reveal) or just flow.
-//   content  (default slot)   a BARE, full-width opaque riser. Its only job is
-//                             the pin coupling — it's opaque + z-indexed so
-//                             content rising from below cleanly meets the pinned
-//                             heading. The consumer composes ALL grids/sections
-//                             here: full-bleed by default; a contained row opts
-//                             into gutters with the site's .container class.
-//
-// Wraps the base Layout (html/head/tokens/fonts/ClientRouter) unchanged.
+// FullHeroLayout — a page shell with three regions over the base Layout:
+//   scene    (slot="scene")   a full-viewport background layer, faded top and
+//                             bottom; heading and content flow over it.
+//   heading  (slot="heading") the lockup region, inset to the gutter; slotted
+//                             content owns its own animation.
+//   content  (default slot)   a bare opaque riser; the consumer composes its
+//                             grids here (.container for a gutted row).
 import Layout from "./Layout.astro";
 
 interface Props {
@@ -36,14 +23,8 @@ const { title, description, image } = Astro.props;
 	image={image}
 >
 	<div class="fh">
-		{/* SCENE: full-bleed; height driven by --hero-height. */}
 		<div class="fh__scene"><slot name="scene" /></div>
-
-		{/* HEADING: inset to the container gutter so a 12-col lockup lines up
-		     with the content rows below. Slotted content owns any animation. */}
 		<div class="fh__heading"><slot name="heading" /></div>
-
-		{/* CONTENT: bare opaque riser. The consumer builds rows/sections here. */}
 		<div class="fh__content"><slot /></div>
 	</div>
 </Layout>
@@ -79,35 +60,20 @@ const { title, description, image } = Astro.props;
 	.fh {
 		/* Positioning context for the absolute scene layer below. */
 		position: relative;
-		/* Contained: the heading region sits in the same box as every .container
-		   row — the site's one --container-inset (global.css), so the lockup lines
-		   up with the header above it and the content rows below. The scene stays
-		   full-bleed behind it. Named here because the videos widget reads it to
-		   work out how much page margin lies outside the container. */
+		/* The site's one --container-inset, so the lockup lines up with the header
+		   and the content rows. The videos widget reads it for the margin outside
+		   the container. */
 		--hero-inset: var(--container-inset);
-		/* SCENE-OWNED BOTTOM UI. A scene whose own interactive/legible UI hugs its
-		   BOTTOM edge (e.g. the carousel's date scrubber + caption) declares how much
-		   of that edge it occupies; the heading group then rests ABOVE it rather than
-		   through it. 0 for a scene that is pure background (the default). A scene
-		   should MEASURE this and publish it, not restate a breakpoint constant. */
+		/* How much of the scene's bottom edge its own UI occupies (the carousel's
+		   scrubber + caption; see the relay above). The scene MEASURES this; a
+		   pure background reserves nothing. */
 		--hero-floor: 0px;
-		/* Breathing room between the bottom of the heading group and the floor. */
 		--hero-fold-gap: var(--space-5);
-		/* THE FOLD, in two clamps. The slotted heading MEASURES its content and
-		   publishes --sh-group-h (the group's full height), --sh-wordmark-h, and
-		   --sh-header-clear (the minimum lead that clears the site header); the
-		   arithmetic lives here, in CSS, so it re-resolves against a true 100svh on
-		   every layout pass and in the right units.
-
-		   ① LEAD — bottom-anchor the group above the floor, but never above the
-		   header. This is the compression budget: a group that grows eats this
-		   whitespace first, sliding up toward the header. */
-		/* The TOTAL bottom reserve. Scene-owned UI is all of it: every part of the
-		   heading region now scrolls with the page, so nothing there is anchored to the
-		   viewport bottom. (The intro used to be, via an absolute box inside the sticky
-		   pin; it published a --sh-sub-floor that stacked on here. It is plain flow
-		   content now — see the .sh__sub note in stories-heading's styles.css.) */
 		--hero-reserve: var(--hero-floor);
+		/* THE FOLD, in two clamps over the group height the slotted heading measures
+		   (--sh-group-h) and the lead that clears the site header (--sh-header-clear).
+		   ① LEAD bottom-anchors the group above the floor, never above the header: a
+		   growing group eats this whitespace first. */
 		--hero-lead: max(
 			var(--sh-header-clear, 0px),
 			calc(
@@ -115,17 +81,12 @@ const { title, description, image } = Astro.props;
 					var(--sh-group-h, 0px)
 			)
 		);
-		/* ② HEIGHT — grow the scene only once ① has bottomed out. While the group fits,
-		   lead + group + gap + floor == 100svh exactly, so this returns 100svh and
-		   growth is dormant; once the lead is pinned at --sh-header-clear the sum
-		   exceeds one screen and the scene grows by exactly the overflow. svh (not vh)
-		   so the mobile URL bar doesn't change the baseline.
-
-		   Deliberately NOT computed in JS: deriving the lead from the scene's MEASURED
-		   height makes every grown state self-justifying (a taller scene supports the
-		   same tall lead that grew it), so the hero would never shrink back. Here both
-		   clamps read the same fixed 100svh, so the result is a pure function of the
-		   content — no hysteresis. */
+		/* ② HEIGHT grows the scene only once the lead has bottomed out: while the
+		   group fits the sum is exactly 100svh. svh, not vh, so the mobile URL bar
+		   does not move the baseline. In CSS rather than JS on purpose: a lead
+		   derived from the scene's MEASURED height makes every grown state
+		   self-justifying and the hero never shrinks back; here both clamps read the
+		   same fixed 100svh, so there is no hysteresis. */
 		--hero-height: max(
 			100svh,
 			calc(
@@ -133,35 +94,25 @@ const { title, description, image } = Astro.props;
 					var(--hero-reserve)
 			)
 		);
-		/* Half the wordmark's rendered height, as a fraction of the inner width: the
-		   full-width SVG has a ~3.68:1 glyph aspect, so half-height ≈ 0.109 · innerW.
-		   Used only by the CSS fallback for --hero-lead until the JS measures and sets
-		   --hero-lead directly (2 · split ≈ the wordmark height to skip past). */
+		/* Pre-JS estimate of the group height: the full-width wordmark SVG has a
+		   ~3.68:1 glyph aspect (half-height ≈ 0.109 · inner width), plus an allowance
+		   for "other stories" and the intro. The heading overwrites it with the
+		   measured value in its connectedCallback. Deliberately GENEROUS: it cannot
+		   see --hero-floor, and over-estimating fails toward empty space at the
+		   bottom rather than toward printing the intro over the scene's UI. */
 		--hero-split-frac: 0.109;
 		--hero-split: calc(
 			var(--hero-split-frac) * (100vw - 2 * var(--hero-inset))
 		);
-		/* Pre-JS estimate of the heading group's height, for the fold clamps below: the
-		   wordmark (2 · split, per the glyph aspect) plus an allowance for
-		   "other stories" + the intro/CTAs beneath it. The slotted heading overwrites
-		   this with the MEASURED value on its first layout pass (synchronously in its
-		   connectedCallback), so this governs only the pre-hydration frame — but it is
-		   deliberately GENEROUS rather than tight: the estimate cannot see --hero-floor
-		   (a scene publishes that from JS too), so over-estimating the group keeps the
-		   lead short and the fold high, which fails toward empty space at the bottom
-		   instead of toward printing the intro over the scene's bottom UI. */
 		--sh-group-h: calc(2 * var(--hero-split) + 42svh);
 	}
 
-	/* SCENE: a full-viewport BACKGROUND layer, pinned to the top of .fh. The
-	   heading + content flow OVER it (higher z-index). Top+bottom fade masks blend
-	   it into the page so it has no hard seam. */
+	/* SCENE: a full-viewport background layer under the heading and content. */
 	.fh__scene {
 		--dotted-grid-height: var(--hero-height);
-		/* The edge fade, hoisted so a consumer can retarget it. A mask applies to the
-		   WHOLE subtree and no z-index escapes it — so a scene with legible UI near an
-		   edge (e.g. the carousel's date ruler along the bottom) sets this to `none`
-		   here and re-applies the same gradient to its visual layer alone. */
+		/* The edge fade, hoisted so a consumer can switch it off: a mask applies to
+		   the whole subtree, so a scene with legible UI near an edge re-applies it
+		   to its visual layer alone. */
 		--fh-scene-mask: linear-gradient(
 			to bottom,
 			transparent 0,
@@ -178,35 +129,22 @@ const { title, description, image } = Astro.props;
 		mask-image: var(--fh-scene-mask);
 	}
 
-	/* HEADING: inset to the container gutter, over the scene. A LEAD space above the
-	   wordmark drops the whole lockup down so the group (wordmark + "&" + "other
-	   stories" + intro) rests near the bottom of the scene, clear of --hero-floor.
-	   The lead is the COMPRESSION BUDGET: the slotted <stories-heading> measures the
-	   group and sets --hero-lead to bottom-anchor it, so a growing group eats this
-	   whitespace first and only pushes --hero-height past 100svh once the lead has
-	   bottomed out at the site header. --hero-split is the CSS-calc fallback for
-	   first paint (half the wordmark's height, per the ~3.68:1 glyph aspect); the
-	   measured lead only ever tightens from there. z-index ABOVE the content riser
-	   so the pinned lockup stays visible while copy rises. */
+	/* HEADING: inset to the container gutter, dropped down by the lead so the
+	   group rests near the bottom of the scene. Above the content riser so the
+	   pinned lockup stays visible while copy rises. */
 	.fh__heading {
 		padding-inline: var(--hero-inset);
-		/* --hero-lead resolves to the CSS-calc fallback until the heading publishes its
-		   measured --sh-group-h (both terms of the max() then become content-driven).
-		   Pre-JS that fallback places the lockup by the wordmark's ~3.68:1 aspect. */
 		padding-block-start: var(--hero-lead);
 		position: relative;
 		z-index: 3;
-		/* This region is full-width and tall at z-index 3, but the slotted lockup
-		   only paints its left-aligned text — a pinned heading's empty area would
-		   sit OVER content rising below (e.g. the video ruler at ~50vh) and swallow
-		   its drag/click. Let pointers fall THROUGH the region; slotted content
-		   re-enables interaction on its visible parts (pointer-events: auto). */
+		/* The region is full-width and tall but paints only its text; its empty area
+		   would swallow drags meant for the scene's UI underneath. Slotted content
+		   re-enables pointers on its visible parts. */
 		pointer-events: none;
 	}
 
-	/* CONTENT: bare, full-width opaque riser. No padding / max-width / grid — the
-	   consumer owns those. Opaque + z-indexed (below the heading) so content
-	   rising from below cleanly meets the pinned heading and pushes it away. */
+	/* CONTENT: a bare, opaque riser below the heading, so content rising from
+	   below meets the pinned lockup cleanly. The consumer owns the grids. */
 	.fh__content {
 		background: var(--background);
 		position: relative;

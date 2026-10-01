@@ -1,12 +1,8 @@
 ---
-// An autoplaying dotted-grid carousel with a vertical date ruler. Reusable and
-// separate from VideoReel: this one steps through a list of clips (advancing when
-// each clip finishes) and exposes a discrete slider — one major tick per clip —
-// that magnifies toward the selection like the iOS Contacts alphabet scrubber.
-//
-// The clip data is authored in the markup (on each ruler tick + the caption) so
-// it degrades gracefully; the <video-carousel> custom element upgrades it into
-// the interactive scrubber. See packages/video-carousel.
+// An autoplaying dotted-grid carousel with a date ruler that doubles as a
+// scrubber. The clip data is authored in the markup (one ruler tick per clip,
+// plus the caption) so it degrades gracefully; the <video-carousel> custom
+// element upgrades it. See packages/video-carousel.
 import Mono from "@whois/design-system/Mono";
 import clipsData from "../data/video-clips.json";
 
@@ -21,96 +17,63 @@ interface Clip {
 interface Props {
 	/** Which side the date ruler sits on relative to the video card. */
 	rulerSide?: "left" | "right";
-		/** Pin the ruler axis (bypasses the ≤640px auto-flip). Omit for responsive. */
+	/** Pin the ruler axis (bypasses the ≤640px auto-flip). Omit for responsive. */
 	orientation?: "vertical" | "horizontal";
 	/**
 	 * The host has been given a box (a grid cell with a definite height) and the
-	 * clip fills it: the stage takes the whole host and the grid cover-maps into
-	 * it; with `rulerSide="right"` the ruler overhangs the host's edge (the
-	 * element's `fill` attribute; see the package's styles.css).
+	 * clip fills it; with `rulerSide="right"` the ruler overhangs the host's edge
+	 * (the element's `fill` attribute; see the package's styles.css).
 	 */
 	fill?: boolean;
 	/**
-	 * The carousel as a full-bleed background scene: the host fills the box it is
-	 * given, the clip cover-fills it and dissolves into the ruler, which sits along
-	 * the bottom edge above the caption (the element's `scene` attribute; see the
-	 * package's styles.css). Pair with `orientation="horizontal"`.
+	 * The carousel as a full-bleed background scene: the clip cover-fills the host
+	 * and dissolves into the ruler, which sits along the bottom edge above the
+	 * caption (the element's `scene` attribute). Pair with `orientation="horizontal"`.
 	 */
 	scene?: boolean;
 	/** Extra class(es) forwarded to the <video-carousel> host. */
 	class?: string;
 	/**
-	 * Develop the halftone in on first arrival, brightest dots first (the stage's
-	 * <dotted-grid> `intro`). Opt-in per consumer rather than always-on: it is an
-	 * ENTRANCE, so it earns its keep where the carousel IS the hero and the visitor
-	 * is looking straight at it, but not for the footer widget, which is already
-	 * mid-page behind a scroll-driven dock.
-	 * `intro` is the wipe duration in ms, `introDelay` the hold before it starts.
+	 * Develop the halftone in on first arrival (the stage's <dotted-grid> `intro`,
+	 * a duration in ms; `introDelay` the hold before it). Opt-in: an entrance earns
+	 * its keep where the carousel IS the hero, not mid-page behind a scroll dock.
 	 */
 	intro?: number;
 	introDelay?: number;
 	/**
-	 * Animate clip-to-clip changes instead of cutting: `xfade` is the transition's
-	 * length in ms, `xfadeMode` picks the style (`threshold` | `rain`), and
-	 * `xfadeLive` keeps BOTH clips playing through the blend — which also advances
-	 * each clip one transition early, so the change overlaps the outgoing clip's tail
-	 * rather than starting after it. Opt-in per consumer, like `intro`.
+	 * Animate clip-to-clip changes: `xfade` is the length in ms, `xfadeMode` the
+	 * style, and `xfadeLive` keeps both clips playing through the blend (which
+	 * also advances each clip one transition early).
 	 */
 	xfade?: number;
 	xfadeMode?: "threshold" | "rain";
 	xfadeLive?: boolean;
 	/**
-	 * THE HALFTONE LOOK, per instance. These were fixed on the element until the two
-	 * consumers wanted different ones: the footer widget is a small card mid-page and
-	 * carries the brighter, coarser grid the defaults describe, while the mobile hero —
-	 * where this carousel IS the full-bleed scene, at 0.55 opacity under the wordmark —
-	 * wants the finer, dimmer one it had before. A default that suits a thumbnail does
-	 * not suit a full screen, so the look belongs to the consumer rather than the
-	 * component.
-	 * Defaults are the widget's values; pass any subset to override.
+	 * The halftone look, per instance — a default that suits the footer card does
+	 * not suit a full screen. `cellSize` is the lattice pitch (finer at roughly
+	 * constant coverage); `dotScale` shrinks the dot inside an unchanged cell,
+	 * which is what reads as "smaller dots". Defaults are the widget's values.
 	 */
 	cellSize?: number;
-	/**
-	 * Dot size as a fraction of the cell (the element's `dot-scale`), independent of
-	 * `cellSize`. The two are easy to confuse and do different jobs: cellSize is the
-	 * LATTICE PITCH, so lowering it shrinks each dot but packs proportionally more of
-	 * them in — the grid gets finer at roughly constant coverage. dotScale shrinks the
-	 * dot INSIDE an unchanged cell, which is the one that reads as "smaller dots" and
-	 * opens up the gaps between them. 1 fills the cell edge-to-edge at full brightness.
-	 */
 	dotScale?: number;
 	levels?: number;
 	gamma?: number;
 	contrast?: number;
 	/**
-	 * Dot colour. Omitted by default so the element falls back to --color-fg and the
-	 * grid inverts with the active theme. This defaulted to "#fff", which silently
-	 * assumed a dark page: --color-bg in the light theme is oklch(99.24%), so white
-	 * dots sat on a white backdrop and the halftone vanished. Pass a fixed colour
-	 * only for a scene that is genuinely theme-independent — and pick one with
-	 * contrast against BOTH backdrops (the hero's mobile carousel uses a mid grey).
+	 * Dot colour. Omit so the element falls back to --color-fg and inverts with the
+	 * theme; pass a fixed colour only for a scene that reads against BOTH backdrops
+	 * (a "#fff" default once made the light theme's halftone vanish).
 	 */
 	color?: string;
-	/**
-	 * The sparse-field levers, forwarded to the element: `cutoff` blanks cells at or
-	 * below a brightness (no dot, no hatch), `feather` dissolves the ones just above it
-	 * so the field fades out instead of ending at a contour, `denoise` reads each cell
-	 * as the average of its footprint so codec noise stops deciding which cells light,
-	 * and `crosshatch` is the element's shadow engraving — 0 turns it off, which also
-	 * removes its rotated second lattice (a moiré source against the dot grid).
-	 * See the attribute docs in packages/dotted-grid for the full contract.
-	 */
+	/** The sparse-field levers, forwarded to the element; see packages/dotted-grid. */
 	cutoff?: number;
 	feather?: number;
 	denoise?: number;
 	crosshatch?: number;
 	/**
-	 * Tone overrides for the LIGHT theme, forwarded as the element's `light-*`
-	 * attributes (used while the backdrop is light). The same values don't read the
-	 * same in both themes: a small light dot on dark glows and reads larger than it
-	 * is, while the same dot in dark ink on a light page reads as a speck — so light
-	 * usually wants more ink (lower gamma/cutoff, a bigger dotScale). Omit to use
-	 * one set of values for both.
+	 * Tone overrides for the light theme (the element's `light-*` attributes): a
+	 * dark speck on a light page reads fainter than a light dot glowing on dark,
+	 * so light usually wants more ink.
 	 */
 	light?: {
 		gamma?: number;
@@ -121,30 +84,21 @@ interface Props {
 		levels?: number;
 	};
 	/**
-	 * Cap on the halftone's render DPR. The shader's cost is per-pixel and the two
-	 * consumers differ by an order of magnitude in canvas area, so a full-bleed
-	 * consumer should pass 1 while the footer card keeps the element's default of 2.
-	 * See effectiveDpr() in packages/dotted-grid for what the cap does and why it must
-	 * stay an integer.
+	 * Cap on the halftone's render DPR. The shader's cost is per pixel, so a
+	 * full-bleed consumer passes 1; see effectiveDpr() in packages/dotted-grid for
+	 * why it must stay an integer.
 	 */
 	maxDpr?: number;
 	/**
-	 * Lay the caption OVER the clip, bottom-left, as a TV caption: each run of text
-	 * sits on its own highlight that hugs it line by line (the element's
-	 * `caption-overlay` attribute; see styles.css). Off, the caption reads as type
-	 * under the clip — or wherever a consumer positions it (the mobile hero).
+	 * Lay the caption over the clip, bottom-left, as a TV caption with a highlight
+	 * hugging each line (the element's `caption-overlay` attribute).
 	 */
 	captionOverlay?: boolean;
 }
 
-// The clips are DATA, in src/data/video-clips.json: real footage
-// prepared by tools/dotgrid/prepare-video.sh into
-// /public/videos/website-carousel/web (960px, audio-stripped, faststart H.264;
-// iPhone HLG sources tonemapped + brightness-normalized for the halftone look).
-// Location + date come from each clip's embedded capture metadata (GPS reverse-
-// geocoded); descriptions are read from the footage. Ordered oldest→newest so
-// autoplay steps forward in time along the date ruler. Typed here, so a row
-// missing a field fails the build rather than rendering an empty caption.
+// The clips are data (src/data/video-clips.json): footage prepared by
+// tools/dotgrid/prepare-video.sh, ordered oldest→newest so autoplay steps
+// forward in time. Typed, so a row missing a field fails the build.
 const clips: Clip[] = clipsData;
 
 const {
@@ -175,25 +129,20 @@ const {
 
 const first = clips[0];
 
-// Each clip ships an H.264 .web.mp4 (universal fallback) and a smaller AV1/VP9
-// .web.webm alongside it (see tools/dotgrid/prepare-carousel.sh). The .webm sits
-// next to the .mp4 with the same stem, so derive its URL rather than authoring it
-// per clip. The <dotted-grid> prefers the webm where the browser can play it.
+// Each clip's smaller AV1/VP9 .webm sits beside its .mp4 with the same stem.
 const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 ---
 
 <video-carousel
 	class:list={["vc", className]}
 	tick-src="/audio/tick_004.ogg"
-		ruler-side={rulerSide}
+	ruler-side={rulerSide}
 	orientation={orientation}
 	fill={fill ? "" : undefined}
 	scene={scene ? "" : undefined}
 	caption-overlay={captionOverlay ? "" : undefined}
 >
-	{/* Ruler + video share a row so the ruler's height tracks the VIDEO box only
-	   (not the caption). On mobile this row collapses and the ruler drops below the
-	   card as a horizontal strip (see styles.css + the orientation logic in JS). */}
+	{/* Ruler + video share a row so the ruler's height tracks the video box only. */}
 	<div class="vc__main">
 		<div class="vc__ruler" role="group" data-vc-ruler aria-label="Select clip by date">
 			{
@@ -214,13 +163,7 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 			}
 		</div>
 
-		{/* A <figure>: the clip with its <figcaption> below, so the caption is
-		   the clip's caption to assistive tech and not a stray element. */}
 		<figure class="vc__stage" data-vc-stage>
-			{/* The intro wipe (when a consumer opts in) runs ONCE, on the first clip —
-			   the element latches it, so stepping to the next clip swaps the source
-			   without re-developing the frame. That is what makes it usable here: an
-			   entrance for the carousel, not an effect on every advance. */}
 			<dotted-grid
 				class="vc__grid"
 				data-vc-grid
@@ -252,14 +195,10 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				xfade-mode={xfadeMode}
 				xfade-live={xfadeLive ? "" : undefined}
 			></dotted-grid>
-			{/* The caption in the instrument voices: what the clip is as a caps mono
-			   label, its place in the dim sentence-case mono (no date — the ruler
-			   already says when). The element rewrites the [data-vc-*] fields on every
-			   selection. Two RUNS (.vc__cap-run), each inside its own line
-			   (.vc__cap-line): the title, then the place. Both wrappers are `display: contents` by
-			   default, so the fields lay out exactly as if they were the caption's
-			   direct children; `caption-overlay` turns them on so each run can carry
-			   one highlight that follows its text across a wrap. */}
+			{/* Title then place, no date (the ruler says when). Each run sits in its
+			   own line so `caption-overlay` can give it one highlight that follows the
+			   text across a wrap; both wrappers are `display: contents` otherwise. The
+			   element rewrites the [data-vc-*] fields on every selection. */}
 			<figcaption class="vc__caption">
 				<span class="vc__cap-line">
 					<span class="vc__cap-run vc__cap-run--title">

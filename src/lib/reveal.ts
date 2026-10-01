@@ -1,78 +1,46 @@
 /**
- * The asset-arrival reveal coordinator.
+ * The asset-arrival reveal coordinator: holds `[data-reveal]` elements invisible
+ * and eases them in once their asset has decoded AND they are scrolled into
+ * view. The motion itself is CSS (src/styles/reveal.css, DS tokens); this
+ * decides only WHEN.
  *
- * THE PROBLEM. Content that carries an asset — a post image, a widget's media —
- * snaps in at full strength the instant that asset decodes, in whatever order the
- * network finishes. Nothing on this site had a mount-time entrance, so the page
- * assembled visibly rather than arriving.
+ * WHAT THIS DELIBERATELY DOES NOT TOUCH:
  *
- * WHAT THIS DOES. Holds marked elements invisible, then eases them in once their
- * asset is decoded AND they are scrolled into view. This is a coordinator, not an
- * animation library: the motion is two declarations in src/styles/reveal.css and
- * the durations are DS tokens. What lives here is only the decision of WHEN.
+ *  1. THE HERO. Never mark anything inside `.fh`: the homepage's LCP element is
+ *     the wordmark, so holding it back for `document.fonts.ready` trades a
+ *     one-frame reflow for hundreds of ms of measured LCP. Each custom element
+ *     fades its own generated layer from inside its package.
  *
- * WHAT THIS DELIBERATELY DOES NOT TOUCH — read before extending:
+ *  2. ANY PROPERTY BUT `opacity`. stories-heading's fitFold() measures `.sh__sub`
+ *     (`position: fixed` on desktop) in viewport coordinates, so any ancestor with
+ *     `transform`, `translate`, `filter`, `backdrop-filter`, `contain: paint` or
+ *     `content-visibility` becomes its containing block and silently corrupts the
+ *     fold (measured: `filter: blur(0px)` moved it 490px). Opacity is neither a
+ *     containing block nor an input to any measurement.
  *
- *  1. THE HERO. Never mark anything inside `.fh`. The homepage's Largest
- *     Contentful Paint element is the SVG wordmark text (measured: ~323k px² at
- *     156ms), so holding the hero back to wait for `document.fonts.ready` would
- *     trade a one-frame reflow for hundreds of ms of *measured* LCP — paying a
- *     real metric to hide a cosmetic one. The lockup's font-swap jump is fixed at
- *     its source instead (self-hosted/preloaded faces), and each custom element
- *     fades the layer it generates from inside its own package.
+ *  3. `pointer-events`. The hero's full-width boxes fall through to the date
+ *     scrubber beneath them (tests/hero-fold.spec.ts); an `auto` anywhere in that
+ *     chain breaks reachability.
  *
- *  2. ANY PROPERTY BUT `opacity`. The hero's layout is load-bearing CSS
- *     arithmetic (--hero-lead / --hero-height in FullHeroLayout.astro) and
- *     `stories-heading`'s fitFold() measures `.sh__sub` — which is
- *     `position: fixed` on desktop — in VIEWPORT-ABSOLUTE coordinates. Any
- *     ancestor with `transform`, `translate`, `filter`, `backdrop-filter`,
- *     `contain: paint` or `content-visibility` becomes the containing block for
- *     that fixed element and silently corrupts the fold. Measured on this page:
- *     `opacity` on an ancestor leaves `.sh__sub` at its viewport anchor, while
- *     `filter: blur(0px)` moves it 490px — right out of a 900px viewport. Opacity
- *     is the one visual verb that is neither a containing block for fixed
- *     descendants nor an input to getBoundingClientRect / getBBox /
- *     ResizeObserver. Use it and nothing else.
+ *  4. `.sh__sub`'s opacity. Its scroll-timeline animation with `fill-mode: both`
+ *     forces `opacity: 1` at scroll 0 from the animation origin, which outranks
+ *     anything set here.
  *
- *  3. `pointer-events`. The hero relies on a five-level `none → auto`
- *     fall-through chain so its invisible full-width boxes don't swallow the date
- *     scrubber's drags (asserted in tests/hero-fold.spec.ts). Writing `auto`
- *     anywhere in that chain breaks reachability.
- *
- *  4. `.sh__sub`'s opacity. It already animates opacity + visibility on a
- *     scroll-timeline with `animation-fill-mode: both`, so at scroll 0 the
- *     animation's before-phase forces `opacity: 1` from the animation origin —
- *     which outranks any transition or declaration here. A reveal on that element
- *     would appear to do nothing at all.
- *
- * FAILING VISIBLE. Hiding content from JS is only safe if every failure path ends
- * with it shown. The hidden rule requires BOTH `html.reveal-armed` (added by a
- * dependency-free inline script in the document head, which also schedules its own
- * removal) AND the absence of the revealed state. So removing the class or setting
- * the state each independently reveals, and neither depends on this module loading:
- * no JS → never armed → visible. Bundle 404s or throws → the inline backstop
- * disarms → visible. An asset hangs → the per-group deadline fires → visible.
- *
- * Lifecycle follows the Videos.astro idiom (module singleton + `astro:page-load`
- * bind + `astro:before-swap` teardown) rather than a `data-` marker, because this
- * owns cross-element state and must genuinely rebuild per navigation.
+ * FAILING VISIBLE. The hidden rule requires BOTH `html.reveal-armed` (added by an
+ * inline head script that also schedules its own removal) AND the absence of the
+ * revealed state, so every failure path ends shown: no JS → never armed; bundle
+ * 404s → the inline backstop disarms; an asset hangs → the group deadline fires.
  */
 
-/** Cap on how long a group waits for its assets before revealing anyway. Assets
- *  here are below the fold and already decoded by the time they're scrolled to,
- *  so this is a backstop for the pathological case, not the common path. */
+/** Cap on how long a group waits for its assets before revealing anyway. */
 const DEADLINE_MS = 600;
 
-/** Fire slightly before the element scrolls in, so it is already settling as it
- *  enters rather than starting once fully on screen. */
 const IN_VIEW_MARGIN = "0px 0px -10% 0px";
 const IN_VIEW_THRESHOLD = 0.2;
 
-/** `data-reveal-eager`: fire BEFORE the element reaches the viewport instead of
- *  once a fifth of it is in. For an element whose own entrance is scroll-driven —
- *  the videos carousel parallaxes ~90vh as it docks — the default trigger hides
- *  the first stretch of that motion, so the choreography plays out behind an
- *  opacity of 0 and the visitor only ever sees its tail. */
+/** `data-reveal-eager`: fire before the element reaches the viewport, for one
+ *  whose own entrance is scroll-driven (the videos carousel parallaxes ~90vh as
+ *  it docks) and would otherwise play out behind an opacity of 0. */
 const EAGER_MARGIN = "0px 0px 20% 0px";
 const EAGER_THRESHOLD = 0;
 
@@ -90,10 +58,8 @@ declare global {
 function imageReady(img: HTMLImageElement): Promise<void> {
 	if (img.complete && img.naturalWidth > 0) return Promise.resolve();
 	return new Promise<void>((resolve) => {
-		// decode() is the honest signal — paintable, not merely downloaded — but it
-		// REJECTS on a decode failure and for some cross-origin cases, so both arms
-		// resolve. An unhandled rejection here would surface as a console error on
-		// every affected page.
+		// decode() rejects on failure and for some cross-origin cases; both arms
+		// resolve.
 		if (typeof img.decode === "function") {
 			img.decode().then(
 				() => resolve(),
@@ -133,9 +99,7 @@ function assetsOf(el: HTMLElement): Promise<void>[] {
 	return media;
 }
 
-/** Settle `promise`, but never later than `ms`. "Reveal on ready OR deadline" is
- *  the whole safety property: a source that never settles must not translate into
- *  permanently hidden content. */
+/** Settle `promise`, but never later than `ms`. */
 function withDeadline(promise: Promise<unknown>, ms: number): Promise<void> {
 	return new Promise<void>((resolve) => {
 		let settled = false;
@@ -168,10 +132,8 @@ class RevealCoordinator {
 			document.querySelectorAll<HTMLElement>("[data-reveal]")
 		);
 
-		// Not armed (no JS at parse time, reduced motion, Save-Data, or the backstop
-		// already fired) — then nothing is hidden and there is nothing to schedule.
-		// Reveal everything defensively and stop, so a stale attribute can never
-		// leave content invisible.
+		// Not armed (reduced motion, Save-Data, or the backstop already fired):
+		// nothing is hidden, so mark everything revealed and stop.
 		if (!document.documentElement.classList.contains(ARMED_CLASS)) {
 			for (const el of targets) el.dataset.revealState = "in";
 			return;
@@ -182,12 +144,8 @@ class RevealCoordinator {
 			return;
 		}
 
-		// Mark every target explicitly as pending. The hidden CSS rule is written as
-		// :not([data-reveal-state="in"]), so it already matches an unmarked element and
-		// the reveal LOOKS right without this — but then "pending" exists only in the
-		// documentation, and nothing (a test, a devtools inspection, a future consumer
-		// keying off the state) can distinguish "held deliberately" from "the
-		// coordinator never saw this element".
+		// Explicitly pending, so "held deliberately" is distinguishable from "the
+		// coordinator never saw this element" (the hidden rule matches both).
 		for (const el of targets) {
 			if (el.dataset.revealState !== "in") el.dataset.revealState = "pending";
 		}
@@ -209,9 +167,8 @@ class RevealCoordinator {
 	}
 
 	private async runGroup(members: HTMLElement[]) {
-		// Wait for the group to be reachable before spending its deadline: a group
-		// far down the page would otherwise burn its budget while off screen and be
-		// revealed by the time it is scrolled to.
+		// In view first, then the deadline: a group far down the page would otherwise
+		// burn its budget off screen and arrive already revealed.
 		await Promise.all(members.map((el) => this.whenInView(el)));
 		if (this.destroyed) return;
 
@@ -221,8 +178,7 @@ class RevealCoordinator {
 		);
 		if (this.destroyed) return;
 
-		// Stagger via transition-delay rather than a setTimeout chain: the delay is
-		// declarative, inspectable in devtools, and cannot outlive a teardown.
+		// Stagger via transition-delay rather than timers: it cannot outlive a teardown.
 		const ordered = [...members].sort(
 			(a, b) => this.orderOf(a, members) - this.orderOf(b, members)
 		);
@@ -239,13 +195,7 @@ class RevealCoordinator {
 		return Number.isFinite(raw) ? raw : members.indexOf(el);
 	}
 
-	/**
-	 * One-shot IntersectionObserver: resolve on first intersection, then unobserve.
-	 *
-	 * Only the OBSERVER SHAPE is shared with the widgets' own reveals — this module
-	 * owns its lifecycle separately (initReveal is bound to astro:page-load below,
-	 * which is what makes it survive a ClientRouter swap).
-	 */
+	/** Resolve on first intersection, then unobserve. */
 	private whenInView(el: HTMLElement): Promise<void> {
 		return new Promise<void>((resolve) => {
 			const io = new IntersectionObserver(
@@ -265,8 +215,8 @@ class RevealCoordinator {
 		});
 	}
 
-	/** Drop the armed class once nothing is left pending, so the mechanism goes
-	 *  inert and no later DOM change can be caught by the hidden rule. */
+	/** Disarm once nothing is left pending, so no later DOM change can be caught by
+	 *  the hidden rule. */
 	private scheduleDisarm() {
 		const timer = window.setTimeout(() => {
 			if (this.destroyed) return;
@@ -288,8 +238,7 @@ class RevealCoordinator {
 		this.observers = [];
 		for (const t of this.timers) window.clearTimeout(t);
 		this.timers = [];
-		// A swap mid-flight must not strand anything hidden: reveal every member
-		// outright, then disarm.
+		// A swap mid-flight must not strand anything hidden.
 		for (const el of document.querySelectorAll<HTMLElement>("[data-reveal]")) {
 			el.dataset.revealState = "in";
 		}
@@ -311,9 +260,8 @@ export function teardownReveal(): void {
 
 if (typeof document !== "undefined") {
 	initReveal();
-	// ClientRouter fires `astro:page-load` for the FIRST load as well, so the
-	// singleton guard above is what stops a second coordinator binding over the
-	// same targets (the double-wiring bug documented in src/pages/index.astro).
+	// ClientRouter fires `astro:page-load` for the first load too; the singleton
+	// guard stops a second coordinator binding over the same targets.
 	document.addEventListener("astro:page-load", initReveal);
 	document.addEventListener("astro:before-swap", teardownReveal);
 }

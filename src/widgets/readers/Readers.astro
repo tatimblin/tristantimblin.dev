@@ -1,46 +1,18 @@
 ---
-// Readers widget — a 1×1 tile for how many real people visit this site, in the
-// instrument UI (packages/design-system/CONVENTIONS.md → Instrument UI).
+// Readers widget — a 1×1 tile of how many real people visit this site: a bar
+// per reading (the busiest lit), the total as a count, and a pill that cycles
+// the range (30d → 1y → all) between server-rendered DS Faces, so it fetches
+// nothing and works with the script blocked.
 //
-// The shape: a caps header (VISITORS, and the range as a pill in its meta
-// slot), a mono readout, a graph of vertical hairlines — one per reading, the
-// busiest one lit in the accent — and the total as the big numeral. The figure
-// is a plain COUNT of visitors over the range — not a percentage. At figures
-// Cloudflare rounds to the nearest ten, a percentage turns one sampled event
-// into "50%", which is precision the data does not have; a count says exactly
-// as much as is known.
+// It reads Cloudflare Web Analytics (RUM, so every bar is browsers), not the
+// zone's request counts, which are ~98% crawlers and scanners. That source is
+// thin — sampled, quantized to tens, half the days zero — so every bar is a
+// TRAILING SUM rather than a day; see buildView() in ./readers.ts. A count,
+// not a percentage: at figures rounded to tens a percentage claims precision
+// the data does not have.
 //
-// WHAT IT PLOTS, and why it is not the obvious thing. The tile reads Cloudflare
-// Web Analytics (RUM), which only records pageloads that ran its JavaScript
-// beacon — so every bar is browsers. The zone's own request counts were the
-// tempting source (they are dense, and they make a lovely graph) and they are
-// ~98% crawlers and vulnerability scanners: the top paths after `/` are
-// /wp-login.php, /.env and /.git/config. A graph drawn from those is a graph
-// about bots.
-//
-// The cost of choosing the honest source is that it is thin: the figures are
-// sampled and arrive quantized to tens, and about half of all days are zero. So
-// every bar is a TRAILING SUM rather than a day — see buildView() in
-// ./readers.ts for the full argument, and for why the window widens with the
-// range.
-//
-// POINTING AT THE GRAPH reads it: the bar under the pointer takes the accent
-// from the peak and the readout above names its value and dates. With the
-// script running the graph is also a keyboard slider (arrows / Home / End)
-// whose value text says the same thing; without it, the graph is hidden from
-// assistive tech and a sentence per range carries the peak instead.
-//
-// THE PILL CYCLES the range: 30d → 1y → all. Every range is rendered
-// server-side as its own face in a DS Faces stack and swapped by aria-hidden,
-// the same mechanism Github.astro flips with — so the pill fetches nothing and
-// the tile still works with the script blocked (it shows the first range and
-// an inert pill).
-//
-// Data is read at build time from readers.json (see ./readers.ts), which the
-// readers Action regenerates daily.
-//
-// Props pass through to the <Widget> (a class, the page's data-reveal
-// choreography): the page owns where the card sits and when it fades in.
+// Data is read at build time from readers.json (./readers.ts), which the
+// readers Action regenerates daily. Props pass through to the <Widget>.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
@@ -68,27 +40,19 @@ const { class: className, ...rest } = Astro.props;
 
 const stats = getReaderStats();
 
-// Only the ranges with something in them. A range is unusable either because
-// the ledger is too young to fill it or because it genuinely recorded nobody,
-// and the second is not hypothetical here: most days on this site are zero, so
-// a quiet month makes the 30-day face empty while the all-time face still has
-// hundreds of visitors in it. Judging each range and offering only what exists
-// keeps the tile honest and the pill useful.
+// Only the ranges with something in them: a quiet month leaves the 30-day face
+// empty while all-time still has hundreds of visitors.
 const views = buildViews(stats.days).filter(isDrawable);
 const hasSeries = views.length > 0;
-// Optional: with nothing drawable there is no initial range, and the card is
-// still rendered (as the empty state).
 const initial = views[0];
-// With one range there is nothing to cycle to, so the pill stays a label
-// rather than becoming a button that does nothing.
+// With one range the pill stays a label rather than a button that does nothing.
 const cycles = views.length > 1;
 
 const sampledNote = stats.sampled
 	? "Cloudflare Web Analytics samples traffic, so these are estimates, rounded to the nearest ten."
 	: "";
 
-// What the script needs to read a bar back: its value and its dates, in bar
-// order. Compact keys — this is inlined once per range.
+// What the script needs to read a bar back, inlined once per range.
 const readings = (view: (typeof views)[number]) =>
 	JSON.stringify(
 		view.points.map((p) => ({ v: p.value, s: formatSpan(p.from, p.date) })),
@@ -99,15 +63,13 @@ const readings = (view: (typeof views)[number]) =>
 	{
 		hasSeries && (
 			<Fragment slot="meta">
-				{/* TWO PILLS, one of which is always hidden. Without the script the
-				    static one shows and nothing pretends to be interactive; the
-				    script swaps them. A <button disabled> would have done it in one
-				    element, but "disabled" announces a control that is temporarily
+				{/* Two pills, one always hidden: without the script the static one
+				    shows and nothing pretends to be interactive. Not one <button
+				    disabled>: "disabled" announces a control that is temporarily
 				    unavailable, which is not what a page without JavaScript has. */}
 				<Pill class="wx-rd-range wx-rd-range--static">{initial?.key}</Pill>
 				{cycles && (
 					<Pill as="button" class="wx-rd-range wx-rd-cycle" type="button" hidden>
-						{/* One label per range; the script shows the current one. */}
 						{views.map((view, i) => (
 							<span data-face={view.key} hidden={i !== 0}>{view.key}</span>
 						))}
@@ -131,11 +93,9 @@ const readings = (view: (typeof views)[number]) =>
 						data-label={view.label}
 						data-window={view.window}
 					>
-						{/* The readout: the lit bar's value and dates. At rest that is
-						    the peak, so it says so; the script rewrites it as the
-						    pointer or the keyboard moves the lit bar. aria-hidden —
-						    the slider's value text (or, without the script, the
-						    sentence below) says it for assistive tech. */}
+						{/* The lit bar's value and dates; aria-hidden because the slider's
+						    value text (or, without the script, the sentence below) says
+						    it for assistive tech. */}
 						<Mono class="wx-rd-readout" tone="tertiary" truncate aria-hidden="true">
 							<span class="wx-rd-read-tag">peak </span>
 							<Mono as="span" variant="value" class="wx-rd-read-value">
@@ -147,10 +107,8 @@ const readings = (view: (typeof views)[number]) =>
 							</span>
 						</Mono>
 
-						{/* No label: hidden from the tree until bindGraph() upgrades it into
-						    the slider (BarGraph's default); the sentence below carries the
-						    peak for a reader without the script. `interactive` is the
-						    ring, the crosshair and the touch rule, from the package. */}
+						{/* Hidden from the tree until bindGraph() upgrades it into the
+						    slider; the sentence below carries the peak without the script. */}
 						<BarGraph
 							class="wx-rd-bars"
 							values={view.points.map((p) => p.value)}
@@ -174,10 +132,6 @@ const readings = (view: (typeof views)[number]) =>
 				))}
 				</Faces>
 			) : (
-				/* The data file is generated and the fetch script refuses to write
-				   an empty one — but no visitors yet is a state the tile can
-				   legitimately be in on a fresh site, and it should say so rather
-				   than draw a row of empty bars. */
 				<WidgetEmpty>No visitors yet.</WidgetEmpty>
 			)
 		}
@@ -185,12 +139,6 @@ const readings = (view: (typeof views)[number]) =>
 </Widget>
 
 <script>
-	// Two behaviours, both over markup that is already in the DOM: the pill
-	// cycles the range (showFace moves aria-hidden between the faces, and the
-	// pill's labels follow), and each range's graph reads back the bar under
-	// the pointer / keyboard (markBar moves the accent). No network, no
-	// persisted state. onPage binds per page-load and tears down before a
-	// view-transition swap.
 	import { markBar } from "@whois/design-system/lib/bar-graph";
 	import { showFace } from "@whois/design-system/lib/faces";
 	import { stepFromKey } from "@whois/design-system/lib/keys";
@@ -217,11 +165,8 @@ const readings = (view: (typeof views)[number]) =>
 		let at = peak;
 		let settle = 0;
 
-		// Light bar i — and only bar i, so the card keeps its one accent — and
-		// say what it is, to the eye (the readout) and to assistive tech (the
-		// slider's value text). markBar clamps and returns the bar it lit; a
-		// graph with a different bar count than the readings (a data file the
-		// build and the script disagree on) leaves the graph a picture.
+		// Light bar i and say what it is, to the eye and to assistive tech. A graph
+		// whose bar count disagrees with the readings stays a picture.
 		const show = (i: number) => {
 			const lit = markBar(graph, i);
 			if (lit < 0 || lit > last) return;
@@ -249,8 +194,7 @@ const readings = (view: (typeof views)[number]) =>
 		graph.setAttribute("aria-valuemax", String(last));
 		show(peak);
 
-		// Bars are spread edge to edge (space-between), so bar i sits at
-		// i / last of the width — the nearest one is a rounding away.
+		// Bars are spread edge to edge, so bar i sits at i / last of the width.
 		const fromPointer = (event: PointerEvent) => {
 			const rect = graph.getBoundingClientRect();
 			const x = (event.clientX - rect.left) / Math.max(1, rect.width);
@@ -293,9 +237,8 @@ const readings = (view: (typeof views)[number]) =>
 		const staticPill = widget.querySelector<HTMLElement>(".wx-rd-range--static");
 		if (!button) return () => {};
 
-		// Hand over from the inert pill only now that the handler is about to be
-		// attached, so there is never a frame where a live-looking control does
-		// nothing.
+		// Hand over from the inert pill only now, so a live-looking control never
+		// does nothing.
 		staticPill?.setAttribute("hidden", "");
 		button.hidden = false;
 
@@ -337,13 +280,7 @@ const readings = (view: (typeof views)[number]) =>
 </script>
 
 <style>
-	/* The card chrome, header, pill, readout, hairline graph (with its ring
-	   and crosshair — `interactive`), figure, empty state and the range faces
-	   (a DS Faces stack, swapped on aria-hidden) are all design-system
-	   components; what is here is the graph's share of the body. Scoped: the
-	   DS spreads the scope attribute onto each component's root, and its CSS
-	   sits in a layer under this. */
-
+	/* Everything else is DS components; this is the graph's share of the body. */
 	.wx-rd-readout {
 		display: block;
 	}
@@ -355,10 +292,8 @@ const readings = (view: (typeof views)[number]) =>
 		block-size: auto;
 	}
 
-	/* Compact tiles (the grid's compact-cell query, widget-grid.css): the
-	   readout loses its "peak" tag rather than its dates — the lit bar
-	   already says which one it is. A rule about the CELL, so a container
-	   query, not a viewport one. */
+	/* Compact tiles lose the "peak" tag rather than the dates; the lit bar
+	   already says which one it is. */
 	@container widget (max-width: 624px) {
 		.wx-rd-read-tag {
 			display: none;

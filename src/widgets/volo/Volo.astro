@@ -1,27 +1,11 @@
 ---
-// Volo widget — a 2×2 card in the instrument UI, built from the design
-// system's pieces (packages/design-system/CONVENTIONS.md → Instrument UI).
-//
-// The header is the season — sport and month, in caps — with the team, its
-// standing in a pill (the team's own Volo colour as the pill's dot) and small
-// round buttons stepping through the seasons on the right. Below it, ONE
-// season: every fixture as a mono table on hairlines — result letter in ink
-// (win) or dim ink (loss), score over a zero-anchored margin tick, the bracket
-// round set on the rule it opens. The accent lands once in the list: the next
-// game, or a finished season's last result.
-//
-// The bottom is ALL the seasons — a hairline step chart of where each ENDED,
-// after the playoffs, that does NOT move when the arrows do; the season in
-// progress is the accent, with a playhead dot. One season is a number,
-// thirteen is a shape.
-//
-// Data is read at build time from volo.json (see ./volo.ts), which the
-// volo-seasons Action regenerates daily. Every season is rendered server-side
-// as its own panel in a DS Faces stack and cross-faded by aria-hidden — the
-// same face-swap Github.astro uses, and the reason the arrows fetch nothing.
-//
-// Props pass through to the <Widget> (a class, the page's data-reveal
-// choreography): the page owns where the card sits and when it fades in.
+// Volo widget — a 2×2 card: the season in the header (sport, month, team,
+// standing pill, arrows), one season's fixtures as a mono table, and below
+// them a step chart of where EVERY season ended, which does not move when
+// the arrows do. Data is read at build time from volo.json (./volo.ts, which
+// the volo-seasons Action regenerates daily); every season is rendered
+// server-side as a panel in a DS Faces stack, so the arrows fetch nothing.
+// Props pass through to the <Widget> (a class, the page's data-reveal choreography).
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
@@ -64,16 +48,11 @@ const seasons = getVoloSeasons();
 const current = currentSeasonIndex(seasons);
 const rank = rankSeries(seasons);
 
-// The plot is drawn in an abstract 100-unit box and stretched to whatever width
-// the tile gives it (preserveAspectRatio="none"), so the geometry below is pure
-// arithmetic with no layout in it. Strokes opt out of that stretch — see the
-// vector-effect in volo.css — or they would smear horizontally.
-// The x axis is TIME, not season count: every year gets an equal slot and the
-// seasons inside it divide that slot between them. So 2021's single season is
-// one wide step and each of 2026's three is a third as wide — which is what
-// lets the year labels sit evenly without lying about where a year falls. An
-// ordinal axis (one slot per season) spaced them by how busy a year happened to
-// be, bunching 2021–2023 into the left third.
+// The plot is drawn in an abstract box and stretched to the tile's width
+// (preserveAspectRatio="none"; strokes opt out via vector-effect in volo.css).
+// The x axis is TIME, not season count: every year gets an equal slot and its
+// seasons divide it, so the year labels sit evenly without lying about where a
+// year falls.
 const years = [...new Set(rank.points.map((point) => point.year))];
 const seasonsPerYear = new Map<string, number>();
 for (const point of rank.points) {
@@ -91,14 +70,9 @@ const spans = rank.points.map((point) => {
 const PLOT = { w: Math.max(1, years.length) * 10, h: 100, pad: 7 };
 const plotY = (placing: number) => PLOT.pad + (1 - placing) * (PLOT.h - PLOT.pad * 2);
 
-// A step, not a slope: a season holds one placing for its whole run and then
-// jumps. Drawing it as a diagonal would imply a team drifting between finishes
-// it never actually held.
-//
-// A season with no value breaks the line rather than being bridged — `M` starts
-// a fresh subpath. Bridging would draw a segment across a season whose finish
-// is not known, which is exactly the fiction to avoid: the newest season is
-// still being played.
+// A step, not a slope: a season holds one placing for its whole run. A season
+// with no value breaks the line (`M` starts a fresh subpath) rather than being
+// bridged across a finish that is not known yet.
 const stepPath = (key: "placing" | "seedPlacing") => {
 	let open = false;
 	return rank.points
@@ -120,11 +94,8 @@ const stepPath = (key: "placing" | "seedPlacing") => {
 const finishPath = stepPath("placing");
 const seedPath = stepPath("seedPlacing");
 
-// The accent's one job in the chart: NOW. The season in progress (the one the
-// tile opens on) is drawn in the accent — its step, and a dot at its end like
-// the metronome's playhead — and every other season is ink. It sits at
-// whichever value that season has: its finish once it is decided, its seed
-// while it is still being played.
+// The accent marks NOW: the season in progress, at its finish once decided or
+// its seed while still being played.
 const nowPoint = rank.points[current];
 const nowValue = nowPoint ? (nowPoint.placing ?? nowPoint.seedPlacing) : null;
 const nowSpan = nowPoint ? spans[nowPoint.index] : null;
@@ -138,8 +109,7 @@ const now =
 			}
 		: null;
 
-// The one row in a season's list that takes the accent: the next game if there
-// is one (what a reader looks this tile up for), else the last result.
+// The one accented row: the next game if there is one, else the last result.
 const accentRow = (season: (typeof seasons)[number]) => {
 	const next = season.games.findIndex((game) => !game.result);
 	return next >= 0 ? next : season.games.length - 1;
@@ -147,8 +117,7 @@ const accentRow = (season: (typeof seasons)[number]) => {
 
 const opening = seasons[current];
 
-// The pill's placing, with the separator it carries into the tally after it:
-// "1st · ", or nothing for a season with no placing.
+// "1st · " (the separator travels with the placing), or nothing.
 const placeLabel = (season: (typeof seasons)[number]) => {
 	const place = formatPlacing(season);
 	return place ? `${place} · ` : "";
@@ -166,17 +135,10 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 	headerClass="wx-vl-head"
 	{...rest}
 >
-	{/* The header is WHEN and WHAT: the sport and the season's month on the
-	    left, in the header's caps voice — in the title SLOT, on an element of
-	    this widget's own, because the script rewrites it. The meta slot on the
-	    right is WHO and HOW IT WENT, then the controls: the team name (dim), the
-	    standing pill (the team's own Volo colour as its dot — brand art, the one
-	    colour that is not the family's), and the round buttons that page the
-	    seasons. The header sits outside the panel stack, so the script rewrites
-	    all of it from the panel's data when the season changes; the server
-	    renders the season the tile opens on. squeeze="title": the meta manages
-	    its own width (the container queries in volo.css drop the team, then the
-	    placing) and the heading ellipsises as the last resort. */}
+	{/* The header sits outside the panel stack, so the script rewrites it from
+	    the panel's data when the season changes. squeeze="title": the meta
+	    manages its own width (volo.css drops the team, then the placing) and the
+	    heading ellipsises as the last resort. */}
 	<span slot="title" data-volo-heading>{opening ? seasonHeading(opening) : "volo"}</span>
 	{opening && (
 		<span slot="meta" class="wx-vl-meta">
@@ -187,18 +149,14 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 					data-volo-dot
 					style={opening.team.color ? `background:${opening.team.color}` : undefined}
 				/>
-				{/* Decoration: the panel's hidden text says "League champions". */}
 				<span class="wx-vl-star" data-volo-star hidden={!opening.champion} title="Won the league" aria-hidden="true">★</span>
-				{/* One flex item, so the spaces round the · are ordinary text. The
-				    placing is its own span so a narrow header can drop it. */}
+				{/* The placing is its own span so a narrow header can drop it. */}
 				<span>
 					<span class="wx-vl-place" data-volo-place>{placeLabel(opening)}</span>
 					<span data-volo-tally>{formatTally(opening)}</span>
 				</span>
 			</Pill>
-			{/* SEASON NAV — the metronome's small round buttons, at the pill's
-			    height so the header stays as tall as its neighbours'. Rendered
-			    `hidden` and unhidden by the script below, so a reader without JS
+			{/* Rendered `hidden` and unhidden by the script, so a reader without JS
 			    gets one clean season rather than two dead arrows. A span, not a
 			    <nav>: the meta slot is phrasing content. */}
 			<span class="wx-vl-nav" role="group" aria-label="Season" hidden>
@@ -229,15 +187,11 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 	<CardBody class="wx-vl-body">
 	{
 		seasons.length === 0 ? (
-			/* The data file is generated, and the fetch script refuses to write an
-			   empty one — but a widget that renders nothing beats a build that dies
-			   if that ever changes. */
 			<WidgetEmpty>No seasons yet.</WidgetEmpty>
 		) : (
 			<>
-				{/* Not `fill`: the stack holds the tallest season's height whichever
-				    is showing, so the career field below sits still as the arrows
-				    move between a six- and a nine-game season. */}
+				{/* Not `fill`: the stack holds the tallest season's height, so the
+				    chart below sits still as the arrows move. */}
 				<Faces class="wx-vl-panels" data-volo-panels>
 					{seasons.map((season, i) => {
 						const lit = accentRow(season);
@@ -255,9 +209,7 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 							data-champion={season.champion ? "true" : undefined}
 							aria-label={`${formatSeasonLabel(season)} — ${season.sport}`}
 						>
-							{/* The season, team and record live in the card header, which
-							    the script rewrites; they are repeated here for a screen
-							    reader, which reads the panel, not that header. */}
+							{/* A screen reader reads the panel, not the rewritten header. */}
 							<VisuallyHidden>
 								{seasonHeading(season)}: {season.team.name}, {formatRecord(season)}
 								{season.champion ? ". League champions." : "."}
@@ -271,10 +223,8 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 										data-playoff={game.playoff ? "true" : undefined}
 										data-lit={gameIndex === lit ? "true" : undefined}
 									>
-										{/* First, so it reads before the fixture it heads. It is
-										    positioned out of flow against the grid (see volo.css),
-										    so DOM order costs it nothing — and --vl-i is the row it
-										    sits above. */}
+										{/* Out of flow against the grid (volo.css); --vl-i is the row
+										    it sits above. */}
 										{game.playoff && (
 											<Mono
 												tone="tertiary"
@@ -288,12 +238,8 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 											{formatGameDate(game.startTime, season.timezone)}
 										</Mono>
 										<Mono variant="value" class="wx-vl-opp">
-											{/* Its own box (Mono's truncate) so the name has something
-										    to ellipsise against — these run to 44 characters. */}
-										<Mono as="span" variant="value" truncate class="wx-vl-opp-name">{game.opponent}</Mono>
-											{/* Their standing, set small after the name. A bracket
-											    game names their SEED; anything else names where they
-											    finished, which is a fact from after the fact. */}
+											<Mono as="span" variant="value" truncate class="wx-vl-opp-name">{game.opponent}</Mono>
+											{/* A bracket game names their SEED; anything else where they finished. */}
 											{(() => {
 												const standing = opponentStanding(game);
 												return standing ? (
@@ -313,9 +259,8 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 												) : null;
 											})()}
 										</Mono>
-										{/* Always rendered, even when empty: the rows are
-										    `display: contents` over one shared grid, so a row that
-										    skipped a cell would shift every column after it. */}
+										{/* Always rendered: the rows are `display: contents` over one
+										    grid, so a skipped cell would shift every column after it. */}
 										<Mono tone="tertiary" class="wx-vl-result">{game.result}</Mono>
 										{game.result ? (
 											game.forfeit && !game.for && !game.against ? (
@@ -329,7 +274,6 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 													data-forfeit={game.forfeit ? "true" : undefined}
 												>
 													{game.for}<span class="wx-vl-dash">–</span>{game.against}
-													{/* The margin, as a tick on the divider beneath. */}
 													<span class="wx-vl-bar" />
 												</Mono>
 											)
@@ -346,14 +290,11 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 					})}
 				</Faces>
 
-				{/* RANK BY SEASON — fixed. It deliberately does not respond to the
-				    arrows: it is the constant the seasons are read against. */}
+				{/* RANK BY SEASON — fixed; the constant the seasons are read against. */}
 				<figure class="wx-vl-career">
 					<Hairline as="span" />
 					<figcaption class="wx-vl-career-cap">
 						<Mono class="wx-vl-career-label">Rank by season</Mono>
-						{/* The key, as a DS Legend: the same strokes the plot draws — the
-						    seed a dashed hairline in the dim ink, the finish solid ink. */}
 						<Legend class="wx-vl-legend" aria-label="Key">
 							<LegendItem label="Seed" swatch="dashed" color="var(--text-tertiary)" />
 							<LegendItem label="Finish" swatch="line" color="var(--text-primary)" />
@@ -391,8 +332,6 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 									.join(". ")
 							}
 						>
-							{/* Hairline rules at the two ends of the axis — the chart's
-							    frame, drawn as the instrument's quietest line. */}
 							<path class="wx-vl-rule" d={`M0,${plotY(1)}H${PLOT.w}M0,${plotY(0)}H${PLOT.w}`} />
 							<path class="wx-vl-seed" d={seedPath} />
 							<path class="wx-vl-line" d={finishPath} />
@@ -407,12 +346,9 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 							/>
 						)}
 
-						{/* One hit area per season (a DS HitArea, washed while current),
-						    laid over the plot at exactly the span that season's steps
-						    occupy — same x maths, expressed as a percentage so it tracks
-						    the SVG however wide it stretches. RENDERED DISABLED: bind()
-						    enables them, and only above the grid's compact step (see
-						    syncBands() for why they stay off on a phone). */}
+						{/* One hit area per season, over the span its steps occupy (as a
+						    percentage, so it tracks the stretched SVG). Rendered disabled;
+						    the script enables them above the compact step (see syncBands). */}
 						<div class="wx-vl-hits">
 							{rank.points.map((point, i) => (
 								<HitArea
@@ -447,10 +383,6 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 </Widget>
 
 <script>
-	// Step between season panels: showFace moves aria-hidden from one face to
-	// the next (which is what Faces fades on), over markup that is already in
-	// the DOM — no network, no persisted state. onPage binds per page-load and
-	// tears down before a view-transition swap.
 	import { showFace, shownFace } from "@whois/design-system/lib/faces";
 	import { stepFromKey } from "@whois/design-system/lib/keys";
 	import { onPage } from "@whois/design-system/lib/lifecycle";
@@ -468,8 +400,6 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 		const hits = Array.from(
 			widget.querySelectorAll<HTMLButtonElement>("[data-volo-jump]"),
 		);
-		// The card header sits outside the panel stack, so it is rewritten from
-		// the panel's data when the season changes (see the title and meta slots).
 		const title = widget.querySelector<HTMLElement>("[data-volo-heading]");
 		const teamName = widget.querySelector<HTMLElement>("[data-volo-team]");
 		const dot = widget.querySelector<HTMLElement>("[data-volo-dot]");
@@ -503,12 +433,8 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 			sync();
 		};
 
-		// No wrap, and the ends are disabled rather than inert — the same slider
-		// semantics as packages/video-carousel. Disabling the FOCUSED arrow drops
-		// focus to <body>, where the keys no longer reach the widget — so End on
-		// "next" (or a last click on it) would strand a keyboard reader. Focus
-		// moves to the sibling, which is enabled whenever there is more than one
-		// season.
+		// Disabling the FOCUSED arrow drops focus to <body>, where the keys no
+		// longer reach the widget, so focus moves to the sibling first.
 		const sync = () => {
 			const focused = document.activeElement;
 			prev.disabled = index === 0;
@@ -519,10 +445,8 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 
 		const onPrev = () => select(index - 1);
 		const onNext = () => select(index + 1);
-		// Bound on the WIDGET, not the panel stack. The arrows are the only
-		// focusable things here and they are siblings of the stack, so a keydown
-		// while one is focused never reaches it — the shortcuts were unreachable
-		// for exactly the reader who needs them.
+		// Bound on the WIDGET: the arrows are siblings of the panel stack, so a
+		// keydown while one is focused never reaches the stack.
 		const onKey = (event: KeyboardEvent) => {
 			const step = stepFromKey(event, index, panels.length - 1);
 			if (step === null) return;
@@ -535,13 +459,9 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 			if (target !== undefined) select(Number(target));
 		};
 
-		// The bands are a DESKTOP affordance. At the grid's compact step it drops
-		// to two columns and a year with four seasons divides its slot four ways,
-		// which leaves the narrowest band about 11px — well under any touch
-		// target. So they stay disabled at that size: no tap target that cannot
-		// be hit reliably, no tab stop that does nothing useful, and no pointer
-		// cursor promising something. The arrows are the control there. The step
-		// is the grid's own (lib/breakpoints), the same one volo.css follows.
+		// The bands stay disabled at the grid's compact step: a year with four
+		// seasons leaves the narrowest band ~11px, under any touch target. The
+		// arrows are the control there.
 		const wide = window.matchMedia(WIDGET_WIDE_MQ);
 		const syncBands = () => {
 			for (const hit of hits) hit.disabled = !wide.matches;
@@ -551,11 +471,9 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 		next.addEventListener("click", onNext);
 		widget.addEventListener("keydown", onKey);
 		for (const hit of hits) hit.addEventListener("click", onJump);
-		// Re-evaluated on resize and rotation, not just at load.
 		wide.addEventListener("change", syncBands);
 		syncBands();
 
-		// The arrows only work once this ran, so this is where they earn their place.
 		nav.hidden = false;
 		sync();
 

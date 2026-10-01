@@ -23,35 +23,14 @@ import "@whois/video-carousel/styles.css";
 import "@whois/wobble-text/styles.css";
 ---
 
-{/* NB: no preloadMedia here, deliberately. Preloading the hero clip looks like an
-     obvious win — <dotted-grid> only creates its <video> in connectedCallback, so
-     the clip isn't requested until the page bundle has run (measured: 218ms vs a
-     bundle finishing at 54ms). But A/B under 500kbps/200ms throttling showed no
-     benefit (~6.5s vs ~6.0s to first halftone pixels, i.e. slightly worse, within
-     noise): the clip is only ~60KB, and on this page it contends with the video
-     carousel's own clips for the same connection, so promoting it just reorders the
-     queue. The Layout still supports `preloadMedia` for a page whose hero asset is
-     genuinely the critical path — this one's isn't. */}
 <FullHeroLayout
 	title="Tristan Timblin"
 	description="Tristan Timblin — American computer programmer and human-computer interaction engineer."
 >
-	{/* SCENE: fabric video as a dotted-grid halftone — a full-viewport background
-	     layer, faded at the top+bottom edges (see FullHeroLayout .fh__scene). */}
-	{/* No color/background attrs, DELIBERATELY: the grid falls back to --color-fg /
-	     --color-bg, so it inverts with the active theme. This carried a hardcoded
-	     color="#fff" so the fold's crest could reach full white on the dark page —
-	     but --color-bg in the light theme is oklch(99.24%), so white dots landed on
-	     a white backdrop and the scene disappeared entirely. The highlight lift is
-	     what buys that crest anyway: it pushes the brightest cells toward the
-	     background's contrast pole (white on dark, black on light), which is the
-	     theme-safe version of the same intent. */}
-	{/* `intro`: develop the halftone in on arrival, brightest dots first, so the
-	     scene resolves out of the page colour instead of snapping to full strength
-	     the moment the first video frame decodes. Runs once, starts at that first
-	     frame, and is skipped entirely under prefers-reduced-motion.
-	     No hold (intro-delay="0"): the develop-in starts immediately on the first
-	     frame — kept subtle by the eased ramp and the grid's sparse, cut-off field. */}
+	{/* SCENE (>900px): the fabric clip as a halftone. No `color` attr, so the grid
+	     falls back to --color-fg and inverts with the theme — a fixed #fff vanished
+	     on the light page. `intro` develops it in on the first frame, brightest
+	     dots first. */}
 	<dotted-grid
 		slot="scene"
 		class="hero__video"
@@ -72,42 +51,14 @@ import "@whois/wobble-text/styles.css";
 		crosshatch="0"
 	/>
 
-	{/* SCENE (mobile only): the video carousel promoted into the hero as the
-	     full-bleed background, replacing fabric ≤900px (see .hero-carousel styles
-	     + videos.css which hides the footer copy at the same breakpoint). Portrait
-	     clip cover-fills; the date ruler is pinned HORIZONTAL along the bottom edge
-	     as a film scrubber, and publishes how much of that edge it occupies so the
-	     heading group can rest above it (--hero-floor; see the script below). */}
-	{/* intro/introDelay match the fabric scene above so BOTH hero variants make the
-	     same entrance — the halftone develops in brightest-dots-first with no hold,
-	     whichever scene the breakpoint is showing. Runs once, on the first
-	     clip; later clips swap in without re-developing. */}
-	{/* max-dpr: this canvas is FULL-BLEED, and the halftone's cost is per-pixel — at
-	     DPR 2 on a phone that is ~1.3 Mpx re-composited on every video frame. Measured
-	     at 8x CPU throttle while scrolling: 46.6ms median frame at 1.32 Mpx against
-	     11.8ms at 0.33 Mpx, i.e. the canvas was roughly three quarters of the frame and
-	     the cost tracks area. The footer widget's card is a fraction of the size and
-	     keeps the default cap. See effectiveDpr() for why a cap of 1 does not
-	     reintroduce lattice moiré (the upscale stays a whole number). */}
-	{/* HALFTONE: the finer, dimmer grid, which is NOT the component's default. Those
-	     defaults suit the footer widget — a small card, viewed directly, where a coarse
-	     bright grid reads as texture. Here the same clip is the full-bleed scene at 0.55
-	     opacity with the wordmark on top of it, and the coarser grid competes with the
-	     type instead of sitting under it. Same values the hero used before the defaults
-	     moved; gamma is the component default, restated so the whole look reads in one
-	     place rather than half here and half there. */}
-	{/* color: THE ONE DELIBERATE EXCEPTION to the fabric scene's "no colour, stay
-	     theme-aware" note above, and the case VideoCarousel's own `color` prop doc
-	     is written around. The fabric grid can drop its colour because it also runs
-	     at full strength and leans on the highlight lift to reach the background's
-	     contrast pole. This one doesn't: it is held at opacity 0.55 (see
-	     .hero-carousel .vc__grid) so the wordmark stays legible on top of it, and
-	     --color-fg at 0.55 lands close to this grey in BOTH themes anyway while
-	     swinging its absolute value by the full page contrast range. A fixed mid
-	     grey reads at the same weight against the near-white light backdrop and the
-	     near-black dark one, which is what a scene under type wants. Pick a fixed
-	     colour ONLY with that both-backdrops check done — the hardcoded #fff this
-	     pattern started from is what made the light theme's scene vanish. */}
+	{/* SCENE (≤900px): the video carousel, full-bleed, with its date scrubber along
+	     the bottom edge; videos.css hides the footer copy at the same breakpoint.
+	     Same intro as the fabric so both variants make the same entrance. maxDpr 1
+	     because the halftone's cost is per pixel and this canvas is the whole
+	     viewport. The finer, dimmer grid than the footer card's: the clip sits
+	     under the wordmark at 0.55 opacity. `color` is the one fixed colour: at that
+	     opacity a mid grey reads at the same weight on both themes' backdrops, where
+	     --color-fg would swing by the full page contrast. */}
 	<VideoCarousel
 		slot="scene"
 		class="hero-carousel"
@@ -126,31 +77,17 @@ import "@whois/wobble-text/styles.css";
 		xfadeLive
 	/>
 
-	{/* HEADER: brand + nav, overlaying the top of the scene (z-index 4). Lives in
-	     the heading slot so it renders inside the hero over the dotgrid. */}
 	<SiteHeader slot="heading" />
 
-	{/* HEADING: the full-width "tristan" wordmark, then the animated
-	     "& other stories" lockup. The big "&" overlaps the wordmark (indented) and
-	     parallaxes + fades on its own scroll position; "other stories" pins mid-
-	     viewport and wipes its outline→solid reveal.
-	     The INTRO is passed as the default slot: it flows directly beneath
-	     "other stories" (as a static sibling of the pin, so it scrolls away with the
-	     page rather than hanging pinned), and the two read as one group. */}
+	{/* The wordmark and the "& other stories" lockup; the intro lede is its default
+	     slot, so it flows beneath "other stories" as one group. */}
 	<StoriesHeading slot="heading">
-		{/* A short "who I am" lede. Static (no reveal). The parent regions opt
-		     pointers out; .hero-intro opts back in.
-		     On the SAME grid as the body copy below (.home__grid; one --home-columns
-		     template, below) so the lede shares its exact measure — cols 1–5 —
-		     instead of an eyeballed max-width. */}
+		{/* On the same grid as the body copy below (--home-columns), so the lede
+		     shares its exact measure rather than an eyeballed max-width. */}
 		<Grid class="hero-intro" align="end" templateColumns="var(--home-columns)" gapX={5}>
 			<GridItem class="hero-intro__lede">
-				{/* Not <Body>: this line is a sentence, but it is not the reading
-				     role. It is a small uppercase STATEMENT in the heading face at its
-				     Bold — a quieter, more graphic register than the hero face above
-				     it — so it is a Text: the caps role (the site's one caps tracking),
-				     the heading family, the small step, the body leading (`spaced`)
-				     since it wraps to two or three lines, the secondary ink. */}
+				{/* A Text, not a Body: a small caps statement in the heading face, not
+				     reading copy. */}
 				<Text as="p" size={1} caps family="heading" spaced variant="secondary">
 					American computer programmer and human-computer interaction engineer.
 				</Text>
@@ -158,21 +95,12 @@ import "@whois/wobble-text/styles.css";
 		</Grid>
 	</StoriesHeading>
 
-	{/* CONTENT: the page owns its grid rows here. First row — body copy (cols
-	     1–5) — rises into the pinned lockup and pushes it away. The video carousel
-	     no longer lives here: it's a cell in the widget grid below that
-	     parallaxes UP to visually sit alongside this row (see widgets/videos). */}
 	<div class="container">
 		<Grid class="home__grid" templateColumns="var(--home-columns)" gapX={5}>
-			{/* Eases in as it is scrolled to. Marked on the grid CELL rather than on
-			     <wobble-text> inside it, so the reveal's opacity and the element's
-			     `filter` stay on separate boxes (a filter on the same element as a
-			     fading ancestor is the containing-block hazard called out in
-			     src/lib/reveal.ts). */}
+			{/* data-reveal on the grid CELL, not on <wobble-text>: the reveal's opacity
+			     and the element's `filter` must stay on separate boxes (see
+			     src/lib/reveal.ts on containing blocks). */}
 			<GridItem class="home__copy" data-reveal>
-				{/* <Body>: this copy IS the reading role, so it is set by the role and
-				     nothing else. Body takes no size prop on purpose; retuning reading
-				     text is one edit in tokens.overrides.css. */}
 				<wobble-text scale="3.2" speed="0.3">
 					<Body>
 						I am a craftsman, I create things to be used. Even if they often are
@@ -180,13 +108,6 @@ import "@whois/wobble-text/styles.css";
 						through in an empathetic design, where with a deep understanding of
 						another I can build them worlds.
 					</Body>
-					{/* The DS Blockquote — the one quote on the site, the same one a post
-					     draws: no fill, the accent bar down the left edge, the words a step
-					     up in the primary ink (the Body inside reads the retuned body
-					     tokens), and the attribution as a `footer` in the caps mono, the
-					     pattern the posts' plugin emits. The link is a discreet Anchor
-					     underlined at rest: the caption's ink, the accent under the
-					     pointer — the DS's one link. */}
 					<Blockquote class="home__quote" cite="https://future-sf.com/fiction/1700/">
 						<Body>
 							I'm arrogant enough to demand the Reader's complete, total
@@ -207,29 +128,14 @@ import "@whois/wobble-text/styles.css";
 		</Grid>
 	</div>
 
-	{/* WIDGETS: an Apple-widgets-style grid at the foot of the page. Mixed
-	     sizes in non-packed DOM order so grid-auto-flow: dense re-packs holes;
-	     every cell is a DS Widget in the instrument UI (src/widgets/*).
-
-	     The cells carry data-reveal so the row eases in as one staggered group when
-	     scrolled to (see src/lib/reveal.ts). Order follows the VISUAL left-to-right
-	     packing, which grid-auto-flow: dense makes differ from DOM order: the 1×2
-	     video cell is authored first but lands in the last column, so it reveals
-	     last. data-reveal-order exists for exactly this mismatch.
-	     Each widget spreads its props onto its <Widget>, which forwards data-*
-	     through Card → Box, so no wrapper element is needed (which would also
-	     disturb the dense packing) and the choreography is written here, on the
-	     page that owns the row.
-
-	     The videos card is its OWN reveal group, deliberately not the row's. A
-	     group waits for every member to be in view before it fades any of them
-	     in, and this card paints ~90vh above its slot (the dock lift) while its
-	     row-mates sit at their real grid position — so grouping it with them held
-	     it invisible until the ROW arrived, by which point it had already climbed
-	     most of the way up the page and the parallax played out unseen. On its
-	     own — and with `data-reveal-eager`, which trips the observer just BEFORE
-	     it reaches the viewport — it is already opaque when it crosses the fold,
-	     which is where its entrance is choreographed to start. */}
+	{/* WIDGETS. Mixed sizes in non-packed DOM order; grid-auto-flow: dense re-packs
+	     them, so data-reveal-order follows the VISUAL left-to-right packing rather
+	     than DOM order (the 1×2 video cell is authored first but lands last).
+	     The videos card is its own reveal group: a group waits for every member to
+	     be in view, and this card paints ~90vh above its slot (the dock lift), so
+	     grouped with the row it stayed invisible until the row arrived and the
+	     parallax played unseen. `data-reveal-eager` trips it just before the fold,
+	     where its entrance starts. */}
 	<div class="container home__widgets">
 		<WidgetGrid cols={4}>
 			<Videos data-reveal data-reveal-group="videos" data-reveal-eager />
@@ -238,17 +144,10 @@ import "@whois/wobble-text/styles.css";
 
 			<BikeStats data-reveal data-reveal-group="widgets" data-reveal-order="1" />
 
-			{/* 1×1 in column 3 alongside the 1×2 video cell. */}
 			<Github data-reveal data-reveal-group="widgets" data-reveal-order="2" />
 
-			{/* 2×2, and the first item that fits columns 1–2 of row 2 once the
-			     three 1×1s have filled row 1 — so it lands bottom-left with no
-			     explicit placement, purely from size + DOM order. */}
 			<Volo data-reveal data-reveal-group="widgets" data-reveal-order="3" />
 
-			{/* 1×1, and the only cell left once Volo has taken columns 1–2 of row
-			     2 — so it lands beside it with no explicit placement, from size and
-			     DOM order alone. */}
 			<Readers data-reveal data-reveal-group="widgets" data-reveal-order="4" />
 		</WidgetGrid>
 	</div>
@@ -259,39 +158,21 @@ import "@whois/wobble-text/styles.css";
 		import "@whois/video-carousel";
 		import "@whois/wobble-text";
 	</script>
-
 </FullHeroLayout>
 
 <style>
-	/* SCENE ------------------------------------------------------------- */
-	/* Two stacked scene layers inside FullHeroLayout's .fh__scene (100svh absolute
-	   background layer). Both fill it; only one shows per breakpoint:
-	     >900px  → fabric dotgrid (.hero__video), carousel hidden.
-	     ≤900px  → video carousel (.hero-carousel) full-bleed, fabric hidden;
-	               the footer carousel is hidden at the same breakpoint (videos.css).
-	   NB: `.hero-carousel` lands on the <video-carousel> host, which belongs to
-	   VideoCarousel.astro's style scope — so these rules must be :global() to reach
-	   it from here. `.hero__video` is authored in this file, so it stays scoped. */
+	/* SCENE: two layers in FullHeroLayout's .fh__scene; one shows per breakpoint.
+	   `.hero-carousel` lands on the <video-carousel> host, which belongs to
+	   VideoCarousel.astro's style scope, so its rules are :global(). */
 	.hero__video {
 		position: absolute;
 		inset: 0;
 		display: block;
-		/* FULL STRENGTH, deliberately — no opacity here. This was opacity: 0.55, to
-		   keep the halftone a faint texture under the type rather than a field
-		   competing with it, and it did buy that. But opacity is a blunt way to pay
-		   for it: it dims the whole layer, so the dots — lifted toward the
-		   background's contrast pole — capped out at 55% white and the fold's crest
-		   could never actually read as white. Measured on one frame at the #fff the
-		   element then hardcoded: peak luminance 145 of 255 at 0.55
-		   against 255 here, while the lit area barely moves (1.2% -> 1.8% of the
-		   band above the wordmark).
-		   The quiet is `cutoff`'s job now (on the element below): it removes the dim
-		   dots outright instead of greying every dot down, which is the same trade
-		   made at the right end of the ramp. Raise that, not this, if the field ever
-		   gets loud — dimming here would just take the highlights down with it. */
+		/* Full strength: the quiet comes from `cutoff` on the element, which removes
+		   the dim dots instead of greying every dot down — an opacity here would cap
+		   the highlights too. */
 	}
 
-	/* Desktop: fabric is the scene; the carousel lives only in the footer widget. */
 	:global(.hero-carousel) {
 		display: none;
 	}
@@ -312,13 +193,8 @@ import "@whois/wobble-text/styles.css";
 		}
 	}
 
-	/* THE PAGE'S COLUMNS ------------------------------------------------ */
-	/* ONE template for the two grids that must agree — the hero lede and the
-	   content row — as a custom property each Grid consumes through its
-	   templateColumns prop: twelve columns, and one at the compact step, where
-	   the property changes and both grids follow. The lede and the copy take
-	   the same five of them, so the two blocks share one measure and one left
-	   edge (and the copy's left edge is "other stories'"). */
+	/* THE PAGE'S COLUMNS: one template for the hero lede and the content row, so
+	   the two share one measure and one left edge. */
 	.hero-intro,
 	.home__grid {
 		--home-columns: repeat(12, 1fr);
@@ -339,41 +215,26 @@ import "@whois/wobble-text/styles.css";
 		}
 	}
 
-	/* HERO INTRO -------------------------------------------------------- */
-	/* Sits with the lockup in the lower-left of the first screen. The parent
-	   .fh__heading opts pointers out (so its empty area doesn't block content
-	   rising below); this block opts back in for its lede.
-	   NO top margin: .sh__sub already supplies the single --sh-heading-gap that binds
-	   the intro to "other stories" as one group. A margin here stacked on top of it
-	   and split the lockup in two. */
+	/* HERO INTRO. No top margin: .sh__sub already supplies the gap that binds it to
+	   "other stories". Pointers fall through the full-width box (on mobile it
+	   overlays the scene's date scrubber); the lede text opts back in. */
 	.hero-intro {
-		/* Pointers fall through the full-width box (it overlays the scene's date
-		   scrubber on mobile, and its empty area would swallow the drag); the lede
-		   text opts back in below. */
 		pointer-events: none;
 	}
-	/* The lede's setting is the Text's (face, step, caps, leading, ink); only
-	   the pointer opt-in is the page's. */
 	.hero-intro__lede p {
 		pointer-events: auto;
 	}
 
-	/* CONTENT ROW ------------------------------------------------------- */
+	/* CONTENT ROW */
 	.home__copy {
 		padding-block-start: var(--space-5);
 	}
-	/* Layout is the page's business; the paragraphs' type is Body's. */
 	.home__copy :global(p + p) {
 		margin-block-start: var(--space-5);
 	}
-
-	/* The Ken Liu passage: the DS Blockquote marks it (the accent bar, the step
-	   up); the page only sets it apart from the copy around it. */
 	.home__quote {
 		margin-block: var(--space-5) var(--space-6);
 	}
-
-	/* Stacked layout (≤900px): the copy sits a step under the lockup. */
 	@media (max-width: 900px) {
 		.home__copy {
 			margin-block-start: var(--space-5);
@@ -381,10 +242,9 @@ import "@whois/wobble-text/styles.css";
 		}
 	}
 
-	/* WIDGETS ----------------------------------------------------------- */
+	/* WIDGETS */
 	.home__widgets {
 		margin-block-start: var(--space-10);
 		padding-block-end: var(--space-10);
 	}
-
 </style>

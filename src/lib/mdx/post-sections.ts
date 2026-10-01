@@ -1,13 +1,8 @@
 /**
- * The post body, cut into SECTIONS for the ruled page.
- *
- * A /txt post is written as one markdown column — paragraphs, h2s, images,
- * fences, a quote — and read on a four-column grid where every h2 opens a
- * row: its number and heading in the first column, its text in the next two
- * (`Prose variant="ruled"`, packages/design-system/src/styles/prose.css,
- * which draws this markup and documents its shape). No markdown says
- * "section", so the cut happens here, on the HTML tree, after Shiki has
- * highlighted the fences and before Astro maps the tags onto components:
+ * The post body, cut into SECTIONS for the ruled page: every h2 opens one
+ * (`Prose variant="ruled"`, packages/design-system/src/styles/prose.css draws
+ * the markup). The cut happens on the HTML tree, after Shiki has highlighted
+ * the fences and before Astro maps the tags onto components:
  *
  *   <section class="ds-prose-section" data-section="01">
  *     <header class="ds-prose-section__head">
@@ -17,45 +12,23 @@
  *     <div class="ds-prose-section__body">…the blocks up to the next h2…</div>
  *   </section>
  *
- * Whatever comes before the first h2 is section 00, labelled "Intro"; a post
- * with no h2s is one such section. The label is NOT an h2 — it is set like
- * one (the classes H2 renders) but it is not a heading the author wrote, so
- * it stays out of the document outline and out of the page's heading list.
- *
- * Inside a body, three blocks are given their ruled dress: a paragraph that
- * is only an image (or only a link around one) becomes a figure with a
- * `Fig. 0N / <alt>` caption — numbered on from the hero when the frontmatter
- * has one, since that is Fig. 01 on the page; a fenced block becomes a figure
- * with a header row, `<section>.<n> / <title>` on the left and the language on
- * the right; and a quote whose last line starts with a dash — its own
- * paragraph, or the last line of the last one — becomes a figure: the
- * blockquote, then a `figcaption`, the attribution, outside the quoted words.
- * The mono voice throughout is the design system's own Mono classes, so the
- * page needs no rule for it.
+ * Whatever precedes the first h2 is section 00, labelled "Intro" — set like an
+ * h2 but not one, so it stays out of the document outline. Inside a body, an
+ * image-only paragraph becomes a `Fig. 0N / <alt>` figure (numbered on from
+ * the hero when the frontmatter has one), a fence becomes a figure with a
+ * `<section>.<n> / <title>` + language header, and a quote whose last line
+ * starts with a dash gets that line as its `figcaption`.
  *
  * THE FENCE'S TITLE. Shiki replaces the fence and keeps none of its meta, so
- * `shikiPostCode` — a Shiki transformer, registered in astro.config's
- * `markdown.shikiConfig.transformers` — stamps the `title="…"` meta onto the
- * `pre` as `data-title` while it still has it, and the rehype half reads it
- * back off the same element. Each fence carries its own title, so a fence
- * nested in a list or a quote cannot shift the labels of the ones after it.
- * The remark half only fixes one authoring slip first: a fence with a title
- * and no language (```` ``` title="x" ````) parses the title AS the language,
- * so it is moved back into the meta.
+ * `shikiPostCode` (a Shiki transformer, registered in astro.config) stamps the
+ * `title="…"` meta onto the `pre` as `data-title` while it still has it, and
+ * the rehype half reads it back. The remark half first fixes one authoring
+ * slip: a fence with a title and no language parses the title AS the language.
  *
- * The remark and rehype halves run on every markdown file Astro renders and
- * do nothing unless the file is under TXT_BASE — the other markdown on the
- * site keeps its one column. The tags Astro maps onto components (h2, p, img,
- * blockquote) are the same tags afterwards, so the mapping still lands; the
- * wrappers are plain elements no mapping names. `mdxjsEsm` nodes (a post's
- * `import`s) stay at the root, where MDX needs them.
- *
- * THE IMAGES ARE IMPORTS. A post's pictures are files beside it
- * (`./images/x.webp`), and Astro's own rewrite — the relative `img` into an
- * `astro-image` JSX node whose `src` is the import, which the `img` mapping
- * (src/components/mdx/Img.astro) then draws as a <Picture> — runs after the
- * site's plugins, so it lands inside the figure this makes. `imageOf` takes
- * the rewritten shapes too, so the order is not load-bearing.
+ * Both halves do nothing outside TXT_BASE. The tags Astro maps onto components
+ * are unchanged afterwards, `mdxjsEsm` nodes stay at the root, and `imageOf`
+ * accepts Astro's rewritten image shapes too, so plugin order is not
+ * load-bearing.
  */
 import type { Element, ElementContent, Root, RootContent, Text } from "hast";
 import type { Code, Root as MdRoot } from "mdast";
@@ -129,9 +102,8 @@ export const shikiPostCode: ShikiTransformer = {
 const isElement = (node: unknown): node is Element =>
 	typeof node === "object" && node !== null && (node as Element).type === "element";
 
-/** The element's tag, or null for any other node — a plain string, not a
- *  type guard: a guard on the tag would narrow the node away from Element
- *  for every branch after the one it fails. */
+/** The element's tag, or null — not a type guard, which would narrow the node
+ *  away from Element in every branch after the one it fails. */
 const tagOf = (node: unknown): string | null => (isElement(node) ? node.tagName : null);
 
 const isBlank = (node: RootContent | ElementContent) =>
@@ -185,13 +157,9 @@ interface JsxImage {
 
 const JSX_IMAGE = /^(?:img|astro-image)$/;
 
-/** An image, in any of the shapes Astro's pipeline gives one, with its alt:
- *  the markdown `img` (as this plugin normally sees it — Astro's own rewrite
- *  of a relative path to its import runs after the site's plugins, in the
- *  markdown and the MDX pipelines both, and lands inside the figure this
- *  makes), the same `img` after the markdown rewrite (its props folded into
- *  `__ASTRO_IMAGE_`), or the MDX rewrite's `astro-image` JSX node. Taking
- *  all three keeps the order of the plugins from being load-bearing. */
+/** An image in any of the shapes Astro's pipeline gives one, with its alt: the
+ *  markdown `img`, the same `img` after the markdown rewrite (props folded
+ *  into `__ASTRO_IMAGE_`), or the MDX rewrite's `astro-image` JSX node. */
 function imageOf(node: unknown): { alt: string } | null {
 	if (isElement(node)) {
 		if (node.tagName !== "img") return null;
@@ -262,9 +230,8 @@ function takeAttribution(quote: Element): ElementContent[] | null {
 		return last.children;
 	}
 
-	// The last line of the last paragraph: `> words` / `> — Author`, one
-	// paragraph with a soft break. The attribution is everything after the
-	// last text node's last line-opening dash.
+	// The last line of the last paragraph (one paragraph with a soft break):
+	// everything after the last text node's last line-opening dash.
 	for (let i = last.children.length - 1; i >= 0; i--) {
 		const child = last.children[i];
 		if (child.type !== "text") continue;
@@ -298,18 +265,15 @@ function trimEnd(children: ElementContent[]) {
 	}
 }
 
-/**
- * The rehype half: the cut, and the dress on figures, fences and quotes.
- */
+/** The rehype half: the cut, and the dress on figures, fences and quotes. */
 export function rehypePostSections() {
 	return (tree: Root, file: VFile) => {
 		if (!inTxt(file)) return;
 		const data = file.data as PostData;
-		// The figures count on from the hero, which is Fig. 01 when there is one.
+		// The hero, when there is one, is Fig. 01.
 		let figure = data.astro?.frontmatter?.hero ? 2 : 1;
 
-		// THE CUT. Root children in order: esm stays at the root; an h2 opens a
-		// section; everything else belongs to the open one.
+		// THE CUT.
 		const esm: RootContent[] = [];
 		type Section = { heading: Element | null; nodes: RootContent[] };
 		const sections: Section[] = [];
@@ -337,7 +301,7 @@ export function rehypePostSections() {
 				const { alt } = image;
 				const n = pad2(figure++);
 				const label = alt ? `fig. ${n} / ${alt}` : `fig. ${n}`;
-				// Fig's flow markup (packages/design-system/src/components/Fig.astro).
+				// Fig's markup (packages/design-system/src/components/Fig.astro).
 				return el("figure", { className: ["ds-fig"] }, [
 					image.content,
 					el("figcaption", { className: ["ds-fig__cap"] }, [mono(label)]),
