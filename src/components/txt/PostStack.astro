@@ -4,11 +4,11 @@
 // on every arrival (a load, a client-router swap, a back/forward restore
 // from the bfcache); pointing at another opens it (a tap or click on a
 // phone or anywhere a closed post is clicked, focus from the keyboard). The
-// open post's body sits in the right half: its excerpt, then — pinned to
-// the foot of the body — a control rail: READ, a solid accent button flush
-// in the corner the column rule makes with the post's bottom hairline, and
-// a faint line from its top edge across the rest of the half, carrying the
-// category and word count.
+// open post's body sits in the right half: its category and word count and
+// its excerpt, then — pinned to the foot of the body — a control rail: READ,
+// a solid accent button flush in the corner the column rule makes with the
+// post's bottom hairline, and a faint line from its top edge across the rest
+// of the half, an empty strip for controls to come.
 //
 // THE CLICK RULE: a title is a link only while its post is open (and is
 // underlined then, to say so). A click (mouse, pen, touch, or Enter) on a
@@ -81,6 +81,7 @@ const ordered = byDateDesc(posts);
 						<div class="stack__body">
 							<div class="stack__body-inner" data-stack-measure>
 								<div class="stack__text">
+									<Mono class="stack__meta">{meta}</Mono>
 									<Body class="stack__excerpt">{post.data.excerpt}</Body>
 								</div>
 								<div class="stack__rail">
@@ -96,9 +97,7 @@ const ordered = byDateDesc(posts);
 										Read
 										<Icon slot="end-icon" name="external" />
 									</Button>
-									<div class="stack__strip">
-										<Mono truncate class="stack__meta">{meta}</Mono>
-									</div>
+									<div class="stack__strip" />
 								</div>
 							</div>
 						</div>
@@ -231,8 +230,12 @@ const ordered = byDateDesc(posts);
 		align-self: start;
 		display: grid;
 		justify-items: start;
+		gap: var(--space-4);
 		padding-inline-start: var(--stack-inset);
 		padding-block-end: var(--space-6);
+	}
+	.stack__meta {
+		display: block;
 	}
 	.stack__excerpt {
 		max-inline-size: var(--measure-note);
@@ -241,9 +244,7 @@ const ordered = byDateDesc(posts);
 	/* THE RAIL: the right half's foot, edge to edge — READ in the corner
 	   (the column rule on its left, the post's bottom hairline under it),
 	   then the strip: a faint hairline level with READ's top, as tall as
-	   READ, carrying the meta (category · words) a step after READ, centred
-	   on it. The meta is one line that ellipsises rather than wraps, so it
-	   can never make the rail (and so H) taller. READ is the DS's primary button, the accent fill with
+	   READ, empty. READ is the DS's primary button, the accent fill with
 	   --on-accent; squared off here so it sits in a ruled corner, and its
 	   ring drawn inside, where the body's clip can't cut it. Its leading
 	   padding is the text inset, with no border and no caps indent (the
@@ -268,15 +269,7 @@ const ordered = byDateDesc(posts);
 	}
 	.stack__strip {
 		flex: 1;
-		min-inline-size: 0;
-		display: flex;
-		align-items: center;
-		padding-inline: var(--space-4) var(--stack-inset);
 		border-block-start: 1px solid color-mix(in oklab, var(--hairline) 50%, transparent);
-	}
-	.stack__meta {
-		display: block;
-		min-inline-size: 0;
 	}
 
 	/* Phone: one column — the date above the title, no rule between them; the

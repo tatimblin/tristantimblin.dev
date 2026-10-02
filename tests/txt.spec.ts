@@ -119,15 +119,13 @@ test.describe("/txt/", () => {
 		// The date column reads month / year.
 		await expect(page.locator(`${POST} time.stack__date`).first()).toHaveText("02 / 26");
 		await expect(page.locator(`${POST} time.stack__date`).first()).toHaveAttribute("datetime", "2026-02-02");
-		// The open body: the excerpt, READ to the same place, and category ·
-		// words on the rail beside READ — no reading-time numeral.
+		// The open body: category · words, the excerpt, READ to the same
+		// place — no reading-time numeral.
 		const body = page.locator(`${OPEN} .stack__body`);
 		await expect(body).toBeVisible();
 		await expect(body.locator(".stack__time, .ds-figure")).toHaveCount(0);
-		await expect(body.locator(".stack__rail .stack__strip .stack__meta")).toHaveText(
-			/^Programming · [\d,]+ words$/,
-		);
-		await expect(body.locator(".stack__text .stack__meta")).toHaveCount(0);
+		await expect(body.locator(".stack__text .stack__meta")).toHaveText(/^Programming · [\d,]+ words$/);
+		await expect(body.locator(".stack__rail .stack__meta")).toHaveCount(0);
 		await expect(body.locator(".stack__excerpt")).toHaveText(/\S/);
 		const read = body.locator("a.stack__read");
 		await expect(read).toHaveAttribute("href", "/txt/asserting-on-agent-behavior/");
@@ -169,7 +167,7 @@ test.describe("/txt/", () => {
 	}
 
 	for (const width of [1440, 375]) {
-		test(`READ's label starts on the title's and the excerpt's x at ${width}${width < 640 ? ", READ bleeding to the viewport edge" : ""}`, async ({
+		test(`the meta and READ's label start on the title's and the excerpt's x at ${width}${width < 640 ? ", READ bleeding to the viewport edge" : ""}`, async ({
 			page,
 		}) => {
 			await page.setViewportSize({ width, height: width < 640 ? 812 : 900 });
@@ -192,13 +190,11 @@ test.describe("/txt/", () => {
 					excerpt: textX(post.querySelector(".stack__excerpt")!),
 					label: textX(read),
 					readLeft: read.getBoundingClientRect().left,
-					readRight: read.getBoundingClientRect().right,
-					readMid: (read.getBoundingClientRect().top + read.getBoundingClientRect().bottom) / 2,
-					metaLeft: post.querySelector(".stack__meta")!.getBoundingClientRect().left,
-					metaMid:
-						(post.querySelector(".stack__meta")!.getBoundingClientRect().top +
-							post.querySelector(".stack__meta")!.getBoundingClientRect().bottom) /
-						2,
+					meta: textX(post.querySelector(".stack__meta")!),
+					titleBottom: post.querySelector(".stack__title")!.getBoundingClientRect().bottom,
+					metaTop: post.querySelector(".stack__meta")!.getBoundingClientRect().top,
+					metaBottom: post.querySelector(".stack__meta")!.getBoundingClientRect().bottom,
+					excerptTop: post.querySelector(".stack__excerpt")!.getBoundingClientRect().top,
 					readBottom: read.getBoundingClientRect().bottom,
 					nextTop: post.nextElementSibling!.getBoundingClientRect().top,
 					rule: box.left + box.width / 2,
@@ -212,10 +208,11 @@ test.describe("/txt/", () => {
 			// (phone), its foot on the next post's top.
 			expect(Math.abs(m.readLeft - (width < 640 ? 0 : m.rule))).toBeLessThanOrEqual(1);
 			expect(Math.abs(m.readBottom - m.nextTop)).toBeLessThanOrEqual(1);
-			// The meta follows READ on the rail, a step after it, centred on it.
-			expect(m.metaLeft).toBeGreaterThan(m.readRight);
-			expect(m.metaLeft - m.readRight).toBeLessThanOrEqual(24);
-			expect(Math.abs(m.metaMid - m.readMid)).toBeLessThanOrEqual(1);
+			// The meta sits on its own line between the title and the excerpt,
+			// on their x.
+			expect(Math.abs(m.meta - m.title)).toBeLessThanOrEqual(1);
+			expect(m.metaTop).toBeGreaterThanOrEqual(m.titleBottom - 1);
+			expect(m.metaBottom).toBeLessThanOrEqual(m.excerptTop + 1);
 			// The bleed never scrolls the page sideways.
 			expect(m.scrollWidth).toBeLessThanOrEqual(m.clientWidth);
 		});
@@ -312,14 +309,12 @@ test.describe("/txt/", () => {
 				});
 				const header = document.querySelector(".blog__main h1, h1")!.getBoundingClientRect().left;
 				const title = document.querySelector(".stack__title")!.getBoundingClientRect().left;
-				const meta = document.querySelector(".stack__post[data-open] .stack__meta")!;
 				return {
 					vw,
 					stack: { left: s.left, right: s.right, border: getComputedStyle(stack).borderTopWidth },
 					posts,
 					header,
 					title,
-					metaOneLine: meta.getBoundingClientRect().height <= parseFloat(getComputedStyle(meta).fontSize) * 1.5,
 					scrollWidth: document.documentElement.scrollWidth,
 				};
 			});
@@ -334,8 +329,6 @@ test.describe("/txt/", () => {
 			// The title stays on the page's gutter, under the page heading.
 			expect(Math.abs(m.title - m.header)).toBeLessThanOrEqual(1);
 			expect(m.title).toBeGreaterThan(0);
-			// The meta never wraps (it ellipsises), so the rail keeps its height.
-			expect(m.metaOneLine).toBe(true);
 			expect(m.scrollWidth).toBeLessThanOrEqual(m.vw);
 		});
 	}
