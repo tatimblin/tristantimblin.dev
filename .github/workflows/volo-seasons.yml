@@ -42,11 +42,18 @@ jobs:
       # the one sent. `if: always()` because the rotation happens before the data
       # query — a token that rotated must be persisted even if the query then
       # failed, or the rotation is lost and the account is stranded.
+      # The file check is in the script, not the `if:` — hashFiles() only sees
+      # the workspace, so a runner.temp path always hashed to '' and this step
+      # was skipped on every run, throwing each rotation away.
       - name: Persist rotated refresh token
-        if: always() && hashFiles(format('{0}/volo-rotated', runner.temp)) != ''
+        if: always()
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
+          if [ ! -s "$RUNNER_TEMP/volo-rotated" ]; then
+            echo "Refresh token did not rotate — nothing to persist."
+            exit 0
+          fi
           gh secret set VOLO_REFRESH_TOKEN --body "$(cat "$RUNNER_TEMP/volo-rotated")"
           rm -f "$RUNNER_TEMP/volo-rotated"
 
