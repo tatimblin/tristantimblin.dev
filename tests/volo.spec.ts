@@ -13,7 +13,13 @@ test("the season arrows keep focus at the ends of the range", async ({ page }) =
 	const prev = widget.locator("[data-volo-prev]");
 	const next = widget.locator("[data-volo-next]");
 	const heading = widget.locator("[data-volo-heading]");
-	await widget.scrollIntoViewIfNeeded();
+	// Plain scroll, NOT locator.scrollIntoViewIfNeeded() — the widget row never
+	// settles (see the same note in reveal.spec.ts), so waiting for a stable box
+	// times out on a CI runner.
+	await widget.waitFor({ state: "attached" });
+	await page.evaluate(() =>
+		document.querySelector(".wx-volo")?.scrollIntoView({ block: "center" })
+	);
 	await expect(widget.locator(".wx-vl-nav")).toBeVisible();
 
 	// The newest season shows first, so "next" starts disabled.
