@@ -124,6 +124,12 @@
 .wx-nowplaying spotify-player::part(elapsed) {
 	color: var(--text-primary);
 }
+/* Pinned to the right edge rather than left to space-between: Firefox spreads
+   the spanning bar's width across both auto columns, so the second column
+   starts mid-row and a start-aligned timestamp sat under the middle. */
+.wx-nowplaying spotify-player::part(remaining) {
+	justify-self: end;
+}
 /* The component rounds the elapsed stretch's leading end, which would shave
    the first tick; the ruler is square. */
 /* (Separate rules: one engine's unknown pseudo-element would void a list.) */
