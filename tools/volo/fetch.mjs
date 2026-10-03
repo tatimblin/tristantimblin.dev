@@ -152,10 +152,16 @@ async function authenticate() {
 		({ webRefresh: auth } = await graphql(REFRESH, { t: refreshToken }, null));
 	} catch (error) {
 		// Volo's answer to a revoked or expired refresh token. It is not worth a
-		// retry; it needs a human with a browser.
-		if (String(error.message).includes("Session not found")) {
+		// retry; it needs a human with a browser. A dead token has also come back
+		// as Hasura's generic action failure (2026-10-03, the day after "Session
+		// not found" for the same token).
+		const message = String(error.message);
+		if (
+			message.includes("Session not found") ||
+			message.includes("http exception when calling webhook")
+		) {
 			console.error(
-				"::error::Volo rejected the refresh token (Session not found). " +
+				`::error::Volo rejected the refresh token (${message}). ` +
 					"Re-authenticate with the volo-sports skill " +
 					"(`volo.py auth login --email …`) and update VOLO_REFRESH_TOKEN.",
 			);
