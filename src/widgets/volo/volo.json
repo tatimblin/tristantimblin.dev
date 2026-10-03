@@ -1,6 +1,6 @@
 {
-	"updated": "2026-09-19T06:12:46.360Z",
-	"username": null,
+	"updated": "2026-10-03T21:57:50.135Z",
+	"username": "tristimb",
 	"seasons": [
 		{
 			"id": "4c50bffb-2890-4dfb-a838-714fff55a9fa",
@@ -30,7 +30,6 @@
 				{
 					"startTime": "2021-07-22T02:00:00+00:00",
 					"opponent": "Spiked Punch",
-					"opponentColor": "#a8adb0",
 					"opponentRank": 10,
 					"opponentSeed": null,
 					"playoff": false,
@@ -45,7 +44,6 @@
 				{
 					"startTime": "2021-07-29T00:00:00+00:00",
 					"opponent": "Steve",
-					"opponentColor": "#f05438",
 					"opponentRank": 3,
 					"opponentSeed": 2,
 					"playoff": false,
@@ -60,7 +58,6 @@
 				{
 					"startTime": "2021-08-04T22:00:00+00:00",
 					"opponent": "Pun for all and all for Pun",
-					"opponentColor": "#ffffff",
 					"opponentRank": 11,
 					"opponentSeed": null,
 					"playoff": false,
@@ -75,7 +72,6 @@
 				{
 					"startTime": "2021-08-18T02:00:00+00:00",
 					"opponent": "Setters of Catan",
-					"opponentColor": "#e3e4e6",
 					"opponentRank": 7,
 					"opponentSeed": 6,
 					"playoff": false,
@@ -90,7 +86,6 @@
 				{
 					"startTime": "2021-08-25T01:20:00+00:00",
 					"opponent": "Sandy Cheeks",
-					"opponentColor": "#0387b8",
 					"opponentRank": 2,
 					"opponentSeed": 1,
 					"playoff": false,
@@ -105,7 +100,6 @@
 				{
 					"startTime": "2021-09-09T00:40:00+00:00",
 					"opponent": "How I Set Your Mother",
-					"opponentColor": "#108b5d",
 					"opponentRank": 13,
 					"opponentSeed": null,
 					"playoff": false,
@@ -120,7 +114,6 @@
 				{
 					"startTime": "2021-09-15T22:45:00+00:00",
 					"opponent": "K.M.P",
-					"opponentColor": "#494949",
 					"opponentRank": 4,
 					"opponentSeed": 5,
 					"playoff": true,
@@ -135,7 +128,6 @@
 				{
 					"startTime": "2021-09-15T23:30:00+00:00",
 					"opponent": "Sandy Cheeks",
-					"opponentColor": "#0387b8",
 					"opponentRank": 2,
 					"opponentSeed": 1,
 					"playoff": true,
@@ -177,7 +169,6 @@
 				{
 					"startTime": "2022-05-10T23:00:00+00:00",
 					"opponent": "Volleyball Joneses",
-					"opponentColor": "#e97299",
 					"opponentRank": 3,
 					"opponentSeed": 6,
 					"playoff": false,
@@ -192,7 +183,6 @@
 				{
 					"startTime": "2022-05-17T23:00:00+00:00",
 					"opponent": "Miranda's Team",
-					"opponentColor": "#a8adb0",
 					"opponentRank": 13,
 					"opponentSeed": 14,
 					"playoff": false,
@@ -207,7 +197,6 @@
 				{
 					"startTime": "2022-05-24T22:15:00+00:00",
 					"opponent": "New Best Friends",
-					"opponentColor": "#000000",
 					"opponentRank": 8,
 					"opponentSeed": 12,
 					"playoff": false,
@@ -222,7 +211,6 @@
 				{
 					"startTime": "2022-05-31T23:45:00+00:00",
 					"opponent": "We Always Get It Up",
-					"opponentColor": "#86b660",
 					"opponentRank": 11,
 					"opponentSeed": 7,
 					"playoff": false,
@@ -237,7 +225,6 @@
 				{
 					"startTime": "2022-06-07T23:45:00+00:00",
 					"opponent": "Union Pacific Big Boys",
-					"opponentColor": "#494949",
 					"opponentRank": 12,
 					"opponentSeed": 11,
 					"playoff": false,
@@ -252,7 +239,6 @@
 				{
 					"startTime": "2022-06-14T22:15:00+00:00",
 					"opponent": "Spike Lee",
-					"opponentColor": "#395389",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": false,
@@ -267,7 +253,6 @@
 				{
 					"startTime": "2022-06-28T23:00:00+00:00",
 					"opponent": "Blue Man Group",
-					"opponentColor": "#92cfe1",
 					"opponentRank": 10,
 					"opponentSeed": 10,
 					"playoff": true,
@@ -282,7 +267,6 @@
 				{
 					"startTime": "2022-06-28T23:45:00+00:00",
 					"opponent": "Volleyball Joneses",
-					"opponentColor": "#e97299",
 					"opponentRank": 3,
 					"opponentSeed": 6,
 					"playoff": true,
@@ -297,7 +281,6 @@
 				{
 					"startTime": "2022-06-29T00:30:00+00:00",
 					"opponent": "Spike Lee",
-					"opponentColor": "#395389",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": true,
@@ -339,7 +322,6 @@
 				{
 					"startTime": "2023-10-11T03:00:00+00:00",
 					"opponent": "Bipsters",
-					"opponentColor": "#494949",
 					"opponentRank": 9,
 					"opponentSeed": null,
 					"playoff": false,
@@ -354,7 +336,6 @@
 				{
 					"startTime": "2023-10-18T03:50:00+00:00",
 					"opponent": "Tecate Crushers",
-					"opponentColor": "#b20216",
 					"opponentRank": 4,
 					"opponentSeed": 4,
 					"playoff": false,
@@ -369,7 +350,6 @@
 				{
 					"startTime": "2023-10-25T03:00:00+00:00",
 					"opponent": "Sutro Xtracts",
-					"opponentColor": "#355f9b",
 					"opponentRank": 6,
 					"opponentSeed": 6,
 					"playoff": false,
@@ -384,7 +364,6 @@
 				{
 					"startTime": "2023-11-01T03:00:00+00:00",
 					"opponent": "Frisco",
-					"opponentColor": "#f0e788",
 					"opponentRank": 8,
 					"opponentSeed": 8,
 					"playoff": false,
@@ -399,7 +378,6 @@
 				{
 					"startTime": "2023-11-15T04:50:00+00:00",
 					"opponent": "Master Batters",
-					"opponentColor": "#675098",
 					"opponentRank": 7,
 					"opponentSeed": 7,
 					"playoff": false,
@@ -414,7 +392,6 @@
 				{
 					"startTime": "2023-12-06T04:50:00+00:00",
 					"opponent": "hashweh homies",
-					"opponentColor": "#1e2949",
 					"opponentRank": 3,
 					"opponentSeed": 2,
 					"playoff": false,
@@ -429,7 +406,6 @@
 				{
 					"startTime": "2023-12-13T04:00:00+00:00",
 					"opponent": "Frisco",
-					"opponentColor": "#f0e788",
 					"opponentRank": 8,
 					"opponentSeed": 8,
 					"playoff": true,
@@ -444,7 +420,6 @@
 				{
 					"startTime": "2024-01-10T04:00:00+00:00",
 					"opponent": "Tecate Crushers",
-					"opponentColor": "#b20216",
 					"opponentRank": 4,
 					"opponentSeed": 4,
 					"playoff": true,
@@ -459,7 +434,6 @@
 				{
 					"startTime": "2024-01-10T04:50:00+00:00",
 					"opponent": "Babe Ruths",
-					"opponentColor": "#e97299",
 					"opponentRank": 2,
 					"opponentSeed": 3,
 					"playoff": true,
@@ -501,7 +475,6 @@
 				{
 					"startTime": "2024-04-10T03:50:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#f0e788",
 					"opponentRank": 4,
 					"opponentSeed": 4,
 					"playoff": false,
@@ -516,7 +489,6 @@
 				{
 					"startTime": "2024-04-17T03:50:00+00:00",
 					"opponent": "Nathan's Famous Hot Dongs (Taylor's Version)",
-					"opponentColor": "#ffffff",
 					"opponentRank": 2,
 					"opponentSeed": 2,
 					"playoff": false,
@@ -531,7 +503,6 @@
 				{
 					"startTime": "2024-04-24T03:00:00+00:00",
 					"opponent": "hashweh homies",
-					"opponentColor": "#675098",
 					"opponentRank": 3,
 					"opponentSeed": 3,
 					"playoff": false,
@@ -546,7 +517,6 @@
 				{
 					"startTime": "2024-05-01T03:00:00+00:00",
 					"opponent": "Tecate Crushers",
-					"opponentColor": "#b20216",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": false,
@@ -561,7 +531,6 @@
 				{
 					"startTime": "2024-05-08T03:00:00+00:00",
 					"opponent": "Here to cheat",
-					"opponentColor": "#e97299",
 					"opponentRank": 6,
 					"opponentSeed": 6,
 					"playoff": false,
@@ -576,7 +545,6 @@
 				{
 					"startTime": "2024-05-15T03:50:00+00:00",
 					"opponent": "Diamond In The Rough",
-					"opponentColor": "#a8adb0",
 					"opponentRank": 7,
 					"opponentSeed": 7,
 					"playoff": false,
@@ -591,7 +559,6 @@
 				{
 					"startTime": "2024-05-22T03:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#f0e788",
 					"opponentRank": 4,
 					"opponentSeed": 4,
 					"playoff": true,
@@ -606,7 +573,6 @@
 				{
 					"startTime": "2024-05-29T03:00:00+00:00",
 					"opponent": "Tecate Crushers",
-					"opponentColor": "#b20216",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": true,
@@ -648,7 +614,6 @@
 				{
 					"startTime": "2024-06-19T03:50:00+00:00",
 					"opponent": "Nathan's Famous Hot Dongs (Taylor's Version)",
-					"opponentColor": "#ffffff",
 					"opponentRank": 5,
 					"opponentSeed": null,
 					"playoff": false,
@@ -663,7 +628,6 @@
 				{
 					"startTime": "2024-06-26T03:00:00+00:00",
 					"opponent": "Tecate Crushers",
-					"opponentColor": "#b20216",
 					"opponentRank": 2,
 					"opponentSeed": 3,
 					"playoff": false,
@@ -678,7 +642,6 @@
 				{
 					"startTime": "2024-07-03T03:00:00+00:00",
 					"opponent": "hashweh homies",
-					"opponentColor": "#108b5d",
 					"opponentRank": 3,
 					"opponentSeed": 2,
 					"playoff": false,
@@ -693,7 +656,6 @@
 				{
 					"startTime": "2024-07-10T03:50:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#dc582a",
 					"opponentRank": 4,
 					"opponentSeed": 4,
 					"playoff": false,
@@ -708,7 +670,6 @@
 				{
 					"startTime": "2024-07-17T03:50:00+00:00",
 					"opponent": "buffalo wild dingz",
-					"opponentColor": "#675098",
 					"opponentRank": 6,
 					"opponentSeed": null,
 					"playoff": false,
@@ -723,7 +684,6 @@
 				{
 					"startTime": "2024-07-24T03:50:00+00:00",
 					"opponent": "Nathan's Famous Hot Dongs (Taylor's Version)",
-					"opponentColor": "#ffffff",
 					"opponentRank": 5,
 					"opponentSeed": null,
 					"playoff": false,
@@ -738,7 +698,6 @@
 				{
 					"startTime": "2024-07-31T03:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#dc582a",
 					"opponentRank": 4,
 					"opponentSeed": 4,
 					"playoff": true,
@@ -753,7 +712,6 @@
 				{
 					"startTime": "2024-07-31T03:50:00+00:00",
 					"opponent": "Tecate Crushers",
-					"opponentColor": "#b20216",
 					"opponentRank": 2,
 					"opponentSeed": 3,
 					"playoff": true,
@@ -795,7 +753,6 @@
 				{
 					"startTime": "2024-07-25T02:00:00+00:00",
 					"opponent": "set me baby one more time",
-					"opponentColor": "#675098",
 					"opponentRank": 3,
 					"opponentSeed": 2,
 					"playoff": false,
@@ -810,7 +767,6 @@
 				{
 					"startTime": "2024-08-01T02:45:00+00:00",
 					"opponent": "Twinks in Perril",
-					"opponentColor": "#355f9b",
 					"opponentRank": 2,
 					"opponentSeed": 3,
 					"playoff": false,
@@ -825,7 +781,6 @@
 				{
 					"startTime": "2024-08-08T01:15:00+00:00",
 					"opponent": "Soft Touch 9.0",
-					"opponentColor": "#494949",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": false,
@@ -840,7 +795,6 @@
 				{
 					"startTime": "2024-08-15T01:15:00+00:00",
 					"opponent": "The Three Amigos",
-					"opponentColor": "#dc582a",
 					"opponentRank": 6,
 					"opponentSeed": null,
 					"playoff": false,
@@ -855,7 +809,6 @@
 				{
 					"startTime": "2024-08-22T02:00:00+00:00",
 					"opponent": "Fillmore Squad",
-					"opponentColor": "#b20216",
 					"opponentRank": 4,
 					"opponentSeed": 4,
 					"playoff": false,
@@ -870,7 +823,6 @@
 				{
 					"startTime": "2024-08-29T02:45:00+00:00",
 					"opponent": "set me baby one more time",
-					"opponentColor": "#675098",
 					"opponentRank": 3,
 					"opponentSeed": 2,
 					"playoff": false,
@@ -912,7 +864,6 @@
 				{
 					"startTime": "2025-04-23T03:00:00+00:00",
 					"opponent": "Seventh Inning Stretchers",
-					"opponentColor": "#494949",
 					"opponentRank": 4,
 					"opponentSeed": 4,
 					"playoff": false,
@@ -927,7 +878,6 @@
 				{
 					"startTime": "2025-04-30T04:00:00+00:00",
 					"opponent": "Fun Times Inc",
-					"opponentColor": "#355f9b",
 					"opponentRank": 8,
 					"opponentSeed": null,
 					"playoff": false,
@@ -942,7 +892,6 @@
 				{
 					"startTime": "2025-05-07T03:00:00+00:00",
 					"opponent": "hashweh homies",
-					"opponentColor": "#000000",
 					"opponentRank": 5,
 					"opponentSeed": null,
 					"playoff": false,
@@ -957,7 +906,6 @@
 				{
 					"startTime": "2025-05-14T04:00:00+00:00",
 					"opponent": "Picolas Cage",
-					"opponentColor": "#108b5d",
 					"opponentRank": 6,
 					"opponentSeed": null,
 					"playoff": false,
@@ -972,7 +920,6 @@
 				{
 					"startTime": "2025-05-21T03:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#92cfe1",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": false,
@@ -987,7 +934,6 @@
 				{
 					"startTime": "2025-05-28T04:00:00+00:00",
 					"opponent": "Pitch Perfect",
-					"opponentColor": "#b20216",
 					"opponentRank": 7,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1002,7 +948,6 @@
 				{
 					"startTime": "2025-06-04T03:00:00+00:00",
 					"opponent": "Molly's Moderately Famous Hot Dongs",
-					"opponentColor": "#e76e68",
 					"opponentRank": 3,
 					"opponentSeed": 3,
 					"playoff": true,
@@ -1017,7 +962,6 @@
 				{
 					"startTime": "2025-06-04T04:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#92cfe1",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": true,
@@ -1059,7 +1003,6 @@
 				{
 					"startTime": "2025-06-18T03:00:00+00:00",
 					"opponent": "Seventh Inning Stretchers",
-					"opponentColor": "#675098",
 					"opponentRank": 4,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1074,7 +1017,6 @@
 				{
 					"startTime": "2025-06-25T03:00:00+00:00",
 					"opponent": "SF Homies",
-					"opponentColor": "#dc582a",
 					"opponentRank": 5,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1089,7 +1031,6 @@
 				{
 					"startTime": "2025-07-02T03:00:00+00:00",
 					"opponent": "The Mighty Melonheads",
-					"opponentColor": "#494949",
 					"opponentRank": 1,
 					"opponentSeed": 2,
 					"playoff": false,
@@ -1104,7 +1045,6 @@
 				{
 					"startTime": "2025-07-09T04:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#108b5d",
 					"opponentRank": 2,
 					"opponentSeed": 1,
 					"playoff": false,
@@ -1119,7 +1059,6 @@
 				{
 					"startTime": "2025-07-16T03:00:00+00:00",
 					"opponent": "Beer for Tax Purposes",
-					"opponentColor": "#e76e68",
 					"opponentRank": 8,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1134,7 +1073,6 @@
 				{
 					"startTime": "2025-07-23T04:00:00+00:00",
 					"opponent": "Picolas Cage",
-					"opponentColor": "#ffffff",
 					"opponentRank": 7,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1149,7 +1087,6 @@
 				{
 					"startTime": "2025-07-30T03:00:00+00:00",
 					"opponent": "The Mighty Melonheads",
-					"opponentColor": "#494949",
 					"opponentRank": 1,
 					"opponentSeed": 2,
 					"playoff": true,
@@ -1191,7 +1128,6 @@
 				{
 					"startTime": "2025-08-27T03:00:00+00:00",
 					"opponent": "Adios Pelota",
-					"opponentColor": "#dc582a",
 					"opponentRank": 7,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1206,7 +1142,6 @@
 				{
 					"startTime": "2025-09-03T03:00:00+00:00",
 					"opponent": "Picolas Cage",
-					"opponentColor": "#ffffff",
 					"opponentRank": 5,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1221,7 +1156,6 @@
 				{
 					"startTime": "2025-09-10T04:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#108b5d",
 					"opponentRank": 1,
 					"opponentSeed": 2,
 					"playoff": false,
@@ -1236,7 +1170,6 @@
 				{
 					"startTime": "2025-09-17T03:00:00+00:00",
 					"opponent": "Baja Midnight",
-					"opponentColor": "#675098",
 					"opponentRank": 6,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1251,7 +1184,6 @@
 				{
 					"startTime": "2025-09-24T04:00:00+00:00",
 					"opponent": "Molly's Moderately Famous Hot Dongs",
-					"opponentColor": "#000000",
 					"opponentRank": 4,
 					"opponentSeed": 3,
 					"playoff": false,
@@ -1266,7 +1198,6 @@
 				{
 					"startTime": "2025-10-01T04:00:00+00:00",
 					"opponent": "Bat Attitudes",
-					"opponentColor": "#494949",
 					"opponentRank": 8,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1281,7 +1212,6 @@
 				{
 					"startTime": "2025-10-08T03:00:00+00:00",
 					"opponent": "Hey Homies",
-					"opponentColor": "#b20216",
 					"opponentRank": 2,
 					"opponentSeed": 1,
 					"playoff": true,
@@ -1296,7 +1226,6 @@
 				{
 					"startTime": "2025-10-08T04:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#108b5d",
 					"opponentRank": 1,
 					"opponentSeed": 2,
 					"playoff": true,
@@ -1338,7 +1267,6 @@
 				{
 					"startTime": "2025-10-15T04:00:00+00:00",
 					"opponent": "Molly's Moderately Famous Hot Dongs",
-					"opponentColor": "#f0e788",
 					"opponentRank": 4,
 					"opponentSeed": 4,
 					"playoff": false,
@@ -1353,7 +1281,6 @@
 				{
 					"startTime": "2025-10-22T03:00:00+00:00",
 					"opponent": "Seventh Inning Stretchers",
-					"opponentColor": "#108b5d",
 					"opponentRank": 3,
 					"opponentSeed": 3,
 					"playoff": false,
@@ -1368,7 +1295,6 @@
 				{
 					"startTime": "2025-10-29T03:00:00+00:00",
 					"opponent": "PSA Athletic Club",
-					"opponentColor": "#355f9b",
 					"opponentRank": 8,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1383,7 +1309,6 @@
 				{
 					"startTime": "2025-11-12T05:00:00+00:00",
 					"opponent": "Team: No Game Today",
-					"opponentColor": "#494949",
 					"opponentRank": 5,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1398,7 +1323,6 @@
 				{
 					"startTime": "2025-11-19T04:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#675098",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": false,
@@ -1413,7 +1337,6 @@
 				{
 					"startTime": "2025-11-26T05:00:00+00:00",
 					"opponent": "Presidio Pickles",
-					"opponentColor": "#b20216",
 					"opponentRank": 7,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1428,7 +1351,6 @@
 				{
 					"startTime": "2025-12-03T04:00:00+00:00",
 					"opponent": "Seventh Inning Stretchers",
-					"opponentColor": "#108b5d",
 					"opponentRank": 3,
 					"opponentSeed": 3,
 					"playoff": true,
@@ -1443,7 +1365,6 @@
 				{
 					"startTime": "2025-12-03T05:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#675098",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": true,
@@ -1485,7 +1406,6 @@
 				{
 					"startTime": "2026-04-29T04:00:00+00:00",
 					"opponent": "Bay Baes",
-					"opponentColor": "#355f9b",
 					"opponentRank": 5,
 					"opponentSeed": 4,
 					"playoff": false,
@@ -1500,7 +1420,6 @@
 				{
 					"startTime": "2026-05-06T03:00:00+00:00",
 					"opponent": "Big Tony and the ball crushers",
-					"opponentColor": "#b20216",
 					"opponentRank": 8,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1515,7 +1434,6 @@
 				{
 					"startTime": "2026-05-13T04:00:00+00:00",
 					"opponent": "SF Chihuahuas",
-					"opponentColor": "#000000",
 					"opponentRank": 6,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1530,7 +1448,6 @@
 				{
 					"startTime": "2026-05-20T03:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#675098",
 					"opponentRank": 2,
 					"opponentSeed": 3,
 					"playoff": false,
@@ -1545,7 +1462,6 @@
 				{
 					"startTime": "2026-05-27T03:00:00+00:00",
 					"opponent": "Molly's Moderately Famous Hot Dongs",
-					"opponentColor": "#dc582a",
 					"opponentRank": 4,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1560,7 +1476,6 @@
 				{
 					"startTime": "2026-06-03T03:00:00+00:00",
 					"opponent": "Short People",
-					"opponentColor": "#1e2949",
 					"opponentRank": 7,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1575,7 +1490,6 @@
 				{
 					"startTime": "2026-06-10T03:00:00+00:00",
 					"opponent": "Bay Baes",
-					"opponentColor": "#355f9b",
 					"opponentRank": 5,
 					"opponentSeed": 4,
 					"playoff": true,
@@ -1590,7 +1504,6 @@
 				{
 					"startTime": "2026-06-10T04:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#675098",
 					"opponentRank": 2,
 					"opponentSeed": 3,
 					"playoff": true,
@@ -1611,7 +1524,7 @@
 			"seasonOrder": 5300,
 			"startDate": "2026-06-16T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
-			"status": "active",
+			"status": "completed",
 			"team": {
 				"name": "who cares",
 				"color": "#dc582a"
@@ -1632,7 +1545,6 @@
 				{
 					"startTime": "2026-06-17T03:00:00+00:00",
 					"opponent": "Jalapeño Jefes",
-					"opponentColor": "#b20216",
 					"opponentRank": 5,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1647,7 +1559,6 @@
 				{
 					"startTime": "2026-06-24T04:00:00+00:00",
 					"opponent": "H&O",
-					"opponentColor": "#b20216",
 					"opponentRank": 8,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1662,7 +1573,6 @@
 				{
 					"startTime": "2026-07-01T03:00:00+00:00",
 					"opponent": "Bay Baes",
-					"opponentColor": "#f0e788",
 					"opponentRank": 6,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1677,7 +1587,6 @@
 				{
 					"startTime": "2026-07-08T03:00:00+00:00",
 					"opponent": "Arroz con Corona",
-					"opponentColor": "#ffffff",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": false,
@@ -1692,7 +1601,6 @@
 				{
 					"startTime": "2026-07-15T04:00:00+00:00",
 					"opponent": "Molly's Moderately Famous Hot Dongs",
-					"opponentColor": "#1e2949",
 					"opponentRank": 7,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1707,7 +1615,6 @@
 				{
 					"startTime": "2026-07-22T03:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentColor": "#e76e68",
 					"opponentRank": 2,
 					"opponentSeed": 2,
 					"playoff": false,
@@ -1722,7 +1629,6 @@
 				{
 					"startTime": "2026-07-29T03:00:00+00:00",
 					"opponent": "Arroz con Corona",
-					"opponentColor": "#ffffff",
 					"opponentRank": 1,
 					"opponentSeed": 1,
 					"playoff": true,
@@ -1749,23 +1655,22 @@
 				"color": "#219099"
 			},
 			"record": {
-				"wins": 5,
-				"losses": 0,
+				"wins": 7,
+				"losses": 1,
 				"ties": 0,
-				"pointsFor": 81,
-				"pointsAgainst": 42,
-				"differential": 39,
+				"pointsFor": 126,
+				"pointsAgainst": 70,
+				"differential": 56,
 				"rank": 1,
 				"teams": 8
 			},
-			"seed": null,
+			"seed": 1,
 			"champion": false,
 			"games": [
 				{
 					"startTime": "2026-08-19T03:00:00+00:00",
 					"opponent": "Son of a Pitch",
-					"opponentColor": "#ffffff",
-					"opponentRank": 8,
+					"opponentRank": 7,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
@@ -1779,9 +1684,8 @@
 				{
 					"startTime": "2026-08-26T04:00:00+00:00",
 					"opponent": "Thee Parkside Memorial Hot Dongs",
-					"opponentColor": "#721e38",
 					"opponentRank": 3,
-					"opponentSeed": null,
+					"opponentSeed": 3,
 					"playoff": false,
 					"round": null,
 					"roundOrder": null,
@@ -1794,7 +1698,6 @@
 				{
 					"startTime": "2026-09-02T04:00:00+00:00",
 					"opponent": "Wild Bunch",
-					"opponentColor": "#92cfe1",
 					"opponentRank": 5,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1809,7 +1712,6 @@
 				{
 					"startTime": "2026-09-09T04:00:00+00:00",
 					"opponent": "H&O",
-					"opponentColor": "#b20216",
 					"opponentRank": 6,
 					"opponentSeed": null,
 					"playoff": false,
@@ -1824,9 +1726,8 @@
 				{
 					"startTime": "2026-09-16T03:00:00+00:00",
 					"opponent": "Arroz con Modelo",
-					"opponentColor": "#108b5d",
 					"opponentRank": 2,
-					"opponentSeed": null,
+					"opponentSeed": 2,
 					"playoff": false,
 					"round": null,
 					"roundOrder": null,
@@ -1839,16 +1740,43 @@
 				{
 					"startTime": "2026-09-23T03:00:00+00:00",
 					"opponent": "Bay Baes",
-					"opponentColor": "#494949",
-					"opponentRank": 7,
+					"opponentRank": 8,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
 					"roundOrder": null,
 					"week": 6,
-					"result": null,
-					"for": null,
-					"against": null,
+					"result": "W",
+					"for": 18,
+					"against": 5,
+					"forfeit": false
+				},
+				{
+					"startTime": "2026-09-30T03:00:00+00:00",
+					"opponent": "Diamond Dogs",
+					"opponentRank": 4,
+					"opponentSeed": 4,
+					"playoff": true,
+					"round": "Semifinals",
+					"roundOrder": 1,
+					"week": null,
+					"result": "W",
+					"for": 17,
+					"against": 11,
+					"forfeit": false
+				},
+				{
+					"startTime": "2026-09-30T04:00:00+00:00",
+					"opponent": "Arroz con Modelo",
+					"opponentRank": 2,
+					"opponentSeed": 2,
+					"playoff": true,
+					"round": "Finals",
+					"roundOrder": 2,
+					"week": null,
+					"result": "L",
+					"for": 10,
+					"against": 12,
 					"forfeit": false
 				}
 			]
