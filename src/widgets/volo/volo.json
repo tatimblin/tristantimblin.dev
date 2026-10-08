@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-07T12:38:49.795Z",
+	"updated": "2026-10-08T12:48:28.636Z",
 	"username": "tristimb",
 	"seasons": [
 		{
@@ -1649,7 +1649,7 @@
 			"seasonOrder": 5300,
 			"startDate": "2026-08-18T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
-			"status": "active",
+			"status": "completed",
 			"team": {
 				"name": "who cares",
 				"color": "#219099"
