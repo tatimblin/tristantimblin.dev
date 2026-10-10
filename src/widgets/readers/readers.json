@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-08",
+	"updated": "2026-10-09",
 	"host": "tristantimblin.dev",
 	"siteTag": "4fa1a14d4e604219b081bb511741d2ab",
 	"sampled": true,
@@ -141,8 +141,8 @@
 		},
 		{
 			"date": "2026-08-26",
-			"pageloads": 10,
-			"visits": 10
+			"pageloads": 0,
+			"visits": 0
 		},
 		{
 			"date": "2026-08-27",
@@ -151,7 +151,7 @@
 		},
 		{
 			"date": "2026-08-28",
-			"pageloads": 60,
+			"pageloads": 0,
 			"visits": 0
 		},
 		{
@@ -176,8 +176,8 @@
 		},
 		{
 			"date": "2026-09-02",
-			"pageloads": 10,
-			"visits": 10
+			"pageloads": 0,
+			"visits": 0
 		},
 		{
 			"date": "2026-09-03",
@@ -186,8 +186,8 @@
 		},
 		{
 			"date": "2026-09-04",
-			"pageloads": 40,
-			"visits": 30
+			"pageloads": 100,
+			"visits": 0
 		},
 		{
 			"date": "2026-09-05",
@@ -206,7 +206,7 @@
 		},
 		{
 			"date": "2026-09-08",
-			"pageloads": 10,
+			"pageloads": 0,
 			"visits": 0
 		},
 		{
@@ -216,22 +216,22 @@
 		},
 		{
 			"date": "2026-09-10",
-			"pageloads": 20,
+			"pageloads": 200,
 			"visits": 0
 		},
 		{
 			"date": "2026-09-11",
-			"pageloads": 20,
-			"visits": 20
+			"pageloads": 0,
+			"visits": 0
 		},
 		{
 			"date": "2026-09-12",
-			"pageloads": 50,
+			"pageloads": 0,
 			"visits": 0
 		},
 		{
 			"date": "2026-09-13",
-			"pageloads": 60,
+			"pageloads": 0,
 			"visits": 0
 		},
 		{
@@ -246,8 +246,8 @@
 		},
 		{
 			"date": "2026-09-16",
-			"pageloads": 20,
-			"visits": 10
+			"pageloads": 100,
+			"visits": 100
 		},
 		{
 			"date": "2026-09-17",
@@ -261,13 +261,13 @@
 		},
 		{
 			"date": "2026-09-19",
-			"pageloads": 10,
+			"pageloads": 0,
 			"visits": 0
 		},
 		{
 			"date": "2026-09-20",
-			"pageloads": 30,
-			"visits": 10
+			"pageloads": 0,
+			"visits": 0
 		},
 		{
 			"date": "2026-09-21",
@@ -276,12 +276,12 @@
 		},
 		{
 			"date": "2026-09-22",
-			"pageloads": 10,
-			"visits": 10
+			"pageloads": 0,
+			"visits": 0
 		},
 		{
 			"date": "2026-09-23",
-			"pageloads": 10,
+			"pageloads": 0,
 			"visits": 0
 		},
 		{
@@ -291,28 +291,28 @@
 		},
 		{
 			"date": "2026-09-25",
-			"pageloads": 10,
+			"pageloads": 0,
 			"visits": 0
 		},
 		{
 			"date": "2026-09-26",
-			"pageloads": 30,
+			"pageloads": 0,
 			"visits": 0
 		},
 		{
 			"date": "2026-09-27",
-			"pageloads": 50,
-			"visits": 30
+			"pageloads": 0,
+			"visits": 0
 		},
 		{
 			"date": "2026-09-28",
-			"pageloads": 140,
-			"visits": 20
+			"pageloads": 200,
+			"visits": 0
 		},
 		{
 			"date": "2026-09-29",
-			"pageloads": 140,
-			"visits": 10
+			"pageloads": 0,
+			"visits": 0
 		},
 		{
 			"date": "2026-09-30",
@@ -321,18 +321,18 @@
 		},
 		{
 			"date": "2026-10-01",
-			"pageloads": 170,
-			"visits": 60
+			"pageloads": 200,
+			"visits": 0
 		},
 		{
 			"date": "2026-10-02",
-			"pageloads": 170,
-			"visits": 20
+			"pageloads": 600,
+			"visits": 0
 		},
 		{
 			"date": "2026-10-03",
-			"pageloads": 40,
-			"visits": 10
+			"pageloads": 0,
+			"visits": 0
 		},
 		{
 			"date": "2026-10-04",
@@ -341,7 +341,7 @@
 		},
 		{
 			"date": "2026-10-05",
-			"pageloads": 10,
+			"pageloads": 0,
 			"visits": 0
 		},
 		{
@@ -358,6 +358,11 @@
 			"date": "2026-10-08",
 			"pageloads": 0,
 			"visits": 0
+		},
+		{
+			"date": "2026-10-09",
+			"pageloads": 0,
+			"visits": 0
 		}
 	],
 	"postDays": [
@@ -369,42 +374,17 @@
 		{
 			"date": "2026-09-04",
 			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
-			"reads": 10
+			"reads": 100
 		},
 		{
 			"date": "2026-09-10",
 			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
-			"reads": 20
-		},
-		{
-			"date": "2026-09-12",
-			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
-			"reads": 30
-		},
-		{
-			"date": "2026-09-25",
-			"path": "/txt/asserting-on-agent-behavior/",
-			"reads": 10
-		},
-		{
-			"date": "2026-09-28",
-			"path": "/txt/asserting-on-agent-behavior/",
-			"reads": 10
-		},
-		{
-			"date": "2026-09-28",
-			"path": "/txt/why-i-joined-fisker/",
-			"reads": 20
-		},
-		{
-			"date": "2026-09-29",
-			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
-			"reads": 30
+			"reads": 200
 		},
 		{
 			"date": "2026-10-01",
 			"path": "/txt/asserting-on-agent-behavior/",
-			"reads": 20
+			"reads": 200
 		}
 	]
 }
