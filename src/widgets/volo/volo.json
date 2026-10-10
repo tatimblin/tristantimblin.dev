@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-09T12:34:02.635Z",
+	"updated": "2026-10-10T11:54:34.961Z",
 	"username": "tristimb",
 	"seasons": [
 		{
@@ -1777,6 +1777,117 @@
 					"result": "L",
 					"for": 10,
 					"against": 12,
+					"forfeit": false
+				}
+			]
+		},
+		{
+			"id": "c6452ca1-c40e-46d1-9ff6-dbb3ce751659",
+			"sport": "Softball",
+			"seasonLabel": "Fall 2026",
+			"seasonOrder": 5400,
+			"startDate": "2026-10-13T19:00:00+00:00",
+			"timezone": "America/Los_Angeles",
+			"status": "ready",
+			"team": {
+				"name": "Who? cares",
+				"color": "#000000"
+			},
+			"record": {
+				"wins": 0,
+				"losses": 0,
+				"ties": 0,
+				"pointsFor": 0,
+				"pointsAgainst": 0,
+				"differential": 0,
+				"rank": 6,
+				"teams": 6
+			},
+			"seed": null,
+			"champion": false,
+			"games": [
+				{
+					"startTime": "2026-10-14T03:00:00+00:00",
+					"opponent": "CPK",
+					"opponentRank": 5,
+					"opponentSeed": null,
+					"playoff": false,
+					"round": null,
+					"roundOrder": null,
+					"week": 1,
+					"result": null,
+					"for": null,
+					"against": null,
+					"forfeit": false
+				},
+				{
+					"startTime": "2026-10-21T04:00:00+00:00",
+					"opponent": "Arroz con Pacificos",
+					"opponentRank": 1,
+					"opponentSeed": null,
+					"playoff": false,
+					"round": null,
+					"roundOrder": null,
+					"week": 2,
+					"result": null,
+					"for": null,
+					"against": null,
+					"forfeit": false
+				},
+				{
+					"startTime": "2026-10-28T03:00:00+00:00",
+					"opponent": "Molly's Moderately Famous Hot Dongs",
+					"opponentRank": 3,
+					"opponentSeed": null,
+					"playoff": false,
+					"round": null,
+					"roundOrder": null,
+					"week": 3,
+					"result": null,
+					"for": null,
+					"against": null,
+					"forfeit": false
+				},
+				{
+					"startTime": "2026-11-04T04:00:00+00:00",
+					"opponent": "Diamond Dogs",
+					"opponentRank": 4,
+					"opponentSeed": null,
+					"playoff": false,
+					"round": null,
+					"roundOrder": null,
+					"week": 4,
+					"result": null,
+					"for": null,
+					"against": null,
+					"forfeit": false
+				},
+				{
+					"startTime": "2026-11-11T05:00:00+00:00",
+					"opponent": "H&O",
+					"opponentRank": 2,
+					"opponentSeed": null,
+					"playoff": false,
+					"round": null,
+					"roundOrder": null,
+					"week": 5,
+					"result": null,
+					"for": null,
+					"against": null,
+					"forfeit": false
+				},
+				{
+					"startTime": "2026-11-18T04:00:00+00:00",
+					"opponent": "CPK",
+					"opponentRank": 5,
+					"opponentSeed": null,
+					"playoff": false,
+					"round": null,
+					"roundOrder": null,
+					"week": 6,
+					"result": null,
+					"for": null,
+					"against": null,
 					"forfeit": false
 				}
 			]
