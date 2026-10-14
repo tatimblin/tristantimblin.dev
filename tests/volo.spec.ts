@@ -22,12 +22,17 @@ test("the season arrows keep focus at the ends of the range", async ({ page }) =
 	);
 	await expect(widget.locator(".wx-vl-nav")).toBeVisible();
 
-	// The newest season shows first, so "next" starts disabled.
+	// The widget opens on the latest season that has STARTED, not the last one —
+	// a season Volo has announced but not yet begun sits after it, with "next"
+	// enabled — so walk to the end first rather than assume where it opened.
+	// "previous" is enabled either way: there is always an earlier season.
+	await prev.focus();
+	await page.keyboard.press("End");
 	await expect(next).toBeDisabled();
+	await expect(prev).toBeFocused();
 	const newest = await heading.textContent();
 
 	// Home from "previous": prev disables, focus lands on next.
-	await prev.focus();
 	await page.keyboard.press("Home");
 	await expect(prev).toBeDisabled();
 	await expect(next).toBeFocused();
