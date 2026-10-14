@@ -2,9 +2,13 @@ name: Volo Seasons Collection
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Daily at 6 AM UTC (offset from baywheels' 3 and github's 4). Games are
-                         # Tuesday evenings Pacific ≈ Wednesday 03:00 UTC, so this
-                         # picks up a result the same night it is recorded.
+    # Wednesday and Thursday at 14:00 UTC (~7 AM Pacific). Every game so far
+    # has been on a Tuesday evening Pacific (≈ Wednesday 05:00 UTC at the
+    # latest), so Wednesday picks up the night's results. Thursday is the
+    # backstop: it catches scores a captain entered late, retries a run that
+    # failed on Wednesday, and covers a Wednesday league. A run that finds no
+    # change commits nothing.
+    - cron: '0 14 * * 3,4'
   workflow_dispatch:  # Allow manual trigger
 
 permissions:
@@ -59,8 +63,11 @@ jobs:
 
       - name: Commit if changed
         run: |
-          if git diff --quiet -- src/widgets/volo/volo.json; then
-            echo "No change to volo.json — nothing to commit."
+          # -I ignores the `updated` stamp, which the fetch rewrites on every run:
+          # a diff that touches only it is not new data, and committing it would
+          # trigger a full deploy for nothing.
+          if git diff --quiet -I'^[[:space:]]*"updated": ' -- src/widgets/volo/volo.json; then
+            echo "No change to volo.json beyond the timestamp — nothing to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"

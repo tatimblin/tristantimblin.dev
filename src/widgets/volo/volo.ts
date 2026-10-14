@@ -1,5 +1,5 @@
 // Volo league seasons — read at build time (frontmatter runs in Node) from
-// volo.json, which the volo-seasons GitHub Action regenerates daily (the
+// volo.json, which the volo-seasons GitHub Action regenerates weekly (the
 // Action's fetch script writes to this file's path — keep them in sync).
 // Volo.astro consumes the normalized shape returned by getVoloSeasons().
 //
