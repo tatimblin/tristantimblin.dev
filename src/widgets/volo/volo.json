@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-13T13:33:58.132Z",
+	"updated": "2026-10-14T18:29:04.912Z",
 	"username": "tristimb",
 	"seasons": [
 		{
@@ -1788,19 +1788,19 @@
 			"seasonOrder": 5400,
 			"startDate": "2026-10-13T19:00:00+00:00",
 			"timezone": "America/Los_Angeles",
-			"status": "ready",
+			"status": "active",
 			"team": {
 				"name": "Who? cares",
 				"color": "#000000"
 			},
 			"record": {
-				"wins": 0,
+				"wins": 1,
 				"losses": 0,
 				"ties": 0,
-				"pointsFor": 0,
-				"pointsAgainst": 0,
-				"differential": 0,
-				"rank": 6,
+				"pointsFor": 23,
+				"pointsAgainst": 12,
+				"differential": 11,
+				"rank": 2,
 				"teams": 6
 			},
 			"seed": null,
@@ -1815,15 +1815,15 @@
 					"round": null,
 					"roundOrder": null,
 					"week": 1,
-					"result": null,
-					"for": null,
-					"against": null,
+					"result": "W",
+					"for": 23,
+					"against": 12,
 					"forfeit": false
 				},
 				{
 					"startTime": "2026-10-21T04:00:00+00:00",
 					"opponent": "Arroz con Pacificos",
-					"opponentRank": 1,
+					"opponentRank": 3,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
@@ -1837,7 +1837,7 @@
 				{
 					"startTime": "2026-10-28T03:00:00+00:00",
 					"opponent": "Molly's Moderately Famous Hot Dongs",
-					"opponentRank": 3,
+					"opponentRank": 6,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
@@ -1851,7 +1851,7 @@
 				{
 					"startTime": "2026-11-04T04:00:00+00:00",
 					"opponent": "Diamond Dogs",
-					"opponentRank": 4,
+					"opponentRank": 1,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
@@ -1865,7 +1865,7 @@
 				{
 					"startTime": "2026-11-11T05:00:00+00:00",
 					"opponent": "H&O",
-					"opponentRank": 2,
+					"opponentRank": 4,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
