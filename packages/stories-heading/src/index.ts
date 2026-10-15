@@ -75,6 +75,8 @@ export class StoriesHeadingElement extends HTMLElement {
 	/** --sh-scene-bottom resolved to px from the scene's top, or null when unset
 	    (the picture fills the scene box). Cached in measure(). */
 	private sceneCut: number | null = null;
+	/** The pin's sticky line (--sh-top) in px. Cached in measure(). */
+	private pinTop = 0;
 	private subFade = 0;
 
 	/** The slotted intro wrapper — a static sibling of the pin, so it scrolls with the
@@ -259,7 +261,6 @@ export class StoriesHeadingElement extends HTMLElement {
 		if (!this.cssDrivesScroll) {
 			this.revealPx = this.cssPx("--sh-reveal", 0.6 * window.innerHeight);
 			this.subFade = this.readSubFadePx();
-			this.sceneCut = this.readSceneCut();
 		}
 
 		this.fitWordmark();
@@ -283,6 +284,13 @@ export class StoriesHeadingElement extends HTMLElement {
 		}
 
 		this.fitFold();
+
+		// Fallback-path only, and LAST: the pin line and the picture's edge are both
+		// derived from what the fits above just published (--sh-wordmark-h, the lead).
+		if (!this.cssDrivesScroll) {
+			this.sceneCut = this.readSceneCut();
+			this.pinTop = this.pin ? parseFloat(getComputedStyle(this.pin).top) || 0 : 0;
+		}
 	}
 
 	/**
@@ -1086,16 +1094,17 @@ export class StoriesHeadingElement extends HTMLElement {
 		const revealPx = this.revealPx;
 		if (revealPx <= 0) return 1;
 
-		// Scene-gated path: measure the heading's top against the scene's bottom edge
-		// — where its PICTURE ends (--sh-scene-bottom), which may be short of the box.
-		if (this.scene) {
+		// Scene-gated path: the same scroll range as the CSS timeline (--sh-wipe-at).
+		// The wipe starts once the scroll has carried the scene's picture — which may
+		// end short of its box (--sh-scene-bottom) — up past the pin line, and at once
+		// when it already ends above it. Measured as a scroll offset, not as the gap
+		// between heading and edge: a picture ending above the resting heading would
+		// otherwise start the wipe part-way through.
+		if (this.scene && this.pin) {
 			const box = this.scene.getBoundingClientRect();
-			const sceneBottom =
-				this.sceneCut === null ? box.bottom : box.top + this.sceneCut;
-			const headingTop = this.heading.getBoundingClientRect().top;
-			// 0 while the text overlaps the scene (headingTop above sceneBottom);
-			// grows as it descends past the scene edge, complete after --sh-reveal.
-			return clamp01((headingTop - sceneBottom) / revealPx);
+			const sceneBottom = box.top + (this.sceneCut ?? box.height) + window.scrollY;
+			const wipeAt = Math.max(0, sceneBottom - this.pinTop);
+			return clamp01((window.scrollY - wipeAt) / revealPx);
 		}
 
 		// Fallback (no scene): original pin-based progress.
