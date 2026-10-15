@@ -46,8 +46,8 @@ function clamp01(x: number): number {
  *   --sh-amp-size/-top   the "&"'s size and its baseline-aligned position.
  *   --sh-solid-*         the four registration corrections onto the outline.
  *   --sh-pin-height      the pin's height, so the track can reserve its scroll.
- * ...and onto .fh, for the hero fold: --sh-group-h, --sh-wordmark-h and
- * --sh-header-clear. Those also FEED THE CSS RANGES the timelines animate over, which
+ * ...and onto .fh, for the hero fold: --sh-group-h, --sh-lockup-h,
+ * --sh-wordmark-h and --sh-header-clear. Those also FEED THE CSS RANGES the timelines animate over, which
  * is why they have to stay correct even though nothing reads them per frame.
  *
  * Lifecycle mirrors the sibling packages: a `listeners` cleanup array, a
@@ -282,19 +282,23 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * BOTTOM-ANCHOR THE LOCKUP GROUP above the scene's reserved bottom edge.
+	 * CENTRE THE LOCKUP, keeping the group above the scene's reserved bottom edge.
 	 *
 	 * The scene is a full-bleed background layer whose own UI may hug its BOTTOM edge
 	 * (the carousel's date scrubber + caption, declared as --hero-floor by the
-	 * layout). The group — wordmark + "&" + "other stories" + the slotted intro/CTAs —
-	 * must rest ABOVE that floor, never through it. Two clamps, in a fixed order:
+	 * layout). The lockup — wordmark + "&" + "other stories" — centres in the first
+	 * screen; the slotted intro/CTAs flow below it, in the lower half, and the whole
+	 * group must rest ABOVE that floor, never through it. Two clamps, in a fixed order:
 	 *
-	 *   lead   = max(headerClear, 100svh − floor − foldGap − group)   ① spend whitespace
+	 *   lead   = max(headerClear,
+	 *                min((100svh − lockup) / 2,
+	 *                    100svh − floor − foldGap − group))           ① spend whitespace
 	 *   height = max(100svh, lead + group + foldGap + floor)          ② then grow
 	 *
-	 * ① bottom-anchors the group by SHRINKING the lead, so a group that grows (longer
-	 * copy, larger dynamic type, a narrower screen forcing more wrapping) first eats
-	 * the whitespace under the site header. Only when the lead bottoms out at
+	 * ① centres the lockup until the intro below it would reach the floor; from there
+	 * it SHRINKS the lead, so a group that grows (longer copy, larger dynamic type, a
+	 * narrower screen forcing more wrapping) first eats the whitespace under the site
+	 * header. Only when the lead bottoms out at
 	 * headerClear — no whitespace left — does the group's bottom pass the fold, and ②
 	 * grows the hero by exactly that overflow. Growing is the last resort.
 	 *
@@ -302,6 +306,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * publishes content sizes:
 	 *
 	 *   --sh-group-h      the group's full height (wordmark → intro bottom)
+	 *   --sh-lockup-h     the lockup's height (wordmark → "other stories" bottom)
 	 *   --sh-wordmark-h   the wordmark's rendered height
 	 *   --sh-header-clear the minimum lead that clears the site header
 	 *
@@ -313,7 +318,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * clamps against a true `100svh`, in the correct units, every layout pass.
 	 *
 	 * Also publishes --sh-top: the sticky line must FOLLOW the group. A fixed 50svh
-	 * line clamps the pin whenever the bottom-anchored lead would place it higher,
+	 * line clamps the pin whenever the lead would place it higher,
 	 * silently dragging "other stories" away from the wordmark. Deriving it from the
 	 * lead makes the clamp coincide with the natural position — zero slack at rest, so
 	 * "other stories" sits exactly one --sh-heading-gap below the wordmark.
@@ -368,6 +373,7 @@ export class StoriesHeadingElement extends HTMLElement {
 				.height ?? 0;
 
 		this.setPx(fh, "--sh-group-h", wmHeight + headingGap + belowWordmark, "groupH");
+		this.setPx(fh, "--sh-lockup-h", wmHeight + headingGap + (pinRect?.height ?? 0), "lockupH");
 		this.setPx(fh, "--sh-wordmark-h", wmHeight, "wordmarkH");
 		// A negative heading-gap (the sub tucks UP into the wordmark) shortens the group
 		// via --sh-group-h above, but it must NOT reduce the header clearance — the

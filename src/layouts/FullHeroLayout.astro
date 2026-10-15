@@ -70,15 +70,23 @@ const { title, description, image } = Astro.props;
 		--hero-floor: 0px;
 		--hero-fold-gap: var(--space-5);
 		--hero-reserve: var(--hero-floor);
-		/* THE FOLD, in two clamps over the group height the slotted heading measures
-		   (--sh-group-h) and the lead that clears the site header (--sh-header-clear).
-		   ① LEAD bottom-anchors the group above the floor, never above the header: a
-		   growing group eats this whitespace first. */
+		/* THE FOLD, in two clamps over the heights the slotted heading measures: the
+		   LOCKUP ("tristan & other stories", --sh-lockup-h), the whole GROUP (lockup +
+		   the intro below it, --sh-group-h), and the lead that clears the site header
+		   (--sh-header-clear).
+		   ① LEAD centres the lockup in the first screen, so the intro falls into the
+		   lower half — the same half "other stories" pins across. If the intro would
+		   reach past the floor from there, the lead shrinks toward bottom-anchoring the
+		   whole group, so a growing group eats the whitespace above first; never above
+		   the header. */
 		--hero-lead: max(
 			var(--sh-header-clear, 0px),
-			calc(
-				100svh - var(--hero-reserve) - var(--hero-fold-gap) -
-					var(--sh-group-h, 0px)
+			min(
+				calc((100svh - var(--sh-lockup-h, 0px)) / 2),
+				calc(
+					100svh - var(--hero-reserve) - var(--hero-fold-gap) -
+						var(--sh-group-h, 0px)
+				)
 			)
 		);
 		/* ② HEIGHT grows the scene only once the lead has bottomed out: while the
@@ -94,10 +102,10 @@ const { title, description, image } = Astro.props;
 					var(--hero-reserve)
 			)
 		);
-		/* Pre-JS estimate of the group height: the full-width wordmark SVG has a
-		   ~3.68:1 glyph aspect (half-height ≈ 0.109 · inner width), plus an allowance
-		   for "other stories" and the intro. The heading overwrites it with the
-		   measured value in its connectedCallback. Deliberately GENEROUS: it cannot
+		/* Pre-JS estimates of the group and lockup heights: the full-width wordmark
+		   SVG has a ~3.68:1 glyph aspect (half-height ≈ 0.109 · inner width), plus an
+		   allowance for "other stories" (the lockup) and the intro (the group). The
+		   heading overwrites both with measured values in its connectedCallback. Deliberately GENEROUS: it cannot
 		   see --hero-floor, and over-estimating fails toward empty space at the
 		   bottom rather than toward printing the intro over the scene's UI. */
 		--hero-split-frac: 0.109;
@@ -105,6 +113,23 @@ const { title, description, image } = Astro.props;
 			var(--hero-split-frac) * (100vw - 2 * var(--hero-inset))
 		);
 		--sh-group-h: calc(2 * var(--hero-split) + 42svh);
+		--sh-lockup-h: calc(2 * var(--hero-split) + var(--space-10));
+		/* THE SCENE BOX: an optional frame for a scene's PICTURE inside the scene
+		   region below. Cut at the wordmark's midline, so "tristan" straddles the
+		   edge — its top half over the picture, its bottom half (and everything under
+		   it) on the page — and inset one step wider than the text column on each
+		   side, an outer frame around the content grid that never reaches the
+		   viewport edge. The region itself stays the full hero, so a full-bleed scene
+		   simply ignores these. Pre-JS, the wordmark's half-height is the
+		   --hero-split estimate above. */
+		--hero-scene-cut: calc(
+			var(--hero-lead) +
+				var(--sh-wordmark-h, calc(2 * var(--hero-split))) / 2
+		);
+		--hero-scene-inset: max(
+			var(--space-2),
+			calc(var(--hero-inset) - var(--space-8))
+		);
 	}
 
 	/* SCENE: a full-viewport background layer under the heading and content. */
@@ -130,7 +155,7 @@ const { title, description, image } = Astro.props;
 	}
 
 	/* HEADING: inset to the container gutter, dropped down by the lead so the
-	   group rests near the bottom of the scene. Above the content riser so the
+	   lockup rests mid-scene. Above the content riser so the
 	   pinned lockup stays visible while copy rises. */
 	.fh__heading {
 		padding-inline: var(--hero-inset);

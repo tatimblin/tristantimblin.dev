@@ -64,6 +64,7 @@ import "@whois/wobble-text/styles.css";
 		class="hero-carousel"
 		scene
 		orientation="horizontal"
+		rulerBaseline="bottom"
 		maxDpr={1}
 		cellSize={4}
 		levels={10}
@@ -166,7 +167,12 @@ import "@whois/wobble-text/styles.css";
 	   VideoCarousel.astro's style scope, so its rules are :global(). */
 	.hero__video {
 		position: absolute;
-		inset: 0;
+		/* Inside FullHeroLayout's scene box: cut at the wordmark's midline, framed a
+		   step outside the text column. */
+		inset: 0 var(--hero-scene-inset) auto;
+		width: auto;
+		height: var(--hero-scene-cut);
+		--dotted-grid-height: var(--hero-scene-cut);
 		display: block;
 		/* Full strength: the quiet comes from `cutoff` on the element, which removes
 		   the dim dots instead of greying every dot down — an opacity here would cap
@@ -190,6 +196,40 @@ import "@whois/wobble-text/styles.css";
 		   it); the carousel's `scene` variant fades its clip alone instead. */
 		:global(.fh__scene:has(.hero-carousel)) {
 			--fh-scene-mask: none;
+		}
+	}
+
+	/* THE PHONE SCENE FADES OUT ON SCROLL. Full height, the scrubber standing on
+	   the hero's bottom edge with the caption over the clip above it, and the
+	   whole carousel dissolves over the first half screen of scroll, so the
+	   lockup carries on over plain page. A scroll-progress
+	   timeline, for the reasons in packages/stories-heading/src/styles.css: the
+	   compositor advances it, so it cannot trail a touch scroll. Gated the same way
+	   too — an engine without scroll timelines (Firefox) keeps the static state,
+	   the scene simply shown; reduced motion never applies the animation. */
+	@media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+		@supports (animation-timeline: scroll()) {
+			:global(.hero-carousel) {
+				animation-name: hero-scene-fade;
+				animation-timing-function: linear;
+				animation-fill-mode: both;
+				animation-timeline: scroll(root block);
+				animation-range: 0 50svh;
+			}
+		}
+	}
+	/* visibility flips at the end, so the gone scrubber stops taking drags. */
+	@keyframes hero-scene-fade {
+		from {
+			opacity: 1;
+			visibility: visible;
+		}
+		99.9% {
+			visibility: visible;
+		}
+		to {
+			opacity: 0;
+			visibility: hidden;
 		}
 	}
 
@@ -225,21 +265,13 @@ import "@whois/wobble-text/styles.css";
 		pointer-events: auto;
 	}
 
-	/* CONTENT ROW */
-	.home__copy {
-		padding-block-start: var(--space-5);
-	}
+	/* CONTENT ROW. No top spacing: the hero's pinned travel already separates it
+	   from "other stories", which it rises into and pushes away. */
 	.home__copy :global(p + p) {
 		margin-block-start: var(--space-5);
 	}
 	.home__quote {
 		margin-block: var(--space-5) var(--space-6);
-	}
-	@media (max-width: 900px) {
-		.home__copy {
-			margin-block-start: var(--space-5);
-			padding-block-start: 0;
-		}
 	}
 
 	/* WIDGETS */

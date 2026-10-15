@@ -6,7 +6,8 @@
      .sh__amp       the big "&", overlapping the wordmark (indented). It parallaxes
                     + fades on its OWN viewport position — decoupled from below.
      .sh__track     reserves the pin duration in normal flow for "other stories"
-                    (height = --sh-reveal + --sh-hold + --sh-pin-height).
+                    (height = --sh-reveal + --sh-hold + --sh-pin-height): the
+                    hero's lower half, then the wipe.
      .sh__pin       position:sticky at --sh-top; holds "other stories" while the
                     track scrolls past. Empty space below the pin is what the
                     rising body copy fills before bumping the heading away.
@@ -20,7 +21,7 @@
 stories-heading {
 	--sh-clip: 1;
 	/* Where "other stories" pins. The sticky line must FOLLOW the group: a fixed line
-	   clamps the pin whenever the bottom-anchored lead would place it lower, which
+	   clamps the pin whenever the lead would place it lower, which
 	   silently opens a gap between the wordmark and "other stories" (34px of slack on
 	   a short phone). Derived from the same lead the layout uses, so the clamp
 	   coincides with the group's natural position — zero slack at rest, and
@@ -33,9 +34,15 @@ stories-heading {
 	);
 	/* Scroll distance over which the outline→solid reveal plays out while pinned. */
 	--sh-reveal: 300px;
-	/* Extra scroll the heading stays FIXED after the reveal, before the rising
-	   paragraph reaches and pushes it away. This is the px "fix duration". */
-	--sh-hold: 300px;
+	/* The rest of the pinned scroll: the lower half of the hero, which the scene
+	   scrolls up and past while "other stories" holds at the centred pin line.
+	   DERIVED, not tuned: the distance from the pin line to the scene's bottom edge
+	   is exactly --hero-height − --sh-top, and the wipe is gated on that edge (its
+	   opaque backdrop must not cut into the halftone), so the wipe plays over the
+	   --sh-reveal after it. The --space-6 is a short rest once the wipe is done,
+	   before the rising copy (which adds no spacing of its own) pushes the heading
+	   away; on mobile it also carries the heading clear of the date scrubber. */
+	--sh-hold: calc(var(--hero-height, 100svh) - var(--sh-top) + var(--space-6));
 	/* "&" size: far larger than "other stories" so it reads as a display glyph
 	   overlapping the wordmark. FIXED steps (not vw-clamps) that change only at
 	   breakpoints; "other stories" tracks --sh-heading-size. */
@@ -451,18 +458,9 @@ stories-heading {
 		/* Half the desktop intro separation (64px → 32px): the tighter single column
 		   wants less air between "other stories" and the intro. */
 		--sh-sub-gap: var(--space-3);
-		/* Reveal wipe plays over 100px of scroll (vs 300px on desktop). */
+		/* Reveal wipe plays over 100px of scroll (vs 300px on desktop). The hold is
+		   the base rule's: pinned while the scene, scrubber and all, scrolls past. */
 		--sh-reveal: 100px;
-		/* Hold FIXED long enough that "other stories" stays pinned while the full-bleed
-		   hero scene — including its bottom date scrubber — scrolls up and PAST it, so
-		   the heading parallaxes OVER that strip and comes to rest below the scene,
-		   right above the rising paragraph. DERIVED, not tuned: the distance from the
-		   pin line to the scene's bottom edge is exactly --hero-height − --sh-top, so
-		   that plus a margin is what clears it — and it stays correct now that the
-		   scene can grow past 100svh (and that --sh-top follows the group). */
-		--sh-hold: calc(
-			var(--hero-height, 100svh) - var(--sh-top) + var(--space-6)
-		);
 	}
 
 	/* The "&" stays absolutely positioned over the wordmark (JS aligns it to the
