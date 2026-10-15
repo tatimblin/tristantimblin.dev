@@ -68,21 +68,28 @@ const { title, description, image } = Astro.props;
 		   scrubber + caption; see the relay above). The scene MEASURES this; a
 		   pure background reserves nothing. */
 		--hero-floor: 0px;
-		--hero-fold-gap: var(--space-5);
+		/* THE FRAME: an optional empty margin a consumer may set (--hero-frame) to
+		   hold its scene in from the viewport — the band the site header sits in,
+		   matched on the sides and at the foot. Unset, nothing is framed. The fold gap
+		   below the group is at least the frame, so a framed lockup rests on the
+		   frame's bottom edge rather than inside it. */
+		--hero-fold-gap: max(var(--space-5), var(--hero-frame, 0px));
 		--hero-reserve: var(--hero-floor);
 		/* THE FOLD, in two clamps over the heights the slotted heading measures: the
 		   LOCKUP ("tristan & other stories", --sh-lockup-h), the whole GROUP (lockup +
 		   the intro below it, --sh-group-h), and the lead that clears the site header
 		   (--sh-header-clear).
-		   ① LEAD centres the lockup in the first screen, so the intro falls into the
-		   lower half — the same half "other stories" pins across. If the intro would
-		   reach past the floor from there, the lead shrinks toward bottom-anchoring the
-		   whole group, so a growing group eats the whitespace above first; never above
-		   the header. */
+		   ① LEAD aims for --hero-lead-ideal: by default it centres the lockup in the
+		   first screen, so the intro falls into the lower half — the same half "other
+		   stories" pins across. If the intro would reach past the floor from there,
+		   the lead shrinks toward bottom-anchoring the whole group, so a growing group
+		   eats the whitespace above first; never above the header. A consumer that
+		   wants the group ON the floor sets --hero-lead-ideal to 100svh: the
+		   bottom-anchored clamp then always wins. */
 		--hero-lead: max(
 			var(--sh-header-clear, 0px),
 			min(
-				calc((100svh - var(--sh-lockup-h, 0px)) / 2),
+				var(--hero-lead-ideal, calc((100svh - var(--sh-lockup-h, 0px)) / 2)),
 				calc(
 					100svh - var(--hero-reserve) - var(--hero-fold-gap) -
 						var(--sh-group-h, 0px)
@@ -119,16 +126,16 @@ const { title, description, image } = Astro.props;
 		   edge — its top half over the picture, its bottom half (and everything under
 		   it) on the page — and inset one step wider than the text column on each
 		   side, an outer frame around the content grid that never reaches the
-		   viewport edge. The region itself stays the full hero, so a full-bleed scene
-		   simply ignores these. Pre-JS, the wordmark's half-height is the
-		   --hero-split estimate above. */
+		   viewport edge — or, with a --hero-frame, inset by the frame. The region
+		   itself stays the full hero, so a full-bleed scene simply ignores these.
+		   Pre-JS, the wordmark's half-height is the --hero-split estimate above. */
 		--hero-scene-cut: calc(
 			var(--hero-lead) +
 				var(--sh-wordmark-h, calc(2 * var(--hero-split))) / 2
 		);
-		--hero-scene-inset: max(
-			var(--space-2),
-			calc(var(--hero-inset) - var(--space-8))
+		--hero-scene-inset: var(
+			--hero-frame,
+			max(var(--space-2), calc(var(--hero-inset) - var(--space-8)))
 		);
 	}
 

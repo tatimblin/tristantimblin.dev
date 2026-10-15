@@ -167,12 +167,12 @@ import "@whois/wobble-text/styles.css";
 	   VideoCarousel.astro's style scope, so its rules are :global(). */
 	.hero__video {
 		position: absolute;
-		/* Inside FullHeroLayout's scene box: cut at the wordmark's midline, framed a
-		   step outside the text column. */
-		inset: 0 var(--hero-scene-inset) auto;
+		/* Inside FullHeroLayout's scene box: held in by the frame at the top and
+		   sides, cut at the wordmark's midline. */
+		inset: var(--hero-frame, 0px) var(--hero-scene-inset) auto;
 		width: auto;
-		height: var(--hero-scene-cut);
-		--dotted-grid-height: var(--hero-scene-cut);
+		height: calc(var(--hero-scene-cut) - var(--hero-frame, 0px));
+		--dotted-grid-height: calc(var(--hero-scene-cut) - var(--hero-frame, 0px));
 		display: block;
 		/* Full strength: an opacity here would cap the highlights too; the tone is
 		   set by the element's own gamma/contrast. */
@@ -181,12 +181,23 @@ import "@whois/wobble-text/styles.css";
 	:global(.hero-carousel) {
 		display: none;
 	}
-	/* The halftone stops at the wordmark's midline, above "other stories", so the
-	   heading's wipe needn't wait for the hero to scroll past: tell it where the
-	   picture really ends. */
+	/* THE DESKTOP HERO: framed, the group on the floor. An empty margin the
+	   height of the site header's band (--sh-header-clear, which the heading
+	   measures; ~64px before it does) runs round the top, sides and foot; the
+	   halftone fills the frame down to the wordmark's midline, and the lockup and
+	   intro rest on the frame's bottom edge. The halftone stops above "other
+	   stories", so the heading's wipe needn't wait for the hero to scroll past:
+	   tell it where the picture really ends. */
 	@media (min-width: 901px) {
 		:global(.fh) {
+			--hero-frame: var(--sh-header-clear, var(--space-10));
+			--hero-lead-ideal: 100svh;
 			--sh-scene-bottom: var(--hero-scene-cut);
+		}
+		/* A frame, not a vignette: the box's edges are the margin's, so the scene's
+		   edge fade is off. */
+		:global(.fh__scene:has(.hero__video)) {
+			--fh-scene-mask: none;
 		}
 	}
 
