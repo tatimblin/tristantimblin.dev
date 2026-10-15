@@ -94,6 +94,13 @@ interface Props {
 	 * hugging each line (the element's `caption-overlay` attribute).
 	 */
 	captionOverlay?: boolean;
+	/**
+	 * Which edge a horizontal ruler's ticks stand on: `top` (default) hangs them
+	 * under the clip with the years below; `bottom` stands them on the strip's
+	 * floor with the years above — for a scene ruler sitting on the page edge
+	 * (the element's `ruler-baseline` attribute).
+	 */
+	rulerBaseline?: "top" | "bottom";
 }
 
 // The clips are data (src/data/video-clips.json): footage prepared by
@@ -116,6 +123,7 @@ const {
 	dotScale,
 	maxDpr,
 	captionOverlay = false,
+	rulerBaseline,
 	levels = 15,
 	gamma = 0.5,
 	contrast = 1.2,
@@ -141,6 +149,7 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 	fill={fill ? "" : undefined}
 	scene={scene ? "" : undefined}
 	caption-overlay={captionOverlay ? "" : undefined}
+	ruler-baseline={rulerBaseline}
 >
 	{/* Ruler + video share a row so the ruler's height tracks the video box only. */}
 	<div class="vc__main">
