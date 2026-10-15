@@ -36,19 +36,19 @@ import "@whois/wobble-text/styles.css";
 		class="hero__video"
 		src="/videos/fabric.web.mp4"
 		src-webm="/videos/fabric.web.webm"
-		rate="0.65"
+		rate="0.93"
 		max-dpr="1"
-		cell-size="11"
-		dot-scale="0.55"
-		levels="14"
-		gamma="0.6"
-		contrast="1"
+		cell-size="6"
+		dot-scale="1.15"
+		levels="6"
+		gamma="0.55"
+		contrast="1.05"
 		intro-delay="0"
 		intro="3200"
-		cutoff="0.1"
-		feather="0.4"
-		denoise="1"
-		crosshatch="0"
+		feather="0.65"
+		denoise="0.1"
+		bloom="0.5"
+		crosshatch="0.3"
 	/>
 
 	{/* SCENE (≤900px): the video carousel, full-bleed, with its date scrubber along
@@ -174,9 +174,8 @@ import "@whois/wobble-text/styles.css";
 		height: var(--hero-scene-cut);
 		--dotted-grid-height: var(--hero-scene-cut);
 		display: block;
-		/* Full strength: the quiet comes from `cutoff` on the element, which removes
-		   the dim dots instead of greying every dot down — an opacity here would cap
-		   the highlights too. */
+		/* Full strength: an opacity here would cap the highlights too; the tone is
+		   set by the element's own gamma/contrast. */
 	}
 
 	:global(.hero-carousel) {
