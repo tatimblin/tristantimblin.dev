@@ -72,6 +72,9 @@ export class StoriesHeadingElement extends HTMLElement {
 	    path only). Reading them in update() meant a getComputedStyle — a forced style
 	    recalc — on every frame of every scroll, for values only a resize can change. */
 	private revealPx = 0;
+	/** --sh-scene-bottom resolved to px from the scene's top, or null when unset
+	    (the picture fills the scene box). Cached in measure(). */
+	private sceneCut: number | null = null;
 	private subFade = 0;
 
 	/** The slotted intro wrapper — a static sibling of the pin, so it scrolls with the
@@ -256,6 +259,7 @@ export class StoriesHeadingElement extends HTMLElement {
 		if (!this.cssDrivesScroll) {
 			this.revealPx = this.cssPx("--sh-reveal", 0.6 * window.innerHeight);
 			this.subFade = this.readSubFadePx();
+			this.sceneCut = this.readSceneCut();
 		}
 
 		this.fitWordmark();
@@ -1052,6 +1056,22 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
+	 * --sh-scene-bottom in px, or null when the consumer hasn't set it. It is
+	 * usually a calc() of other custom properties, which getComputedStyle hands back
+	 * unevaluated, so it is resolved by sizing a throwaway box with it.
+	 */
+	private readSceneCut(): number | null {
+		if (!getComputedStyle(this).getPropertyValue("--sh-scene-bottom").trim()) return null;
+		const probe = document.createElement("div");
+		probe.style.cssText =
+			"position:absolute;visibility:hidden;width:0;height:var(--sh-scene-bottom)";
+		this.appendChild(probe);
+		const h = probe.getBoundingClientRect().height;
+		probe.remove();
+		return h;
+	}
+
+	/**
 	 * Reveal progress 0→1 for the outline→solid wipe, GATED on the dotgrid scene:
 	 * the solid layer's opaque --color-bg backdrop would knock a black rectangle out
 	 * of the halftone dots, so the wipe stays at 0 until "other stories" has cleared
@@ -1066,9 +1086,12 @@ export class StoriesHeadingElement extends HTMLElement {
 		const revealPx = this.revealPx;
 		if (revealPx <= 0) return 1;
 
-		// Scene-gated path: measure the heading's top against the scene's bottom edge.
+		// Scene-gated path: measure the heading's top against the scene's bottom edge
+		// — where its PICTURE ends (--sh-scene-bottom), which may be short of the box.
 		if (this.scene) {
-			const sceneBottom = this.scene.getBoundingClientRect().bottom;
+			const box = this.scene.getBoundingClientRect();
+			const sceneBottom =
+				this.sceneCut === null ? box.bottom : box.top + this.sceneCut;
 			const headingTop = this.heading.getBoundingClientRect().top;
 			// 0 while the text overlaps the scene (headingTop above sceneBottom);
 			// grows as it descends past the scene edge, complete after --sh-reveal.

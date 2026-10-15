@@ -34,15 +34,22 @@ stories-heading {
 	);
 	/* Scroll distance over which the outline→solid reveal plays out while pinned. */
 	--sh-reveal: 300px;
-	/* The rest of the pinned scroll: the lower half of the hero, which the scene
-	   scrolls up and past while "other stories" holds at the centred pin line.
-	   DERIVED, not tuned: the distance from the pin line to the scene's bottom edge
-	   is exactly --hero-height − --sh-top, and the wipe is gated on that edge (its
-	   opaque backdrop must not cut into the halftone), so the wipe plays over the
-	   --sh-reveal after it. The --space-6 is a short rest once the wipe is done,
-	   before the rising copy (which adds no spacing of its own) pushes the heading
-	   away; on mobile it also carries the heading clear of the date scrubber. */
-	--sh-hold: calc(var(--hero-height, 100svh) - var(--sh-top) + var(--space-6));
+	/* Where the scene's PICTURE ends, from the top of the document. The wipe is
+	   gated on this edge (its opaque backdrop must not cut into the halftone). A
+	   full-height scene ends with the hero; a consumer whose picture stops short
+	   (cut at the wordmark) sets --sh-scene-bottom to that edge instead. */
+	--sh-wipe-at: max(
+		0px,
+		calc(var(--sh-scene-bottom, var(--hero-height, 100svh)) - var(--sh-top))
+	);
+	/* The rest of the pinned scroll: the scroll that carries "other stories" from
+	   the pin line clear of the scene's picture, while it holds at the centred pin
+	   line. DERIVED, not tuned: that distance is exactly --sh-wipe-at (0 when the
+	   picture already ends above the pin), and the wipe plays over the --sh-reveal
+	   after it. The --space-6 is a short rest once the wipe is done, before the
+	   rising copy (which adds no spacing of its own) pushes the heading away; on
+	   mobile it also carries the heading clear of the date scrubber. */
+	--sh-hold: calc(var(--sh-wipe-at) + var(--space-6));
 	/* "&" size: far larger than "other stories" so it reads as a display glyph
 	   overlapping the wordmark. FIXED steps (not vw-clamps) that change only at
 	   breakpoints; "other stories" tracks --sh-heading-size. */
@@ -520,8 +527,8 @@ stories-heading {
 
      wipe   started when "other stories" cleared the scene's bottom edge, i.e. when
             headingTop == sceneBottom. The heading is sticky at --sh-top and the
-            scene's bottom sits --hero-height down the document, so that is scroll
-            offset (--hero-height − --sh-top), running for --sh-reveal.
+            picture's bottom sits --sh-scene-bottom down the document, so that is
+            scroll offset --sh-wipe-at, running for --sh-reveal.
      intro  0 → --sh-sub-fade-px of scroll, exactly as before.
      "&"    its own viewport position: from its top at 60vh to its top at 10vh. The
             "&" sits --sh-amp-top below the host, which starts --hero-lead down the
@@ -550,8 +557,8 @@ stories-heading {
 			animation-timing-function: linear;
 			animation-fill-mode: both;
 			animation-timeline: scroll(root block);
-			animation-range: calc(var(--hero-height) - var(--sh-top))
-				calc(var(--hero-height) - var(--sh-top) + var(--sh-reveal));
+			animation-range: var(--sh-wipe-at)
+				calc(var(--sh-wipe-at) + var(--sh-reveal));
 		}
 
 		.sh__sub {

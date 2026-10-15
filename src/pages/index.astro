@@ -181,6 +181,14 @@ import "@whois/wobble-text/styles.css";
 	:global(.hero-carousel) {
 		display: none;
 	}
+	/* The halftone stops at the wordmark's midline, above "other stories", so the
+	   heading's wipe needn't wait for the hero to scroll past: tell it where the
+	   picture really ends. */
+	@media (min-width: 901px) {
+		:global(.fh) {
+			--sh-scene-bottom: var(--hero-scene-cut);
+		}
+	}
 
 	@media (max-width: 900px) {
 		.hero__video {
