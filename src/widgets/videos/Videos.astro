@@ -62,56 +62,50 @@ const { class: className, ...rest } = Astro.props;
 	// where it PAINTS, so the grid keeps the cell reserved and the other widgets
 	// flow around it throughout.
 	//
-	// The parallax spans the card's ENTIRE visible life: it starts the instant the
-	// raised card's top edge crosses the fold and eases to 0 at the dock line, so
-	// the card is drifting the whole way down the page rather than riding along
-	// 1:1 for most of the scroll and only parallaxing at the end. (It used to hold
-	// a constant lift until the card was COMPLETELY in view — with a cell this tall
-	// that moment lands low on the page, which is why the effect only read as a
-	// short hop right before docking.)
+	// The parallax runs from PAGE LOAD to the dock. On load the card waits just
+	// under the fold — out of sight, so the hero's frame is the whole first screen
+	// — and as the page scrolls it rises through the empty column beside the copy,
+	// easing to 0 lift as its slot reaches the dock line, where it pins to the grid.
 	//
 	// Each frame:
-	//   naturalTop = rect.top − currentLift          // slot's paint pos, transform-free
-	//   enterLine  = vh + travel                     // naturalTop when the RAISED top is at the fold
-	//   dockLine   = DOCK_VH · vh                     // naturalTop at which lift hits 0
-	//   q          = clamp01((enterLine − naturalTop) / (enterLine − dockLine))
-	//   lift       = −travel · (1 − ease(q))         // −travel at the fold → 0 at the dock
-	// naturalTop is measured transform-invariantly (minus the lift we applied) so it
-	// never feeds back; the whole thing self-calibrates across resize/layout shifts.
+	//   slotY      = the slot's document top        // from layout offsets, transform-free
+	//   travel     = slotY − vh                      // lift that parks the card ON the fold at scroll 0
+	//   q          = clamp01(scrollY / (slotY − dockLine))
+	//   lift       = −travel · (1 − ease(q))         // −travel at load → 0 at the dock
+	// slotY ignores transforms (see docTop) so the lift never feeds back; the whole
+	// thing self-calibrates across resize/layout shifts.
 	// ease = smoothstep, whose slope is 0 at both ends and peaks at 1.5 in the
-	// middle. The card therefore rises into view at roughly page speed, PINS hardest
-	// once it is properly on screen, and eases back to 1:1 as it settles — no
-	// velocity jump at either end. (easeOutQuad, whose slope peaks at entry, was
-	// worse here despite parallaxing "sooner": the card is 2/3 of a viewport tall,
-	// so lagging hardest at entry left it creeping as a sliver along the bottom edge
-	// for hundreds of px of scroll, and the drift went unseen for the same reason
-	// a constant phase-1 lift did.)
-	// The pin depth is 1 − 1.5·travel/span (0.16 at the tuned travel: the card holds
-	// near-still while the page runs past it). It stays positive — the card always
-	// moves up the screen, never stalls or reverses — while travel < 1.4vh.
-	// Docking completes at the fixed dockLine (independent of travel) so it always
-	// fully settles as the grid frames, no matter how high it enters.
-	//
-	// `travel` (the raise / parallax distance) is set in CSS via --vc-travel on the
-	// widget (default 55vh); larger = enters higher + more parallax. DOCK_VH is how
-	// far down the viewport the cell is when it finishes settling into the grid.
+	// middle: the card starts moving with the page, PINS hardest mid-way, and eases
+	// back to 1:1 as it settles — no velocity jump at either end. The pin depth is
+	// 1 − 1.5·travel/span, positive while travel/span < 2/3 — the card always moves
+	// up the screen, never stalls or reverses. That ratio grows with the slot's
+	// depth (2/3 at ~2.4 viewports down), so travel is capped at MAX_TRAVEL_RATIO of
+	// the span: a deeper slot then starts the card further below the fold — still
+	// out of sight — rather than letting the drift outrun the scroll.
+	// DOCK_VH is how far down the viewport the cell is when it finishes settling.
 	import { WIDGET_COMPACT_MQ } from "@whois/design-system/lib/breakpoints";
 	import { onPage } from "@whois/design-system/lib/lifecycle";
 
-	const TRAVEL_FALLBACK = 0.55; // --vc-travel fallback, fraction of viewport height
 	const DOCK_VH = 0.3; // cell's viewport-top (vh) when fully docked
+	// Cap on travel/span, so the eased drift can never outrun the scroll (pin
+	// depth 1 − 1.5·ratio stays ≥ 0.1).
+	const MAX_TRAVEL_RATIO = 0.6;
 	const SELECTOR = ".wx-videos";
 
 	const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 	const smoothstep = (t: number) => t * t * (3 - 2 * t);
 
-	/** Resolve a CSS length custom property (vh or px) on el to pixels. */
-	function cssPx(el: HTMLElement, prop: string, fallbackPx: number): number {
-		const raw = getComputedStyle(el).getPropertyValue(prop).trim();
-		if (!raw) return fallbackPx;
-		if (raw.endsWith("vh")) return (parseFloat(raw) / 100) * window.innerHeight;
-		const n = parseFloat(raw);
-		return Number.isFinite(n) ? n : fallbackPx;
+	/**
+	 * The slot's top in document space, from LAYOUT offsets: they ignore every
+	 * transform, so neither the lift this writes nor the reveal's entrance
+	 * `translate` (a 16px rise that is mid-flight while the page settles) can skew
+	 * where the card is parked.
+	 */
+	function docTop(el: HTMLElement): number {
+		let y = 0;
+		for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null)
+			y += n.offsetTop;
+		return y;
 	}
 
 	class DockLift {
@@ -133,7 +127,13 @@ const { class: className, ...rest } = Astro.props;
 			window.addEventListener("resize", onResize, { passive: true });
 			this.mobileMQ.addEventListener("change", onMQ);
 			this.reduced.addEventListener("change", onMQ);
+			// The slot moves when the page above it reflows (fonts landing, the hero
+			// settling its fold) with no scroll or resize to say so, and the card's
+			// rest position at load is derived from the slot — so watch the page too.
+			const ro = new ResizeObserver(onResize);
+			ro.observe(document.body);
 			this.offs.push(
+				() => ro.disconnect(),
 				() => window.removeEventListener("scroll", onScroll),
 				() => window.removeEventListener("resize", onResize),
 				() => this.mobileMQ.removeEventListener("change", onMQ),
@@ -162,19 +162,13 @@ const { class: className, ...rest } = Astro.props;
 				return;
 			}
 			const vh = window.innerHeight;
-			const rect = this.el.getBoundingClientRect();
-			const naturalTop = rect.top - this.lift; // strip the applied transform
-			const travel = cssPx(this.el, "--vc-travel", TRAVEL_FALLBACK * vh);
-
-			// Start of the parallax: the raised card's top edge sits on the fold, i.e.
-			// naturalTop − travel = vh. Independent of the cell's height, so a taller
-			// carousel doesn't push the effect further down the page.
-			const enterLine = vh + travel;
+			const slotY = docTop(this.el);
 			// End: the lift reaches 0 at the fixed dock line, so it always fully
-			// settles as the grid frames, regardless of travel.
-			const dockLine = DOCK_VH * vh;
-			const span = Math.max(1, enterLine - dockLine);
-			const q = clamp01((enterLine - naturalTop) / span);
+			// settles as the grid frames.
+			const span = Math.max(1, slotY - DOCK_VH * vh);
+			// Start: at scroll 0 the card's top sits exactly on the fold.
+			const travel = Math.min(Math.max(0, slotY - vh), MAX_TRAVEL_RATIO * span);
+			const q = clamp01(window.scrollY / span);
 			this.setLift(-travel * (1 - smoothstep(q)));
 		}
 
