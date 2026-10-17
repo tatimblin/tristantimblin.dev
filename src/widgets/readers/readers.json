@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-15",
+	"updated": "2026-10-16",
 	"host": "tristantimblin.dev",
 	"siteTag": "4fa1a14d4e604219b081bb511741d2ab",
 	"sampled": true,
@@ -176,8 +176,8 @@
 		},
 		{
 			"date": "2026-09-02",
-			"pageloads": 0,
-			"visits": 0
+			"pageloads": 10,
+			"visits": 10
 		},
 		{
 			"date": "2026-09-03",
@@ -186,8 +186,8 @@
 		},
 		{
 			"date": "2026-09-04",
-			"pageloads": 100,
-			"visits": 0
+			"pageloads": 40,
+			"visits": 30
 		},
 		{
 			"date": "2026-09-05",
@@ -206,7 +206,7 @@
 		},
 		{
 			"date": "2026-09-08",
-			"pageloads": 0,
+			"pageloads": 10,
 			"visits": 0
 		},
 		{
@@ -216,22 +216,22 @@
 		},
 		{
 			"date": "2026-09-10",
-			"pageloads": 200,
+			"pageloads": 20,
 			"visits": 0
 		},
 		{
 			"date": "2026-09-11",
-			"pageloads": 0,
-			"visits": 0
+			"pageloads": 20,
+			"visits": 20
 		},
 		{
 			"date": "2026-09-12",
-			"pageloads": 0,
+			"pageloads": 50,
 			"visits": 0
 		},
 		{
 			"date": "2026-09-13",
-			"pageloads": 0,
+			"pageloads": 60,
 			"visits": 0
 		},
 		{
@@ -246,8 +246,8 @@
 		},
 		{
 			"date": "2026-09-16",
-			"pageloads": 100,
-			"visits": 100
+			"pageloads": 20,
+			"visits": 10
 		},
 		{
 			"date": "2026-09-17",
@@ -261,13 +261,13 @@
 		},
 		{
 			"date": "2026-09-19",
-			"pageloads": 0,
+			"pageloads": 10,
 			"visits": 0
 		},
 		{
 			"date": "2026-09-20",
-			"pageloads": 0,
-			"visits": 0
+			"pageloads": 30,
+			"visits": 10
 		},
 		{
 			"date": "2026-09-21",
@@ -276,12 +276,12 @@
 		},
 		{
 			"date": "2026-09-22",
-			"pageloads": 0,
-			"visits": 0
+			"pageloads": 10,
+			"visits": 10
 		},
 		{
 			"date": "2026-09-23",
-			"pageloads": 0,
+			"pageloads": 10,
 			"visits": 0
 		},
 		{
@@ -291,28 +291,28 @@
 		},
 		{
 			"date": "2026-09-25",
-			"pageloads": 0,
+			"pageloads": 10,
 			"visits": 0
 		},
 		{
 			"date": "2026-09-26",
-			"pageloads": 0,
+			"pageloads": 30,
 			"visits": 0
 		},
 		{
 			"date": "2026-09-27",
-			"pageloads": 0,
-			"visits": 0
+			"pageloads": 50,
+			"visits": 30
 		},
 		{
 			"date": "2026-09-28",
-			"pageloads": 200,
-			"visits": 0
+			"pageloads": 140,
+			"visits": 20
 		},
 		{
 			"date": "2026-09-29",
-			"pageloads": 0,
-			"visits": 0
+			"pageloads": 140,
+			"visits": 10
 		},
 		{
 			"date": "2026-09-30",
@@ -321,18 +321,18 @@
 		},
 		{
 			"date": "2026-10-01",
-			"pageloads": 200,
-			"visits": 0
+			"pageloads": 170,
+			"visits": 60
 		},
 		{
 			"date": "2026-10-02",
-			"pageloads": 600,
-			"visits": 0
+			"pageloads": 170,
+			"visits": 20
 		},
 		{
 			"date": "2026-10-03",
-			"pageloads": 0,
-			"visits": 0
+			"pageloads": 40,
+			"visits": 10
 		},
 		{
 			"date": "2026-10-04",
@@ -341,7 +341,7 @@
 		},
 		{
 			"date": "2026-10-05",
-			"pageloads": 0,
+			"pageloads": 10,
 			"visits": 0
 		},
 		{
@@ -366,7 +366,7 @@
 		},
 		{
 			"date": "2026-10-10",
-			"pageloads": 100,
+			"pageloads": 20,
 			"visits": 0
 		},
 		{
@@ -386,13 +386,18 @@
 		},
 		{
 			"date": "2026-10-14",
-			"pageloads": 0,
+			"pageloads": 30,
 			"visits": 0
 		},
 		{
 			"date": "2026-10-15",
-			"pageloads": 0,
-			"visits": 0
+			"pageloads": 70,
+			"visits": 20
+		},
+		{
+			"date": "2026-10-16",
+			"pageloads": 70,
+			"visits": 20
 		}
 	],
 	"postDays": [
