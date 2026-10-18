@@ -22,8 +22,8 @@
 // `priority` is for the one image that is the page's largest paint (a post's
 // hero, PostLayout): no reveal — which holds an armed page's image at opacity 0
 // until the coordinator's module runs — and fetched eagerly at high priority
-// (Astro sets loading/decoding/fetchpriority from the flag). It is also the
-// image on the wide row (three columns); a body image sits in two.
+// (Astro sets loading/decoding/fetchpriority from the flag). Hero or body, an
+// image sits on the wide row (three columns): a body figure bleeds.
 import { Picture } from "astro:assets";
 import type { ImageMetadata } from "astro";
 import { RULED_SIZES, RULED_WIDTHS } from "../../lib/ruled-image";
@@ -37,8 +37,8 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { src, alt = "", priority = false, ...rest } = Astro.props;
-const row = priority ? "wide" : "column";
+// `title` is the figure's caption (post-sections.ts), not a tooltip.
+const { src, alt = "", priority = false, title: _caption, ...rest } = Astro.props;
 ---
 
 <Picture
@@ -46,8 +46,8 @@ const row = priority ? "wide" : "column";
 	alt={alt}
 	formats={["avif"]}
 	fallbackFormat="webp"
-	widths={[...RULED_WIDTHS[row]]}
-	sizes={RULED_SIZES[row]}
+	widths={[...RULED_WIDTHS.wide]}
+	sizes={RULED_SIZES.wide}
 	priority={priority}
 	data-reveal={priority ? undefined : ""}
 	{...rest}

@@ -9,11 +9,13 @@
  * (PostLayout's --ruled-columns / --ruled-gap):
  *
  *   wide    the last three columns — the hero (Fig. 01), and a block that
- *           bleeds the row (the fleet demo's poster):  ¾·content − 4px,
- *           848px at the cap.
- *   column  the middle two — a body figure:  ½·content − 8px, 560px at the cap.
+ *           bleeds the row (a body figure, the fleet demo's poster):
+ *           ¾·content − 4px, 848px at the cap.
+ *   full    all four — a block that bleeds `full` (the fleet demo's poster):
+ *           the content, 1136px at the cap.
  *
- * Below 1024 both are the whole content width. `widths` brackets those
+ * (The text holds the middle two, 560px at the cap; no picture sits there.)
+ * Below 1024 a picture is the whole content width. `widths` brackets those
  * boxes at 1× and 2×; Astro drops any candidate wider than the source and
  * adds the source's own width, so a 1200px original tops out at itself.
  */
@@ -21,10 +23,10 @@ const NARROW = "(min-width: 800px) calc(100vw - 64px), (min-width: 400px) 92vw, 
 
 export const RULED_SIZES = {
 	wide: `(min-width: 1264px) 848px, (min-width: 1024px) calc(75vw - 52px), ${NARROW}`,
-	column: `(min-width: 1264px) 560px, (min-width: 1024px) calc(50vw - 40px), ${NARROW}`,
+	full: `(min-width: 1264px) 1136px, ${NARROW}`,
 } as const;
 
 export const RULED_WIDTHS = {
 	wide: [400, 640, 848, 1280, 1696],
-	column: [400, 560, 800, 1120],
+	full: [400, 640, 1136, 1600, 2272],
 } as const;

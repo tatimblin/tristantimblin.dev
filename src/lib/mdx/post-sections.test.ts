@@ -75,8 +75,14 @@ describe("post sections", () => {
 	test("an image inside a link becomes a figure, the link kept", async () => {
 		const { html } = await render("[![A desk](/desk.webp)](https://example.com)\n");
 		expect(html).toMatch(
-			/<figure class="ds-fig"><a href="https:\/\/example\.com"><img src="\/desk\.webp" alt="A desk"[^>]*><\/a><figcaption class="ds-fig__cap"><span[^>]*>fig\. 01 \/ A desk<\/span><\/figcaption><\/figure>/,
+			/<figure class="ds-fig" data-prose-bleed=""><a href="https:\/\/example\.com"><img src="\/desk\.webp" alt="A desk"[^>]*><\/a><figcaption class="ds-fig__cap"><span[^>]*>fig\. 01 \/ A desk<\/span><\/figcaption><\/figure>/,
 		);
+	});
+
+	test("an image's title, when it has one, is the caption; the alt stays the alt", async () => {
+		const { html } = await render('![A long description of a desk](/desk.webp "The desk")\n');
+		expect(html).toContain("fig. 01 / The desk");
+		expect(html).toContain('alt="A long description of a desk"');
 	});
 
 	test("figures count on from the hero", async () => {
@@ -92,7 +98,7 @@ describe("post sections", () => {
 		// first, from the plain img, and the rewrite finds the img in it.
 		const { html } = await render("![A desk](./images/desk.webp)\n");
 		expect(html).toMatch(
-			/<figure class="ds-fig"><img __ASTRO_IMAGE_="[^"]*desk\.webp[^"]*"><figcaption class="ds-fig__cap"><span[^>]*>fig\. 01 \/ A desk<\/span><\/figcaption><\/figure>/,
+			/<figure class="ds-fig" data-prose-bleed=""><img __ASTRO_IMAGE_="[^"]*desk\.webp[^"]*"><figcaption class="ds-fig__cap"><span[^>]*>fig\. 01 \/ A desk<\/span><\/figcaption><\/figure>/,
 		);
 	});
 
@@ -153,6 +159,30 @@ describe("post sections", () => {
 		);
 		expect(first).toMatchObject({ type: "element", tagName: "img" });
 		expect(caption).toBe("fig. 01 / A desk");
+	});
+
+	test("a title is read out of the fold and the JSX node too", () => {
+		const folded = figureOf(
+			paragraph({
+				type: "element",
+				tagName: "img",
+				properties: { __ASTRO_IMAGE_: JSON.stringify({ src: "./images/desk.webp", alt: "A desk", title: "Desk", index: 0 }) },
+				children: [],
+			}),
+		);
+		expect(folded.caption).toBe("fig. 01 / Desk");
+		const jsx = figureOf(
+			paragraph({
+				type: "mdxJsxFlowElement",
+				name: "astro-image",
+				attributes: [
+					{ type: "mdxJsxAttribute", name: "alt", value: "A desk" },
+					{ type: "mdxJsxAttribute", name: "title", value: "Desk" },
+				],
+				children: [],
+			}),
+		);
+		expect(jsx.caption).toBe("fig. 01 / Desk");
 	});
 
 	test("a rewritten image inside a link keeps the link", () => {

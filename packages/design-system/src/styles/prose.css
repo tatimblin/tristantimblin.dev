@@ -133,7 +133,8 @@
    the page says otherwise), opened by a hairline: the first column holds the
    section's number and its heading and STICKS while the text scrolls past;
    the next two hold the text — a subgrid, so a block that says
-   `data-prose-bleed` can take every column to the right edge — and the
+   `data-prose-bleed` can take every column to the right edge, or with
+   `="full"` the head's column as well — and the
    fourth is air. The sectioned markup comes from the site's rehype plugin
    (see Prose.astro for the shape); the mono voice inside it (the numbers,
    the captions, a code block's header, a quote's attribution) is the
@@ -185,6 +186,18 @@
 }
 .ds-prose-section__body > [data-prose-bleed] {
 	grid-column: 1 / -1;
+}
+/* `data-prose-bleed="full"` takes the head's column too: the whole row, edge
+   to edge. The body is a subgrid of the last three columns only, so the
+   block reaches back one column and one gap — a column is (body − 2 gaps)/3,
+   and a margin's percentage is of the body — and it rides over the sticky
+   head as it scrolls past. */
+.ds-prose-section__body > [data-prose-bleed="full"] {
+	--bleed-reach: calc((100% - 2 * var(--ruled-gap, var(--space-4))) / 3 + var(--ruled-gap, var(--space-4)));
+	position: relative;
+	z-index: 1;
+	margin-inline-start: calc(-1 * var(--bleed-reach));
+	inline-size: calc(100% + var(--bleed-reach));
 }
 /* A sub-heading holds onto what it introduces: more room before, less after. */
 .ds-prose-section__body > :is(h3, h4) {
@@ -258,5 +271,9 @@
 	}
 	.ds-prose-section__body > * {
 		grid-column: 1 / -1;
+	}
+	.ds-prose-section__body > [data-prose-bleed="full"] {
+		margin-inline-start: 0;
+		inline-size: auto;
 	}
 }

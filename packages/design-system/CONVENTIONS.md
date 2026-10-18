@@ -347,9 +347,10 @@ the UI face, where the accent appears once, on a hovered title.
   columns — `--ruled-columns` / `--ruled-gap`, four and `--space-4` unless the
   page sets them — its number and heading sticky in the first column, its text
   in the next two on a subgrid (a block that says `data-prose-bleed` takes the
-  row), the fourth air; below 1024 the heads stack. It expects the sectioned
+  row to the right edge, `data-prose-bleed="full"` the head's column too), the
+  fourth air; below 1024 the heads stack. It expects the sectioned
   markup the site's rehype plugin emits (`src/lib/mdx/post-sections.ts`; the
-  shape is in `Prose.astro`): images as a `Fig` (`figure.ds-fig`), fences as
+  shape is in `Prose.astro`): images as a bled `Fig` (`figure.ds-fig`), fences as
   `figure.ds-prose-code` between two hairlines under a header row, a quote with
   an attribution as `figure.ds-prose-quote`; links in the ink on a 1px
   underline (`--hyperlink` and `--anchor-border-color` retuned in scope).

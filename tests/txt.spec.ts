@@ -806,6 +806,13 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(figure.locator("img")).toHaveAttribute("src", /^\/_astro\/aptitude-fail\..*\.webp$/);
 		await expect(figure.locator("img")).toHaveCSS("border-top-width", "1px");
 		await expect(figure.locator("figcaption")).toHaveText(/^fig\. 02 \/ aptitude, failing/i);
+		// It bleeds: the text's two columns and the air beside them, where a paragraph stays in two.
+		const { col, gap, text } = await columns(page);
+		const bled = await box(page, ".ds-prose-section__body > figure.ds-fig");
+		const para = await box(page, ".ds-prose-section__body > p");
+		expect(Math.abs(bled.width - (3 * col + 2 * gap))).toBeLessThanOrEqual(1);
+		expect(Math.abs(para.width - text)).toBeLessThanOrEqual(1);
+		expect(Math.abs(bled.x - para.x)).toBeLessThanOrEqual(1);
 
 		// The quote: the accent bar, no fill, the words a step up, the attribution.
 		const quote = body.locator("blockquote.ds-blockquote");
@@ -819,6 +826,24 @@ test.describe("/txt/<slug> — the post page", () => {
 			body.locator("figure.ds-prose-quote:has(> blockquote.ds-blockquote) > figcaption"),
 		).toHaveText(/brace sproul \/ langchain/i);
 		expect(await quote.locator("> p").first().textContent()).not.toMatch(/^\s*—/);
+	});
+
+	test("a full bleed takes every column: the fleet demo, edge to edge, its launch the DS button", async ({
+		page,
+	}) => {
+		await page.goto(OLDEST);
+		const { article } = await columns(page);
+		const demo = await box(page, "fleet-demo[data-prose-bleed='full']");
+		expect(Math.abs(demo.x - article.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(demo.width - article.width)).toBeLessThanOrEqual(1);
+		// The Button's box, not element.css's fallback dress.
+		const launch = page.locator("fleet-demo [data-launch]");
+		await expect(launch).toHaveClass(/ds-button--variant-primary/);
+		const [height, token] = await launch.evaluate((el) => [
+			getComputedStyle(el).height,
+			getComputedStyle(document.documentElement).getPropertyValue("--space-6").trim(),
+		]);
+		expect(height).toBe(token);
 	});
 
 	test("the index: the inverted header, the tags, the previous and next posts; an end says so", async ({

@@ -12,16 +12,19 @@
 // they bridge the element's token names onto the site's, and handle layout.
 //
 // The poster is a screenshot of the workbench, an import drawn as a <Picture>
-// (AVIF, a WebP fallback) at the widths of the row it bleeds — the same three
-// columns as a post's hero (src/lib/ruled-image.ts). Lazy: it is well below
-// the fold, and the element owns its own entrance, so no reveal hook.
+// (AVIF, a WebP fallback) at the widths of the row it bleeds — all four
+// columns (src/lib/ruled-image.ts). Lazy: it is well below the fold, and the
+// element owns its own entrance, so no reveal hook.
+//
+// The launch button is the DS Button: the element only needs `[data-launch]`.
 import { Picture } from "astro:assets";
+import Button from "@whois/design-system/Button";
 import "@whois/vscode-fleet-demo/element.css";
 import poster from "../assets/fleet-demo-poster.webp";
 import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 ---
 
-<fleet-demo class="fleet-demo" data-prose-bleed>
+<fleet-demo class="fleet-demo" data-prose-bleed="full">
 	{/* [data-poster] is the OVERLAY, not the image: element.css lays it out as a
 	    centered flex column stacked over the (later) iframe, with the screenshot
 	    absolutely filling it and the button/caption riding on top. */}
@@ -31,12 +34,12 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 			alt="VS Code running a fleet-management extension: vehicle explorer, door controls, and a CAN terminal"
 			formats={["avif"]}
 			fallbackFormat="webp"
-			widths={[...RULED_WIDTHS.wide]}
-			sizes={RULED_SIZES.wide}
+			widths={[...RULED_WIDTHS.full]}
+			sizes={RULED_SIZES.full}
 			loading="lazy"
 			decoding="async"
 		/>
-		<button type="button" data-launch>Launch the demo</button>
+		<Button variant="primary" type="button" data-launch>Launch the demo</Button>
 		<p data-caption>Real VS Code, real extension, mock vehicles. Roomier on a desktop.</p>
 	</div>
 </fleet-demo>
@@ -66,15 +69,14 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 		--color-muted: color-mix(in oklch, var(--blue-400) 86%, transparent);
 
 		/* THE ROW. The post's text sits in two of the page's four columns; a
-		   workbench needs more than that, so the element says data-prose-bleed
-		   and the ruled Prose gives it the whole row to the right edge — three
-		   columns, ~850px at 1440, on the page's own lines. So it is simply as
-		   wide as its cell, no viewport arithmetic: the grid places it. The
-		   element's own children (poster, iframe) are `position: absolute;
-		   inset: 0`, so the box IS the frame. Square, on the hairline, like every
-		   other figure on the ruled page. */
-		width: 100%;
-		margin: 0;
+		   workbench needs more than that, so the element says
+		   data-prose-bleed="full" and the ruled Prose gives it every column,
+		   edge to edge — 1136px at 1440, on the page's own lines. Prose sets its
+		   width and inline margin, so none is set here (this sheet is
+		   unlayered and would win). The element's own children (poster, iframe)
+		   are `position: absolute; inset: 0`, so the box IS the frame. Square,
+		   on the hairline, like every other figure on the ruled page. */
+		margin-block: 0;
 		border-radius: 0;
 		border-color: var(--hairline);
 	}
@@ -100,13 +102,22 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 		border-radius: 0;
 	}
 
-	/* A primary action against a dark screenshot: element.css supplies the accent
-	   fill; the shadow lifts it off a busy editor background. */
-	.fleet-demo [data-launch] {
-		font-family: var(--font-ui);
-		font-size: var(--font-size-3);
-		font-weight: var(--font-weight-500);
-		box-shadow: var(--shadow-2);
+	/* The launch button is the DS Button, but element.css dresses
+	   `[data-launch]` for a page with no DS (padding, fill, font, a hover
+	   scale) — unlayered, so it beats the Button's layered rules. Rolling
+	   those properties back a layer hands them to the Button again; the
+	   element's state rules (hidden while launching) are other properties
+	   and stay. */
+	.fleet-demo :global([data-launch]),
+	.fleet-demo :global([data-launch]:hover:not([disabled])) {
+		font: revert-layer;
+		padding: revert-layer;
+		border: revert-layer;
+		border-radius: revert-layer;
+		background: revert-layer;
+		color: revert-layer;
+		transform: revert-layer;
+		transition: revert-layer;
 	}
 
 	/* The caption is a static block, so it would paint UNDERNEATH the absolutely

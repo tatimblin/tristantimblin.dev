@@ -14,8 +14,8 @@
  *
  * Whatever precedes the first h2 is section 00, labelled "Intro" — set like an
  * h2 but not one, so it stays out of the document outline. Inside a body, an
- * image-only paragraph becomes a `Fig. 0N / <alt>` figure (numbered on from
- * the hero when the frontmatter has one), a fence becomes a figure with a
+ * image-only paragraph becomes a `Fig. 0N / <title, else alt>` figure (numbered on from
+ * the hero when the frontmatter has one) that bleeds wider than the text, a fence becomes a figure with a
  * `<section>.<n> / <title>` + language header, and a quote whose last line
  * starts with a dash gets that line as its `figcaption`.
  *
@@ -157,23 +157,28 @@ interface JsxImage {
 
 const JSX_IMAGE = /^(?:img|astro-image)$/;
 
-/** An image in any of the shapes Astro's pipeline gives one, with its alt: the
- *  markdown `img`, the same `img` after the markdown rewrite (props folded
+/** The words a figure is captioned with: the image's title when it has one
+ *  (`![alt](src "caption")`), else its alt. */
+const captionOf = (alt: unknown, title: unknown): string =>
+	typeof title === "string" && title.trim() ? title : typeof alt === "string" ? alt : "";
+
+/** An image in any of the shapes Astro's pipeline gives one, with its caption:
+ *  the markdown `img`, the same `img` after the markdown rewrite (props folded
  *  into `__ASTRO_IMAGE_`), or the MDX rewrite's `astro-image` JSX node. */
-function imageOf(node: unknown): { alt: string } | null {
+function imageOf(node: unknown): { caption: string } | null {
 	if (isElement(node)) {
 		if (node.tagName !== "img") return null;
-		const { alt, __ASTRO_IMAGE_: folded } = node.properties;
-		if (typeof alt === "string") return { alt };
+		const { alt, title, __ASTRO_IMAGE_: folded } = node.properties;
+		if (typeof alt === "string") return { caption: captionOf(alt, title) };
 		if (typeof folded === "string") {
 			try {
-				const props = JSON.parse(folded) as { alt?: unknown };
-				return { alt: typeof props.alt === "string" ? props.alt : "" };
+				const props = JSON.parse(folded) as { alt?: unknown; title?: unknown };
+				return { caption: captionOf(props.alt, props.title) };
 			} catch {
-				return { alt: "" };
+				return { caption: "" };
 			}
 		}
-		return { alt: "" };
+		return { caption: "" };
 	}
 	const jsx = node as JsxImage | null;
 	if (
@@ -185,23 +190,24 @@ function imageOf(node: unknown): { alt: string } | null {
 	) {
 		return null;
 	}
-	const alt = jsx.attributes.find((a) => a.type === "mdxJsxAttribute" && a.name === "alt")?.value;
-	return { alt: typeof alt === "string" ? alt : "" };
+	const attr = (name: string) =>
+		jsx.attributes.find((a) => a.type === "mdxJsxAttribute" && a.name === name)?.value;
+	return { caption: captionOf(attr("alt"), attr("title")) };
 }
 
 /** A paragraph that is only an image, or only a link around one: the
- *  paragraph's one child (the image, or the a) and the image's alt, or null. */
-function soleImage(node: RootContent): { content: ElementContent; alt: string } | null {
+ *  paragraph's one child (the image, or the a) and the image's caption, or null. */
+function soleImage(node: RootContent): { content: ElementContent; caption: string } | null {
 	if (!isElement(node) || node.tagName !== "p") return null;
 	const kids = node.children.filter((c) => !isBlank(c));
 	const only = kids[0];
 	if (kids.length !== 1 || only === undefined) return null;
 	const direct = imageOf(only);
-	if (direct) return { content: only, alt: direct.alt };
+	if (direct) return { content: only, caption: direct.caption };
 	if (isElement(only) && only.tagName === "a") {
 		const inner = only.children.filter((c) => !isBlank(c));
 		const linked = inner.length === 1 ? imageOf(inner[0]) : null;
-		if (linked) return { content: only, alt: linked.alt };
+		if (linked) return { content: only, caption: linked.caption };
 	}
 	return null;
 }
@@ -298,11 +304,12 @@ export function rehypePostSections() {
 		const dress = (node: RootContent, no: string, count: { code: number }): RootContent => {
 			const image = soleImage(node);
 			if (image) {
-				const { alt } = image;
+				const { caption } = image;
 				const n = pad2(figure++);
-				const label = alt ? `fig. ${n} / ${alt}` : `fig. ${n}`;
-				// Fig's markup (packages/design-system/src/components/Fig.astro).
-				return el("figure", { className: ["ds-fig"] }, [
+				const label = caption ? `fig. ${n} / ${caption}` : `fig. ${n}`;
+				// Fig's markup (packages/design-system/src/components/Fig.astro),
+				// bled: a picture takes the text's two columns and the air beside them.
+				return el("figure", { className: ["ds-fig"], dataProseBleed: "" }, [
 					image.content,
 					el("figcaption", { className: ["ds-fig__cap"] }, [mono(label)]),
 				]);

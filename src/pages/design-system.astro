@@ -1076,7 +1076,8 @@ const faces = [
 				markdown body into it: a figure per image with a <code>Fig. 0N /</code>
 				caption, a figure per fenced block with a header row, a <code>footer</code>
 				for a quote's attribution, and <code>data-prose-bleed</code> on a block that
-				takes the whole row. Links in the ink on a 1px underline, inline code on the
+				takes the row to the right edge (every figure does), or
+				<code>data-prose-bleed="full"</code> to take the head's column too. Links in the ink on a 1px underline, inline code on the
 				first wash, images on a hairline with no corner, code between two hairlines
 				with no box. The columns are <code>--ruled-columns</code> / <code>--ruled-gap</code>,
 				so a page lays its own rows on the same lines. Below 1024 the heads stack.
