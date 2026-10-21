@@ -39,16 +39,18 @@ import "@whois/wobble-text/styles.css";
 		rate="0.93"
 		max-dpr="1"
 		cell-size="6"
-		dot-scale="1.15"
+		dot-scale="1.1"
+		dot-shape="circle"
 		levels="6"
-		gamma="0.55"
+		gamma="0.4"
 		contrast="1.05"
 		intro-delay="0"
 		intro="3200"
-		feather="0.65"
-		denoise="0.1"
-		bloom="0.5"
-		crosshatch="0.3"
+		cutoff="0.06"
+		feather="0.2"
+		denoise="0.3"
+		bloom="0"
+		crosshatch="0"
 	/>
 
 	{/* SCENE (≤900px): the video carousel, full-bleed, with its date scrubber along
@@ -68,9 +70,13 @@ import "@whois/wobble-text/styles.css";
 		maxDpr={1}
 		cellSize={4}
 		levels={10}
-		gamma={0.5}
-		contrast={1.1}
-		color="#c2b9a8"
+		gamma={0.9}
+		contrast={1.05}
+		cutoff={0.08}
+		feather={0.2}
+		denoise={0.3}
+		crosshatch={0}
+		color="#191918"
 		introDelay={0}
 		intro={3200}
 		xfade={1600}

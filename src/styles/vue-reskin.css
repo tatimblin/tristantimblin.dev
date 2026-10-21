@@ -75,9 +75,11 @@ html.maximeheckel-light .ds-fig img {
 	border-radius: 2.5px;
 }
 
-/* --- Halftones: a soft warm gray on cream, low contrast ------------------ */
+/* --- Halftones: dark ink on cream, newsprint-style ----------------------- */
+/* Not inverted: the clip's shadows stay bare cream and its folds print. The
+   hero's light tuning (gamma .4, no bloom/hatch) lives on the element. */
 html.maximeheckel-light :is(dotted-grid, video-carousel) {
-	--color-fg: #b9b0a0;
+	--color-fg: #191918;
 }
 /* The footer-row clip IS the widget, so it keeps a bit more weight. */
 html.maximeheckel-light .wx-videos dotted-grid {
