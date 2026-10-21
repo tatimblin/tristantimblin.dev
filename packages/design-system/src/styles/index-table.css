@@ -3,12 +3,10 @@
  * Rows on the page's column template (`--index-columns`, the page's
  * `--ruled-columns` unless the Index says otherwise), each cut off by a
  * hairline on the ROW — so the gaps between its cells carry it too — and the
- * cells padded a step in, so the text sits off the column lines. The whole
- * table is a panel — the card's surface, dashed edge, radius and ring — and
- * the head row is its header: the card header's gradient fill and secondary
- * ink over a dashed rule, so the index reads as one more container on the
- * site rather than a slab of ink. The last row drops its rule; the panel's
- * edge closes it. A dim row is an end with nothing beyond it.
+ * cells padded a step in, so the text sits off the column lines. The head row
+ * is the ink with the page colour on it, the fill on the row for the same
+ * reason; its Monos take the page colour through the token they read. A dim
+ * row is an end with nothing beyond it.
  *
  * Below 1024 the rows collapse to three columns — the label, the number, the
  * rest — and the FOLD cell (the fourth column) drops under the title; a head
@@ -16,11 +14,6 @@
 .ds-index {
 	--index-columns: var(--ruled-columns, repeat(4, minmax(0, 1fr)));
 	--index-gap: var(--ruled-gap, var(--space-4));
-	background: var(--card-background);
-	border: var(--border);
-	border-radius: var(--radius-box);
-	box-shadow: var(--shadow-panel);
-	overflow: hidden;
 }
 .ds-index__row {
 	display: grid;
@@ -29,16 +22,15 @@
 	align-items: baseline;
 	border-block-end: var(--border);
 }
-.ds-index__row:last-child {
-	border-block-end: 0;
-}
 .ds-index__row > * {
 	padding: var(--space-3);
 	min-inline-size: 0;
 }
 .ds-index__row--head {
-	background: var(--panel-header-bg);
-	color: var(--text-secondary);
+	--text-secondary: var(--background);
+	background: var(--text-primary);
+	color: var(--background);
+	border: 0;
 }
 .ds-index__row--head > * {
 	padding-block: var(--space-2);

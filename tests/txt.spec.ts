@@ -872,74 +872,71 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(height).toBe(token);
 	});
 
-	test("the index: the inverted header, the tags, the previous and next posts; an end says so", async ({
+	test("the foot card: keep reading, older and newer side by side, the tags; an end says so", async ({
 		page,
 	}) => {
 		await page.goto(NEWEST);
-		const index = page.getByRole("navigation", { name: "Index" });
-		await expect(index).toHaveAttribute("data-post-index", "");
-		await expect(index.locator(".ds-index__row--head > .ds-mono")).toHaveText([
-			/index/i,
-			/no\./i,
-			/title/i,
-			/filed/i,
-		]);
-		// The index is a panel — the card's dashed edge and radius — and its head
-		// row is the panel header: the gradient fill, not a slab of ink. The
-		// themes are pinned below.
-		await expect(index).toHaveCSS("border-top-style", "dashed");
-		await expect(index).toHaveCSS("border-top-left-radius", "2.5px");
-		await expect(index.locator(".ds-index__row--head")).toHaveCSS("background-image", /linear-gradient/);
-		const indexBox = await box(page, ".ds-index");
+		const card = page.getByRole("navigation", { name: "Keep reading" });
+		await expect(card).toHaveAttribute("data-post-index", "");
+		// A panel: the card's dashed edge, radius and gradient header.
+		await expect(card).toHaveCSS("border-top-style", "dashed");
+		await expect(card).toHaveCSS("border-top-left-radius", "2.5px");
+		await expect(card.locator(".ds-card-header")).toHaveText(/keep reading\s*txt \/ 005 of 005/i);
+		await expect(card.locator(".ds-card-header")).toHaveCSS("background-image", /linear-gradient/);
+		const cardBox = await box(page, ".post-more");
 		const { article } = await columns(page);
-		expect(Math.abs(indexBox.width - article.width)).toBeLessThanOrEqual(1);
+		expect(Math.abs(cardBox.width - article.width)).toBeLessThanOrEqual(1);
 
-		const tags = index.locator('[data-index-row="tags"]');
-		await expect(tags).toHaveText(/tags\s*005\s*ai · testing · agents · developer tools/i);
+		const tags = card.locator('[data-index-row="tags"]');
+		await expect(tags).toHaveText(/tagged\s*ai\s*testing\s*agents\s*developer tools/i);
 		expect(
 			await tags.locator("a").evaluateAll((as) => as.map((a) => a.getAttribute("href"))),
 		).toEqual(["/txt/tag/ai/", "/txt/tag/testing/", "/txt/tag/agents/", "/txt/tag/developer-tools/"]);
 
-		const prev = index.locator('[data-index-row="prev"]');
-		await expect(prev).toHaveText(/← previous\s*004\s*Tahoe Mountain Hair\s*jun 2025/i);
-		await expect(prev.locator('a[data-neighbour="prev"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair/");
+		// The older half is one link, title and month inside it.
+		const prev = card.locator('a[data-neighbour="prev"]');
+		await expect(prev).toHaveText(/← older\s*Tahoe Mountain Hair\s*jun 2025/i);
+		await expect(prev).toHaveAttribute("href", "/txt/tahoe-mountain-hair/");
 		await expect(prev.locator("time")).toHaveAttribute("datetime", "2025-06-13");
-		await expect(prev).toHaveCSS("border-bottom-width", "1px");
-		// The last row leaves its rule to the panel's edge.
-		await expect(index.locator(".ds-index__row").last()).toHaveCSS("border-bottom-width", "0px");
 
-		const next = index.locator('[data-index-row="next"]');
-		await expect(next).toHaveClass(/ds-index__row--dim/);
-		await expect(next).toHaveText(/next →\s*—\s*Nothing newer\s*—/);
+		// Side by side at desktop, a dashed rule between; the newer half reads
+		// from the right edge.
+		const next = card.locator('[data-index-row="next"]');
+		const prevBox = (await prev.boundingBox())!;
+		const nextBox = (await next.boundingBox())!;
+		expect(Math.abs(prevBox.y - nextBox.y)).toBeLessThanOrEqual(1);
+		expect(nextBox.x).toBeGreaterThan(prevBox.x + prevBox.width - 1);
+		await expect(next).toHaveCSS("border-left-style", "dashed");
+		await expect(next).toHaveCSS("text-align", "end");
+
+		// The newest post has no newer: the half says so and links nowhere.
+		await expect(next).toHaveText(/newer →\s*This is the latest post/i);
 		await expect(next.locator("a")).toHaveCount(0);
+		await expect(card.locator("a.post-more__half--next")).toHaveCount(0);
 
 		await page.goto(OLDEST);
 		await expect(page.locator(".post__no")).toHaveText(/txt \/ 001/i);
-		await expect(page.locator('[data-index-row="prev"]')).toHaveText(/Nothing older/);
-		await expect(page.locator('[data-index-row="prev"] a')).toHaveCount(0);
-		await expect(page.locator('[data-index-row="next"] a[data-neighbour="next"]')).toHaveAttribute(
-			"href",
-			"/txt/why-i-joined-fisker/",
-		);
-		await expect(page.locator('[data-index-row="next"]')).toHaveText(/002/);
+		await expect(page.locator('[data-index-row="prev"]')).toHaveText(/This is the first post/);
+		await expect(page.locator("a.post-more__half--prev")).toHaveCount(0);
+		await expect(page.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/why-i-joined-fisker/");
 	});
 
-	test("light theme: the index is a pale panel with dark header ink", async ({
+	test("light theme: the foot card is a pale panel with dark header ink", async ({
 		page,
 	}) => {
 		await page.addInitScript(() => localStorage.setItem("theme", "light"));
 		await page.goto(NEWEST);
 		await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-		expect(await luminance(page, ".ds-index")).toBeGreaterThan(0.85);
-		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeLessThan(0.3);
+		expect(await luminance(page, ".post-more")).toBeGreaterThan(0.85);
+		expect(await luminance(page, ".post-more .ds-card-header__title", "color")).toBeLessThan(0.3);
 	});
 
-	test("dark theme: the index is a dark panel with light header ink, and the code block is edged", async ({ page }) => {
+	test("dark theme: the foot card is a dark panel with light header ink, and the code block is edged", async ({ page }) => {
 		await page.addInitScript(() => localStorage.setItem("theme", "dark"));
 		await page.goto(NEWEST);
 		await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-		expect(await luminance(page, ".ds-index")).toBeLessThan(0.05);
-		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeGreaterThan(0.3);
+		expect(await luminance(page, ".post-more")).toBeLessThan(0.05);
+		expect(await luminance(page, ".post-more .ds-card-header__title", "color")).toBeGreaterThan(0.3);
 		// The slab sinks below the dark page, so the dashed edge is drawn round it
 		// (--code-border) to hold its shape; on cream it has none.
 		const preSel = ".ds-prose-section__body figure.ds-prose-code pre.astro-code";
@@ -956,7 +953,7 @@ test.describe("/txt/<slug> — the post page", () => {
 	}) => {
 		await page.goto(NEWEST);
 		await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveCount(1);
-		await expect(page.getByRole("navigation", { name: "Index" })).toHaveCount(1);
+		await expect(page.getByRole("navigation", { name: "Keep reading" })).toHaveCount(1);
 		await expect(page.getByRole("img", { name: /read-order test/ })).toBeVisible();
 		const times = page.locator("article[data-post] time");
 		expect(await times.count()).toBeGreaterThanOrEqual(2);
@@ -1015,15 +1012,15 @@ test.describe("/txt/<slug> — the post page", () => {
 			expect(b.x + b.width).toBeLessThanOrEqual(article.x + article.width + 1);
 		}
 
-		// The index rows fit too, the title still a link, the month under it.
-		// The panel spans the column; its rows sit inside its 1px edge.
-		const panel = await box(page, ".ds-index");
+		// The foot card spans the column; its halves stack, older on top, both
+		// on the left edge.
+		const panel = await box(page, ".post-more");
 		expect(Math.abs(panel.width - article.width)).toBeLessThanOrEqual(1);
-		const link = await box(page, 'a[data-neighbour="prev"]');
-		const filed = await box(page, '[data-index-row="prev"] .ds-index__fold');
-		expect(link.x + link.width).toBeLessThanOrEqual(article.x + article.width + 1);
-		expect(filed.y).toBeGreaterThanOrEqual(link.y + link.height - 1);
-		await expect(page.locator(".ds-index__row--head > .ds-index__fold")).toBeHidden();
+		const older = await box(page, '[data-index-row="prev"]');
+		const newer = await box(page, '[data-index-row="next"]');
+		expect(older.x + older.width).toBeLessThanOrEqual(article.x + article.width + 1);
+		expect(newer.y).toBeGreaterThanOrEqual(older.y + older.height - 1);
+		await expect(page.locator('[data-index-row="next"]')).toHaveCSS("text-align", "start");
 	});
 
 	test("with scripting off the post reads: the sections, the figures and the index are static markup", async ({
