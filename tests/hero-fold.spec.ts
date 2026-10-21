@@ -200,10 +200,25 @@ test.describe("hero fold — mobile", () => {
 
 		// Growing the group must consume the lead before the hero grows: the wordmark
 		// slides up toward the header while the hero stays one screen tall.
-		await stretchLede(page, 2);
+		//
+		// SEARCHED FOR, like the growth half below: how many repetitions leave the
+		// centred regime is a property of the lede's face and size. This was a fixed
+		// x2, and when the lede moved to a more compact setting x2 still fit under the
+		// centred lockup — the wordmark rightly did not move, and the assertion failed
+		// for a reason unconnected to the invariant. So find the first multiplier that
+		// moves the wordmark at all, and require that it did so by spending the lead
+		// (the hero still one screen, the lead not yet at its floor).
+		let movedAt = 0;
+		for (let times = 2; times <= 16 && !movedAt; times++) {
+			await stretchLede(page, times);
+			const f = await readMobileFold(page);
+			if (f.wordmarkClearsHeader < base.wordmarkClearsHeader - 1) movedAt = times;
+		}
+		expect(movedAt, "the lede should start spending the lead within 16 repetitions").toBeGreaterThan(0);
 		const spent = await readMobileFold(page);
 		expect(spent.clearance).toBeGreaterThanOrEqual(MIN_GAP);
 		expect(spent.wordmarkClearsHeader).toBeLessThan(base.wordmarkClearsHeader);
+		expect(spent.grew).toBeCloseTo(0, 0);
 
 		// 2. PRECEDENCE (growth half) — once the whitespace is gone the lead pins at
 		// its minimum and the hero, only then, exceeds one screen.
@@ -341,33 +356,33 @@ test.describe("hero fold — mobile", () => {
 	});
 });
 
-test.describe("lockup tuck — only the tall letters overlap", () => {
-	// THE REGRESSION THIS EXISTS FOR, which has already happened once. "other stories"
-	// tucks UP into the whitespace under "tristan" so the two read as one lockup. How far
-	// up was two hand-picked px tokens, one per breakpoint — chosen against the faces the
-	// site used at the time. Self-hosting the type (the Migra/Mondwest swap) moved both
-	// faces' metrics out from under those numbers, and the same tokens then read as the
-	// words colliding. Nothing failed; it just looked wrong until someone noticed.
+test.describe("lockup tuck — a measured breath under the wordmark", () => {
+	// THE REGRESSION THIS EXISTS FOR, which has already happened twice. How "other
+	// stories" sits under "tristan" was once two hand-picked px tokens, one per
+	// breakpoint, chosen against the faces of the time; a font swap moved the metrics
+	// out from under them and the words collided. Nothing failed; it just looked wrong
+	// until someone noticed.
 	//
-	// The tuck is derived now (fitHeadingTuck in stories-heading), from the relationship
-	// that actually defines the look: THE HEADING'S X-HEIGHT LINE SITS ON THE WORDMARK'S
-	// BASELINE, give or take a couple of px of optical clearance. Everything that rises
-	// above that line — the t's, the h, the i's tittle — crosses into the wordmark, and
-	// nothing else does.
+	// The gap is derived now (fitHeadingTuck in stories-heading), from the relationship
+	// that defines the look. With the old serif-over-pixel-face pair that was an
+	// OVERLAP — the heading's x-height line on the wordmark's baseline, only the
+	// ascenders crossing. With DM Sans on both words the ascenders met the wordmark
+	// head-on and read as a collision, so the rule is now: THE HEADING'S TALLEST INK
+	// SITS A SMALL, FONT-SIZED BREATH BELOW THE WORDMARK'S BASELINE ("tristan" has no
+	// descenders, so the wordmark's ink bottom IS its baseline). Nothing crosses.
 	//
-	// ASSERTED AS BOUNDS, NOT AS AN EXACT POSITION, and the distinction is what makes this
-	// test durable. "Only the tall letters overlap" admits a small range: the x-height line
-	// may sit anywhere from ON the baseline to a hair below it. Where exactly it lands
-	// inside that range is a tuning choice (TUCK_CLEARANCE), and pinning the tuned value
-	// would mean every future nudge to the look breaks a test that is supposed to be about
-	// the RULE. So the bounds are the two ways the rule can actually be violated: the round
-	// letters crossing the baseline (collision — the direction the font swap pushed it), or
-	// the gap opening so far that the lockup reads as two separate lines.
+	// ASSERTED AS BOUNDS, NOT AS AN EXACT POSITION. Where the gap lands inside the range
+	// is a tuning choice (TUCK_CLEARANCE, in em), and pinning the tuned value would make
+	// every nudge to the look break a test that is supposed to be about the RULE. The
+	// bounds are the two ways the rule can actually be violated: the ink crossing into
+	// the wordmark (collision), or the gap opening so far that the lockup reads as two
+	// separate lines. Both in em of the heading's size, since "reads as one lockup"
+	// scales with the type — the same 10px is invisible at 130px and a chasm at 50px.
 	for (const vp of [
 		{ name: "mobile", width: 390, height: 844 },
 		{ name: "desktop", width: 1440, height: 900 },
 	]) {
-		test(`the x-height line sits on the wordmark baseline at ${vp.name}`, async ({
+		test(`the heading's ink clears the wordmark baseline, tightly, at ${vp.name}`, async ({
 			page,
 		}) => {
 			await page.setViewportSize({ width: vp.width, height: vp.height });
@@ -392,46 +407,27 @@ test.describe("lockup tuck — only the tall letters overlap", () => {
 				probe.remove();
 
 				const cs = getComputedStyle(outline);
+				const size = parseFloat(cs.fontSize);
 				const ctx = document.createElement("canvas").getContext("2d")!;
-				ctx.font = `${cs.fontWeight} ${parseFloat(cs.fontSize)}px ${cs.fontFamily}`;
-				// "x" has no ascender and no descender, so its ink top IS the x-height line.
-				const xHeight = ctx.measureText("x").actualBoundingBoxAscent;
+				ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
+				// The phrase's tallest ink — whichever of the t, h or tittle stands highest.
 				const ascent = ctx.measureText("other stories").actualBoundingBoxAscent;
 
 				// The wordmark's SVG viewBox is fit to its glyph ink and "tristan" has no
 				// descenders, so the box's bottom edge is its baseline.
-				return {
-					xHeightLine: baseline - xHeight,
-					wordmarkBaseline: q(".sh__wordmark-svg").getBoundingClientRect().bottom,
-					inkOverlap:
-						q(".sh__wordmark-svg").getBoundingClientRect().bottom -
-						(baseline - ascent),
-					ascenderOvershoot: ascent - xHeight,
-					xHeight,
-				};
+				const wordmarkBaseline = q(".sh__wordmark-svg").getBoundingClientRect().bottom;
+				return { size, ascent, daylight: baseline - ascent - wordmarkBaseline };
 			});
 
 			// Sanity: the metrics really were readable, so the bounds below can't pass by
 			// every quantity being zero.
-			expect(ink.xHeight).toBeGreaterThan(0);
-			expect(ink.ascenderOvershoot).toBeGreaterThan(0);
+			expect(ink.size).toBeGreaterThan(0);
+			expect(ink.ascent).toBeGreaterThan(0);
 
-			// The TALL letters do cross into the wordmark — without this the two words
-			// separate and stop reading as one lockup.
-			expect(ink.inkOverlap).toBeGreaterThan(0);
-
-			const clearance = ink.xHeightLine - ink.wordmarkBaseline;
-
-			// The ROUND letters do not. This is the collision guard, and it is the one the
-			// font swap tripped: on the previous hand-picked tuck the x-height line sat
-			// 5.3px ABOVE the baseline, i.e. the bowls of the o/e/r/s were running into
-			// "tristan". Anything at or below the baseline is fine.
-			expect(clearance).toBeGreaterThanOrEqual(-0.5);
-
-			// ...and it stays TIGHT. Bounded as a fraction of the ascender overshoot rather
-			// than in px, because "still reads as one lockup" scales with the type — the
-			// same 3px gap is invisible at 129px and a chasm at 52px.
-			expect(clearance).toBeLessThan(0.25 * ink.ascenderOvershoot);
+			// Nothing crosses: the collision guard.
+			expect(ink.daylight / ink.size).toBeGreaterThan(0.05);
+			// ...and it stays TIGHT enough to read as one lockup.
+			expect(ink.daylight / ink.size).toBeLessThan(0.4);
 		});
 	}
 });

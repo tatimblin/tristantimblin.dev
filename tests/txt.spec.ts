@@ -655,8 +655,10 @@ test.describe("/txt/<slug> — the post page", () => {
 		const image = await box(page, "[data-post-hero] img");
 		expect(Math.abs(image.x - (article.x + col + gap))).toBeLessThanOrEqual(1);
 		expect(Math.abs(image.x + image.width - (article.x + article.width))).toBeLessThanOrEqual(1);
+		// Framed like every box: the dashed edge and the one corner.
 		await expect(img).toHaveCSS("border-top-width", "1px");
-		await expect(img).toHaveCSS("border-top-left-radius", "0px");
+		await expect(img).toHaveCSS("border-top-style", "dashed");
+		await expect(img).toHaveCSS("border-top-left-radius", "2.5px");
 		// It is not in the body any more: the body's first figure is Fig. 02.
 		await expect(page.locator('.ds-prose img[src*="/aptitude-pass."]')).toHaveCount(0);
 		await expect(page.locator(".ds-prose .ds-fig figcaption").first()).toHaveText(/^fig\. 02 \//i);
@@ -697,10 +699,11 @@ test.describe("/txt/<slug> — the post page", () => {
 			"Where it breaks down",
 			"Let the agent decide",
 		]);
-		// The heads are the page's h2s, in the UI face at the semibold, 24px.
+		// The heads are the page's h2s, in the heading face at its Medium, 24px.
 		const h2 = sections.locator("h2").first();
 		await expect(h2).toHaveCSS("font-size", "24px");
-		expect(await h2.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/Mondwest/);
+		await expect(h2).toHaveCSS("font-weight", "500");
+		expect(await h2.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/^"DM Sans"/);
 
 		const head = page.locator(".ds-prose-section__head").nth(1);
 		await expect(head).toHaveCSS("position", "sticky");
@@ -760,26 +763,43 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair/");
 	});
 
-	test("the body: links in the ink, code between hairlines under a numbered header, a captioned figure, the pull quote", async ({
+	test("the body: links in the link blue, code between hairlines under a numbered header, a captioned figure, the pull quote", async ({
 		page,
 	}) => {
 		await page.goto(NEWEST);
 		const body = page.locator(".ds-prose-section__body");
 
-		// Links in the primary ink on a 1px underline, not the hyperlink blue.
+		// Links in the link token (the hyperlink blue), not the ink, underlined at
+		// rest by text-decoration — no border drawn under them — and plain under
+		// the pointer.
 		const link = body.locator("a").first();
-		const [linkInk, ink] = await page.evaluate(() => [
-			getComputedStyle(document.querySelector(".ds-prose-section__body a")!).color,
-			getComputedStyle(document.querySelector(".post__title")!).color,
-		]);
-		expect(linkInk).toBe(ink);
-		await expect(link).toHaveCSS("border-bottom-width", "1px");
+		const [linkInk, token, ink] = await page.evaluate(() => {
+			const probe = document.createElement("span");
+			probe.style.color = "var(--link-color)";
+			document.body.append(probe);
+			const resolved = getComputedStyle(probe).color;
+			probe.remove();
+			return [
+				getComputedStyle(document.querySelector(".ds-prose-section__body a")!).color,
+				resolved,
+				getComputedStyle(document.querySelector(".post__title")!).color,
+			];
+		});
+		expect(linkInk).toBe(token);
+		expect(linkInk).toBe("rgb(2, 118, 253)");
+		expect(linkInk).not.toBe(ink);
+		await expect(link).toHaveCSS("text-decoration-line", "underline");
+		await expect(link).toHaveCSS("text-underline-offset", "2px");
+		await expect(link).toHaveCSS("border-bottom-width", "0px");
+		await link.hover();
+		await expect(link).toHaveCSS("text-decoration-line", "none");
+		await page.mouse.move(0, 0);
 
-		// Inline code on the first wash, no box.
+		// Inline code on the first wash, no edge, the box's corner.
 		const code = body.locator(":not(pre) > code").first();
 		await expect(code).toHaveCSS("border-top-width", "0px");
-		await expect(code).toHaveCSS("border-top-left-radius", "0px");
-		expect(await code.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe(TRANSPARENT);
+		await expect(code).toHaveCSS("border-top-left-radius", "2.5px");
+		await expect(code).toHaveCSS("background-color", "rgb(241, 244, 247)");
 
 		// The fence: a figure with its header row, the code highlighted, no box.
 		const fig = body.locator("figure.ds-prose-code");
@@ -790,10 +810,14 @@ test.describe("/txt/<slug> — the post page", () => {
 		]);
 		await expect(fig).toHaveCSS("border-top-width", "1px");
 		await expect(fig).toHaveCSS("border-bottom-width", "1px");
+		await expect(fig).toHaveCSS("border-top-style", "dashed");
+		// The code on its slab: --code-bg / --code-fg (the near-black block on
+		// cream), the box's corner, no edge on the light page.
 		const pre = fig.locator("pre.astro-code");
-		await expect(pre).toHaveCSS("background-color", TRANSPARENT);
+		await expect(pre).toHaveCSS("background-color", "rgb(25, 25, 24)");
+		await expect(pre).toHaveCSS("color", "rgb(245, 245, 243)");
 		await expect(pre).toHaveCSS("border-top-width", "0px");
-		await expect(pre).toHaveCSS("border-top-left-radius", "0px");
+		await expect(pre).toHaveCSS("border-top-left-radius", "2.5px");
 		// Shiki still colours the tokens: a key and a string are different inks.
 		const inks = await pre.locator("span[style]").evaluateAll((spans) =>
 			[...new Set(spans.map((s) => getComputedStyle(s).color))]
@@ -819,7 +843,9 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(quote).toHaveCount(1);
 		await expect(quote).toHaveCSS("background-color", TRANSPARENT);
 		await expect(quote).toHaveCSS("border-left-width", "2px");
-		await expect(quote.locator("> p").first()).toHaveCSS("font-size", "20px");
+		// A step up from the 14px body: --font-size-4 (the mono reads larger
+		// than the old grotesk did at a size).
+		await expect(quote.locator("> p").first()).toHaveCSS("font-size", "18px");
 		// The attribution is outside the quoted words: the figure's caption.
 		await expect(quote.locator("footer")).toHaveCount(0);
 		await expect(
@@ -859,9 +885,10 @@ test.describe("/txt/<slug> — the post page", () => {
 			/filed/i,
 		]);
 		// The header row is the ink with the page colour on it — the fill on the
-		// row, so no gap between cells shows the page.
-		expect(await luminance(page, ".ds-index__row--head")).toBeGreaterThan(0.8);
-		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeLessThan(0.1);
+		// row, so no gap between cells shows the page. Light is the default theme,
+		// so on cream that is a black bar; the dark theme is pinned below.
+		expect(await luminance(page, ".ds-index__row--head")).toBeLessThan(0.05);
+		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeGreaterThan(0.85);
 		const rowBox = await box(page, ".ds-index__row--head");
 		const { article } = await columns(page);
 		expect(Math.abs(rowBox.width - article.width)).toBeLessThanOrEqual(1);
@@ -899,15 +926,26 @@ test.describe("/txt/<slug> — the post page", () => {
 	}) => {
 		await page.addInitScript(() => localStorage.setItem("theme", "light"));
 		await page.goto(NEWEST);
-		await expect(page.locator("html")).toHaveClass(/maximeheckel-light/);
+		await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 		expect(await luminance(page, ".ds-index__row--head")).toBeLessThan(0.05);
 		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeGreaterThan(0.85);
 	});
 
-	test("dark theme: the header row is the light fill", async ({ page }) => {
+	test("dark theme: the header row is the light fill, and the code block is edged", async ({ page }) => {
+		await page.addInitScript(() => localStorage.setItem("theme", "dark"));
 		await page.goto(NEWEST);
-		await expect(page.locator("html")).toHaveClass(/maximeheckel-dark/);
+		await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 		expect(await luminance(page, ".ds-index__row--head")).toBeGreaterThan(0.7);
+		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeLessThan(0.05);
+		// The slab sinks below the dark page, so the dashed edge is drawn round it
+		// (--code-border) to hold its shape; on cream it has none.
+		const preSel = ".ds-prose-section__body figure.ds-prose-code pre.astro-code";
+		const pre = page.locator(preSel);
+		await expect(pre).toHaveCSS("border-top-width", "1px");
+		await expect(pre).toHaveCSS("border-top-style", "dashed");
+		expect(await luminance(page, preSel)).toBeLessThan(await luminance(page, "body"));
+		// The link lifted for the dark page, still the link token.
+		await expect(page.locator(".ds-prose-section__body a").first()).toHaveCSS("color", "rgb(92, 165, 255)");
 	});
 
 	test("accessibility basics: one h1, a labelled index, machine-readable dates", async ({

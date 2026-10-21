@@ -66,13 +66,10 @@ test("a raw theme flip repaints a paused grid, with no event", async ({ page }) 
 	const before = await measure(grid);
 	expect(before.mean).toBeGreaterThan(0.6);
 
-	// Exactly what a theme toggle changes on <html>, and nothing else: no
-	// `themechange` event, no call into the element.
+	// Exactly what a theme toggle changes on <html> — the data-theme attribute —
+	// and nothing else: no `themechange` event, no call into the element.
 	await page.evaluate(() => {
-		const r = document.documentElement;
-		r.classList.remove("maximeheckel-light");
-		r.classList.add("maximeheckel-dark");
-		r.dataset.theme = "dark";
+		document.documentElement.dataset.theme = "dark";
 	});
 	await expect
 		.poll(async () => (await measure(grid)).mean, { timeout: 5_000 })
