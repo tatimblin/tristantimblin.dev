@@ -1937,7 +1937,7 @@ assertions:
 
 			seed();
 			// Re-seed when the theme flips. Watch the attribute itself rather than the
-			// footer's `themechange` event: data-theme on <html> IS the theme, and any
+			// footer's toggle: data-theme on <html> IS the theme, and any
 			// writer (the toggle, the init script after a swap, a test) moves it.
 			const themeWatch = new MutationObserver(() => seed());
 			themeWatch.observe(root, { attributes: true, attributeFilter: ["data-theme"] });

@@ -434,16 +434,14 @@ const PREVIEWS = ["light", "dark", "split"];
 		display: none;
 	}
 
-	/* A pane is a small theme scope: the bridge aliases are re-declared here so
-	   they resolve against THIS pane's tokens rather than <html>'s. */
+	/* A pane is a small theme scope: its data-theme re-resolves the tokens (and
+	   the bridge's --color-* aliases, also on [data-theme]) against THIS pane. */
 	.dotgrid-demo__pane {
-		--color-bg: var(--background);
-		--color-fg: var(--text-primary);
 		position: relative;
 		min-width: 0;
 		min-height: 0;
-		background: var(--color-bg);
-		color: var(--color-fg);
+		background: var(--background);
+		color: var(--text-primary);
 	}
 	.dotgrid-demo__pane > dotted-grid {
 		--dotted-grid-height: 100%;

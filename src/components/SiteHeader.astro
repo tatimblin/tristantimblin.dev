@@ -1,9 +1,9 @@
 ---
 // Site header — the brand + nav bar. Mirrors SiteFooter's model: fixed markup +
 // scoped <style> on DS tokens, so it re-tints with the theme toggle (the
-// <dotted-grid> samples the same theme colours fresh each frame through the
-// bridge's --color-fg / --color-bg, and this bar reads --text-primary and
-// --accent directly).
+// <dotted-grid> re-resolves the same theme colours through the bridge's
+// --color-fg / --color-bg when data-theme flips, and this bar reads
+// --text-primary and --accent directly).
 //
 // Two placements, one component — so the site has one header, not two:
 //   overlay  (default) absolute over the top of the full-viewport dotgrid scene

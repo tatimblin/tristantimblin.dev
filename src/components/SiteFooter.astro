@@ -3,8 +3,8 @@
 // light/dark theme toggle. Themes automatically via DS tokens (--text-primary /
 // --background / --border). Light is the site default; the toggle persists
 // the user's explicit choice in localStorage and re-tints the whole page,
-// including the animating <dotted-grid> visuals (they sample the bridge's
-// --color-fg / --color-bg fresh each frame).
+// including the <dotted-grid> visuals (they re-resolve their tone when
+// data-theme on <html> changes).
 import Text from "@whois/design-system/Text";
 import Chip from "@whois/design-system/Chip";
 
@@ -96,8 +96,8 @@ const year = new Date().getFullYear();
 	}
 
 	// Theme: pressed = light. The label names the theme a click switches to.
-	// `themechange` nudges a paused/reduced-motion <dotted-grid> to repaint
-	// (the animating path already re-tints every frame).
+	// No event needed: <dotted-grid> (paused ones included) observes data-theme
+	// on <html> itself.
 	const isLight = () => document.documentElement.dataset.theme !== "dark";
 	bindToggle(
 		"theme",
@@ -110,7 +110,6 @@ const year = new Date().getFullYear();
 			} catch {
 				/* storage unavailable: the choice lasts the page */
 			}
-			document.dispatchEvent(new Event("themechange"));
 		},
 		(light) =>
 			light

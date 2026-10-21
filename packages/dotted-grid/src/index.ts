@@ -55,10 +55,14 @@ const TRAIL_MS = 600; // trail lifetime — longer than fade-in so dots trail ou
  * THEME FLIPS. One observer for every live element, on <html>'s class,
  * data-theme and style: whatever a theme toggle changes there, the tone
  * variables may have changed with it. Each element re-resolves its tone and
- * repaints only if something it uses actually moved, so a class change that
- * has nothing to do with the theme costs one style read per element and no
- * draw. Repainting covers paused and reduced-motion elements, which have no
- * running loop to pick the change up.
+ * repaints only if something it uses actually moved. Repainting covers paused
+ * and reduced-motion elements, which have no running loop to pick the change up.
+ *
+ * Most class changes there are not the theme: Lenis toggles `lenis-scrolling`
+ * / `lenis-smooth` on <html> at every scroll start and stop, and re-resolving a
+ * tone costs a style recalc plus canvas readbacks per element. So the pass
+ * first compares a key of the three values (Lenis's classes stripped) against
+ * the last one, a few string reads, and does nothing when it has not moved.
  *
  * Coalesced to one pass per frame: a toggle that swaps a class AND an
  * attribute fires twice, and the second read would see the same values.
@@ -66,14 +70,27 @@ const TRAIL_MS = 600; // trail lifetime — longer than fade-in so dots trail ou
 const live = new Set<DottedGridElement>();
 let themeObserver: MutationObserver | null = null;
 let themePending = false;
+let themeKey = "";
+const SCROLL_STATE_CLASS = /^lenis(-|$)/;
+function readThemeKey(): string {
+	const html = document.documentElement;
+	const classes = Array.from(html.classList)
+		.filter((c) => !SCROLL_STATE_CLASS.test(c))
+		.join(" ");
+	return `${html.getAttribute("data-theme") ?? ""}|${html.getAttribute("style") ?? ""}|${classes}`;
+}
 function watchTheme(el: DottedGridElement) {
 	live.add(el);
 	if (themeObserver || typeof MutationObserver === "undefined") return;
+	themeKey = readThemeKey();
 	themeObserver = new MutationObserver(() => {
 		if (themePending) return;
 		themePending = true;
 		requestAnimationFrame(() => {
 			themePending = false;
+			const key = readThemeKey();
+			if (key === themeKey) return;
+			themeKey = key;
 			for (const g of live) g.refreshTone();
 		});
 	});
@@ -378,6 +395,7 @@ export class DottedGridElement extends HTMLElement {
 		// A view transition can re-insert a PERSISTED element into a freshly built
 		// document, so nothing resolved against the old one survives into this life.
 		this.tone = null;
+		this.reflectPaper();
 
 		this.canvas = document.createElement("canvas");
 		this.appendChild(this.canvas);
@@ -518,6 +536,7 @@ export class DottedGridElement extends HTMLElement {
 
 	attributeChangedCallback(name: string, oldValue: string, newValue: string) {
 		if (oldValue === newValue) return;
+		if (name === "paper") this.reflectPaper();
 		if (!this.gl) return; // not yet connected
 
 		// `src` drives the (gapless) swap; it reads `src-webm` fresh, so a host that
@@ -564,6 +583,24 @@ export class DottedGridElement extends HTMLElement {
 		if (toneEquals(this.tone, next)) return;
 		this.tone = next;
 		this.scheduleRender();
+	}
+
+	/**
+	 * Mirror a valid `paper` attribute onto the host's --dg-paper, so the box's
+	 * pre-frame background (styles.css) is the paper the shader will paint, in
+	 * the same order resolveTone reads it: attribute, --dg-paper, --color-bg.
+	 * Removed again only if it was this that set it.
+	 */
+	private reflectedPaper = false;
+	private reflectPaper() {
+		const paper = this.getAttribute("paper")?.trim();
+		if (paper && CSS.supports("color", paper)) {
+			this.style.setProperty("--dg-paper", paper);
+			this.reflectedPaper = true;
+		} else if (this.reflectedPaper) {
+			this.style.removeProperty("--dg-paper");
+			this.reflectedPaper = false;
+		}
 	}
 
 	private resolveTone(): Tone {

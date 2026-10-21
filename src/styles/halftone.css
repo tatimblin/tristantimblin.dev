@@ -16,8 +16,10 @@
  * than a wide one. Inverting the polarity on light floods the frame with ink;
  * both themes keep positive polarity and change the ink instead.
  *
- * Inks come from the theme tokens (--halftone-ink, --halftone-ink-soft); a
- * tone attribute on the element would beat these variables, so keep tone here.
+ * Inks come from the theme tokens: unset, --dg-ink falls back to the bridge's
+ * --color-fg, which on a halftone IS --halftone-ink, so a preset names an ink
+ * only where it differs (--halftone-ink-soft, --text-tertiary). A tone
+ * attribute on the element would beat these variables, so keep tone here.
  */
 
 /* --- Desktop hero: the fabric clip ---------------------------------------- */
@@ -29,7 +31,6 @@
 }
 
 [data-theme="light"] .hero__video {
-	--dg-ink: var(--halftone-ink);
 	--dg-gamma: 0.4;
 	--dg-dot-scale: 1.1;
 	--dg-dot-shape: circle;
@@ -41,7 +42,6 @@
 }
 
 [data-theme="dark"] .hero__video {
-	--dg-ink: var(--halftone-ink);
 	--dg-gamma: 0.55;
 	--dg-dot-scale: 1.15;
 	--dg-dot-shape: morph;
@@ -60,7 +60,6 @@
 }
 
 [data-theme="light"] .hero-carousel dotted-grid {
-	--dg-ink: var(--halftone-ink);
 	--dg-gamma: 0.9;
 	--dg-contrast: 1.05;
 	--dg-cutoff: 0.08;
