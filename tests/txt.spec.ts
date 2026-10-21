@@ -197,15 +197,18 @@ test.describe("/txt/", () => {
 				const post = document.querySelector(".stack__post[data-open]")!;
 				const box = post.getBoundingClientRect();
 				const read = post.querySelector(".stack__read")!;
+				// A demo row has no meta line (its DEMO chip says what it is).
+				const meta = post.querySelector(".stack__meta");
 				return {
 					title: textX(post.querySelector(".stack__title")!),
 					excerpt: textX(post.querySelector(".stack__excerpt")!),
 					label: textX(read),
 					readLeft: read.getBoundingClientRect().left,
-					meta: textX(post.querySelector(".stack__meta")!),
+					hasMeta: meta !== null,
+					meta: meta ? textX(meta) : 0,
 					titleBottom: post.querySelector(".stack__title")!.getBoundingClientRect().bottom,
-					metaTop: post.querySelector(".stack__meta")!.getBoundingClientRect().top,
-					metaBottom: post.querySelector(".stack__meta")!.getBoundingClientRect().bottom,
+					metaTop: meta ? meta.getBoundingClientRect().top : 0,
+					metaBottom: meta ? meta.getBoundingClientRect().bottom : 0,
 					excerptTop: post.querySelector(".stack__excerpt")!.getBoundingClientRect().top,
 					readBottom: read.getBoundingClientRect().bottom,
 					nextTop: post.nextElementSibling!.getBoundingClientRect().top,
@@ -222,9 +225,11 @@ test.describe("/txt/", () => {
 			expect(Math.abs(m.readBottom - m.nextTop)).toBeLessThanOrEqual(1);
 			// The meta sits on its own line between the title and the excerpt,
 			// on their x.
-			expect(Math.abs(m.meta - m.title)).toBeLessThanOrEqual(1);
-			expect(m.metaTop).toBeGreaterThanOrEqual(m.titleBottom - 1);
-			expect(m.metaBottom).toBeLessThanOrEqual(m.excerptTop + 1);
+			if (m.hasMeta) {
+				expect(Math.abs(m.meta - m.title)).toBeLessThanOrEqual(1);
+				expect(m.metaTop).toBeGreaterThanOrEqual(m.titleBottom - 1);
+				expect(m.metaBottom).toBeLessThanOrEqual(m.excerptTop + 1);
+			}
 			// The bleed never scrolls the page sideways.
 			expect(m.scrollWidth).toBeLessThanOrEqual(m.clientWidth);
 		});

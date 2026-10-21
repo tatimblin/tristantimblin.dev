@@ -45,8 +45,8 @@
 // pages.
 //
 // DEMOS (src/content/demos) are interleaved by date: the same row, with a
-// DEMO chip after the title, `demo / 00N` (their own count) for the meta,
-// the one-line description for the excerpt, and VIEW for READ.
+// DEMO chip after the title (and no meta line), the one-line description for
+// the excerpt, and VIEW for READ.
 import type { CollectionEntry } from "astro:content";
 import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
@@ -60,9 +60,7 @@ import {
 	demoHref,
 	isoDate,
 	monthYear,
-	padNo,
 	postHref,
-	postNumbers,
 	readingStats,
 } from "../../lib/blog";
 
@@ -74,7 +72,6 @@ interface Props {
 }
 
 const { posts, label = "Posts" } = Astro.props;
-const demoNos = postNumbers(posts.filter((e) => e.collection === "demos"));
 const rows = byDateDesc(posts).map((entry) => {
 	if (entry.collection === "demos") {
 		return {
@@ -82,7 +79,7 @@ const rows = byDateDesc(posts).map((entry) => {
 			date: entry.data.date,
 			title: entry.data.title,
 			demo: true,
-			meta: `demo / ${padNo(demoNos.get(entry.id)!)}`,
+			meta: null,
 			excerpt: entry.data.description,
 			action: "View",
 		};
@@ -119,7 +116,7 @@ const rows = byDateDesc(posts).map((entry) => {
 						<div class="stack__body">
 							<div class="stack__body-inner" data-stack-measure>
 								<div class="stack__text">
-									<Mono class="stack__meta">{meta}</Mono>
+									{meta && <Mono class="stack__meta">{meta}</Mono>}
 									<Body class="stack__excerpt">{excerpt}</Body>
 								</div>
 								<div class="stack__rail">

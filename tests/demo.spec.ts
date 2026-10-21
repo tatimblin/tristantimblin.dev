@@ -179,7 +179,7 @@ test.describe("demos in the index, the feed and the sitemap", () => {
 		await expect(row).toHaveCount(1);
 		await expect(row).toHaveAttribute("data-demo", "");
 		await expect(row.locator(".stack__title .ds-chip")).toHaveText(/demo/i);
-		await expect(row.locator(".stack__meta")).toHaveText(/^demo \/ 001$/i);
+		await expect(row.locator(".stack__meta")).toHaveCount(0);
 		await expect(row.locator("a.stack__read")).toHaveText(/view/i);
 		// Interleaved by date: the rows run newest first across both kinds.
 		const dates = await page
