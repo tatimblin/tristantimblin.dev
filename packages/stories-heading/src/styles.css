@@ -129,7 +129,7 @@ stories-heading {
 	   after any change here. */
 		font-weight: var(--font-weight-500, 500);
 	letter-spacing: var(--tracking-hero, -0.02em);
-	fill: var(--text-primary, #ededed);
+	fill: var(--text-primary, CanvasText);
 	/* SVG user units; the viewBox is resized to the real glyph bbox in JS, so
 	   this only sets the internal proportions, not the on-screen size. */
 	font-size: 300px;
@@ -367,17 +367,17 @@ stories-heading {
 		var(--font-hero, ui-sans-serif, system-ui, sans-serif)
 	);
 	font-weight: var(--font-hero-weight, 500);
-	color: var(--color-bg, #0a0a0a);
-	-webkit-text-stroke: 1px var(--color-fg, #ededed);
+	color: var(--color-bg, Canvas);
+	-webkit-text-stroke: 1px var(--color-fg, CanvasText);
 }
 
 /* Solid (revealed): the heading face, on an opaque backdrop so the wipe masks the
    outline beneath it. Hidden from the top by --sh-clip → fully shown at --sh-clip 0.
    The hero and heading roles are both DM Sans Medium today, so the wipe is a FILL
-   change on one face. It is built to also be a TYPEFACE swap (it was, out of a
-   serif outline into a pixel face): the two layers may resolve to faces with
-   different advance widths, which is why measureHeadingWidth() in index.ts fits the
-   box to the wider of the two layers instead of to the in-flow outline alone. */
+   change on one face. It is built to also be a TYPEFACE swap: the two layers may
+   resolve to faces with different advance widths, which is why
+   measureHeadingWidth() in index.ts fits the box to the wider of the two layers
+   instead of to the in-flow outline alone. */
 .sh__solid {
 	font-family: var(--font-heading, ui-sans-serif, system-ui, sans-serif);
 	font-weight: var(--font-heading-weight, 500);
@@ -390,8 +390,8 @@ stories-heading {
 	     track  closes the advance difference so both start AND end on the same x. */
 	font-size: calc(1em * var(--sh-solid-scale, 1));
 	letter-spacing: calc(var(--sh-tracking) + var(--sh-solid-track, 0em));
-	color: var(--color-fg, #ededed);
-	background: var(--color-bg, #0a0a0a);
+	color: var(--color-fg, CanvasText);
+	background: var(--color-bg, Canvas);
 	clip-path: inset(calc(var(--sh-clip) * 100%) 0 0 0);
 }
 
