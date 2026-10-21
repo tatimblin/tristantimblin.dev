@@ -4,7 +4,7 @@ The L4 3D → line route: a scanned head read from a `.glb`, welded, cut into
 plane slices, outlined by its silhouette edges, hidden lines removed by a
 z-buffer, and projected orthographically onto the 400×400 panel, through
 [`tools/scenes/lib/mesh-lines.ts`](../lib/mesh-lines.ts). `bun run scenes:bake`
-writes `packages/design-system/src/scenes/head.svg`; `bun run scenes:check`
+writes `theme/design-system/src/scenes/head.svg`; `bun run scenes:check`
 fails when this directory or its output has drifted.
 
 ## Credits

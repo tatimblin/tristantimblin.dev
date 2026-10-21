@@ -18,7 +18,7 @@
  * three — so the case reads as the drawing's white line work and the
  * internals carry the colour.
  *
- *   bun run scenes:bake      → packages/design-system/src/scenes/phone.svg
+ *   bun run scenes:bake      → theme/design-system/src/scenes/phone.svg
  *
  * Drawn from nothing but the kit and the recipes: no credit (README.md).
  */

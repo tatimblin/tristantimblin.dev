@@ -10,7 +10,7 @@
 //   duration — seconds (float/int)
 // Vite inlines the CSV contents as a string at build time, so the data is
 // bundled with the page — no filesystem read at render time.
-import csv from "./bike-stats.csv?raw";
+import csv from "../../data/bike-stats.csv?raw";
 
 interface Row {
 	date: string;

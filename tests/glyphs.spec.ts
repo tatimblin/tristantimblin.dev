@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { GLYPH_NAMES } from "../packages/design-system/src/glyphs/names";
+import { GLYPH_NAMES } from "../theme/design-system/src/glyphs/names";
 
 /**
  * THE GLYPH TILE SHEET, IN THE BROWSER.

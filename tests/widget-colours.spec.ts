@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
  * colour, so they carry it: the GitHub grid in GitHub's own greens (the
  * --contrib-* ramp, through the tile grid's --tile-N hooks), and Volo's results
  * in --positive / --negative. Pinned per theme to the values in
- * packages/design-system/src/tokens/themes/{light,dark}.css.
+ * theme/design-system/src/tokens/themes/{light,dark}.css.
  */
 
 const THEMES = {

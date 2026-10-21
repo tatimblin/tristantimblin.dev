@@ -1,6 +1,6 @@
 /* Legacy-name bridge.
  *
- * The Web Components in packages/* reference a small set of custom properties
+ * The Web Components in theme/* reference a small set of custom properties
  * (--color-*) that the design system does not define, and read them where a
  * class cannot reach: <dotted-grid> samples --color-fg / --color-bg into a
  * canvas, <stories-heading> and <video-carousel> paint --color-bg behind their

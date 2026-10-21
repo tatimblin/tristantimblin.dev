@@ -7,7 +7,7 @@
 // filesystem read or API call at render time, and no token shipped to the client.
 // See tools/github-stats/fetch.mjs for the shape and .github/workflows/github-stats.yml
 // for the pipeline (mirrors the baywheels/bike-stats setup).
-import data from "./github.json";
+import data from "../../data/github.json";
 
 export interface ContribDay {
 	date: string;

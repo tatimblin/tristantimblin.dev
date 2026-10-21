@@ -8,7 +8,7 @@
  * stacked numerals) are HTML over the frame, placed by the page with
  * SceneLabel; nothing here is text.
  *
- *   bun run scenes:bake      → packages/design-system/src/scenes/globe.svg
+ *   bun run scenes:bake      → theme/design-system/src/scenes/globe.svg
  *
  * Credits and the data's licence are in README.md beside this file.
  */

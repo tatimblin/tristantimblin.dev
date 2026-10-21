@@ -2,12 +2,12 @@
 
 The L4 constructed route: the exploded phone of a synth panel's screen, on
 the 320×180 plate. No data and no dependency — the drawing is the family-H
-iso part recipes (`packages/design-system/src/glyphs/recipes/`: `handset`,
+iso part recipes (`theme/design-system/src/glyphs/recipes/`: `handset`,
 `iso-shell`, `rotary`, `pcb`, `battery`, `joystick`, `cone`, `spring`,
 `screw`) run again with the scene kit, each placed by `part()`
-(`packages/design-system/src/scenes/parts.ts`), plus a dashed explosion axis
+(`theme/design-system/src/scenes/parts.ts`), plus a dashed explosion axis
 and four wires drawn with the kit. `bun run scenes:bake` writes
-`packages/design-system/src/scenes/phone.svg`; `bun run scenes:check` fails
+`theme/design-system/src/scenes/phone.svg`; `bun run scenes:check` fails
 when this directory, a recipe or the kit has drifted.
 
 ## Credits

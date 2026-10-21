@@ -1,6 +1,6 @@
 /**
  * The art profile of the SVG validator
- * (packages/design-system/scripts/validate-art.mjs): one fixture per rule,
+ * (theme/design-system/scripts/validate-art.mjs): one fixture per rule,
  * each of which must fire — and only it — so a validator that passes
  * everything cannot slip by. The glyph fixtures are validate-glyph.test.ts,
  * the scene ones validate-scene.test.ts. `bun run test:unit`.

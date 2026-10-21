@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { SCENE_NAMES } from "../packages/design-system/src/scenes/names";
+import { SCENE_NAMES } from "../theme/design-system/src/scenes/names";
 
 /**
  * THE SCENES SECTION OF THE CATALOGUE, IN THE BROWSER.

@@ -38,8 +38,9 @@ jobs:
 
       # `every`: a file counts as code only if it matches ALL patterns, i.e. it is
       # not excluded by any `!` line. So `code` is true when at least one changed
-      # file is outside the content/docs set. (Nightly data commits never reach
-      # here: they're pushed with GITHUB_TOKEN and deployed by nightly.yml.)
+      # file is outside the content/docs/data set. (Nightly data commits never
+      # reach here: they're pushed with GITHUB_TOKEN and deployed by nightly.yml;
+      # the src/data line covers hand edits to the widget data and manifests.)
       - name: Filter changed paths
         id: filter
         if: github.event_name == 'push'
@@ -50,6 +51,7 @@ jobs:
             code:
               - '**'
               - '!src/content/**'
+              - '!src/data/**'
               - '!**/*.md'
 
   # Layout invariants that only a real engine can confirm — chiefly the mobile hero

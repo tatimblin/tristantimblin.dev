@@ -1,4 +1,4 @@
-<!-- baked from tools/scenes/phone/scene.ts (sources d4474069304ff503) — edit the source -->
+<!-- baked from tools/scenes/phone/scene.ts (sources 3a54db17deb22381) — edit the source -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
   <g data-motion="dash" data-speed="0.5">
     <line x1="160" y1="0" x2="160" y2="180" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4" />

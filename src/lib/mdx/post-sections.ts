@@ -1,6 +1,6 @@
 /**
  * The post body, cut into SECTIONS for the ruled page: every h2 opens one
- * (`Prose variant="ruled"`, packages/design-system/src/styles/prose.css draws
+ * (`Prose variant="ruled"`, theme/design-system/src/styles/prose.css draws
  * the markup). The cut happens on the HTML tree, after Shiki has highlighted
  * the fences and before Astro maps the tags onto components:
  *
@@ -307,7 +307,7 @@ export function rehypePostSections() {
 				const { caption } = image;
 				const n = pad2(figure++);
 				const label = caption ? `fig. ${n} / ${caption}` : `fig. ${n}`;
-				// Fig's markup (packages/design-system/src/components/Fig.astro),
+				// Fig's markup (theme/design-system/src/components/Fig.astro),
 				// bled: a picture takes the text's two columns and the air beside them.
 				return el("figure", { className: ["ds-fig"], dataProseBleed: "" }, [
 					image.content,

@@ -8,9 +8,12 @@ Guidance for AI agents working in this repo.
   shell in `src/layouts/Layout.astro` (the blog's in `BlogLayout` /
   `PostLayout`), global CSS in `src/styles/global.css`, the homepage's tiles in
   `src/widgets/`, posts as `src/content/txt/<slug>.mdx` with their images
-  (`images/`) beside them.
-- **`packages/*`** — workspace packages (Bun workspaces, consumed as `@whois/*`,
-  source exports, no build step):
+  (`images/`) beside them. Data lives in `src/data/`: the widgets' JSON/CSV
+  (written by the nightly fetchers in `tools/`, see `.github/workflows/nightly.yml`)
+  and the media manifests. A change to only content, data or docs skips the
+  full Playwright suite in CI (build, smoke, deploy only).
+- **`theme/*`** — the site's look, as workspace packages (Bun workspaces,
+  consumed as `@whois/*`, source exports, no build step):
   - `@whois/design-system` — the design system (tokens + Astro/CSS components).
   - Web Components (custom elements): `stories-heading`, `wobble-text`.
 - **The halftone elements live in their own repo**,
@@ -20,7 +23,7 @@ Guidance for AI agents working in this repo.
   `package.json`). To change them, release there and bump the URL here.
 - **`tests/`** — Playwright, against the built site (`bun run test`);
   `bun run test:unit` runs the unit tests beside the code (`src/**/*.test.ts`
-  and `packages/*/src/**/*.test.ts`; a bare `bun test` sees `src/` only — see
+  and `theme/*/src/**/*.test.ts`; a bare `bun test` sees `src/` only — see
   `bunfig.toml`).
 - Run the dev server with **`bun run dev`** (copies the fleet demo, then
   `bunx astro dev` under Node). Do **not** use
@@ -47,7 +50,7 @@ locally, `bun run build` in vscode-fleet and copy its `demo/dist` over
 the demo's own build and bundle-size guard live in vscode-fleet.
 
 **Baked drawings are committed** — the glyphs (`bun run glyphs:bake` from
-`packages/design-system/src/glyphs/recipes/`) and the scenes (`bun run
+`theme/design-system/src/glyphs/recipes/`) and the scenes (`bun run
 scenes:bake` from `tools/scenes/<name>/scene.ts`, whose heavy deps — d3-geo,
 world-atlas — are root devDependencies that never ship) — so `build` does
 not bake; `glyphs:check` / `scenes:check` fail when a source and its file
@@ -71,7 +74,7 @@ hostname flat: Universal SSL covers `*.tristantimblin.dev` but not a nested
 
 ## Design system — read before writing UI CSS
 
-The site is built on **`@whois/design-system`** (`packages/design-system`). It
+The site is built on **`@whois/design-system`** (`theme/design-system`). It
 provides a global token layer (spacing, type, color, radii, fonts) plus
 presentational Astro components. **Prefer DS components and tokens over bespoke
 CSS** — hand-rolling values it was built to standardize drifts the design back to
@@ -93,7 +96,7 @@ ad-hoc.
 **Don't** fork component CSS inline, invent token names, or hardcode magic values
 (`padding: 17px`, `#3b5bdb`).
 
-**Full guide:** [`packages/design-system/CONVENTIONS.md`](packages/design-system/CONVENTIONS.md)
+**Full guide:** [`theme/design-system/CONVENTIONS.md`](theme/design-system/CONVENTIONS.md)
 — usage, the gate in detail, when to edit which token file, and authoring
 conventions for extending the package.
 
@@ -103,7 +106,7 @@ first paint (`window.__setTheme`), and the `SiteFooter` toggle writes both. Neve
 key styles off a class or `prefers-color-scheme`; scope with `[data-theme]` (a
 `ThemePage` wrapper sets it too, so derived tokens must be declared on
 `[data-theme]`, not `:root`, to re-resolve inside one). The token files, in
-`packages/design-system/src/tokens/`, load in this order:
+`theme/design-system/src/tokens/`, load in this order:
 `tokens.generated.css` (generated — never edit) → `tokens.overrides.css` (type
 roles, motion, the EDGES and INSTRUMENT UI blocks) → `themes/light.css` /
 `themes/dark.css` (every value that differs between the themes, the same set in

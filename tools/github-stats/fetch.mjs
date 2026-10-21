@@ -41,7 +41,7 @@ const TOP_LANGUAGES = 6;
 const EXCLUDED_LANGUAGES = new Set(["HTML"]);
 
 const OUT_PATH = fileURLToPath(
-	new URL("../../src/widgets/github/github.json", import.meta.url),
+	new URL("../../src/data/github.json", import.meta.url),
 );
 
 // GitHub's contributionLevel enum → 0–4 intensity buckets the widget tints by.

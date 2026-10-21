@@ -46,7 +46,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const OUT_PATH = fileURLToPath(
-	new URL("../../src/widgets/readers/readers.json", import.meta.url),
+	new URL("../../src/data/readers.json", import.meta.url),
 );
 
 // The Web Analytics site this reads. Not a secret — it is a public identifier

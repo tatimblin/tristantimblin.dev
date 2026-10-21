@@ -29,10 +29,10 @@
 //   validateSvg(source, { profile: PROFILES.glyph }) → string[]   // [] when clean
 //   validateArt(source, { slug: "mega-desk" }) → string[]         // the art profile
 //
-//   bun packages/design-system/scripts/validate-art.mjs [--profile glyph|scene] <file…>
-//   bun run validate:art packages/design-system/src/art/_template.svg   // exit 1 on a violation
-//   bun run validate:glyph packages/design-system/src/glyphs/*.svg
-//   bun run validate:scene packages/design-system/src/scenes/*.svg
+//   bun theme/design-system/scripts/validate-art.mjs [--profile glyph|scene] <file…>
+//   bun run validate:art theme/design-system/src/art/_template.svg   // exit 1 on a violation
+//   bun run validate:glyph theme/design-system/src/glyphs/*.svg
+//   bun run validate:scene theme/design-system/src/scenes/*.svg
 //
 // Without --profile the CLI reads a file's BAKE HEADER: a baked scene or
 // glyph is held to its own profile (`profileOf`); a file with no header is
@@ -892,7 +892,7 @@ export function main(args) {
 		profile = PROFILES[name];
 	}
 	if (files.length === 0) {
-		console.error(`usage: bun packages/design-system/scripts/validate-art.mjs [--profile ${Object.keys(PROFILES).join("|")}] <file.svg…>`);
+		console.error(`usage: bun theme/design-system/scripts/validate-art.mjs [--profile ${Object.keys(PROFILES).join("|")}] <file.svg…>`);
 		return 2;
 	}
 	let code = 0;

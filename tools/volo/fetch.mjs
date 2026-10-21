@@ -4,7 +4,7 @@
  * and the score of each game that has one.
  *
  * Mirrors tools/github-stats/fetch.mjs: a scheduled Action runs this, it writes
- * src/widgets/volo/volo.json, and the workflow commits the file if it changed.
+ * src/data/volo.json, and the workflow commits the file if it changed.
  * Astro imports that JSON in frontmatter, so nothing is fetched at render time
  * and no credential reaches the browser.
  *
@@ -40,7 +40,7 @@ import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const OUT_PATH = fileURLToPath(
-	new URL("../../src/widgets/volo/volo.json", import.meta.url),
+	new URL("../../src/data/volo.json", import.meta.url),
 );
 
 const ENDPOINT = "https://www.volosports.com/hapi/v1/graphql";

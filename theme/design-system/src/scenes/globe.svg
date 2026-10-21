@@ -1,4 +1,4 @@
-<!-- baked from tools/scenes/globe/scene.ts (sources ffb74feea4d06bac) — edit the source -->
+<!-- baked from tools/scenes/globe/scene.ts (sources 819edfda769b955d) — edit the source -->
 <!-- credit: Natural Earth (public domain), via world-atlas 110m -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
   <path d="M 40 0 V 400 M 360 0 V 400 M 0 40 H 400 M 0 360 H 400" fill="none" stroke="var(--art-ink-2)" stroke-width="1" class="art-line" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6" />

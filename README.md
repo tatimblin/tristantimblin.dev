@@ -1,7 +1,7 @@
 # tristantimblin.dev
 
 Tristan Timblin's personal site — an Astro static site, with its design system
-and Web Components as Bun workspace packages under `packages/`. The halftone
+and Web Components as Bun workspace packages under `theme/`. The halftone
 elements (`<dotted-grid>`, `<video-carousel>`) come from
 [tatimblin/dotgrid](https://github.com/tatimblin/dotgrid).
 

@@ -8,7 +8,7 @@
 // client. See tools/volo/fetch.mjs for the shape and
 // .github/workflows/volo-seasons.yml for the pipeline (mirrors the github-stats
 // setup).
-import data from "./volo.json";
+import data from "../../data/volo.json";
 
 export type GameResult = "W" | "L" | "T";
 
