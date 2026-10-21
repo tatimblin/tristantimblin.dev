@@ -133,8 +133,8 @@
 	.ds-scene-label--size-xl {
 		font-size: calc(var(--scene-unit) * 7);
 	}
-	/* variant: numeral — the spec sheet's thin numeral (the display role,
-	 * Mondwest Thin), no case change, no tracking, set tight. */
+	/* variant: numeral — the spec sheet's numeral (the display role), no case
+	 * change, the display tracking, set tight. */
 	.ds-scene-label--variant-numeral {
 		font-family: var(--font-display);
 		font-weight: var(--font-display-weight);

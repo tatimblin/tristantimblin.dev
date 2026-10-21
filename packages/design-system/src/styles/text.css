@@ -13,7 +13,7 @@
 }
 
 /* family — the site's faces by ROLE. A face on this site travels with its
-   weight (Migra and Mondwest ship discrete cuts). The default is `inherit`,
+   weight (DM Sans and Roboto Mono ship discrete cuts). The default is `inherit`,
    which needs no class. */
 .ds-text--family-ui {
 	font-family: var(--font-ui);

@@ -1,5 +1,5 @@
-/* NumberStream — rows of digits in the label voice (Mondwest Regular at the
- * label step, tabular so the columns hold), the secondary ink, a row on
+/* NumberStream — rows of digits in the label voice (the UI face at the label
+ * step, tabular so the columns hold), the secondary ink, a row on
  * each line. The box is exactly `rows` lines tall and clips, so the doubled
  * rows of `motion` stay out of sight. */
 /* Imported by its component, not by styles/index.css, so it ships only

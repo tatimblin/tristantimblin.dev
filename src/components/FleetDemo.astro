@@ -53,19 +53,14 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 	   * + *`) sits in a cascade layer under this unlayered sheet, so the site
 	   wins at any specificity. */
 	.fleet-demo {
-		/* Token bridge. element.css asks for --color-accent/--color-border/
-		   --color-muted (generic names, with literal fallbacks, so the package
-		   stands alone); this site's DS publishes --accent/--border-color/
-		   --text-tertiary. Aliasing here beats overriding element.css rule by
-		   rule — one hop, and the element keeps owning its own appearance. */
-		--color-accent: var(--accent);
-		--color-border: var(--border-color);
-		/* --color-muted (the caption) is deliberately NOT bridged onto
-		   --text-tertiary. That token flips with the site theme, but what the
-		   caption sits on does not: the poster is a Dark Modern screenshot in
-		   both themes, so in light mode the "correct" tertiary would be dark
-		   grey on a near-black image. --blue-400 is the dark theme's primary
-		   ink and the one pale step the two themes share, so it does not flip. */
+		/* element.css reads the DS edge and corner itself, and the bridge
+		   (tokens/bridge.css) hands it --color-accent. --color-muted (the
+		   caption) is the one name re-pointed here, deliberately NOT onto the
+		   bridge's --text-tertiary: that flips with the site theme, but what
+		   the caption sits on does not — the poster is a Dark Modern screenshot
+		   in both themes, so in light mode the tertiary would be dark grey on a
+		   near-black image. --blue-400 is a pale step the generated palette
+		   gives both themes alike, so it does not flip. */
 		--color-muted: color-mix(in oklch, var(--blue-400) 86%, transparent);
 
 		/* THE ROW. The post's text sits in two of the page's four columns; a
@@ -74,12 +69,8 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 		   edge to edge — 1136px at 1440, on the page's own lines. Prose sets its
 		   width and inline margin, so none is set here (this sheet is
 		   unlayered and would win). The element's own children (poster, iframe)
-		   are `position: absolute; inset: 0`, so the box IS the frame. In the
-		   dashed edge at the small corner, like every other figure on the
-		   ruled page. */
+		   are `position: absolute; inset: 0`, so the box IS the frame. */
 		margin-block: 0;
-		border: var(--border);
-		border-radius: var(--radius-box);
 	}
 
 	/* The poster's <picture> wrapper contributes no box: the overlay is a flex
@@ -91,7 +82,7 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 	}
 
 	/* Prose dresses every image in the column — `inline-size: 100%; block-size:
-	   auto; border-radius: var(--border-radius-2)` — which is right for a photo
+	   auto; border-radius: var(--radius-box)` — which is right for a photo
 	   sitting in the column and wrong for a poster the element has already
 	   positioned `absolute; inset: 0` inside its own framed box. That rule
 	   outranks element.css (the package's sheet is imported before it), so the

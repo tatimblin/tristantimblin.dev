@@ -54,9 +54,11 @@
 
 	/* HALFTONE. Dark ink on cream, newsprint-style — the bridge hands these
 	   to <dotted-grid> / <video-carousel> as --color-fg. The footer-row clip
-	   IS its widget, so it prints a softer, warmer ink than the hero. */
+	   IS its widget, and its clips are mostly bright — which positive polarity
+	   prints as ink — so it takes the tertiary grey, the dashed edge's colour,
+	   and reads as a picture on the page rather than a dark block. */
 	--halftone-ink: #191918;
-	--halftone-ink-soft: #8f8778;
+	--halftone-ink-soft: var(--text-tertiary);
 
 	/* ART, ink on paper: the plate the first wash, the edge the dashed
 	   rule's colour, the line the secondary ink. The fills keep their hue and

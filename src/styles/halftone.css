@@ -41,7 +41,7 @@
 }
 
 [data-theme="dark"] .hero__video {
-	--dg-ink: var(--color-fg);
+	--dg-ink: var(--halftone-ink);
 	--dg-gamma: 0.55;
 	--dg-dot-scale: 1.15;
 	--dg-dot-shape: morph;
@@ -69,10 +69,10 @@
 	--dg-crosshatch: 0;
 }
 
-/* A mid grey: under the wordmark at reduced opacity it reads at a picture's
-   weight, where the full --color-fg would compete with the type. */
+/* The tertiary ink, a mid warm grey: under the wordmark at reduced opacity it
+   reads at a picture's weight, where the full ink would compete with the type. */
 [data-theme="dark"] .hero-carousel dotted-grid {
-	--dg-ink: #7f7f7f;
+	--dg-ink: var(--text-tertiary);
 	--dg-gamma: 0.5;
 	--dg-contrast: 1.1;
 }
@@ -83,7 +83,12 @@
    dots; light needs more ink for the same image, but not so much that the floor
    fills in and the tile reads as mostly black. */
 
+/* The soft ink: on cream the tertiary grey, so the tile keeps its full tonal
+   range — it is the widget's whole content — at a pencil's weight, since
+   positive polarity inks a bright clip's sky and walls, not its subject. On
+   the dark page it is the full ink. */
 .wx-videos dotted-grid {
+	--dg-ink: var(--halftone-ink-soft);
 	--dg-levels: 12;
 	--dg-contrast: 1.1;
 	--dg-crosshatch: 0;
@@ -91,17 +96,13 @@
 	--dg-feather: 0.4;
 }
 
-/* A warm mid ink: the tile keeps more weight than the hero (it is the widget's
-   whole content) without the hard-black specks full ink gave on cream. */
 [data-theme="light"] .wx-videos dotted-grid {
-	--dg-ink: var(--halftone-ink-soft);
 	--dg-gamma: 0.42;
 	--dg-cutoff: 0.12;
 	--dg-dot-scale: 1;
 }
 
 [data-theme="dark"] .wx-videos dotted-grid {
-	--dg-ink: var(--color-fg);
 	--dg-gamma: 0.6;
 	--dg-cutoff: 0.2;
 	--dg-dot-scale: 0.8;

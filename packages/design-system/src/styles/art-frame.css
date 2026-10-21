@@ -71,13 +71,13 @@
 		font-weight: var(--font-weight-400);
 		letter-spacing: var(--tracking-mono);
 	}
-	/* the numeral: the display role, Mondwest Thin — Stat's numeral */
+	/* the numeral: the display role — Stat's numeral */
 	.ds-art-frame .art-numeral {
 		font-family: var(--font-display);
 		font-weight: var(--font-display-weight);
 		letter-spacing: var(--tracking-heading);
 	}
-	/* the title: a module's heading, the heading role (Mondwest Bold) */
+	/* the title: a module's heading, the heading role */
 	.ds-art-frame .art-title {
 		font-family: var(--font-heading);
 		font-weight: var(--font-heading-weight);
