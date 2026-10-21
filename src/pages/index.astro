@@ -168,7 +168,7 @@ import "@whois/wobble-text/styles.css";
 		display: none;
 	}
 	/* THE DESKTOP HERO: framed, the group on the floor. An empty margin the
-	   height of the site header's band (--sh-header-clear, which the heading
+	   height of the site header's band (--sh-header-h, which the heading
 	   measures; ~64px before it does) runs round the top, sides and foot; the
 	   halftone fills the frame down to the wordmark's midline, and the lockup and
 	   intro rest on the frame's bottom edge. The halftone stops above "other
@@ -176,7 +176,7 @@ import "@whois/wobble-text/styles.css";
 	   tell it where the picture really ends. */
 	@media (min-width: 901px) {
 		:global(.fh) {
-			--hero-frame: var(--sh-header-clear, var(--space-10));
+			--hero-frame: var(--sh-header-h, var(--space-10));
 			--hero-lead-ideal: 100svh;
 			--sh-scene-bottom: var(--hero-scene-cut);
 		}

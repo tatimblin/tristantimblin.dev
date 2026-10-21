@@ -316,6 +316,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	 *   --sh-lockup-h     the lockup's height (wordmark → "other stories" bottom)
 	 *   --sh-wordmark-h   the wordmark's rendered height
 	 *   --sh-header-clear the minimum lead that clears the site header
+	 *   --sh-header-h     the site header's band alone (a framed hero's margin)
 	 *
 	 * That split is what makes the system acyclic. If JS instead computed the lead
 	 * from the scene's measured height, every grown state would be its own fixed point
@@ -386,6 +387,9 @@ export class StoriesHeadingElement extends HTMLElement {
 		// via --sh-group-h above, but it must NOT reduce the header clearance — the
 		// wordmark still has to clear the overlaid header. Only a positive gap adds slack.
 		this.setPx(fh, "--sh-header-clear", headerH + Math.max(0, headingGap), "headerClear");
+		// The header's band on its own, for a consumer that frames the hero in it: the
+		// clearance above carries the heading gap too, which is lead, not frame.
+		this.setPx(fh, "--sh-header-h", headerH, "headerH");
 	}
 
 	/**
