@@ -40,6 +40,14 @@ const postLinks = (page: Page) =>
 const POST = ".stack__post";
 const OPEN = ".stack__post[data-open]";
 
+/** The href of the nth row's title on /txt, read off the page: the rows are
+ *  the posts and the demos interleaved by date, so which entry sits at a
+ *  given index is content, not something these tests pin. */
+const hrefAt = async (page: Page, n: number) =>
+	(await page.locator(`${POST} a.stack__title`).nth(n).getAttribute("href"))!;
+/** A URL ending in that href. */
+const endsWith = (href: string) => new RegExp(`${href.replace(/[/.]/g, "\\$&")}$`);
+
 /** The hrefs of the open posts (there should be exactly one). */
 const openPosts = (page: Page) =>
 	page.locator(`${OPEN} a.stack__title`).evaluateAll((as) => as.map((a) => a.getAttribute("href")));
@@ -115,14 +123,18 @@ test.describe("/txt/", () => {
 		expect(links.slice(0, 2)).toEqual(["/txt/asserting-on-agent-behavior/", "/txt/tahoe-mountain-hair/"]);
 		// No year groups, no PostList: the stack alone.
 		await expect(page.locator(".ds-post-group, .ds-post-list")).toHaveCount(0);
-		expect(await openPosts(page)).toEqual(["/txt/asserting-on-agent-behavior/"]);
+		// The first row (the newest entry, a post or a demo: demos are
+		// interleaved, tests/demo.spec.ts) is the open one.
+		const first = await page.locator(`${POST} a.stack__title`).first().getAttribute("href");
+		expect(await openPosts(page)).toEqual([first]);
+		await expect(page.locator(`${OPEN} .stack__body`)).toBeVisible();
 		// The date column reads month / year.
-		await expect(page.locator(`${POST} time.stack__date`).first()).toHaveText("02 / 26");
-		await expect(page.locator(`${POST} time.stack__date`).first()).toHaveAttribute("datetime", "2026-02-02");
-		// The open body: category · words, the excerpt, READ to the same
+		const row = page.locator(POST).filter({ has: page.locator('a[href="/txt/asserting-on-agent-behavior/"]') });
+		await expect(row.locator("time.stack__date")).toHaveText("02 / 26");
+		await expect(row.locator("time.stack__date")).toHaveAttribute("datetime", "2026-02-02");
+		// A post's body: category · words, the excerpt, READ to the same
 		// place — no reading-time numeral.
-		const body = page.locator(`${OPEN} .stack__body`);
-		await expect(body).toBeVisible();
+		const body = row.locator(".stack__body");
 		await expect(body.locator(".stack__time, .ds-figure")).toHaveCount(0);
 		await expect(body.locator(".stack__text .stack__meta")).toHaveText(/^Programming · [\d,]+ words$/);
 		await expect(body.locator(".stack__rail .stack__meta")).toHaveCount(0);
@@ -229,12 +241,13 @@ test.describe("/txt/", () => {
 		// second: the second slides (its body closes, the fourth's opens below
 		// the pointer, which is above both). Nothing moved the pointer, so the
 		// fourth stays open — no pointerenter / mouseover reopens the second.
+		const fourth = await hrefAt(page, 3);
 		await page.locator(`${POST} a.stack__title`).nth(3).focus();
 		await settle(page);
-		expect(await openPosts(page)).toEqual(["/txt/why-i-joined-fisker/"]);
+		expect(await openPosts(page)).toEqual([fourth]);
 		// Give a synthetic hover update every chance to fire.
 		await page.waitForTimeout(400);
-		expect(await openPosts(page)).toEqual(["/txt/why-i-joined-fisker/"]);
+		expect(await openPosts(page)).toEqual([fourth]);
 		// The pointer never left the second post, which is now closed.
 		const { x, y } = await titleCentre(page, 1);
 		expect(await postAt(page, x, y)).toBe(1);
@@ -251,16 +264,17 @@ test.describe("/txt/", () => {
 		const page = await context.newPage();
 		await page.goto("/txt/");
 		await page.locator("[data-stack]").scrollIntoViewIfNeeded();
+		const second = await hrefAt(page, 1);
 		let { x, y } = await titleCentre(page, 1);
 		await page.touchscreen.tap(x, y);
 		await settle(page);
 		await expect(page).toHaveURL(/\/txt\/$/);
-		expect(await openPosts(page)).toEqual(["/txt/tahoe-mountain-hair/"]);
+		expect(await openPosts(page)).toEqual([second]);
 		// The title may have moved up (the first post's body closed above it):
 		// tap where it is now.
 		({ x, y } = await titleCentre(page, 1));
 		await page.touchscreen.tap(x, y);
-		await expect(page).toHaveURL(/\/txt\/tahoe-mountain-hair\/$/);
+		await expect(page).toHaveURL(endsWith(second));
 		await context.close();
 	});
 
@@ -271,7 +285,7 @@ test.describe("/txt/", () => {
 		await page.keyboard.press("Tab");
 		await expect(page.locator(`${POST} a.stack__title`).nth(1)).toBeFocused();
 		await settle(page);
-		expect(await openPosts(page)).toEqual(["/txt/tahoe-mountain-hair/"]);
+		expect(await openPosts(page)).toEqual([await hrefAt(page, 1)]);
 	});
 
 	test("reduced motion: the swap is instant", async ({ page }) => {
@@ -290,7 +304,7 @@ test.describe("/txt/", () => {
 				Array.from(document.querySelectorAll(".stack__body")).reduce((n, el) => n + el.getAnimations().length, 0),
 			),
 		).toBe(0);
-		expect(await openPosts(page)).toEqual(["/txt/mega-desk/"]);
+		expect(await openPosts(page)).toEqual([await hrefAt(page, 2)]);
 	});
 
 	for (const width of [375, 320]) {
@@ -374,14 +388,15 @@ test.describe("/txt/", () => {
 		await page.goto("/txt/");
 		// No prior move: the first pointer event the page sees is this press,
 		// so the hover gate has not opened anything.
+		const third = await hrefAt(page, 2);
 		let { x, y } = await titleCentre(page, 2);
 		await page.mouse.click(x, y);
 		await settle(page);
 		await expect(page).toHaveURL(/\/txt\/$/);
-		expect(await openPosts(page)).toEqual(["/txt/mega-desk/"]);
+		expect(await openPosts(page)).toEqual([third]);
 		({ x, y } = await titleCentre(page, 2));
 		await page.mouse.click(x, y);
-		await expect(page).toHaveURL(/\/txt\/mega-desk\/$/);
+		await expect(page).toHaveURL(endsWith(third));
 	});
 
 	test("mouse: a click on a closed post's date opens it and goes nowhere", async ({ page }) => {
@@ -391,7 +406,7 @@ test.describe("/txt/", () => {
 			await page.locator(`${POST} time.stack__date`).nth(1).click();
 			await settle(page);
 			await expect(page).toHaveURL(/\/txt\/$/);
-			expect(await openPosts(page)).toEqual(["/txt/tahoe-mountain-hair/"]);
+			expect(await openPosts(page)).toEqual([await hrefAt(page, 1)]);
 		}
 	});
 
@@ -400,18 +415,20 @@ test.describe("/txt/", () => {
 		await page.goto("/txt/");
 		await page.mouse.move(1, 1);
 		await moveAndCheck(page, 1);
+		const second = await hrefAt(page, 1);
 		const { x, y } = await titleCentre(page, 1);
 		await page.mouse.click(x, y);
-		await expect(page).toHaveURL(/\/txt\/tahoe-mountain-hair\/$/);
+		await expect(page).toHaveURL(endsWith(second));
 	});
 
 	test("keyboard: Enter on a focused title navigates (focus has opened it)", async ({ page }) => {
 		await page.goto("/txt/");
+		const second = await hrefAt(page, 1);
 		await page.locator(`${POST} a.stack__title`).nth(1).focus();
 		await settle(page);
-		expect(await openPosts(page)).toEqual(["/txt/tahoe-mountain-hair/"]);
+		expect(await openPosts(page)).toEqual([second]);
 		await page.keyboard.press("Enter");
-		await expect(page).toHaveURL(/\/txt\/tahoe-mountain-hair\/$/);
+		await expect(page).toHaveURL(endsWith(second));
 	});
 
 	for (const width of [1440, 375]) {
@@ -428,7 +445,7 @@ test.describe("/txt/", () => {
 						!document.documentElement.hasAttribute("data-astro-transition"),
 				);
 				await settle(page);
-				expect(await openPosts(page), how).toEqual([NEWEST]);
+				expect(await openPosts(page), how).toEqual([await hrefAt(page, 0)]);
 				const g = await geometry(page);
 				expect(Math.abs(g.bodies[0] - g.open), how).toBeLessThanOrEqual(1);
 			};
@@ -440,11 +457,12 @@ test.describe("/txt/", () => {
 			await writing.click();
 			await arrived("from a post by the header link");
 			// Back to the list after opening another post and following it.
+			const third = await hrefAt(page, 2);
 			await page.locator(`${POST} time.stack__date`).nth(2).click();
 			await settle(page);
-			expect(await openPosts(page)).toEqual([NO_H2S]);
+			expect(await openPosts(page)).toEqual([third]);
 			await page.locator(`${OPEN} a.stack__title`).click();
-			await expect(page).toHaveURL(/\/txt\/mega-desk\/$/);
+			await expect(page).toHaveURL(endsWith(third));
 			await page.goBack();
 			await arrived("back from a post");
 			// A reload with the pointer resting on a later post: nothing has moved.
@@ -453,7 +471,7 @@ test.describe("/txt/", () => {
 			await page.reload();
 			await arrived("a reload under a resting pointer");
 			await page.waitForTimeout(400);
-			expect(await openPosts(page)).toEqual([NEWEST]);
+			expect(await openPosts(page)).toEqual([await hrefAt(page, 0)]);
 		});
 	}
 
@@ -480,7 +498,7 @@ test.describe("/txt/", () => {
 		await page.locator('.site-header a[href="/txt/"]').click();
 		await expect(page).toHaveURL(/\/txt\/?$/);
 		// The server renders the first post open, its body at its natural height.
-		expect(await openPosts(page)).toEqual(["/txt/asserting-on-agent-behavior/"]);
+		expect(await openPosts(page)).toEqual([await hrefAt(page, 0)]);
 		await expect(page.locator(`${OPEN} .stack__body`)).toBeVisible();
 		await expect(page.locator(`${OPEN} .stack__excerpt`)).toBeVisible();
 		expect((await geometry(page)).bodies[0]).toBeGreaterThan(0);
@@ -519,7 +537,7 @@ test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) 
 			.poll(() => page.evaluate(() => (window as unknown as { __kept?: boolean }).__kept ?? false))
 			.toBe(true);
 		await settle(page);
-		expect(await openPosts(page)).toEqual([NEWEST]);
+		expect(await openPosts(page)).toEqual([await hrefAt(page, 0)]);
 	} finally {
 		await browser.close();
 	}

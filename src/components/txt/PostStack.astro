@@ -43,46 +43,84 @@
 // One consumer, so a site component built from DS pieces and tokens, not a DS
 // component (extract it if a second appears). PostIndex still draws the tag
 // pages.
+//
+// DEMOS (src/content/demos) are interleaved by date: the same row, with a
+// DEMO chip after the title, `demo / 00N` (their own count) for the meta,
+// the one-line description for the excerpt, and VIEW for READ.
 import type { CollectionEntry } from "astro:content";
 import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
 import Body from "@whois/design-system/Body";
 import Button from "@whois/design-system/Button";
+import Chip from "@whois/design-system/Chip";
 import Icon from "@whois/design-system/Icon";
-import { byDateDesc, categories, isoDate, monthYear, postHref, readingStats } from "../../lib/blog";
+import {
+	byDateDesc,
+	categories,
+	demoHref,
+	isoDate,
+	monthYear,
+	padNo,
+	postHref,
+	postNumbers,
+	readingStats,
+} from "../../lib/blog";
+
+type Entry = CollectionEntry<"txt"> | CollectionEntry<"demos">;
 
 interface Props {
-	posts: CollectionEntry<"txt">[];
+	posts: Entry[];
 	label?: string;
 }
 
 const { posts, label = "Posts" } = Astro.props;
-const ordered = byDateDesc(posts);
+const demoNos = postNumbers(posts.filter((e) => e.collection === "demos"));
+const rows = byDateDesc(posts).map((entry) => {
+	if (entry.collection === "demos") {
+		return {
+			href: demoHref(entry.id),
+			date: entry.data.date,
+			title: entry.data.title,
+			demo: true,
+			meta: `demo / ${padNo(demoNos.get(entry.id)!)}`,
+			excerpt: entry.data.description,
+			action: "View",
+		};
+	}
+	const cat = entry.data.category ? categories[entry.data.category] : null;
+	const { words } = readingStats(entry.body);
+	return {
+		href: postHref(entry.id),
+		date: entry.data.date,
+		title: entry.data.title,
+		demo: false,
+		meta: [cat?.label, `${words.toLocaleString("en-US")} words`].filter(Boolean).join(" · "),
+		excerpt: entry.data.excerpt,
+		action: "Read",
+	};
+});
 ---
 
 {
-	ordered.length === 0 ? (
+	rows.length === 0 ? (
 		<Body variant="tertiary">Nothing here yet.</Body>
 	) : (
 		<ol class="stack" aria-label={label} data-stack>
-			{ordered.map((post, i) => {
-				const href = postHref(post.id);
-				const cat = post.data.category ? categories[post.data.category] : null;
-				const { words } = readingStats(post.body);
-				const meta = [cat?.label, `${words.toLocaleString("en-US")} words`].filter(Boolean).join(" · ");
+			{rows.map(({ href, date, title, demo, meta, excerpt, action }, i) => {
 				return (
-					<li class="stack__post" data-open={i === 0 ? "" : undefined}>
-						<Mono as="time" class="stack__date" datetime={isoDate(post.data.date)}>
-							{monthYear(post.data.date)}
+					<li class="stack__post" data-open={i === 0 ? "" : undefined} data-demo={demo ? "" : undefined}>
+						<Mono as="time" class="stack__date" datetime={isoDate(date)}>
+							{monthYear(date)}
 						</Mono>
 						<Text as="a" size={4} responsive class="stack__title ds-control" href={href}>
-							{post.data.title}
+							{title}
+							{demo && <Chip class="stack__chip">Demo</Chip>}
 						</Text>
 						<div class="stack__body">
 							<div class="stack__body-inner" data-stack-measure>
 								<div class="stack__text">
 									<Mono class="stack__meta">{meta}</Mono>
-									<Body class="stack__excerpt">{post.data.excerpt}</Body>
+									<Body class="stack__excerpt">{excerpt}</Body>
 								</div>
 								<div class="stack__rail">
 									{/* The second link to the same place: the title is the tab stop. */}
@@ -94,7 +132,7 @@ const ordered = byDateDesc(posts);
 										aria-hidden="true"
 										class="stack__read"
 									>
-										Read
+										{action}
 										<Icon slot="end-icon" name="external" />
 									</Button>
 									<div class="stack__strip" />
@@ -191,6 +229,12 @@ const ordered = byDateDesc(posts);
 		text-decoration-line: underline;
 		text-decoration-thickness: 1px;
 		text-underline-offset: var(--space-1);
+	}
+	/* A demo's marker: the DS chip after its title, on the title's middle.
+	   A chip is an inline box, so the open title's underline stops short of it. */
+	.stack__chip {
+		margin-inline-start: var(--space-2);
+		vertical-align: middle;
 	}
 	/* A closed header is one target: anywhere on it opens the post. */
 	.stack__post:not([data-open]) .stack__date {

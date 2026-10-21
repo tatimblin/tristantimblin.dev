@@ -87,6 +87,15 @@ version here. `PUBLIC_EMBED_BASE` points a build at a local stand-in.
 `tests/embed.spec.ts` routes the bucket to a stub module (set
 `PAINTERLY_DIST=<painterly-scene>/dist` to use the real bundle).
 
+**Demos** are the full-screen form: `src/content/demos/<slug>.md` (all
+frontmatter: title, a one-line description, date, tags, `embed` — a key in
+`embeds.json` — the poster and its alt, optional notes/credits, draft) renders
+at `/demo/<slug>/` (`src/pages/demo/[slug].astro`): `<Embed fullscreen>`
+fills the viewport and mounts at once, with one small DS Card over it. Demos
+are interleaved by date on `/txt` (a DEMO chip), ride in the feed and the
+sitemap, and are numbered on their own (`demo / 001`), never as a txt.
+`tests/demo.spec.ts` covers them.
+
 ## Design system — read before writing UI CSS
 
 The site is built on **`@whois/design-system`** (`theme/design-system`). It

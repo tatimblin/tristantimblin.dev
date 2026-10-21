@@ -41,6 +41,18 @@ export const categoryIds = Object.keys(categories) as [CategoryId, ...CategoryId
 export const tagHref = (tag: string) => `/txt/tag/${tag}/`;
 export const postHref = (id: string) => `/txt/${id}/`;
 
+/** The demos (src/content/demos): full-screen experiments, listed among the
+ *  posts but numbered on their own (`demo / 001`, postNumbers over the demos
+ *  alone) and served at /demo/<id>/. */
+export const DEMOS_BASE = "./src/content/demos";
+export const demoHref = (id: string) => `/demo/${id}/`;
+
+/** Whether an entry is built and listed: always on a dev server (a draft is
+ *  read in place there), and in a production build only when it is not a
+ *  draft. The one filter getPosts and getDemos share. */
+export const isPublished = (entry: { data: { draft: boolean } }, dev: boolean): boolean =>
+	dev || !entry.data.draft;
+
 /** The shape this needs off a collection entry, spelled structurally so the
  *  module does not have to import astro:content. */
 interface Dated {
