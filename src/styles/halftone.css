@@ -1,7 +1,7 @@
 /* HALFTONE PRESETS — the <dotted-grid> tuning for each theme.
  *
  * The element reads its tone from --dg-* custom properties (see
- * packages/dotted-grid/src/tone.ts), re-reading them whenever <html>'s class,
+ * tone.ts in @tristimb/dotted-grid, github.com/tatimblin/dotgrid), re-reading them whenever <html>'s class,
  * data-theme or style changes, so a theme flip re-tunes every grid live, paused
  * ones included. An ATTRIBUTE ON THE ELEMENT BEATS THESE: a tuning attribute
  * left in the markup pins that setting in both themes and the rule here quietly

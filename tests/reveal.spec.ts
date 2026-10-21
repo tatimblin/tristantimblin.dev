@@ -508,7 +508,7 @@ test.describe("ruler — mobile scrubber orientation", () => {
 			// The dissolve lives on .vc__grid — the CLIP alone — and runs from a lead-in
 			// above the caption all the way down to the scene's bottom edge, under the
 			// strip. See the baseline-down scene note in
-			// packages/video-carousel/src/styles.css. It is measured against the clip's box.
+			// @tristimb/video-carousel/styles.css. It is measured against the clip's box.
 			const grid = document.querySelector<HTMLElement>(".hero-carousel .vc__grid")!;
 			const carousel = document.querySelector<HTMLElement>(".hero-carousel")!;
 

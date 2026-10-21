@@ -2,7 +2,7 @@
 // An autoplaying dotted-grid carousel with a date ruler that doubles as a
 // scrubber. The clip data is authored in the markup (one ruler tick per clip,
 // plus the caption) so it degrades gracefully; the <video-carousel> custom
-// element upgrades it. See packages/video-carousel.
+// element upgrades it. See @tristimb/video-carousel (github.com/tatimblin/dotgrid).
 import Mono from "@whois/design-system/Mono";
 import clipsData from "../data/video-clips.json";
 
@@ -52,13 +52,13 @@ interface Props {
 	 * The lattice pitch in CSS px, per instance (a footer card and a full screen
 	 * want different densities). The rest of the look (ink, gamma, cutoff, ...)
 	 * is per THEME, so it is not a prop: it is set with --dg-* custom properties
-	 * on the host's grid (see src/styles/halftone.css and packages/dotted-grid).
+	 * on the host's grid (see src/styles/halftone.css and @tristimb/dotted-grid).
 	 * An attribute would beat those and pin the value in both themes.
 	 */
 	cellSize?: number;
 	/**
 	 * Cap on the halftone's render DPR. The shader's cost is per pixel, so a
-	 * full-bleed consumer passes 1; see effectiveDpr() in packages/dotted-grid for
+	 * full-bleed consumer passes 1; see effectiveDpr() in @tristimb/dotted-grid for
 	 * why it must stay an integer.
 	 */
 	maxDpr?: number;
