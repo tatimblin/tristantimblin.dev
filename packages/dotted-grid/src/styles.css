@@ -4,7 +4,9 @@ dotted-grid {
 	width: 100%;
 	/* No-JS / pre-hydration fallback height; override per-instance. */
 	height: var(--dotted-grid-height, 100vh);
-	background: var(--dotted-grid-bg, var(--color-bg, #000));
+	/* The colour the shader paints as its paper, so the box matches the canvas
+	   before the first frame. Unset, both fall back to --color-bg. */
+	background: var(--dg-paper, var(--dotted-grid-bg, var(--color-bg, #000)));
 	overflow: hidden;
 }
 

@@ -5,9 +5,11 @@ import "../styles/global.css";
 // Asset-arrival reveal (the motion; the scheduling lives in src/lib/reveal.ts and
 // the arming script in this file's <head>).
 import "../styles/reveal.css";
-// The site's four self-hosted faces, plus the metric-matched fallbacks that keep
-// the swap from reflowing the copy.
+// The site's two self-hosted faces (DM Sans, Roboto Mono), plus the
+// metric-matched fallbacks that keep the swap from reflowing the copy.
 import "../styles/fonts.css";
+// Per-theme <dotted-grid> tone presets (--dg-* variables): hero, carousel, footer clip.
+import "../styles/halftone.css";
 // Design-system token cascade (generated DS tokens → site overrides → legacy
 // name bridge). Imported after global.css so its custom properties win.
 import "@whois/design-system/tokens.css";
@@ -34,13 +36,14 @@ type Props = ComponentProps<typeof Seo>;
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		{/* Preload the faces every page paints above the fold, so the swap lands
-		     before first scroll rather than after fonts.css is parsed. Both Migra
-		     cuts: the hero lockup uses both. `crossorigin` is required even
-		     same-origin — fonts fetch in CORS mode, and a preload without it is
-		     discarded and fetched twice. Unused cuts are left out on purpose. */}
+		     before first scroll rather than after fonts.css is parsed: the body
+		     face's Regular and DM Sans Medium (the hero lockup and headings).
+		     `crossorigin` is required even same-origin — fonts fetch in CORS mode,
+		     and a preload without it is discarded and fetched twice. Unused cuts
+		     are left out on purpose. */}
 		<link
 			rel="preload"
-			href="/fonts/RobotoMono-300-latin.woff2"
+			href="/fonts/RobotoMono-400-latin.woff2"
 			as="font"
 			type="font/woff2"
 			crossorigin

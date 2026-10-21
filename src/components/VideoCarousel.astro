@@ -49,40 +49,13 @@ interface Props {
 	xfadeMode?: "threshold" | "rain";
 	xfadeLive?: boolean;
 	/**
-	 * The halftone look, per instance — a default that suits the footer card does
-	 * not suit a full screen. `cellSize` is the lattice pitch (finer at roughly
-	 * constant coverage); `dotScale` shrinks the dot inside an unchanged cell,
-	 * which is what reads as "smaller dots". Defaults are the widget's values.
+	 * The lattice pitch in CSS px, per instance (a footer card and a full screen
+	 * want different densities). The rest of the look (ink, gamma, cutoff, ...)
+	 * is per THEME, so it is not a prop: it is set with --dg-* custom properties
+	 * on the host's grid (see src/styles/halftone.css and packages/dotted-grid).
+	 * An attribute would beat those and pin the value in both themes.
 	 */
 	cellSize?: number;
-	dotScale?: number;
-	levels?: number;
-	gamma?: number;
-	contrast?: number;
-	/**
-	 * Dot colour. Omit so the element falls back to --color-fg and inverts with the
-	 * theme; pass a fixed colour only for a scene that reads against BOTH backdrops
-	 * (a "#fff" default once made the light theme's halftone vanish).
-	 */
-	color?: string;
-	/** The sparse-field levers, forwarded to the element; see packages/dotted-grid. */
-	cutoff?: number;
-	feather?: number;
-	denoise?: number;
-	crosshatch?: number;
-	/**
-	 * Tone overrides for the light theme (the element's `light-*` attributes): a
-	 * dark speck on a light page reads fainter than a light dot glowing on dark,
-	 * so light usually wants more ink.
-	 */
-	light?: {
-		gamma?: number;
-		contrast?: number;
-		cutoff?: number;
-		feather?: number;
-		dotScale?: number;
-		levels?: number;
-	};
 	/**
 	 * Cap on the halftone's render DPR. The shader's cost is per pixel, so a
 	 * full-bleed consumer passes 1; see effectiveDpr() in packages/dotted-grid for
@@ -120,19 +93,9 @@ const {
 	xfadeMode,
 	xfadeLive,
 	cellSize = 7,
-	dotScale,
 	maxDpr,
 	captionOverlay = false,
 	rulerBaseline,
-	levels = 15,
-	gamma = 0.5,
-	contrast = 1.2,
-	color,
-	cutoff,
-	feather,
-	denoise,
-	crosshatch,
-	light = {},
 } = Astro.props;
 
 const first = clips[0];
@@ -183,21 +146,6 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 				no-loop
 				max-dpr={maxDpr}
 				cell-size={cellSize}
-				dot-scale={dotScale}
-				levels={levels}
-				gamma={gamma}
-				contrast={contrast}
-				color={color}
-				cutoff={cutoff}
-				feather={feather}
-				denoise={denoise}
-				crosshatch={crosshatch}
-				light-gamma={light.gamma}
-				light-contrast={light.contrast}
-				light-cutoff={light.cutoff}
-				light-feather={light.feather}
-				light-dot-scale={light.dotScale}
-				light-levels={light.levels}
 				intro={intro}
 				intro-delay={introDelay}
 				xfade={xfade}

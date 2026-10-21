@@ -38,39 +38,32 @@
 	 * hence the -weight companions. Reach for the pair together; setting the
 	 * family without the weight lands on whichever cut the browser thinks is
 	 * closest. */
-	--font-hero: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+	--font-hero: "DM Sans", "DM Sans Fallback", ui-sans-serif, system-ui, sans-serif;
 	--font-hero-weight: var(--font-weight-500);
-	--font-ui: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+	--font-ui: "DM Sans", "DM Sans Fallback", ui-sans-serif, system-ui, sans-serif;
 	--font-heading: var(--font-ui);
 	--font-heading-weight: var(--font-weight-500);
 	--font-display: var(--font-ui);
 	--font-display-weight: var(--font-weight-500);
-	--font-body: "Roboto Mono", ui-monospace, monospace;
+	--font-body: "Roboto Mono", "Roboto Mono Fallback", ui-monospace, monospace;
 
-	/* The step ABOVE the generated weight scale, which stops at 600 (560): the
-	 * Bold cut Mondwest and Migra both ship. tokens.generated.css is re-emitted
-	 * from the upstream package, so it cannot be extended there without the next
-	 * regeneration dropping the addition. A request for 600 on a family with a
-	 * 400 and a 700 would land on the 700 anyway; naming it means the emphasis
-	 * asks for the cut it gets. (The generated 500/600 remain for a face that
-	 * has them — Neue Montreal's Semibold.) */
+	/* The step ABOVE the generated weight scale, which stops at 600 (560): DM
+	 * Sans ships a Bold. tokens.generated.css is re-emitted from the upstream
+	 * package, so it cannot be extended there without the next regeneration
+	 * dropping the addition. Naming it means the emphasis asks for the cut it
+	 * gets. */
 	--font-weight-700: 700;
-	/* And the step BELOW it, for the same reason: Mondwest's Thin cut, the
-	 * display role's weight. (The Light, 300, holds no role and has no name.) */
-	--font-weight-200: 200;
 
 	/* The BODY role's companions, named the same way --font-hero-weight names
-	 * Migra's cut. --font-body says which FACE reading text is set in; these say
-	 * how it is SET, so "body text" is one decision in one place instead of a size
-	 * and a line-height retyped at every call site. Consumed by .ds-body
+	 * the hero's cut. --font-body says which FACE reading text is set in; these
+	 * say how it is SET, so "body text" is one decision in one place instead of a
+	 * size and a line-height retyped at every call site. Consumed by .ds-body
 	 * (styles/body.css) — reach for the component, not these, at a call site.
 	 *
-	 * A grotesk at 16px, on its own leading: 1.6 — Neue Montreal's tall ascenders
-	 * already open the line, and a paragraph at 1.7 (the bitmap face's setting)
-	 * drifts. No tracking: the 0.3px the previous body face carried was a
-	 * correction for its tight counters, which a text grotesk does not need. */
+	 * The old Vue site's setting: a mono at 14px on 1.33. Regular (400), not the
+	 * old site's Light — 300 reads thin and grey in the narrow columns here. */
 	--font-body-size: var(--font-size-1);
-	--font-body-weight: 300;
+	--font-body-weight: var(--font-weight-400);
 	--font-body-line-height: 1.33;
 	--font-body-letter-spacing: 0;
 
@@ -150,7 +143,7 @@
 	 * and inline code: the system mono stack, no file loaded, since code wants a
 	 * real monospace and what a reader's terminal already looks like. The label
 	 * voice (Mono, the caps) is the UI face. */
-	--font-code: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+	--font-code: "Roboto Mono", "Roboto Mono Fallback", ui-monospace, SFMono-Regular, Menlo, monospace;
 
 	/* MOTION -----------------------------------------------------------------
 	 * The DS ships no easing/duration tokens, so every timing on the site used to

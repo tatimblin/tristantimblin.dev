@@ -59,13 +59,6 @@
 	z-index: 1;
 }
 
-/* The clip prints in the theme's SOFT halftone ink: the clip IS the widget, a
-   cell among text tiles, so at the hero's full ink it reads as type-weight
-   specks. <dotted-grid> resolves --color-fg from its own computed style and
-   re-reads it on every theme change, so scoping the alias here is enough. */
-.wx-videos dotted-grid {
-	--color-fg: var(--halftone-ink-soft);
-}
 
 /* FILL THE CELL. The clip IS the widget, so the carousel is `fill` (its own
    attribute, video-carousel/styles.css): the stage takes the whole 1×2 cell
