@@ -1,0 +1,62 @@
+name: Build and deploy
+
+# The one place the site is built and published. Called by deploy.yml (master
+# pushes, after the test gate when code changed) and by nightly.yml (after a
+# data commit). No Playwright here: just the production build, a smoke test of
+# the built dist, and the Cloudflare Pages deploy.
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit to build. Empty means the caller's github.sha.
+        type: string
+        default: ""
+    secrets:
+      CLOUDFLARE_API_TOKEN:
+        required: true
+      CLOUDFLARE_ACCOUNT_ID:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # One production deploy at a time across BOTH callers, and never interrupt a
+    # live one. A newer queued deploy replaces an older queued one, which is fine:
+    # the newer one builds the newer commit.
+    concurrency:
+      group: cloudflare-pages-production
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # nightly.yml passes the data commit it just pushed; its own github.sha
+          # is the commit from BEFORE that push.
+          ref: ${{ inputs.ref || github.sha }}
+          # Pull the actual video/audio bytes (stored in Git LFS), not the
+          # pointer files — otherwise the build ships broken media.
+          lfs: true
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Production build
+        run: bun run build
+
+      # Serves dist with `astro preview` and checks /, /txt/, a post and a 404.
+      - name: Smoke test
+        run: bun tools/smoke/smoke.mjs
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=tristantimblin --branch=master
