@@ -10,7 +10,8 @@
 		display: flex;
 		flex: none;
 		min-inline-size: 0;
-		border-block-start: 1px solid var(--hairline);
+		border-block-start: var(--border);
+		border-radius: var(--radius-box);
 		font-family: var(--font-ui);
 	}
 	.ds-stat-strip > * {
@@ -22,7 +23,7 @@
 		justify-content: center;
 		gap: var(--space-1);
 		padding: var(--space-2) var(--space-3);
-		border-inline-end: 1px solid var(--hairline);
+		border-inline-end: var(--border);
 	}
 	/* A Stat cell keeps its own two-line layout; the strip only sets the box. */
 	.ds-stat-strip > .ds-stat {

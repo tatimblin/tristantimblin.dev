@@ -1,41 +1,41 @@
 /* Anchor — port of the DS styled('a', { …, variants }), on the site's
-   motion tokens and with its private properties prefixed. */
+   motion tokens and with its private properties prefixed.
+
+   Every link is the one link: the link colour, underlined at rest, plain
+   under the pointer (the --link-* tokens). The underline is a text
+   decoration, never a border, so it lays nothing out. */
 .ds-anchor {
 	font-size: inherit;
 	line-height: inherit;
-	color: var(--anchor-color, var(--hyperlink));
+	color: var(--anchor-color, var(--link-color));
 	font-weight: inherit;
 	word-break: break-word;
-	text-decoration: none;
-	transition:
-		border-color var(--duration-swap) var(--ease-reveal),
-		color var(--duration-swap) var(--ease-reveal);
+	text-decoration-line: var(--link-decoration);
+	text-decoration-thickness: var(--link-underline-thickness);
+	text-underline-offset: var(--link-underline-offset);
+	transition: color var(--duration-standard) var(--ease-standard);
 
-	--anchor-hover-color: var(--text-primary);
+	--anchor-hover-color: var(--link-hover-color);
 }
 
 .ds-anchor:focus {
-	--anchor-color: var(--anchor-hover-color, var(--accent));
+	--anchor-color: var(--anchor-hover-color, var(--link-hover-color));
 	--anchor-arrow-shift: var(--anchor-arrow-translation, 0);
+	text-decoration-line: var(--link-decoration-hover);
 }
 
 @media (hover: hover) and (pointer: fine) {
 	.ds-anchor:hover {
-		--anchor-color: var(--anchor-hover-color, var(--accent));
+		--anchor-color: var(--anchor-hover-color, var(--link-hover-color));
 		--anchor-arrow-shift: var(--anchor-arrow-translation, 0);
+		text-decoration-line: var(--link-decoration-hover);
 	}
 }
 
-/* ink — the primary ink at rest, the accent under the pointer or focus. */
-.ds-anchor--variant-ink {
-	--anchor-color: var(--text-primary);
-	--anchor-hover-color: var(--accent);
-}
-
-/* discreet */
-.ds-anchor--discreet-true {
-	--anchor-color: var(--text-tertiary);
-}
+/* ink and discreet — once the primary and the tertiary ink at rest. The
+   design has one link colour, so both now read as every other link; the
+   props stay (the port's API), and a page that wants a quieter link scopes
+   --link-color. */
 
 /* external */
 .ds-anchor--external-true {
@@ -99,23 +99,6 @@
 		scaleX(var(--anchor-arrow-direction, 1));
 }
 
-/* underline */
-.ds-anchor--underline-true {
-	border-bottom: 1px solid;
-	border-color: var(--anchor-border-color, transparent);
-
-	--anchor-hover-color: unset;
-}
-.ds-anchor--underline-true:focus {
-	--anchor-border-color: var(--accent);
-}
-@media (hover: hover) and (pointer: fine) {
-	.ds-anchor--underline-true:hover {
-		--anchor-border-color: var(--accent);
-	}
-}
-/* underline="always": drawn at rest, in the text's own colour; the accent
-   still takes it under the pointer (the rules above). */
-.ds-anchor--underline-always {
-	--anchor-border-color: currentColor;
-}
+/* underline / underline="always" — once a border drawn under the pointer, or
+   at rest. Every link is underlined at rest now (the base rule), so the prop
+   adds nothing; it stays for the port's API. */

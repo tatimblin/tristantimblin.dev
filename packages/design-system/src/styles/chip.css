@@ -1,11 +1,13 @@
-/* Chip — the boxed chip: a square box of caps mono in a hairline, no fill.
- * The ruled screen's tag and its toggle, where Pill is the capsule with a
- * wash. Selected (aria-current, or aria-pressed="true") is the ink as a solid
- * fill with the page colour on it — the one filled thing on a ruled row, so
- * the current filter reads at a glance.
+/* Chip — the tag: a small box of caps mono on the first wash, the old blog's
+ * tag. The ruled screen's tag and its toggle (the footer's SOUND / DARK, the
+ * /txt filters). Selected (aria-current, or aria-pressed="true") steps the
+ * wash up to the third and the ink up with it, so the current filter reads
+ * at a glance without a solid block on a quiet row.
  *
  * The voice (face, size, tracking, case) is the `ds-mono ds-caps` classes
- * Chip.astro composes; this file is the box and the colour. */
+ * Chip.astro composes; this file is the box and the colour. The edge is
+ * there but transparent by default (--chip-border), so a tone that draws one
+ * changes no size. */
 .ds-chip {
 	display: inline-flex;
 	align-items: center;
@@ -15,18 +17,17 @@
 	box-sizing: border-box;
 	min-block-size: var(--space-5);
 	padding: 0 var(--space-2);
-	border: 1px solid var(--chip-border, var(--hairline));
-	border-radius: 0;
+	border: var(--border-width) solid var(--chip-border, transparent);
+	border-radius: var(--radius-box);
 	white-space: nowrap;
 	text-decoration: none;
 	user-select: none;
-	background: var(--chip-background, transparent);
-	color: var(--chip-color, var(--text-secondary));
-	/* A micro-transition on a small control: felt, not watched. */
+	background: var(--chip-background, var(--wash-1));
+	color: var(--chip-color, var(--text-subtle));
 	transition:
-		background var(--duration-quick) var(--ease-reveal),
-		color var(--duration-quick) var(--ease-reveal),
-		border-color var(--duration-quick) var(--ease-reveal);
+		background var(--duration-standard) var(--ease-standard),
+		color var(--duration-standard) var(--ease-standard),
+		border-color var(--duration-standard) var(--ease-standard);
 }
 
 /* A static one is not a control: no text cursor over it. At zero
@@ -34,18 +35,16 @@
 :where(.ds-chip) {
 	cursor: default;
 }
-/* Selected: filled with the ink. */
+/* Selected: the third wash, the secondary ink. */
 .ds-chip[aria-current],
 .ds-chip[aria-pressed="true"] {
-	--chip-background: var(--text-primary);
-	--chip-color: var(--background);
-	--chip-border: var(--text-primary);
+	--chip-background: var(--wash-3);
+	--chip-color: var(--text-secondary);
 }
 
-/* As a control (Chip.astro composes `ds-control`): the hover step. */
-:is(button, a).ds-chip:not([aria-current], [aria-pressed="true"]):hover:not(:disabled),
-:is(button, a).ds-chip:not([aria-current], [aria-pressed="true"]):focus-visible {
-	--chip-border: var(--hairline-strong);
+/* As a control (Chip.astro composes `ds-control`): the hover step, the ink. */
+:is(button, a).ds-chip:hover:not(:disabled),
+:is(button, a).ds-chip:focus-visible {
 	--chip-color: var(--text-primary);
 }
 

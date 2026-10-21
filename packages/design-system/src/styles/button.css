@@ -3,8 +3,9 @@
  * hover, and none of that survives on a flat surface. Three variants, which
  * are three amounts of emphasis:
  *
- *   primary    filled with the accent — the one action a card asks for.
- *   secondary  an ink wash — the reference's flat dark-grey `Deploy ▸`.
+ *   primary    the dashed CTA in the link colour — the one action a card
+ *              asks for.
+ *   secondary  the first wash.
  *   tertiary   nothing until pointed at.
  *
  * Set in the structure voice (caps mono), because a button's label is a
@@ -25,15 +26,15 @@
 		gap: var(--space-1);
 		flex-shrink: 0;
 		box-sizing: border-box;
-		border: 1px solid transparent;
+		border: var(--border-width) var(--border-style) var(--button-border, transparent);
 		white-space: nowrap;
 		block-size: var(--space-6);
 		inline-size: max-content;
 		padding: 0 var(--space-4);
-		border-radius: var(--border-radius-1);
+		border-radius: var(--radius-box);
 		transition:
-			background var(--duration-swap) var(--ease-reveal),
-			color var(--duration-swap) var(--ease-reveal),
+			background var(--duration-standard) var(--ease-standard),
+			color var(--duration-standard) var(--ease-standard),
 			transform var(--duration-swap) var(--ease-reveal);
 
 		background: var(--button-background, transparent);
@@ -64,24 +65,29 @@
 		padding-inline-end: var(--space-3);
 	}
 
-	/* variant: primary */
+	/* variant: primary — the dashed CTA: the panel's edge round the panel
+	   header's fill, the label in the link colour; flat on the first wash
+	   under the pointer. */
 	.ds-button--variant-primary {
-		--button-background: var(--accent);
-		--button-color: var(--on-accent);
+		--button-background: var(--panel-header-bg);
+		--button-color: var(--link-color);
+		--button-border: var(--border-color);
 	}
 	.ds-button--variant-primary:hover:not(:disabled),
 	.ds-button--variant-primary:focus-visible {
-		--button-background: var(--accent-hover);
+		--button-background: var(--wash-1);
+		--button-color: var(--link-hover-color);
 	}
 
-	/* variant: secondary */
+	/* variant: secondary — the first wash, the tag's quiet ink. */
 	.ds-button--variant-secondary {
-		--button-background: var(--wash-2);
-		--button-color: var(--text-primary);
+		--button-background: var(--wash-1);
+		--button-color: var(--text-secondary);
 	}
 	.ds-button--variant-secondary:hover:not(:disabled),
 	.ds-button--variant-secondary:focus-visible {
-		--button-background: var(--wash-3);
+		--button-background: var(--wash-2);
+		--button-color: var(--text-primary);
 	}
 
 	/* variant: tertiary */
@@ -104,5 +110,6 @@
 	.ds-button--variant-primary.ds-button--inverted-true {
 		--button-background: var(--text-primary);
 		--button-color: var(--background);
+		--button-border: transparent;
 	}
 }

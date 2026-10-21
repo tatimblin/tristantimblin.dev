@@ -1,13 +1,13 @@
 /* Blockquote — the quote on the ruled page. No fill and no corner; a bar of
  * the accent (--bar-width) down the left edge — the one place the accent
  * appears in a post's text — and the words a step up from the paragraph:
- * the body face still, at --font-size-5 on the UI leading, in the primary
+ * the body face still, at --font-size-4 on the UI leading, in the primary
  * ink. The Body inside reads the body role's tokens, so the retune is those
  * tokens in scope, the way Prose retunes its headings. The attribution is a
  * `footer` in the caps mono (Mono's classes, emitted by the plugin or
  * written as `<Mono as="footer">`), a step under the words. */
 .ds-blockquote {
-	--font-body-size: var(--font-size-5);
+	--font-body-size: var(--font-size-4);
 	--font-body-line-height: var(--line-height-ui);
 	margin: 0;
 	padding: 0 0 0 var(--space-4);

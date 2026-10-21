@@ -1,11 +1,17 @@
-/* Hairline — a 1px rule that fades out at both ends (the reference
- * dashboard's header divider, the same gradient the card header draws). */
+/* Hairline — a rule: the one edge (--border) drawn across its container. */
 .ds-hairline {
 	display: block;
 	flex: none;
 	margin: 0;
 	border: 0;
+	border-block-start: var(--border);
 	inline-size: 100%;
-	block-size: 1px;
+	block-size: 0;
+}
+/* variant="fade": the OPT-IN divider that fades out at both ends, a 1px
+   gradient (--hairline-fade) in place of the edge. */
+.ds-hairline--variant-fade {
+	border-block-start: 0;
+	block-size: var(--border-width);
 	background: var(--hairline-fade);
 }

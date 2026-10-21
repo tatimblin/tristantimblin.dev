@@ -1,8 +1,9 @@
 ---
-// EM — DS <Text as="em" variant="tertiary" />: the emphasis is the quieter
-// ink and the element's own italic. (Upstream also set weight 500 and a
-// -0.3px letter-spacing; the body face has no 500 cut, and an absolute
-// tracking is right at one size only.)
+// EM — DS <Text as="em" variant="secondary" />: the emphasis is the quieter
+// ink and the element's own italic. (Upstream used the tertiary ink, weight
+// 500 and a -0.3px letter-spacing; the tertiary step is the faintest meta ink
+// here, too light for a word inside a sentence, and an absolute tracking is
+// right at one size only.)
 import Text from "./Text.astro";
 
 interface Props {
@@ -14,6 +15,6 @@ interface Props {
 const props = Astro.props;
 ---
 
-<Text {...props} as="em" variant="tertiary">
+<Text {...props} as="em" variant="secondary">
 	<slot />
 </Text>

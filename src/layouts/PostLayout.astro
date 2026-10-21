@@ -204,19 +204,19 @@ const neighbourRows = [
 	/* THE GRID. Four columns a step apart, the tokens the ruled Prose reads
 	   too, so the page's rows and the sections fall on the same lines. The
 	   page's headings — the title here, the section heads through Prose — on
-	   the UI face at the semibold, by the heading tokens in scope. */
+	   the UI face at its Medium, by the heading tokens in scope. */
 	.post {
 		--ruled-columns: repeat(4, minmax(0, 1fr));
 		--ruled-gap: var(--space-4);
 		--font-heading: var(--font-ui);
-		--font-heading-weight: var(--font-weight-700);
+		--font-heading-weight: var(--font-weight-500);
 	}
 
 	/* THE STATUS STRIP. One row between the strong hairlines, the date on
 	   the right edge. */
 	.post__strip {
 		margin-block-start: var(--space-10);
-		border-block: 1px solid var(--hairline-strong);
+		border-block: var(--border);
 	}
 	.post__cell {
 		padding-block: var(--space-2);

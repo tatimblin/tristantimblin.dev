@@ -84,8 +84,11 @@
    cell; the body fills the cell below the header and stacks its children with
    the widget gap. min-block-size: 0 so a flex child that measures itself (a
    tile grid, a chart) can shrink to the cell instead of forcing it taller. */
+/* The header keeps card.css's block padding (the panel header is one fixed
+   band, cut off by its edge) and takes the fluid pad on the inline axis only,
+   so its title lines up with the body's content. */
 .ds-widget > .ds-card-header {
-	padding: var(--widget-pad) var(--widget-pad) var(--space-3);
+	padding-inline: var(--widget-pad);
 }
 .ds-widget > .ds-card-body {
 	flex: 1 1 auto;
@@ -96,11 +99,11 @@
 	padding: var(--widget-pad);
 }
 .ds-widget > .ds-card-header + .ds-card-body {
-	padding-block-start: var(--space-3);
+	padding-block-start: var(--space-4);
 }
-/* COMPACT TILES: the header row closes up a step, since every pixel of a
-   small cell that the header takes is one the body's graphic loses, and the
-   caps tighten to the mono tracking — the full caps tracking costs a word a
+/* COMPACT TILES: the body closes up under the header a step, since every
+   pixel of a small cell that the chrome takes is one the body's graphic
+   loses, and the caps tighten to the mono tracking — the full caps tracking costs a word a
    line — by retuning the token the caps role reads, in scope. These are
    rules about the CELL, so they are a container query on the grid: the
    fluid scale above is keyed to a 300px reference cell, and a two-column
@@ -110,11 +113,8 @@
 	.ds-widget {
 		--tracking-caps: var(--tracking-mono);
 	}
-	.ds-widget > .ds-card-header {
-		padding-block: var(--space-3) var(--space-2);
-	}
 	.ds-widget > .ds-card-header + .ds-card-body {
-		padding-block-start: var(--space-2);
+		padding-block-start: var(--space-3);
 	}
 }
 

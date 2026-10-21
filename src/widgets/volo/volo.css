@@ -36,7 +36,7 @@
 	block-size: 0.7em;
 	border-radius: var(--border-radius-pill);
 	background: var(--text-tertiary);
-	box-shadow: 0 0 0 1px var(--hairline);
+	box-shadow: 0 0 0 var(--border-width) var(--hairline);
 }
 
 /* HEADER META -------------------------------------------------------------
@@ -127,7 +127,7 @@
 	/* Stretch so the rule is drawn at the ROW's top edge, and the four cells'
 	   rules meet as one hairline. */
 	align-self: stretch;
-	border-block-start: 1px solid var(--hairline);
+	border-block-start: var(--border);
 }
 .wx-vl-game:first-child > :not(.wx-vl-round) {
 	border-block-start: none;

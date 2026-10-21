@@ -1,13 +1,10 @@
-/* VUE RESKIN prototype override layer — delete this import to revert. */
-@import "./vue-reskin.css";
-
 /* Design-system tokens (spacing --space-*, type --font-size-*, colors, radii,
    fonts, the type roles) come from @whois/design-system/tokens.css, imported
    AFTER this file in Layout.astro. This block defines only what the DS layer
    does NOT provide: the site container. Everything else the site's CSS reads
    is a DS token. */
 :root {
-  --container-max: 1200px;
+  --container-max: 976px;
   --container-pad: clamp(1rem, 4vw, 2rem);
   /* THE CONTAINER AS AN INSET — the one source for every full-width row that
      sits in the site's container: the site header, the homepage's hero and
@@ -38,14 +35,15 @@
   display: none !important;
 }
 
-.maximeheckel-light {
-  color-scheme: light;
-}
-.maximeheckel-dark {
-  color-scheme: dark;
+/* The page colour on the root too, so an overscroll or a page shorter than the
+   viewport shows the theme's page rather than the UA's white. (Each theme's
+   color-scheme is set with its palette, tokens/themes/*.css.) */
+html {
+  background: var(--background);
 }
 
 body {
+  min-height: 100%;
   margin: 0;
   /* The BODY role, as the DS Body component sets it (tokens.overrides.css):
      anything not set by a component reads as reading text. */
@@ -122,6 +120,20 @@ h1:where(:not(.ds-heading)) {
 
 h2:where(:not(.ds-heading)) {
   font-size: var(--font-size-7);
+}
+
+/* A bare link in running text (one written as a plain <a>, not an Anchor)
+   reads as the Anchor does: the link tokens, underlined at rest. Unclassed
+   only, so a Pill or a Chip rendered as an <a> keeps its own box. */
+:where(.ds-prose, .ds-body, main p) a:not([class]) {
+  color: var(--link-color);
+  text-decoration-line: var(--link-decoration);
+  text-decoration-thickness: var(--link-underline-thickness);
+  text-underline-offset: var(--link-underline-offset);
+}
+:where(.ds-prose, .ds-body, main p) a:not([class]):is(:hover, :focus-visible) {
+  color: var(--link-hover-color);
+  text-decoration-line: var(--link-decoration-hover);
 }
 
 img {
