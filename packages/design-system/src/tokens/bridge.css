@@ -27,7 +27,7 @@
 
 :root {
 	/* Colors — map the packages' names to DS semantic tokens. */
-	--color-bg: var(--gray-100);
+	--color-bg: var(--background);
 	--color-fg: var(--text-primary);
 	--color-muted: var(--text-tertiary);
 	--color-border: var(--border-color);

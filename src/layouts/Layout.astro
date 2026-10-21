@@ -26,7 +26,7 @@ type Props = ComponentProps<typeof Seo>;
      so we manage the class ourselves. The server renders the dark class and the
      inline head script below re-applies any stored choice before first paint, so
      tokens resolve with no JS dependency and no FOUC. */}
-<html lang="en" class="maximeheckel-dark">
+<html lang="en" class="maximeheckel-light">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -40,35 +40,14 @@ type Props = ComponentProps<typeof Seo>;
 		     discarded and fetched twice. Unused cuts are left out on purpose. */}
 		<link
 			rel="preload"
-			href="/fonts/neue-montreal-regular.woff2"
+			href="/fonts/RobotoMono-300-latin.woff2"
 			as="font"
 			type="font/woff2"
 			crossorigin
 		/>
 		<link
 			rel="preload"
-			href="/fonts/ppmondwest-regular.woff2"
-			as="font"
-			type="font/woff2"
-			crossorigin
-		/>
-		<link
-			rel="preload"
-			href="/fonts/fs-mondwest-bold.woff2"
-			as="font"
-			type="font/woff2"
-			crossorigin
-		/>
-		<link
-			rel="preload"
-			href="/fonts/migra-medium.woff2"
-			as="font"
-			type="font/woff2"
-			crossorigin
-		/>
-		<link
-			rel="preload"
-			href="/fonts/migra-bold.woff2"
+			href="/fonts/DMSans-500-latin.woff2"
 			as="font"
 			type="font/woff2"
 			crossorigin
@@ -92,7 +71,7 @@ type Props = ComponentProps<typeof Seo>;
 					r.classList.add("maximeheckel-" + t);
 				};
 				function apply() {
-					window.__setTheme(localStorage.getItem("theme") === "light" ? "light" : "dark");
+					window.__setTheme(localStorage.getItem("theme") === "dark" ? "dark" : "light");
 				}
 				apply();
 				document.addEventListener("astro:after-swap", apply);

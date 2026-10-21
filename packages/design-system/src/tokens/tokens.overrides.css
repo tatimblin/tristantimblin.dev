@@ -496,3 +496,89 @@
 	--scene-glow: none;
 	--scene-text-glow: none;
 }
+
+/* VUE RESKIN (prototype) -----------------------------------------------------
+ * The old Vue site's visual language, routed through the tokens: cream page,
+ * near-white cards, warm-gray dashed edges, DM Sans + Roboto Mono, the bright
+ * link blue as the one accent. Last in the file, so it wins over the blocks
+ * above. Component rules the tokens cannot reach live in
+ * src/styles/vue-reskin.css. */
+:root {
+	--font-hero: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+	--font-hero-weight: 500;
+	--font-ui: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+	--font-heading: var(--font-ui);
+	--font-heading-weight: 500;
+	--font-display: var(--font-ui);
+	--font-display-weight: 500;
+	--font-body: "Roboto Mono", ui-monospace, monospace;
+	--font-body-size: var(--font-size-1);
+	--font-body-weight: 300;
+	--font-body-line-height: 1.33;
+	--font-code: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+	--tracking-hero: -0.03em;
+	--tracking-caps: 0.0625em; /* 0.75px at 12px */
+	--tracking-mono: 0.02em;
+	--line-height-heading: 1.1;
+
+	/* The old site's one radius, 2.5px, everywhere a box is rounded. */
+	--border-radius-0: 2.5px;
+	--border-radius-1: 2.5px;
+	--border-radius-2: 2.5px;
+	--border-radius-3: 2.5px;
+	--border-radius-tile: 2px;
+	--art-radius: 2.5px;
+
+	/* The old palette, by name. */
+	--vue-cream: #fff8eb;
+	--vue-panel: #fdfdfd;
+	--vue-pale-blue: #f1f4f7;
+	--vue-shadow-blue: #d1dbe4;
+	--vue-blue: #0276fd;
+	--vue-gray-40: #aaa9a6;
+	--vue-gray-50: #727270;
+	--vue-gray-70: #525250;
+	--vue-gray-90: #191918;
+	--vue-gray-20: #f5f5f3;
+	--vue-border: 1px dashed var(--vue-gray-40);
+	--vue-shadow: 0 1px 0 1px var(--vue-shadow-blue);
+	--vue-header: linear-gradient(var(--vue-panel) 50%, var(--vue-pale-blue));
+	--vue-ease: cubic-bezier(0.645, 0.045, 0.355, 1);
+
+	--container-max: 976px;
+}
+.maximeheckel-light {
+	--background: var(--vue-cream);
+	--gray-100: var(--vue-cream);
+	--card-background: var(--vue-panel);
+	--gray-200: var(--vue-panel);
+	--gray-300: var(--vue-pale-blue);
+	--border-color: var(--vue-gray-40);
+	--text-primary: #000;
+	--text-secondary: var(--vue-gray-70);
+	--text-tertiary: var(--vue-gray-40);
+	--hyperlink: var(--vue-blue);
+	--code-snippet-background: var(--vue-pale-blue);
+
+	--accent: var(--vue-blue);
+	--on-accent: #fff;
+	--accent-hover: oklch(from var(--vue-blue) calc(l - 0.06) c h);
+	/* Lit tiles: a muted, paler blue rather than the full link blue. */
+	--lit: oklch(from var(--vue-blue) calc(l + 0.08) calc(c * 0.55) h);
+	--hairline: var(--vue-gray-40);
+	--hairline-strong: var(--vue-gray-40);
+	--hairline-fade: repeating-linear-gradient(
+		to right,
+		var(--vue-gray-40) 0 3px,
+		transparent 3px 6px
+	);
+	--wash-1: var(--vue-pale-blue);
+	--wash-2: color-mix(in oklab, var(--vue-shadow-blue) 70%, var(--vue-pale-blue));
+	--wash-3: var(--vue-shadow-blue);
+	--tone-5: var(--vue-shadow-blue);
+
+	--art-plate: var(--vue-pale-blue);
+	--art-edge: var(--vue-gray-40);
+	--art-ink: var(--vue-gray-70);
+	--art-coral: var(--vue-blue);
+}

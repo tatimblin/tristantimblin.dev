@@ -1,3 +1,6 @@
+/* VUE RESKIN prototype override layer — delete this import to revert. */
+@import "./vue-reskin.css";
+
 /* Design-system tokens (spacing --space-*, type --font-size-*, colors, radii,
    fonts, the type roles) come from @whois/design-system/tokens.css, imported
    AFTER this file in Layout.astro. This block defines only what the DS layer
