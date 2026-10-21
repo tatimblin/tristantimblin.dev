@@ -24,6 +24,12 @@
 	--border-color: #6b665d;
 	--input-border: var(--border-color);
 	--panel-outline: #262a30;
+	/* The header fade, quieter than light's: the full slate wash reads as a
+	   lit band on a dark panel, so fade only a third of the way toward it. */
+	--panel-header-bg: linear-gradient(
+		var(--card-background) 50%,
+		color-mix(in oklab, var(--wash-1) 35%, var(--card-background))
+	);
 
 	/* INK. A warm off-white, then three warm greys down. */
 	--text-primary: #f3eee4;
