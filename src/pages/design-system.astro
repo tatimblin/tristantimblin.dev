@@ -75,6 +75,8 @@ import Fig from "@whois/design-system/Fig";
 import Img from "../components/mdx/Img.astro";
 import aptitudePass from "../content/txt/images/aptitude-pass.webp";
 import aptitudeFail from "../content/txt/images/aptitude-fail.webp";
+import Embed from "../components/Embed.astro";
+import sutroPoster from "../content/txt/images/sutro-painterly.webp";
 import Index from "@whois/design-system/Index";
 import IndexRow from "@whois/design-system/IndexRow";
 import HitArea from "@whois/design-system/HitArea";
@@ -1223,6 +1225,26 @@ assertions:
 						<Img src={aptitudeFail} alt="Aptitude CLI failing" />
 					</Fig>
 				</div>
+			</div>
+		</section>
+
+		<section class="ds-demo__section" id="embed">
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Embed — a live experiment in a Fig</Heading>
+			<p class="ds-demo__note">
+				A site component (<code>src/components/Embed.astro</code>), shown here because it
+				dresses a <code>Fig</code>. The poster stands in until the frame is a screen away;
+				then the module named in <code>src/data/embeds.json</code> is imported from its
+				bucket and mounted over it, and destroyed again two screens out. With no WebGL, a
+				failed import, or reduced motion and no still frame, the poster stays.
+			</p>
+			<div style="max-inline-size: var(--measure-prose);">
+				<Embed
+					name="painterly-scene"
+					no="03"
+					poster={sutroPoster}
+					alt="A painterly grassy hill, Sutro Tower on a hazy far ridge, cumulus across a blue sky"
+					caption="Sutro, from painterly-scene"
+				/>
 			</div>
 		</section>
 
