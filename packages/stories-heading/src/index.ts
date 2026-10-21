@@ -60,6 +60,9 @@ export class StoriesHeadingElement extends HTMLElement {
 	private heading: HTMLElement | null = null;
 	private wordmarkSvg: SVGSVGElement | null = null;
 	private wordmarkText: SVGTextElement | null = null;
+	/** A hidden, viewBox-less twin of the wordmark's <text>, measured in place of the
+	    real one. See bboxAtUnitScale(). */
+	private bboxProbe: SVGSVGElement | null = null;
 	/** True when the browser drives the scroll effects itself, so this class must not.
 	    Read ONCE at connect: it cannot change for the lifetime of a document, and
 	    CSS.supports() is a parse, not something to repeat per frame. */
@@ -488,22 +491,22 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * height. So take the width from getBBox() and the height from the real glyph
 	 * ink measured with Canvas measureText (actualBoundingBox*), then set the
 	 * <text> baseline (y) to that ink top so the glyphs sit flush in the box.
+	 *
+	 * The bbox is read at UNIT SCALE (bboxAtUnitScale), never off the live <text>:
+	 * the live one's bbox depends on the very viewBox this writes, so measuring it
+	 * makes a feedback loop that never settles where glyph advances are hinted.
 	 */
 	private fitWordmark() {
 		if (!this.wordmarkSvg || !this.wordmarkText) return;
-		let box: DOMRect;
-		try {
-			box = this.wordmarkText.getBBox();
-		} catch {
-			return; // not rendered yet
-		}
-		if (!box || box.width <= 0 || box.height <= 0) return;
+		const box = this.bboxAtUnitScale();
+		if (!box || box.width <= 0 || box.height <= 0) return; // not rendered yet
 
 		const ink = this.measureInk();
 		if (ink) {
 			// Baseline sits `ascent` below the box top; height is the ink extent.
-			this.wordmarkText.setAttribute("y", ink.ascent.toFixed(2));
-			this.wordmarkSvg.setAttribute(
+			this.setAttr(this.wordmarkText, "y", ink.ascent.toFixed(2));
+			this.setAttr(
+				this.wordmarkSvg,
 				"viewBox",
 				`${box.x.toFixed(2)} 0 ${box.width.toFixed(2)} ${(ink.ascent + ink.descent).toFixed(2)}`
 			);
@@ -511,10 +514,58 @@ export class StoriesHeadingElement extends HTMLElement {
 		}
 
 		// Fallback: metrics box (no ink measurement available).
-		this.wordmarkSvg.setAttribute(
+		this.setAttr(
+			this.wordmarkSvg,
 			"viewBox",
 			`${box.x.toFixed(2)} ${box.y.toFixed(2)} ${box.width.toFixed(2)} ${box.height.toFixed(2)}`
 		);
+	}
+
+	/** setAttribute, skipped when the value is already there. */
+	private setAttr(el: Element, name: string, value: string) {
+		if (el.getAttribute(name) !== value) el.setAttribute(name, value);
+	}
+
+	/**
+	 * THE WORDMARK'S BBOX, MEASURED WHERE THE ANSWER CANNOT MOVE IT.
+	 *
+	 * Chromium lays SVG text out in a font scaled by the text's on-screen scale, and
+	 * where the font rasteriser hints glyph advances (Linux; not macOS) the user-space
+	 * width that comes back from getBBox() is a non-monotonic function of that scale.
+	 * The scale is svgWidth / viewBox width, and fitWordmark() writes the viewBox from
+	 * the bbox. Measured on the live <text> that is a loop with no fixed point: in
+	 * headless Chromium on Ubuntu (what CI runs) the viewBox width cycled 859.6–862.0
+	 * every frame, the wordmark's height with it, and through the ResizeObserver and the fold
+	 * (--sh-group-h) everything below the hero shook by a fraction of a pixel forever.
+	 * That alone is a real bug (a CPU burned on layout every frame, a page that never
+	 * holds still); it also kept Playwright from ever seeing the footer "stable".
+	 *
+	 * So measure a hidden twin of the <text> in a viewBox-less <svg>: one user unit is
+	 * one CSS px, whatever the live viewBox is, and the answer depends only on the
+	 * text and its computed style. The twin is a clone, so it carries the same class
+	 * (face, weight, size, tracking) and inherits the same ancestors' tokens; it is
+	 * absolute, 0×0 and hidden, so it adds nothing to layout, paint or the a11y tree.
+	 */
+	private bboxAtUnitScale(): DOMRect | null {
+		if (!this.wordmarkSvg || !this.wordmarkText) return null;
+		if (!this.bboxProbe?.isConnected) {
+			const probe = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			probe.setAttribute("aria-hidden", "true");
+			probe.setAttribute("focusable", "false");
+			probe.style.cssText =
+				"position:absolute;left:0;top:0;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none";
+			this.wordmarkSvg.after(probe);
+			this.bboxProbe = probe;
+		}
+		const probe = this.bboxProbe;
+		// Re-cloned every measure, so the twin can never drift from the live text.
+		const twin = this.wordmarkText.cloneNode(true) as SVGTextElement;
+		probe.replaceChildren(twin);
+		try {
+			return twin.getBBox();
+		} catch {
+			return null; // not rendered (e.g. display:none)
+		}
 	}
 
 	/**
@@ -940,6 +991,8 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.clearSubFade();
 		this.sub = null;
 		this.solid = null;
+		this.bboxProbe?.remove();
+		this.bboxProbe = null;
 		// Re-measured from scratch on re-connect, so allow the announcement again.
 		delete this.dataset.ready;
 	}
