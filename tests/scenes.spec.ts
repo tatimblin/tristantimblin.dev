@@ -125,15 +125,27 @@ test.describe("scenes", () => {
 	});
 
 	test("readouts scale with the scene's width", async ({ page }) => {
-		const sizeAt = async (width: number) => {
+		// The label is sized in container units (2.6 × 1cqi), so its size is a
+		// fixed fraction of the SCENE's width — not the viewport's. Which viewport
+		// gives the wider scene depends on the catalogue's layout (at 1280 the pair
+		// sits side by side beside the token panel; at 390 one fills the column), so
+		// the test compares each label against its own scene rather than assuming
+		// the wider window draws the bigger scene.
+		const measure = async (width: number) => {
 			await page.setViewportSize({ width, height: 900 });
 			await page.goto(PAGE);
-			const label = page.locator('[data-scene-demo="dark"] .ds-scene-label').first();
-			return label.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+			const scene = page.locator('[data-scene-demo="dark"]');
+			return scene.evaluate((el) => ({
+				scene: el.getBoundingClientRect().width,
+				label: parseFloat(getComputedStyle(el.querySelector(".ds-scene-label")!).fontSize),
+			}));
 		};
-		const wide = await sizeAt(1280);
-		const narrow = await sizeAt(390);
-		expect(wide).toBeGreaterThan(narrow);
+		const a = await measure(1280);
+		const b = await measure(390);
+		expect(Math.abs(a.scene - b.scene), "the two layouts must draw the scene at different widths").toBeGreaterThan(10);
+		for (const m of [a, b]) expect(m.label / m.scene).toBeCloseTo(0.026, 3);
+		// And so the label follows the scene, whichever is wider.
+		expect(Math.sign(a.label - b.label)).toBe(Math.sign(a.scene - b.scene));
 	});
 
 	test("motion: paused at rest, running under the pointer over a readout, still under reduced motion", async ({ page }) => {
