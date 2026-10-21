@@ -110,11 +110,12 @@ const ordered = byDateDesc(posts);
 
 <style>
 	/* The ruled table: the edge above and below the list, one between posts,
-	   and the vertical one between the columns. That one is a background
-	   stripe down the post's middle (the columns are equal halves), not a cell
+	   and the vertical one between the columns. That one is a pseudo-element
+	   down the post's middle (the columns are equal halves), not a cell
 	   border, so the date can sit on the title's baseline and the open body
-	   can span both columns without breaking the rule — drawn as dashes, 3px
-	   on and 3px off, to match the dashed edge. Square, flat, no fill. */
+	   can span both columns without breaking the rule — drawn with the same
+	   var(--border) as the other edges, so its dash and colour are theirs.
+	   Square, flat, no fill. */
 	.stack {
 		list-style: none;
 		margin: 0;
@@ -133,12 +134,16 @@ const ordered = byDateDesc(posts);
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		grid-template-rows: auto auto;
-		background: repeating-linear-gradient(
-				to bottom,
-				var(--hairline) 0 3px,
-				transparent 3px 6px
-			)
-			50% 0 / var(--border-width) 100% no-repeat;
+		position: relative;
+	}
+	.stack__post::before {
+		content: "";
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 50%;
+		margin-inline-start: calc(var(--border-width) / -2);
+		border-inline-start: var(--border);
+		pointer-events: none;
 	}
 	.stack__post + .stack__post {
 		border-block-start: var(--border);
@@ -296,7 +301,9 @@ const ordered = byDateDesc(posts);
 			grid-template-columns: minmax(0, 1fr);
 			grid-template-rows: auto auto auto;
 			padding-inline: var(--stack-inset);
-			background: none;
+		}
+		.stack__post::before {
+			content: none;
 		}
 		.stack__date {
 			grid-column: 1;
