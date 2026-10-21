@@ -1,0 +1,7 @@
+{
+	"painterly-scene": {
+		"version": "0.1.0",
+		"base": "https://painterly-scene-media.tristantimblin.dev",
+		"stillFrame": true
+	}
+}

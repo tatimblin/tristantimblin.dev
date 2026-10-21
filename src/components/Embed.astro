@@ -1,0 +1,231 @@
+---
+// A live experiment in a post: a poster figure that becomes the real thing
+// when it is scrolled near.
+//
+//   <Embed name="painterly-scene" poster={sutro} alt="…" caption="…" />
+//   <Embed src="https://…/v1.2.3/index.js" assetBase="https://…/v1.2.3/" … />
+//
+// The module at `src` (an ES module on another origin; see src/lib/embeds.ts)
+// exports `mount(el, { assetBase }) => { destroy() }`: it draws into `el`,
+// sizes itself to it, and tears everything down on destroy(). `name` looks
+// both URLs up in src/data/embeds.json, which pins the version.
+//
+// The figure is the DS Fig (flow: the frame, then the `fig. 0N /` caption
+// line), bled across the wide row like a body image. The frame holds the
+// poster, a <Picture> cut to that row (src/lib/ruled-image.ts), and above it
+// the stage the module mounts into. The script below:
+//   - imports and mounts when the frame comes within a screen of the
+//     viewport, and destroys it once it is two screens away, or when the
+//     client router swaps the page out (onPage);
+//   - keeps the poster when there is no WebGL, when the import or mount
+//     fails, and when the reader prefers reduced motion and the embed has no
+//     still frame of its own (`stillFrame`);
+//   - shows the stage only once mount() has returned, so a slow or failed
+//     load never covers the poster with an empty box.
+// No framework: one small script, shipped only with a page that has an Embed.
+import type { ImageMetadata } from "astro";
+import { Picture } from "astro:assets";
+import Fig from "@whois/design-system/Fig";
+import { embed } from "../lib/embeds";
+import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
+
+interface Props {
+	/** An entry in src/data/embeds.json; or give `src` and `assetBase`. */
+	name?: string;
+	/** The module URL to import(). */
+	src?: string;
+	/** Passed to mount() as `assetBase`. */
+	assetBase?: string;
+	/** The still shown before (and instead of) the live embed. */
+	poster: ImageMetadata;
+	alt: string;
+	caption?: string;
+	/** The figure number, zero-padded (`02`), when the post counts it. */
+	no?: string;
+	/** The frame's CSS aspect-ratio; the poster's own by default. */
+	aspect?: string;
+	/** The module renders a still frame under reduced motion (`name` reads it from embeds.json). */
+	stillFrame?: boolean;
+}
+
+const { name, poster, alt, caption, no } = Astro.props;
+const resolved = name ? embed(name) : null;
+const src = Astro.props.src ?? resolved?.src;
+const assetBase = Astro.props.assetBase ?? resolved?.assetBase ?? "";
+const stillFrame = Astro.props.stillFrame ?? resolved?.stillFrame ?? false;
+if (!src) throw new Error("<Embed>: give it a `name` from src/data/embeds.json, or a `src`");
+const aspect = Astro.props.aspect ?? `${poster.width} / ${poster.height}`;
+---
+
+<Fig class="embed" no={no} caption={caption} data-prose-bleed="">
+	<div
+		class="embed__frame"
+		style={`aspect-ratio: ${aspect}`}
+		data-embed
+		data-src={src}
+		data-asset-base={assetBase}
+		data-still-frame={stillFrame ? "" : undefined}
+		data-state="poster"
+	>
+		<Picture
+			class="embed__poster"
+			src={poster}
+			alt={alt}
+			formats={["avif"]}
+			fallbackFormat="webp"
+			widths={[...RULED_WIDTHS.wide]}
+			sizes={RULED_SIZES.wide}
+			loading="lazy"
+			decoding="async"
+		/>
+		<div class="embed__stage" data-embed-stage aria-hidden="true"></div>
+	</div>
+</Fig>
+
+<script>
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+
+	type Handle = { destroy(): void };
+	type EmbedModule = { mount(el: HTMLElement, opts: { assetBase: string }): Handle };
+
+	// Within a screen: start loading. Two screens out: tear it down. The gap
+	// between the two is the hysteresis that keeps a reader scrolling back and
+	// forth near the edge from remounting it every time.
+	const NEAR = "100% 0px";
+	const FAR = "200% 0px";
+
+	function hasWebGL(): boolean {
+		try {
+			const c = document.createElement("canvas");
+			return Boolean(c.getContext("webgl2") ?? c.getContext("webgl"));
+		} catch {
+			return false;
+		}
+	}
+
+	onPage(() => {
+		const frames = [...document.querySelectorAll<HTMLElement>("[data-embed]")];
+		if (!frames.length) return;
+		const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+		const webgl = hasWebGL();
+		// Per frame: the live handle, and a token that a mount still in flight
+		// checks when its import resolves (a newer intent wins).
+		const live = new Map<HTMLElement, Handle>();
+		const intent = new Map<HTMLElement, number>();
+
+		const setState = (frame: HTMLElement, state: string) => {
+			frame.dataset.state = state;
+		};
+		const allowed = (frame: HTMLElement) =>
+			webgl && !(reduced.matches && !("stillFrame" in frame.dataset)) && frame.dataset.state !== "failed";
+
+		async function mount(frame: HTMLElement) {
+			if (live.has(frame) || frame.dataset.state === "loading" || !allowed(frame)) return;
+			const token = (intent.get(frame) ?? 0) + 1;
+			intent.set(frame, token);
+			setState(frame, "loading");
+			const stage = frame.querySelector<HTMLElement>("[data-embed-stage]")!;
+			try {
+				const mod = (await import(/* @vite-ignore */ frame.dataset.src!)) as EmbedModule;
+				if (intent.get(frame) !== token) return; // scrolled away or swapped out meanwhile
+				if (typeof mod.mount !== "function") throw new Error("the module exports no mount()");
+				live.set(frame, mod.mount(stage, { assetBase: frame.dataset.assetBase ?? "" }));
+				setState(frame, "live");
+			} catch (err) {
+				console.warn(`[embed] ${frame.dataset.src} failed; keeping the poster.`, err);
+				stage.replaceChildren();
+				if (intent.get(frame) === token) setState(frame, "failed");
+			}
+		}
+
+		function unmount(frame: HTMLElement) {
+			intent.set(frame, (intent.get(frame) ?? 0) + 1);
+			const handle = live.get(frame);
+			live.delete(frame);
+			if (handle) {
+				try {
+					handle.destroy();
+				} catch (err) {
+					console.warn("[embed] destroy() threw", err);
+				}
+			}
+			frame.querySelector("[data-embed-stage]")?.replaceChildren();
+			if (frame.dataset.state !== "failed") setState(frame, "poster");
+		}
+
+		const near = new IntersectionObserver(
+			(entries) => {
+				for (const e of entries) if (e.isIntersecting) void mount(e.target as HTMLElement);
+			},
+			{ rootMargin: NEAR },
+		);
+		const far = new IntersectionObserver(
+			(entries) => {
+				for (const e of entries) if (!e.isIntersecting) unmount(e.target as HTMLElement);
+			},
+			{ rootMargin: FAR },
+		);
+		for (const frame of frames) {
+			near.observe(frame);
+			far.observe(frame);
+		}
+
+		// Reduced motion switched on: an embed with no still frame goes back to
+		// its poster. Switched off: the near observer's next callback remounts.
+		const onMotion = () => {
+			for (const frame of frames) {
+				if (!allowed(frame)) unmount(frame);
+			}
+			for (const frame of frames) {
+				near.unobserve(frame);
+				near.observe(frame);
+			}
+		};
+		reduced.addEventListener("change", onMotion);
+
+		return () => {
+			reduced.removeEventListener("change", onMotion);
+			near.disconnect();
+			far.disconnect();
+			for (const frame of frames) unmount(frame);
+		};
+	});
+</script>
+
+<style>
+	/* The frame IS the figure's picture box: the dashed edge at the small
+	   corner (what fig.css gives a body image), clipping the poster and the
+	   stage stacked inside it. Its aspect-ratio is set inline from the prop. */
+	.embed__frame {
+		position: relative;
+		overflow: hidden;
+		border: var(--border);
+		border-radius: var(--radius-box);
+		background: var(--panel-header-bg);
+	}
+
+	/* fig.css and the Prose draw a bare img with the edge, at auto height;
+	   here the frame carries the edge, and the poster fills it. */
+	.embed__frame :global(img) {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		margin: 0;
+		border: none;
+		border-radius: var(--radius-square);
+	}
+
+	/* The stage sits over the poster, hidden until mount() has returned, then
+	   eased in, so the poster shows through any load or failure. */
+	.embed__stage {
+		position: absolute;
+		inset: 0;
+		opacity: 0;
+		transition: opacity var(--duration-standard) var(--ease-standard);
+	}
+	.embed__frame[data-state="live"] .embed__stage {
+		opacity: 1;
+	}
+</style>

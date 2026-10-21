@@ -72,6 +72,21 @@ or add them to `public/`. To add or change one: put the render in `media/`
 hostname flat: Universal SSL covers `*.tristantimblin.dev` but not a nested
 `media.<project>.tristantimblin.dev`. This site is the exception, at `media.`.
 
+## Post embeds — experiments from other repos
+
+A live experiment in a post (the painterly Sutro scene, from the private
+`tatimblin/painterly-scene`) is `<Embed name="…" poster={…} alt="…" />`
+(`src/components/Embed.astro`). Its repo's release uploads a built ES module
+and its assets to the project's bucket under `v<version>/`, and
+`src/data/embeds.json` pins the version and the host. `<Embed>` shows the
+poster, `import()`s `<base>/v<version>/index.js` when the frame nears the
+viewport, calls its `mount(el, { assetBase })`, and calls `destroy()` once it's
+far away or on navigation. Nothing is installed and CI needs no secrets. To
+move a post to a new release, cut it in the experiment's repo and bump the
+version here. `PUBLIC_EMBED_BASE` points a build at a local stand-in.
+`tests/embed.spec.ts` routes the bucket to a stub module (set
+`PAINTERLY_DIST=<painterly-scene>/dist` to use the real bundle).
+
 ## Design system — read before writing UI CSS
 
 The site is built on **`@whois/design-system`** (`theme/design-system`). It
