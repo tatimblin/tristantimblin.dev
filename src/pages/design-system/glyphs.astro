@@ -13,7 +13,7 @@
 // build with no edit here: FAMILY below places it (unknown → F, controls).
 // The generator spread is listed by hand, since its point is the variants.
 // The sheet follows the page's theme; the switch at the top puts it on the
-// other page (the theme class on the sheet, as ThemePage does). noindex: a
+// other page (data-theme on the sheet, as ThemePage does). noindex: a
 // working page, not content.
 import Layout from "../../layouts/Layout.astro";
 import Heading from "@whois/design-system/Heading";
@@ -483,7 +483,7 @@ const kinds = (entries: Entry[]) =>
 		accent-color: var(--accent);
 	}
 
-	/* THE SHEET. Its own page colour and ink, so a theme class on it (the
+	/* THE SHEET. Its own page colour and ink, so data-theme on it (the
 	 * switch) repaints it as a ThemePage would; on the page's own theme it is
 	 * the page. */
 	.glyph-sheet {
