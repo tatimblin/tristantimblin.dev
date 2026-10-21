@@ -19,10 +19,7 @@ Guidance for AI agents working in this repo.
   [tatimblin/dotgrid](https://github.com/tatimblin/dotgrid):
   `@tristimb/dotted-grid` (`<dotted-grid>`) and `@tristimb/video-carousel`
   (`<video-carousel>`), installed from GitHub Release tarballs (see the URLs in
-  `package.json`). Their unit tests, shader checks and API docs are there; a
-  change to them is a release there plus a URL bump here. To work on both at
-  once, `bun link` the packages. The site keeps the theme presets, the `/dotgrid`
-  playground, the video prep scripts (`tools/dotgrid/`) and the page-level tests.
+  `package.json`). To change them, release there and bump the URL here.
 - **`tests/`** — Playwright, against the built site (`bun run test`);
   `bun run test:unit` runs the unit tests beside the code (`src/**/*.test.ts`
   and `packages/*/src/**/*.test.ts`; a bare `bun test` sees `src/` only — see
