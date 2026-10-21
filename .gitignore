@@ -1,7 +1,7 @@
 # build output
 dist/
 
-# built VS Code workbench page (bun run build:fleet-demo)
+# built VS Code workbench page, copied from @tristimb/fleet-demo (bun run copy:fleet-demo)
 public/fleet-demo/
 
 # generated types

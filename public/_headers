@@ -15,7 +15,7 @@
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
 
-# The VS Code embed (public/fleet-demo, built by bun run build:fleet-demo). Vite
+# The VS Code embed (public/fleet-demo, copied from @tristimb/fleet-demo). Vite
 # content-addresses everything under assets/ — the 11 MB workbench chunk, the
 # workers, the wasm, the service worker the webview host registers — so those are
 # safe to cache forever. index.html is the one unhashed file and the only thing
