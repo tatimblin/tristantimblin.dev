@@ -32,9 +32,7 @@ as `@tristimb/fleet-demo`: a GitHub Release tarball pinned by URL in
 
 - `dist/` — the built workbench page. `copy:fleet-demo` copies it to
   `public/fleet-demo/` (gitignored); the root `build` and `dev` both run it
-  first, and so does Playwright's `webServer` (via `build`). `build:site` is a
-  bare `astro build` with no copy — on a clean checkout it ships the post with
-  a dead embed. Ship with `build`.
+  first, and so does Playwright's `webServer` (via `build`).
 - `src/element.ts` / `element.css` — the `<fleet-demo>` poster/launch element,
   imported as source by `src/components/FleetDemo.astro`.
 

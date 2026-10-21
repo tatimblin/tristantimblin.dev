@@ -45,13 +45,7 @@ export default defineConfig({
 	],
 
 	webServer: {
-		// THE ROOT BUILD, not a bare `astro build`. `bun run build` runs
-		// copy:fleet-demo (node_modules/@tristimb/fleet-demo/dist → public/fleet-demo)
-		// before Astro copies public/ into dist. public/fleet-demo is gitignored, so
-		// calling astro build directly on a clean checkout served a site with no embed
-		// at all: tests/fleet-demo.spec.ts would fail on a missing bundle rather than
-		// on the thing it means to check — or, written defensively, pass while
-		// asserting nothing.
+		// The root build: it copies the prebuilt fleet demo into public/ first.
 		command: "bun run build && bunx --bun astro preview --port 4321",
 		url: "http://localhost:4321",
 		reuseExistingServer: !process.env.CI,

@@ -7,7 +7,6 @@
     "dev": "bun run copy:fleet-demo && bunx astro dev",
     "build": "bun run copy:fleet-demo && bunx --bun astro build",
     "copy:fleet-demo": "rm -rf public/fleet-demo && cp -R node_modules/@tristimb/fleet-demo/dist public/fleet-demo",
-    "build:site": "bunx --bun astro build",
     "preview": "bunx --bun astro preview",
     "astro": "bunx --bun astro",
     "check": "astro check",
