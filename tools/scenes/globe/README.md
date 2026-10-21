@@ -3,7 +3,7 @@
 The L4 data route: land from Natural Earth through a d3-geo orthographic
 projection, on the 400×400 panel, with a tracking console's chrome drawn by
 the art kit. `bun run scenes:bake` writes
-`packages/design-system/src/scenes/globe.svg`; `bun run scenes:check` fails
+`theme/design-system/src/scenes/globe.svg`; `bun run scenes:check` fails
 when this directory or its output has drifted.
 
 ## Credits

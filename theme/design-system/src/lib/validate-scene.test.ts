@@ -1,6 +1,6 @@
 /**
  * The scene profile of the SVG validator
- * (packages/design-system/scripts/validate-art.mjs): a clean scene passes,
+ * (theme/design-system/scripts/validate-art.mjs): a clean scene passes,
  * the wash, the dot-dash and the second motion group it adds over art
  * pass, and each rule where a scene differs from art (or keeps art's
  * limit) still fires. The glyph fixtures are validate-glyph.test.ts, the

@@ -1,8 +1,8 @@
 [install]
 registry = "https://registry.npmjs.org/"
 
-# `bun run test:unit` (= `bun test ./src ./packages ./tools`) is the unit tests
-# beside the code: src/**/*.test.ts, packages/*/src/**/*.test.ts and
+# `bun run test:unit` (= `bun test ./src ./theme ./tools`) is the unit tests
+# beside the code: src/**/*.test.ts, theme/*/src/**/*.test.ts and
 # tools/**/*.test.ts (the scene libraries). The Playwright specs
 # in tests/ are *.spec.ts, which bun would collect and fail to run, and bun has
 # no exclude — so the root below keeps a bare `bun test` to src/, and the

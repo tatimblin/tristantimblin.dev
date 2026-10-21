@@ -25,10 +25,10 @@ concurrency:
 
 # The files the fetchers write.
 env:
-  DATA_BIKE: src/widgets/bike-stats/bike-stats.csv
-  DATA_GITHUB: src/widgets/github/github.json
-  DATA_READERS: src/widgets/readers/readers.json
-  DATA_VOLO: src/widgets/volo/volo.json
+  DATA_BIKE: src/data/bike-stats.csv
+  DATA_GITHUB: src/data/github.json
+  DATA_READERS: src/data/readers.json
+  DATA_VOLO: src/data/volo.json
 
 jobs:
   collect:

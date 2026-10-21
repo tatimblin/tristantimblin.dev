@@ -464,7 +464,7 @@ these — never a literal, never an `opacity` attribute. The ink plus at most
 three of the four colours per file; one dominates.
 
 **Files.** Every art file starts
-from **`packages/design-system/src/art/_template.svg`**, whose comments carry
+from **`theme/design-system/src/art/_template.svg`**, whose comments carry
 the rules (they are stripped on render): `viewBox="0 0 320 180"` on a 10-unit
 grid, a 16-unit safe area, at least one shape running out of frame; every
 stroked shape `vector-effect="non-scaling-stroke"` (1px at any size) with its

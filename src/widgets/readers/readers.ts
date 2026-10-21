@@ -15,7 +15,7 @@
 // deliberately not used. The figures are SAMPLED and pre-scaled by Cloudflare,
 // which is why they always arrive as multiples of ten: one person is reported
 // as "10". They are estimates, and the widget labels them so.
-import data from "./readers.json";
+import data from "../../data/readers.json";
 
 export interface ReaderDay {
 	date: string; // YYYY-MM-DD, UTC

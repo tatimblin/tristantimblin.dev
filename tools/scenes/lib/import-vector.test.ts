@@ -8,7 +8,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PROFILES, validateSvg } from "../../../packages/design-system/scripts/validate-art.mjs";
+import { PROFILES, validateSvg } from "../../../theme/design-system/scripts/validate-art.mjs";
 import { importVector, ImportVectorError, parsePath } from "./import-vector";
 import { SWATCHES } from "./swatches";
 

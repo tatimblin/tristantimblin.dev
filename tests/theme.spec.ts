@@ -6,7 +6,7 @@ import { test, expect, type Page } from "@playwright/test";
  * The theme is ONE attribute: data-theme="light|dark" on <html>, written by the
  * inline init in Layout.astro (before first paint, from localStorage "theme",
  * light when nothing is stored) and by the footer toggle. The token layer keys
- * off it (packages/design-system/src/tokens/themes/{light,dark}.css), so these
+ * off it (theme/design-system/src/tokens/themes/{light,dark}.css), so these
  * tests assert on what the attribute RESOLVES to — the page colour, the card's
  * edge — and not only on the attribute, which could flip while nothing listened.
  *

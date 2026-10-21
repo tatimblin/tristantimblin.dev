@@ -1333,7 +1333,7 @@ assertions:
 				ink is the secondary ink, so the same drawing reads as ink on paper, with the
 				white faces dark and the fills a step deeper; at night it is the card. A file names no colour but these tokens, and the frame owns the
 				plate, the edge, the corner, the line weights and the motion, so the whole
-				language retunes in one place. Every file starts from <code>packages/design-system/src/art/_template.svg</code>.
+				language retunes in one place. Every file starts from <code>theme/design-system/src/art/_template.svg</code>.
 			</p>
 			<div class="ds-demo__swatches">
 				{artTokens.map(([name, note]) => (
@@ -1424,7 +1424,7 @@ assertions:
 		<section class="ds-demo__section" id="glyphs">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Glyphs — micrographics and the keycap tile</Heading>
 			<p class="ds-demo__note">
-				The micrographics (<code>packages/design-system/src/glyphs/</code>; <code>Glyph</code>, <code>GlyphTile</code>; glyph.css and motion.css): hairline
+				The micrographics (<code>theme/design-system/src/glyphs/</code>; <code>Glyph</code>, <code>GlyphTile</code>; glyph.css and motion.css): hairline
 				marks on a 48×32 grid, inlined beside text. Their line work is <code>currentColor</code> — the ink of the text they sit in, dimmed through <code>--glyph-dim</code> (that ink at 40%, resolved on the glyph) — and their
 				colour is the art palette, so a glyph follows the theme as the art does. A
 				glyph is BAKED from a recipe (<code>src/glyphs/recipes/&lt;name&gt;.ts</code>, a
@@ -1553,7 +1553,7 @@ assertions:
 		<section class="ds-demo__section" id="scenes">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Scenes — L4, a baked illustration and its readouts</Heading>
 			<p class="ds-demo__note">
-				A scene is a whole illustration in the art language — a projected globe, a sliced mesh, an exploded assembly — drawn by a source in <code>tools/scenes/&lt;name&gt;/scene.ts</code> with whatever it needs at bake time (d3-geo, a mesh reader: root devDependencies that never ship) and baked by <code>bun run scenes:bake</code> to <code>packages/design-system/src/scenes/&lt;name&gt;.svg</code> under the scene profile: art's rules with a 400×400 panel beside the plate, a budget for a coastline (≤ 400 elements, ≤ 64 KB), one wash fill, a dot-dash and two motions. <code>Scene</code> is an <code>ArtFrame</code> with a layer of HTML readouts over it — <code>SceneLabel</code>, anchored (<code>at</code>) or at a point (<code>x</code> / <code>y</code>), sized by the scene's width — and the file's credit under it; <code>tone</code> is the console's colour, <code>glow</code> the CRT's bloom on the dark page only. Hover a scene: the orbit turns and the marker blinks.
+				A scene is a whole illustration in the art language — a projected globe, a sliced mesh, an exploded assembly — drawn by a source in <code>tools/scenes/&lt;name&gt;/scene.ts</code> with whatever it needs at bake time (d3-geo, a mesh reader: root devDependencies that never ship) and baked by <code>bun run scenes:bake</code> to <code>theme/design-system/src/scenes/&lt;name&gt;.svg</code> under the scene profile: art's rules with a 400×400 panel beside the plate, a budget for a coastline (≤ 400 elements, ≤ 64 KB), one wash fill, a dot-dash and two motions. <code>Scene</code> is an <code>ArtFrame</code> with a layer of HTML readouts over it — <code>SceneLabel</code>, anchored (<code>at</code>) or at a point (<code>x</code> / <code>y</code>), sized by the scene's width — and the file's credit under it; <code>tone</code> is the console's colour, <code>glow</code> the CRT's bloom on the dark page only. Hover a scene: the orbit turns and the marker blinks.
 			</p>
 			<div class="ds-demo__art-themes">
 				{(["light", "dark"] as const).map((t) => (
@@ -1913,8 +1913,8 @@ assertions:
 				}
 				const config = {
 					// :root tokens go in the overrides; themed ones in the theme's file.
-					target: "packages/design-system/src/tokens/tokens.overrides.css",
-					themeTarget: `packages/design-system/src/tokens/themes/${currentTheme()}.css`,
+					target: "theme/design-system/src/tokens/tokens.overrides.css",
+					themeTarget: `theme/design-system/src/tokens/themes/${currentTheme()}.css`,
 					theme: currentTheme(),
 					root: rootTokens,
 					themed,

@@ -12,7 +12,7 @@
  * the yaw, the ladder) are HTML over the frame, placed by the page with
  * SceneLabel; nothing here is text.
  *
- *   bun run scenes:bake      → packages/design-system/src/scenes/head.svg
+ *   bun run scenes:bake      → theme/design-system/src/scenes/head.svg
  *
  * Every parameter of the view and the cut is here; the credit and the
  * pipeline are in README.md beside this file.

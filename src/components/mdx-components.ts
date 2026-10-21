@@ -6,7 +6,7 @@
 // item, em/strong) reference the DS component directly.
 //
 // Deliberately NOT mapped — kept as raw tags, styled by the DS Prose container
-// the post body sits in (packages/design-system/src/styles/prose.css):
+// the post body sits in (theme/design-system/src/styles/prose.css):
 //   - `code`: MDX maps it globally, so mapping it to a component would also
 //     wrap fenced-block `<pre><code>`. Inline + block code are handled in CSS.
 //   - `pre`, `hr`, `del`, `table`: no clean 1:1 DS component.

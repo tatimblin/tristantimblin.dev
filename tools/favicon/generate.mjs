@@ -75,7 +75,7 @@ const STEM_COLS = [3, 3]; // inclusive; centered under the crossbar
 
 // --- Color ------------------------------------------------------------------
 // Approximations of --text-primary in each theme, converted from the design
-// system's OKLCH tokens (packages/design-system/src/tokens/tokens.generated.css:
+// system's OKLCH tokens (theme/design-system/src/tokens/tokens.generated.css:
 // light --gray-1200, dark --blue-400). The SVG can't read CSS vars, and the site
 // theme is a localStorage class toggle, so prefers-color-scheme is the only
 // lever available here — same approach as the file this replaces.

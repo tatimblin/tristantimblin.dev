@@ -10,7 +10,7 @@
  * shows beside its title. Tags stay in the frontmatter and keep their pages
  * (/txt/tag/<tag>); they are just no longer the thing the list is organised by.
  *
- * Each category owns an icon from the DS set (packages/design-system/src/icons)
+ * Each category owns an icon from the DS set (theme/design-system/src/icons)
  * — never an emoji, which the old `icon` frontmatter field used to carry.
  */
 import type { IconName } from "@whois/design-system/icons";

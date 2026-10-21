@@ -1,4 +1,4 @@
-// Generate packages/design-system/src/tokens/tokens.generated.css from the
+// Generate theme/design-system/src/tokens/tokens.generated.css from the
 // published @maximeheckel/design-system package.
 //
 // The package's globalStyles() is a Stitches globalCss() call that registers
@@ -16,7 +16,7 @@
 // This is a DEV-TIME step. The committed tokens.generated.css is what ships;
 // re-run after `bun update @maximeheckel/design-system` to refresh it:
 //
-//   bun packages/design-system/scripts/gen-tokens.mjs
+//   bun theme/design-system/scripts/gen-tokens.mjs
 
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

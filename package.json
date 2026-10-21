@@ -2,7 +2,7 @@
   "name": "tristantimblin.dev",
   "type": "module",
   "version": "0.0.1",
-  "workspaces": ["packages/*"],
+  "workspaces": ["theme/*"],
   "scripts": {
     "dev": "bun run copy:fleet-demo && bunx astro dev",
     "build": "bun run copy:fleet-demo && bunx --bun astro build",
@@ -11,15 +11,15 @@
     "astro": "bunx --bun astro",
     "check": "astro check",
     "test": "playwright test",
-    "test:unit": "bun test ./src ./packages ./tools",
+    "test:unit": "bun test ./src ./theme ./tools",
     "media:push": "bun tools/media/push.mjs",
-    "validate:art": "bun packages/design-system/scripts/validate-art.mjs",
-    "validate:glyph": "bun packages/design-system/scripts/validate-art.mjs --profile glyph",
-    "glyphs:bake": "bun packages/design-system/scripts/bake-glyphs.ts",
-    "glyphs:check": "bun packages/design-system/scripts/bake-glyphs.ts --check",
-    "validate:scene": "bun packages/design-system/scripts/validate-art.mjs --profile scene",
-    "scenes:bake": "bun packages/design-system/scripts/bake-scenes.ts",
-    "scenes:check": "bun packages/design-system/scripts/bake-scenes.ts --check"
+    "validate:art": "bun theme/design-system/scripts/validate-art.mjs",
+    "validate:glyph": "bun theme/design-system/scripts/validate-art.mjs --profile glyph",
+    "glyphs:bake": "bun theme/design-system/scripts/bake-glyphs.ts",
+    "glyphs:check": "bun theme/design-system/scripts/bake-glyphs.ts --check",
+    "validate:scene": "bun theme/design-system/scripts/validate-art.mjs --profile scene",
+    "scenes:bake": "bun theme/design-system/scripts/bake-scenes.ts",
+    "scenes:check": "bun theme/design-system/scripts/bake-scenes.ts --check"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",

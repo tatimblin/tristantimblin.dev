@@ -33,7 +33,7 @@
         "world-atlas": "^2.0.2",
       },
     },
-    "packages/design-system": {
+    "theme/design-system": {
       "name": "@whois/design-system",
       "version": "0.0.1",
       "devDependencies": {
@@ -42,11 +42,11 @@
         "react-dom": "^19",
       },
     },
-    "packages/stories-heading": {
+    "theme/stories-heading": {
       "name": "@whois/stories-heading",
       "version": "0.0.1",
     },
-    "packages/wobble-text": {
+    "theme/wobble-text": {
       "name": "@whois/wobble-text",
       "version": "0.0.1",
     },
@@ -442,11 +442,11 @@
 
     "@vscode/l10n": ["@vscode/l10n@0.0.18", "", {}, "sha512-KYSIHVmslkaCDyw013pphY+d7x1qV8IZupYfeIfzNA+nsaWHbn5uPuQRvdRFsa9zFzGeudPuoGoZ1Op4jrJXIQ=="],
 
-    "@whois/design-system": ["@whois/design-system@workspace:packages/design-system"],
+    "@whois/design-system": ["@whois/design-system@workspace:theme/design-system"],
 
-    "@whois/stories-heading": ["@whois/stories-heading@workspace:packages/stories-heading"],
+    "@whois/stories-heading": ["@whois/stories-heading@workspace:theme/stories-heading"],
 
-    "@whois/wobble-text": ["@whois/wobble-text@workspace:packages/wobble-text"],
+    "@whois/wobble-text": ["@whois/wobble-text@workspace:theme/wobble-text"],
 
     "acorn": ["acorn@8.18.0", "", { "bin": { "acorn": "bin/acorn" } }, "sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ=="],
 

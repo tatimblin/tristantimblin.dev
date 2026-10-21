@@ -9,7 +9,7 @@
  * readouts (FREQ, the dials, FF, the colour bars) are HTML over the frame,
  * placed by the page; nothing here is text.
  *
- *   bun run scenes:bake      → packages/design-system/src/scenes/hud.svg
+ *   bun run scenes:bake      → theme/design-system/src/scenes/hud.svg
  */
 
 import { readFileSync } from "node:fs";
