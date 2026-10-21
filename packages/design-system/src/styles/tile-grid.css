@@ -14,7 +14,9 @@
  *
  * Levels: 0 is unlit, 1–2 the ink at two strengths (ordinary days), 3–4 the
  * accent (the few hits you'd look for). `data-lit` is the binary case — a
- * step that is on — and follows the theme. */
+ * step that is on — and follows the theme. Each level reads --tile-1 … --tile-4
+ * first, so a caller can recolour the ramp (the GitHub widget's greens)
+ * without reaching into this sheet. */
 .ds-tile-grid-box {
 	flex: 1 1 auto;
 	min-block-size: 0;
@@ -47,16 +49,16 @@
 	aspect-ratio: 1;
 }
 .ds-tile[data-level="1"] {
-	background: var(--wash-2);
+	background: var(--tile-1, var(--wash-2));
 }
 .ds-tile[data-level="2"] {
-	background: var(--wash-3);
+	background: var(--tile-2, var(--wash-3));
 }
 .ds-tile[data-level="3"] {
-	background: color-mix(in oklab, var(--accent) 70%, var(--wash-1));
+	background: var(--tile-3, color-mix(in oklab, var(--accent) 70%, var(--wash-1)));
 }
 .ds-tile[data-level="4"] {
-	background: var(--accent);
+	background: var(--tile-4, var(--accent));
 }
 .ds-tile[data-lit] {
 	background: var(--lit);

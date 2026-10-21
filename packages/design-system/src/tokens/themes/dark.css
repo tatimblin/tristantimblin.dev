@@ -52,6 +52,15 @@
 	--accent-hover: oklch(from var(--accent) calc(l + 0.06) c h);
 	--lit: oklch(from var(--accent) calc(l - 0.12) calc(c * 0.75) h);
 
+	/* SIGNAL. Lifted for the dark page; the contribution greens are GitHub's
+	   own dark-mode ramp, dim to bright. */
+	--positive: #3fb950;
+	--negative: #f85149;
+	--contrib-1: #0e4429;
+	--contrib-2: #006d32;
+	--contrib-3: #26a641;
+	--contrib-4: #39d353;
+
 	/* CODE. Inline code on the first wash. A fenced block sinks BELOW the
 	   page — the light theme's slab is the darkest thing on the page, and so
 	   is this — with the dashed edge drawn round it (prose.css) so it holds
