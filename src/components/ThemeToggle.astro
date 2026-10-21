@@ -1,0 +1,26 @@
+---
+// ThemeToggle — the light/dark switch: a DS Chip as a button (the tag-style
+// caps control), pressed = light, its label naming the theme a click switches
+// to. The site footer carries it, and a demo page's panel (which has no
+// footer). The binding is src/lib/theme-toggle.ts.
+import Chip from "@whois/design-system/Chip";
+
+interface Props {
+	class?: string;
+}
+---
+
+<Chip
+	as="button"
+	type="button"
+	class={Astro.props.class}
+	data-theme-toggle
+	aria-label="Switch to light theme"
+	aria-pressed="false"
+>
+	<span data-theme-toggle-label>Light</span>
+</Chip>
+
+<script>
+	import "../lib/theme-toggle";
+</script>

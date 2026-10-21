@@ -1,62 +1,23 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { test, expect, type Page } from "@playwright/test";
-import registry from "../src/data/embeds.json" with { type: "json" };
+import { assetBase, realDist, serveEmbed, src } from "./fixtures/embed-route";
 
 /**
  * <Embed>: A POSTER THAT BECOMES THE REAL THING NEAR THE VIEWPORT.
  *
- * The component lives in posts, and the one post that uses it is a draft, so
- * the production build renders it only in the /design-system catalogue; that
- * is where these tests look at it. The bundle it imports lives in its own R2
- * bucket (src/data/embeds.json), which CI must not depend on, so every test
- * routes the bucket's URL:
- *   - by default to tests/fixtures/embed-stub.js, a module with the same
- *     mount()/destroy() shape that draws a 2D canvas and counts its calls;
- *   - with PAINTERLY_DIST=<painterly-scene>/dist, to the real built bundle and
- *     its textures, so the scene itself can be checked locally.
+ * The inline form (a figure in a post) is used by no published post yet, so
+ * the production build renders it in the /design-system catalogue; that is
+ * where these tests look at it. The full-screen form is a demo page's stage
+ * (tests/demo.spec.ts). Every test routes the bundle's bucket
+ * (tests/fixtures/embed-route.ts).
  *
  * What a reader would never notice going wrong, and so what is asserted:
  *  1. The module loading before the frame is anywhere near the screen.
  *  2. A live embed left running (or a canvas left behind) after it has
  *     scrolled far away: destroy() must run and the stage must be emptied.
  *  3. A failed import covering the poster with an empty box.
- *  4. The draft leaking into /txt, the feed or the sitemap.
  */
 
 const PAGE = "/design-system/";
-// The URLs src/lib/embeds.ts builds from the registry (its unit test pins the shape).
-const { base, version } = registry["painterly-scene"];
-const assetBase = `${base}/v${version}/`;
-const src = `${assetBase}index.js`;
-const realDist = process.env.PAINTERLY_DIST;
-
-/** Serve the bucket's URLs from the stub, or from a local painterly dist. */
-async function serveEmbed(page: Page): Promise<string[]> {
-	const requests: string[] = [];
-	await page.route(`${assetBase}**`, async (route) => {
-		const url = route.request().url();
-		requests.push(url);
-		const path = url.slice(assetBase.length);
-		const headers = { "access-control-allow-origin": "*" };
-		if (realDist) {
-			try {
-				const body = await readFile(join(realDist, path));
-				const contentType = path.endsWith(".js") ? "text/javascript" : "image/png";
-				return route.fulfill({ body, contentType, headers });
-			} catch {
-				return route.fulfill({ status: 404, headers });
-			}
-		}
-		if (url !== src) return route.fulfill({ status: 404, headers });
-		return route.fulfill({
-			path: join(import.meta.dirname, "fixtures/embed-stub.js"),
-			contentType: "text/javascript",
-			headers,
-		});
-	});
-	return requests;
-}
 
 const frame = (page: Page) => page.locator("#embed [data-embed]");
 
@@ -135,24 +96,5 @@ test.describe("Embed", () => {
 			await expect(frame(page)).toHaveAttribute("data-state", "poster");
 			expect(requests).toEqual([]);
 		});
-	});
-});
-
-test.describe("the draft that embeds Sutro", () => {
-	const slug = "painterly-sutro";
-
-	test("is not in the production build's index, feed or sitemap", async ({ page, request }) => {
-		await page.goto("/txt/");
-		await expect(page.locator(`a[href*="/txt/${slug}/"]`)).toHaveCount(0);
-
-		const rss = await (await request.get("/rss.xml")).text();
-		expect(rss).toContain("<item>");
-		expect(rss).not.toContain(slug);
-
-		const sitemap = await (await request.get("/sitemap-0.xml")).text();
-		expect(sitemap).toContain("/txt/");
-		expect(sitemap).not.toContain(slug);
-
-		expect((await request.get(`/txt/${slug}/`)).status()).toBe(404);
 	});
 });

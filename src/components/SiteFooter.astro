@@ -7,6 +7,7 @@
 // data-theme on <html> changes).
 import Text from "@whois/design-system/Text";
 import Chip from "@whois/design-system/Chip";
+import ThemeToggle from "./ThemeToggle.astro";
 
 const year = new Date().getFullYear();
 ---
@@ -28,9 +29,7 @@ const year = new Date().getFullYear();
 		<Chip as="button" type="button" data-sound-toggle aria-label="Mute ruler sounds" aria-pressed="false">
 			<span data-sound-toggle-label>Sound</span>
 		</Chip>
-		<Chip as="button" type="button" data-theme-toggle aria-label="Switch to light theme" aria-pressed="false">
-			<span data-theme-toggle-label>Light</span>
-		</Chip>
+		<ThemeToggle />
 	</div>
 </footer>
 
@@ -95,27 +94,7 @@ const year = new Date().getFullYear();
 		});
 	}
 
-	// Theme: pressed = light. The label names the theme a click switches to.
-	// No event needed: <dotted-grid> (paused ones included) observes data-theme
-	// on <html> itself.
-	const isLight = () => document.documentElement.dataset.theme !== "dark";
-	bindToggle(
-		"theme",
-		isLight,
-		() => {
-			const next = isLight() ? "dark" : "light";
-			window.__setTheme(next);
-			try {
-				localStorage.setItem("theme", next);
-			} catch {
-				/* storage unavailable: the choice lasts the page */
-			}
-		},
-		(light) =>
-			light
-				? { label: "Dark", aria: "Switch to dark theme" }
-				: { label: "Light", aria: "Switch to light theme" },
-	);
+	// (The theme chip binds itself: ThemeToggle.astro.)
 
 	// Sound for the video-carousel ruler ticks: pressed = muted. Persists
 	// `sound` ("off" = muted) and broadcasts `soundchange` so the carousel

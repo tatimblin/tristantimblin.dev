@@ -1,0 +1,248 @@
+---
+// /demo/<slug> — one demo: a live experiment (src/content/demos) filling the
+// viewport, not a written post. The scene is the full-screen <Embed> (poster
+// first, mounted at once, `touch-action: none` so a finger drags inside it);
+// over it, one small panel in the top-left corner — the DS Card: the way back
+// to /txt and the controls (theme, info) in its header; the demo's number and
+// date, its title and its one-line description in the body; notes and credits
+// behind the info toggle. On a phone the panel folds to its header and the
+// title; the info toggle opens the rest. Esc closes it. Under reduced motion
+// the panel says what is showing instead of the live scene (a still frame, or
+// the poster).
+//
+// Demos are numbered on their own (`demo / 001`), never as a txt.
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import { getImage } from "astro:assets";
+import Layout from "../../layouts/Layout.astro";
+import Embed from "../../components/Embed.astro";
+import ThemeToggle from "../../components/ThemeToggle.astro";
+import Card from "@whois/design-system/Card";
+import Anchor from "@whois/design-system/Anchor";
+import Heading from "@whois/design-system/Heading";
+import Body from "@whois/design-system/Body";
+import Mono from "@whois/design-system/Mono";
+import IconButton from "@whois/design-system/IconButton";
+import Icon from "@whois/design-system/Icon";
+import { dottedDate, isoDate, padNo, postNumbers, TXT_HREF } from "../../lib/blog";
+import { embed as resolveEmbed } from "../../lib/embeds";
+import { getDemos } from "../../lib/posts";
+
+export const getStaticPaths = (async () => {
+	const demos = await getDemos();
+	const numbers = postNumbers(demos);
+	return demos.map((demo) => ({
+		params: { slug: demo.id },
+		props: { demo, no: numbers.get(demo.id)! },
+	}));
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { demo, no } = Astro.props;
+const { title, description, date, tags, embed, poster, notes, credits } = demo.data;
+const { stillFrame } = resolveEmbed(embed);
+const ogImage = (await getImage({ src: poster.src, format: "jpg" })).src;
+const hasInfo = Boolean(notes || credits);
+---
+
+<Layout
+	title={`${title} — Tristan Timblin`}
+	description={description}
+	image={ogImage}
+	imageAlt={poster.alt}
+	type="article"
+	publishDate={date}
+	tags={tags}
+	footer={false}
+>
+	<main class="demo" data-demo>
+		<Embed
+			name={embed}
+			poster={poster.src}
+			alt={poster.alt}
+			fullscreen
+			touchAction="none"
+			label={`${title}, a live scene`}
+			describedby="demo-description"
+		/>
+
+		<Card as="aside" class="demo__panel" squeeze="title" aria-labelledby="demo-title" data-demo-panel>
+			<Anchor slot="title" variant="ink" arrow="left" href={TXT_HREF} class="demo__back">Writing</Anchor>
+			<div slot="meta" class="demo__controls">
+				<ThemeToggle />
+				{hasInfo && (
+					<IconButton
+						variant="outline"
+						size="xs"
+						aria-label="About this demo"
+						aria-expanded="false"
+						aria-controls="demo-info"
+						data-demo-info-toggle
+					>
+						<Icon name="info" />
+					</IconButton>
+				)}
+			</div>
+
+			<div class="demo__body">
+				<Mono class="demo__meta">
+					<span>demo / {padNo(no)}</span>
+					<time datetime={isoDate(date)}>{dottedDate(date)}</time>
+				</Mono>
+				<Heading as="h1" size={3} id="demo-title" class="demo__title">{title}</Heading>
+				<Body id="demo-description" class="demo__description">{description}</Body>
+				<Mono variant="text" class="demo__motion" data-demo-motion>
+					{stillFrame
+						? "Reduced motion is on: showing a still frame."
+						: "Reduced motion is on: showing the poster, not the live scene."}
+				</Mono>
+				{hasInfo && (
+					<dl id="demo-info" class="demo__info" hidden data-demo-info>
+						{notes && (
+							<div>
+								<Mono as="dt">Notes</Mono>
+								<Body as="dd">{notes}</Body>
+							</div>
+						)}
+						{credits && (
+							<div>
+								<Mono as="dt">Credits</Mono>
+								<Body as="dd">{credits}</Body>
+							</div>
+						)}
+					</dl>
+				)}
+			</div>
+		</Card>
+	</main>
+</Layout>
+
+<script>
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+	// The theme chip sits in the Card's meta slot, which drops its own script.
+	import "../../lib/theme-toggle";
+
+	// The info toggle: aria-expanded on the button, `hidden` on the notes, and
+	// data-open on the panel (on a phone it also unfolds the meta and the
+	// description). Esc closes it, and brings focus back to the button when it
+	// was inside the panel.
+	onPage(() => {
+		const panel = document.querySelector<HTMLElement>("[data-demo-panel]");
+		const button = panel?.querySelector<HTMLButtonElement>("[data-demo-info-toggle]");
+		const info = panel?.querySelector<HTMLElement>("[data-demo-info]");
+		if (!panel || !button || !info) return;
+		const set = (open: boolean) => {
+			button.setAttribute("aria-expanded", String(open));
+			info.hidden = !open;
+			panel.toggleAttribute("data-open", open);
+		};
+		const onClick = () => set(info.hidden);
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key !== "Escape" || info.hidden) return;
+			const within = panel.contains(document.activeElement);
+			set(false);
+			if (within) button.focus();
+		};
+		button.addEventListener("click", onClick);
+		document.addEventListener("keydown", onKey);
+		return () => {
+			button.removeEventListener("click", onClick);
+			document.removeEventListener("keydown", onKey);
+		};
+	});
+</script>
+
+<style>
+	/* The page is the scene: one viewport, nothing to scroll. */
+	:global(html:has([data-demo])),
+	:global(body:has([data-demo])) {
+		overflow: hidden;
+	}
+	.demo {
+		position: fixed;
+		inset: 0;
+		block-size: 100dvh;
+	}
+
+	/* THE PANEL: a small card in the top-left corner, over the sky. It takes
+	   no more room than its text needs, and never a third of a phone. */
+	.demo .demo__panel {
+		position: absolute;
+		inset-block-start: var(--space-4);
+		inset-inline-start: var(--space-4);
+		inline-size: min(calc(var(--space-14) + var(--space-12)), calc(100% - 2 * var(--space-4)));
+		max-block-size: calc(100% - 2 * var(--space-4));
+		overflow-y: auto;
+		font-family: var(--font-ui);
+	}
+	.demo__controls {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+	.demo__body {
+		display: grid;
+		gap: var(--space-2);
+		padding: var(--space-3) var(--space-4) var(--space-4);
+	}
+	.demo__meta {
+		display: flex;
+		justify-content: space-between;
+		gap: var(--space-3);
+	}
+	.demo__title {
+		margin: 0;
+	}
+	.demo__description {
+		margin: 0;
+	}
+	/* Said only to a reader who asked for less motion. */
+	.demo__motion {
+		display: none;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.demo__motion {
+			display: block;
+		}
+	}
+	.demo__info {
+		display: grid;
+		gap: var(--space-3);
+		margin: 0;
+		padding-block-start: var(--space-3);
+		border-block-start: var(--border);
+	}
+	.demo__info[hidden] {
+		display: none;
+	}
+	.demo__info > div {
+		display: grid;
+		gap: var(--space-1);
+	}
+	.demo__info dd {
+		margin: 0;
+	}
+
+	/* Phone: the panel folds to its header and the title; the info toggle
+	   opens the number, the date, the description and the notes. */
+	@media (max-width: 639px) {
+		.demo .demo__panel {
+			inset-block-start: var(--space-3);
+			inset-inline-start: var(--space-3);
+			inline-size: auto;
+			max-inline-size: calc(100% - 2 * var(--space-3));
+			max-block-size: calc(100% - 2 * var(--space-3));
+		}
+		/* Open, it takes the width it is allowed: the text wraps there. */
+		.demo .demo__panel[data-open] {
+			inline-size: calc(100% - 2 * var(--space-3));
+		}
+		.demo__body {
+			padding: var(--space-2) var(--space-3) var(--space-3);
+		}
+		.demo__panel:not([data-open]) .demo__meta,
+		.demo__panel:not([data-open]) .demo__description {
+			display: none;
+		}
+	}
+</style>

@@ -1,12 +1,13 @@
 ---
-// /txt — every post, newest first: the BlogLayout shell, on the site
-// container, over the expanding post stack (PostStack): the newest open, the rest a ruled list.
+// /txt — every post and demo, newest first: the BlogLayout shell, on the site
+// container, over the expanding post stack (PostStack): the newest open, the
+// rest a ruled list. Demos are interleaved by date, marked with a chip.
 import BlogLayout from "../../layouts/BlogLayout.astro";
 import PostStack from "../../components/txt/PostStack.astro";
 import { BLOG_DESCRIPTION, BLOG_TITLE } from "../../lib/blog";
-import { getPosts } from "../../lib/posts";
+import { getDemos, getPosts } from "../../lib/posts";
 
-const posts = await getPosts();
+const entries = [...(await getPosts()), ...(await getDemos())];
 ---
 
 <BlogLayout
@@ -15,5 +16,5 @@ const posts = await getPosts();
 	description={BLOG_DESCRIPTION}
 	heading={BLOG_TITLE}
 >
-	<PostStack posts={posts} />
+	<PostStack posts={entries} />
 </BlogLayout>

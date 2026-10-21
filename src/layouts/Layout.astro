@@ -20,7 +20,12 @@ import SiteFooter from "../components/SiteFooter.astro";
 import Seo from "../components/Seo.astro";
 import { MEDIA_BASE } from "../lib/media";
 
-type Props = ComponentProps<typeof Seo>;
+type Props = ComponentProps<typeof Seo> & {
+	/** The site footer; a full-screen page (a demo) leaves it out. */
+	footer?: boolean;
+};
+
+const { footer = true, ...seo } = Astro.props;
 ---
 
 <!doctype html>
@@ -65,7 +70,7 @@ type Props = ComponentProps<typeof Seo>;
 			title="Writing — Tristan Timblin"
 			href="/rss.xml"
 		/>
-		<Seo {...Astro.props} />
+		<Seo {...seo} />
 		{/* No-FOUC theme init: apply the stored choice before first paint, and
 		     re-apply after each view-transition swap. Light is the fallback.
 		     window.__setTheme is the one attribute write; the footer toggle calls
@@ -122,7 +127,7 @@ type Props = ComponentProps<typeof Seo>;
 	</head>
 	<body>
 		<slot />
-		<SiteFooter />
+		{footer && <SiteFooter />}
 		<script>
 			// Reveal coordinator: schedules the [data-reveal] fades. Safe to load late —
 			// the inline arming script in <head> owns the fail-visible backstop, so if this

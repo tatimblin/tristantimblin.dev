@@ -22,6 +22,12 @@
 //     still frame of its own (`stillFrame`);
 //   - shows the stage only once mount() has returned, so a slow or failed
 //     load never covers the poster with an empty box.
+//
+// `fullscreen` is a demo page's stage (src/pages/demo/[slug].astro): no
+// figure, the frame fills its parent, the poster is fetched first, and the
+// module mounts at once and stays until the page goes. Once live, the canvas
+// is labelled (role="img", `label`, `describedby`) and the poster hidden from
+// readers; before that, the poster's alt speaks for it.
 // No framework: one small script, shipped only with a page that has an Embed.
 import type { ImageMetadata } from "astro";
 import { Picture } from "astro:assets";
@@ -46,25 +52,49 @@ interface Props {
 	aspect?: string;
 	/** The module renders a still frame under reduced motion (`name` reads it from embeds.json). */
 	stillFrame?: boolean;
+	/** A demo page's stage: no figure, the frame fills its parent, the poster
+	 *  loads first thing, and it mounts at once instead of on approach. */
+	fullscreen?: boolean;
+	/** Passed to mount() as `touchAction` (the canvas's touch-action): `none`
+	 *  lets a finger drag inside the scene where no page has to scroll. */
+	touchAction?: string;
+	/** The live canvas's accessible name (it is given role="img"); `alt` by default. */
+	label?: string;
+	/** The id of the element that describes the scene (aria-describedby). */
+	describedby?: string;
 }
 
-const { name, poster, alt, caption, no } = Astro.props;
+const { name, poster, alt, caption, no, fullscreen = false, touchAction, describedby } = Astro.props;
+const label = Astro.props.label ?? alt;
 const resolved = name ? embed(name) : null;
 const src = Astro.props.src ?? resolved?.src;
 const assetBase = Astro.props.assetBase ?? resolved?.assetBase ?? "";
 const stillFrame = Astro.props.stillFrame ?? resolved?.stillFrame ?? false;
 if (!src) throw new Error("<Embed>: give it a `name` from src/data/embeds.json, or a `src`");
 const aspect = Astro.props.aspect ?? `${poster.width} / ${poster.height}`;
+// Full screen: a bare box round the frame instead of the numbered figure, and
+// the poster at the viewport's width, fetched first.
+const Wrap = fullscreen ? "div" : Fig;
+const wrap = fullscreen
+	? { class: "embed embed--full" }
+	: { class: "embed", no, caption, "data-prose-bleed": "" };
+const widths = fullscreen
+	? [640, 960, 1280, 1920].filter((w) => w < poster.width).concat(poster.width)
+	: [...RULED_WIDTHS.wide];
 ---
 
-<Fig class="embed" no={no} caption={caption} data-prose-bleed="">
+<Wrap {...wrap}>
 	<div
 		class="embed__frame"
-		style={`aspect-ratio: ${aspect}`}
+		style={fullscreen ? undefined : `aspect-ratio: ${aspect}`}
 		data-embed
+		data-embed-eager={fullscreen ? "" : undefined}
 		data-src={src}
 		data-asset-base={assetBase}
 		data-still-frame={stillFrame ? "" : undefined}
+		data-touch-action={touchAction}
+		data-label={label}
+		data-describedby={describedby}
 		data-state="poster"
 	>
 		<Picture
@@ -73,20 +103,23 @@ const aspect = Astro.props.aspect ?? `${poster.width} / ${poster.height}`;
 			alt={alt}
 			formats={["avif"]}
 			fallbackFormat="webp"
-			widths={[...RULED_WIDTHS.wide]}
-			sizes={RULED_SIZES.wide}
-			loading="lazy"
+			widths={widths}
+			sizes={fullscreen ? "100vw" : RULED_SIZES.wide}
+			loading={fullscreen ? "eager" : "lazy"}
+			fetchpriority={fullscreen ? "high" : undefined}
 			decoding="async"
 		/>
 		<div class="embed__stage" data-embed-stage aria-hidden="true"></div>
 	</div>
-</Fig>
+</Wrap>
 
 <script>
 	import { onPage } from "@whois/design-system/lib/lifecycle";
 
 	type Handle = { destroy(): void };
-	type EmbedModule = { mount(el: HTMLElement, opts: { assetBase: string }): Handle };
+	type EmbedModule = {
+		mount(el: HTMLElement, opts: { assetBase: string; touchAction?: string }): Handle;
+	};
 
 	// Within a screen: start loading. Two screens out: tear it down. The gap
 	// between the two is the hysteresis that keeps a reader scrolling back and
@@ -113,8 +146,21 @@ const aspect = Astro.props.aspect ?? `${poster.width} / ${poster.height}`;
 		const live = new Map<HTMLElement, Handle>();
 		const intent = new Map<HTMLElement, number>();
 
+		// One of the two is what a screen reader meets: the poster's alt, or,
+		// once live, the canvas as an image with the frame's label.
+		const hide = (el: Element | null, hidden: boolean) =>
+			hidden ? el?.setAttribute("aria-hidden", "true") : el?.removeAttribute("aria-hidden");
 		const setState = (frame: HTMLElement, state: string) => {
 			frame.dataset.state = state;
+			hide(frame.querySelector("[data-embed-stage]"), state !== "live");
+			hide(frame.querySelector("img"), state === "live");
+		};
+		const labelCanvas = (frame: HTMLElement, stage: HTMLElement) => {
+			const canvas = stage.querySelector("canvas");
+			if (!canvas) return;
+			canvas.setAttribute("role", "img");
+			canvas.setAttribute("aria-label", frame.dataset.label ?? "");
+			if (frame.dataset.describedby) canvas.setAttribute("aria-describedby", frame.dataset.describedby);
 		};
 		const allowed = (frame: HTMLElement) =>
 			webgl && !(reduced.matches && !("stillFrame" in frame.dataset)) && frame.dataset.state !== "failed";
@@ -129,7 +175,9 @@ const aspect = Astro.props.aspect ?? `${poster.width} / ${poster.height}`;
 				const mod = (await import(/* @vite-ignore */ frame.dataset.src!)) as EmbedModule;
 				if (intent.get(frame) !== token) return; // scrolled away or swapped out meanwhile
 				if (typeof mod.mount !== "function") throw new Error("the module exports no mount()");
-				live.set(frame, mod.mount(stage, { assetBase: frame.dataset.assetBase ?? "" }));
+				const { assetBase = "", touchAction } = frame.dataset;
+				live.set(frame, mod.mount(stage, touchAction ? { assetBase, touchAction } : { assetBase }));
+				labelCanvas(frame, stage);
 				setState(frame, "live");
 			} catch (err) {
 				console.warn(`[embed] ${frame.dataset.src} failed; keeping the poster.`, err);
@@ -165,18 +213,25 @@ const aspect = Astro.props.aspect ?? `${poster.width} / ${poster.height}`;
 			},
 			{ rootMargin: FAR },
 		);
-		for (const frame of frames) {
+		// An eager frame (a full-screen demo) is the page: it mounts now and
+		// stays until the page goes. The rest wait for the observers.
+		const eager = frames.filter((frame) => "embedEager" in frame.dataset);
+		const lazy = frames.filter((frame) => !eager.includes(frame));
+		for (const frame of eager) void mount(frame);
+		for (const frame of lazy) {
 			near.observe(frame);
 			far.observe(frame);
 		}
 
 		// Reduced motion switched on: an embed with no still frame goes back to
-		// its poster. Switched off: the near observer's next callback remounts.
+		// its poster. Switched off: an eager one remounts now, the others on the
+		// near observer's next callback.
 		const onMotion = () => {
 			for (const frame of frames) {
 				if (!allowed(frame)) unmount(frame);
 			}
-			for (const frame of frames) {
+			for (const frame of eager) void mount(frame);
+			for (const frame of lazy) {
 				near.unobserve(frame);
 				near.observe(frame);
 			}
@@ -202,6 +257,17 @@ const aspect = Astro.props.aspect ?? `${poster.width} / ${poster.height}`;
 		border: var(--border);
 		border-radius: var(--radius-box);
 		background: var(--panel-header-bg);
+	}
+
+	/* Full screen: the frame is its parent's whole box, edge to edge, with no
+	   edge of its own (the page's chrome carries the dashed look). */
+	.embed--full,
+	.embed--full .embed__frame {
+		block-size: 100%;
+	}
+	.embed--full .embed__frame {
+		border: none;
+		border-radius: var(--radius-square);
 	}
 
 	/* fig.css and the Prose draw a bare img with the edge, at auto height;
