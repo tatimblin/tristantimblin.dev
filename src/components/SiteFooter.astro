@@ -1,10 +1,10 @@
 ---
 // Global site footer — a basic full-width bar with a copyright line and the
 // light/dark theme toggle. Themes automatically via DS tokens (--text-primary /
-// --background / --hairline). Dark is the site default; the toggle persists
+// --background / --border). Light is the site default; the toggle persists
 // the user's explicit choice in localStorage and re-tints the whole page,
-// including the animating <dotted-grid> visuals (they sample the bridge's
-// --color-fg / --color-bg fresh each frame).
+// including the <dotted-grid> visuals (they re-resolve their tone when
+// data-theme on <html> changes).
 import Text from "@whois/design-system/Text";
 import Chip from "@whois/design-system/Chip";
 
@@ -20,11 +20,11 @@ const year = new Date().getFullYear();
 	     What stays local is only what the DS has no opinion about — the face. */}
 	<Text as="p" size={1} variant="tertiary" class="site-footer__note">© {year} Tristan Timblin</Text>
 	<div class="site-footer__controls">
-		{/* The toggles are DS Chips as buttons — the ruled screen's boxed caps
-		     control (/txt's filters are the same chip): a hairline box, no fill,
-		     the strong hairline under the pointer, the one focus ring, and the ON
-		     state read off aria-pressed as the ink filled in. The scripts below
-		     keep aria-pressed true to the state, and the chip follows. */}
+		{/* The toggles are DS Chips as buttons — the tag-style caps control
+		     (/txt's filters are the same chip): the first wash, the ink under the
+		     pointer, the one focus ring, and the ON state read off aria-pressed
+		     as the wash stepped up. The scripts below keep aria-pressed true to
+		     the state, and the chip follows. */}
 		<Chip as="button" type="button" data-sound-toggle aria-label="Mute ruler sounds" aria-pressed="false">
 			<span data-sound-toggle-label>Sound</span>
 		</Chip>
@@ -41,7 +41,7 @@ const year = new Date().getFullYear();
 		justify-content: space-between;
 		gap: var(--space-4);
 		padding-block: var(--space-5);
-		border-top: 1px solid var(--hairline);
+		border-top: var(--border);
 		background: var(--background);
 		color: var(--text-primary);
 	}
@@ -96,17 +96,20 @@ const year = new Date().getFullYear();
 	}
 
 	// Theme: pressed = light. The label names the theme a click switches to.
-	// `themechange` nudges a paused/reduced-motion <dotted-grid> to repaint
-	// (the animating path already re-tints every frame).
-	const isLight = () => !document.documentElement.classList.contains("maximeheckel-dark");
+	// No event needed: <dotted-grid> (paused ones included) observes data-theme
+	// on <html> itself.
+	const isLight = () => document.documentElement.dataset.theme !== "dark";
 	bindToggle(
 		"theme",
 		isLight,
 		() => {
 			const next = isLight() ? "dark" : "light";
 			window.__setTheme(next);
-			localStorage.setItem("theme", next);
-			document.dispatchEvent(new Event("themechange"));
+			try {
+				localStorage.setItem("theme", next);
+			} catch {
+				/* storage unavailable: the choice lasts the page */
+			}
 		},
 		(light) =>
 			light

@@ -12,8 +12,9 @@
  * chart's key (a Legend) and its season bands (HitAreas) are design-system
  * components (Volo.astro). What is here is the tile's own layout — the shared
  * table grid, the margin tick, the step chart — and the few STATE colours
- * that ARE the design: ink for a win, the dim ink for a loss, the accent for
- * exactly one row and for the season in progress on the chart. The only
+ * that ARE the design: green for a win, red for a loss (--positive /
+ * --negative), the accent for the next game's time and for the season in
+ * progress on the chart. The only
  * literal colour is the team's own, which comes from Volo per team and is
  * inline on its dot. */
 
@@ -36,7 +37,7 @@
 	block-size: 0.7em;
 	border-radius: var(--border-radius-pill);
 	background: var(--text-tertiary);
-	box-shadow: 0 0 0 1px var(--hairline);
+	box-shadow: 0 0 0 var(--border-width) var(--hairline);
 }
 
 /* HEADER META -------------------------------------------------------------
@@ -127,7 +128,7 @@
 	/* Stretch so the rule is drawn at the ROW's top edge, and the four cells'
 	   rules meet as one hairline. */
 	align-self: stretch;
-	border-block-start: 1px solid var(--hairline);
+	border-block-start: var(--border);
 }
 .wx-vl-game:first-child > :not(.wx-vl-round) {
 	border-block-start: none;
@@ -167,10 +168,13 @@
 	color: var(--text-secondary);
 }
 
-/* The result letter. A win is the ink, a loss the dim ink (the Mono's own
-   tone), a tie between: the instrument's strengths, not a traffic light. */
+/* The result letter. A win the positive green, a loss the negative red, a
+   tie the dim ink: the sign, in the colour the margin tick carries too. */
 .wx-vl-game[data-result="W"] .wx-vl-result {
-	color: var(--text-primary);
+	color: var(--positive);
+}
+.wx-vl-game[data-result="L"] .wx-vl-result {
+	color: var(--negative);
 }
 .wx-vl-game[data-result="T"] .wx-vl-result {
 	color: var(--text-secondary);
@@ -197,10 +201,10 @@
 	text-underline-offset: 0.2em;
 }
 
-/* THE ACCENT, ONCE in the list: the next game's time, or — in a season with
-   nothing left to play — its last result. */
-.wx-vl-game[data-lit="true"] .wx-vl-time,
-.wx-vl-game[data-lit="true"][data-result] .wx-vl-result {
+/* THE ACCENT, ONCE in the list: the next game's time. A season with nothing
+   left to play keeps its last result's green or red — the sign outranks the
+   highlight. */
+.wx-vl-game[data-lit="true"] .wx-vl-time {
 	color: var(--accent);
 }
 .wx-vl-game[data-lit="true"][data-result="upcoming"] .wx-vl-opp {
@@ -226,10 +230,11 @@
 }
 .wx-vl-game[data-result="W"] .wx-vl-bar {
 	inset-inline-start: 50%;
-	background: var(--text-primary);
+	background: var(--positive);
 }
 .wx-vl-game[data-result="L"] .wx-vl-bar {
 	inset-inline-end: 50%;
+	background: var(--negative);
 }
 /* A tie has no direction: it sits astride the zero. */
 .wx-vl-game[data-result="T"] .wx-vl-bar {

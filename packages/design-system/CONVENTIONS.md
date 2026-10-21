@@ -13,9 +13,10 @@ system](https://github.com/MaximeHeckel/design-system), pruned to what this
 site uses and extended with what it needed. It has two parts:
 
 - **A token layer** — CSS custom properties (spacing, type, color, radii, fonts,
-  motion) applied globally. The theme is set via `class="maximeheckel-light"`
-  or `-dark` on `<html>` (see `src/layouts/Layout.astro`), so tokens resolve at
-  first paint with no JS.
+  motion) applied globally. The theme is set via `data-theme="light"` (the
+  default) or `"dark"` on `<html>` (see `src/layouts/Layout.astro`), so tokens
+  resolve at first paint with no JS; any wrapper may carry its own
+  `data-theme` (ThemePage) and every themed token re-resolves inside it.
 - **Presentational components** — `.astro` components (`Text`, `Grid`, `Button`,
   `Card`, …) that render fixed markup + a CSS class, consuming those tokens.
 
@@ -135,7 +136,8 @@ Work top-down. Stop at the first rule that matches.
 | File | Rule |
 |------|------|
 | `src/tokens/tokens.generated.css` | **Never hand-edit.** It's generated from the upstream package. Regenerate with `bun scripts/gen-tokens.mjs` after `bun update @maximeheckel/design-system`. |
-| `src/tokens/tokens.overrides.css` | The **only** place to retune DS token *values* for this site (it wins over generated), and where the site's own tokens live: the type roles and scale steps, the motion vocabulary, the INSTRUMENT UI block (on the theme classes), the ART block. |
+| `src/tokens/tokens.overrides.css` | Where the site's own theme-independent tokens live (it wins over generated): the type roles and scale steps, the motion vocabulary, the EDGES block (border, radius, link, code-token tokens on `:root`; the composites `--border`, `--shadow-panel`, `--panel-header-bg`, `--link-color` on `[data-theme]`), the INSTRUMENT UI block and the ART defaults (on `[data-theme]`). |
+| `src/tokens/themes/light.css`, `themes/dark.css` | The two palettes, on `[data-theme="light"]` / `[data-theme="dark"]`: every value that differs between the themes (page, panel, edge colour, inks, washes, accent and `--on-accent`, code block, halftone ink, art plate). Edit both together — they name the same set. |
 | `src/tokens/bridge.css` | Edit to add a legacy-name alias (e.g. mapping a site/Web-Component `--color-*` name onto a DS token). |
 | `src/components/*.astro`, `src/styles/*.css` | Edit freely: the package is this site's. For a component that is still a port (`Grid`, `Flex`, `List`, `Anchor`, `Icon`, `VisuallyHidden`) keep the prop names. New component ⇒ add its `@import` to `src/styles/index.css` (in a layer) — or, while only the catalogue renders it, import the file from the component wrapped in `@layer ds.components` — **and** a section to the catalogue page. |
 | `src/lib/*.ts` | Client helpers a widget's script imports; keep them DOM-free at import time. |
@@ -146,7 +148,7 @@ Work top-down. Stop at the first rule that matches.
 
 The cards, widgets and controls are drawn after instrument UIs (a hardware
 metronome's screen, a dashboard card): **flat** surfaces a few percent apart,
-1px **hairlines**, **one accent** (orange-red) used once per card for the lit
+1px **dashed edges**, **one accent** (the link blue) used once per card for the lit
 thing / the playhead / the primary action, and everything else the **ink at a
 few strengths**. Two voices of type: small tracked uppercase **labels** for
 structure, and a big regular-weight **numeral** for values. `Card`,
@@ -154,26 +156,34 @@ structure, and a big regular-weight **numeral** for values. `Card`,
 are restyled (no shadows, no glass, caps labels), and the components below have
 no upstream at all.
 
-**Tokens** (`tokens.overrides.css` → INSTRUMENT UI, on the theme classes unless
-noted):
+**Tokens** (`tokens.overrides.css` → EDGES and INSTRUMENT UI, on `[data-theme]`
+unless noted; the per-theme values in `themes/*.css`):
 
 | Token | What it is for |
 | --- | --- |
-| `--accent`, `--accent-hover` | the one accent (retuned from blue; mixed from `--red-900`/`--orange-900`), and the accent under the pointer (a touch lighter, by relative colour — a primary Button, the strip's action cell). |
-| `--on-accent` | type ON the accent — the dark ink in both themes (white fails AA on it). |
-| `--lit` | a step/tile/key that is ON — the accent on dark, the **ink** on light. Use for binary on/off; use `--accent` for things that must be orange in both themes. |
-| `--wash-1/2/3` | the ink at 7 / 16 / 30 % — unlit tile & subtle pill fill; two stronger steps. |
-| `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
-| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour; the STRONG edge (the ink at `--wash-3`) for the one outline on a ruled screen that must read over the plain hairlines inside it — the card's border, a chip under the pointer; the divider gradient that fades at both ends. The package reads `--hairline`, never `--border-color`. |
+| `--border` (`--border-width` 1px, `--border-style` dashed, `--border-color` — the parts on `:root`/the theme) | THE edge: cards, dividers, a figure's frame, a section's rule. Compose it (`border-block-start: var(--border)`); never type `1px solid`. A side that must stay invisible uses the parts with a transparent colour. |
+| `--radius-box` (2.5px), `--radius-square` (0) — `:root` | the one corner of anything boxed, and a corner square on purpose. `--border-radius-0..3` all resolve to `--radius-box`. |
+| `--shadow-panel`, `--panel-outline` | a panel's 1px tinted ring under its edge, and its colour. |
+| `--panel-header-bg` | a panel header's fill: the card fading into `--wash-1` (also the primary Button's and the outline Pill's). |
+| `--code-bg`, `--code-fg`, `--code-border`, `--code-token-*` | a fenced block: the slab, its ink and edge (per theme), and the shared highlight colours. |
+| `--link-color`, `--link-hover-color`, `--link-decoration(-hover)`, `--link-underline-offset/-thickness` | every link: the colour, underlined at rest, plain under the pointer. |
+| `--duration-standard` (250ms), `--ease-standard` — `:root` | the chrome's own transition (a chip, a pill, a button washing in). |
+| `--halftone-ink`, `--halftone-ink-soft` | the halftones' dot ink per theme, handed to `<dotted-grid>` / `<video-carousel>` as `--color-fg` (bridge.css). |
+| `--accent`, `--accent-hover` | the one accent (the link blue, re-tuned lighter on the dark page), and the accent under the pointer. |
+| `--on-accent` | type ON the accent — white on the light theme's blue, the dark ink on the dark theme's. |
+| `--lit` | a step/tile/key that is ON — a quieter blue off the accent. Use for binary on/off; use `--accent` for the accent itself. |
+| `--wash-1/2/3` | three solid tints (the pale blue-grey tag fill, then the panel ring's blue): unlit tile & subtle pill fill; two stronger steps. |
+| `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, `--wash-3`. For ranked things (legend, share ruler). |
+| `--text-subtle` | a quiet label ink between secondary and tertiary — a tag's, a toggle's. |
+| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour alone (a drawn stripe, a ring); a stronger edge for under the pointer; the OPT-IN divider gradient that fades at both ends (`<Hairline variant="fade">`). A whole edge is `--border`. |
 | `--bar-width` (`:root`, 2px) | every solid edge bar: the pull quote's. |
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px) — `:root` | the steps below the generated scales. |
 | `--ticks-image`, `--ticks-image-ink` | the tick ruler as a gradient (hairlines on `--tick-pitch`) in currentColor, and in the ink — for a box that should read as a ruler and cannot take the classes (the player's progress bar). TickRuler draws its own on the same pitch. |
 | `--focus-ring`, `--focus-ring-offset`, `--focus-ring-inset` | the focus ring for everything focusable that is not a native control, drawn by `control.css` for every `ds-control`; the offset, and the inset form of it for a control that rings inside its box (set `--control-ring-offset: var(--focus-ring-inset)` in scope). |
 | `--playhead-dot` | a playhead's dot — the Volo season track's, the video carousel's. |
-| `--shadow-2`, `--shadow-3` | the upstream shadow scale on the theme's `--shadow-color`, for the few things that float — a control panel. Cards are flat and take none. |
+| `--shadow-3` | the upstream shadow scale's step 3 on the theme's `--shadow-color`, for the few things that float — a control panel. Cards take `--shadow-panel`. |
 | `--voice-mono-*`, `--voice-figure-*` | the label voice (family, size, tracking) and the figure voice (family, weight, tracking, size) as custom properties, for a shadow-DOM consumer styled through `::part()`. Mono and Figure read them; a WidgetGrid redefines the sizes on its scale. |
 | `--duration-reveal / -settle / -swap / -quick / -loop`, `--ease-reveal` | the motion vocabulary; all `0s` under `prefers-reduced-motion: reduce`, so a transition timed by a token is a cut for that visitor and no component needs a reduced-motion block of its own. |
-| light-theme `--gray-*` | retuned warm (hue 80, stone/bone). Page, card, hairline and inks all follow. (`-700` / `-800` stay generated: nothing reads them.) |
 
 **Controls.** Every control — Button, IconButton, a Pill or Chip as a button or
 link, Anchor, PostRow's link, HitArea —
@@ -237,7 +247,7 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
 - `Stat` — `value` + `label` (props or default/`label` slots): the mono pair
   (the value at the next step, in the ink), several in a row.
   `variant="numeral"` is the spec sheet's pair instead: the value big and
-  thin (`--font-display`, Mondwest Thin, at `--font-size-8`) with a caps
+  thin (`--font-display`, DM Sans Medium, at `--font-size-8`) with a caps
   label BESIDE it on the numeral's top edge; the label wraps (a `<br>`, or a
   title and a meta line in the `label` slot).
 - `StatStrip` — a row of hairline-cut cells under a hairline: every child is
@@ -428,16 +438,16 @@ crop off the tile's edges. The language is centralised so a file carries only
 its drawing: the **tokens** name every colour, the **frame** owns the plate and
 the motion, and a **validator** holds the rules.
 
-**Tokens** (`tokens.overrides.css` → ART, on the theme classes). **The plate
+**Tokens** (`tokens.overrides.css` → ART, on `[data-theme]`, retuned per theme in `themes/*.css`). **The plate
 follows the theme.** The values below are the dark palette the language was
-sampled on (cyan and green since retuned toward signal neon); the light theme overrides them, so a light page shows ink on bone
+sampled on (cyan and green since retuned toward signal neon); the light theme overrides them, so a light page shows ink on paper
 rather than black windows: the same drawing, inverted.
 
 | Token | Dark | Light | Use |
 | --- | --- | --- | --- |
-| `--art-plate` | `oklch(17% 0.008 280)` | `var(--gray-300)` | the tile fill |
-| `--art-edge` | `oklch(34% 0.006 280)` | `var(--gray-500)` | the tile's 1px edge |
-| `--art-ink` | `oklch(97% 0 0)` | `var(--gray-1200)` | line work and "white" fills — dark on light |
+| `--art-plate` | `var(--card-background)` | `var(--wash-1)` | the tile fill (each theme file sets it) |
+| `--art-edge` | `#4a463f` | `var(--border-color)` | the tile's 1px edge (each theme file sets it) |
+| `--art-ink` | `oklch(97% 0 0)` | `var(--text-secondary)` | line work and "white" fills — dark on light |
 | `--art-ink-2` | the ink at 45% | the same mix of the light ink | secondary lines: grids, dashed paths, ghost outlines — the one dimming |
 | `--art-lavender` `--art-cyan` `--art-green` | `#bda3ea` · `#5b8def` · `#5ee27f` | each by relative colour from the dark value, hue kept, lightness down and chroma up (green's chroma a touch down, to stay in sRGB) | the fills |
 | `--art-coral` | `var(--accent)` | `var(--accent)` (the light theme's own) | coral IS the site accent |
@@ -494,10 +504,10 @@ and tracking by role:
 
 | Class | Voice | Face | Sizes (viewBox units) |
 | --- | --- | --- | --- |
-| `art-label` | the label voice: IDs, codes, file names, a section head | `--voice-mono-family` (the UI face, Mondwest Regular), `--tracking-caps` | 3.5 · 4.5 · 6 |
+| `art-label` | the label voice: IDs, codes, file names, a section head | `--voice-mono-family` (the UI face, DM Sans Regular), `--tracking-caps` | 3.5 · 4.5 · 6 |
 | `art-caption` | the line under a readout, a log line; dim by the kit's default | the same, `--tracking-mono` | 3.5 · 4.5 |
-| `art-title` | a module's heading: ONLINE, EPOCH, VARIANT 033 | `--font-heading` (Mondwest Bold) | 6 · 9 · 14 |
-| `art-numeral` | the big thin figure: 007, 45, 0079 | `--font-display` (Mondwest Thin), Stat's numeral | 9 · 14 · 22 · 32 |
+| `art-title` | a module's heading: ONLINE, EPOCH, VARIANT 033 | `--font-heading` (DM Sans Medium) | 6 · 9 · 14 |
+| `art-numeral` | the big thin figure: 007, 45, 0079 | `--font-display` (DM Sans Medium), Stat's numeral | 9 · 14 · 22 · 32 |
 
 The file sets only `x`, `y` (the baseline), `font-size` — a step of the
 one **scale**, 3.5 4.5 6 9 14 22 32, the voice's steps only, in viewBox
@@ -627,7 +637,7 @@ their own lines.
 | iso (`iso.ts`) | `iso(x, y, z, at?)` at a true 30° (`ISO_X` / `ISO_Y` / `ISO_Z` the unit axes) · `isoBox` · `isoCylinder(x, y, r, h, {axis, top, side})` (upright, or lying along `x` / `y`; discs r × r/2) · `isoEllipse(x, y, r, {axis})` (a 2:1 disc on the ground or standing on the x / y face) · `isoRoundRect(x, y, w, d, c)` (flat, rounded corners; `c = d/2` is a pill) · `isoRoundBox(x, y, w, d, h, c, {top, side})` (rounded vertical edges: a shell, a board) · `isoCoil(x, y, r, h, turns)` (a standing spring, one path) · `isoPlane({grid})` · `vanishingGrid` — visible faces only, never a wireframe; a disc keeps ry = r/2, a rounded corner is the true projection so it meets the 30° edges tangent |
 | hidden lines (`clip.ts`) | `convexHull(points)` (a silhouette: the hull of a solid's projected corners) · `edges(points)` (a closed outline as segments) · `chain(points)` (an open line as segments) · `clipOutside(segs, poly)` (Cyrus–Beck: what of the segments shows outside a convex polygon, either winding) · `clipOutsidePolygon(segs, poly)` (the same for any simple polygon, convex or not — a mountain's ridge, a notched board: cut at every crossing, what lies along the outline hidden with it) · `insidePolygon(p, poly)` (a ray cast; on the outline counts as inside — a scatter kept off a lake) · `segmentsD(segs)` (one path `d`, rounded) — line work behind a solid is cut, not painted over, since a scene may not paint the plate |
 | curves through points (`gen/`) | `smoothD(points, closed?)` (Catmull-Rom as cubics; `closed` runs round the loop and shuts it, no corner at the join — a shore, a forest's edge) · `lineD(points)` (the polyline) · `rng(seed)` (a deterministic scatter) |
-| type (`type.ts`; art and scene — the glyph kit throws) | `text(x, y, words, {role, size, anchor, paint, turn})` (one line in a voice, `role` `label \| caption \| numeral \| title`, `size` a step of that voice's scale, default 4.5 / 3.5 / 22 / 9; a caption's paint dim unless said; a size off the voice throws; words escaped, set as given) · `rule(x0, x1, y, {dotted, paint})` (a solid ink hair, or dim round dots) · `section(x, y, w, title)` (the infographic's head: a dotted rule from (x, y), the title in caps hanging under it; `sectionDepth(size)` deep) · `bracketLabel(x, y, words)` (`[ ACTIVE ]`) · `readout(x, y, {value, label, caption, captionAt, size, paint})` (the thin numeral on the baseline at (x, y), a caps label over it, a caption beside its top — "14 SPEAKERS" — or `below`) · `advance(words, voice, size)` (an estimated width off the measured Mondwest cuts: figures 0.575 em, capitals 0.72, plus the voice's tracking — leave a margin) · `caps(words)` (upper case, a hex prefix's `x` kept) |
+| type (`type.ts`; art and scene — the glyph kit throws) | `text(x, y, words, {role, size, anchor, paint, turn})` (one line in a voice, `role` `label \| caption \| numeral \| title`, `size` a step of that voice's scale, default 4.5 / 3.5 / 22 / 9; a caption's paint dim unless said; a size off the voice throws; words escaped, set as given) · `rule(x0, x1, y, {dotted, paint})` (a solid ink hair, or dim round dots) · `section(x, y, w, title)` (the infographic's head: a dotted rule from (x, y), the title in caps hanging under it; `sectionDepth(size)` deep) · `bracketLabel(x, y, words)` (`[ ACTIVE ]`) · `readout(x, y, {value, label, caption, captionAt, size, paint})` (the thin numeral on the baseline at (x, y), a caps label over it, a caption beside its top — "14 SPEAKERS" — or `below`) · `advance(words, voice, size)` (an estimated width off the measured DM Sans cuts: figures 0.58 em, capitals 0.645, plus the voice's tracking — leave a margin) · `caps(words)` (upper case, a hex prefix's `x` kept) |
 | layout and strings (`layout.ts`, `ids.ts`) | `grid(cols, rows, gutter = 10, margin = 16, {width, height, inset})` (cell boxes `{x, y, w, h, col, row}` on the 320×180 plate or any box, row-major) · `span(a, b)` (the box two cells cover) · `ids(seed)` → `{ file, node, module, hex, id, code, state, status, coords, num, pick }` (`LOG_004.TXT`, `NODE B43`, `MODULE B7`, `0x7B8A`, `ID: 7F-C2`, `A0-04`, `ACTIVE`, `[ACTIVE]`, `02.44 / 118.09`, `0079`: deterministic off `rng`, each call the stream's next) |
 | assembly | `group(children, {motion, speed, transform})` (the data-motion contract; a transform with a motion goes on an outer `g`) · `svg({viewBox, children, header})` · `wash(colour, pct)` (a scene's translucent fill) |
 
@@ -1158,9 +1168,9 @@ dark one; `tests/scenes.spec.ts` holds them.
 ## Catalogue tooling
 
 - `ThemePage theme="light|dark"` — a piece of one theme's page inside the
-  other: the theme class, the page colour, the ink, a hairline box, labelled.
+  other: `data-theme`, the page colour, the ink, a hairline box, labelled.
   Every themed token re-resolves inside it (which is why the instrument tokens
-  sit on the theme classes, not `:root`).
+  sit on `[data-theme]`, not `:root`).
 - `Knobs` / `KnobGroup` / `Knob` — a playground's control panel: a card
   surface with `--shadow-3`; a title row (`title`, the `meta` slot), a `note`
   slot, a scrolling body of `Knob` rows (`label`, `type="range|color|checkbox|
@@ -1244,9 +1254,9 @@ All resolve globally from `@whois/design-system/tokens.css` (imported in
 Layout): spacing `--space-0..15`, radii `--border-radius-0..3` (+ `-tile`,
 `-pill`), type `--font-size-0..9` (no `-2`; `0` = 12px and `9` = 72px are the
 site's steps below and above the generated scale), weights
-`--font-weight-200/400/500/600/700` (`200` and `700` are the site's: Mondwest's
-Thin, and the Bold cut Mondwest and Migra ship), the leadings `--line-height-heading/-body/-ui` (1.15 / 1.6 / 1.3),
-the trackings `--tracking-heading` (0, a bitmap face), `--tracking-caps` (0.1em),
+`--font-weight-200/400/500/600/700` (`200` and `700` are the site's; DM Sans
+ships 400/500/700 and Roboto Mono 300/400/500), the leadings `--line-height-heading/-body/-ui` (1.15 / 1.6 / 1.3),
+the trackings `--tracking-heading` (0), `--tracking-caps` (0.1em),
 `--tracking-mono` (0.04em), the theme colors `--text-primary/secondary/tertiary`,
 `--accent`, `--accent-hover`, `--on-accent`, `--background`,
 `--card-background`, `--border-color` (site CSS may read it; the package reads
@@ -1254,7 +1264,7 @@ the trackings `--tracking-heading` (0, a bitmap face), `--tracking-caps` (0.1em)
 orange/pink-*` scales, `--hyperlink`, the `--token-*` code palette, and
 `--shadow-color`; plus the instrument tokens (previous section: `--lit`,
 `--wash-*`, `--tone-*`, `--hairline*`, `--bar-width`, `--tick-pitch`,
-`--ticks-image*`, `--focus-ring*`, `--playhead-dot`, `--shadow-2/-3`, the
+`--ticks-image*`, `--focus-ring*`, `--playhead-dot`, `--shadow-3`, the
 voices, the durations, `--ease-reveal` and the reveal's
 `--reveal-rise` / `--reveal-stagger`), `--tracking-hero` (the hero
 face's display tracking, the lockup's) and the two measures, `--measure-prose`
@@ -1272,23 +1282,24 @@ collapses); a rule that *adds* as it widens is `min-width` (`(min-width:
 viewport, is a container query on the grid (`@container widget`).
 
 **Fonts are named by role, not by family** (`tokens.overrides.css`; the faces
-are self-hosted from `/fonts`, built by `tools/fonts/build.sh`, @font-face'd
+are self-hosted from `/fonts`, fetched by `tools/fonts/build.sh`, @font-face'd
 with metric-matched fallbacks in `src/styles/fonts.css`):
 
 | Token | Face | Where |
 | --- | --- | --- |
-| `--font-hero` + `--font-hero-weight` | Migra Bold | the hero lockup only (the wordmark takes the Medium itself) |
-| `--font-heading` + `--font-heading-weight` | Mondwest Bold | every heading: the post title, section heads, DS `H1`–`H4`, a bare `h2`, the hero lede |
-| `--font-ui` | Mondwest Regular | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome |
-| `--font-display` + `--font-display-weight` | Mondwest Thin (200) | the big thin numeral: `Stat variant="numeral"` |
-| `--font-body` + `--font-body-weight/-size/-line-height/-letter-spacing` | Neue Montreal Regular | reading text (`Body`, and the bare `body`) |
-| `--font-code` | the system mono stack | code alone — fenced blocks and inline code; no file is loaded |
+| `--font-hero` + `--font-hero-weight` | DM Sans Medium (500) | the hero lockup only: the wordmark, the "&", "other stories" |
+| `--font-heading` + `--font-heading-weight` | DM Sans Medium (500) | every heading: the post title, section heads, DS `H1`–`H4`, a bare `h2`, the hero lede |
+| `--font-ui` | DM Sans | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome |
+| `--font-display` + `--font-display-weight` | DM Sans Medium (500) | the big numeral: `Stat variant="numeral"` |
+| `--font-body` + `--font-body-weight/-size/-line-height/-letter-spacing` | Roboto Mono Regular (400) | reading text (`Body`, and the bare `body`) |
+| `--font-code` | Roboto Mono | code — fenced blocks and inline code |
 
-Migra and Mondwest are ONE family each with discrete cuts (Migra 500/700;
-Mondwest 200/300/400/700), so a role that uses one names the family AND the
-weight — set only the family and the browser picks the cut. Neue Montreal
-ships 400/600. `font-synthesis-weight` is off site-wide (global.css): a weight
-lands on a real cut or it is not drawn. `Text`'s `family` values are these
+DM Sans and Roboto Mono are ONE family each with discrete static cuts (DM Sans
+400/500/700, Roboto Mono 300/400/500, each a latin and a latin-ext file split
+by `unicode-range`), so a role names the family AND the weight — set only the
+family and the browser picks the cut. A weight with no file (600) lands on the
+nearest real cut by the CSS matching rules. `font-synthesis-weight` is off
+site-wide (global.css): a weight lands on a real cut or it is not drawn. `Text`'s `family` values are these
 roles — `ui | heading | body | hero | code`, and `default`, which inherits.
 Live specimens are in the catalogue's first section.
 

@@ -2,7 +2,8 @@
 // published @maximeheckel/design-system package.
 //
 // The package's globalStyles() is a Stitches globalCss() call that registers
-// the :root token vars + .maximeheckel-light / .maximeheckel-dark theme blocks.
+// the :root token vars + .maximeheckel-light / .maximeheckel-dark theme blocks
+// (re-emitted as [data-theme="light"] / [data-theme="dark"], see THEME_SELECTOR).
 // getCssText() then serializes every registered rule — but in Stitches' own
 // format: a "--sxs" marker, an outer condition-less @media{} wrapper, component
 // keyframes, and a box-sizing reset. We parse that with a brace scanner and
@@ -69,16 +70,25 @@ let rules = topLevelRules(raw);
 const mediaWrapper = rules.find((r) => r.selector === "@media");
 if (mediaWrapper) rules = topLevelRules(mediaWrapper.body);
 
-const KEEP = new Set([":root", ".maximeheckel-light", ".maximeheckel-dark"]);
+// Upstream themes by class (.maximeheckel-light / -dark); this site themes by
+// attribute (<html data-theme="light|dark">; any wrapper may carry one too).
+// The selectors are renamed on the way out so the generated blocks key off
+// the same attribute as the hand-owned ones.
+const THEME_SELECTOR = {
+	":root": ":root",
+	".maximeheckel-light": '[data-theme="light"]',
+	".maximeheckel-dark": '[data-theme="dark"]',
+};
+const rename = (selector) => THEME_SELECTOR[selector] ?? selector;
 const out = [];
 
 for (const { selector, body } of rules) {
-	if (KEEP.has(selector)) {
-		out.push(`${selector} {\n${formatDecls(body)}\n}`);
+	if (selector in THEME_SELECTOR) {
+		out.push(`${rename(selector)} {\n${formatDecls(body)}\n}`);
 	} else if (selector.startsWith("@supports")) {
 		// @supports { .theme { ...decls } } — keep, reformatting the inner rule.
 		const inner = topLevelRules(body)
-			.map((r) => `\t${r.selector} {\n${formatDecls(r.body, "\t\t")}\n\t}`)
+			.map((r) => `\t${rename(r.selector)} {\n${formatDecls(r.body, "\t\t")}\n\t}`)
 			.join("\n");
 		out.push(`${selector} {\n${inner}\n}`);
 	}

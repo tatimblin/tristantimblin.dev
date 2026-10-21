@@ -115,10 +115,10 @@ describe("the module sheet: rules, sections, brackets, readouts", () => {
 });
 
 describe("advance and caps", () => {
-	test("advance: the measured faces — figures 0.575 em, capitals 0.72, the label's tracking on top", () => {
-		expect(advance("0000", "numeral", 10)).toBeCloseTo(23, 0);
-		expect(advance("ABCD", "title", 10)).toBeCloseTo(28.8, 0);
-		expect(advance("AB", "label", 10)).toBeCloseTo(2 * (0.72 + 0.1) * 10, 1);
+	test("advance: the measured faces — figures 0.58 em, capitals 0.645, the label's tracking on top", () => {
+		expect(advance("0000", "numeral", 10)).toBeCloseTo(23.2, 0);
+		expect(advance("ABCD", "title", 10)).toBeCloseTo(25.8, 0);
+		expect(advance("AB", "label", 10)).toBeCloseTo(2 * (0.645 + 0.0625) * 10, 1);
 		expect(advance("", "label", 10)).toBe(0);
 	});
 

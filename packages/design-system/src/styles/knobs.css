@@ -12,8 +12,8 @@
 		max-block-size: 100%;
 		padding: var(--space-4);
 		background: var(--card-background);
-		border: 1px solid var(--hairline);
-		border-radius: var(--border-radius-2);
+		border: var(--border);
+		border-radius: var(--radius-box);
 		box-shadow: var(--shadow-3);
 		color: var(--text-primary);
 		font-family: var(--font-ui);
@@ -37,7 +37,8 @@
 			inset: auto 0 0;
 			inline-size: auto;
 			max-block-size: 45vh;
-			border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
+			border-radius: var(--radius-box) var(--radius-box) var(--radius-square)
+				var(--radius-square);
 		}
 	}
 	.ds-knobs__head {
@@ -62,7 +63,7 @@
 		display: flex;
 		gap: var(--space-2);
 		padding-block-start: var(--space-3);
-		border-block-start: 1px solid var(--hairline);
+		border-block-start: var(--border);
 	}
 	.ds-knobs__actions > * {
 		flex: 1 1 0;
@@ -74,7 +75,7 @@
 		padding: var(--space-2) 0 0;
 		min-inline-size: 0;
 		border: 0;
-		border-block-start: 1px solid var(--hairline);
+		border-block-start: var(--border);
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
@@ -117,8 +118,8 @@
 		block-size: var(--space-5);
 		flex: none;
 		padding: 0;
-		border: 1px solid var(--hairline);
-		border-radius: var(--border-radius-0);
+		border: var(--border);
+		border-radius: var(--radius-box);
 		background: none;
 		cursor: pointer;
 	}
@@ -126,8 +127,8 @@
 		flex: 1 1 auto;
 		min-inline-size: 0;
 		padding: var(--space-1) var(--space-2);
-		border: 1px solid var(--input-border);
-		border-radius: var(--border-radius-0);
+		border: var(--border-width) solid var(--input-border);
+		border-radius: var(--radius-box);
 		background: var(--input-background);
 		color: var(--text-primary);
 		font: inherit;

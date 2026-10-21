@@ -10,12 +10,11 @@
 import type { ImageMetadata } from "astro";
 import BlogLayout from "./BlogLayout.astro";
 import Img from "../components/mdx/Img.astro";
-import Anchor from "@whois/design-system/Anchor";
 import Fig from "@whois/design-system/Fig";
 import Grid from "@whois/design-system/Grid";
 import Heading from "@whois/design-system/Heading";
-import Index from "@whois/design-system/Index";
-import IndexRow from "@whois/design-system/IndexRow";
+import Card from "@whois/design-system/Card";
+import Chip from "@whois/design-system/Chip";
 import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
 import Prose from "@whois/design-system/Prose";
@@ -29,13 +28,11 @@ import {
 	type CategoryId,
 } from "../lib/blog";
 
-/** A neighbouring post, as the index at the foot lists it. */
+/** A neighbouring post, as the foot card links it. */
 export interface Neighbour {
 	title: string;
 	href: string;
 	date: Date;
-	/** Its chronological number. */
-	no: number;
 }
 
 /** The post's hero image, from its frontmatter: the collection resolves the
@@ -78,6 +75,7 @@ const {
 	imageAlt,
 	canonical,
 	no,
+	total,
 	stats,
 	hero = null,
 	prev = null,
@@ -87,10 +85,11 @@ const {
 const cat = category ? categories[category] : null;
 const COLUMNS = "var(--ruled-columns)";
 
-/** The two neighbour rows of the index: the older post, then the newer. */
-const neighbourRows = [
-	{ key: "prev", label: "← previous", post: prev, none: "Nothing older" },
-	{ key: "next", label: "next →", post: next, none: "Nothing newer" },
+/** The two halves of the foot card: the older post on the left, the newer on
+ *  the right, each pointing the way it goes. */
+const neighbours = [
+	{ key: "prev", label: "← Older", post: prev, none: "This is the first post" },
+	{ key: "next", label: "Newer →", post: next, none: "This is the latest post" },
 ] as const;
 ---
 
@@ -152,51 +151,50 @@ const neighbourRows = [
 			<slot />
 		</Prose>
 
-		<Index class="post__index" aria-label="Index" data-post-index="">
-			<IndexRow head>
-				<Mono>index</Mono>
-				<Mono>no.</Mono>
-				<Mono>title</Mono>
-				<Mono class="ds-index__fold">filed</Mono>
-			</IndexRow>
-			<IndexRow data-index-row="tags">
-				<Mono>tags</Mono>
-				<Mono tone="primary">{padNo(no)}</Mono>
-				<Mono tone="primary" class="ds-index__span">
-					{tags.length > 0
-						? tags.map((tag, i) => (
-								<Fragment>
-									{i > 0 && " · "}
-									<Anchor variant="ink" href={tagHref(tag)}>{tag.replace(/[-_]+/g, " ")}</Anchor>
-								</Fragment>
-							))
-						: "—"}
-				</Mono>
-			</IndexRow>
-			{neighbourRows.map(({ key, label, post, none }) =>
-				post ? (
-					<IndexRow data-index-row={key}>
-						<Mono>{label}</Mono>
-						<Mono tone="primary">{padNo(post.no)}</Mono>
-						<Anchor variant="ink" href={post.href} class="ds-index__title" data-neighbour={key}>
-							{post.title}
-						</Anchor>
-						<Mono class="ds-index__fold">
-							<time datetime={isoDate(post.date)}>{filedDate(post.date)}</time>
-						</Mono>
-					</IndexRow>
-				) : (
-					<IndexRow dim data-index-row={key}>
-						<Mono>{label}</Mono>
-						<Mono>—</Mono>
-						<Text as="span" size={3} variant="tertiary" class="ds-index__title">
-							{none}
-						</Text>
-						<Mono class="ds-index__fold">—</Mono>
-					</IndexRow>
-				),
+		{/* THE FOOT: a panel, "keep reading". Its body is the two neighbours,
+		     side by side — each half one big link: which way it goes, the title,
+		     the month — and its foot the post's tags as chip links. Where there
+		     is no neighbour the half says so, dimmed, and links nowhere. */}
+		<Card as="nav" class="post-more" aria-label="Keep reading" data-post-more="" title="Keep reading">
+			<Mono slot="meta" tone="tertiary" class="post-more__count">
+				txt / {padNo(no)} of {padNo(total)}
+			</Mono>
+			<div class="post-more__pair">
+				{neighbours.map(({ key, label, post, none }) =>
+					post ? (
+						<a
+							class={`post-more__half post-more__half--${key} ds-control`}
+							href={post.href}
+							data-half={key}
+							data-neighbour={key}
+						>
+							<Mono class="post-more__dir">{label}</Mono>
+							<Text as="span" size={3} class="post-more__title">{post.title}</Text>
+							<Mono tone="tertiary" class="post-more__date">
+								<time datetime={isoDate(post.date)}>{filedDate(post.date)}</time>
+							</Mono>
+						</a>
+					) : (
+						<div class={`post-more__half post-more__half--${key} post-more__half--none`} data-half={key}>
+							<Mono tone="tertiary" class="post-more__dir">{label}</Mono>
+							<Text as="span" size={3} variant="tertiary" class="post-more__title">{none}</Text>
+						</div>
+					),
+				)}
+			</div>
+			{tags.length > 0 && (
+				<div class="post-more__tags" data-half="tags">
+					<Mono tone="tertiary">Tagged</Mono>
+					<ul class="post-more__chips">
+						{tags.map((tag) => (
+							<li>
+								<Chip as="a" href={tagHref(tag)}>{tag.replace(/[-_]+/g, " ")}</Chip>
+							</li>
+						))}
+					</ul>
+				</div>
 			)}
-		</Index>
+		</Card>
 	</article>
 </BlogLayout>
 
@@ -204,19 +202,19 @@ const neighbourRows = [
 	/* THE GRID. Four columns a step apart, the tokens the ruled Prose reads
 	   too, so the page's rows and the sections fall on the same lines. The
 	   page's headings — the title here, the section heads through Prose — on
-	   the UI face at the semibold, by the heading tokens in scope. */
+	   the UI face at its Medium, by the heading tokens in scope. */
 	.post {
 		--ruled-columns: repeat(4, minmax(0, 1fr));
 		--ruled-gap: var(--space-4);
 		--font-heading: var(--font-ui);
-		--font-heading-weight: var(--font-weight-700);
+		--font-heading-weight: var(--font-weight-500);
 	}
 
 	/* THE STATUS STRIP. One row between the strong hairlines, the date on
 	   the right edge. */
 	.post__strip {
 		margin-block-start: var(--space-10);
-		border-block: 1px solid var(--hairline-strong);
+		border-block: var(--border);
 	}
 	.post__cell {
 		padding-block: var(--space-2);
@@ -249,20 +247,96 @@ const neighbourRows = [
 		line-height: var(--line-height-ui);
 	}
 
-	/* THE HERO (a ruled Fig) and THE INDEX (an Index): their rows are the
-	   components'; the page places them. */
+	/* THE HERO (a ruled Fig): its rows are the component's; the page places
+	   it. */
 	.post__fig {
 		margin: var(--space-11) 0 0;
 	}
-	.post__index {
+
+	/* THE FOOT CARD. The two halves split the body down a dashed rule; each is
+	   one link, the whole half its target, tinted with the first wash under
+	   the pointer. The newer half reads from the right edge, so each arrow
+	   points out of the card the way it goes. Below 640 they stack, older
+	   on top, the rule between them, both on the left edge. */
+	.post-more {
 		margin-block-start: var(--space-12);
+	}
+	.post-more__pair {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	}
+	.post-more__half {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-2);
+		padding: var(--space-5) var(--space-4);
+		color: var(--text-primary);
+		text-decoration: none;
+		transition: background-color var(--duration-standard) var(--ease-standard);
+		--control-ring-offset: var(--focus-ring-inset);
+	}
+	.post-more__half--next {
+		align-items: flex-end;
+		text-align: end;
+		border-inline-start: var(--border);
+	}
+	a.post-more__half:hover {
+		background: var(--wash-1);
+	}
+	a.post-more__half .post-more__dir {
+		color: var(--text-secondary);
+	}
+	a.post-more__half:hover .post-more__dir {
+		color: var(--accent);
+	}
+	.post-more__title {
+		line-height: var(--line-height-ui);
+		text-wrap: pretty;
+	}
+	a.post-more__half .post-more__title {
+		text-decoration-line: underline;
+		text-decoration-thickness: 1px;
+		text-decoration-color: var(--border-color);
+		text-underline-offset: var(--space-1);
+	}
+	a.post-more__half:hover .post-more__title {
+		text-decoration-color: currentColor;
+	}
+
+	/* Tags: the card's foot row, a quiet label and the chips. */
+	.post-more__tags {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--space-3);
+		padding: var(--space-3) var(--space-4);
+		border-block-start: var(--border);
+	}
+	.post-more__chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	@media (max-width: 639px) {
+		.post-more__pair {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.post-more__half--next {
+			align-items: flex-start;
+			text-align: start;
+			border-inline-start: 0;
+			border-block-start: var(--border);
+		}
 	}
 
 	/* ONE COLUMN, below the desktop step: the strip two by two (the date
 	   still on the right edge), no column numbers, the title a step down,
-	   the hero and the table full
-	   width. The table keeps three columns — label, number, title — and the
-	   FILED cell drops under the title (the header's is not drawn). */
+	   the hero full width. */
 	@media (max-width: 1023px) {
 		.post {
 			--ruled-columns: minmax(0, 1fr);

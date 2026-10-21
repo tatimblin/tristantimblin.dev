@@ -1,13 +1,15 @@
-/* Pill — a small capsule of caps mono: `LOW RISK` in a card header, `30D` on
+/* Pill — a small tag of caps mono: `LOW RISK` in a card header, `30D` on
  * the visitors tile, `PAUSED` on the player. A departure from the DS port
  * (which was a rounded rectangle at text size in the UI face): the pill is
- * in the structure voice, fully round, and comes in two shapes of emphasis:
+ * in the structure voice, a box at the one small corner, and comes in two
+ * shapes of emphasis:
  *
- *   subtle    (the default when no variant is given) an ink wash — the header
- *             pill. A small icon in front is welcome; the gap is for it.
- *   outline   a hairline, no fill — a quiet link or toggle (the 404's ways
- *             back). Its edge is the Chip's: the hairline at rest, the
- *             strong one under the pointer.
+ *   subtle    (the default when no variant is given) the first wash, the
+ *             quiet ink — the header pill, the old blog's tag. A small icon
+ *             in front is welcome; the gap is for it.
+ *   outline   the dashed edge on the panel-header fill, in the link colour —
+ *             a way somewhere (the 404's ways back): the Button's look at a
+ *             pill's size. Flat on the first wash under the pointer.
  *
  * THE VOICE IS NOT HERE. Pill.astro composes the `ds-mono ds-caps` classes,
  * which own the face, the size (fluid inside a widget), the weight, the
@@ -26,18 +28,18 @@
 	box-sizing: border-box;
 	min-block-size: var(--space-5);
 	padding: var(--space-1) var(--space-3);
-	border: 1px solid transparent;
-	border-radius: var(--border-radius-pill);
+	border: var(--border-width) var(--border-style) var(--pill-border, transparent);
+	border-radius: var(--radius-box);
 	white-space: nowrap;
 	text-decoration: none;
 	user-select: none;
 
 	background: var(--pill-background, var(--wash-1));
-	color: var(--pill-color, var(--text-primary));
+	color: var(--pill-color, var(--text-subtle));
 	transition:
-		background var(--duration-swap) var(--ease-reveal),
-		color var(--duration-swap) var(--ease-reveal),
-		border-color var(--duration-swap) var(--ease-reveal);
+		background var(--duration-standard) var(--ease-standard),
+		color var(--duration-standard) var(--ease-standard),
+		border-color var(--duration-standard) var(--ease-standard);
 }
 /* A static one is not a control: no text cursor over it. At zero
    specificity, so a control's pointer (control.css) wins. */
@@ -53,22 +55,22 @@
 /* variant */
 .ds-pill--variant-subtle {
 	--pill-background: var(--wash-1);
-	--pill-color: var(--text-primary);
+	--pill-color: var(--text-subtle);
 }
 .ds-pill--variant-outline {
-	--pill-background: transparent;
-	--pill-color: var(--text-secondary);
-	border-color: var(--hairline);
+	--pill-background: var(--panel-header-bg);
+	--pill-color: var(--link-color);
+	--pill-border: var(--border-color);
 }
 
 /* As a control: the hover steps. */
 :is(button, a).ds-pill:hover:not(:disabled),
 :is(button, a).ds-pill:focus-visible {
 	--pill-background: var(--wash-2);
+	--pill-color: var(--text-primary);
 }
 :is(button, a).ds-pill--variant-outline:hover:not(:disabled),
 :is(button, a).ds-pill--variant-outline:focus-visible {
 	--pill-background: var(--wash-1);
-	--pill-color: var(--text-primary);
-	border-color: var(--hairline-strong);
+	--pill-color: var(--link-hover-color);
 }

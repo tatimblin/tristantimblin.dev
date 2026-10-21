@@ -8,12 +8,11 @@
 	min-inline-size: 0;
 }
 
-/* THE NUMERAL (variant="numeral") — the spec sheet's pair: the value big and
- * thin, the label small beside it. The numeral is the display role (Mondwest
- * Thin): at this size the Regular's stems read as bold, the Thin's as a
- * drawn line, which is the look. Tabular, so a count that steps does not
- * shift; no tracking, a bitmap face on its own grid. Line-height 1 and
- * flex-start put the label's first line on the numeral's top edge. */
+/* THE NUMERAL (variant="numeral") — the spec sheet's pair: the value big,
+ * the label small beside it. The numeral is the display role (DM Sans
+ * Medium). Tabular, so a count that steps does not shift; the display
+ * tracking. Line-height 1 and flex-start put the label's first line on the
+ * numeral's top edge. */
 .ds-stat--variant-numeral {
 	flex-direction: row;
 	align-items: flex-start;

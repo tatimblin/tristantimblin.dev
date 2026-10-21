@@ -43,11 +43,11 @@ function clamp01(x: number): number {
  * Published from measure():
  *   --sh-heading-fitsize font-size (px) fitting "other stories" to a 6-col span.
  *   --sh-heading-gap     the measured tuck of "other stories" into the wordmark.
- *   --sh-amp-size/-top   the "&"'s size and its baseline-aligned position.
+ *   --sh-amp-size/-top/-left the "&"'s size and its place behind "other stories".
  *   --sh-solid-*         the four registration corrections onto the outline.
  *   --sh-pin-height      the pin's height, so the track can reserve its scroll.
  * ...and onto .fh, for the hero fold: --sh-group-h, --sh-lockup-h,
- * --sh-wordmark-h and --sh-header-clear. Those also FEED THE CSS RANGES the timelines animate over, which
+ * --sh-wordmark-h and --sh-header-h. Those also FEED THE CSS RANGES the timelines animate over, which
  * is why they have to stay correct even though nothing reads them per frame.
  *
  * Lifecycle mirrors the sibling packages: a `listeners` cleanup array, a
@@ -98,17 +98,18 @@ export class StoriesHeadingElement extends HTMLElement {
 	    resizes anything downstream would log an RO-loop warning (see setPx). */
 	private lastWritten = new Map<string, number>();
 
-	/** The "&"'s size, as a fraction of the wordmark's RENDERED INK HEIGHT.
-	    Tied to the wordmark rather than to a breakpoint so the glyph holds the same
-	    proportion at every viewport — the wordmark is itself full-width, so this is
-	    effectively a ratio of the screen too, and the CSS --sh-amp-size steps exist only
-	    for the pre-measure frame.
-	    Ink height, not font-size: fitWordmark() sets the SVG viewBox to the real glyph
-	    bounds, so the two are the same thing here and the ratio means what it looks like.
-	    The glyph is baseline-aligned to the wordmark (see fitAmp), so growth goes UPWARD
-	    into the word — which is the point, now that the "&" paints over the whole lockup
-	    rather than being threaded between its layers. */
-	private static readonly AMP_SIZE_RATIO = 0.65;
+	/** The "&"'s INK HEIGHT, as a fraction of the wordmark's rendered ink height.
+	    A display glyph, not a letter of the line: its baseline on the heading's, it
+	    rises from behind "other stories" to about the wordmark's x-height midline,
+	    knocking a hole out of "tr". Tied to the wordmark rather than to a breakpoint
+	    so it holds the same proportion at every viewport; the CSS --sh-amp-size
+	    steps exist only for the pre-measure frame. */
+	private static readonly AMP_SIZE_RATIO = 0.6;
+	/** Where the "&"'s ink centre sits across the wordmark's ink, 0 (its left edge)
+	    to 1 (its right): over the "r", between "t" and "is", as on the live site. */
+	private static readonly AMP_CENTER = 0.21;
+	/** How far the "&"'s baseline drops BELOW the heading's, in em of the "&". */
+	private static readonly AMP_DROP = 0;
 
 	/** The "&"'s parallax distance (px) at full progress. */
 	private static readonly AMP_PARALLAX = 100;
@@ -131,33 +132,22 @@ export class StoriesHeadingElement extends HTMLElement {
 	    large is only a slightly taller opaque mask, over page background. */
 	private static readonly COVER_SLACK = 8;
 
-	/** Optical clearance added to the measured tuck, in px.
-	    fitHeadingTuck() computes the point where the heading's x-height line sits exactly
-	    ON the wordmark's baseline. That is the mathematically exact reading of "only the
-	    tall letters overlap", and on screen it is a shade tight: the ascender tips land
-	    hard against the wordmark's letterforms with nothing between them. A couple of
-	    pixels of daylight lets the two words breathe without loosening the lockup — the
-	    round letters still sit below the baseline and the tall ones still cross it.
-	    FLAT px, not a ratio, and deliberately so: this is a fixed optical clearance
-	    between two edges, not a proportion of either face. Same reasoning as COVER_SLACK
-	    above. If it ever needs to scale with the type instead, multiply by the heading's
-	    font-size at the call site — one line. */
-	private static readonly TUCK_CLEARANCE = 2;
+	/** The daylight between the wordmark's baseline and the tallest ink of "other
+	    stories" (the t's apex, the h's ascender, the i's tittle), in em of the
+	    heading's font-size — so the gap is a property of the type and scales with it.
+	    fitHeadingTuck() measures where that ink sits and places it this far under the
+	    wordmark. NEGATIVE: an overlap, the live site's tuck — the heading's tallest
+	    letters cross the wordmark's baseline. "other stories" stacks OVER "tristan"
+	    and is a background-filled outline, so its ascenders knock out the wordmark
+	    where they cross rather than colliding with it. */
+	private static readonly TUCK_CLEARANCE = -0.12;
 
-	/** Vertical offset of the "&" from the wordmark baseline, as a fraction of the
-	    "&"'s own font-size (so it scales across viewports). POSITIVE lifts it above
-	    the baseline; negative drops it below. It sits just under the baseline so the
-	    glyph hangs into the wordmark's descender whitespace. */
-	private static readonly AMP_LIFT = -0.06;
-
-	/** Grid the "other stories" fit targets: N columns of a 12-col content grid
-	   with a 24px (var(--space-5)) gutter, matching .home__grid. Below this host
-	   width (the ≤900px stacked layout) the fit is skipped for the rem fallback.
-	   Applies to the TYPE fit only — fitFold() runs at every width. */
-	private static readonly GRID_COLUMNS = 12;
-	private static readonly GRID_GAP = 24;
-	private static readonly FIT_SPAN = 6;
-	private static readonly FIT_MIN_WIDTH = 901;
+	/** "other stories"'s single-line width as a fraction of the wordmark's. One
+	    proportion at every width (see fitHeading). The live site's serif heading ran
+	    ~0.6 of its wordmark, but DM Sans is far wider and taller in the x-height at a
+	    given width, so the same fraction reads as too big; this keeps the heading
+	    clearly subordinate. */
+	private static readonly HEADING_RATIO = 0.42;
 
 	connectedCallback() {
 		this.track = this.querySelector<HTMLElement>("[data-sh-track]");
@@ -264,7 +254,6 @@ export class StoriesHeadingElement extends HTMLElement {
 		}
 
 		this.fitWordmark();
-		this.fitAmp();
 		// BEFORE the fit, not after: alignHeadingLayers narrows the solid layer, and
 		// fitHeading sizes the box to the WIDER layer — run the other way round and
 		// each re-measure feeds the other a different answer, so the fit never settles.
@@ -275,6 +264,10 @@ export class StoriesHeadingElement extends HTMLElement {
 		// AFTER fitHeading: the tuck is derived from the heading's ink metrics at its
 		// FITTED size, so it has to read the size the fit just landed on.
 		this.fitHeadingTuck();
+		// LAST: the "&" stands behind "other stories", so it is placed off the heading's
+		// fitted size and tuck. It is absolute and takes no flow space, so nothing above
+		// reads it back.
+		this.fitAmp();
 
 		if (this.pin) {
 			this.style.setProperty(
@@ -302,7 +295,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * screen; the slotted intro/CTAs flow below it, in the lower half, and the whole
 	 * group must rest ABOVE that floor, never through it. Two clamps, in a fixed order:
 	 *
-	 *   lead   = max(headerClear,
+	 *   lead   = max(headerH,
 	 *                min((100svh − lockup) / 2,
 	 *                    100svh − floor − foldGap − group))           ① spend whitespace
 	 *   height = max(100svh, lead + group + foldGap + floor)          ② then grow
@@ -311,7 +304,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * it SHRINKS the lead, so a group that grows (longer copy, larger dynamic type, a
 	 * narrower screen forcing more wrapping) first eats the whitespace under the site
 	 * header. Only when the lead bottoms out at
-	 * headerClear — no whitespace left — does the group's bottom pass the fold, and ②
+	 * headerH — no whitespace left — does the group's bottom pass the fold, and ②
 	 * grows the hero by exactly that overflow. Growing is the last resort.
 	 *
 	 * BOTH clamps live in CSS (see FullHeroLayout). This method only MEASURES and
@@ -320,7 +313,8 @@ export class StoriesHeadingElement extends HTMLElement {
 	 *   --sh-group-h      the group's full height (wordmark → intro bottom)
 	 *   --sh-lockup-h     the lockup's height (wordmark → "other stories" bottom)
 	 *   --sh-wordmark-h   the wordmark's rendered height
-	 *   --sh-header-clear the minimum lead that clears the site header
+	 *   --sh-header-h     the site header's band: the minimum lead (the wordmark
+	 *                     clears the header) and a framed hero's margin
 	 *
 	 * That split is what makes the system acyclic. If JS instead computed the lead
 	 * from the scene's measured height, every grown state would be its own fixed point
@@ -387,10 +381,14 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.setPx(fh, "--sh-group-h", wmHeight + headingGap + belowWordmark, "groupH");
 		this.setPx(fh, "--sh-lockup-h", wmHeight + headingGap + (pinRect?.height ?? 0), "lockupH");
 		this.setPx(fh, "--sh-wordmark-h", wmHeight, "wordmarkH");
-		// A negative heading-gap (the sub tucks UP into the wordmark) shortens the group
-		// via --sh-group-h above, but it must NOT reduce the header clearance — the
-		// wordmark still has to clear the overlaid header. Only a positive gap adds slack.
-		this.setPx(fh, "--sh-header-clear", headerH + Math.max(0, headingGap), "headerClear");
+		// The header's band: the lead's floor (the lead runs from the hero's top to the
+		// wordmark's, so the wordmark clears the header exactly at headerH — the heading
+		// gap sits BELOW the wordmark and is already in --sh-group-h, not clearance), and
+		// the margin a consumer framing the hero in the header's band uses. Rounded UP
+		// to a whole px: it is a floor with no slack, and setPx's 0.1px rounding (or a
+		// skipped sub-0.5px rewrite) could otherwise park the wordmark a hair under
+		// the header. Whole px always differ by ≥1, so the guard never skips one.
+		this.setPx(fh, "--sh-header-h", Math.ceil(headerH), "headerH");
 	}
 
 	/**
@@ -408,45 +406,64 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * Size the "&" to AMP_SIZE_RATIO of the wordmark's rendered ink height and drop it so its
-	 * own baseline sits on the wordmark's baseline. The "&" is absolutely positioned
-	 * inside the host; the wordmark <svg> is its offset parent's first child, so its
-	 * offsetTop/height locate the wordmark box. Within a font, the baseline sits
-	 * `ascentRatio` down from the glyph-box top; we align the "&"'s baseline to the
-	 * wordmark's by matching those baseline offsets. All font-relative, so it holds
-	 * at every viewport.
+	 * Set the "&" as a display glyph BEHIND "other stories" and OVER "tristan": its ink
+	 * AMP_SIZE_RATIO of the wordmark's ink height, its baseline AMP_DROP em under the
+	 * heading's, its ink centred AMP_CENTER of the way across the wordmark's ink.
+	 *
+	 * Runs AFTER fitHeading/fitHeadingTuck: it is placed off the heading's fitted size
+	 * and tuck. And it reads the heading's AT-REST position, not its current one — the
+	 * pin is sticky, so once it detaches its box is wherever the scroll put it. The
+	 * track is in flow (scroll-invariant) and the text's baseline within the pin is
+	 * pure layout, so trackTop + (baseline − pinTop) is the at-rest baseline from any
+	 * scroll position. Published relative to the host (the "&"'s containing block).
 	 */
 	private fitAmp() {
 		if (!this.amp || !this.wordmarkSvg) return;
-		// Wordmark box top + height RELATIVE TO THE HOST (the "&"'s positioning
-		// context), so --sh-amp-top lands in the same coordinate space.
-		const hostTop = this.getBoundingClientRect().top;
+		const hostRect = this.getBoundingClientRect();
 		const wmRect = this.wordmarkSvg.getBoundingClientRect();
-		const wmTop = wmRect.top - hostTop;
 		const wmHeight = wmRect.height;
 		if (!(wmHeight > 0)) return;
 
-		const ampSize = wmHeight * StoriesHeadingElement.AMP_SIZE_RATIO;
+		// SIZE: by INK height, asked of the face — font-size is not ink.
+		const ink = this.measureAmpInk(100);
+		const ampPerPx = (ink?.ascent ?? 72) / 100;
+		const ampSize = (wmHeight * StoriesHeadingElement.AMP_SIZE_RATIO) / ampPerPx;
 		this.style.setProperty("--sh-amp-size", `${ampSize.toFixed(2)}px`);
 
-		// The wordmark box IS its ink (fitWordmark set the viewBox to the ink
-		// bounds), so its baseline is `ascent/(ascent+descent)` down from wmTop.
-		const wmInk = this.measureInk();
-		const wmBaseline =
-			wmTop +
-			(wmInk ? (wmInk.ascent / (wmInk.ascent + wmInk.descent)) * wmHeight : wmHeight);
+		const outline = this.heading?.querySelector(".sh__outline");
+		const baseline = outline ? this.baselineOf(outline) : null;
+		if (!outline || !this.track || !this.pin || baseline === null) return;
+		const pinTop = this.pin.getBoundingClientRect().top;
+		const trackTop = this.track.getBoundingClientRect().top;
+		const headingBaseline = trackTop - hostRect.top + (baseline - pinTop);
 
-		// The "&"'s baseline sits `ampAscent` below its own top (its font-size box
-		// top). Place --sh-amp-top so that top + ampAscent == wmBaseline, then lift
-		// it slightly above the baseline (proportional to its size, so it scales).
-		const ampAscent = this.measureAmpAscent(ampSize);
-		const lift = StoriesHeadingElement.AMP_LIFT * ampSize;
-		const ampTop = wmBaseline - (ampAscent ?? ampSize * 0.72) - lift;
+		// VERTICAL: the "&"'s box top sits its own baseline offset above its baseline
+		// (read off the element by layout, not modelled from font metrics).
+		const ampBaseline = headingBaseline + StoriesHeadingElement.AMP_DROP * ampSize;
+		const ampTop = ampBaseline - (this.ampBaselineOffset() ?? ampSize * 0.8);
 		this.style.setProperty("--sh-amp-top", `${ampTop.toFixed(2)}px`);
+
+		// HORIZONTAL: across the wordmark's INK — fitWordmark sized its viewBox to the
+		// glyphs, so the svg's box is the text, not a padded container.
+		// The "&"'s ink spans [origin − left, origin + right] of its box's left edge.
+		const centre = wmRect.left - hostRect.left + StoriesHeadingElement.AMP_CENTER * wmRect.width;
+		const k = ampSize / 100;
+		const inkMid = ((ink ? ink.right - ink.left : 70) * k) / 2;
+		this.style.setProperty("--sh-amp-left", `${(centre - inkMid).toFixed(2)}px`);
 	}
 
-	/** Ink ascent (px above baseline) of "&" at `sizePx`, via Canvas measureText. */
-	private measureAmpAscent(sizePx: number): number | null {
+	/** Distance from the "&" element's top to its baseline, in px — asked of the
+	    layout engine with a zero-height probe, as baselineOf does for the heading. */
+	private ampBaselineOffset(): number | null {
+		if (!this.amp) return null;
+		const base = this.baselineOf(this.amp);
+		if (base === null) return null;
+		return base - this.amp.getBoundingClientRect().top;
+	}
+
+	/** Ink box of "&" at `sizePx` via Canvas measureText: its ascent above the
+	    baseline and its left/right extents from the glyph origin. */
+	private measureAmpInk(sizePx: number): { ascent: number; left: number; right: number } | null {
 		if (!this.amp) return null;
 		if (!this.inkCanvas) this.inkCanvas = document.createElement("canvas");
 		const ctx = this.inkCanvas.getContext("2d");
@@ -454,8 +471,12 @@ export class StoriesHeadingElement extends HTMLElement {
 		const cs = getComputedStyle(this.amp);
 		ctx.font = `${cs.fontWeight} ${sizePx}px ${cs.fontFamily}`;
 		const m = ctx.measureText("&");
-		const a = m.actualBoundingBoxAscent;
-		return Number.isFinite(a) ? a : null;
+		if (!Number.isFinite(m.actualBoundingBoxAscent) || m.actualBoundingBoxAscent <= 0) return null;
+		return {
+			ascent: m.actualBoundingBoxAscent,
+			left: m.actualBoundingBoxLeft,
+			right: m.actualBoundingBoxRight,
+		};
 	}
 
 	/**
@@ -497,38 +518,24 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * Size "other stories" so its single-line width equals a 6-column span of the
-	 * 12-col content grid (matching the "NEW DARK WEB" reference). The grid shares
-	 * this host's content-box width and the same --hero-inset gutter as the page's
-	 * .fh-row, so this host's own width is the grid's total width. A span of N cols
-	 * is N*colW + (N-1)*gap where colW = (total - 11*gap)/12. We measure the text
-	 * at a reference px size with Canvas measureText (no layout thrash), then scale
-	 * font-size by target/natural. Below FIT_MIN_WIDTH (the ≤900px stacked layout,
-	 * where white-space wraps) the fit is skipped so CSS keeps the rem fallback.
+	 * Size "other stories" so its single-line width is HEADING_RATIO of the
+	 * wordmark's — one proportion at every viewport, so the heading stays
+	 * subordinate to "tristan" on a phone as on a desktop (a grid-span fit above
+	 * 900px and ~70vw below it made the phone's heading 3/4 of the wordmark). We
+	 * measure the text at a reference px size with Canvas measureText (no layout
+	 * thrash), then scale font-size by target/natural.
 	 */
 	private fitHeading() {
 		if (!this.heading) return;
 
-		const hostWidth = this.getBoundingClientRect().width;
-		if (!(hostWidth > 0)) {
+		const wmWidth =
+			this.wordmarkSvg?.getBoundingClientRect().width || this.getBoundingClientRect().width;
+		if (!(wmWidth > 0)) {
 			// Not rendered: drop the fit, fall back to the rem step.
 			this.style.removeProperty("--sh-heading-fitsize");
 			return;
 		}
-
-		// Below FIT_MIN_WIDTH (the one-column mobile layout) fit "other stories" to
-		// ~70vw on a single line; above it fit to a 6-col span of the content grid.
-		let target: number;
-		if (hostWidth < StoriesHeadingElement.FIT_MIN_WIDTH) {
-			target = 0.7 * window.innerWidth;
-		} else {
-			const gap = StoriesHeadingElement.GRID_GAP;
-			const cols = StoriesHeadingElement.GRID_COLUMNS;
-			const span = StoriesHeadingElement.FIT_SPAN;
-			const colW = (hostWidth - (cols - 1) * gap) / cols;
-			target = span * colW + (span - 1) * gap;
-		}
-		if (!(target > 0)) return;
+		const target = StoriesHeadingElement.HEADING_RATIO * wmWidth;
 
 		// Natural single-line ink width of "other stories" at a reference px size.
 		const REF = 100;
@@ -541,37 +548,31 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * SIT "OTHER STORIES" SO ONLY ITS TALL LETTERS OVERLAP THE WORDMARK.
+	 * TUCK "OTHER STORIES" UP INTO THE WORDMARK.
 	 *
-	 * The lockup reads as one unit because the heading tucks UP into the whitespace under
-	 * "tristan" (which has no descenders, so that space is clear). How far up is the
-	 * whole question, and the answer is a TYPOGRAPHIC relationship, not a spacing step:
-	 * the heading's X-HEIGHT LINE should land on the wordmark's BASELINE, plus a couple
-	 * of pixels of optical clearance (TUCK_CLEARANCE). Then the ascenders — the t's and
-	 * the h, plus the i's tittle — poke above that baseline and nothing else does. Round
-	 * letters (o, e, r, s) sit entirely below it.
+	 * The heading sits directly under "tristan" (which has no descenders, so its ink
+	 * bottom IS its baseline), its tallest ink TUCK_CLEARANCE em from that baseline —
+	 * negative, so the t, h and tittle cross it, as on the live site. A typographic
+	 * relationship, not a spacing step: measured off the faces, it scales with the
+	 * heading's fitted size. "other stories" stacks over "tristan" as a
+	 * background-filled outline, so the crossing knocks out instead of colliding.
+	 * (For a while, on DM Sans, this was a clear breath below the baseline instead.)
+	 * Derived either way, never tuned per breakpoint: hand-picked px tokens went stale
+	 * the last time the faces changed.
 	 *
-	 * DERIVED, NOT TUNED, and the difference has already bitten once. This was two
-	 * hand-picked px tokens, one per breakpoint. Both were chosen against the previous
-	 * faces, and self-hosting the type (the Migra/Mondwest swap) moved the metrics out
-	 * from under them: the same numbers then read as too much overlap. A ratio of the
-	 * face's own ink cannot go stale that way — it re-derives from whatever CSS resolves.
-	 *
-	 * Measured on the OUTLINE layer: it is the one in normal flow, so it defines the box,
-	 * and it is what is actually on screen at rest (the solid layer is clipped away until
-	 * the wipe, and alignHeadingLayers has matched its ink height to this one anyway).
+	 * Measured on the OUTLINE layer: it is the one in normal flow, so it defines the box.
 	 *
 	 * SCROLL-INVARIANT, which is why it is expressed against the PIN rather than the
 	 * viewport or the wordmark. measure() can run from a resize at any scroll position,
 	 * and the pin is sticky — its distance from the wordmark IS the scroll offset once it
-	 * detaches. The heading's baseline relative to the pin, by contrast, is pure layout:
-	 * the heading is in the pin's flow. At rest the pin's top coincides with the track's,
-	 * which sits one --sh-heading-gap below the wordmark's ink bottom, so
+	 * detaches. The heading's baseline relative to the pin, by contrast, is pure layout.
+	 * At rest the pin's top coincides with the track's, which sits one --sh-heading-gap
+	 * below the wordmark's ink bottom, so
 	 *
-	 *     xHeightLine = wordmarkBaseline + gap + (baseline − pinTop) − xHeight
+	 *     inkTop = wordmarkBaseline + gap + (baseline − pinTop) − ascent
 	 *
-	 * and setting that equal to the wordmark's baseline gives the gap below. Neither term
-	 * on the right depends on the gap, so this lands in ONE pass — no feedback, and the
+	 * and setting that to wordmarkBaseline + clearance gives the gap. Neither term on the
+	 * right depends on the gap, so this lands in ONE pass — no feedback, and the
 	 * re-measure the write triggers computes the same number and is skipped by setPx.
 	 */
 	private fitHeadingTuck(): void {
@@ -588,22 +589,23 @@ export class StoriesHeadingElement extends HTMLElement {
 		const size = parseFloat(cs.fontSize);
 		if (!(size > 0)) return;
 
-		// x-height = the ink ascent of "x": no ascender, no descender, so its ink top IS
-		// the x-height line. Asking the face directly beats any table of per-font ratios.
+		// The phrase's own tallest ink, asked of the face: the ascent of the whole
+		// string, so whichever of the t, h or tittle stands highest sets it.
 		ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
-		const xHeight = ctx.measureText("x").actualBoundingBoxAscent;
-		if (!Number.isFinite(xHeight) || xHeight <= 0) return;
+		const ascent = ctx.measureText(text.textContent || "").actualBoundingBoxAscent;
+		if (!Number.isFinite(ascent) || ascent <= 0) return;
 
 		const baseline = this.baselineOf(text);
 		if (baseline === null) return;
 		const pinTop = this.pin.getBoundingClientRect().top;
 
-		// Negative: the heading rises into the wordmark by its own ascender overshoot,
-		// less the optical clearance that keeps the tips off the wordmark's letterforms.
+		// The ink top sits (baseline − pinTop − ascent) below the track top; the track
+		// sits one gap below the wordmark's ink bottom (its baseline: "tristan" has no
+		// descenders). Solve for the gap that puts the ink TUCK_CLEARANCE from it.
 		this.setPx(
 			this,
 			"--sh-heading-gap",
-			xHeight - (baseline - pinTop) + StoriesHeadingElement.TUCK_CLEARANCE,
+			StoriesHeadingElement.TUCK_CLEARANCE * size - (baseline - pinTop - ascent),
 			"headingGap"
 		);
 	}
@@ -611,11 +613,12 @@ export class StoriesHeadingElement extends HTMLElement {
 	/**
 	 * REGISTER THE SOLID LAYER ON THE OUTLINE.
 	 *
-	 * The wipe swaps typefaces mid-phrase, so the two layers are set in faces with
-	 * different metrics and do not line up on their own: Mondwest painted ~0.15em
-	 * low and ~0.28em long. They can never match glyph-for-glyph — different
-	 * typefaces — but they can share a bottom edge and an end, which is what makes
-	 * the swap read as one phrase resolving rather than two words sliding past.
+	 * The wipe CAN swap typefaces mid-phrase (--font-hero for the outline, --font-heading
+	 * for the solid). Both are DM Sans Medium today, so every correction below measures
+	 * ~0; when they were a serif and a pixel face the solid painted ~0.15em low and
+	 * ~0.28em long. Two faces can never match glyph-for-glyph, but they can share a
+	 * bottom edge and an end, which is what makes the swap read as one phrase resolving
+	 * rather than two words sliding past.
 	 *
 	 * MEASURED, NOT MODELLED. The obvious approach — derive the baseline from each
 	 * face's ascent/descent — lands wrong, because engines disagree about which of a
@@ -653,15 +656,10 @@ export class StoriesHeadingElement extends HTMLElement {
 
 		// SIZE — match the painted INK HEIGHT, not the font-size.
 		//
-		// The two faces are already normalised to a common x-height (the size-adjust
-		// in fonts.css), which is right for running text but not for two words laid
-		// on top of each other: Mondwest draws much taller ascenders off that same
-		// x-height, so "other stories" — whose t, h and t are its only tall letters —
-		// overshot the outline by a fifth of its height and read as sitting high.
-		// Scaling the solid until its ink box matches makes the swap look like ONE
-		// word changing its skin. The cost is that Mondwest's lowercase now sits a
-		// touch smaller than the outline's; that is the trade a two-face wipe makes,
-		// and matching the block wins because the block is what the eye compares.
+		// Two faces at one font-size can draw very different ascenders (the old pixel
+		// face overshot the serif outline by a fifth of its height). Scaling the solid
+		// until its ink box matches makes the swap look like ONE word changing its
+		// skin; matching the block wins because the block is what the eye compares.
 		// Measure the element that actually HOLDS the text, not the layer wrapper.
 		// The solid layer wraps its phrase in <wobble-text>, which is display:block —
 		// so the wrapper's own line box is an empty one sitting below the real text,
@@ -706,9 +704,9 @@ export class StoriesHeadingElement extends HTMLElement {
 		// eye reads two different typefaces against.
 		//
 		// Not the Range box's bottom: that is the CONTENT AREA (the face's own
-		// ascent+descent), and the two faces' content areas differ enormously —
-		// Mondwest's is ~1.7x the outline's after its optical size-adjust — so
-		// matching their bottoms hangs the solid well above the outline. Not the
+		// ascent+descent), and two faces' content areas can differ enormously (the
+		// old pixel face's was ~1.7x the outline's), so matching their bottoms hangs
+		// the solid well above the outline. Not the
 		// font's descent metric either; that was the first attempt and engines
 		// disagree about which of a face's three metric pairs forms the box.
 		//
@@ -1120,8 +1118,11 @@ export class StoriesHeadingElement extends HTMLElement {
 	 */
 	private ampProgress(): number {
 		if (!this.amp) return 0;
-		const start = 0.6 * window.innerHeight; // begin drifting/fading here
 		const end = 0.1 * window.innerHeight; // fully drifted/faded here
+		// Begin drifting/fading at 60vh — or at the first pixel of scroll, if the "&"
+		// already rests above that (the CSS range's max(0px, …) floor).
+		const restTop = this.amp.getBoundingClientRect().top - this.ampShift + window.scrollY;
+		const start = Math.max(end + 1, Math.min(0.6 * window.innerHeight, restTop));
 		// STRIP THE TRANSFORM WE APPLIED LAST FRAME. getBoundingClientRect() includes it,
 		// so feeding the moved position back in makes the parallax damp itself: every
 		// pixel of drift pushes the "&" further from the finish line it is measured

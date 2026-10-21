@@ -21,7 +21,7 @@
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
 	column-gap: var(--space-6);
-	border-block-start: 1px solid var(--hairline);
+	border-block-start: var(--border);
 }
 .ds-post-group + .ds-post-group {
 	margin-block-start: var(--space-8);
@@ -51,7 +51,7 @@
 	grid-column: 1 / -1;
 }
 .ds-post-row + .ds-post-row {
-	border-block-start: 1px solid var(--hairline);
+	border-block-start: var(--border);
 }
 
 /* The whole row is the link. Its min height is the row pitch, and the
@@ -64,7 +64,7 @@
 	min-block-size: var(--space-9);
 	padding-block: var(--space-3);
 	color: inherit;
-	border-radius: var(--border-radius-0);
+	border-radius: var(--radius-box);
 }
 .ds-post-row__title {
 	grid-column: 1;

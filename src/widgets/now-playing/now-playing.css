@@ -106,7 +106,7 @@
 	grid-column: 1 / -1;
 	grid-row: 1;
 	inline-size: 100%;
-	border-radius: 0;
+	border-radius: var(--radius-square);
 	/* The track's ink (see --ssp-track above). */
 	color: var(--text-tertiary);
 }
@@ -134,13 +134,13 @@
    the first tick; the ruler is square. */
 /* (Separate rules: one engine's unknown pseudo-element would void a list.) */
 .wx-nowplaying spotify-player::part(progress-bar)::-webkit-progress-bar {
-	border-radius: 0;
+	border-radius: var(--radius-square);
 }
 .wx-nowplaying spotify-player::part(progress-bar)::-webkit-progress-value {
-	border-radius: 0;
+	border-radius: var(--radius-square);
 }
 .wx-nowplaying spotify-player::part(progress-bar)::-moz-progress-bar {
-	border-radius: 0;
+	border-radius: var(--radius-square);
 }
 
 /* Compact tiles (the grid's compact-cell query, widget-grid.css): the header

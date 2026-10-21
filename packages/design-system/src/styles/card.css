@@ -1,17 +1,17 @@
-/* Card — the flat card of the instrument UI (see tokens.overrides.css,
- * INSTRUMENT UI). A deliberate departure from the DS port: upstream's Card is
- * a shadowed, optionally glassy surface with a `depth` scale, and none of that
- * survives here. A card is a surface a few percent off the page with a 1px
- * hairline round it — the reference dashboard card — and nothing else says
- * "card": one depth, one surface. */
+/* Card — the panel. A deliberate departure from the DS port: upstream's Card
+ * is a shadowed, optionally glassy surface with a `depth` scale, and none of
+ * that survives here. A card is a near-white surface on the page in a dashed
+ * edge (--border), at the one small corner (--radius-box), with a 1px tinted
+ * ring under it (--shadow-panel); its header fades down into the first wash
+ * and is cut off by the same dashed edge. One depth, one surface. */
 
 /* CardWrapper */
 .ds-card {
 	position: relative;
 	background: var(--card-background);
-	border-radius: var(--border-radius-2);
-	border: 1px solid var(--hairline);
-	box-shadow: none;
+	border-radius: var(--radius-box);
+	border: var(--border);
+	box-shadow: var(--shadow-panel);
 	overflow: hidden;
 }
 
@@ -22,33 +22,40 @@
 .ds-card--chrome-false {
 	border: none;
 	background: none;
+	box-shadow: none;
 	overflow: visible;
 }
 
 /* CardHeader — the header row: the title left, an optional pill or meta
-   right, and a hairline under it that fades out at both ends. The row is
-   LAYOUT only: the title is a Mono (CardHeader.astro), which owns the caps
-   voice — face, size, tracking, the phone tightening — and a Pill or handle in
-   the meta slot carries its own. Fixed line-height of 1 so the row is exactly
-   as tall as its label plus padding, whatever the theme's UI face. */
+   right, on the panel-header fill and cut off from the body by the panel's
+   own dashed edge (a real border, so it is the card's edge and not a drawn
+   stripe). The row is LAYOUT only: the title is a Mono (CardHeader.astro), a
+   Pill or handle in the meta slot carries its own voice. Fixed line-height of
+   1 so the row is exactly as tall as its label plus padding. The block
+   padding is a third of --space-6 (10.67px), so the header's rule sits where
+   the old site's did. */
 .ds-card-header {
 	position: relative;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	gap: var(--space-2);
-	padding: var(--space-3) var(--space-4);
+	padding: calc(var(--space-6) / 3) var(--space-4);
 	line-height: 1;
 	white-space: nowrap;
 	color: var(--text-secondary);
+	background: var(--panel-header-bg);
+	border-block-end: var(--border);
 }
-.ds-card-header::after {
-	content: "";
-	position: absolute;
-	inset-inline: 0;
-	inset-block-end: 0;
-	block-size: 1px;
-	background: var(--hairline-fade);
+/* The title: the heading face at the small step, uppercase, untracked — a
+   panel's name, not a kicker. The caps role reads --tracking-caps, so the
+   tracking is retuned in scope rather than fought. */
+.ds-card-header__title {
+	--tracking-caps: 0;
+	font-family: var(--font-heading);
+	font-size: var(--font-size-1);
+	font-weight: var(--font-heading-weight);
+	color: var(--text-secondary);
 }
 /* Both slots reserve a Pill's height, so a header is the same height whether
    its meta is a pill, a handle or nothing — otherwise the hairlines under a row
@@ -96,5 +103,5 @@
    bottom padding already stands the divider off the label, so the body starts
    the same distance below it rather than a full pad away. */
 .ds-card-header + .ds-card-body {
-	padding-block-start: var(--space-3);
+	padding-block-start: var(--space-4);
 }

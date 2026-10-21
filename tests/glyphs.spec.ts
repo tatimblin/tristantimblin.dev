@@ -147,11 +147,19 @@ test.describe("glyph tile sheet", () => {
 	test("the theme switch puts the sheet on the other page", async ({ page }) => {
 		await page.goto(SHEET);
 		const sheet = page.locator("[data-glyph-sheet]");
+		// The page is light by default, so dark is the other page: the sheet takes
+		// data-theme, and every themed token inside re-resolves (its plate darkens).
+		const plate = () => sheet.evaluate((el) => getComputedStyle(el).getPropertyValue("--background").trim());
+		const pagePlate = await plate();
+		await page.locator('[data-sheet-theme="dark"]').click();
+		await expect(sheet).toHaveAttribute("data-theme", "dark");
+		await expect(page.locator('[data-sheet-theme="dark"]')).toHaveAttribute("aria-pressed", "true");
+		expect(await plate()).not.toBe(pagePlate);
 		await page.locator('[data-sheet-theme="light"]').click();
-		await expect(sheet).toHaveClass(/maximeheckel-light/);
-		await expect(page.locator('[data-sheet-theme="light"]')).toHaveAttribute("aria-pressed", "true");
+		await expect(sheet).toHaveAttribute("data-theme", "light");
 		await page.locator('[data-sheet-theme="page"]').click();
-		await expect(sheet).not.toHaveClass(/maximeheckel-/);
+		await expect(sheet).not.toHaveAttribute("data-theme");
+		expect(await plate()).toBe(pagePlate);
 	});
 
 	test("the catalogue links to the sheet", async ({ page }) => {

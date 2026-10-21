@@ -40,7 +40,7 @@
 	--font-weight-600:560;
 }
 
-.maximeheckel-light {
+[data-theme="light"] {
 	--base-hue:266;
 	--white:oklch(100% 0 0);
 	--gray-000:oklch(99.5% 0 var(--base-hue));
@@ -150,7 +150,7 @@
 }
 
 @supports not (color: rgb(from white r g b)) {
-	.maximeheckel-light {
+	[data-theme="light"] {
 		--header:oklch(99.24% 0.008 var(--base-hue) / 40%);
 		--emphasis:oklch(64.6% 0.172 var(--base-hue) / 7%);
 		--foreground:oklch(98.08% 0.008 var(--base-hue) / 100%);
@@ -160,7 +160,7 @@
 	}
 }
 
-.maximeheckel-dark {
+[data-theme="dark"] {
 	--base-hue:262.04;
 	--white:oklch(100% 0 0);
 	--gray-000:oklch(12.92% 0.005 var(--base-hue));
@@ -270,7 +270,7 @@
 }
 
 @supports not (color: rgb(from white r g b)) {
-	.maximeheckel-dark {
+	[data-theme="dark"] {
 		--header:oklch(18.68% 0.01 var(--base-hue) / 40%);
 		--emphasis:oklch(64.6% 0.172 var(--base-hue) / 7%);
 		--danger-emphasis:oklch(64.51% 0.204 22 / 10%);

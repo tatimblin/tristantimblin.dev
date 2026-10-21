@@ -198,7 +198,7 @@ const instrumentTokens = [
 	["--accent", "the one accent"],
 	["--accent-hover", "the accent under the pointer"],
 	["--on-accent", "type on the accent — the ink, both themes"],
-	["--lit", "a step that is on (accent dark / ink light)"],
+	["--lit", "a step that is on: a quieter blue (paler on cream, deeper at night)"],
 	["--wash-1", "unlit tile · subtle pill"],
 	["--wash-2", "ink, 2nd strength"],
 	["--wash-3", "ink, 3rd strength · outline"],
@@ -207,13 +207,27 @@ const instrumentTokens = [
 	["--tone-3", "rank 3"],
 	["--tone-4", "rank 4"],
 	["--tone-5", "rank 5 / other"],
-	["--hairline", "edges and dividers"],
+	["--hairline", "the edge's colour alone (--border-color): a stripe, a ring"],
 	["--hairline-strong", "the one outline that must read over the hairlines inside it"],
 	["--focus-ring", "the focus ring, at --focus-ring-offset (or --focus-ring-inset)"],
 	["--bar-width", "every solid edge bar: the pull quote's"],
 	["--shadow-3", "the deep shadow, for the few things that float (a control panel)"],
 	["--card-background", "card surface"],
 	["--background", "page"],
+] as const;
+
+// Edge tokens (tokens.overrides.css -> EDGES, colours in themes/*.css), for
+// their own swatch row: name -> what it is for. Each is shown as what it draws.
+const edgeTokens = [
+	["--border", "the one edge: 1px dashed --border-color — cards, rules, frames"],
+	["--radius-box", "the one corner (2.5px): a card, a chip, a code block, an image"],
+	["--shadow-panel", "the 1px tinted ring under a panel (--panel-outline)"],
+	["--panel-header-bg", "a panel header's fill: the card fading into the first wash"],
+	["--code-bg", "a fenced block's slab, --code-fg on it (and --code-border round it at night)"],
+	["--code-snippet-background", "inline code's wash"],
+	["--link-color", "every link: underlined at rest, plain under the pointer"],
+	["--halftone-ink", "the hero halftone's ink (-> --dg-ink in halftone.css)"],
+	["--halftone-ink-soft", "the footer clip's softer ink"],
 ] as const;
 
 // A sixteen-step sequencer row, for the tile grid: which steps are on.
@@ -243,13 +257,13 @@ const iconVariants = ["default", "primary", "secondary", "tertiary"] as const;
 // ── Token control panel ─────────────────────────────────────────────────────
 // A three.js/lil-gui-style panel that live-edits the DS tokens driving every
 // component below. Utility tokens (--space-*, --border-radius-*, --font-*) are
-// defined on :root; color tokens are defined per-theme on .maximeheckel-*. The
-// `scope` field tells the copy-config export (and the agent applying it) which
-// selector each token belongs under in tokens.overrides.css.
+// defined on :root; color tokens are defined per-theme on [data-theme="…"]
+// (tokens/themes/*.css). The `scope` field tells the copy-config export (and
+// the agent applying it) which file and selector each token belongs under.
 type TokenControl = {
 	var: string; // CSS custom property, e.g. "--accent"
 	label: string;
-	type: "color" | "length" | "number";
+	type: "color" | "length" | "number" | "text"; // text: a keyword or a composite
 	min?: number;
 	max?: number;
 	step?: number;
@@ -257,7 +271,7 @@ type TokenControl = {
 };
 type TokenGroup = {
 	title: string;
-	scope: "root" | "themed"; // :root vs .maximeheckel-<theme>
+	scope: "root" | "themed"; // :root vs [data-theme="<theme>"]
 	controls: TokenControl[];
 };
 
@@ -279,23 +293,59 @@ const TOKEN_GROUPS: TokenGroup[] = [
 			{ var: "--warning", label: "warning", type: "color" },
 			{ var: "--success", label: "success", type: "color" },
 			{ var: "--hyperlink", label: "hyperlink", type: "color" },
+			{ var: "--text-subtle", label: "text-subtle", type: "color" },
+			{ var: "--wash-1", label: "wash-1", type: "color" },
 		],
 	},
 	{
-		title: "Color scales",
+		// The edge's colours: the dashed rule and the ring under a panel.
+		title: "Edges (theme)",
 		scope: "themed",
 		controls: [
-			{ var: "--gray-100", label: "gray-100", type: "color" },
-			{ var: "--gray-400", label: "gray-400", type: "color" },
-			{ var: "--gray-900", label: "gray-900", type: "color" },
-			{ var: "--gray-1200", label: "gray-1200", type: "color" },
-			{ var: "--blue-400", label: "blue-400", type: "color" },
-			{ var: "--blue-900", label: "blue-900", type: "color" },
-			{ var: "--blue-1000", label: "blue-1000", type: "color" },
-			{ var: "--green-900", label: "green-900", type: "color" },
-			{ var: "--red-900", label: "red-900", type: "color" },
-			{ var: "--orange-900", label: "orange-900", type: "color" },
-			{ var: "--pink-900", label: "pink-900", type: "color" },
+			{ var: "--border-color", label: "border-color", type: "color" },
+			{ var: "--panel-outline", label: "panel-outline", type: "color" },
+			{ var: "--panel-header-bg", label: "panel-header-bg", type: "text" },
+		],
+	},
+	{
+		// How every box is drawn: one width, one dash, one corner.
+		title: "Edges",
+		scope: "root",
+		controls: [
+			{ var: "--border-width", label: "border-width", min: 0, max: 4, step: 0.5, ...px },
+			{ var: "--border-style", label: "border-style", type: "text" },
+			{ var: "--radius-box", label: "radius-box", min: 0, max: 16, step: 0.5, ...px },
+		],
+	},
+	{
+		title: "Code",
+		scope: "themed",
+		controls: [
+			{ var: "--code-bg", label: "code-bg", type: "color" },
+			{ var: "--code-fg", label: "code-fg", type: "color" },
+			{ var: "--code-snippet-background", label: "code-snippet-bg", type: "color" },
+		],
+	},
+	{
+		title: "Links",
+		scope: "root",
+		controls: [
+			{ var: "--link-decoration", label: "link-decoration", type: "text" },
+			{ var: "--link-decoration-hover", label: "link-decoration-hover", type: "text" },
+			{ var: "--link-underline-offset", label: "underline-offset", min: 0, max: 8, step: 0.5, ...px },
+			{ var: "--link-underline-thickness", label: "underline-thickness", min: 0, max: 4, step: 0.5, ...px },
+			{ var: "--duration-standard", label: "duration-standard", type: "number", min: 0, max: 1000, step: 10, unit: "ms" },
+			{ var: "--ease-standard", label: "ease-standard", type: "text" },
+		],
+	},
+	{
+		// The halftones' ink: <dotted-grid> re-reads its tone when <html>'s style
+		// changes, so a drag here re-inks the grids live, paused ones included.
+		title: "Halftone",
+		scope: "themed",
+		controls: [
+			{ var: "--halftone-ink", label: "halftone-ink", type: "color" },
+			{ var: "--halftone-ink-soft", label: "halftone-ink-soft", type: "color" },
 		],
 	},
 	{
@@ -307,16 +357,6 @@ const TOKEN_GROUPS: TokenGroup[] = [
 			{ var: "--space-4", label: "space-4", min: 0, max: 64, step: 1, ...px },
 			{ var: "--space-5", label: "space-5", min: 0, max: 80, step: 1, ...px },
 			{ var: "--space-6", label: "space-6", min: 0, max: 96, step: 1, ...px },
-		],
-	},
-	{
-		title: "Radius",
-		scope: "root",
-		controls: [
-			{ var: "--border-radius-0", label: "radius-0", min: 0, max: 32, step: 1, ...px },
-			{ var: "--border-radius-1", label: "radius-1", min: 0, max: 40, step: 1, ...px },
-			{ var: "--border-radius-2", label: "radius-2", min: 0, max: 48, step: 1, ...px },
-			{ var: "--border-radius-3", label: "radius-3", min: 0, max: 64, step: 1, ...px },
 		],
 	},
 	{
@@ -341,38 +381,38 @@ const TOKEN_GROUPS: TokenGroup[] = [
 const faces = [
 	{
 		token: "--font-hero",
-		name: "Migra Bold",
-		use: "the hero lockup \u2014 \u201cother stories\u201d, the ampersand (the wordmark takes the Medium)",
+		name: "DM Sans Medium",
+		use: "the hero lockup \u2014 the wordmark and \u201cother stories\u201d; the solid accent \u201c&\u201d",
 		css: "font-family: var(--font-hero); font-weight: var(--font-hero-weight);",
 	},
 	{
 		token: "--font-heading",
-		name: "Mondwest Bold",
+		name: "DM Sans Medium",
 		use: "every heading \u2014 the post title, section heads, DS H1\u2013H4, a bare h2; the hero lede",
 		css: "font-family: var(--font-heading); font-weight: var(--font-heading-weight);",
 	},
 	{
 		token: "--font-ui",
-		name: "Mondwest Regular",
-		use: "the interface \u2014 widget chrome, the label voice (Mono, caps), figures, the blog's chrome",
+		name: "DM Sans Regular \u00b7 Bold",
+		use: "the interface \u2014 widget chrome, the label voice (Mono, caps), figures, the blog's chrome; a post row's title and a table head take the Bold",
 		css: "font-family: var(--font-ui); font-weight: var(--font-weight-400);",
 	},
 	{
 		token: "--font-display",
-		name: "Mondwest Thin",
-		use: "the big thin numeral \u2014 Stat\u2019s numeral variant: a count or an index set large",
+		name: "DM Sans Medium",
+		use: "the big numeral \u2014 Stat\u2019s numeral variant: a count or an index set large",
 		css: "font-family: var(--font-display); font-weight: var(--font-display-weight);",
 	},
 	{
 		token: "--font-body",
-		name: "Neue Montreal Regular",
-		use: "reading text",
+		name: "Roboto Mono Regular",
+		use: "reading text, at 14px on 1.33 (the --font-body-* tokens)",
 		css: "font-family: var(--font-body); font-weight: var(--font-body-weight);",
 	},
 	{
 		token: "--font-code",
-		name: "the system mono",
-		use: "code alone \u2014 fenced blocks and inline code; no file is loaded",
+		name: "Roboto Mono Regular",
+		use: "code \u2014 fenced blocks and inline code: the body face, so code in a paragraph sits in its line",
 		css: "font-family: var(--font-code);",
 	},
 ];
@@ -391,8 +431,9 @@ const faces = [
 	<Knobs title="tokens" floating data-token-controls aria-label="design token controls">
 		<Mono slot="meta" tone="accent" data-theme-name />
 		<Fragment slot="note">
-			Color edits apply to the current theme. Drag to preview; Copy config
-			exports changed tokens as JSON.
+			Colour edits apply to the current theme (data-theme on &lt;html&gt;) and
+			re-seed when it flips. Drag to preview; Copy config exports changed
+			tokens as JSON.
 		</Fragment>
 		{TOKEN_GROUPS.map((group) => (
 			<KnobGroup legend={group.title} data-scope={group.scope}>
@@ -402,6 +443,8 @@ const faces = [
 							<input type="color" data-var={c.var} data-role="swatch" />
 							<input type="text" data-var={c.var} data-role="value" spellcheck="false" />
 						</Knob>
+					) : c.type === "text" ? (
+						<Knob label={c.label} type="text" data-var={c.var} data-role="value" spellcheck="false" />
 					) : (
 						<Knob
 							label={c.label}
@@ -426,12 +469,12 @@ const faces = [
 
 		{/* TYPOGRAPHY ----------------------------------------------------- */}
 		<section class="ds-demo__section">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Faces — three faces, four roles</Heading>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Faces — two faces, six roles</Heading>
 			<p class="ds-demo__note">
-				Self-hosted from <code>/fonts</code> (built by <code>tools/fonts/build.sh</code>,
-				@font-face'd in <code>src/styles/fonts.css</code>). Reach for the ROLE token, not
-				the family name. Migra and Mondwest each ship discrete cuts under one family, so
-				a role carries a weight companion — set both or the browser picks the cut for you.
+				DM Sans (400 / 500 / 700) and Roboto Mono (300 / 400 / 500), self-hosted from <code>/fonts</code> as latin and latin-ext woff2 (fetched by <code>tools/fonts/build.sh</code>, @font-face'd in <code>src/styles/fonts.css</code>,
+				each with a metric-matched fallback so the swap does not reflow). Reach for the
+				ROLE token, not the family name. Each family ships discrete cuts, one <code>@font-face</code> per cut at its real weight, so a role carries a weight
+				companion — set both or the browser picks the cut for you.
 			</p>
 			<Flex direction="column" gap={3} alignItems="start">
 				{faces.map((f) => (
@@ -451,8 +494,7 @@ const faces = [
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Text — sizes</Heading>
 			<p class="ds-demo__note">
 				0–9, each <code>--font-size-N</code>: 12 / 14 / 16 / 18 / 20 / 24 / 32 / 44 / 72.
-				There is no 2 — the scale has no such token. 8 and 9 are the display steps;
-				<code>Heading</code> reaches them as sizes 5 and 6.
+				There is no 2 — the scale has no such token. 8 and 9 are the display steps; <code>Heading</code> reaches them as sizes 5 and 6.
 			</p>
 			<Flex direction="column" gap={2} alignItems="start">
 				{textSizes.map((s) => (
@@ -484,14 +526,13 @@ const faces = [
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Text — spaced / truncate / caps</Heading>
 			<p class="ds-demo__note">
 				<code>spaced</code> is off by default; on, it is the body role's leading and
-				tracking for a run that should sit like a paragraph without being one.
-				<code>caps</code> composes the caps role. <code>truncate</code> is one line,
+				tracking for a run that should sit like a paragraph without being one. <code>caps</code> composes the caps role. <code>truncate</code> is one line,
 				ellipsised.
 			</p>
 			<Flex direction="column" gap={2} alignItems="start">
 				<Text spaced size={4}>spaced — the body role's leading and tracking</Text>
 				<Text caps size={1} variant="secondary">caps — the uppercase label role</Text>
-				<div style="width:220px; border:1px dashed var(--hairline);">
+				<div style="width:220px; border: var(--border);">
 					<Text truncate size={4}>truncate this very long line that overflows its container</Text>
 				</div>
 			</Flex>
@@ -500,42 +541,35 @@ const faces = [
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Leading, tracking, and what the faces can actually do</Heading>
 			<p class="ds-demo__note">
-				Three leadings, because there are three jobs. <code>--line-height-heading</code>
-				(1.15) holds a heading's lines together as one object; body leading on display
-				type makes a two-line heading read as two unrelated lines.
-				<code>--line-height-body</code> (1.6) gives running text room to find the next
-				line. <code>--line-height-ui</code> (1.3) sits between them for label type, which
-				wants to be tighter than prose without being display-tight.
-				<code>--tracking-heading</code> is none: a bitmap face's letters sit on a grid,
-				and pulling them together at 72px closes the gaps the grid drew (the hero's
-				Migra keeps its own -0.02em in the lockup's stylesheet).
+				Three leadings, because there are three jobs. <code>--line-height-heading</code> (1.1) holds a heading's lines together as one object; body leading on display
+				type makes a two-line heading read as two unrelated lines. <code>--line-height-body</code> (1.33, the old site's mono setting) gives running
+				text room to find the next line — a monospace's even colour needs less than a
+				proportional face would. <code>--line-height-ui</code> (1.3) sits between them for
+				label type, which wants to be tighter than prose without being display-tight. <code>--tracking-heading</code> is none at heading sizes; the hero pulls in at
+				display size (<code>--tracking-hero</code>, -0.03em), where DM Sans's default
+				spacing reads loose.
 			</p>
 			<p class="ds-demo__note">
 				Uppercase always gets tracking: every letterform in a text face is fitted to sit
 				beside lowercase, so capitals run together jam. That is most of why all-caps
-				reads as hard. <code>--tracking-caps</code> (0.1em) is the one step, for every
-				small uppercase label — pixel capitals already stand apart, so it is a touch
-				under what a grotesk took. The site had been making that decision five times
-				at 0.04 / 0.08 / 0.1 / 0.14 / 0.18em.
+				reads as hard. <code>--tracking-caps</code> (0.0625em, 0.75px at 12px) is the one
+				step, for every small uppercase label; <code>--tracking-mono</code> (0.02em) is the
+				small one for the label voice in sentence case. The site had been making that
+				decision five times at 0.04 / 0.08 / 0.1 / 0.14 / 0.18em.
 			</p>
 			<p class="ds-demo__note">
-				<strong>What the three faces support</strong>, read out of the files in
-				<code>/fonts</code> rather than assumed — this is why some typographic advice
-				does not apply here. None of them is a <em>variable</em> font, so weights cannot
-				be nudged per theme; the cuts are Migra 500/700, Mondwest 200/300/400/700 and
-				Neue Montreal 400/600. None ships <code>smcp</code>, so small caps would be
-				faked — resized capitals, far too light — which is why
-				<code>font-synthesis-small-caps</code> is off in global.css. Old-style figures
-				(<code>onum</code>) exist only on Migra, the hero face. Neue Montreal ships
-				<code>tnum</code>; Mondwest, a bitmap face, sets its figures on one advance
-				already. Migra and Neue Montreal ship <code>liga</code> and <code>kern</code>.
-				Mondwest's 200 and 300 are not vendor cuts: they are thinned from its Regular
-				in bitmap space — 2 px stems taken to 1.5 px and 1 px on the face's own
-				50-per-em grid — with cap height, x-height and every advance width held fixed,
-				so they are drop-in. Its 700 (the former FS Mondwest) is a different drawing
-				with its own normalisation. The heading tracking is none: a bitmap face's
-				letters sit on a grid, and pulling them together at 72px closes the gaps the
-				grid drew.
+				<strong>What the two faces support</strong>, measured in the browser against the
+				files in <code>/fonts</code> rather than assumed — this is why some typographic
+				advice does not apply here. Neither is shipped as a <em>variable</em> font, so
+				weights cannot be nudged per theme; the cuts are DM Sans 400/500/700 and Roboto
+				Mono 300/400/500 (300 holds no role: it read thin and grey in the narrow
+				columns). Neither ships <code>smcp</code>, so small caps would be faked — resized
+				capitals, far too light — which is why <code>font-synthesis-small-caps</code> is
+				off in global.css, as is <code>font-synthesis-weight</code>: emphasis is a cut the
+				family has. Neither has old-style figures (<code>onum</code>). DM Sans's figures
+				are proportional and these subsets carry no <code>tnum</code>, so <code>tabular-nums</code> is a no-op on it — a column of figures that must align
+				wants the mono. Roboto Mono sets every glyph on one advance already. DM Sans
+				ships <code>liga</code> and <code>kern</code>; the mono needs neither.
 			</p>
 			<Flex direction="column" gap={2} alignItems="start">
 				<Text caps family="ui" size={1}>ds-caps · section mark</Text>
@@ -548,11 +582,11 @@ const faces = [
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Instrument UI — tokens</Heading>
 			<p class="ds-demo__note">
 				The vocabulary the cards, widgets and controls are drawn in (tokens.overrides.css
-				→ INSTRUMENT UI): one orange-red accent used once per card; the ink at three
+				→ INSTRUMENT UI): one blue accent used once per card; the ink at three
 				washes; a five-step rank ramp for things ordered by importance; one hairline
 				colour and its strong step; one bar width. <code>--lit</code> is what a step
-				looks like when it is on — the accent on the dark theme, the ink on the light
-				one. On the theme classes, so a <code>ThemePage</code> re-resolves them.
+				looks like when it is on — a quieter blue than the accent, so a lit grid reads
+				as state, not a row of buttons. Declared on <code>[data-theme]</code>, so a <code>ThemePage</code> re-resolves them.
 			</p>
 			<div class="ds-demo__swatches">
 				{instrumentTokens.map(([name, note]) => (
@@ -577,14 +611,73 @@ const faces = [
 			</div>
 		</section>
 
+		{/* EDGES: border, corner, panel, code, links, halftone ink ------------- */}
+		<section class="ds-demo__section" id="edges">
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Edges — the border, the corner, the panel, code, links</Heading>
+			<p class="ds-demo__note">
+				How every box is drawn (tokens.overrides.css → EDGES): one 1px <strong>dashed</strong> rule in a warm grey (<code>--border</code>, composed from <code>--border-width</code>, <code>--border-style</code> and the theme's <code>--border-color</code>), one 2.5px corner (<code>--radius-box</code>; the
+				generated <code>--border-radius-0…3</code> all alias it), a 1px tinted ring under a
+				panel (<code>--shadow-panel</code>) and a header that fades into the first wash
+				(<code>--panel-header-bg</code>). Compose the edge — <code>border-block-start:
+				var(--border)</code> — rather than typing <code>1px solid</code>; a side that must
+				stay invisible takes the parts with a transparent colour. <code>--radius-square</code> is a 0 on purpose. The width, dash and corner sit on <code>:root</code>; the
+				composites read a theme's colours, so they sit on <code>[data-theme]</code> and
+				re-resolve under any wrapper carrying one. The editor's Edges groups drive them live.
+			</p>
+			<div class="ds-demo__swatches">
+				{edgeTokens.map(([name, note]) => (
+					<div class="ds-demo__swatch-row">
+						{name === "--border" ? (
+							<span class="ds-demo__swatch" style="border: var(--border); background: none" />
+						) : name === "--radius-box" ? (
+							<span class="ds-demo__swatch" style="border: var(--border); border-radius: var(--radius-box); background: var(--card-background)" />
+						) : name === "--shadow-panel" ? (
+							<span class="ds-demo__swatch" style="box-shadow: var(--shadow-panel); background: var(--card-background); border: var(--border)" />
+						) : name === "--code-bg" ? (
+							<span class="ds-demo__swatch ds-demo__swatch--on" style="background: var(--code-bg); color: var(--code-fg); border: var(--code-border)">{"{}"}</span>
+						) : name === "--link-color" ? (
+							<span class="ds-demo__swatch ds-demo__swatch--on" style="background: none; color: var(--link-color); text-decoration: var(--link-decoration); text-underline-offset: var(--link-underline-offset)">Aa</span>
+						) : (
+							<span class="ds-demo__swatch" style={`background: var(${name})`} />
+						)}
+						<Mono variant="value">{name}</Mono>
+						<Mono variant="text">{note}</Mono>
+					</div>
+				))}
+			</div>
+			<h2 class="ds-demo__h ds-demo__h--sub">Both themes — the same box on each page</h2>
+			<p class="ds-demo__note">
+				The theme is one attribute, <code>data-theme="light|dark"</code> on <code>&lt;html&gt;</code> (light by default, the footer toggle stores the choice
+				in <code>localStorage.theme</code>); each palette is a file
+				(<code>tokens/themes/light.css</code>, <code>dark.css</code>) naming the same set. <code>ThemePage</code> sets the attribute on a wrapper, so both pages show here
+				whichever the site is on: cream with a near-black code slab, and the warm night
+				with the slab sunk below the page and the dashed edge drawn round it.
+			</p>
+			<div class="ds-demo__art-themes">
+				{(["light", "dark"] as const).map((t) => (
+					<ThemePage theme={t}>
+						<Card title={`panel · ${t}`} data-edge-demo={t}>
+							<Mono slot="meta" tone="accent">--border</Mono>
+							<CardBody>
+								<div class="ds-prose ds-demo__edge-prose">
+									<p>
+										Body in the mono with a <a href="#edges">link in --link-color</a> and <code>inline code</code> on its wash.
+									</p>
+									<pre><code>const edge = "var(--border)";</code></pre>
+								</div>
+							</CardBody>
+						</Card>
+					</ThemePage>
+				))}
+			</div>
+		</section>
+
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Mono — the label voice</Heading>
 			<p class="ds-demo__note">
 				Small type in the UI face that labels rather than says (the name is from when
 				it was a monospace; the classes and the component keep it). <code>caps</code> is the panel
-				label (the default), <code>text</code> the quiet sentence case, <code>value</code>
-				a figure at label size. Sizes 0 / 1; tones override the variant's colour;
-				<code>truncate</code> ellipsises. Inside a WidgetGrid the size follows the cell.
+				label (the default), <code>text</code> the quiet sentence case, <code>value</code> a figure at label size. Sizes 0 / 1; tones override the variant's colour; <code>truncate</code> ellipsises. Inside a WidgetGrid the size follows the cell.
 			</p>
 			<Flex direction="column" gap={3} alignItems="start">
 				<Mono>caps · the panel label</Mono>
@@ -618,9 +711,8 @@ const faces = [
 			</Flex>
 			<p class="ds-demo__note" style="margin-top: var(--space-6);">
 				<code>Stat variant="numeral"</code>: the spec sheet's pair — the value big and
-				thin (<code>--font-display</code>, Mondwest Thin, at <code>--font-size-8</code>)
-				with a caps label beside it on the numeral's top edge. The label wraps: a
-				<code>&lt;br&gt;</code>, or a title and its meta in the <code>label</code> slot.
+				large (<code>--font-display</code>, DM Sans Medium, at <code>--font-size-8</code>)
+				with a caps label beside it on the numeral's top edge. The label wraps: a <code>&lt;br&gt;</code>, or a title and its meta in the <code>label</code> slot.
 			</p>
 			<Flex gap={6} wrap="wrap" alignItems="start">
 				<Stat variant="numeral" value="05" label="Posts" />
@@ -634,16 +726,16 @@ const faces = [
 
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Hairline</Heading>
-			<p class="ds-demo__note">A 1px rule that fades at both ends — the card header's divider. An <code>hr</code>, or <code>as="span"</code> when decorative.</p>
+			<p class="ds-demo__note">A rule: the one edge (<code>--border</code>, dashed) drawn across its container. <code>variant="fade"</code> opts into the divider that fades out at both ends (<code>--hairline-fade</code>, a solid 1px gradient). An <code>hr</code>, or <code>as="span"</code> when decorative.</p>
 			<Hairline />
+			<Hairline variant="fade" style="margin-top: var(--space-4);" />
 		</section>
 
 		<section class="ds-demo__section" id="rule-label">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">RuleLabel · DimensionLabel — the spec sheet's labels</Heading>
 			<p class="ds-demo__note">
 				<code>RuleLabel</code>: a caps label under a 1px dotted hairline — an optional
-				leading <code>no</code> in the accent, the label, an optional trailing
-				<code>meta</code> slot in the tertiary ink. <code>truncate</code> holds it to
+				leading <code>no</code> in the accent, the label, an optional trailing <code>meta</code> slot in the tertiary ink. <code>truncate</code> holds it to
 				one line. <code>DimensionLabel</code>: the label centred on a dimension line —
 				end ticks, a hairline, dots on an even pitch.
 			</p>
@@ -709,8 +801,7 @@ const faces = [
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Button — variants</Heading>
 			<p class="ds-demo__note">
 				Flat: primary is the accent (the one action a card asks for), secondary an ink
-				wash (the reference's <code>Deploy ▸</code>), tertiary nothing until pointed at.
-				<code>rounded</code> makes a pill button.
+				wash (the reference's <code>Deploy ▸</code>), tertiary nothing until pointed at. <code>rounded</code> makes a pill button.
 			</p>
 			<Flex gap={3} wrap="wrap">
 				<Button variant="primary">Primary</Button>
@@ -727,10 +818,7 @@ const faces = [
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">IconButton — variants / sizes / rounded</Heading>
 			<p class="ds-demo__note">
-				<code>secondary</code> (the default) is an ink wash in a hairline;
-				<code>outline</code> the hairline alone, the ruled screen's. Sizes
-				<code>xs</code> (the pill-height one that fits a card header's meta slot),
-				<code>sm</code>, <code>lg</code>, <code>xl</code> (the one big control a screen
+				<code>secondary</code> (the default) is an ink wash in a hairline; <code>outline</code> the hairline alone, the ruled screen's. Sizes <code>xs</code> (the pill-height one that fits a card header's meta slot), <code>sm</code>, <code>lg</code>, <code>xl</code> (the one big control a screen
 				has). <code>rounded</code> is the round button of the instrument UI.
 			</p>
 			<Flex gap={3} wrap="wrap" alignItems="center">
@@ -755,12 +843,10 @@ const faces = [
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Card — the flat card</Heading>
 			<p class="ds-demo__note">
-				A surface a few percent off the page inside a 1px hairline; no shadow, no
-				depth scale, no glass — one card. The header is <code>CardHeader</code>:
-				<code>title</code> (a prop, or a slot for a title a script rewrites) in the caps
-				mono voice over a hairline that fades at both ends, with the <code>meta</code>
-				slot on the right — Card and Widget both render it, and so can a page by hand.
-				<code>squeeze="title"</code> leaves the meta unclipped and ellipsises the title
+				A near-white panel on the page in the dashed edge (<code>--border</code>) at the
+				box corner (<code>--radius-box</code>), the 1px tinted ring under it
+				(<code>--shadow-panel</code>); no depth scale, no glass — one card. The header is <code>CardHeader</code>: <code>title</code> (a prop, or a slot for a title a script rewrites) in the caps
+				mono voice on the header fill (<code>--panel-header-bg</code>), cut off by the same dashed edge, with the <code>meta</code> slot on the right — Card and Widget both render it, and so can a page by hand. <code>squeeze="title"</code> leaves the meta unclipped and ellipsises the title
 				instead. <code>chrome={"{false}"}</code> is no frame, fill or clip at all.
 			</p>
 			<Grid templateColumns="repeat(auto-fill, minmax(280px, 1fr))" gap={4}>
@@ -796,9 +882,7 @@ const faces = [
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Pill — variants</Heading>
 			<p class="ds-demo__note">
-				Caps mono in a capsule. <code>subtle</code> (the default) is the header pill,
-				<code>outline</code> the quiet link or toggle (its edge is the Chip's). As a
-				<code>button</code> or <code>a</code> it is a pill button.
+				Caps mono in a capsule. <code>subtle</code> (the default) is the header pill, <code>outline</code> the quiet link or toggle (its edge is the Chip's). As a <code>button</code> or <code>a</code> it is a pill button.
 			</p>
 			<Flex gap={2} wrap="wrap" alignItems="center">
 				<Pill><Icon name="check" />low risk</Pill>
@@ -813,11 +897,9 @@ const faces = [
 		<section class="ds-demo__section" id="chip">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Chip — the boxed chip</Heading>
 			<p class="ds-demo__note">
-				The ruled screen's tag and toggle: caps mono in a square hairline box, no fill,
-				where a Pill is the capsule with a wash. As an <code>a</code> or
-				<code>button</code> it is a chip button (the strong hairline under the pointer,
-				the focus ring). SELECTED is read off the chip's own ARIA —
-				<code>aria-current</code> on a link, <code>aria-pressed="true"</code> on a toggle
+				The tag and toggle: the label voice on the first wash at the box corner, the edge drawn only under the pointer,
+				where a Pill is the capsule with a wash. As an <code>a</code> or <code>button</code> it is a chip button (the strong hairline under the pointer,
+				the focus ring). SELECTED is read off the chip's own ARIA — <code>aria-current</code> on a link, <code>aria-pressed="true"</code> on a toggle
 				— and fills it with the ink, so what a reader is told and what is drawn cannot
 				fall out of step. The readout TAGS (see <a href="#readouts">Readouts</a>): <code>tone="accent"</code> draws the edge and caps in the accent, and <code>variant="arrow"</code> is a filled tag cut to a chevron — the ink, or the accent with <code>tone="accent"</code>.
 			</p>
@@ -856,10 +938,8 @@ const faces = [
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">BarGraph</Heading>
 			<p class="ds-demo__note">
 				Vertical hairlines with data heights, scaled to <code>max</code> (default: the
-				largest value); <code>mark</code> draws one bar in the accent — by INDEX (or
-				<code>"last"</code> / <code>"max"</code>), where Tile's <code>lit</code> is a
-				boolean. <code>label</code> names it as an image; without one it is
-				<code>aria-hidden</code>. <code>interactive</code> is for a graph a script
+				largest value); <code>mark</code> draws one bar in the accent — by INDEX (or <code>"last"</code> / <code>"max"</code>), where Tile's <code>lit</code> is a
+				boolean. <code>label</code> names it as an image; without one it is <code>aria-hidden</code>. <code>interactive</code> is for a graph a script
 				reads back (the visitors tile): it composes <code>ds-control</code> for the
 				ring, takes a crosshair once the script has made it a slider, and its bars
 				are moved with <code>markBar()</code> from <code>lib/bar-graph</code>.
@@ -949,8 +1029,7 @@ const faces = [
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Faces — a stack of alternatives, one showing</Heading>
 			<p class="ds-demo__note">
-				Every face is rendered in the same grid cell; an <code>inactive</code> face is
-				<code>aria-hidden</code>, which is what the cross-fade keys on, so a script swaps
+				Every face is rendered in the same grid cell; an <code>inactive</code> face is <code>aria-hidden</code>, which is what the cross-fade keys on, so a script swaps
 				faces by moving that attribute. Without <code>fill</code> the stack holds its
 				tallest face's height whichever is showing (the seasons); with it the stack takes
 				the rest of a card body and each face is clipped to it (the flip, the ranges).
@@ -977,8 +1056,7 @@ const faces = [
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Widget — the pieces together</Heading>
 			<p class="ds-demo__note">
-				<code>Widget</code> draws the header (<code>title</code> left, the <code>meta</code>
-				slot right, the fading hairline) and <code>CardBody</code> fills the rest of the
+				<code>Widget</code> draws the header (<code>title</code> left, the <code>meta</code> slot right, the dashed rule under them) and <code>CardBody</code> fills the rest of the
 				cell. Inside a WidgetGrid every voice scales with the cell. Two columns here,
 				so the cells are the homepage's ~300px, not phone tiles; a header pill needs a
 				short title beside it on a 1×1.
@@ -1044,8 +1122,7 @@ const faces = [
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Prose — the reading column</Heading>
 			<p class="ds-demo__note">
 				Wraps rendered markdown. It spaces the blocks, sets section headings in the
-				UI face with a hairline under each h2 (by retuning <code>--font-heading</code>
-				in scope, not by overriding <code>.ds-heading</code>), and styles the tags
+				UI face with a hairline under each h2 (by retuning <code>--font-heading</code> in scope, not by overriding <code>.ds-heading</code>), and styles the tags
 				markdown leaves raw: fenced and inline code, images, rules, tables. Mapped
 				blocks (Body, List, Anchor, Blockquote) keep their own type.
 			</p>
@@ -1073,13 +1150,10 @@ const faces = [
 				heading in the first column (sticky on a desktop) and its text in the next
 				two, the fourth column air. It expects the sectioned markup below — the
 				site's rehype plugin (<code>src/lib/mdx/post-sections.ts</code>) cuts a
-				markdown body into it: a figure per image with a <code>Fig. 0N /</code>
-				caption, a figure per fenced block with a header row, a <code>footer</code>
-				for a quote's attribution, and <code>data-prose-bleed</code> on a block that
-				takes the row to the right edge (every figure does), or
-				<code>data-prose-bleed="full"</code> to take the head's column too. Links in the ink on a 1px underline, inline code on the
-				first wash, images on a hairline with no corner, code between two hairlines
-				with no box. The columns are <code>--ruled-columns</code> / <code>--ruled-gap</code>,
+				markdown body into it: a figure per image with a <code>Fig. 0N /</code> caption, a figure per fenced block with a header row, a <code>footer</code> for a quote's attribution, and <code>data-prose-bleed</code> on a block that
+				takes the row to the right edge (every figure does), or <code>data-prose-bleed="full"</code> to take the head's column too. Links in <code>--link-color</code>, underlined at rest and plain under the pointer; inline code on its wash
+				at the box corner; images in the dashed edge at the corner; code between two dashed rules,
+				on its slab (<code>--code-bg</code> / <code>--code-fg</code>). The columns are <code>--ruled-columns</code> / <code>--ruled-gap</code>,
 				so a page lays its own rows on the same lines. Below 1024 the heads stack.
 			</p>
 			<Prose variant="ruled">
@@ -1120,8 +1194,7 @@ assertions:
 			<p class="ds-demo__note">
 				Markdown <code>&gt;</code> maps here. The ruled page's quote — the one design:
 				no fill, the accent bar (<code>--bar-width</code>), the words up a step (the
-				body role's size and leading retuned in scope), and an attribution as a
-				<code>footer</code> in the caps mono (in a post, the sections plugin moves it
+				body role's size and leading retuned in scope), and an attribution as a <code>footer</code> in the caps mono (in a post, the sections plugin moves it
 				out into the figure's caption).
 			</p>
 			<Blockquote style="max-inline-size: var(--measure-prose);">
@@ -1133,7 +1206,7 @@ assertions:
 		<section class="ds-demo__section" id="fig">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Fig — the numbered figure</Heading>
 			<p class="ds-demo__note">
-				The image on a hairline, square, with the <code>Fig. 0N /</code> label and a
+				The image in the dashed edge at the box corner, with the <code>Fig. 0N /</code> label and a
 				caption in the caps mono. <code>layout="flow"</code> (the default) is one
 				caption line under the image — the shape the sections plugin emits for every
 				image in a post body. <code>layout="ruled"</code> is a row on the page's
@@ -1154,13 +1227,10 @@ assertions:
 		</section>
 
 		<section class="ds-demo__section" id="index">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Index · IndexRow — the table at the foot</Heading>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Index · IndexRow — a ruled index table</Heading>
 			<p class="ds-demo__note">
-				Rows on the page's column template, cut by hairlines, opened by an inverted
-				<code>head</code> row; a <code>dim</code> row is an end with nothing beyond it.
-				Three cell classes: <code>ds-index__title</code> (the reading-size cell),
-				<code>ds-index__span</code> (takes the rest of the row),
-				<code>ds-index__fold</code> (the fourth column, which folds under the title
+				Rows on the page's column template, cut by hairlines, opened by an inverted <code>head</code> row; a <code>dim</code> row is an end with nothing beyond it.
+				Three cell classes: <code>ds-index__title</code> (the reading-size cell), <code>ds-index__span</code> (takes the rest of the row), <code>ds-index__fold</code> (the fourth column, which folds under the title
 				below 1024). The links are <code>Anchor variant="ink"</code>.
 			</p>
 			<Index aria-label="Sample index" style="--ruled-columns: repeat(4, minmax(0, 1fr));">
@@ -1190,11 +1260,9 @@ assertions:
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">HitArea · WidgetEmpty · Legend swatches</Heading>
 			<p class="ds-demo__note">
 				<code>HitArea</code> is a transparent control laid OVER something — a real
-				button, no chrome, its focus ring inside the box it fills; <code>wash</code>
-				lights it under the pointer and while it says it is current or pressed. Tab to
+				button, no chrome, its focus ring inside the box it fills; <code>wash</code> lights it under the pointer and while it says it is current or pressed. Tab to
 				the card: the ring is inside it. <code>WidgetEmpty</code> is a tile's empty
-				state, centred in the body's room. A <code>LegendItem</code>'s
-				<code>swatch</code> is a dot, a <code>line</code> or a <code>dashed</code> line.
+				state, centred in the body's room. A <code>LegendItem</code>'s <code>swatch</code> is a dot, a <code>line</code> or a <code>dashed</code> line.
 			</p>
 			<WidgetGrid cols={3}>
 				<Widget size="1x1" title="flip">
@@ -1261,12 +1329,11 @@ assertions:
 				The illustration language the plates are drawn in (tokens.overrides.css →
 				ART; <code>ArtFrame</code>; art-frame.css): white 1px line work and flat fills
 				in four colours on a near-black landscape plate. The plate follows the
-				theme: on the light page it is bone (<code>--gray-300</code>) and the ink is
-				dark, so the same drawing reads as ink on bone, with the white faces dark and
-				the fills a step deeper. A file names no colour but these tokens, and the frame owns the
+				theme: on the cream page it is the first wash (<code>--wash-1</code>) and the
+				ink is the secondary ink, so the same drawing reads as ink on paper, with the
+				white faces dark and the fills a step deeper; at night it is the card. A file names no colour but these tokens, and the frame owns the
 				plate, the edge, the corner, the line weights and the motion, so the whole
-				language retunes in one place. Every file starts from
-				<code>packages/design-system/src/art/_template.svg</code>.
+				language retunes in one place. Every file starts from <code>packages/design-system/src/art/_template.svg</code>.
 			</p>
 			<div class="ds-demo__swatches">
 				{artTokens.map(([name, note]) => (
@@ -1291,8 +1358,7 @@ assertions:
 				<code>&lt;ArtFrame svg={"{raw}"} label="…" /&gt;</code> inlines the file on the
 				plate (<code>role="img"</code>); with no label, or <code>decorative</code>, it is
 				aria-hidden and the link around it names it. The box is the file's 16:9
-				and clips (<code>--art-ratio</code> retunes it in scope). Strokes are
-				<code>vector-effect="non-scaling-stroke"</code>, so the line is 1px at 230px
+				and clips (<code>--art-ratio</code> retunes it in scope). Strokes are <code>vector-effect="non-scaling-stroke"</code>, so the line is 1px at 230px
 				and at 720px alike.
 			</p>
 			<div class="ds-demo__art-sizes">
@@ -1302,8 +1368,8 @@ assertions:
 
 			<h2 class="ds-demo__h ds-demo__h--sub">Both themes — the plate follows the page</h2>
 			<p class="ds-demo__note">
-				The same file on each theme's page (<code>ThemePage</code>): the near-black
-				plate and white line on the dark page, bone and the dark ink on the light one.
+				The same file on each theme's page (<code>ThemePage</code>): the warm dark
+				plate and white line on the dark page, the pale wash and the dark ink on cream.
 			</p>
 			<div class="ds-demo__art-themes">
 				{(["light", "dark"] as const).map((t) => (
@@ -1315,10 +1381,7 @@ assertions:
 
 			<h2 class="ds-demo__h ds-demo__h--sub">Line weights</h2>
 			<p class="ds-demo__note">
-				Top to bottom: <code>.art-line</code> (1, the inherited default),
-				<code>.art-line--2</code> (1.5, one emphasis outline), <code>--art-ink-2</code>
-				for the secondary line, and the two dash patterns, <code>4 4</code> and
-				<code>2 6</code>.
+				Top to bottom: <code>.art-line</code> (1, the inherited default), <code>.art-line--2</code> (1.5, one emphasis outline), <code>--art-ink-2</code> for the secondary line, and the two dash patterns, <code>4 4</code> and <code>2 6</code>.
 			</p>
 			<div class="ds-demo__art-sizes">
 				<ArtFrame svg={artLines} label="the two line weights and two dash patterns, at tile size" />
@@ -1330,8 +1393,7 @@ assertions:
 				A file marks one group <code>data-motion</code> and the frame owns the
 				keyframes, timed by <code>--duration-loop</code> (<code>data-speed</code> 0.5 / 1 / 2
 				divides it). Paused at rest — the still frame is the poster — and running on
-				hover, focus, inside a hovered link, or with <code>play</code>
-				(<code>data-art-play</code>). Under reduced motion the loop is 0s and nothing
+				hover, focus, inside a hovered link, or with <code>play</code> (<code>data-art-play</code>). Under reduced motion the loop is 0s and nothing
 				moves. The first frame sits inside a link.
 			</p>
 			<label class="ds-demo__art-toggle">
@@ -1632,7 +1694,7 @@ assertions:
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Box / Flex (foundation)</Heading>
 			<Flex gap={2} justifyContent="space-between"
-				style="border:1px solid var(--border-color); padding: var(--space-2);">
+				style="border: var(--border); padding: var(--space-2);">
 				<Box style="background:var(--blue-400); padding: var(--space-2);">flex a</Box>
 				<Box style="background:var(--blue-500); padding: var(--space-2);">flex b</Box>
 				<Box style="background:var(--blue-600); padding: var(--space-2);">flex c</Box>
@@ -1643,8 +1705,7 @@ assertions:
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Grid — 12 columns + spans</Heading>
 			<Text size={1} variant="tertiary">
-				A 12-track grid. GridItem <code>colSpan</code> maps to
-				<code>grid-column: span N</code>. Spans in each row sum to 12.
+				A 12-track grid. GridItem <code>colSpan</code> maps to <code>grid-column: span N</code>. Spans in each row sum to 12.
 			</Text>
 			<Grid templateColumns="repeat(12, 1fr)" gap={3} style="margin-top: var(--space-3);">
 				{Array.from({ length: 12 }).map((_, i) => (
@@ -1699,8 +1760,7 @@ assertions:
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Grid — breakpoints</Heading>
 			<Text size={1} variant="tertiary">
-				Resize the window. First row uses intrinsic
-				<code>auto-fill / minmax()</code> (no media queries).
+				Resize the window. First row uses intrinsic <code>auto-fill / minmax()</code> (no media queries).
 				Second row switches column count at the DS breakpoints (sm 640 · md
 				768 · lg 1024).
 			</Text>
@@ -1754,10 +1814,7 @@ assertions:
 					?.closest<HTMLElement>("[data-scope]");
 				return (fs?.dataset.scope as "root" | "themed") ?? "themed";
 			};
-			const currentTheme = () =>
-				root.classList.contains("maximeheckel-light")
-					? "maximeheckel-light"
-					: "maximeheckel-dark";
+			const currentTheme = () => (root.dataset.theme === "dark" ? "dark" : "light");
 
 			// Resolve any CSS color (incl. oklch) to #rrggbb by painting a pixel and
 			// reading its bytes — canvas serializes oklch as "oklch(...)", not hex, so
@@ -1810,7 +1867,7 @@ assertions:
 				});
 
 				const nameEl = panel.querySelector<HTMLElement>("[data-theme-name]");
-				if (nameEl) nameEl.textContent = currentTheme().replace("maximeheckel-", "");
+				if (nameEl) nameEl.textContent = currentTheme();
 			}
 
 			function apply(varName: string, value: string) {
@@ -1855,7 +1912,9 @@ assertions:
 					(scope === "root" ? rootTokens : themed)[varName] = value;
 				}
 				const config = {
+					// :root tokens go in the overrides; themed ones in the theme's file.
 					target: "packages/design-system/src/tokens/tokens.overrides.css",
+					themeTarget: `packages/design-system/src/tokens/themes/${currentTheme()}.css`,
 					theme: currentTheme(),
 					root: rootTokens,
 					themed,
@@ -1877,8 +1936,12 @@ assertions:
 				?.addEventListener("click", () => seed(), { signal });
 
 			seed();
-			// Re-seed when the site theme toggles (SiteFooter dispatches themechange).
-			document.addEventListener("themechange", () => seed(), { signal });
+			// Re-seed when the theme flips. Watch the attribute itself rather than the
+			// footer's toggle: data-theme on <html> IS the theme, and any
+			// writer (the toggle, the init script after a swap, a test) moves it.
+			const themeWatch = new MutationObserver(() => seed());
+			themeWatch.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+			signal.addEventListener("abort", () => themeWatch.disconnect());
 		}
 
 		// The Faces demo: the pill moves aria-hidden between the two faces.
@@ -1904,7 +1967,7 @@ assertions:
 
 		// Bound with onPage: on every page load (the client router swaps the
 		// DOM), every listener on the bind's signal, so the teardown before a
-		// swap removes them — the themechange one on the document included.
+		// swap removes them — the theme observer on <html> included.
 		onPage(() => {
 			const ac = new AbortController();
 			initTokenControls(ac.signal);
@@ -1940,7 +2003,7 @@ assertions:
 	}
 	.ds-demo__section {
 		padding-block: var(--space-6);
-		border-top: 1px solid var(--hairline);
+		border-top: var(--border);
 	}
 	.ds-demo__rule-labels {
 		display: grid;
@@ -1950,9 +2013,16 @@ assertions:
 	.ds-demo__h {
 		margin-bottom: var(--space-4);
 	}
-	/* A sub-heading inside a section: the next block of the same section. */
+	/* A sub-heading inside a section: the next block of the same section. A
+	   bare h2, so set a step under the section's own Heading (size 2) — the
+	   global h2 is the post's section head, far too loud here. */
 	.ds-demo__h--sub {
 		margin-top: var(--space-7);
+		font-family: var(--font-heading);
+		font-weight: var(--font-heading-weight);
+		font-size: var(--font-size-3);
+		line-height: var(--line-height-ui);
+		color: var(--text-secondary);
 	}
 
 	/* Instrument token swatches: a square of the token beside its name and job. */
@@ -1971,7 +2041,7 @@ assertions:
 		inline-size: var(--space-6);
 		block-size: var(--space-6);
 		border-radius: var(--border-radius-0);
-		border: 1px solid var(--hairline);
+		border: var(--border);
 	}
 	.ds-demo__swatch--on {
 		display: inline-grid;
@@ -2003,6 +2073,11 @@ assertions:
 		grid-template-columns: 230px minmax(0, 1fr);
 		gap: var(--space-4);
 		align-items: start;
+	}
+	/* The edge specimen's prose: the paragraph and the slab a step apart. */
+	.ds-demo__edge-prose {
+		display: grid;
+		gap: var(--space-3);
 	}
 	/* The template on each theme's page (ThemePage), side by side. */
 	.ds-demo__art-themes {
@@ -2067,7 +2142,9 @@ assertions:
 		margin-block: calc(-1 * var(--space-3)) var(--space-5);
 		font-size: var(--font-size-1);
 		line-height: var(--line-height-ui);
-		color: var(--text-tertiary);
+		/* The subtle ink, not the tertiary: the tertiary is the dashed edge's
+		   grey, ~2.2:1 on cream — fine for a rule, too faint for a paragraph. */
+		color: var(--text-subtle);
 	}
 
 	.ds-demo__note code {

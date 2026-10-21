@@ -109,16 +109,18 @@ const ordered = byDateDesc(posts);
 }
 
 <style>
-	/* The ruled table: a hairline above and below the list, one between posts,
-	   and the vertical one between the columns. That one is a 1px background
-	   stripe down the post's middle (the columns are equal halves), not a cell
+	/* The ruled table: the edge above and below the list, one between posts,
+	   and the vertical one between the columns. That one is a pseudo-element
+	   down the post's middle (the columns are equal halves), not a cell
 	   border, so the date can sit on the title's baseline and the open body
-	   can span both columns without breaking the rule. Square, flat, no fill. */
+	   can span both columns without breaking the rule — drawn with the same
+	   var(--border) as the other edges, so its dash and colour are theirs.
+	   Square, flat, no fill. */
 	.stack {
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		border-block: 1px solid var(--hairline);
+		border-block: var(--border);
 		/* Scroll anchoring must not shift the page while a swap runs. */
 		overflow-anchor: none;
 	}
@@ -132,10 +134,19 @@ const ordered = byDateDesc(posts);
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		grid-template-rows: auto auto;
-		background: linear-gradient(var(--hairline), var(--hairline)) 50% 0 / 1px 100% no-repeat;
+		position: relative;
+	}
+	.stack__post::before {
+		content: "";
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 50%;
+		margin-inline-start: calc(var(--border-width) / -2);
+		border-inline-start: var(--border);
+		pointer-events: none;
 	}
 	.stack__post + .stack__post {
-		border-block-start: 1px solid var(--hairline);
+		border-block-start: var(--border);
 	}
 
 	/* THE HEADER. Identical open and closed: the same size, weight, tracking
@@ -261,7 +272,7 @@ const ordered = byDateDesc(posts);
 		   follows the padding, and the strip follows READ. */
 		block-size: auto;
 		padding-block: var(--space-3);
-		border-radius: 0;
+		border-radius: var(--radius-box);
 		border-inline-start-width: 0;
 		padding-inline-start: var(--stack-inset);
 		text-indent: 0;
@@ -269,7 +280,8 @@ const ordered = byDateDesc(posts);
 	}
 	.stack__strip {
 		flex: 1;
-		border-block-start: 1px solid color-mix(in oklab, var(--hairline) 50%, transparent);
+		border-block-start: var(--border-width) var(--border-style)
+			color-mix(in oklab, var(--hairline) 50%, transparent);
 	}
 
 	/* Phone: one column — the date above the title, no rule between them; the
@@ -289,7 +301,9 @@ const ordered = byDateDesc(posts);
 			grid-template-columns: minmax(0, 1fr);
 			grid-template-rows: auto auto auto;
 			padding-inline: var(--stack-inset);
-			background: none;
+		}
+		.stack__post::before {
+			content: none;
 		}
 		.stack__date {
 			grid-column: 1;

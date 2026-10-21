@@ -18,12 +18,14 @@
 	color: var(--button-color, var(--text-secondary));
 	transform: scale(var(--button-content-scale, 1)) translateZ(0);
 	border-radius: var(--icon-button-corner, var(--border-radius-1));
-	border: 1px solid var(--button-border, var(--hairline));
+	/* Solid, not the dashed --border: at an icon's size a dash breaks the
+	   round button's outline into beads. */
+	border: var(--border-width) solid var(--button-border, var(--hairline));
 
 	transition:
-		border-color var(--duration-swap) var(--ease-reveal),
-		color var(--duration-swap) var(--ease-reveal),
-		background var(--duration-swap) var(--ease-reveal),
+		border-color var(--duration-standard) var(--ease-standard),
+		color var(--duration-standard) var(--ease-standard),
+		background var(--duration-standard) var(--ease-standard),
 		transform var(--duration-swap) var(--ease-reveal);
 }
 

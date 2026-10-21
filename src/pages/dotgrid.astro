@@ -1,7 +1,14 @@
 ---
-// /dotgrid — the playground for the <dotted-grid> web component: the hero
-// grid full-viewport, driven live by a floating Knobs panel (the design
-// system's control panel).
+// /dotgrid — the playground for the <dotted-grid> web component: the grid
+// full-viewport, on a light paper, a dark one, or both side by side (split),
+// driven live by a floating Knobs panel (the design system's control panel).
+//
+// The tone knobs write --dg-* custom properties onto the grids, the same
+// variables src/styles/halftone.css sets per theme, so "copy CSS" hands back
+// a block that drops straight into that sheet. The structural knobs (cell
+// size, the colour reveal) stay attributes. Each pane is scoped to a theme the
+// way the page itself is, so a colour left on "auto" takes that pane's ink
+// (--color-fg) or paper (--color-bg): split shows one tuning on both grounds.
 import Layout from "../layouts/Layout.astro";
 import Knobs from "@whois/design-system/Knobs";
 import KnobGroup from "@whois/design-system/KnobGroup";
@@ -21,46 +28,119 @@ const SOURCES = [
 const SRC = SOURCES[0].src;
 const SRC_WEBM = SOURCES[0].webm;
 
-// The knobs: an attribute each, a range over it. `zeroOff` marks the
-// "absent = off" attributes (0 removes the attribute rather than setting it).
-const knobs = [
+// Attribute knobs: one attribute each. `zeroOff` marks the "absent = off"
+// attributes (0 removes the attribute rather than setting it).
+const attrKnobs = [
 	{ attr: "cell-size", min: 2, max: 24, step: 1, value: 6 },
-	{ attr: "dot-scale", min: 0.2, max: 1.5, step: 0.05, value: 1 },
-	{ attr: "levels", min: 1, max: 12, step: 1, value: 5 },
-	{ attr: "cutoff", min: 0, max: 1, step: 0.05, value: 0, zeroOff: true },
-	{ attr: "feather", min: 0, max: 1, step: 0.05, value: 0, zeroOff: true },
-	{ attr: "denoise", min: 0, max: 1, step: 0.05, value: 0, zeroOff: true },
-	{ attr: "gamma", min: 0.2, max: 3, step: 0.05, value: 0.8 },
-	{ attr: "contrast", min: 0.2, max: 3, step: 0.05, value: 1.1 },
 	{ attr: "color-reveal", min: 0, max: 300, step: 10, value: 0, zeroOff: true },
 	{ attr: "shimmer", label: "shimmer %", min: 0, max: 100, step: 1, value: 0, zeroOff: true },
-	{ attr: "reveal-boost", min: 0, max: 1, step: 0.05, value: 1 },
-	{ attr: "dot-shape", label: "dot-shape (0 sq / 1 circle / 2 morph)", min: 0, max: 2, step: 1, value: 2 },
-	{ attr: "bloom", min: 0, max: 1, step: 0.05, value: 0.55, zeroOff: true },
-	{ attr: "crosshatch", min: 0, max: 1, step: 0.05, value: 0.35, zeroOff: true },
+	{ attr: "reveal-boost", min: 0, max: 1, step: 0.05, value: 0.3 },
 	{ attr: "intro-jitter", min: 0, max: 0.5, step: 0.02, value: 0.16 },
 ];
+
+// Tone knobs: one --dg-* variable each. Initial values are the fabric-cream
+// preset's; the page script applies the preset on load anyway.
+const toneKnobs = [
+	{ name: "dot-scale", min: 0.2, max: 1.5, step: 0.05, value: 1.1 },
+	{ name: "levels", min: 1, max: 12, step: 1, value: 6 },
+	{ name: "cutoff", min: 0, max: 1, step: 0.02, value: 0.06 },
+	{ name: "feather", min: 0, max: 1, step: 0.05, value: 0.2 },
+	{ name: "denoise", min: 0, max: 1, step: 0.05, value: 0.3 },
+	{ name: "gamma", min: 0.2, max: 3, step: 0.05, value: 0.4 },
+	{ name: "contrast", min: 0.2, max: 3, step: 0.05, value: 1.05 },
+	{ name: "dot-shape", label: "dot-shape (0 sq / 1 circle / 2 morph)", min: 0, max: 2, step: 1, value: 1 },
+	{ name: "bloom", min: 0, max: 1, step: 0.05, value: 0 },
+	{ name: "crosshatch", min: 0, max: 1, step: 0.05, value: 0 },
+];
+
+// Colour knobs: a picker plus an "auto" box. Auto removes the variable, so the
+// grid falls back to its pane's theme (or, for glow, the paper's contrast pole).
+const colourKnobs = [
+	{ name: "ink", value: "#191918" },
+	{ name: "ink-hi", value: "#191918" },
+	{ name: "paper", value: "#fff8eb" },
+	{ name: "glow", value: "#000000" },
+];
+
+const PRESETS = ["fabric-cream", "fabric-dark", "beach", "duotone-sepia", "phosphor-green"];
+const PREVIEWS = ["light", "dark", "split"];
 ---
 
 <Layout
 	title="Dotted Grid — Tristan Timblin"
-	description="An interactive playground for the dotted-grid web component: tune cell size, dot size, gamma, and contrast against live video sources."
+	description="An interactive playground for the dotted-grid web component: tune its tone per theme against live video sources, and copy the result as CSS."
 	noindex
 >
 	<main class="dotgrid-demo">
-		{/* Full-viewport hero preview, driven live by the control panel. */}
-		<dotted-grid data-hero src={SRC} src-webm={SRC_WEBM}></dotted-grid>
+		<div class="dotgrid-demo__stage" data-stage data-preview="split">
+			{/* Each pane carries a theme the way <html> does, so its grid resolves
+			     that theme's tokens. */}
+			<div class="dotgrid-demo__pane" data-theme="light" data-pane="light">
+				<dotted-grid data-grid data-hero src={SRC} src-webm={SRC_WEBM} cell-size="6"></dotted-grid>
+				<span class="dotgrid-demo__tag">light</span>
+			</div>
+			<div class="dotgrid-demo__pane" data-theme="dark" data-pane="dark">
+				<dotted-grid data-grid src={SRC} src-webm={SRC_WEBM} cell-size="6"></dotted-grid>
+				<span class="dotgrid-demo__tag">dark</span>
+			</div>
+		</div>
 
 		<Knobs title="<dotted-grid>" floating data-controls aria-label="dotted-grid controls">
-			<KnobGroup legend="source" class="dotgrid-demo__sources">
+			<KnobGroup legend="preset" class="dotgrid-demo__chips">
+				{PRESETS.map((p) => (
+					<Chip as="button" type="button" data-preset={p} aria-pressed="false">
+						{p}
+					</Chip>
+				))}
+			</KnobGroup>
+			<KnobGroup legend="preview" class="dotgrid-demo__chips">
+				{PREVIEWS.map((p) => (
+					<Chip as="button" type="button" data-preview={p} aria-pressed={p === "split" ? "true" : "false"}>
+						{p}
+					</Chip>
+				))}
+			</KnobGroup>
+			<KnobGroup legend="source" class="dotgrid-demo__chips">
 				{SOURCES.map((s, i) => (
 					<Chip as="button" type="button" data-src={s.src} data-webm={s.webm} aria-pressed={i === 0 ? "true" : "false"}>
 						{s.label}
 					</Chip>
 				))}
 			</KnobGroup>
-			<KnobGroup legend="halftone">
-				{knobs.map((k) => (
+			<KnobGroup legend="polarity" class="dotgrid-demo__chips">
+				{["positive", "negative"].map((p) => (
+					<Chip as="button" type="button" data-polarity={p} aria-pressed={p === "positive" ? "true" : "false"}>
+						{p}
+					</Chip>
+				))}
+			</KnobGroup>
+			<KnobGroup legend="colour">
+				{colourKnobs.map((c) => (
+					<Knob label={c.name} type="color">
+						<input type="color" data-colour={c.name} value={c.value} aria-label={`${c.name} colour`} />
+						{/* A span, not a label: the Knob row is already the label (for the picker). */}
+						<span class="dotgrid-demo__auto">
+							<input type="checkbox" data-auto={c.name} checked aria-label={`${c.name}: auto`} /> auto
+						</span>
+					</Knob>
+				))}
+			</KnobGroup>
+			<KnobGroup legend="tone (--dg-*)">
+				{toneKnobs.map((k) => (
+					<Knob
+						label={k.label ?? k.name}
+						type="range"
+						out={k.name}
+						data-var={k.name}
+						min={k.min}
+						max={k.max}
+						step={k.step}
+						value={k.value}
+					/>
+				))}
+			</KnobGroup>
+			<KnobGroup legend="grid">
+				{attrKnobs.map((k) => (
 					<Knob
 						label={k.label ?? k.attr}
 						type="range"
@@ -73,23 +153,20 @@ const knobs = [
 						value={k.value}
 					/>
 				))}
+				<Knob label="paused" type="checkbox" data-attr="paused" />
 			</KnobGroup>
 			<KnobGroup legend="intro">
 				{/* The intro wipe is a one-shot ENTRANCE, so it can't be driven by a live
 				     slider like the other knobs: it runs once per element and latches. These
-				     two feed the replay button, which re-runs it on a fresh element at the
+				     two feed the replay button, which re-runs it on fresh elements at the
 				     chosen delay + duration (see the handler in the page script). */}
 				<Knob label="intro delay ms" type="range" out="intro-delay-ms" data-intro-delay-ms min="0" max="3000" step="100" value="600" />
 				<Knob label="intro ms" type="range" out="intro-ms" data-intro-ms min="300" max="8000" step="100" value="3200" />
 				<Button variant="secondary" type="button" data-replay-intro>replay intro ▶</Button>
 			</KnobGroup>
-			<KnobGroup legend="colour" class="dotgrid-demo__row">
-				<Knob label="color" type="color" data-attr="color" value="#ededed" />
-				<Knob label="background" type="color" data-attr="background" value="#000000" />
-			</KnobGroup>
-			<KnobGroup legend="switches" class="dotgrid-demo__row">
-				<Knob label="invert" type="checkbox" data-attr="invert" />
-				<Knob label="paused" type="checkbox" data-attr="paused" />
+			<KnobGroup legend="css">
+				<Button variant="secondary" type="button" data-copy-css>copy CSS</Button>
+				<pre class="dotgrid-demo__css" data-css></pre>
 			</KnobGroup>
 		</Knobs>
 	</main>
@@ -97,14 +174,48 @@ const knobs = [
 		import "@whois/dotted-grid";
 		import { onPage } from "@whois/design-system/lib/lifecycle";
 
-		// Live controls: reflect each input onto the hero <dotted-grid> attributes.
-		// Boolean attrs (invert/paused) toggle presence; the rest set a value.
-		//
-		// Resolved on every use, not captured once: the "replay intro" button below
-		// swaps in a FRESH element (the only honest way to re-run a one-shot entrance),
-		// so a captured reference would leave every other slider driving a discarded
-		// node while the visible one ignored them.
-		const hero = () => document.querySelector<HTMLElement>("[data-hero]");
+		type Grid = HTMLElement & { refreshTone?: () => void };
+		type Colour = "ink" | "ink-hi" | "paper" | "glow";
+		type Preset = {
+			source?: string;
+			polarity?: "positive" | "negative";
+			/** Colours left out are auto: the pane's theme decides them. */
+			colours?: Partial<Record<Colour, string>>;
+			tone: Record<string, number>;
+		};
+
+		// The presets. fabric-cream and fabric-dark are the site's hero tunings (the
+		// same numbers as src/styles/halftone.css); the rest are starting points.
+		const PRESETS: Record<string, Preset> = {
+			"fabric-cream": {
+				source: "/videos/fabric.web.mp4",
+				tone: { "dot-scale": 1.1, levels: 6, cutoff: 0.06, feather: 0.2, denoise: 0.3, gamma: 0.4, contrast: 1.05, "dot-shape": 1, bloom: 0, crosshatch: 0 },
+			},
+			"fabric-dark": {
+				source: "/videos/fabric.web.mp4",
+				tone: { "dot-scale": 1.15, levels: 6, cutoff: 0, feather: 0.65, denoise: 0.1, gamma: 0.55, contrast: 1.05, "dot-shape": 2, bloom: 0.5, crosshatch: 0.3 },
+			},
+			beach: {
+				source: "/videos/beach.web.mp4",
+				colours: { ink: "#5f7891" },
+				tone: { "dot-scale": 1.1, levels: 6, cutoff: 0.06, feather: 0.3, denoise: 0.3, gamma: 0.5, contrast: 1.1, "dot-shape": 1, bloom: 0, crosshatch: 0 },
+			},
+			// Faint dots a warm tan, the fullest a deep brown, on an old-paper ground.
+			"duotone-sepia": {
+				colours: { ink: "#b08a5a", "ink-hi": "#3b2414", paper: "#f4e9d4" },
+				tone: { "dot-scale": 1.1, levels: 8, cutoff: 0.04, feather: 0.25, denoise: 0.3, gamma: 0.45, contrast: 1.1, "dot-shape": 1, bloom: 0, crosshatch: 0.15 },
+			},
+			// A green CRT: dim phosphor rising to a bright one, on near-black, glowing green.
+			"phosphor-green": {
+				colours: { ink: "#2fa34f", "ink-hi": "#9dffb4", paper: "#040a05", glow: "#c8ffd4" },
+				tone: { "dot-scale": 1.15, levels: 6, cutoff: 0, feather: 0.4, denoise: 0.2, gamma: 0.42, contrast: 1.1, "dot-shape": 2, bloom: 0.6, crosshatch: 0.25 },
+			},
+		};
+
+		const SHAPES = ["square", "circle", "morph"];
+		const grids = () => Array.from(document.querySelectorAll<Grid>("[data-grid]"));
+		const cssText = (decls: Array<[string, string]>) =>
+			`dotted-grid {\n${decls.map(([k, v]) => `\t${k}: ${v};`).join("\n")}\n}\n`;
 
 		// Wired with onPage (bound on every astro:page-load, which ClientRouter
 		// fires for the first load AND after every navigation): a module script
@@ -112,78 +223,183 @@ const knobs = [
 		// controls dead after navigating here from another page. Every listener
 		// takes the bind's signal, so the teardown before a swap — or before a
 		// second load on the same panel — removes them all.
+		//
+		// Grids are resolved on every use, not captured once: "replay intro" swaps
+		// in FRESH elements (the only honest way to re-run a one-shot entrance).
 		function wireControls() {
 			const panel = document.querySelector<HTMLElement>("[data-controls]");
-			if (!hero() || !panel) return;
+			const stage = document.querySelector<HTMLElement>("[data-stage]");
+			if (!panel || !stage || grids().length === 0) return;
 			const ac = new AbortController();
 			const { signal } = ac;
-			const sync = (input: HTMLInputElement) => {
-				const attr = input.dataset.attr;
-				// The intro delay/duration sliders have no data-attr: they feed the replay
-				// button below rather than an attribute, since the wipe is a one-shot
-				// entrance that would otherwise re-latch on every drag. Their readout is
-				// named after the slider so both stay in step.
-				if (!attr) {
-					const key = input.dataset.introMs !== undefined ? "intro-ms" : "intro-delay-ms";
-					const out = panel.querySelector<HTMLElement>(`[data-out="${key}"]`);
-					if (out) out.textContent = input.value;
-					return;
-				}
-				const el = hero();
-				if (!el) return;
-				if (input.type === "checkbox") {
-					input.checked ? el.setAttribute(attr, "") : el.removeAttribute(attr);
-				} else if (input.dataset.zeroOff !== undefined && input.value === "0") {
-					// "absent = off" attrs (color-reveal, shimmer): 0 removes the attr.
-					el.removeAttribute(attr);
-				} else {
-					el.setAttribute(attr, input.value);
-				}
-				const out = panel.querySelector<HTMLElement>(`[data-out="${attr}"]`);
-				if (out) out.textContent = input.value;
+			const $ = <T extends Element>(sel: string) => panel.querySelector<T>(sel);
+			const $$ = <T extends Element>(sel: string) => Array.from(panel.querySelectorAll<T>(sel));
+			const on = (el: Element | null | undefined, type: string, fn: () => void) =>
+				el?.addEventListener(type, fn, { signal });
+			const readout = (key: string, value: string) => {
+				const out = $<HTMLElement>(`[data-out="${key}"]`);
+				if (out) out.textContent = value;
 			};
-			panel.querySelectorAll<HTMLInputElement>("input").forEach((input) => {
-				input.addEventListener("input", () => sync(input), { signal });
-				sync(input); // apply initial state on load
-			});
+			const press = (sel: string, pressed: Element | null) =>
+				$$(sel).forEach((b) => b.setAttribute("aria-pressed", String(b === pressed)));
+			const autoBox = (name: string) => $<HTMLInputElement>(`[data-auto="${name}"]`);
+
+			// The tone as it stands, as the --dg-* declarations it amounts to. Auto
+			// colours are left out: no variable IS auto.
+			const declarations = (): Array<[string, string]> => {
+				const out: Array<[string, string]> = [];
+				for (const c of $$<HTMLInputElement>("[data-colour]")) {
+					if (!autoBox(c.dataset.colour!)?.checked) out.push([`--dg-${c.dataset.colour}`, c.value]);
+				}
+				const pol = $<HTMLElement>('[data-polarity][aria-pressed="true"]')?.dataset.polarity;
+				out.push(["--dg-polarity", pol ?? "positive"]);
+				for (const r of $$<HTMLInputElement>("[data-var]")) {
+					const name = r.dataset.var!;
+					out.push([`--dg-${name}`, name === "dot-shape" ? SHAPES[+r.value] : r.value]);
+				}
+				return out;
+			};
+
+			// Push the tone onto every grid as inline variables, then ask each to
+			// re-read: nothing observes an element's own style, only <html>'s.
+			const applyTone = () => {
+				const decls = declarations();
+				for (const g of grids()) {
+					for (const name of Array.from(g.style)) {
+						if (name.startsWith("--dg-")) g.style.removeProperty(name);
+					}
+					for (const [k, v] of decls) g.style.setProperty(k, v);
+					g.refreshTone?.();
+				}
+				const css = $<HTMLElement>("[data-css]");
+				if (css) css.textContent = cssText(decls);
+			};
+
+			// Attribute knobs. Boolean attrs (paused) toggle presence.
+			const syncAttr = (input: HTMLInputElement) => {
+				const attr = input.dataset.attr!;
+				for (const el of grids()) {
+					if (input.type === "checkbox") {
+						input.checked ? el.setAttribute(attr, "") : el.removeAttribute(attr);
+					} else if (input.dataset.zeroOff !== undefined && input.value === "0") {
+						// "absent = off" attrs (color-reveal, shimmer): 0 removes the attr.
+						el.removeAttribute(attr);
+					} else {
+						el.setAttribute(attr, input.value);
+					}
+				}
+				if (input.type !== "checkbox") readout(attr, input.value);
+			};
+			for (const input of $$<HTMLInputElement>("[data-attr]")) {
+				on(input, "input", () => syncAttr(input));
+				syncAttr(input);
+			}
+
+			for (const input of $$<HTMLInputElement>("[data-var]")) {
+				on(input, "input", () => {
+					readout(input.dataset.var!, input.value);
+					applyTone();
+				});
+			}
+			for (const input of $$<HTMLInputElement>("[data-colour]")) {
+				on(input, "input", () => {
+					// Picking a colour means "use this one": take it off auto.
+					const box = autoBox(input.dataset.colour!);
+					if (box) box.checked = false;
+					applyTone();
+				});
+			}
+			for (const box of $$<HTMLInputElement>("[data-auto]")) on(box, "change", applyTone);
+			for (const btn of $$<HTMLButtonElement>("[data-polarity]")) {
+				on(btn, "click", () => {
+					press("[data-polarity]", btn);
+					applyTone();
+				});
+			}
+
+			// Intro readouts: these sliders feed the replay button, not an attribute.
+			const msInput = $<HTMLInputElement>("[data-intro-ms]");
+			const delayInput = $<HTMLInputElement>("[data-intro-delay-ms]");
+			on(msInput, "input", () => readout("intro-ms", msInput!.value));
+			on(delayInput, "input", () => readout("intro-delay-ms", delayInput!.value));
 
 			// Replay the intro wipe. It latches after running (an entrance, not a loop),
 			// and the latch lives in the element instance — so the honest way to replay it
-			// is to give the page a FRESH element with the attribute already set, exactly
-			// as a real page load would. Copies the current attributes across so the
-			// replay reflects whatever the other sliders are set to.
-			const replay = panel.querySelector<HTMLButtonElement>("[data-replay-intro]");
-			const msInput = panel.querySelector<HTMLInputElement>("[data-intro-ms]");
-			const delayInput = panel.querySelector<HTMLInputElement>("[data-intro-delay-ms]");
-			replay?.addEventListener("click", () => {
-				const current = document.querySelector<HTMLElement>("[data-hero]");
-				if (!current) return;
-				const fresh = document.createElement("dotted-grid");
-				for (const { name, value } of Array.from(current.attributes)) {
-					fresh.setAttribute(name, value);
+			// is to give the page FRESH elements with the attribute already set, exactly
+			// as a real page load would. Copies every attribute across (style, so the
+			// tone, included) so the replay reflects the current knobs.
+			on($("[data-replay-intro]"), "click", () => {
+				for (const current of grids()) {
+					const fresh = document.createElement("dotted-grid");
+					for (const { name, value } of Array.from(current.attributes)) {
+						fresh.setAttribute(name, value);
+					}
+					fresh.setAttribute("intro-delay", delayInput?.value ?? "600");
+					fresh.setAttribute("intro", msInput?.value ?? "3200");
+					current.replaceWith(fresh);
 				}
-				fresh.setAttribute("intro-delay", delayInput?.value ?? "600");
-				fresh.setAttribute("intro", msInput?.value ?? "3200");
-				current.replaceWith(fresh);
-			}, { signal });
+			});
 
-			// Source switcher: swap the video the effect samples. The chips are
-			// toggles; the pressed one is the source playing.
-			panel.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((btn) => {
-				btn.addEventListener("click", () => {
-					// Set src-webm before src: the element reads src-webm fresh when the
-					// src change triggers a (gapless) reload, so the pair stays consistent.
-					const el = hero();
-					if (!el) return;
+			// Source switcher: swap the video the effect samples. Set src-webm before
+			// src: the element reads src-webm fresh when the src change triggers a
+			// (gapless) reload, so the pair stays consistent.
+			const setSource = (btn: HTMLButtonElement) => {
+				for (const el of grids()) {
+					if (el.getAttribute("src") === btn.dataset.src) continue;
 					if (btn.dataset.webm) el.setAttribute("src-webm", btn.dataset.webm);
 					else el.removeAttribute("src-webm");
 					el.setAttribute("src", btn.dataset.src!);
-					panel
-						.querySelectorAll("[data-src]")
-						.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
-				}, { signal });
+				}
+				press("[data-src]", btn);
+			};
+			for (const btn of $$<HTMLButtonElement>("[data-src]")) on(btn, "click", () => setSource(btn));
+
+			// Preview: one theme's pane full screen, or both side by side.
+			for (const btn of $$<HTMLButtonElement>("[data-preview]")) {
+				on(btn, "click", () => {
+					stage.dataset.preview = btn.dataset.preview;
+					press("[data-preview]", btn);
+				});
+			}
+
+			// A preset sets every tone knob, the colours, polarity and source.
+			const applyPreset = (name: string) => {
+				const p = PRESETS[name];
+				if (!p) return;
+				for (const r of $$<HTMLInputElement>("[data-var]")) {
+					const v = p.tone[r.dataset.var!];
+					if (v !== undefined) r.value = String(v);
+					readout(r.dataset.var!, r.value);
+				}
+				for (const c of $$<HTMLInputElement>("[data-colour]")) {
+					const v = p.colours?.[c.dataset.colour as Colour];
+					const box = autoBox(c.dataset.colour!);
+					if (box) box.checked = !v;
+					if (v) c.value = v;
+				}
+				press("[data-polarity]", $(`[data-polarity="${p.polarity ?? "positive"}"]`));
+				const src = p.source ? $<HTMLButtonElement>(`[data-src="${p.source}"]`) : null;
+				if (src) setSource(src);
+				press("[data-preset]", $(`[data-preset="${name}"]`));
+				applyTone();
+			};
+			for (const btn of $$<HTMLButtonElement>("[data-preset]")) {
+				on(btn, "click", () => applyPreset(btn.dataset.preset!));
+			}
+
+			// Copy CSS: the current tone as a rule for src/styles/halftone.css.
+			const copy = $<HTMLButtonElement>("[data-copy-css]");
+			on(copy, "click", async () => {
+				try {
+					await navigator.clipboard.writeText(cssText(declarations()));
+					copy!.textContent = "copied ✓";
+				} catch {
+					copy!.textContent = "select the CSS below";
+				}
+				setTimeout(() => (copy!.textContent = "copy CSS"), 1600);
 			});
 
+			applyPreset("fabric-cream");
 			return () => ac.abort();
 		}
 
@@ -193,27 +409,73 @@ const knobs = [
 
 <style>
 	.dotgrid-demo {
-		background: #000;
-		color: #fafaf7;
 		position: relative;
 		min-height: 100vh;
+		background: var(--color-bg);
 	}
 
-	.dotgrid-demo > dotted-grid {
-		--dotted-grid-height: 100vh;
+	/* The stage: one pane, or two side by side (stacked on a narrow screen). */
+	.dotgrid-demo__stage {
+		display: grid;
+		grid-template-columns: 1fr;
+		height: 100vh;
+	}
+	.dotgrid-demo__stage[data-preview="split"] {
+		grid-template-columns: 1fr 1fr;
+	}
+	@media (max-width: 700px) {
+		.dotgrid-demo__stage[data-preview="split"] {
+			grid-template-columns: 1fr;
+			grid-template-rows: 1fr 1fr;
+		}
+	}
+	.dotgrid-demo__stage[data-preview="light"] [data-pane="dark"],
+	.dotgrid-demo__stage[data-preview="dark"] [data-pane="light"] {
+		display: none;
 	}
 
-	.dotgrid-demo__sources,
-	.dotgrid-demo__row {
+	/* A pane is a small theme scope: its data-theme re-resolves the tokens (and
+	   the bridge's --color-* aliases, also on [data-theme]) against THIS pane. */
+	.dotgrid-demo__pane {
+		position: relative;
+		min-width: 0;
+		min-height: 0;
+		background: var(--background);
+		color: var(--text-primary);
+	}
+	.dotgrid-demo__pane > dotted-grid {
+		--dotted-grid-height: 100%;
+	}
+	.dotgrid-demo__tag {
+		position: absolute;
+		inset-block-start: var(--space-3);
+		inset-inline-start: var(--space-3);
+		font-family: var(--font-code);
+		font-size: var(--font-size-1);
+		opacity: 0.6;
+		pointer-events: none;
+	}
+
+	.dotgrid-demo__chips {
 		flex-direction: row;
 		flex-wrap: wrap;
 		gap: var(--space-2);
 	}
-	.dotgrid-demo__sources > :global(legend),
-	.dotgrid-demo__row > :global(legend) {
+	.dotgrid-demo__chips > :global(legend) {
 		flex-basis: 100%;
 	}
-	.dotgrid-demo__row > :global(.ds-knob) {
-		flex: 1 1 0;
+	.dotgrid-demo__auto {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+		font-size: var(--font-size-1);
+	}
+	.dotgrid-demo__css {
+		margin: 0;
+		font-family: var(--font-code);
+		font-size: var(--font-size-1);
+		white-space: pre;
+		overflow-x: auto;
+		user-select: all;
 	}
 </style>

@@ -1,8 +1,14 @@
 /* The design-system token cascade. Import order matters — later wins:
- *   1. tokens.generated.css  — untouched output of the published DS package.
- *   2. tokens.overrides.css  — this site's hand-owned retunes.
- *   3. bridge.css            — legacy site/Web-Component names → DS tokens.
+ *   1. tokens.generated.css  — the published DS package's output, emitted by
+ *                              scripts/gen-tokens.mjs (never hand-edited).
+ *   2. tokens.overrides.css  — this site's hand-owned retunes, and the tokens
+ *                              derived from a theme's palette ([data-theme]).
+ *   3. themes/light.css,     — the two palettes, [data-theme="light|dark"]:
+ *      themes/dark.css         every value that differs between the themes.
+ *   4. bridge.css            — legacy site/Web-Component names → DS tokens.
  */
 @import "./tokens.generated.css";
 @import "./tokens.overrides.css";
+@import "./themes/light.css";
+@import "./themes/dark.css";
 @import "./bridge.css";

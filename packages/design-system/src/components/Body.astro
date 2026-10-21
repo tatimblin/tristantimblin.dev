@@ -19,9 +19,10 @@ interface Props {
 
 const {
 	as = "p", // body text is a paragraph unless told otherwise
-	// The reading colour. Primary is the page's loudest ink and belongs to
-	// headings; long-form set in it fights them. Overridable per call site.
-	variant = "secondary",
+	// The reading colour: the primary ink. Reading text is a light mono, whose
+	// thin stems need the full ink to hold up; the headings are set apart by
+	// face and size rather than by colour. Overridable per call site.
+	variant = "primary",
 	class: className,
 	...rest
 } = Astro.props;

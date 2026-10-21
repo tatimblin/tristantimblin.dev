@@ -60,9 +60,11 @@
 .ds-legend__item--swatch-dashed .ds-legend__dot {
 	inline-size: var(--space-3);
 	block-size: 0;
-	border-radius: 0;
+	border-radius: var(--radius-square);
 	background: none;
-	border-block-start: 1px solid var(--legend-color, var(--tone-2));
+	/* Solid: the line IS the data's mark (a series drawn as one), and dashed
+	   is the other swatch. */
+	border-block-start: var(--border-width) solid var(--legend-color, var(--tone-2));
 }
 .ds-legend__item--swatch-dashed .ds-legend__dot {
 	border-block-start-style: dashed;

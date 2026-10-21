@@ -80,8 +80,8 @@ const langs = [
 
 	<CardBody class="wx-gh-body">
 		<Faces fill data-gh-faces>
-		{/* Face A: the contribution grid as tiles — ordinary days the ink at two
-		     strengths, the big days lit in the accent — over the yearly total. */}
+		{/* Face A: the contribution grid as tiles in GitHub's greens, light to
+		     dark by the day's count — over the yearly total. */}
 		<Face data-face="grid">
 			<TileGrid cols={weeks.length} rows={7} fit="height">
 				{
@@ -155,6 +155,15 @@ const langs = [
 	   design-system components; only the faces' own layout is here. Scoped:
 	   the DS spreads the scope attribute onto each component's root, and its
 	   CSS sits in a cascade layer under this, so a plain class here wins. */
+
+	/* GitHub's own greens on the contribution grid, so it reads as the chart it
+	   mirrors; the empty days keep the theme's wash. */
+	.wx-gh-body {
+		--tile-1: var(--contrib-1);
+		--tile-2: var(--contrib-2);
+		--tile-3: var(--contrib-3);
+		--tile-4: var(--contrib-4);
+	}
 
 	/* The languages face: the ruler at the top, the legend at the foot. */
 	.wx-gh-face--langs {

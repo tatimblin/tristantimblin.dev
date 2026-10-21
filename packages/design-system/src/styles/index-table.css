@@ -20,7 +20,7 @@
 	grid-template-columns: var(--index-columns);
 	column-gap: var(--index-gap);
 	align-items: baseline;
-	border-block-end: 1px solid var(--hairline);
+	border-block-end: var(--border);
 }
 .ds-index__row > * {
 	padding: var(--space-3);

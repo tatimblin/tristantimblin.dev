@@ -1,7 +1,7 @@
 /* ReadoutStack — a column of values, one emphasised. The rest are the label
- * voice (Mondwest Regular at the label step, tabular) in the tertiary ink;
- * the emphasised one — read off aria-current — is the thin numeral (the
- * display role) a few steps up, in the ink. Centred: it is a tile's
+ * voice (the UI face at the label step, tabular) in the tertiary ink; the
+ * emphasised one — read off aria-current — is the numeral (the display
+ * role) a few steps up, in the ink. Centred: it is a tile's
  * readout, and the lit value sits on the stack's axis. */
 /* Imported by its component, not by styles/index.css, so it ships only
  * on the pages that render one; in ds.components as if it were. */

@@ -27,10 +27,10 @@ import "@whois/wobble-text/styles.css";
 	title="Tristan Timblin"
 	description="Tristan Timblin — American computer programmer and human-computer interaction engineer."
 >
-	{/* SCENE (>900px): the fabric clip as a halftone. No `color` attr, so the grid
-	     falls back to --color-fg and inverts with the theme — a fixed #fff vanished
-	     on the light page. `intro` develops it in on the first frame, brightest
-	     dots first. */}
+	{/* SCENE (>900px): the fabric clip as a halftone. Its tone (ink, gamma,
+	     bloom, ...) is per theme and lives in src/styles/halftone.css, NOT here:
+	     a tuning attribute would beat the stylesheet and pin that value in both
+	     themes. `intro` develops it in on the first frame, fullest dots first. */}
 	<dotted-grid
 		slot="scene"
 		class="hero__video"
@@ -39,26 +39,16 @@ import "@whois/wobble-text/styles.css";
 		rate="0.93"
 		max-dpr="1"
 		cell-size="6"
-		dot-scale="1.15"
-		levels="6"
-		gamma="0.55"
-		contrast="1.05"
 		intro-delay="0"
 		intro="3200"
-		feather="0.65"
-		denoise="0.1"
-		bloom="0.5"
-		crosshatch="0.3"
 	/>
 
 	{/* SCENE (≤900px): the video carousel, full-bleed, with its date scrubber along
 	     the bottom edge; videos.css hides the footer copy at the same breakpoint.
 	     Same intro as the fabric so both variants make the same entrance. maxDpr 1
 	     because the halftone's cost is per pixel and this canvas is the whole
-	     viewport. The finer, dimmer grid than the footer card's: the clip sits
-	     under the wordmark at 0.55 opacity. `color` is the one fixed colour: at that
-	     opacity a mid grey reads at the same weight on both themes' backdrops, where
-	     --color-fg would swing by the full page contrast. */}
+	     viewport. The finer grid than the footer card's: the clip sits under the
+	     wordmark. Its per-theme tone is in src/styles/halftone.css. */}
 	<VideoCarousel
 		slot="scene"
 		class="hero-carousel"
@@ -67,10 +57,6 @@ import "@whois/wobble-text/styles.css";
 		rulerBaseline="bottom"
 		maxDpr={1}
 		cellSize={4}
-		levels={10}
-		gamma={0.5}
-		contrast={1.1}
-		color="#7f7f7f"
 		introDelay={0}
 		intro={3200}
 		xfade={1600}
@@ -182,7 +168,7 @@ import "@whois/wobble-text/styles.css";
 		display: none;
 	}
 	/* THE DESKTOP HERO: framed, the group on the floor. An empty margin the
-	   height of the site header's band (--sh-header-clear, which the heading
+	   height of the site header's band (--sh-header-h, which the heading
 	   measures; ~64px before it does) runs round the top, sides and foot; the
 	   halftone fills the frame down to the wordmark's midline, and the lockup and
 	   intro rest on the frame's bottom edge. The halftone stops above "other
@@ -190,7 +176,7 @@ import "@whois/wobble-text/styles.css";
 	   tell it where the picture really ends. */
 	@media (min-width: 901px) {
 		:global(.fh) {
-			--hero-frame: var(--sh-header-clear, var(--space-10));
+			--hero-frame: var(--sh-header-h, var(--space-10));
 			--hero-lead-ideal: 100svh;
 			--sh-scene-bottom: var(--hero-scene-cut);
 		}

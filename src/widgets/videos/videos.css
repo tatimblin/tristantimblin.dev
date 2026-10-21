@@ -59,16 +59,6 @@
 	z-index: 1;
 }
 
-/* Light theme: set the dots halfway between the secondary and primary ink. At
-   full --text-primary the halftone read as hard black specks on the white page;
-   the plain secondary step, once the carousel lost its frame and filled the 1×2
-   cell, read too faint to make out. Halfway keeps it a picture, not type-weight
-   ink, while holding the image together. <dotted-grid> resolves --color-fg from its own computed
-   style and re-reads it on every theme change, so scoping the alias here is enough.
-   Dark keeps the primary ink: light dots on black already glow at the right weight. */
-.maximeheckel-light .wx-videos dotted-grid {
-	--color-fg: color-mix(in oklab, var(--text-primary) 50%, var(--text-secondary));
-}
 
 /* FILL THE CELL. The clip IS the widget, so the carousel is `fill` (its own
    attribute, video-carousel/styles.css): the stage takes the whole 1×2 cell

@@ -1,21 +1,26 @@
 ---
-// Hairline — a 1px rule, fading at both ends (styles/hairline.css): the
-// reference dashboard's divider, the same gradient the card header draws.
-// An <hr> by default, so it is a separator to a reader as well as to the
-// eye; pass as="span" when it is purely decorative.
+// Hairline — a rule (styles/hairline.css): the one edge, --border, drawn
+// across its container. `variant="fade"` opts into the divider that fades out
+// at both ends instead. An <hr> by default, so it is a separator to a reader
+// as well as to the eye; pass as="span" when it is purely decorative.
 //
 //   <Hairline />
-//   <Hairline as="span" />
+//   <Hairline as="span" variant="fade" />
 import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
+	variant?: "rule" | "fade";
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { as = "hr", class: className, ...rest } = Astro.props;
+const { as = "hr", variant = "rule", class: className, ...rest } = Astro.props;
 const Tag = as as any;
 ---
 
-<Tag class={cx("ds-hairline", className)} {...(Tag !== "hr" ? { role: "separator" } : {})} {...rest} />
+<Tag
+	class={cx("ds-hairline", variant === "fade" && "ds-hairline--variant-fade", className)}
+	{...(Tag !== "hr" ? { role: "separator" } : {})}
+	{...rest}
+/>

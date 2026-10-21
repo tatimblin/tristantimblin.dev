@@ -3,7 +3,7 @@
    Structure:
      .sh__wordmark  the full-width "tristan" SVG; width:100% fills gutter-to-gutter
                     (JS sizes the viewBox to the glyph bbox, so no baked ratio).
-     .sh__amp       the big "&", overlapping the wordmark (indented). It parallaxes
+     .sh__amp       the big "&", behind "other stories" and up into the wordmark. It parallaxes
                     + fades on its OWN viewport position — decoupled from below.
      .sh__track     reserves the pin duration in normal flow for "other stories"
                     (height = --sh-reveal + --sh-hold + --sh-pin-height): the
@@ -51,29 +51,22 @@ stories-heading {
 	   mobile it also carries the heading clear of the date scrubber. */
 	--sh-hold: calc(var(--sh-wipe-at) + var(--space-6));
 	/* "&" size: far larger than "other stories" so it reads as a display glyph
-	   overlapping the wordmark. FIXED steps (not vw-clamps) that change only at
-	   breakpoints; "other stories" tracks --sh-heading-size. */
+	   standing behind it. These FIXED steps are the pre-measure frame only —
+	   fitAmp() in index.ts sizes it off the wordmark's measured ink height.
+	   "other stories" tracks --sh-heading-size. */
 	--sh-amp-size: 8rem;
 	--sh-heading-size: 2rem;
-	/* How far the "&" is indented from the left gutter so it sits OVER the
-	   wordmark rather than at the edge — proportional to its own size. */
-	--sh-amp-indent: calc(0.8 * var(--sh-amp-size));
-	/* Vertical offset from "tristan" to "other stories". NEGATIVE so the heading tucks
-	   UP into the wordmark's baseline whitespace and the two read as one tight lockup
-	   ("tristan" has no descenders, so the overlap lands in clear space). Drives both
-	   the track's flow margin and the --sh-top sticky line together, so they stay
-	   coincident (zero slack at rest). DS-token based.
+	/* Vertical offset from "tristan" to "other stories": the wordmark's baseline down
+	   to the heading's box top. Drives both the track's flow margin and the --sh-top
+	   sticky line together, so they stay coincident (zero slack at rest). NEGATIVE in
+	   practice: the heading's ascenders tuck up across the wordmark's baseline.
 
 	   A PRE-JS FALLBACK ONLY. fitHeadingTuck() in index.ts MEASURES this and overwrites
 	   it on the host, because the right value is a typographic relationship rather than a
-	   spacing step: the heading's x-height line should land on the wordmark's baseline, so
-	   only the tall letters (the t's, the h, the i's tittle) cross it. That is the face's
-	   own ascender overshoot, and it re-derives when the type changes.
-	   Which is not hypothetical — this WAS a hand-picked token per breakpoint, chosen
-	   against the previous faces, and self-hosting the type moved the metrics out from
-	   under both. Keep this token close to the measured answer (it governs the first
-	   frame) but do not tune the LOOK here; tune it in fitHeadingTuck or not at all. */
-	--sh-heading-gap: calc(-1 * var(--space-4));
+	   spacing step: the heading's tallest ink TUCK_CLEARANCE em (negative: across) from
+	   the wordmark's baseline. Keep this token close to the measured answer (it governs the
+	   first frame) but do not tune the LOOK here; tune it in fitHeadingTuck or not at all. */
+	--sh-heading-gap: 0px;
 	/* Separation from "other stories" down to the intro/CTAs — the intro is page copy
 	   that follows the heading, not a subhead of it. Halved on mobile (see the ≤900px
 	   block) where the tighter column wants less air. */
@@ -91,7 +84,7 @@ stories-heading {
 }
 
 /* Fixed lockup type steps at the DS breakpoints (sm 640 / lg 1024 / xl 1280).
-   The "&" grows large; "other stories" tracks the copy heading. (Mobile-stacked
+   "other stories" tracks the copy heading (JS fits it above 900px). (Mobile-stacked
    overrides are further down.) */
 @media (min-width: 640px) {
 	stories-heading {
@@ -119,36 +112,28 @@ stories-heading {
 	margin: 0;
 	position: relative;
 	/* The BOTTOM of the lockup's three layers: "other stories" (5) over the "&" (4)
-	   over "tristan" (3). The heading tucks UP into the wordmark (negative
-	   --sh-heading-gap), so "other stories" now knocks its background-filled outline
-	   glyphs out of "tristan" where they cross — the same fill-and-stroke treatment
-	   the "&" already uses against the wordmark, extended to the whole lockup. */
+	   over "tristan" (3). Both overlap it at rest: "other stories"'s ascenders tuck
+	   across its baseline (see fitHeadingTuck) and the "&" knocks a hole out of "tr". */
 	z-index: 3;
 	pointer-events: auto; /* the host opts pointers out; the visible glyphs opt back in */
 }
 
 .sh__wordmark-svg {
 	display: block;
-	width: 80%;
+	width: 100%;
 	height: auto;
 }
 
 .sh__wordmark-text {
-	font-family: var(--font-hero, ui-serif, Georgia, serif);
-	/* Migra MEDIUM, deliberately lighter than the rest of the lockup. The wordmark
-	   is set enormous, and at that size the bold cut's stroke contrast turns heavy
-	   and closes up the counters; the medium keeps the high-contrast serif reading
-	   as a display face rather than a slab. The "&" and "other stories" stay on
-	   --font-hero-weight (700) — they are set far smaller and need the weight to
-	   hold up against the wordmark beside them.
-	   The lockup's own cut, not the heading role's (that is Mondwest now, and
-	   its Bold): Migra Medium is spelled here, in the one place it is used.
+	font-family: var(--font-hero, ui-sans-serif, system-ui, sans-serif);
+	/* DM Sans MEDIUM. Set this large, the Bold's stems close up the counters of
+	   the a and the n; the Medium keeps the word open.
 	   Changing this moves the wordmark's ink metrics, which JS measures into
 	   --sh-group-h and thence the whole hero fold — re-run tests/hero-fold.spec.ts
 	   after any change here. */
 		font-weight: var(--font-weight-500, 500);
 	letter-spacing: var(--tracking-hero, -0.02em);
-	fill: var(--text-primary, #ededed);
+	fill: var(--text-primary, CanvasText);
 	/* SVG user units; the viewBox is resized to the real glyph bbox in JS, so
 	   this only sets the internal proportions, not the on-screen size. */
 	font-size: 300px;
@@ -156,42 +141,36 @@ stories-heading {
 
 /* --- Ampersand -------------------------------------------------------- */
 
-/* A display glyph overlapping the wordmark, ABSOLUTELY positioned so it takes no
-   flow space (the heading sits directly under "tristan", not under the "&").
-   JS sizes it to ~1/3 of the wordmark's rendered ink height (--sh-amp-size) and
-   drops its top (--sh-amp-top) so its baseline aligns with "tristan"'s baseline.
+/* A display glyph standing BEHIND "other stories" and OVER "tristan", ABSOLUTELY
+   positioned so it takes no flow space. JS (fitAmp) sizes its ink to 0.6x the
+   wordmark's ink height (--sh-amp-size), seats its baseline on the heading's
+   (--sh-amp-top) and centres it a fifth of the way across the wordmark, over the
+   "r" (--sh-amp-left), so it rises from behind "other stories" to about the
+   wordmark's x-height midline.
    FILL + DOUBLE OUTLINE: the glyph is FILLED with the background colour (knocking
-   out the "tristan" glyphs it overlaps) and stroked in the foreground colour
-   (--sh-amp-stroke); a ::before behind it re-draws the "&" with a WIDER
-   background-colour stroke (--sh-amp-halo) so a background-coloured ring separates
-   the dark outline from the letters it crosses.
-   Its parallax + fade are driven by its own viewport position in JS. */
+   out the scene's halftone behind it) and stroked in the foreground colour
+   (--sh-amp-stroke) — the same 1px outline "other stories" is drawn in at rest; a
+   ::before behind it re-draws the "&" with a WIDER background-colour stroke
+   (--sh-amp-halo) so a clear ring separates the outline from the dots it crosses.
+   Theme tokens only, so it flips with data-theme like the rest of the lockup.
+   BETWEEN THE WORDS in z, the live site's layering: the background fill knocks a
+   hole out of "tr" (the intended look), and "other stories" — itself a
+   background-filled outline — overlays its lower half.
+   Its parallax + fade are scroll-driven (the foot of this file): the "&" leaves
+   with "tristan" while "other stories" pins. */
 .sh__amp {
-	--sh-amp-stroke: 1px; /* the normal (foreground) outline */
+	--sh-amp-stroke: 1px; /* the foreground outline */
 	--sh-amp-halo: 0.625rem; /* the wider background-colour ring around it */
 	position: absolute;
-	/* BETWEEN the two words: over the wordmark (3), under "other stories" (5).
-	   A DELIBERATE MIDDLE, not a leftover. Both neighbours were tried on screen:
-	     · Over everything (6) — the "&" wins the lockup outright, which is louder
-	       than it should be for what is essentially a connective mark.
-	     · Under everything (2) — it vanishes. The "&" is sized at AMP_SIZE_RATIO of
-	       the wordmark's ink height and offset by 0.8 of its own size, so it lands
-	       ENTIRELY inside the wordmark's box with no part in clear space; behind an
-	       opaque fill there is nothing left to see. Getting it back would mean making
-	       its interior transparent and dropping the halo (see --sh-amp-halo) — a
-	       different mark, not a different depth.
-	   Here it knocks its clean hole through "tristan" and then "other stories" — itself
-	   only an outline — reads back across it. Each word gets to cross one thing. */
 	z-index: 4;
 	top: var(--sh-amp-top, 0);
-	left: var(--sh-amp-indent);
-	font-family: var(--font-hero, ui-serif, Georgia, serif);
+	left: var(--sh-amp-left, 20%);
+	font-family: var(--font-hero, ui-sans-serif, system-ui, sans-serif);
 	font-size: var(--sh-amp-size);
-		font-weight: var(--font-hero-weight, 700);
+	font-weight: var(--font-hero-weight, 500);
 	line-height: 1;
-	letter-spacing: var(--tracking-hero, -0.02em);
 	color: var(--color-bg, #0a0a0a);
-	-webkit-text-stroke: var(--sh-amp-stroke) var(--text-primary, #ededed);
+	-webkit-text-stroke: var(--sh-amp-stroke) var(--color-fg, #ededed);
 	white-space: nowrap;
 	pointer-events: none;
 	/* parallax (translateY) + fade, both from the "&"'s OWN scroll position. */
@@ -201,8 +180,7 @@ stories-heading {
 }
 
 /* The background-colour halo: the same glyph, wider stroke, painted BEHIND the
-   real outline (z-index -1) so only its outer ring shows — a background-coloured
-   ring around the dark outline that lifts it off the "tristan" glyphs. */
+   real outline (z-index -1) so only its outer ring shows. */
 .sh__amp::before {
 	content: "&";
 	position: absolute;
@@ -220,8 +198,8 @@ stories-heading {
    the lockup is what the paragraph rises into. */
 .sh__track {
 	position: relative;
-	/* Follow "tristan" (the "&" is absolutely positioned and takes no flow space) with
-	   a NEGATIVE --sh-heading-gap, so "other stories" tucks up into the wordmark. */
+	/* Follow "tristan" (the "&" is absolutely positioned and takes no flow space) by
+	   the measured --sh-heading-gap (see fitHeadingTuck). */
 	margin-block-start: var(--sh-heading-gap);
 	height: calc(var(--sh-reveal) + var(--sh-hold) + var(--sh-pin-height, 0px));
 }
@@ -262,7 +240,7 @@ stories-heading {
 	   The two layers no longer share a face — see .sh__solid — so they no longer
 	   share advance widths either; the JS fit sizes this box to the WIDER of the
 	   two, which is what keeps the clip-path from shaving either one. */
-	font-weight: var(--font-hero-weight, 700);
+	font-weight: var(--font-hero-weight, 500);
 	line-height: 0.85;
 		/* The hero face's display tracking (the site's token), named so the solid
 	   layer can ADD its registration tracking to it rather than restate the
@@ -270,7 +248,7 @@ stories-heading {
 	--sh-tracking: var(--tracking-hero, -0.02em);
 	letter-spacing: var(--sh-tracking);
 	white-space: nowrap;
-	/* fit-content sizes the box to the text ADVANCE width, but a serif glyph's ink
+	/* fit-content sizes the box to the text ADVANCE width, but a glyph.s ink
 	   (the trailing "s") overshoots its advance via the right side-bearing — and the
 	   solid layer's clip-path (border-box) would shave it. Trailing padding gives the
 	   ink (and the wobble-text displacement) room; the solid layer's --color-bg
@@ -409,35 +387,34 @@ stories-heading {
 .sh__outline {
 	font-family: var(
 		--sh-outline-font,
-		var(--font-hero, ui-serif, Georgia, serif)
+		var(--font-hero, ui-sans-serif, system-ui, sans-serif)
 	);
-	font-weight: var(--font-hero-weight, 700);
-	color: var(--color-bg, #0a0a0a);
-	-webkit-text-stroke: 1px var(--color-fg, #ededed);
+	font-weight: var(--font-hero-weight, 500);
+	color: var(--color-bg, Canvas);
+	-webkit-text-stroke: 1px var(--color-fg, CanvasText);
 }
 
-/* Solid (revealed): the pixel heading face at its Bold, on an opaque backdrop so
-   the wipe masks the outline beneath it. Hidden from the top by --sh-clip → fully
-   shown at --sh-clip 0.
-   THE WIPE IS A TYPEFACE SWAP, not just a fill: the phrase resolves out of the
-   hero serif's outline into Mondwest. The two faces therefore have DIFFERENT
-   advance widths and do not register glyph-for-glyph — deliberate, and the reason
+/* Solid (revealed): the heading face, on an opaque backdrop so the wipe masks the
+   outline beneath it. Hidden from the top by --sh-clip → fully shown at --sh-clip 0.
+   The hero and heading roles are both DM Sans Medium today, so the wipe is a FILL
+   change on one face. It is built to also be a TYPEFACE swap: the two layers may
+   resolve to faces with different advance widths, which is why
    measureHeadingWidth() in index.ts fits the box to the wider of the two layers
    instead of to the in-flow outline alone. */
 .sh__solid {
-	font-family: var(--font-heading, ui-monospace, monospace);
-	font-weight: var(--font-heading-weight, 700);
+	font-family: var(--font-heading, ui-sans-serif, system-ui, sans-serif);
+	font-weight: var(--font-heading-weight, 500);
 	/* Registration onto the outline — four corrections, all measured per-face by
-	   alignHeadingLayers() in index.ts, none of them a hand-tuned nudge:
-	     scale  matches the painted ink height (Mondwest's ascenders run tall off the
-	            shared x-height, so it overshot by a fifth),
+	   alignHeadingLayers() in index.ts, none of them a hand-tuned nudge (each is
+	   ~0 while both layers share a face, and re-derives if they stop):
+	     scale  matches the painted ink height,
 	     cover  lifts this box's top clear of both layers' ink (see the rule above),
 	     shift  drops its baseline onto the outline's,
 	     track  closes the advance difference so both start AND end on the same x. */
 	font-size: calc(1em * var(--sh-solid-scale, 1));
 	letter-spacing: calc(var(--sh-tracking) + var(--sh-solid-track, 0em));
-	color: var(--color-fg, #ededed);
-	background: var(--color-bg, #0a0a0a);
+	color: var(--color-fg, CanvasText);
+	background: var(--color-bg, Canvas);
 	clip-path: inset(calc(var(--sh-clip) * 100%) 0 0 0);
 }
 
@@ -455,13 +432,7 @@ stories-heading {
    still pins and is pushed away by the rising copy — same mechanism as desktop. */
 @media (max-width: 900px) {
 	stories-heading {
-		--sh-amp-size: 6rem;
 		--sh-heading-size: 2rem;
-		/* Pre-JS fallback for the smaller heading here (see the base rule). The measured
-		   tuck works out to ~0.14 of the heading's font-size at BOTH breakpoints — the
-		   ratio is a property of the face, not of the screen — so this step is simply the
-		   nearest token to that at this size. fitHeadingTuck() overwrites it either way. */
-		--sh-heading-gap: calc(-1 * var(--space-2));
 		/* Half the desktop intro separation (64px → 32px): the tighter single column
 		   wants less air between "other stories" and the intro. */
 		--sh-sub-gap: var(--space-3);
@@ -470,8 +441,7 @@ stories-heading {
 		--sh-reveal: 100px;
 	}
 
-	/* The "&" stays absolutely positioned over the wordmark (JS aligns it to the
-	   baseline) but is static — no parallax/fade — in the stacked layout.
+	/* The "&" stays absolutely positioned behind "other stories" (JS places it) but is static — no parallax/fade — in the stacked layout.
 	   `animation: none`, not just `transform: none`: an animation with fill:both
 	   outranks a normal declaration, so overriding the transform alone would lose to
 	   the parallax timeline. Switching the animation off is what actually stops it. */
@@ -479,17 +449,6 @@ stories-heading {
 		animation: none;
 		transform: none;
 		opacity: 1;
-	}
-
-	/* Wordmark fills the full inner width (gutter-to-gutter) on mobile. */
-	.sh__wordmark-svg {
-		width: 100%;
-	}
-}
-
-@media (max-width: 640px) {
-	stories-heading {
-		--sh-amp-size: 6rem;
 	}
 }
 
@@ -532,7 +491,10 @@ stories-heading {
      intro  0 → --sh-sub-fade-px of scroll, exactly as before.
      "&"    its own viewport position: from its top at 60vh to its top at 10vh. The
             "&" sits --sh-amp-top below the host, which starts --hero-lead down the
-            document, so those are scroll offsets (top − 60vh) and (top − 10vh).
+            document, so those are scroll offsets (top − 60vh) and (top − 10vh) —
+            the start floored at 0: the "&" stands behind "other stories", low
+            enough that its top can rest above 60vh, and without the floor it would
+            load already part-way down its drift.
             vh, not svh: the JS this replaces measured window.innerHeight, and this
             effect only runs above 900px where the two agree. */
 
@@ -574,7 +536,7 @@ stories-heading {
 			animation-timing-function: linear;
 			animation-fill-mode: both;
 			animation-timeline: scroll(root block);
-			animation-range: calc(var(--hero-lead) + var(--sh-amp-top) - 60vh)
+			animation-range: max(0px, calc(var(--hero-lead) + var(--sh-amp-top) - 60vh))
 				calc(var(--hero-lead) + var(--sh-amp-top) - 10vh);
 		}
 	}

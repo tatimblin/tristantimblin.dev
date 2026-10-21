@@ -4,7 +4,7 @@
    does NOT provide: the site container. Everything else the site's CSS reads
    is a DS token. */
 :root {
-  --container-max: 1200px;
+  --container-max: 976px;
   --container-pad: clamp(1rem, 4vw, 2rem);
   /* THE CONTAINER AS AN INSET — the one source for every full-width row that
      sits in the site's container: the site header, the homepage's hero and
@@ -35,14 +35,15 @@
   display: none !important;
 }
 
-.maximeheckel-light {
-  color-scheme: light;
-}
-.maximeheckel-dark {
-  color-scheme: dark;
+/* The page colour on the root too, so an overscroll or a page shorter than the
+   viewport shows the theme's page rather than the UA's white. (Each theme's
+   color-scheme is set with its palette, tokens/themes/*.css.) */
+html {
+  background: var(--background);
 }
 
 body {
+  min-height: 100%;
   margin: 0;
   /* The BODY role, as the DS Body component sets it (tokens.overrides.css):
      anything not set by a component reads as reading text. */
@@ -50,21 +51,20 @@ body {
   font-weight: var(--font-body-weight);
   color: var(--text-primary);
   background: var(--background);
-  /* Grayscale AA rather than the OS default. On a dark page subpixel rendering
-     fattens every stem — worst on Mondwest, whose strokes are already square and
-     heavy — so this is the one lever that genuinely thins the type on a face that
-     ships a single cut. The -moz- half covers Firefox on macOS; neither does
-     anything on Windows or Linux, where grayscale AA is already the default. */
+  /* Grayscale AA rather than the OS default. On the dark page subpixel
+     rendering fattens every stem, and this is the one lever that thins the type
+     without reaching for a lighter cut. The -moz- half covers Firefox on macOS;
+     neither does anything on Windows or Linux, where grayscale AA is already the
+     default. */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Every face ships discrete cuts — Mondwest 200/300/400/700, Migra 500/700,
-     Neue Montreal 400/600 — and a request between them must land on a real one.
-     Faux-bolding a bitmap face smears its pixel grid into mush, so refuse the
-     synthesis: emphasis is a cut the family has (the roles name it) or it is
-     colour and size. */
+  /* Both faces ship discrete cuts — DM Sans 400/500/700, Roboto Mono
+     300/400/500 — and a request between them must land on a real one, not a
+     smeared faux bold. So refuse the synthesis: emphasis is a cut the family
+     has (the roles name it) or it is colour and size. */
   font-synthesis-weight: none;
   /* And refuse FAKE SMALL CAPS for the same reason. Verified against the files in
-     public/fonts: not one of the four faces ships an `smcp` feature, so any
+     public/fonts: neither face ships an `smcp` feature, so any
      font-variant-caps request here would be synthesised — capitals merely scaled
      down, which land far too light against the surrounding text and read worse
      than plain uppercase would. If small caps are ever wanted, they need a face
@@ -87,9 +87,9 @@ p {
   margin: 0;
 }
 
-/* BARE headings take the heading face. Family and weight travel together: Migra
-   is one family with two cuts, so a family without a weight lands on whichever
-   the browser guesses. A DS Heading sets its own (heading.css) — and since the
+/* BARE headings take the heading face. Family and weight travel together: DM
+   Sans ships three cuts, so a family without a weight lands on whichever the
+   browser guesses. A DS Heading sets its own (heading.css) — and since the
    package's CSS sits in cascade layers under this file, an unlayered element
    rule here would beat it at any specificity, so these are kept off it. */
 h1:where(:not(.ds-heading)),
@@ -119,6 +119,20 @@ h1:where(:not(.ds-heading)) {
 
 h2:where(:not(.ds-heading)) {
   font-size: var(--font-size-7);
+}
+
+/* A bare link in running text (one written as a plain <a>, not an Anchor)
+   reads as the Anchor does: the link tokens, underlined at rest. Unclassed
+   only, so a Pill or a Chip rendered as an <a> keeps its own box. */
+:where(.ds-prose, .ds-body, main p) a:not([class]) {
+  color: var(--link-color);
+  text-decoration-line: var(--link-decoration);
+  text-decoration-thickness: var(--link-underline-thickness);
+  text-underline-offset: var(--link-underline-offset);
+}
+:where(.ds-prose, .ds-body, main p) a:not([class]):is(:hover, :focus-visible) {
+  color: var(--link-hover-color);
+  text-decoration-line: var(--link-decoration-hover);
 }
 
 img {
