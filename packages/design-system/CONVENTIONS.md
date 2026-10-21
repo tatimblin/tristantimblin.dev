@@ -13,9 +13,10 @@ system](https://github.com/MaximeHeckel/design-system), pruned to what this
 site uses and extended with what it needed. It has two parts:
 
 - **A token layer** — CSS custom properties (spacing, type, color, radii, fonts,
-  motion) applied globally. The theme is set via `class="maximeheckel-light"`
-  or `-dark` on `<html>` (see `src/layouts/Layout.astro`), so tokens resolve at
-  first paint with no JS.
+  motion) applied globally. The theme is set via `data-theme="light"` (the
+  default) or `"dark"` on `<html>` (see `src/layouts/Layout.astro`), so tokens
+  resolve at first paint with no JS; any wrapper may carry its own
+  `data-theme` (ThemePage) and every themed token re-resolves inside it.
 - **Presentational components** — `.astro` components (`Text`, `Grid`, `Button`,
   `Card`, …) that render fixed markup + a CSS class, consuming those tokens.
 
@@ -135,7 +136,8 @@ Work top-down. Stop at the first rule that matches.
 | File | Rule |
 |------|------|
 | `src/tokens/tokens.generated.css` | **Never hand-edit.** It's generated from the upstream package. Regenerate with `bun scripts/gen-tokens.mjs` after `bun update @maximeheckel/design-system`. |
-| `src/tokens/tokens.overrides.css` | The **only** place to retune DS token *values* for this site (it wins over generated), and where the site's own tokens live: the type roles and scale steps, the motion vocabulary, the INSTRUMENT UI block (on the theme classes), the ART block. |
+| `src/tokens/tokens.overrides.css` | Where the site's own theme-independent tokens live (it wins over generated): the type roles and scale steps, the motion vocabulary, the EDGES block (border, radius, link, code-token tokens on `:root`; the composites `--border`, `--shadow-panel`, `--panel-header-bg`, `--link-color` on `[data-theme]`), the INSTRUMENT UI block and the ART defaults (on `[data-theme]`). |
+| `src/tokens/themes/light.css`, `themes/dark.css` | The two palettes, on `[data-theme="light"]` / `[data-theme="dark"]`: every value that differs between the themes (page, panel, edge colour, inks, washes, accent and `--on-accent`, code block, halftone ink, art plate). Edit both together — they name the same set. |
 | `src/tokens/bridge.css` | Edit to add a legacy-name alias (e.g. mapping a site/Web-Component `--color-*` name onto a DS token). |
 | `src/components/*.astro`, `src/styles/*.css` | Edit freely: the package is this site's. For a component that is still a port (`Grid`, `Flex`, `List`, `Anchor`, `Icon`, `VisuallyHidden`) keep the prop names. New component ⇒ add its `@import` to `src/styles/index.css` (in a layer) — or, while only the catalogue renders it, import the file from the component wrapped in `@layer ds.components` — **and** a section to the catalogue page. |
 | `src/lib/*.ts` | Client helpers a widget's script imports; keep them DOM-free at import time. |
@@ -146,7 +148,7 @@ Work top-down. Stop at the first rule that matches.
 
 The cards, widgets and controls are drawn after instrument UIs (a hardware
 metronome's screen, a dashboard card): **flat** surfaces a few percent apart,
-1px **hairlines**, **one accent** (orange-red) used once per card for the lit
+1px **dashed edges**, **one accent** (the link blue) used once per card for the lit
 thing / the playhead / the primary action, and everything else the **ink at a
 few strengths**. Two voices of type: small tracked uppercase **labels** for
 structure, and a big regular-weight **numeral** for values. `Card`,
@@ -154,17 +156,26 @@ structure, and a big regular-weight **numeral** for values. `Card`,
 are restyled (no shadows, no glass, caps labels), and the components below have
 no upstream at all.
 
-**Tokens** (`tokens.overrides.css` → INSTRUMENT UI, on the theme classes unless
-noted):
+**Tokens** (`tokens.overrides.css` → EDGES and INSTRUMENT UI, on `[data-theme]`
+unless noted; the per-theme values in `themes/*.css`):
 
 | Token | What it is for |
 | --- | --- |
-| `--accent`, `--accent-hover` | the one accent (retuned from blue; mixed from `--red-900`/`--orange-900`), and the accent under the pointer (a touch lighter, by relative colour — a primary Button, the strip's action cell). |
-| `--on-accent` | type ON the accent — the dark ink in both themes (white fails AA on it). |
-| `--lit` | a step/tile/key that is ON — the accent on dark, the **ink** on light. Use for binary on/off; use `--accent` for things that must be orange in both themes. |
-| `--wash-1/2/3` | the ink at 7 / 16 / 30 % — unlit tile & subtle pill fill; two stronger steps. |
-| `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, 22 % ink. For ranked things (legend, share ruler). |
-| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour; the STRONG edge (the ink at `--wash-3`) for the one outline on a ruled screen that must read over the plain hairlines inside it — the card's border, a chip under the pointer; the divider gradient that fades at both ends. The package reads `--hairline`, never `--border-color`. |
+| `--border` (`--border-width` 1px, `--border-style` dashed, `--border-color` — the parts on `:root`/the theme) | THE edge: cards, dividers, a figure's frame, a section's rule. Compose it (`border-block-start: var(--border)`); never type `1px solid`. A side that must stay invisible uses the parts with a transparent colour. |
+| `--radius-box` (2.5px), `--radius-square` (0) — `:root` | the one corner of anything boxed, and a corner square on purpose. `--border-radius-0..3` all resolve to `--radius-box`. |
+| `--shadow-panel`, `--panel-outline` | a panel's 1px tinted ring under its edge, and its colour. |
+| `--panel-header-bg` | a panel header's fill: the card fading into `--wash-1` (also the primary Button's and the outline Pill's). |
+| `--code-bg`, `--code-fg`, `--code-border`, `--code-token-*` | a fenced block: the slab, its ink and edge (per theme), and the shared highlight colours. |
+| `--link-color`, `--link-hover-color`, `--link-decoration(-hover)`, `--link-underline-offset/-thickness` | every link: the colour, underlined at rest, plain under the pointer. |
+| `--duration-standard` (250ms), `--ease-standard` — `:root` | the chrome's own transition (a chip, a pill, a button washing in). |
+| `--halftone-ink`, `--halftone-ink-soft` | the halftones' dot ink per theme, handed to `<dotted-grid>` / `<video-carousel>` as `--color-fg` (bridge.css). |
+| `--accent`, `--accent-hover` | the one accent (the link blue, re-tuned lighter on the dark page), and the accent under the pointer. |
+| `--on-accent` | type ON the accent — white on the light theme's blue, the dark ink on the dark theme's. |
+| `--lit` | a step/tile/key that is ON — a quieter blue off the accent. Use for binary on/off; use `--accent` for the accent itself. |
+| `--wash-1/2/3` | three solid tints (the pale blue-grey tag fill, then the panel ring's blue): unlit tile & subtle pill fill; two stronger steps. |
+| `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, `--wash-3`. For ranked things (legend, share ruler). |
+| `--text-subtle` | a quiet label ink between secondary and tertiary — a tag's, a toggle's. |
+| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour alone (a drawn stripe, a ring); a stronger edge for under the pointer; the OPT-IN divider gradient that fades at both ends (`<Hairline variant="fade">`). A whole edge is `--border`. |
 | `--bar-width` (`:root`, 2px) | every solid edge bar: the pull quote's. |
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px) — `:root` | the steps below the generated scales. |
 | `--ticks-image`, `--ticks-image-ink` | the tick ruler as a gradient (hairlines on `--tick-pitch`) in currentColor, and in the ink — for a box that should read as a ruler and cannot take the classes (the player's progress bar). TickRuler draws its own on the same pitch. |
@@ -173,7 +184,6 @@ noted):
 | `--shadow-2`, `--shadow-3` | the upstream shadow scale on the theme's `--shadow-color`, for the few things that float — a control panel. Cards are flat and take none. |
 | `--voice-mono-*`, `--voice-figure-*` | the label voice (family, size, tracking) and the figure voice (family, weight, tracking, size) as custom properties, for a shadow-DOM consumer styled through `::part()`. Mono and Figure read them; a WidgetGrid redefines the sizes on its scale. |
 | `--duration-reveal / -settle / -swap / -quick / -loop`, `--ease-reveal` | the motion vocabulary; all `0s` under `prefers-reduced-motion: reduce`, so a transition timed by a token is a cut for that visitor and no component needs a reduced-motion block of its own. |
-| light-theme `--gray-*` | retuned warm (hue 80, stone/bone). Page, card, hairline and inks all follow. (`-700` / `-800` stay generated: nothing reads them.) |
 
 **Controls.** Every control — Button, IconButton, a Pill or Chip as a button or
 link, Anchor, PostRow's link, HitArea —
@@ -428,7 +438,7 @@ crop off the tile's edges. The language is centralised so a file carries only
 its drawing: the **tokens** name every colour, the **frame** owns the plate and
 the motion, and a **validator** holds the rules.
 
-**Tokens** (`tokens.overrides.css` → ART, on the theme classes). **The plate
+**Tokens** (`tokens.overrides.css` → ART, on `[data-theme]`, retuned per theme in `themes/*.css`). **The plate
 follows the theme.** The values below are the dark palette the language was
 sampled on (cyan and green since retuned toward signal neon); the light theme overrides them, so a light page shows ink on bone
 rather than black windows: the same drawing, inverted.
@@ -1158,9 +1168,9 @@ dark one; `tests/scenes.spec.ts` holds them.
 ## Catalogue tooling
 
 - `ThemePage theme="light|dark"` — a piece of one theme's page inside the
-  other: the theme class, the page colour, the ink, a hairline box, labelled.
+  other: `data-theme`, the page colour, the ink, a hairline box, labelled.
   Every themed token re-resolves inside it (which is why the instrument tokens
-  sit on the theme classes, not `:root`).
+  sit on `[data-theme]`, not `:root`).
 - `Knobs` / `KnobGroup` / `Knob` — a playground's control panel: a card
   surface with `--shadow-3`; a title row (`title`, the `meta` slot), a `note`
   slot, a scrolling body of `Knob` rows (`label`, `type="range|color|checkbox|
