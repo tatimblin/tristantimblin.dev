@@ -120,8 +120,8 @@ export const SPEEDS = Object.freeze(["0.5", "1", "2"]);
  *
  *   art-label    the label voice: --voice-mono-family (the UI face), tracked caps, small
  *   art-caption  a smaller, dimmer label: the line under a readout
- *   art-numeral  the thin display numeral (--font-display, Mondwest Thin)
- *   art-title    a module's heading: --font-heading, Mondwest Bold
+ *   art-numeral  the display numeral (--font-display, DM Sans Medium)
+ *   art-title    a module's heading: --font-heading, DM Sans Medium
  *
  * The file sets only where (x, y, text-anchor), how big (font-size, in
  * viewBox units, on the voice's steps of one SCALE) and the paint (fill,

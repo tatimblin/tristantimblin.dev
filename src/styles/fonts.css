@@ -1,221 +1,68 @@
-/* FONT LOADING — the site's three faces, self-hosted, plus metric-matched fallbacks.
- * (Three FACES, eight files: Migra, Mondwest and Neue Montreal each ship more than
- * one cut under a single family name, so the browser matches by weight.)
+/* FONT LOADING — the site's two faces, self-hosted, plus metric-matched fallbacks.
  *
- * The files are built by tools/fonts/build.sh (latin subsets of the vendor
- * originals) and served from /fonts with a one-year immutable cache (public/_headers).
- * Nothing is fetched from a third party; the roles they fill are named by the
- * --font-hero / --font-heading / --font-ui / --font-body tokens in the design
- * system's tokens.overrides.css.
+ * DM Sans (400 / 500 / 700) is the interface, the headings and the hero
+ * wordmark; Roboto Mono (300 / 400 / 500) is the body and the code. Each cut
+ * is its own static file in two subsets, latin and latin-ext, split by
+ * unicode-range so a page of English never fetches the -ext file.
  *
- * TWO SEPARATE ADJUSTMENTS LIVE HERE. They look alike and do different jobs:
+ * The files are fetched by tools/fonts/build.sh (the Google Fonts CSS API's
+ * own subsets, both faces OFL) and served from /fonts with a one-year
+ * immutable cache (public/_headers). Nothing is fetched from a third party at
+ * runtime; the roles they fill are named by the --font-hero / --font-heading /
+ * --font-ui / --font-body / --font-code tokens in the design system.
  *
- * 1. size-adjust on a REAL face — optical normalisation.
- *    Mondwest is a bitmap face whose glyphs sit small inside a generous em: the
- *    Bold cut's x-height is 0.282/em and the other three's 0.440/em, against
- *    0.530 for Migra. Set at the same --font-size-* they would render around half
- *    and four-fifths the size of the type beside them, which makes the whole
- *    numeric scale mean something different per face. Scaling each cut onto a
- *    common x-height restores the scale as the single source of truth, so a
- *    size-5 heading and a size-5 label read as the same step whichever face they
- *    use.
+ * ONE FAMILY PER FACE, ONE @font-face PER CUT, each declaring only its real
+ * weight. A request for a weight lands on its file; a weight no file has
+ * (600, say) resolves to the nearest real cut per the CSS matching rules
+ * rather than stretching one cut across the whole 100–900 axis, which made
+ * every weight render as the same file and look like nothing happened.
  *
- * 2. The *Fallback* faces — anti-reflow.
- *    font-display: swap paints text immediately in a fallback and swaps when the
- *    web font lands. Different metrics on the two sides means every paragraph
- *    reflows at the swap — the "flash, then the styling snaps in" a cold mobile
- *    load used to show. Each fallback wraps a near-universal system font
- *    (Georgia / Arial) and overrides its metrics to occupy the SAME box as the
- *    real face, so the swap is metrically invisible.
+ * No size-adjust on the real faces: the two sit within 5% of each other's
+ * x-height (DM Sans 0.504/em, Roboto Mono 0.528/em), so the numeric scale
+ * already means the same step in either.
  *
- * DERIVED, NOT GUESSED. Every percentage below was computed from the fonts'
- * actual head/OS-2 tables:
- *   size-adjust      = webfont.xHeight / fallback.xHeight
- *   ascent-override  = webfont.typoAscent  / upm / size-adjust
- *   descent-override = webfont.typoDescent / upm / size-adjust
- *   line-gap-override= webfont.typoLineGap / upm / size-adjust
- * where "webfont.*" means the face's metrics AFTER its own size-adjust from (1).
- * Per-em metrics as measured:
- *   Migra          upm 1000  asc 0.7500  desc 0.2500  gap 0.1000  xHeight 0.5300
- *   Mondwest 700   upm 2048  asc 0.7256  desc 0.2954  gap 0       xHeight 0.2822
- *   Mondwest 2/3/4 upm 4096  asc 0.7598  desc 0.2400  gap 0.0200  xHeight 0.4400
- *   Neue Montrl    upm 1000  asc 0.9580  desc 0.2420  gap 0       xHeight 0.5100
- * (The three lighter Mondwest cuts share those metrics EXACTLY — the thinned
- * weights hold upm, cap height, x-height and every advance width fixed — so one
- * size-adjust and one fallback cut cover them; the Bold is a different drawing
- * with its own. Both Neue Montreal cuts share theirs, Semibold's x-height
- * differing by 0.001 em.)
- * Fallback x-heights: Georgia 0.4814, Arial 0.5186.
- * Re-run the same arithmetic if a face is ever swapped — or delete the fallback
- * faces and drop them from the stacks; the plain system fallback still works, it
- * just reflows on swap again. */
+ * THE *Fallback* FACES — anti-reflow. font-display: swap paints text at once
+ * in a fallback and swaps when the web font lands. Different metrics on the
+ * two sides means every line reflows at the swap. Each fallback wraps a
+ * near-universal system font and overrides its metrics to occupy the SAME box:
+ *   size-adjust      = webfont line length / fallback line length
+ *                      (a 113-character English sentence, measured in Chromium)
+ *   ascent-override  = webfont.ascent  / upm / size-adjust
+ *   descent-override = webfont.descent / upm / size-adjust
+ *   line-gap-override= webfont.lineGap / upm / size-adjust
+ * Matching the line length rather than the x-height is the one that holds a
+ * paragraph's wrap still across the swap, which is what the user sees.
+ * Per-em metrics as measured (OS/2 typo = hhea in both):
+ *   DM Sans       upm 1000  asc 0.9920  desc 0.3100  gap 0  xHeight 0.504  cap 0.700
+ *   Roboto Mono   upm 2048  asc 1.0479  desc 0.2710  gap 0  xHeight 0.528  advance 0.600
+ * Line length per character: DM Sans 400 0.4667, 500 0.4744, 700 0.4913;
+ * Arial 0.4476, Arial Bold 0.4820; Roboto Mono and Courier New both 0.6001.
+ * Re-run the same arithmetic if a face is ever swapped. */
 
 /* --- The real faces ---------------------------------------------------- */
 
-/* Migra — the hero lockup only: the wordmark (500) and "& other stories" (700).
-   ONE family with two weights rather than two families, so the browser matches
-   the cut by font-weight and never synthesises. Migra is the reference face; the
-   Mondwests are normalised onto its x-height. */
-@font-face {
-	font-family: "Migra";
-	font-style: normal;
-	font-weight: 500;
-	font-display: swap;
-	src: url("/fonts/migra-medium.woff2") format("woff2");
-}
-
-@font-face {
-	font-family: "Migra";
-	font-style: normal;
-	font-weight: 700;
-	font-display: swap;
-	src: url("/fonts/migra-bold.woff2") format("woff2");
-}
-
-/* Mondwest — the interface and the headings: ONE family, four cuts, so a
-   request for a weight lands on a file and nothing is synthesised. The Regular
-   (400) is the UI face (--font-ui: labels, chrome, the caps voice, the widget
-   figures); the Bold (700, the former "FS Mondwest") is the heading face
-   (--font-heading) and the UI's emphasis. The Light (300) and Thin (200) are
-   thinned from the Regular in bitmap space — 2 px stems taken to 1.5 px and
-   1 px on the face's own 50-per-em grid, with cap height, x-height and every
-   advance width held fixed. The Thin is the display role (--font-display:
-   the big thin numeral); the Light is served for a use that wants it and
-   holds no role.
-
-   TWO size-adjusts, because two drawings. The Regular, Light and Thin are one
-   drawing at three stem widths (identical metrics, verified), so one 118.2%
-   takes all three onto Migra's x-height. The Bold is a different drawing
-   whose glyphs fill barely a quarter of the em, the largest correction on the
-   site: 187.8%. The two fallback cuts below mirror the split. */
-@font-face {
-	font-family: "Mondwest";
-	font-style: normal;
-	font-weight: 200;
-	font-display: swap;
-	size-adjust: 118.2%;
-	src: url("/fonts/ppmondwest-thin.woff2") format("woff2");
-}
-
-@font-face {
-	font-family: "Mondwest";
-	font-style: normal;
-	font-weight: 300;
-	font-display: swap;
-	size-adjust: 118.2%;
-	src: url("/fonts/ppmondwest-light.woff2") format("woff2");
-}
-
-@font-face {
-	font-family: "Mondwest";
-	font-style: normal;
-	font-weight: 400;
-	font-display: swap;
-	size-adjust: 118.2%;
-	src: url("/fonts/ppmondwest-regular.woff2") format("woff2");
-}
-
-@font-face {
-	font-family: "Mondwest";
-	font-style: normal;
-	font-weight: 700;
-	font-display: swap;
-	size-adjust: 187.8%;
-	src: url("/fonts/fs-mondwest-bold.woff2") format("woff2");
-}
-
-/* PP Neue Montreal — the body: reading text, at the Regular. A neo-grotesque
-   beside two highly-voiced faces, chosen for exactly that: it recedes, so the
-   display face keeps the personality and a paragraph reads as a paragraph.
-   TWO CUTS UNDER ONE FAMILY, on the same reasoning as Migra above; the Semibold
-   is served for a body emphasis that wants a real cut (the body face never
-   synthesises: global.css refuses it).
-   The smallest correction on the site — the glyphs already sit close to Migra's
-   x-height (0.510 vs 0.530), so 103.9% is a nudge rather than a rescue. It is the
-   same on both cuts because their metrics are identical. */
-@font-face {
-	font-family: "Neue Montreal";
-	font-style: normal;
-	font-weight: 400;
-	font-display: swap;
-	size-adjust: 103.9%;
-	src: url("/fonts/neue-montreal-regular.woff2") format("woff2");
-}
-
-@font-face {
-	font-family: "Neue Montreal";
-	font-style: normal;
-	font-weight: 600;
-	font-display: swap;
-	size-adjust: 103.9%;
-	src: url("/fonts/neue-montreal-semibold.woff2") format("woff2");
-}
-
-/* --- Metric-matched fallbacks ------------------------------------------ */
-
-/* Migra → Georgia. Both Migra cuts share these metrics (their typo values are
-   identical and their x-heights differ by 5/1000 em), so one face covers the
-   family. */
-@font-face {
-	font-family: "Migra Fallback";
-	src: local("Georgia");
-	size-adjust: 110.10%;
-	ascent-override: 68.12%;
-	descent-override: 22.71%;
-	line-gap-override: 9.08%;
-}
-
-/* Mondwest → Arial, in two cuts that mirror the two drawings above, so a 700
-   request lands on the box the Bold will take and a lighter one on the box the
-   Regular will. A fallback is a box, not a colour: it holds the line length and
-   line box steady across the swap. The 100–400 face covers the Thin, Light and
-   Regular, which share their metrics exactly. The 133% ascent on the Bold's is
-   not a typo: that cut's vertical metrics are generous relative to its small
-   glyphs, and the 187.8% optical normalisation scales the whole box up with
-   them — matching it keeps the hero lede's line box stable across the swap,
-   which the hero fold measures. */
-@font-face {
-	font-family: "Mondwest Fallback";
-	font-weight: 100 400;
-	src: local("Arial");
-	size-adjust: 100.27%;
-	ascent-override: 89.56%;
-	descent-override: 28.29%;
-	line-gap-override: 2.36%;
-}
-
-@font-face {
-	font-family: "Mondwest Fallback";
-	font-weight: 700;
-	src: local("Arial");
-	size-adjust: 102.20%;
-	ascent-override: 133.33%;
-	descent-override: 54.28%;
-	line-gap-override: 0%;
-}
-
-/* Neue Montreal → Arial. Both are neo-grotesques, so this is the closest metric
-   pairing on the page; the 97% ascent follows Neue Montreal's tall typo ascender
-   (0.958/em), not an error. No font-weight here, so this one face covers BOTH cuts —
-   which is correct, since they share their metrics exactly. Body copy is the bulk
-   of every page, so this is the fallback that matters most. */
-@font-face {
-	font-family: "Neue Montreal Fallback";
-	src: local("Arial");
-	size-adjust: 102.20%;
-	ascent-override: 97.42%;
-	descent-override: 24.61%;
-	line-gap-override: 0%;
-}
-
-/* VUE RESKIN (prototype) -----------------------------------------------------
- * The old Vue site's two faces: DM Sans Medium for headings and labels, Roboto
- * Mono Light for body. One cut each, declared across the whole weight axis so a
- * request for 400/700 lands on the cut rather than on synthesis. */
+/* DM Sans — 400 (the UI's plain voice), 500 (headings, labels, the hero
+   wordmark), 700 (emphasis). */
 @font-face {
 	font-family: "DM Sans";
 	font-style: normal;
-	font-weight: 100 900;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/fonts/DMSans-400-latin.woff2") format("woff2");
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+	font-family: "DM Sans";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/fonts/DMSans-400-latin-ext.woff2") format("woff2");
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+	font-family: "DM Sans";
+	font-style: normal;
+	font-weight: 500;
 	font-display: swap;
 	src: url("/fonts/DMSans-500-latin.woff2") format("woff2");
 	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
@@ -223,15 +70,34 @@
 @font-face {
 	font-family: "DM Sans";
 	font-style: normal;
-	font-weight: 100 900;
+	font-weight: 500;
 	font-display: swap;
 	src: url("/fonts/DMSans-500-latin-ext.woff2") format("woff2");
-	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
+@font-face {
+	font-family: "DM Sans";
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url("/fonts/DMSans-700-latin.woff2") format("woff2");
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+	font-family: "DM Sans";
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url("/fonts/DMSans-700-latin-ext.woff2") format("woff2");
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Roboto Mono — 400 (the body: reading text), 300 (a lighter aside, served
+   for a use that wants it), 500 (emphasis in mono, code that needs weight). */
 @font-face {
 	font-family: "Roboto Mono";
 	font-style: normal;
-	font-weight: 100 900;
+	font-weight: 300;
 	font-display: swap;
 	src: url("/fonts/RobotoMono-300-latin.woff2") format("woff2");
 	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
@@ -239,8 +105,78 @@
 @font-face {
 	font-family: "Roboto Mono";
 	font-style: normal;
-	font-weight: 100 900;
+	font-weight: 300;
 	font-display: swap;
 	src: url("/fonts/RobotoMono-300-latin-ext.woff2") format("woff2");
-	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+	font-family: "Roboto Mono";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/fonts/RobotoMono-400-latin.woff2") format("woff2");
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+	font-family: "Roboto Mono";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/fonts/RobotoMono-400-latin-ext.woff2") format("woff2");
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+	font-family: "Roboto Mono";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("/fonts/RobotoMono-500-latin.woff2") format("woff2");
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+	font-family: "Roboto Mono";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("/fonts/RobotoMono-500-latin-ext.woff2") format("woff2");
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* --- Metric-matched fallbacks ------------------------------------------ */
+
+/* DM Sans → Arial, in two cuts. The 100–500 face is matched to the Medium,
+   the UI's and the headings' cut (the Regular is 1.6% narrower, close enough
+   for a box); the 700 face wraps Arial's own Bold, so the fallback is a real
+   cut rather than a synthesised one. */
+@font-face {
+	font-family: "DM Sans Fallback";
+	font-weight: 100 500;
+	src: local("Arial"), local("ArialMT");
+	size-adjust: 106%;
+	ascent-override: 93.58%;
+	descent-override: 29.25%;
+	line-gap-override: 0%;
+}
+
+@font-face {
+	font-family: "DM Sans Fallback";
+	font-weight: 600 900;
+	src: local("Arial Bold"), local("Arial-BoldMT");
+	size-adjust: 101.93%;
+	ascent-override: 97.32%;
+	descent-override: 30.41%;
+	line-gap-override: 0%;
+}
+
+/* Roboto Mono → Courier New. Both advance exactly 0.6 em, so no size-adjust:
+   the line length is identical; only the vertical box is overridden. Body
+   copy is the bulk of every page, so this is the fallback that matters most. */
+@font-face {
+	font-family: "Roboto Mono Fallback";
+	src: local("Courier New"), local("CourierNewPSMT");
+	size-adjust: 100%;
+	ascent-override: 104.79%;
+	descent-override: 27.1%;
+	line-gap-override: 0%;
 }

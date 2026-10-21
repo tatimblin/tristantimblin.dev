@@ -247,7 +247,7 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
 - `Stat` — `value` + `label` (props or default/`label` slots): the mono pair
   (the value at the next step, in the ink), several in a row.
   `variant="numeral"` is the spec sheet's pair instead: the value big and
-  thin (`--font-display`, Mondwest Thin, at `--font-size-8`) with a caps
+  thin (`--font-display`, DM Sans Medium, at `--font-size-8`) with a caps
   label BESIDE it on the numeral's top edge; the label wraps (a `<br>`, or a
   title and a meta line in the `label` slot).
 - `StatStrip` — a row of hairline-cut cells under a hairline: every child is
@@ -504,10 +504,10 @@ and tracking by role:
 
 | Class | Voice | Face | Sizes (viewBox units) |
 | --- | --- | --- | --- |
-| `art-label` | the label voice: IDs, codes, file names, a section head | `--voice-mono-family` (the UI face, Mondwest Regular), `--tracking-caps` | 3.5 · 4.5 · 6 |
+| `art-label` | the label voice: IDs, codes, file names, a section head | `--voice-mono-family` (the UI face, DM Sans Regular), `--tracking-caps` | 3.5 · 4.5 · 6 |
 | `art-caption` | the line under a readout, a log line; dim by the kit's default | the same, `--tracking-mono` | 3.5 · 4.5 |
-| `art-title` | a module's heading: ONLINE, EPOCH, VARIANT 033 | `--font-heading` (Mondwest Bold) | 6 · 9 · 14 |
-| `art-numeral` | the big thin figure: 007, 45, 0079 | `--font-display` (Mondwest Thin), Stat's numeral | 9 · 14 · 22 · 32 |
+| `art-title` | a module's heading: ONLINE, EPOCH, VARIANT 033 | `--font-heading` (DM Sans Medium) | 6 · 9 · 14 |
+| `art-numeral` | the big thin figure: 007, 45, 0079 | `--font-display` (DM Sans Medium), Stat's numeral | 9 · 14 · 22 · 32 |
 
 The file sets only `x`, `y` (the baseline), `font-size` — a step of the
 one **scale**, 3.5 4.5 6 9 14 22 32, the voice's steps only, in viewBox
@@ -637,7 +637,7 @@ their own lines.
 | iso (`iso.ts`) | `iso(x, y, z, at?)` at a true 30° (`ISO_X` / `ISO_Y` / `ISO_Z` the unit axes) · `isoBox` · `isoCylinder(x, y, r, h, {axis, top, side})` (upright, or lying along `x` / `y`; discs r × r/2) · `isoEllipse(x, y, r, {axis})` (a 2:1 disc on the ground or standing on the x / y face) · `isoRoundRect(x, y, w, d, c)` (flat, rounded corners; `c = d/2` is a pill) · `isoRoundBox(x, y, w, d, h, c, {top, side})` (rounded vertical edges: a shell, a board) · `isoCoil(x, y, r, h, turns)` (a standing spring, one path) · `isoPlane({grid})` · `vanishingGrid` — visible faces only, never a wireframe; a disc keeps ry = r/2, a rounded corner is the true projection so it meets the 30° edges tangent |
 | hidden lines (`clip.ts`) | `convexHull(points)` (a silhouette: the hull of a solid's projected corners) · `edges(points)` (a closed outline as segments) · `chain(points)` (an open line as segments) · `clipOutside(segs, poly)` (Cyrus–Beck: what of the segments shows outside a convex polygon, either winding) · `clipOutsidePolygon(segs, poly)` (the same for any simple polygon, convex or not — a mountain's ridge, a notched board: cut at every crossing, what lies along the outline hidden with it) · `insidePolygon(p, poly)` (a ray cast; on the outline counts as inside — a scatter kept off a lake) · `segmentsD(segs)` (one path `d`, rounded) — line work behind a solid is cut, not painted over, since a scene may not paint the plate |
 | curves through points (`gen/`) | `smoothD(points, closed?)` (Catmull-Rom as cubics; `closed` runs round the loop and shuts it, no corner at the join — a shore, a forest's edge) · `lineD(points)` (the polyline) · `rng(seed)` (a deterministic scatter) |
-| type (`type.ts`; art and scene — the glyph kit throws) | `text(x, y, words, {role, size, anchor, paint, turn})` (one line in a voice, `role` `label \| caption \| numeral \| title`, `size` a step of that voice's scale, default 4.5 / 3.5 / 22 / 9; a caption's paint dim unless said; a size off the voice throws; words escaped, set as given) · `rule(x0, x1, y, {dotted, paint})` (a solid ink hair, or dim round dots) · `section(x, y, w, title)` (the infographic's head: a dotted rule from (x, y), the title in caps hanging under it; `sectionDepth(size)` deep) · `bracketLabel(x, y, words)` (`[ ACTIVE ]`) · `readout(x, y, {value, label, caption, captionAt, size, paint})` (the thin numeral on the baseline at (x, y), a caps label over it, a caption beside its top — "14 SPEAKERS" — or `below`) · `advance(words, voice, size)` (an estimated width off the measured Mondwest cuts: figures 0.575 em, capitals 0.72, plus the voice's tracking — leave a margin) · `caps(words)` (upper case, a hex prefix's `x` kept) |
+| type (`type.ts`; art and scene — the glyph kit throws) | `text(x, y, words, {role, size, anchor, paint, turn})` (one line in a voice, `role` `label \| caption \| numeral \| title`, `size` a step of that voice's scale, default 4.5 / 3.5 / 22 / 9; a caption's paint dim unless said; a size off the voice throws; words escaped, set as given) · `rule(x0, x1, y, {dotted, paint})` (a solid ink hair, or dim round dots) · `section(x, y, w, title)` (the infographic's head: a dotted rule from (x, y), the title in caps hanging under it; `sectionDepth(size)` deep) · `bracketLabel(x, y, words)` (`[ ACTIVE ]`) · `readout(x, y, {value, label, caption, captionAt, size, paint})` (the thin numeral on the baseline at (x, y), a caps label over it, a caption beside its top — "14 SPEAKERS" — or `below`) · `advance(words, voice, size)` (an estimated width off the measured DM Sans cuts: figures 0.58 em, capitals 0.645, plus the voice's tracking — leave a margin) · `caps(words)` (upper case, a hex prefix's `x` kept) |
 | layout and strings (`layout.ts`, `ids.ts`) | `grid(cols, rows, gutter = 10, margin = 16, {width, height, inset})` (cell boxes `{x, y, w, h, col, row}` on the 320×180 plate or any box, row-major) · `span(a, b)` (the box two cells cover) · `ids(seed)` → `{ file, node, module, hex, id, code, state, status, coords, num, pick }` (`LOG_004.TXT`, `NODE B43`, `MODULE B7`, `0x7B8A`, `ID: 7F-C2`, `A0-04`, `ACTIVE`, `[ACTIVE]`, `02.44 / 118.09`, `0079`: deterministic off `rng`, each call the stream's next) |
 | assembly | `group(children, {motion, speed, transform})` (the data-motion contract; a transform with a motion goes on an outer `g`) · `svg({viewBox, children, header})` · `wash(colour, pct)` (a scene's translucent fill) |
 
@@ -1254,9 +1254,9 @@ All resolve globally from `@whois/design-system/tokens.css` (imported in
 Layout): spacing `--space-0..15`, radii `--border-radius-0..3` (+ `-tile`,
 `-pill`), type `--font-size-0..9` (no `-2`; `0` = 12px and `9` = 72px are the
 site's steps below and above the generated scale), weights
-`--font-weight-200/400/500/600/700` (`200` and `700` are the site's: Mondwest's
-Thin, and the Bold cut Mondwest and Migra ship), the leadings `--line-height-heading/-body/-ui` (1.15 / 1.6 / 1.3),
-the trackings `--tracking-heading` (0, a bitmap face), `--tracking-caps` (0.1em),
+`--font-weight-200/400/500/600/700` (`200` and `700` are the site's; DM Sans
+ships 400/500/700 and Roboto Mono 300/400/500), the leadings `--line-height-heading/-body/-ui` (1.15 / 1.6 / 1.3),
+the trackings `--tracking-heading` (0), `--tracking-caps` (0.1em),
 `--tracking-mono` (0.04em), the theme colors `--text-primary/secondary/tertiary`,
 `--accent`, `--accent-hover`, `--on-accent`, `--background`,
 `--card-background`, `--border-color` (site CSS may read it; the package reads
@@ -1282,23 +1282,24 @@ collapses); a rule that *adds* as it widens is `min-width` (`(min-width:
 viewport, is a container query on the grid (`@container widget`).
 
 **Fonts are named by role, not by family** (`tokens.overrides.css`; the faces
-are self-hosted from `/fonts`, built by `tools/fonts/build.sh`, @font-face'd
+are self-hosted from `/fonts`, fetched by `tools/fonts/build.sh`, @font-face'd
 with metric-matched fallbacks in `src/styles/fonts.css`):
 
 | Token | Face | Where |
 | --- | --- | --- |
-| `--font-hero` + `--font-hero-weight` | Migra Bold | the hero lockup only (the wordmark takes the Medium itself) |
-| `--font-heading` + `--font-heading-weight` | Mondwest Bold | every heading: the post title, section heads, DS `H1`–`H4`, a bare `h2`, the hero lede |
-| `--font-ui` | Mondwest Regular | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome |
-| `--font-display` + `--font-display-weight` | Mondwest Thin (200) | the big thin numeral: `Stat variant="numeral"` |
-| `--font-body` + `--font-body-weight/-size/-line-height/-letter-spacing` | Neue Montreal Regular | reading text (`Body`, and the bare `body`) |
-| `--font-code` | the system mono stack | code alone — fenced blocks and inline code; no file is loaded |
+| `--font-hero` + `--font-hero-weight` | DM Sans Medium (500) | the hero lockup only: the wordmark, the "&", "other stories" |
+| `--font-heading` + `--font-heading-weight` | DM Sans Medium (500) | every heading: the post title, section heads, DS `H1`–`H4`, a bare `h2`, the hero lede |
+| `--font-ui` | DM Sans | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome |
+| `--font-display` + `--font-display-weight` | DM Sans Medium (500) | the big numeral: `Stat variant="numeral"` |
+| `--font-body` + `--font-body-weight/-size/-line-height/-letter-spacing` | Roboto Mono Regular (400) | reading text (`Body`, and the bare `body`) |
+| `--font-code` | Roboto Mono | code — fenced blocks and inline code |
 
-Migra and Mondwest are ONE family each with discrete cuts (Migra 500/700;
-Mondwest 200/300/400/700), so a role that uses one names the family AND the
-weight — set only the family and the browser picks the cut. Neue Montreal
-ships 400/600. `font-synthesis-weight` is off site-wide (global.css): a weight
-lands on a real cut or it is not drawn. `Text`'s `family` values are these
+DM Sans and Roboto Mono are ONE family each with discrete static cuts (DM Sans
+400/500/700, Roboto Mono 300/400/500, each a latin and a latin-ext file split
+by `unicode-range`), so a role names the family AND the weight — set only the
+family and the browser picks the cut. A weight with no file (600) lands on the
+nearest real cut by the CSS matching rules. `font-synthesis-weight` is off
+site-wide (global.css): a weight lands on a real cut or it is not drawn. `Text`'s `family` values are these
 roles — `ui | heading | body | hero | code`, and `default`, which inherits.
 Live specimens are in the catalogue's first section.
 
