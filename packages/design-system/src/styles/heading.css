@@ -4,8 +4,8 @@
    spaced); here the ROLES layer (styles/index.css) wins over Text's variants
    by layer order, so one class is enough. */
 .ds-heading {
-	/* The site's heading face. Family and weight travel as a pair: Mondwest is
-	   one family with four cuts, so a family set without a weight lands on
+	/* The site's heading face. Family and weight travel as a pair: DM Sans is
+	   one family with three cuts, so a family set without a weight lands on
 	   whichever the browser considers nearest. This is the single place H1-H4
 	   pick up the face; the bare h1-h6 element rules in the site's global.css set
 	   the same pair, for headings outside the component. */
@@ -16,8 +16,8 @@
 	   read as two unrelated lines drifting apart. The token is the one place to
 	   retune it — see the LEADING note in tokens.overrides.css. */
 	line-height: var(--line-height-heading, 1.15);
-	/* The display tracking token (none, for a bitmap face), so an <h1> and an
-	   <H1> on the same page are tracked alike. */
+	/* The display tracking token, so an <h1> and an <H1> on the same page are
+	   tracked alike. */
 	letter-spacing: var(--tracking-heading, 0);
 }
 

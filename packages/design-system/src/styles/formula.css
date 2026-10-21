@@ -1,8 +1,8 @@
-/* Formula — the thin numeral's voice (the display role, Mondwest Thin) at
+/* Formula — the numeral's voice (the display role, DM Sans Medium) at
  * --font-size-6, a step under a tile's readout, in the ink. The raised and
- * lowered runs are real <sup>/<sub> in the label voice's face (the Thin
- * cannot be read that small), shifted by a relative offset rather than
- * vertical-align, so the line box does not grow round them. */
+ * lowered runs are real <sup>/<sub> in the label voice, shifted by a
+ * relative offset rather than vertical-align, so the line box does not grow
+ * round them. */
 /* Imported by its component, not by styles/index.css, so it ships only
  * on the pages that render one; in ds.components as if it were. */
 @layer ds.components {

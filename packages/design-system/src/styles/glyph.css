@@ -99,8 +99,8 @@
 		aspect-ratio: auto;
 		block-size: calc((100cqi - var(--glyph-tile-gap, var(--space-4))) / 3);
 	}
-	/* The readout over the mark: the spec sheet's thin numeral (the display
-	 * role, Mondwest Thin), tabular, centred, in the tile's colour unless the
+	/* The readout over the mark: the spec sheet's numeral (the display
+	 * role), tabular, centred, in the tile's colour unless the
 	 * slot's content says its own. Not a hit target: it lets the pointer
 	 * through to the cap under it. */
 	.ds-glyph-tile__readout {
