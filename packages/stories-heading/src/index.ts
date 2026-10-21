@@ -47,7 +47,7 @@ function clamp01(x: number): number {
  *   --sh-solid-*         the four registration corrections onto the outline.
  *   --sh-pin-height      the pin's height, so the track can reserve its scroll.
  * ...and onto .fh, for the hero fold: --sh-group-h, --sh-lockup-h,
- * --sh-wordmark-h and --sh-header-clear. Those also FEED THE CSS RANGES the timelines animate over, which
+ * --sh-wordmark-h and --sh-header-h. Those also FEED THE CSS RANGES the timelines animate over, which
  * is why they have to stay correct even though nothing reads them per frame.
  *
  * Lifecycle mirrors the sibling packages: a `listeners` cleanup array, a
@@ -99,15 +99,15 @@ export class StoriesHeadingElement extends HTMLElement {
 	private lastWritten = new Map<string, number>();
 
 	/** The "&"'s INK HEIGHT, as a fraction of the wordmark's rendered ink height.
-	    A display glyph, not a letter of the line: it stands behind "other stories"
-	    (baseline on the heading's) and rises behind "tristan" to stand clear above
-	    it. Tied to the wordmark
-	    rather than to a breakpoint so it holds the same proportion at every viewport;
-	    the CSS --sh-amp-size steps exist only for the pre-measure frame. */
-	private static readonly AMP_SIZE_RATIO = 1.4;
-	/** Where the "&"'s ink centre sits across "other stories", 0 (the phrase's left
-	    edge) to 1 (its right). */
-	private static readonly AMP_CENTER = 0.74;
+	    A display glyph, not a letter of the line: its baseline on the heading's, it
+	    rises from behind "other stories" to about the wordmark's x-height midline,
+	    knocking a hole out of "tr". Tied to the wordmark rather than to a breakpoint
+	    so it holds the same proportion at every viewport; the CSS --sh-amp-size
+	    steps exist only for the pre-measure frame. */
+	private static readonly AMP_SIZE_RATIO = 0.6;
+	/** Where the "&"'s ink centre sits across the wordmark's ink, 0 (its left edge)
+	    to 1 (its right): over the "r", between "t" and "is", as on the live site. */
+	private static readonly AMP_CENTER = 0.21;
 	/** How far the "&"'s baseline drops BELOW the heading's, in em of the "&". */
 	private static readonly AMP_DROP = 0;
 
@@ -136,20 +136,18 @@ export class StoriesHeadingElement extends HTMLElement {
 	    stories" (the t's apex, the h's ascender, the i's tittle), in em of the
 	    heading's font-size — so the gap is a property of the type and scales with it.
 	    fitHeadingTuck() measures where that ink sits and places it this far under the
-	    wordmark. NOT an overlap: the earlier faces (a high-contrast serif wordmark over
-	    a thin pixel face) could interleave, but DM Sans's even, heavy stems meet
-	    "other stories"'s ascenders head-on and the two words collide. A clear, tight
-	    gap reads as one lockup set in two sizes. */
-	private static readonly TUCK_CLEARANCE = 0.22;
+	    wordmark. NEGATIVE: an overlap, the live site's tuck — the heading's tallest
+	    letters cross the wordmark's baseline. "other stories" stacks OVER "tristan"
+	    and is a background-filled outline, so its ascenders knock out the wordmark
+	    where they cross rather than colliding with it. */
+	private static readonly TUCK_CLEARANCE = -0.12;
 
-	/** Grid the "other stories" fit targets: N columns of a 12-col content grid
-	   with a 24px (var(--space-5)) gutter, matching .home__grid. Below this host
-	   width (the ≤900px stacked layout) the fit is skipped for the rem fallback.
-	   Applies to the TYPE fit only — fitFold() runs at every width. */
-	private static readonly GRID_COLUMNS = 12;
-	private static readonly GRID_GAP = 24;
-	private static readonly FIT_SPAN = 6;
-	private static readonly FIT_MIN_WIDTH = 901;
+	/** "other stories"'s single-line width as a fraction of the wordmark's. One
+	    proportion at every width (see fitHeading). The live site's serif heading ran
+	    ~0.6 of its wordmark, but DM Sans is far wider and taller in the x-height at a
+	    given width, so the same fraction reads as too big; this keeps the heading
+	    clearly subordinate. */
+	private static readonly HEADING_RATIO = 0.42;
 
 	connectedCallback() {
 		this.track = this.querySelector<HTMLElement>("[data-sh-track]");
@@ -297,7 +295,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * screen; the slotted intro/CTAs flow below it, in the lower half, and the whole
 	 * group must rest ABOVE that floor, never through it. Two clamps, in a fixed order:
 	 *
-	 *   lead   = max(headerClear,
+	 *   lead   = max(headerH,
 	 *                min((100svh − lockup) / 2,
 	 *                    100svh − floor − foldGap − group))           ① spend whitespace
 	 *   height = max(100svh, lead + group + foldGap + floor)          ② then grow
@@ -306,7 +304,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	 * it SHRINKS the lead, so a group that grows (longer copy, larger dynamic type, a
 	 * narrower screen forcing more wrapping) first eats the whitespace under the site
 	 * header. Only when the lead bottoms out at
-	 * headerClear — no whitespace left — does the group's bottom pass the fold, and ②
+	 * headerH — no whitespace left — does the group's bottom pass the fold, and ②
 	 * grows the hero by exactly that overflow. Growing is the last resort.
 	 *
 	 * BOTH clamps live in CSS (see FullHeroLayout). This method only MEASURES and
@@ -315,8 +313,8 @@ export class StoriesHeadingElement extends HTMLElement {
 	 *   --sh-group-h      the group's full height (wordmark → intro bottom)
 	 *   --sh-lockup-h     the lockup's height (wordmark → "other stories" bottom)
 	 *   --sh-wordmark-h   the wordmark's rendered height
-	 *   --sh-header-clear the minimum lead that clears the site header
-	 *   --sh-header-h     the site header's band alone (a framed hero's margin)
+	 *   --sh-header-h     the site header's band: the minimum lead (the wordmark
+	 *                     clears the header) and a framed hero's margin
 	 *
 	 * That split is what makes the system acyclic. If JS instead computed the lead
 	 * from the scene's measured height, every grown state would be its own fixed point
@@ -383,13 +381,14 @@ export class StoriesHeadingElement extends HTMLElement {
 		this.setPx(fh, "--sh-group-h", wmHeight + headingGap + belowWordmark, "groupH");
 		this.setPx(fh, "--sh-lockup-h", wmHeight + headingGap + (pinRect?.height ?? 0), "lockupH");
 		this.setPx(fh, "--sh-wordmark-h", wmHeight, "wordmarkH");
-		// A negative heading-gap (the sub tucks UP into the wordmark) shortens the group
-		// via --sh-group-h above, but it must NOT reduce the header clearance — the
-		// wordmark still has to clear the overlaid header. Only a positive gap adds slack.
-		this.setPx(fh, "--sh-header-clear", headerH + Math.max(0, headingGap), "headerClear");
-		// The header's band on its own, for a consumer that frames the hero in it: the
-		// clearance above carries the heading gap too, which is lead, not frame.
-		this.setPx(fh, "--sh-header-h", headerH, "headerH");
+		// The header's band: the lead's floor (the lead runs from the hero's top to the
+		// wordmark's, so the wordmark clears the header exactly at headerH — the heading
+		// gap sits BELOW the wordmark and is already in --sh-group-h, not clearance), and
+		// the margin a consumer framing the hero in the header's band uses. Rounded UP
+		// to a whole px: it is a floor with no slack, and setPx's 0.1px rounding (or a
+		// skipped sub-0.5px rewrite) could otherwise park the wordmark a hair under
+		// the header. Whole px always differ by ≥1, so the guard never skips one.
+		this.setPx(fh, "--sh-header-h", Math.ceil(headerH), "headerH");
 	}
 
 	/**
@@ -407,10 +406,9 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * Set the "&" as a display glyph BEHIND "other stories": its ink AMP_SIZE_RATIO of
-	 * the wordmark's ink height, its baseline AMP_DROP em under the heading's, its ink
-	 * centred AMP_CENTER of the way across the phrase. Tall enough that it climbs out
-	 * from behind the heading, behind "tristan", and clear above it.
+	 * Set the "&" as a display glyph BEHIND "other stories" and OVER "tristan": its ink
+	 * AMP_SIZE_RATIO of the wordmark's ink height, its baseline AMP_DROP em under the
+	 * heading's, its ink centred AMP_CENTER of the way across the wordmark's ink.
 	 *
 	 * Runs AFTER fitHeading/fitHeadingTuck: it is placed off the heading's fitted size
 	 * and tuck. And it reads the heading's AT-REST position, not its current one — the
@@ -422,7 +420,8 @@ export class StoriesHeadingElement extends HTMLElement {
 	private fitAmp() {
 		if (!this.amp || !this.wordmarkSvg) return;
 		const hostRect = this.getBoundingClientRect();
-		const wmHeight = this.wordmarkSvg.getBoundingClientRect().height;
+		const wmRect = this.wordmarkSvg.getBoundingClientRect();
+		const wmHeight = wmRect.height;
 		if (!(wmHeight > 0)) return;
 
 		// SIZE: by INK height, asked of the face — font-size is not ink.
@@ -444,10 +443,10 @@ export class StoriesHeadingElement extends HTMLElement {
 		const ampTop = ampBaseline - (this.ampBaselineOffset() ?? ampSize * 0.8);
 		this.style.setProperty("--sh-amp-top", `${ampTop.toFixed(2)}px`);
 
-		// HORIZONTAL: the pin only moves in y, so the heading's x is already at rest.
+		// HORIZONTAL: across the wordmark's INK — fitWordmark sized its viewBox to the
+		// glyphs, so the svg's box is the text, not a padded container.
 		// The "&"'s ink spans [origin − left, origin + right] of its box's left edge.
-		const hRect = outline.getBoundingClientRect();
-		const centre = hRect.left - hostRect.left + StoriesHeadingElement.AMP_CENTER * hRect.width;
+		const centre = wmRect.left - hostRect.left + StoriesHeadingElement.AMP_CENTER * wmRect.width;
 		const k = ampSize / 100;
 		const inkMid = ((ink ? ink.right - ink.left : 70) * k) / 2;
 		this.style.setProperty("--sh-amp-left", `${(centre - inkMid).toFixed(2)}px`);
@@ -519,38 +518,24 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * Size "other stories" so its single-line width equals a 6-column span of the
-	 * 12-col content grid (matching the "NEW DARK WEB" reference). The grid shares
-	 * this host's content-box width and the same --hero-inset gutter as the page's
-	 * .fh-row, so this host's own width is the grid's total width. A span of N cols
-	 * is N*colW + (N-1)*gap where colW = (total - 11*gap)/12. We measure the text
-	 * at a reference px size with Canvas measureText (no layout thrash), then scale
-	 * font-size by target/natural. Below FIT_MIN_WIDTH (the ≤900px stacked layout,
-	 * where white-space wraps) the fit is skipped so CSS keeps the rem fallback.
+	 * Size "other stories" so its single-line width is HEADING_RATIO of the
+	 * wordmark's — one proportion at every viewport, so the heading stays
+	 * subordinate to "tristan" on a phone as on a desktop (a grid-span fit above
+	 * 900px and ~70vw below it made the phone's heading 3/4 of the wordmark). We
+	 * measure the text at a reference px size with Canvas measureText (no layout
+	 * thrash), then scale font-size by target/natural.
 	 */
 	private fitHeading() {
 		if (!this.heading) return;
 
-		const hostWidth = this.getBoundingClientRect().width;
-		if (!(hostWidth > 0)) {
+		const wmWidth =
+			this.wordmarkSvg?.getBoundingClientRect().width || this.getBoundingClientRect().width;
+		if (!(wmWidth > 0)) {
 			// Not rendered: drop the fit, fall back to the rem step.
 			this.style.removeProperty("--sh-heading-fitsize");
 			return;
 		}
-
-		// Below FIT_MIN_WIDTH (the one-column mobile layout) fit "other stories" to
-		// ~70vw on a single line; above it fit to a 6-col span of the content grid.
-		let target: number;
-		if (hostWidth < StoriesHeadingElement.FIT_MIN_WIDTH) {
-			target = 0.7 * window.innerWidth;
-		} else {
-			const gap = StoriesHeadingElement.GRID_GAP;
-			const cols = StoriesHeadingElement.GRID_COLUMNS;
-			const span = StoriesHeadingElement.FIT_SPAN;
-			const colW = (hostWidth - (cols - 1) * gap) / cols;
-			target = span * colW + (span - 1) * gap;
-		}
-		if (!(target > 0)) return;
+		const target = StoriesHeadingElement.HEADING_RATIO * wmWidth;
 
 		// Natural single-line ink width of "other stories" at a reference px size.
 		const REF = 100;
@@ -563,18 +548,17 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * SIT "OTHER STORIES" A MEASURED BREATH UNDER THE WORDMARK.
+	 * TUCK "OTHER STORIES" UP INTO THE WORDMARK.
 	 *
 	 * The heading sits directly under "tristan" (which has no descenders, so its ink
-	 * bottom IS its baseline), with TUCK_CLEARANCE em of daylight between that baseline
-	 * and the heading's tallest ink. A typographic relationship, not a spacing step: the
-	 * gap is measured off the faces and scales with the heading's fitted size.
-	 *
-	 * It USED TO OVERLAP — the heading's x-height line on the wordmark's baseline, so
-	 * only its ascenders crossed. That worked for a high-contrast serif over a thin
-	 * pixel face; with DM Sans's even, heavy stems on both words the ascenders met the
-	 * wordmark head-on and read as a collision. Derived either way, never tuned per
-	 * breakpoint: hand-picked px tokens went stale the last time the faces changed.
+	 * bottom IS its baseline), its tallest ink TUCK_CLEARANCE em from that baseline —
+	 * negative, so the t, h and tittle cross it, as on the live site. A typographic
+	 * relationship, not a spacing step: measured off the faces, it scales with the
+	 * heading's fitted size. "other stories" stacks over "tristan" as a
+	 * background-filled outline, so the crossing knocks out instead of colliding.
+	 * (For a while, on DM Sans, this was a clear breath below the baseline instead.)
+	 * Derived either way, never tuned per breakpoint: hand-picked px tokens went stale
+	 * the last time the faces changed.
 	 *
 	 * Measured on the OUTLINE layer: it is the one in normal flow, so it defines the box.
 	 *
@@ -617,7 +601,7 @@ export class StoriesHeadingElement extends HTMLElement {
 
 		// The ink top sits (baseline − pinTop − ascent) below the track top; the track
 		// sits one gap below the wordmark's ink bottom (its baseline: "tristan" has no
-		// descenders). Solve for the gap that leaves TUCK_CLEARANCE of daylight.
+		// descenders). Solve for the gap that puts the ink TUCK_CLEARANCE from it.
 		this.setPx(
 			this,
 			"--sh-heading-gap",

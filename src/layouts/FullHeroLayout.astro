@@ -77,8 +77,9 @@ const { title, description, image } = Astro.props;
 		--hero-reserve: var(--hero-floor);
 		/* THE FOLD, in two clamps over the heights the slotted heading measures: the
 		   LOCKUP ("tristan & other stories", --sh-lockup-h), the whole GROUP (lockup +
-		   the intro below it, --sh-group-h), and the lead that clears the site header
-		   (--sh-header-clear).
+		   the intro below it, --sh-group-h), and the site header's band
+		   (--sh-header-h): the lead runs to the wordmark's top, so that is the
+		   least lead that clears the header.
 		   ① LEAD aims for --hero-lead-ideal: by default it centres the lockup in the
 		   first screen, so the intro falls into the lower half — the same half "other
 		   stories" pins across. If the intro would reach past the floor from there,
@@ -87,7 +88,7 @@ const { title, description, image } = Astro.props;
 		   wants the group ON the floor sets --hero-lead-ideal to 100svh: the
 		   bottom-anchored clamp then always wins. */
 		--hero-lead: max(
-			var(--sh-header-clear, 0px),
+			var(--sh-header-h, 0px),
 			min(
 				var(--hero-lead-ideal, calc((100svh - var(--sh-lockup-h, 0px)) / 2)),
 				calc(

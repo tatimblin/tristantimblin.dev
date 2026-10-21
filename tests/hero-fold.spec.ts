@@ -123,7 +123,7 @@ async function readFold(page: Page, opts: { requireBottomUi?: boolean } = {}): P
 			innerHeight: window.innerHeight,
 			grew: scene.height - window.innerHeight,
 			clearance: uiTop - groupBottom,
-			leadAtMinimum: Math.abs(lead - px("--sh-header-clear")) < 1.5,
+			leadAtMinimum: Math.abs(lead - px("--sh-header-h")) < 1.5,
 			wordmarkToOtherStories: otherStories.top - wordmark.bottom,
 			otherStoriesToIntro: intro.top - otherStories.bottom,
 			headingGap,
@@ -356,7 +356,7 @@ test.describe("hero fold — mobile", () => {
 	});
 });
 
-test.describe("lockup tuck — a measured breath under the wordmark", () => {
+test.describe("lockup tuck — the heading's ascenders cross the wordmark baseline", () => {
 	// THE REGRESSION THIS EXISTS FOR, which has already happened twice. How "other
 	// stories" sits under "tristan" was once two hand-picked px tokens, one per
 	// breakpoint, chosen against the faces of the time; a font swap moved the metrics
@@ -364,25 +364,24 @@ test.describe("lockup tuck — a measured breath under the wordmark", () => {
 	// until someone noticed.
 	//
 	// The gap is derived now (fitHeadingTuck in stories-heading), from the relationship
-	// that defines the look. With the old serif-over-pixel-face pair that was an
-	// OVERLAP — the heading's x-height line on the wordmark's baseline, only the
-	// ascenders crossing. With DM Sans on both words the ascenders met the wordmark
-	// head-on and read as a collision, so the rule is now: THE HEADING'S TALLEST INK
-	// SITS A SMALL, FONT-SIZED BREATH BELOW THE WORDMARK'S BASELINE ("tristan" has no
-	// descenders, so the wordmark's ink bottom IS its baseline). Nothing crosses.
+	// that defines the look: a TUCK, the live site's — THE HEADING'S TALLEST LETTERS
+	// CROSS THE WORDMARK'S BASELINE by a small, font-sized amount ("tristan" has no
+	// descenders, so the wordmark's ink bottom IS its baseline). "other stories" stacks
+	// over "tristan" as a background-filled outline, so the crossing knocks out rather
+	// than colliding. (For a while, on DM Sans, it was a clear breath below instead.)
 	//
-	// ASSERTED AS BOUNDS, NOT AS AN EXACT POSITION. Where the gap lands inside the range
-	// is a tuning choice (TUCK_CLEARANCE, in em), and pinning the tuned value would make
-	// every nudge to the look break a test that is supposed to be about the RULE. The
-	// bounds are the two ways the rule can actually be violated: the ink crossing into
-	// the wordmark (collision), or the gap opening so far that the lockup reads as two
-	// separate lines. Both in em of the heading's size, since "reads as one lockup"
-	// scales with the type — the same 10px is invisible at 130px and a chasm at 50px.
+	// ASSERTED AS BOUNDS, NOT AS AN EXACT POSITION. Where the overlap lands inside the
+	// range is a tuning choice (TUCK_CLEARANCE, in em), and pinning the tuned value would
+	// make every nudge to the look break a test that is supposed to be about the RULE.
+	// The bounds are the two ways the rule can actually be violated: the heading
+	// dropping clear of the wordmark (no tuck, two separate lines), or sinking so far
+	// that more than its ascenders cross (x-height into the wordmark). Both in em of the
+	// heading's size, since the look scales with the type.
 	for (const vp of [
 		{ name: "mobile", width: 390, height: 844 },
 		{ name: "desktop", width: 1440, height: 900 },
 	]) {
-		test(`the heading's ink clears the wordmark baseline, tightly, at ${vp.name}`, async ({
+		test(`the heading's ascenders tuck across the wordmark baseline at ${vp.name}`, async ({
 			page,
 		}) => {
 			await page.setViewportSize({ width: vp.width, height: vp.height });
@@ -424,10 +423,10 @@ test.describe("lockup tuck — a measured breath under the wordmark", () => {
 			expect(ink.size).toBeGreaterThan(0);
 			expect(ink.ascent).toBeGreaterThan(0);
 
-			// Nothing crosses: the collision guard.
-			expect(ink.daylight / ink.size).toBeGreaterThan(0.05);
-			// ...and it stays TIGHT enough to read as one lockup.
-			expect(ink.daylight / ink.size).toBeLessThan(0.4);
+			// The ascenders cross: a tuck, not a gap...
+			expect(ink.daylight / ink.size).toBeLessThan(-0.03);
+			// ...but only the ascenders: no deeper than x-height on the baseline.
+			expect(ink.daylight / ink.size).toBeGreaterThan(-0.25);
 		});
 	}
 });

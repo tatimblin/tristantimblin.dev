@@ -58,14 +58,13 @@ stories-heading {
 	--sh-heading-size: 2rem;
 	/* Vertical offset from "tristan" to "other stories": the wordmark's baseline down
 	   to the heading's box top. Drives both the track's flow margin and the --sh-top
-	   sticky line together, so they stay coincident (zero slack at rest). Slightly
-	   NEGATIVE in practice: the heading's line box (line-height 0.85) starts above its
-	   own ink, so a small clear gap between the INK still lifts the box.
+	   sticky line together, so they stay coincident (zero slack at rest). NEGATIVE in
+	   practice: the heading's ascenders tuck up across the wordmark's baseline.
 
 	   A PRE-JS FALLBACK ONLY. fitHeadingTuck() in index.ts MEASURES this and overwrites
 	   it on the host, because the right value is a typographic relationship rather than a
-	   spacing step: TUCK_CLEARANCE em of daylight between the wordmark's baseline and the
-	   heading's tallest ink. Keep this token close to the measured answer (it governs the
+	   spacing step: the heading's tallest ink TUCK_CLEARANCE em (negative: across) from
+	   the wordmark's baseline. Keep this token close to the measured answer (it governs the
 	   first frame) but do not tune the LOOK here; tune it in fitHeadingTuck or not at all. */
 	--sh-heading-gap: 0px;
 	/* Separation from "other stories" down to the intro/CTAs — the intro is page copy
@@ -112,9 +111,9 @@ stories-heading {
 .sh__wordmark {
 	margin: 0;
 	position: relative;
-	/* The MIDDLE of the lockup's three layers: "other stories" (5) over "tristan" (3)
-	   over the "&" (2). "other stories" and "tristan" do not overlap at rest (see
-	   fitHeadingTuck); the "&" stands behind both. */
+	/* The BOTTOM of the lockup's three layers: "other stories" (5) over the "&" (4)
+	   over "tristan" (3). Both overlap it at rest: "other stories"'s ascenders tuck
+	   across its baseline (see fitHeadingTuck) and the "&" knocks a hole out of "tr". */
 	z-index: 3;
 	pointer-events: auto; /* the host opts pointers out; the visible glyphs opt back in */
 }
@@ -142,30 +141,28 @@ stories-heading {
 
 /* --- Ampersand -------------------------------------------------------- */
 
-/* A display glyph standing BEHIND "other stories", ABSOLUTELY positioned so it
-   takes no flow space. JS (fitAmp) sizes its ink to 1.4x the wordmark's ink height
-   (--sh-amp-size), seats its baseline on the heading's (--sh-amp-top) and centres
-   it three-quarters across the phrase (--sh-amp-left), so it rises from behind
-   "other stories" up through "tristan" to stand clear above the wordmark.
+/* A display glyph standing BEHIND "other stories" and OVER "tristan", ABSOLUTELY
+   positioned so it takes no flow space. JS (fitAmp) sizes its ink to 0.6x the
+   wordmark's ink height (--sh-amp-size), seats its baseline on the heading's
+   (--sh-amp-top) and centres it a fifth of the way across the wordmark, over the
+   "r" (--sh-amp-left), so it rises from behind "other stories" to about the
+   wordmark's x-height midline.
    FILL + DOUBLE OUTLINE: the glyph is FILLED with the background colour (knocking
    out the scene's halftone behind it) and stroked in the foreground colour
    (--sh-amp-stroke) — the same 1px outline "other stories" is drawn in at rest; a
    ::before behind it re-draws the "&" with a WIDER background-colour stroke
    (--sh-amp-halo) so a clear ring separates the outline from the dots it crosses.
    Theme tokens only, so it flips with data-theme like the rest of the lockup.
-   BEHIND BOTH WORDS in z, not between them. Between (over "tristan", knocking holes
-   through it) was the original layering, against a serif wordmark; on DM Sans's
-   heavy, even stems a glyph this size cuts whole letters out of the word and
-   "tristan" stops reading. Behind, the wordmark stays whole and the "&" shows
-   through its counters and the space around it, and "other stories" — itself a
-   background-filled outline — reads cleanly across its lower half.
+   BETWEEN THE WORDS in z, the live site's layering: the background fill knocks a
+   hole out of "tr" (the intended look), and "other stories" — itself a
+   background-filled outline — overlays its lower half.
    Its parallax + fade are scroll-driven (the foot of this file): the "&" leaves
    with "tristan" while "other stories" pins. */
 .sh__amp {
 	--sh-amp-stroke: 1px; /* the foreground outline */
 	--sh-amp-halo: 0.625rem; /* the wider background-colour ring around it */
 	position: absolute;
-	z-index: 2;
+	z-index: 4;
 	top: var(--sh-amp-top, 0);
 	left: var(--sh-amp-left, 20%);
 	font-family: var(--font-hero, ui-sans-serif, system-ui, sans-serif);
@@ -212,8 +209,8 @@ stories-heading {
 	position: sticky;
 	top: var(--sh-top);
 	/* Ride ABOVE the opaque content riser so it stays visible as copy rises, and
-	   above both the wordmark (3) and the "&" (2), so the lockup stacks
-	   "other stories" → "tristan" → "&".
+	   above both the "&" (4) and the wordmark (3), so the lockup stacks
+	   "other stories" → "&" → "tristan".
 	   The solid layer's opaque --color-bg backdrop sits at this level too, but it is
 	   fully clipped away at rest (--sh-clip 1) and its reveal is gated until the
 	   phrase has cleared the scene — see the `scene` field in index.ts. */
