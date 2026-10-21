@@ -8,8 +8,8 @@
  *
  *   label    the label voice — the UI face, tracked caps; IDs, codes, file names
  *   caption  the same face a size down, the dimmed ink unless said; the line under a readout
- *   numeral  the thin display numeral (Mondwest Thin): 007, 45, 0079
- *   title    a module's heading (Mondwest Bold): EPOCH, CONFIG, NODE
+ *   numeral  the display numeral (--font-display, DM Sans Medium): 007, 45, 0079
+ *   title    a module's heading (--font-heading, DM Sans Medium): EPOCH, CONFIG, NODE
  *
  * The file says only where, how big — a step of one SCALE in viewBox units,
  * each voice its own steps — and which token fills it; the face, weight and
@@ -64,16 +64,18 @@ export interface TextOpts {
 }
 
 /**
- * The faces' advances, in em, measured in Chromium off the self-hosted
- * Mondwest cuts (getComputedTextLength at font-size 10, tracking removed):
- * figures 0.572 (Thin and Regular alike; Bold 0.578), capitals 0.72, and
- * space and punctuation about a third. Lower case (a unit: ms, kPa) is
- * taken at 0.6. The voice's tracking is added per character, as the
- * browser does (after every one, the last included).
+ * The faces' advances, in em, measured in Chromium off the self-hosted DM
+ * Sans cuts (span widths at font-size 100, tabular figures, tracking
+ * removed). Taken at the Medium (500), the numeral's and title's cut and
+ * the wider of the two the voices use, so the Regular (400) label lands a
+ * percent or two inside the estimate: figures 0.577 (400: 0.571), capitals
+ * 0.644 (0.633), lower case 0.532 (0.519), space and punctuation about 0.4.
+ * The voice's tracking is added per character, as the browser does (after
+ * every one, the last included).
  */
-const ADVANCE = { figure: 0.575, capital: 0.72, lower: 0.6, narrow: 0.34 } as const;
-/** Each voice's tracking in em — art-frame.css's letter-spacing: --tracking-caps, --tracking-mono, 0. */
-const TRACKING: Readonly<Record<Voice, number>> = Object.freeze({ label: 0.1, caption: 0.04, numeral: 0, title: 0 });
+const ADVANCE = { figure: 0.58, capital: 0.645, lower: 0.535, narrow: 0.4 } as const;
+/** Each voice's tracking in em — art-frame.css's letter-spacing: --tracking-caps, --tracking-mono, --tracking-heading. */
+const TRACKING: Readonly<Record<Voice, number>> = Object.freeze({ label: 0.0625, caption: 0.02, numeral: 0, title: 0 });
 
 /** The estimated width of `words` set in `voice` at `size`, in viewBox units. */
 export function advance(words: string, voice: Voice = "label", size: number = VOICE_DEFAULT[voice]): number {
@@ -160,8 +162,8 @@ export function section(k: Kit, x: number, y: number, w: number, title: string, 
 	return [rule(k, x, x + w, y, { dotted: true }), text(k, x, y + SECTION_GAP + size * CAP, caps(title), { role: "label", size, paint: o.paint })].join("\n");
 }
 
-/** A caps line's cap height, in em (Mondwest): where a baseline sits under a top edge. */
-const CAP = 0.72;
+/** A caps line's cap height, in em (DM Sans, every cut: OS/2 sCapHeight 700/1000): where a baseline sits under a top edge. */
+const CAP = 0.7;
 
 /** How deep a section head is: the rule, the gap, the label's cap height. */
 export const sectionDepth = (size: TypeSize = 4.5): number => round(SECTION_GAP + size * CAP);
