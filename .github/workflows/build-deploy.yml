@@ -32,9 +32,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          # nightly.yml passes the data commit it just pushed; its own github.sha
-          # is the commit from BEFORE that push.
-          ref: ${{ inputs.ref || github.sha }}
+          # nightly.yml passes the data commit it just pushed; empty means the
+          # triggering commit.
+          ref: ${{ inputs.ref }}
           # Pull the actual video/audio bytes (stored in Git LFS), not the
           # pointer files — otherwise the build ships broken media.
           lfs: true

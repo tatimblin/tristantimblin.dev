@@ -19,9 +19,8 @@ if (!existsSync("dist/index.html")) {
 }
 
 const server = spawn("bunx", ["--bun", "astro", "preview", "--port", String(PORT), "--host", "127.0.0.1"], {
-	stdio: ["ignore", "pipe", "inherit"],
+	stdio: ["ignore", "ignore", "inherit"],
 });
-server.stdout.resume();
 
 const failures = [];
 

@@ -18,17 +18,12 @@ on:
     # about running daily.
     - cron: "0 14 * * *"
   workflow_dispatch:
-    inputs:
-      volo:
-        description: Run the Volo fetch even if today is not Wednesday or Thursday
-        type: boolean
-        default: true
 
 concurrency:
   group: nightly-data
   cancel-in-progress: false
 
-# The files the fetchers write. deploy.yml's paths filter lists the same four.
+# The files the fetchers write.
 env:
   DATA_BIKE: src/widgets/bike-stats/bike-stats.csv
   DATA_GITHUB: src/widgets/github/github.json
@@ -43,7 +38,6 @@ jobs:
     outputs:
       committed: ${{ steps.commit.outputs.committed }}
       sha: ${{ steps.commit.outputs.sha }}
-      failed: ${{ steps.outcomes.outputs.failed }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -150,10 +144,11 @@ jobs:
       # '0 14 * * 3,4' cron did. Every game so far has been on a Tuesday evening
       # Pacific, so Wednesday picks up the night's results. Thursday is the
       # backstop: late-entered scores, a failed Wednesday run, a Wednesday league.
+      # Manual runs always fetch.
       - name: "Volo: is today a Volo day?"
         id: volo_day
         env:
-          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.volo }}
+          FORCE: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           DOW="$(date -u +%u)"
           if [ "$FORCE" = "true" ] || [ "$DOW" = 3 ] || [ "$DOW" = 4 ]; then
@@ -181,8 +176,6 @@ jobs:
       # the one sent. This runs whether or not the fetch succeeded, because the
       # rotation happens before the data query — a rotated token must be
       # persisted even if the query then failed.
-      # The file check is in the script, not the `if:` — hashFiles() only sees
-      # the workspace, so a runner.temp path always hashes to ''.
       - name: "Volo: persist rotated refresh token"
         id: volo_token
         if: always() && steps.volo_day.outputs.run == 'true'
@@ -198,32 +191,8 @@ jobs:
           rm -f "$RUNNER_TEMP/volo-rotated"
 
       # ── One commit ─────────────────────────────────────────────────────────
-      # Throws away anything a failed fetcher may have half-written, so only data
-      # that passed its guard is committed, and records which fetchers failed.
-      - name: Discard output of failed fetchers
-        id: outcomes
-        if: always()
-        env:
-          BW_CHECKOUT: ${{ steps.bw_checkout.outcome }}
-          BW_QUERY: ${{ steps.bw_query.outcome }}
-          BAYWHEELS: ${{ steps.baywheels.outcome }}
-          GH_STATS: ${{ steps.github.outcome }}
-          READERS: ${{ steps.readers.outcome }}
-          VOLO: ${{ steps.volo.outcome }}
-          VOLO_TOKEN: ${{ steps.volo_token.outcome }}
-        run: |
-          failed=""
-          if [ "$BAYWHEELS" != success ]; then git checkout -- "$DATA_BIKE"; fi
-          if [ "$BW_CHECKOUT" = failure ] || [ "$BW_QUERY" = failure ] || [ "$BAYWHEELS" = failure ]; then failed="$failed baywheels"; fi
-          if [ "$GH_STATS" != success ]; then git checkout -- "$DATA_GITHUB"; failed="$failed github"; fi
-          if [ "$READERS" != success ]; then git checkout -- "$DATA_READERS"; failed="$failed readers"; fi
-          if [ "$VOLO" != success ]; then git checkout -- "$DATA_VOLO"; fi
-          if [ "$VOLO" = failure ]; then failed="$failed volo"; fi
-          if [ "$VOLO_TOKEN" = failure ]; then failed="$failed volo-token-rotation"; fi
-          failed="${failed# }"
-          if [ -n "$failed" ]; then echo "::error::Failed fetchers: $failed"; fi
-          echo "failed=$failed" >> "$GITHUB_OUTPUT"
-
+      # Every fetcher writes its file only after its guard passes, so a failed
+      # one leaves nothing behind to discard.
       - name: Commit and push if changed
         id: commit
         run: |
@@ -233,25 +202,27 @@ jobs:
             git checkout -- "$DATA_VOLO"
           fi
 
-          changed="$(git diff --name-only -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_READERS" "$DATA_VOLO")"
-          if [ -z "$changed" ]; then
+          git add -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_READERS" "$DATA_VOLO"
+          if git diff --cached --quiet; then
             echo "No data changed — nothing to commit or deploy."
             echo "committed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-
-          echo "Changed:"; echo "$changed"
-          echo "$changed" | xargs git add --
-          names="$(echo "$changed" | xargs -n1 basename | paste -sd, - | sed 's/,/, /g')"
-          git commit -m "Update nightly data - $(date +'%Y-%m-%d')" -m "Updated: $names"
+          git commit -m "Update nightly data - $(date +%F)"
           # Retry once on top of anything pushed to the branch during the run.
           git push || { git pull --rebase && git push; }
           echo "committed=true" >> "$GITHUB_OUTPUT"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+      # The fetchers are continue-on-error so one broken credential doesn't block
+      # the others' data; this turns any such failure back into a red run.
+      - name: Fail if any fetcher failed
+        if: contains(steps.*.outcome, 'failure')
+        run: exit 1
+
   deploy:
     needs: collect
-    if: needs.collect.outputs.committed == 'true' && github.ref == 'refs/heads/master'
+    if: ${{ !cancelled() && needs.collect.outputs.committed == 'true' && github.ref == 'refs/heads/master' }}
     permissions:
       contents: read
     uses: ./.github/workflows/build-deploy.yml
@@ -260,18 +231,3 @@ jobs:
     secrets:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-  # The fetchers are continue-on-error so one broken credential does not block
-  # the others' data. This job turns any such failure back into a red run.
-  report:
-    needs: [collect, deploy]
-    if: always() && needs.collect.outputs.failed != ''
-    runs-on: ubuntu-latest
-    permissions: {}
-    steps:
-      - name: Fail on fetcher errors
-        env:
-          FAILED: ${{ needs.collect.outputs.failed }}
-        run: |
-          echo "::error::These fetchers failed (their data was not committed): $FAILED"
-          exit 1
