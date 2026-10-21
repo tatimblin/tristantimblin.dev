@@ -18,6 +18,7 @@ import "@whois/design-system/tokens.css";
 import "@whois/design-system/styles.css";
 import SiteFooter from "../components/SiteFooter.astro";
 import Seo from "../components/Seo.astro";
+import { MEDIA_BASE } from "../lib/media";
 
 type Props = ComponentProps<typeof Seo>;
 ---
@@ -55,6 +56,9 @@ type Props = ComponentProps<typeof Seo>;
 			type="font/woff2"
 			crossorigin
 		/>
+		{/* The videos come from R2 (src/lib/media.ts) in CORS mode, so the
+		     preconnect needs `crossorigin` to be the connection they reuse. */}
+		<link rel="preconnect" href={MEDIA_BASE} crossorigin />
 		<link
 			rel="alternate"
 			type="application/rss+xml"

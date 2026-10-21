@@ -34,5 +34,9 @@ playwright-report/
 
 # Raw media originals: kept locally as encoder inputs (the carousel's are
 # tools/dotgrid/prepare-carousel.sh's), never committed, and kept OUT of public/
-# so a local build never ships them. Only the made-for-web renders are tracked.
+# so a local build never ships them.
 media-src/
+
+# The made-for-web renders (tools/dotgrid writes them here). They live in R2,
+# not git: bun run media:push uploads them and rewrites src/data/media.json.
+/media/

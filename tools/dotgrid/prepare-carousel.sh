@@ -33,9 +33,9 @@
 # clips are 60fps, which doubles decode+upload for detail the dot grid can't show.
 # 360px stays ~3x oversampled for what the grid reads, so the halftone is unchanged.
 #
-# We emit TWO files per clip from the same filtered frames: an H.264 .web.mp4
+# We emit TWO files per clip from the same filtered frames: an H.264 .mp4
 # (universal fallback, +faststart) and a smaller AV1 (or VP9 where SVT-AV1 is
-# unavailable) .web.webm that modern browsers prefer via a <source> list. The
+# unavailable) .webm that modern browsers prefer via a <source> list. The
 # dotted-grid element picks the first playable one.
 #
 # The chain, per clip:
@@ -59,7 +59,7 @@
 # Redwoods'. One set of grid settings then fits every clip.
 #
 # Usage: prepare-carousel.sh [-o out_subdir] [clip ...]
-#   -o    output subdir under public/videos/website-carousel (default: web)
+#   -o    output subdir under media/videos (default: none; e.g. -o ab for an A/B take)
 #   clip  basenames to process (e.g. IMG_0360); default: every clip
 #
 # The originals live in media-src/website-carousel (gitignored, kept locally),
@@ -69,8 +69,8 @@
 set -euo pipefail
 
 SRC_DIR="media-src/website-carousel"
-DEST_DIR="public/videos/website-carousel"
-OUT_SUB="web"
+DEST_DIR="media/videos"
+OUT_SUB=""
 
 # The reference distribution: IMG_0360 (Redwoods) as encoded by the earlier
 # mean-target recipe, the one clip whose shape reads well in the halftone.
@@ -79,7 +79,7 @@ OUT_SUB="web"
 # converts TV range to full range on the way (Y 29 reads as 14), so measuring
 # through it and correcting through lutyuv would miss by that stretch; this
 # script's first draft did, and darkened every clip including Redwoods itself.
-# Measured with quantiles() below on web/IMG_0360.web.mp4.
+# Measured with quantiles() below on the IMG_0360 render.
 REF_PCTS="0.02 0.10 0.25 0.50 0.75 0.90 0.98"
 REF_Y="10 18 27 41 64 82 100"
 
@@ -94,7 +94,7 @@ done
 command -v ffmpeg  >/dev/null || { echo "ffmpeg not found." >&2; exit 1; }
 command -v ffprobe >/dev/null || { echo "ffprobe not found." >&2; exit 1; }
 
-OUT_DIR="${DEST_DIR}/${OUT_SUB}"
+OUT_DIR="${DEST_DIR}${OUT_SUB:+/${OUT_SUB}}"
 mkdir -p "$OUT_DIR"
 
 # iPhone HLG (BT.2020, arib-std-b67) needs the HDR->SDR contrast/saturation
@@ -184,7 +184,7 @@ shopt -s nullglob nocaseglob
 for in in "$SRC_DIR"/*.mov; do
   base=$(basename "$in"); base="${base%.*}"
   [ "$#" -eq 0 ] || [[ "$ONLY" == *" $base "* ]] || continue
-  out="${OUT_DIR}/${base}.web.mp4"
+  out="${OUT_DIR}/${base}.mp4"
 
   # Per-clip overrides: three clips can't be served by the uniform recipe (each
   # fails the halftone in a different way — verified by measurement + live A/B;
@@ -220,12 +220,12 @@ for in in "$SRC_DIR"/*.mov; do
     -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
     -movflags +faststart "$out"
 
-  # Second pass: same filtered frames -> a smaller AV1/VP9 .web.webm that modern
+  # Second pass: same filtered frames -> a smaller AV1/VP9 .webm that modern
   # browsers prefer. No +faststart (WebM streams progressively without it).
-  webm="${OUT_DIR}/${base}.web.webm"
+  webm="${OUT_DIR}/${base}.webm"
   ffmpeg -hide_banner -loglevel error -y $SS_ARGS -i "$in" -vf "$vf" -an \
     "${WEBM_ARGS[@]}" -r 30 \
     -colorspace bt709 -color_primaries bt709 -color_trc bt709 "$webm"
 done
 
-echo "Done -> ${OUT_DIR}"
+echo "Done -> ${OUT_DIR}  (then: bun run media:push)"
