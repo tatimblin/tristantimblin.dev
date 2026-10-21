@@ -1,0 +1,233 @@
+name: Nightly data refresh
+
+# Replaces the four per-widget crons (baywheels-stats, github-stats, readers,
+# volo-seasons). Every fetcher runs as its own step and may fail without stopping
+# the others; whatever changed lands as ONE commit, followed by ONE deploy with no
+# Playwright suite.
+#
+# Why the commit does not trigger deploy.yml: the repo is checked out with the
+# default GITHUB_TOKEN, and pushes made with GITHUB_TOKEN do not start other
+# workflows. This workflow calls build-deploy.yml itself instead, so a data
+# commit deploys exactly once. (GH_PAT is still handed to the steps that used it:
+# private-repo checkout, the GitHub stats query and the secret rotations.)
+on:
+  schedule:
+    # Daily at 14:00 UTC (~7 AM Pacific). This is Volo's old slot: it needs to
+    # run after Tuesday-evening Pacific games (≈ Wednesday 05:00 UTC at the
+    # latest) have scores. The other three never cared about the hour, only
+    # about running daily.
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-data
+  cancel-in-progress: false
+
+# The files the fetchers write.
+env:
+  DATA_BIKE: src/widgets/bike-stats/bike-stats.csv
+  DATA_GITHUB: src/widgets/github/github.json
+  DATA_READERS: src/widgets/readers/readers.json
+  DATA_VOLO: src/widgets/volo/volo.json
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # commit and push the refreshed data
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # ── BayWheels ──────────────────────────────────────────────────────────
+      # The query action lives in the private tatimblin/baywheels-stats repo and
+      # is checked out at run time. Its csv-output action is NOT used: it commits
+      # and pushes on its own, and this workflow makes one commit. Its "Write CSV
+      # row" upsert is inlined below instead.
+      - name: "BayWheels: checkout actions"
+        id: bw_checkout
+        continue-on-error: true
+        uses: actions/checkout@v5
+        with:
+          repository: tatimblin/baywheels-stats
+          token: ${{ secrets.GH_PAT }}
+          path: .github/actions/baywheels-stats
+
+      # Mobile OAuth path: query-stats mints an access token from the durable
+      # refresh token and persists the rotated token back to secrets itself, so
+      # no separate browser refresh step is needed.
+      - name: "BayWheels: query statistics"
+        id: bw_query
+        if: steps.bw_checkout.outcome == 'success'
+        continue-on-error: true
+        uses: ./.github/actions/baywheels-stats/query-stats
+        with:
+          github_token: ${{ secrets.GH_PAT }}
+        env:
+          LYFT_CLIENT_BASIC: ${{ secrets.LYFT_CLIENT_BASIC }}
+          LYFT_REFRESH_TOKEN: ${{ secrets.LYFT_REFRESH_TOKEN }}
+          LYFT_DEVICE_HEADERS: ${{ secrets.LYFT_DEVICE_HEADERS }}
+          # Fallback for the browser cookie flow if mobile secrets are unset.
+          BAYWHEELS_COOKIES: ${{ secrets.BAYWHEELS_COOKIES }}
+
+      # Stale-read guard, then the upsert from baywheels-stats/csv-output: one row
+      # per date (re-running a date refreshes it), kept sorted by date.
+      - name: "BayWheels: guard and write CSV row"
+        id: baywheels
+        if: steps.bw_query.outcome == 'success'
+        continue-on-error: true
+        env:
+          RIDES: ${{ steps.bw_query.outputs.number_of_rides }}
+          DISTANCE: ${{ steps.bw_query.outputs.total_distance }}
+          TIME: ${{ steps.bw_query.outputs.total_time }}
+        run: |
+          if [ -z "$RIDES" ] || [ "$RIDES" = "null" ]; then
+            echo "::error::Stats query returned no ride count - auth likely broken. Not committing."
+            exit 1
+          fi
+          echo "Ride count: $RIDES"
+
+          FILE="$DATA_BIKE"
+          DATE="$(date +'%Y-%m-%d')"
+          ROW="$DATE,$RIDES,$DISTANCE,$TIME"
+          mkdir -p "$(dirname "$FILE")"
+          [ -s "$FILE" ] || echo "date,rides,distance,duration" > "$FILE"
+          tmp="$(mktemp)"
+          {
+            head -n 1 "$FILE"
+            { tail -n +2 "$FILE" | grep -v "^${DATE},"; echo "$ROW"; } | sort -t, -k1,1
+          } > "$tmp"
+          mv "$tmp" "$FILE"
+
+      # ── GitHub ─────────────────────────────────────────────────────────────
+      # Fetches the contribution calendar + top languages (incl. private repos)
+      # via the GitHub GraphQL API. The script exits non-zero if the calendar is
+      # empty (stale-auth guard), so a broken token never commits an empty widget.
+      - name: "GitHub: fetch stats"
+        id: github
+        continue-on-error: true
+        run: bun tools/github-stats/fetch.mjs
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+      # ── Readers ────────────────────────────────────────────────────────────
+      # Reads Cloudflare Web Analytics (RUM) pageloads and MERGES the fresh window
+      # into readers.json rather than overwriting it — Cloudflare retains RUM for
+      # ~90 days, so the committed file is the widget's longer history. Exits
+      # non-zero if the window comes back empty (stale-auth guard).
+      #
+      # CLOUDFLARE_ANALYTICS_TOKEN is NOT the deploy's CLOUDFLARE_API_TOKEN: this
+      # one needs `Account → Account Analytics: Read` (RUM is account-scoped).
+      - name: "Readers: fetch stats"
+        id: readers
+        continue-on-error: true
+        run: bun tools/readers/fetch.mjs
+        env:
+          CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # ── Volo ───────────────────────────────────────────────────────────────
+      # Scheduled runs fetch Volo on Wednesday and Thursday (UTC) only, as the old
+      # '0 14 * * 3,4' cron did. Every game so far has been on a Tuesday evening
+      # Pacific, so Wednesday picks up the night's results. Thursday is the
+      # backstop: late-entered scores, a failed Wednesday run, a Wednesday league.
+      # Manual runs always fetch.
+      - name: "Volo: is today a Volo day?"
+        id: volo_day
+        env:
+          FORCE: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          DOW="$(date -u +%u)"
+          if [ "$FORCE" = "true" ] || [ "$DOW" = 3 ] || [ "$DOW" = 4 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Day $DOW is not Wednesday or Thursday; skipping Volo."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Trades VOLO_REFRESH_TOKEN for a short-lived access token, then pulls every
+      # season's schedule and scores. Exits non-zero if no season has a single
+      # recorded result (stale-auth guard, since scores are PLAYER-only).
+      - name: "Volo: fetch seasons"
+        id: volo
+        if: steps.volo_day.outputs.run == 'true'
+        continue-on-error: true
+        run: bun tools/volo/fetch.mjs
+        env:
+          VOLO_REFRESH_TOKEN: ${{ secrets.VOLO_REFRESH_TOKEN }}
+          VOLO_ROTATED_TOKEN_FILE: ${{ runner.temp }}/volo-rotated
+
+      # Volo rotates the refresh token on every use (verified), so the secret must
+      # be replaced or tomorrow's run authenticates with a dead credential. The
+      # fetch script only writes this file when the returned token differs from
+      # the one sent. This runs whether or not the fetch succeeded, because the
+      # rotation happens before the data query — a rotated token must be
+      # persisted even if the query then failed.
+      - name: "Volo: persist rotated refresh token"
+        id: volo_token
+        if: always() && steps.volo_day.outputs.run == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ ! -s "$RUNNER_TEMP/volo-rotated" ]; then
+            echo "Refresh token did not rotate — nothing to persist."
+            exit 0
+          fi
+          gh secret set VOLO_REFRESH_TOKEN --body "$(cat "$RUNNER_TEMP/volo-rotated")"
+          rm -f "$RUNNER_TEMP/volo-rotated"
+
+      # ── One commit ─────────────────────────────────────────────────────────
+      # Every fetcher writes its file only after its guard passes, so a failed
+      # one leaves nothing behind to discard.
+      - name: Commit and push if changed
+        id: commit
+        run: |
+          # -I ignores Volo's `updated` stamp, which the fetch rewrites on every
+          # run: a diff that touches only it is not new data.
+          if git diff --quiet -I'^[[:space:]]*"updated": ' -- "$DATA_VOLO"; then
+            git checkout -- "$DATA_VOLO"
+          fi
+
+          git add -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_READERS" "$DATA_VOLO"
+          if git diff --cached --quiet; then
+            echo "No data changed — nothing to commit or deploy."
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "Update nightly data - $(date +%F)"
+          # Retry once on top of anything pushed to the branch during the run.
+          git push || { git pull --rebase && git push; }
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # The fetchers are continue-on-error so one broken credential doesn't block
+      # the others' data; this turns any such failure back into a red run.
+      - name: Fail if any fetcher failed
+        if: contains(steps.*.outcome, 'failure')
+        run: exit 1
+
+  deploy:
+    needs: collect
+    if: ${{ !cancelled() && needs.collect.outputs.committed == 'true' && github.ref == 'refs/heads/master' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-deploy.yml
+    with:
+      ref: ${{ needs.collect.outputs.sha }}
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
