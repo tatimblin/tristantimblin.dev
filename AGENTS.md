@@ -98,10 +98,44 @@ ad-hoc.
 — usage, the gate in detail, when to edit which token file, and authoring
 conventions for extending the package.
 
-**Fonts:** by role, never by family — `--font-heading` / `--font-ui` Mondwest,
-`--font-body` Neue Montreal, `--font-hero` Migra, `--font-code` the system mono.
-Self-hosted from `public/fonts` (`tools/fonts/build.sh`), @font-face'd in
-`src/styles/fonts.css`; a role names its weight too (see CONVENTIONS).
+**Themes:** one attribute, `data-theme="light|dark"` on `<html>` — light by
+default; the inline init in `Layout.astro` applies `localStorage.theme` before
+first paint (`window.__setTheme`), and the `SiteFooter` toggle writes both. Never
+key styles off a class or `prefers-color-scheme`; scope with `[data-theme]` (a
+`ThemePage` wrapper sets it too, so derived tokens must be declared on
+`[data-theme]`, not `:root`, to re-resolve inside one). The token files, in
+`packages/design-system/src/tokens/`, load in this order:
+`tokens.generated.css` (generated — never edit) → `tokens.overrides.css` (type
+roles, motion, the EDGES and INSTRUMENT UI blocks) → `themes/light.css` /
+`themes/dark.css` (every value that differs between the themes, the same set in
+each) → `bridge.css` (the `--color-*` names the web components read).
+
+**Edges:** every box is `var(--border)` (1px **dashed** `--border-color`) at
+`var(--radius-box)` (2.5px), panels add `--shadow-panel` and a
+`--panel-header-bg` header; code is `--code-bg` / `--code-fg` (+ `--code-border`),
+links `--link-color` / `--link-decoration*`, transitions `--duration-standard` +
+`--ease-standard`. Don't hand-write `1px solid`, `border-radius: 0` (use
+`--radius-square`) or a hex colour.
+
+**Halftone:** `<dotted-grid>` takes its tone from `--dg-*` custom properties
+(`--dg-ink`, `--dg-ink-hi`, `--dg-paper`, `--dg-glow`, `--dg-polarity`,
+`--dg-gamma`, `--dg-contrast`, `--dg-cutoff`, `--dg-feather`, `--dg-dot-scale`,
+`--dg-levels`, `--dg-bloom`, `--dg-crosshatch`, `--dg-denoise`,
+`--dg-dot-shape`); precedence is **attribute → CSS variable → default**, and it
+re-reads them whenever `<html>`'s `class` / `data-theme` / `style` changes. The
+per-theme presets (hero, phone carousel, footer clip) live in
+`src/styles/halftone.css` under `[data-theme=…]`, inked from `--halftone-ink` /
+`--halftone-ink-soft`. Keep tuning out of the markup: an attribute pins its
+setting in both themes and silently beats the preset. Tune live at `/dotgrid`.
+
+**Fonts:** two faces, by role, never by family — DM Sans (400/500/700) for
+`--font-hero`, `--font-heading`, `--font-ui`, `--font-display`; Roboto Mono
+(300/400/500) for `--font-body` and `--font-code`. Self-hosted latin + latin-ext
+woff2 in `public/fonts` (`tools/fonts/build.sh`), one @font-face per cut at its
+real weight plus metric-matched fallbacks in `src/styles/fonts.css`; a role names
+its weight too (`--font-heading-weight` …, see CONVENTIONS). `font-synthesis` is
+off, so ask only for a cut that exists. `tests/fonts.spec.ts` checks every cut
+loads.
 
 **Live catalogue:** run the dev server and open `/design-system`
 (`src/pages/design-system.astro`) — every component in every variant/state. It's
