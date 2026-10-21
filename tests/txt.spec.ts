@@ -884,14 +884,15 @@ test.describe("/txt/<slug> — the post page", () => {
 			/title/i,
 			/filed/i,
 		]);
-		// The header row is the ink with the page colour on it — the fill on the
-		// row, so no gap between cells shows the page. Light is the default theme,
-		// so on cream that is a black bar; the dark theme is pinned below.
-		expect(await luminance(page, ".ds-index__row--head")).toBeLessThan(0.05);
-		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeGreaterThan(0.85);
-		const rowBox = await box(page, ".ds-index__row--head");
+		// The index is a panel — the card's dashed edge and radius — and its head
+		// row is the panel header: the gradient fill, not a slab of ink. The
+		// themes are pinned below.
+		await expect(index).toHaveCSS("border-top-style", "dashed");
+		await expect(index).toHaveCSS("border-top-left-radius", "2.5px");
+		await expect(index.locator(".ds-index__row--head")).toHaveCSS("background-image", /linear-gradient/);
+		const indexBox = await box(page, ".ds-index");
 		const { article } = await columns(page);
-		expect(Math.abs(rowBox.width - article.width)).toBeLessThanOrEqual(1);
+		expect(Math.abs(indexBox.width - article.width)).toBeLessThanOrEqual(1);
 
 		const tags = index.locator('[data-index-row="tags"]');
 		await expect(tags).toHaveText(/tags\s*005\s*ai · testing · agents · developer tools/i);
@@ -904,6 +905,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(prev.locator('a[data-neighbour="prev"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair/");
 		await expect(prev.locator("time")).toHaveAttribute("datetime", "2025-06-13");
 		await expect(prev).toHaveCSS("border-bottom-width", "1px");
+		// The last row leaves its rule to the panel's edge.
+		await expect(index.locator(".ds-index__row").last()).toHaveCSS("border-bottom-width", "0px");
 
 		const next = index.locator('[data-index-row="next"]');
 		await expect(next).toHaveClass(/ds-index__row--dim/);
@@ -921,22 +924,22 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator('[data-index-row="next"]')).toHaveText(/002/);
 	});
 
-	test("light theme: the header row inverts to the ink", async ({
+	test("light theme: the index is a pale panel with dark header ink", async ({
 		page,
 	}) => {
 		await page.addInitScript(() => localStorage.setItem("theme", "light"));
 		await page.goto(NEWEST);
 		await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-		expect(await luminance(page, ".ds-index__row--head")).toBeLessThan(0.05);
-		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeGreaterThan(0.85);
+		expect(await luminance(page, ".ds-index")).toBeGreaterThan(0.85);
+		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeLessThan(0.3);
 	});
 
-	test("dark theme: the header row is the light fill, and the code block is edged", async ({ page }) => {
+	test("dark theme: the index is a dark panel with light header ink, and the code block is edged", async ({ page }) => {
 		await page.addInitScript(() => localStorage.setItem("theme", "dark"));
 		await page.goto(NEWEST);
 		await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-		expect(await luminance(page, ".ds-index__row--head")).toBeGreaterThan(0.7);
-		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeLessThan(0.05);
+		expect(await luminance(page, ".ds-index")).toBeLessThan(0.05);
+		expect(await luminance(page, ".ds-index__row--head > .ds-mono", "color")).toBeGreaterThan(0.3);
 		// The slab sinks below the dark page, so the dashed edge is drawn round it
 		// (--code-border) to hold its shape; on cream it has none.
 		const preSel = ".ds-prose-section__body figure.ds-prose-code pre.astro-code";
@@ -1013,8 +1016,9 @@ test.describe("/txt/<slug> — the post page", () => {
 		}
 
 		// The index rows fit too, the title still a link, the month under it.
-		const row = await box(page, '[data-index-row="prev"]');
-		expect(Math.abs(row.width - article.width)).toBeLessThanOrEqual(1);
+		// The panel spans the column; its rows sit inside its 1px edge.
+		const panel = await box(page, ".ds-index");
+		expect(Math.abs(panel.width - article.width)).toBeLessThanOrEqual(1);
 		const link = await box(page, 'a[data-neighbour="prev"]');
 		const filed = await box(page, '[data-index-row="prev"] .ds-index__fold');
 		expect(link.x + link.width).toBeLessThanOrEqual(article.x + article.width + 1);
