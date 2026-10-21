@@ -181,7 +181,7 @@ unless noted; the per-theme values in `themes/*.css`):
 | `--ticks-image`, `--ticks-image-ink` | the tick ruler as a gradient (hairlines on `--tick-pitch`) in currentColor, and in the ink — for a box that should read as a ruler and cannot take the classes (the player's progress bar). TickRuler draws its own on the same pitch. |
 | `--focus-ring`, `--focus-ring-offset`, `--focus-ring-inset` | the focus ring for everything focusable that is not a native control, drawn by `control.css` for every `ds-control`; the offset, and the inset form of it for a control that rings inside its box (set `--control-ring-offset: var(--focus-ring-inset)` in scope). |
 | `--playhead-dot` | a playhead's dot — the Volo season track's, the video carousel's. |
-| `--shadow-2`, `--shadow-3` | the upstream shadow scale on the theme's `--shadow-color`, for the few things that float — a control panel. Cards are flat and take none. |
+| `--shadow-3` | the upstream shadow scale's step 3 on the theme's `--shadow-color`, for the few things that float — a control panel. Cards take `--shadow-panel`. |
 | `--voice-mono-*`, `--voice-figure-*` | the label voice (family, size, tracking) and the figure voice (family, weight, tracking, size) as custom properties, for a shadow-DOM consumer styled through `::part()`. Mono and Figure read them; a WidgetGrid redefines the sizes on its scale. |
 | `--duration-reveal / -settle / -swap / -quick / -loop`, `--ease-reveal` | the motion vocabulary; all `0s` under `prefers-reduced-motion: reduce`, so a transition timed by a token is a cut for that visitor and no component needs a reduced-motion block of its own. |
 
@@ -440,14 +440,14 @@ the motion, and a **validator** holds the rules.
 
 **Tokens** (`tokens.overrides.css` → ART, on `[data-theme]`, retuned per theme in `themes/*.css`). **The plate
 follows the theme.** The values below are the dark palette the language was
-sampled on (cyan and green since retuned toward signal neon); the light theme overrides them, so a light page shows ink on bone
+sampled on (cyan and green since retuned toward signal neon); the light theme overrides them, so a light page shows ink on paper
 rather than black windows: the same drawing, inverted.
 
 | Token | Dark | Light | Use |
 | --- | --- | --- | --- |
-| `--art-plate` | `oklch(17% 0.008 280)` | `var(--gray-300)` | the tile fill |
-| `--art-edge` | `oklch(34% 0.006 280)` | `var(--gray-500)` | the tile's 1px edge |
-| `--art-ink` | `oklch(97% 0 0)` | `var(--gray-1200)` | line work and "white" fills — dark on light |
+| `--art-plate` | `var(--card-background)` | `var(--wash-1)` | the tile fill (each theme file sets it) |
+| `--art-edge` | `#4a463f` | `var(--border-color)` | the tile's 1px edge (each theme file sets it) |
+| `--art-ink` | `oklch(97% 0 0)` | `var(--text-secondary)` | line work and "white" fills — dark on light |
 | `--art-ink-2` | the ink at 45% | the same mix of the light ink | secondary lines: grids, dashed paths, ghost outlines — the one dimming |
 | `--art-lavender` `--art-cyan` `--art-green` | `#bda3ea` · `#5b8def` · `#5ee27f` | each by relative colour from the dark value, hue kept, lightness down and chroma up (green's chroma a touch down, to stay in sRGB) | the fills |
 | `--art-coral` | `var(--accent)` | `var(--accent)` (the light theme's own) | coral IS the site accent |
@@ -1264,7 +1264,7 @@ the trackings `--tracking-heading` (0), `--tracking-caps` (0.1em),
 orange/pink-*` scales, `--hyperlink`, the `--token-*` code palette, and
 `--shadow-color`; plus the instrument tokens (previous section: `--lit`,
 `--wash-*`, `--tone-*`, `--hairline*`, `--bar-width`, `--tick-pitch`,
-`--ticks-image*`, `--focus-ring*`, `--playhead-dot`, `--shadow-2/-3`, the
+`--ticks-image*`, `--focus-ring*`, `--playhead-dot`, `--shadow-3`, the
 voices, the durations, `--ease-reveal` and the reveal's
 `--reveal-rise` / `--reveal-stagger`), `--tracking-hero` (the hero
 face's display tracking, the lockup's) and the two measures, `--measure-prose`
