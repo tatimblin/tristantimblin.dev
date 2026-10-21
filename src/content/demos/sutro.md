@@ -1,7 +1,7 @@
 ---
 title: "Sutro"
 description: "Placeholder: Sutro Tower over a grassy hill, painted live in WebGL. Drag the grass."
-date: 2026-10-21
+date: 2026-09-26
 tags: ["webgl", "threejs", "generative-art"]
 embed: painterly-scene
 poster:
