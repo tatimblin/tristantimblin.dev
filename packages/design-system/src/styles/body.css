@@ -17,24 +17,20 @@
 .ds-body {
 	/* Family and weight travel together, as with every role on this site — a face
 	   asked for without its weight lands on whichever cut the browser guesses is
-	   nearest. PP Mondwest now ships three (200/300/400), so this pairing is load-
-	   bearing rather than the formality it was when the face had one cut: drop the
-	   weight here and reading text silently renders in the Regular. */
+	   nearest. Roboto Mono ships three (300/400/500), so drop the weight here
+	   and reading text renders in whatever cut the cascade last asked for. */
 	font-family: var(--font-body);
 	font-weight: var(--font-body-weight, 400);
 	font-size: var(--font-body-size, var(--font-size-3, 16px));
 	line-height: var(--font-body-line-height, 1.7);
 	letter-spacing: var(--font-body-letter-spacing, 0.3px);
 
-	/* Ligatures and kerning, asked for rather than assumed. Both are nominally on
-	   by default, but they are also the first things a `font-feature-settings` or a
-	   `font-variant-ligatures: none` further up the cascade switches off, and the
-	   reading role is the one place on the site where losing them is most visible —
-	   "fi" and "fl" clash in running text long before they clash in a heading.
-	   Verified present: PP Mondwest ships `liga` and `kern`.
-	   COMMON ligatures only. Migra and Neue Montreal also carry `dlig`, and
-	   discretionary is exactly what it sounds like — a decorative set that draws
-	   attention to itself, which is the opposite of what body text wants. */
+	/* Ligatures and kerning, asked for rather than assumed. Roboto Mono, a
+	   monospace, draws neither, so for the body face these are a no-op; they
+	   hold for a Body set in another face (DM Sans ships `liga`), where a
+	   `font-variant-ligatures: none` further up the cascade would otherwise
+	   switch them off. COMMON ligatures only: discretionary ones are
+	   decoration, the opposite of what body text wants. */
 	font-variant-ligatures: common-ligatures;
 	font-kerning: normal;
 }

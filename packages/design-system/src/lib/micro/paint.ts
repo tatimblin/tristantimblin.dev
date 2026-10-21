@@ -17,6 +17,8 @@ export type Target = "glyph" | "art" | "scene";
  * A paint by its meaning. `ink` is the line's colour — the text's on a
  * glyph, the plate's on art — and `dim` is its one dimming; the four
  * colours are the art tokens (blue is `--art-cyan`, red `--art-coral`).
+ * The names are the reference's; `red` / `--art-coral` now resolve to the
+ * site accent, the link blue (tokens.overrides.css, ART).
  */
 export type Paint = "ink" | "dim" | "blue" | "red" | "green" | "lavender" | "none";
 

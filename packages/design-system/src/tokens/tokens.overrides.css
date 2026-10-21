@@ -94,7 +94,7 @@
 	 * point. Body text needs room between lines so the eye can find the next one;
 	 * a heading is one or two lines that must read as a single object, and giving
 	 * it body leading makes the lines drift apart instead of holding together.
-	 * ~1.15 for headings against 1.6 for body is that contrast made explicit. */
+	 * 1.1 for headings against the body's 1.33 is that contrast made explicit. */
 	--line-height-heading: 1.1;
 	--line-height-body: var(--font-body-line-height);
 	/* The third leading, for the UI face at label sizes — a post title, a meta
@@ -104,11 +104,9 @@
 	--line-height-ui: 1.3;
 
 	/* Display tracking. A text face wants its letters pulled together as the
-	 * type grows; a BITMAP face does not — its letters sit on a pixel grid,
-	 * and a negative tracking at 72px closes the gaps the grid drew. So the
-	 * heading face's display tracking is none; the hero face, Migra, is a text
-	 * serif and pulls in at display size — the lockup's tracking. In em, so a
-	 * retune tracks the size it is set at. */
+	 * type grows. The headings keep DM Sans's own spacing; the hero lockup, set
+	 * far larger, pulls in — the lockup's tracking. In em, so a retune tracks
+	 * the size it is set at. */
 	--tracking-heading: 0;
 	--tracking-hero: -0.03em;
 
@@ -125,9 +123,7 @@
 	 *   --tracking-mono          the small tracking for the label voice set in
 	 *                            sentence case (a handle, a stat's label) and for
 	 *                            caps on a phone tile, where the full caps
-	 *                            tracking costs a word a line.
-	 * Mondwest's caps are pixel letters on a fixed grid, which already stand
-	 * apart; the caps step is a touch under what the grotesk took. */
+	 *                            tracking costs a word a line. */
 	--tracking-caps: 0.0625em; /* 0.75px at 12px */
 	--tracking-mono: 0.02em;
 
@@ -139,10 +135,10 @@
 	--measure-prose: 44rem;
 	--measure-note: 68ch;
 
-	/* CODE. The one monospace left on the site, for code alone — fenced blocks
-	 * and inline code: the system mono stack, no file loaded, since code wants a
-	 * real monospace and what a reader's terminal already looks like. The label
-	 * voice (Mono, the caps) is the UI face. */
+	/* CODE. Fenced blocks and inline code: the body face, Roboto Mono, with the
+	 * system mono stack behind it. Its own role, so code can part from reading
+	 * text without touching it. The label voice (Mono, the caps) is the UI
+	 * face. */
 	--font-code: "Roboto Mono", "Roboto Mono Fallback", ui-monospace, SFMono-Regular, Menlo, monospace;
 
 	/* MOTION -----------------------------------------------------------------
@@ -289,11 +285,8 @@
  * everything else the ink at a few strengths. The tokens below are that
  * vocabulary. The components that consume them (Mono, Figure, Stat, Pill,
  * TickRuler, BarGraph, Legend, TileGrid, Hairline, and the card chrome) are
- * documented in CONVENTIONS.md.
- *
- * Alpha washes rather than solid greys, throughout: a wash is the ink at a low
- * opacity, so the same token reads correctly on the page, on a card, and on a
- * card on a card, in both themes, without a per-surface variant.
+ * documented in CONVENTIONS.md. The washes (--wash-1..3) and the last rank
+ * step (--tone-5) are per-theme tints, in themes/light.css and dark.css.
  *
  * The steps that do not depend on the theme sit on :root; everything derived
  * from a theme token (the inks, the accent) sits on [data-theme], as the ART
@@ -301,8 +294,7 @@
  * catalogue shows the same specimen on both pages) re-resolves them in scope.
  * A custom property substitutes its var()s where it is declared: on :root,
  * `var(--text-primary)` would be the html element's ink, whatever theme the
- * wrapper carried. A theme file may replace a derived step outright (the
- * washes below are solid tints in both palettes). */
+ * wrapper carried. */
 :root {
 	/* The steps BELOW the generated scales, on the same reasoning as
 	 * --font-size-0 above. Tiles are ~10px squares at phone size, where the
@@ -375,22 +367,14 @@
 		transparent
 	);
 
-	/* Ink washes: the ink at three strengths. --wash-1 is the unlit tile and the
-	 * subtle pill fill; -2 and -3 are the two ordinary strengths a step grid or a
-	 * button uses before anything is "lit". */
-	--wash-1: color-mix(in oklab, var(--text-primary) 7%, transparent);
-	--wash-2: color-mix(in oklab, var(--text-primary) 16%, transparent);
-	--wash-3: color-mix(in oklab, var(--text-primary) 30%, transparent);
-
 	/* The rank ramp, for things ordered by importance that are not "lit": a
 	 * legend, a share ruler, a stack of bars. The accent first — it IS the one
-	 * accent the card gets — then the ink stepping down. Five steps; a sixth
-	 * thing is "other". */
+	 * accent the card gets — then the ink stepping down, and the theme's
+	 * --tone-5 tint last. Five steps; a sixth thing is "other". */
 	--tone-1: var(--accent);
 	--tone-2: var(--text-primary);
 	--tone-3: var(--text-secondary);
 	--tone-4: var(--text-tertiary);
-	--tone-5: color-mix(in oklab, var(--text-primary) 22%, transparent);
 
 	/* The focus ring, for everything focusable that is not a native control:
 	 * a pill or a button, a graph that became a slider, a flip surface. One
@@ -407,13 +391,9 @@
 		transparent 1px var(--tick-pitch)
 	);
 
-	/* SHADOWS, the upstream scale (tokens/shadows.ts, Shadows[2..3]) on the
-	 * theme's --shadow-color, for the few things that float over the page
-	 * — a control panel, a sheet. The cards are flat and take none. */
-	--shadow-2:
-		1px 2px 2px hsl(var(--shadow-color) / 0.333),
-		2px 4px 4px hsl(var(--shadow-color) / 0.333),
-		3px 6px 6px hsl(var(--shadow-color) / 0.333);
+	/* SHADOW, the upstream scale's step 3 (tokens/shadows.ts) on the theme's
+	 * --shadow-color, for the few things that float over the page — a control
+	 * panel, a sheet. The cards take --shadow-panel instead. */
 	--shadow-3:
 		1px 2px 2px hsl(var(--shadow-color) / 0.2),
 		2px 4px 4px hsl(var(--shadow-color) / 0.2),
@@ -424,37 +404,34 @@
 
 /* ART ----------------------------------------------------------------------
  * The illustration language the art, the scenes and the glyphs are drawn in
- * (ArtFrame, art-frame.css; src/art/, src/scenes/, src/glyphs/): white 1px
- * line work and flat fills in four colours on a near-black landscape plate. The
- * plate, line, lavender and coral were sampled from the reference tile sheet;
- * cyan and green were since retuned toward a synth panel's signal neon (a
- * cornflower blue and a bright signal green). An art file may name
+ * (ArtFrame, art-frame.css; src/art/, src/scenes/, src/glyphs/): 1px line
+ * work and flat fills in four colours on a plate. The plate, line and
+ * lavender were sampled from a reference tile sheet; "coral" is now the site
+ * accent, and cyan and green were retuned toward a synth panel's signal neon
+ * (a cornflower blue and a bright signal green). An art file may name
  * NO colour but these — every fill and stroke in it is one of these tokens,
  * `none` or currentColor (the validator holds that line) — so the whole
  * language retunes here and nowhere else.
  *
- * The plate FOLLOWS THE THEME. Below is the dark palette the language was
- * sampled on (near-black plate, white line), on both themes; each theme file
- * then retunes it — the light one to a pale plate and a dark ink, so a light
- * page shows ink-on-paper tiles rather than heavy black windows; the dark one
- * warms the plate onto its own panels. The same drawing inverts: white line
- * work and white faces become dark line work and dark faces. Declared on
- * [data-theme], not :root, for two reasons: --art-coral is the site accent,
- * which a theme sets; and a wrapper carrying the other theme's attribute (the
- * catalogue's ThemePage shows a drawing in both themes side by side) then
- * re-resolves these in scope. */
+ * The plate FOLLOWS THE THEME, and each theme file sets it and its edge
+ * (--art-plate, --art-edge). Below is the dark palette the language was
+ * sampled on (white line, the four fills); the light theme retunes it to a
+ * dark ink and deeper fills, so a light page shows ink-on-paper tiles; the
+ * dark one keeps it. The same drawing inverts: white line work and white
+ * faces become dark line work and dark faces. Declared on [data-theme], not
+ * :root, for two reasons: --art-coral is the site accent, which a theme sets;
+ * and a wrapper carrying the other theme's attribute (the catalogue's
+ * ThemePage shows a drawing in both themes side by side) then re-resolves
+ * these in scope. */
 [data-theme] {
-	/* The tile: its fill and its 1px edge. Sampled #18181f and #3d3d42. */
-	--art-plate: oklch(17% 0.008 280);
-	--art-edge: oklch(34% 0.006 280);
 	/* The line, and white fills. --art-ink-2 is the one dimming the language
 	 * allows — grids, dashed paths, ghost outlines — as the ink at 45% rather
 	 * than an opacity attribute, so it composes over any fill. */
 	--art-ink: oklch(97% 0 0);
 	--art-ink-2: color-mix(in oklab, var(--art-ink) 45%, transparent);
-	/* The four fills. Coral IS the accent: one warm colour on the page, so a
-	 * card's accent meta beside coral art never reads as two near-oranges (the
-	 * sampled #ea6a4f is within a hair of it). */
+	/* The four fills. "Coral" IS the accent — the link blue — so the art's
+	 * one strong colour is the page's one accent, never a second near-blue
+	 * beside it. The name outlives the sampled coral so no art file changes. */
 	--art-lavender: #bda3ea;
 	--art-coral: var(--accent);
 	/* Signal neon, not sampled: "cyan" is now a cornflower blue and green a

@@ -24,6 +24,12 @@
 	--border-color: #6b665d;
 	--input-border: var(--border-color);
 	--panel-outline: #262a30;
+	/* The header fade, quieter than light's: the full slate wash reads as a
+	   lit band on a dark panel, so fade only a third of the way toward it. */
+	--panel-header-bg: linear-gradient(
+		var(--card-background) 50%,
+		color-mix(in oklab, var(--wash-1) 35%, var(--card-background))
+	);
 
 	/* INK. A warm off-white, then three warm greys down. */
 	--text-primary: #f3eee4;
@@ -55,9 +61,11 @@
 	--code-fg: #ece7dd;
 	--code-border: var(--border);
 
-	/* HALFTONE. Light ink on the dark page; the footer clip a step softer. */
+	/* HALFTONE. Light ink on the dark page. The footer clip takes the same
+	   ink: on the dark page a bright clip prints as sparse light dots, so it
+	   needs no softening (its tuning thins it instead, halftone.css). */
 	--halftone-ink: var(--text-primary);
-	--halftone-ink-soft: color-mix(in oklab, var(--text-primary) 78%, var(--background));
+	--halftone-ink-soft: var(--halftone-ink);
 
 	/* ART, warmed onto the dark panels: the plate the card, the edge the
 	   dashed rule's grey. The line and the fills stay the dark palette the

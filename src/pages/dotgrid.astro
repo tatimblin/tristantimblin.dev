@@ -73,13 +73,13 @@ const PREVIEWS = ["light", "dark", "split"];
 >
 	<main class="dotgrid-demo">
 		<div class="dotgrid-demo__stage" data-stage data-preview="split">
-			{/* Each pane carries a theme the way <html> does (both spellings, while
-			     the data-theme rename lands), so its grid resolves that theme's tokens. */}
-			<div class="dotgrid-demo__pane maximeheckel-light" data-theme="light" data-pane="light">
+			{/* Each pane carries a theme the way <html> does, so its grid resolves
+			     that theme's tokens. */}
+			<div class="dotgrid-demo__pane" data-theme="light" data-pane="light">
 				<dotted-grid data-grid data-hero src={SRC} src-webm={SRC_WEBM} cell-size="6"></dotted-grid>
 				<span class="dotgrid-demo__tag">light</span>
 			</div>
-			<div class="dotgrid-demo__pane maximeheckel-dark" data-theme="dark" data-pane="dark">
+			<div class="dotgrid-demo__pane" data-theme="dark" data-pane="dark">
 				<dotted-grid data-grid src={SRC} src-webm={SRC_WEBM} cell-size="6"></dotted-grid>
 				<span class="dotgrid-demo__tag">dark</span>
 			</div>
