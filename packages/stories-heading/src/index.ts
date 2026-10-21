@@ -43,7 +43,7 @@ function clamp01(x: number): number {
  * Published from measure():
  *   --sh-heading-fitsize font-size (px) fitting "other stories" to a 6-col span.
  *   --sh-heading-gap     the measured tuck of "other stories" into the wordmark.
- *   --sh-amp-size/-top   the "&"'s size and its baseline-aligned position.
+ *   --sh-amp-size/-top/-left the "&"'s size and its place behind "other stories".
  *   --sh-solid-*         the four registration corrections onto the outline.
  *   --sh-pin-height      the pin's height, so the track can reserve its scroll.
  * ...and onto .fh, for the hero fold: --sh-group-h, --sh-lockup-h,
@@ -98,18 +98,18 @@ export class StoriesHeadingElement extends HTMLElement {
 	    resizes anything downstream would log an RO-loop warning (see setPx). */
 	private lastWritten = new Map<string, number>();
 
-	/** The "&"'s INK HEIGHT, as a fraction of the wordmark's x-height.
-	    The "&" is set AFTER "tristan", on its baseline, in the accent colour — the
-	    connective between the wordmark and "other stories" below it. At 1 its ink
-	    would stand exactly as tall as the lowercase (a, n, s) beside it, and it
-	    read as a shade too big — an ampersand's loops fill more of their height
-	    than an n does. Just under keeps it a letter of the line, not a display mark.
-	    Tied to the wordmark's own measured x-height rather than to a breakpoint, so
-	    it holds the same proportion at every viewport; the CSS --sh-amp-size steps
-	    exist only for the pre-measure frame. */
-	private static readonly AMP_XHEIGHT_RATIO = 0.92;
-	/** Space between the wordmark's last letter and the "&", in em of the "&". */
-	private static readonly AMP_GAP = 0.1;
+	/** The "&"'s INK HEIGHT, as a fraction of the wordmark's rendered ink height.
+	    A display glyph, not a letter of the line: it stands behind "other stories"
+	    (baseline on the heading's) and rises behind "tristan" to stand clear above
+	    it. Tied to the wordmark
+	    rather than to a breakpoint so it holds the same proportion at every viewport;
+	    the CSS --sh-amp-size steps exist only for the pre-measure frame. */
+	private static readonly AMP_SIZE_RATIO = 1.4;
+	/** Where the "&"'s ink centre sits across "other stories", 0 (the phrase's left
+	    edge) to 1 (its right). */
+	private static readonly AMP_CENTER = 0.74;
+	/** How far the "&"'s baseline drops BELOW the heading's, in em of the "&". */
+	private static readonly AMP_DROP = 0;
 
 	/** The "&"'s parallax distance (px) at full progress. */
 	private static readonly AMP_PARALLAX = 100;
@@ -256,7 +256,6 @@ export class StoriesHeadingElement extends HTMLElement {
 		}
 
 		this.fitWordmark();
-		this.fitAmp();
 		// BEFORE the fit, not after: alignHeadingLayers narrows the solid layer, and
 		// fitHeading sizes the box to the WIDER layer — run the other way round and
 		// each re-measure feeds the other a different answer, so the fit never settles.
@@ -267,6 +266,10 @@ export class StoriesHeadingElement extends HTMLElement {
 		// AFTER fitHeading: the tuck is derived from the heading's ink metrics at its
 		// FITTED size, so it has to read the size the fit just landed on.
 		this.fitHeadingTuck();
+		// LAST: the "&" stands behind "other stories", so it is placed off the heading's
+		// fitted size and tuck. It is absolute and takes no flow space, so nothing above
+		// reads it back.
+		this.fitAmp();
 
 		if (this.pin) {
 			this.style.setProperty(
@@ -400,65 +403,50 @@ export class StoriesHeadingElement extends HTMLElement {
 	}
 
 	/**
-	 * Set the "&" after the wordmark: its ink AMP_XHEIGHT_RATIO of the wordmark's
-	 * x-height, its baseline on the wordmark's, AMP_GAP em past the wordmark's last
-	 * letter. The "&" is absolutely positioned inside the host, so all three are
-	 * published relative to the host's box. All font-relative, so it holds at every
-	 * viewport.
+	 * Set the "&" as a display glyph BEHIND "other stories": its ink AMP_SIZE_RATIO of
+	 * the wordmark's ink height, its baseline AMP_DROP em under the heading's, its ink
+	 * centred AMP_CENTER of the way across the phrase. Tall enough that it climbs out
+	 * from behind the heading, behind "tristan", and clear above it.
+	 *
+	 * Runs AFTER fitHeading/fitHeadingTuck: it is placed off the heading's fitted size
+	 * and tuck. And it reads the heading's AT-REST position, not its current one — the
+	 * pin is sticky, so once it detaches its box is wherever the scroll put it. The
+	 * track is in flow (scroll-invariant) and the text's baseline within the pin is
+	 * pure layout, so trackTop + (baseline − pinTop) is the at-rest baseline from any
+	 * scroll position. Published relative to the host (the "&"'s containing block).
 	 */
 	private fitAmp() {
 		if (!this.amp || !this.wordmarkSvg) return;
-		// Wordmark box RELATIVE TO THE HOST (the "&"'s positioning context), so
-		// --sh-amp-top / --sh-amp-left land in the same coordinate space.
 		const hostRect = this.getBoundingClientRect();
-		const wmRect = this.wordmarkSvg.getBoundingClientRect();
-		const wmTop = wmRect.top - hostRect.top;
-		const wmHeight = wmRect.height;
+		const wmHeight = this.wordmarkSvg.getBoundingClientRect().height;
 		if (!(wmHeight > 0)) return;
 
-		// The wordmark box IS its ink (fitWordmark set the viewBox to the ink
-		// bounds), so its baseline is `ascent/(ascent+descent)` down from wmTop, and
-		// one SVG user unit is `wmHeight / (ascent+descent)` px.
-		const wmInk = this.measureInk();
-		const inkH = wmInk ? wmInk.ascent + wmInk.descent : 0;
-		const wmBaseline = wmTop + (wmInk ? (wmInk.ascent / inkH) * wmHeight : wmHeight);
-
-		// SIZE: the "&"'s ink is AMP_XHEIGHT_RATIO of the wordmark's x-height, so it
-		// reads as a letter of the word's lowercase rather than a display glyph
-		// competing with it. Both are asked of the faces themselves.
-		const wmX = wmInk ? this.measureWordmarkXHeight() : null;
-		const xHeightPx = wmX !== null ? (wmX / inkH) * wmHeight : 0.69 * wmHeight;
-		const ampPerPx = (this.measureAmpAscent(100) ?? 72) / 100;
-		const ampSize = (xHeightPx * StoriesHeadingElement.AMP_XHEIGHT_RATIO) / ampPerPx;
+		// SIZE: by INK height, asked of the face — font-size is not ink.
+		const ink = this.measureAmpInk(100);
+		const ampPerPx = (ink?.ascent ?? 72) / 100;
+		const ampSize = (wmHeight * StoriesHeadingElement.AMP_SIZE_RATIO) / ampPerPx;
 		this.style.setProperty("--sh-amp-size", `${ampSize.toFixed(2)}px`);
 
-		// VERTICAL: its baseline on the wordmark's. The "&"'s baseline sits its ink
-		// ascent below its line-height:1 box top only after the half-leading, which is
-		// zero at line-height 1 — so top = baseline − (the box's ascent). Measured as
-		// ascent ink + the space Canvas reports above it is unreliable, so read the
-		// font box straight off the element instead.
-		const ampAscentBox = this.ampBaselineOffset();
-		const ampTop = wmBaseline - (ampAscentBox ?? ampSize * 0.8);
+		const outline = this.heading?.querySelector(".sh__outline");
+		const baseline = outline ? this.baselineOf(outline) : null;
+		if (!outline || !this.track || !this.pin || baseline === null) return;
+		const pinTop = this.pin.getBoundingClientRect().top;
+		const trackTop = this.track.getBoundingClientRect().top;
+		const headingBaseline = trackTop - hostRect.top + (baseline - pinTop);
+
+		// VERTICAL: the "&"'s box top sits its own baseline offset above its baseline
+		// (read off the element by layout, not modelled from font metrics).
+		const ampBaseline = headingBaseline + StoriesHeadingElement.AMP_DROP * ampSize;
+		const ampTop = ampBaseline - (this.ampBaselineOffset() ?? ampSize * 0.8);
 		this.style.setProperty("--sh-amp-top", `${ampTop.toFixed(2)}px`);
 
-		// HORIZONTAL: one word-space after the wordmark's last letter. The SVG's box
-		// ends on the "n"'s advance (the viewBox is the text's bbox), so its right edge
-		// is where the next letter would start.
-		const gap = StoriesHeadingElement.AMP_GAP * ampSize;
-		this.style.setProperty("--sh-amp-left", `${(wmRect.right - hostRect.left + gap).toFixed(2)}px`);
-	}
-
-	/** The wordmark's x-height in SVG user units (the ink ascent of "x"). */
-	private measureWordmarkXHeight(): number | null {
-		if (!this.wordmarkText) return null;
-		if (!this.inkCanvas) this.inkCanvas = document.createElement("canvas");
-		const ctx = this.inkCanvas.getContext("2d");
-		if (!ctx) return null;
-		const cs = getComputedStyle(this.wordmarkText);
-		const size = parseFloat(cs.fontSize) || 300;
-		ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
-		const a = ctx.measureText("x").actualBoundingBoxAscent;
-		return Number.isFinite(a) && a > 0 ? a : null;
+		// HORIZONTAL: the pin only moves in y, so the heading's x is already at rest.
+		// The "&"'s ink spans [origin − left, origin + right] of its box's left edge.
+		const hRect = outline.getBoundingClientRect();
+		const centre = hRect.left - hostRect.left + StoriesHeadingElement.AMP_CENTER * hRect.width;
+		const k = ampSize / 100;
+		const inkMid = ((ink ? ink.right - ink.left : 70) * k) / 2;
+		this.style.setProperty("--sh-amp-left", `${(centre - inkMid).toFixed(2)}px`);
 	}
 
 	/** Distance from the "&" element's top to its baseline, in px — asked of the
@@ -470,8 +458,9 @@ export class StoriesHeadingElement extends HTMLElement {
 		return base - this.amp.getBoundingClientRect().top;
 	}
 
-	/** Ink ascent (px above baseline) of "&" at `sizePx`, via Canvas measureText. */
-	private measureAmpAscent(sizePx: number): number | null {
+	/** Ink box of "&" at `sizePx` via Canvas measureText: its ascent above the
+	    baseline and its left/right extents from the glyph origin. */
+	private measureAmpInk(sizePx: number): { ascent: number; left: number; right: number } | null {
 		if (!this.amp) return null;
 		if (!this.inkCanvas) this.inkCanvas = document.createElement("canvas");
 		const ctx = this.inkCanvas.getContext("2d");
@@ -479,8 +468,12 @@ export class StoriesHeadingElement extends HTMLElement {
 		const cs = getComputedStyle(this.amp);
 		ctx.font = `${cs.fontWeight} ${sizePx}px ${cs.fontFamily}`;
 		const m = ctx.measureText("&");
-		const a = m.actualBoundingBoxAscent;
-		return Number.isFinite(a) ? a : null;
+		if (!Number.isFinite(m.actualBoundingBoxAscent) || m.actualBoundingBoxAscent <= 0) return null;
+		return {
+			ascent: m.actualBoundingBoxAscent,
+			left: m.actualBoundingBoxLeft,
+			right: m.actualBoundingBoxRight,
+		};
 	}
 
 	/**
@@ -1137,8 +1130,11 @@ export class StoriesHeadingElement extends HTMLElement {
 	 */
 	private ampProgress(): number {
 		if (!this.amp) return 0;
-		const start = 0.6 * window.innerHeight; // begin drifting/fading here
 		const end = 0.1 * window.innerHeight; // fully drifted/faded here
+		// Begin drifting/fading at 60vh — or at the first pixel of scroll, if the "&"
+		// already rests above that (the CSS range's max(0px, …) floor).
+		const restTop = this.amp.getBoundingClientRect().top - this.ampShift + window.scrollY;
+		const start = Math.max(end + 1, Math.min(0.6 * window.innerHeight, restTop));
 		// STRIP THE TRANSFORM WE APPLIED LAST FRAME. getBoundingClientRect() includes it,
 		// so feeding the moved position back in makes the parallax damp itself: every
 		// pixel of drift pushes the "&" further from the finish line it is measured
