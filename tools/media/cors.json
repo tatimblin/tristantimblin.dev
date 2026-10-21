@@ -1,0 +1,21 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": [
+          "https://tristantimblin.dev",
+          "https://www.tristantimblin.dev",
+          "https://*.tristantimblin.pages.dev",
+          "http://localhost:4321",
+          "http://localhost:4322",
+          "http://localhost:4323",
+          "http://localhost:4455"
+        ],
+        "methods": ["GET", "HEAD"],
+        "headers": ["Range"]
+      },
+      "exposeHeaders": ["Content-Length", "Content-Range", "Accept-Ranges"],
+      "maxAgeSeconds": 86400
+    }
+  ]
+}

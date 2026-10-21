@@ -18,9 +18,9 @@
 # 960): ~4x less decode+upload bandwidth for a halftone that looks identical.
 # See prepare-carousel.sh's header for the same reasoning at 360px.
 #
-# Two files are emitted from the same filtered frames: the H.264 .web.mp4
+# Two files are emitted from the same filtered frames: the H.264 .mp4
 # (universal fallback, +faststart) and a smaller AV1 (or VP9 where SVT-AV1 is
-# unavailable) .web.webm that modern browsers prefer. The <dotted-grid> element
+# unavailable) .webm that modern browsers prefer. The <dotted-grid> element
 # is pointed at both via src (mp4) + src-webm (webm) and picks the first playable
 # one. Pass -W 0 to skip the WebM pass (mp4 only).
 #
@@ -47,9 +47,9 @@
 # Usage:
 #   prepare-video.sh [-i in] [-o out] [-w width] [-f fps] [-q crf] [-W webmcrf] [-t] [-n] [-m luma]
 #
-#   -i  input file      (default: tools/dotgrid/fabric.mp4 — the source, kept
-#                        out of public/ so it never ships)
-#   -o  output file     (default: public/videos/fabric.web.mp4; the WebM
+#   -i  input file      (default: media-src/fabric.mp4 — the source, gitignored
+#                        and kept out of public/ so it never ships)
+#   -o  output file     (default: media/videos/fabric.mp4; the WebM
 #                        companion is the same path with a .webm extension)
 #   -w  target width    (default: 480; height auto to preserve aspect)
 #   -f  frame rate      (default: 0 = keep source fps)
@@ -63,10 +63,10 @@
 # Examples:
 #   prepare-video.sh                                                 # fabric (SDR)
 #   prepare-video.sh -w 640 -q 28                                    # smaller/lighter
-#   prepare-video.sh -i public/videos/beach.web.mp4 \
-#     -o public/videos/beach.web.mp4 -w 480                          # re-encode in place
-#   prepare-video.sh -i public/videos/IMG_0697.MOV \
-#     -o public/videos/beach.web.mp4 -t -n                           # iPhone HDR, matched
+#   prepare-video.sh -i media/videos/beach.mp4 \
+#     -o media/videos/beach.mp4 -w 480                          # re-encode in place
+#   prepare-video.sh -i media-src/IMG_0697.MOV \
+#     -o media/videos/beach.mp4 -t -n                           # iPhone HDR, matched
 #
 # HDR note: the proper HLG->SDR chain wants zscale (libzimg) or libplacebo. This
 # ffmpeg build has neither, so -t approximates the tonemap with an eq contrast/
@@ -74,8 +74,8 @@
 # hero (the shader only reads luminance); revisit if a zscale build is available.
 set -euo pipefail
 
-IN="tools/dotgrid/fabric.mp4"
-OUT="public/videos/fabric.web.mp4"
+IN="media-src/fabric.mp4"
+OUT="media/videos/fabric.mp4"
 WIDTH=480
 FPS=0
 CRF=26
@@ -171,7 +171,9 @@ fi
 
 echo "Encoding $IN -> $OUT (width=${WIDTH}, crf=${CRF}, fps=$([ "$FPS" -gt 0 ] && echo "$FPS" || echo "source"), tonemap=$([ "$TONEMAP" -eq 1 ] && echo "on" || echo "off"), normalize=$([ "$NORMALIZE" -eq 1 ] && echo "on" || echo "off"))"
 
-# Re-encoding in place (IN == OUT, e.g. downscaling an existing .web.mp4) would
+mkdir -p "$(dirname "$OUT")"
+
+# Re-encoding in place (IN == OUT, e.g. downscaling an existing render) would
 # have ffmpeg -y clobber the input mid-read. Write to a temp and move on success.
 mp4_target="$OUT"
 same_path=0
@@ -229,3 +231,4 @@ ffprobe -v error \
   -show_entries stream=codec_name,width,height,r_frame_rate,pix_fmt,color_transfer \
   -show_entries format=duration,size \
   -of default=noprint_wrappers=1 "$OUT"
+echo "Next: bun run media:push"

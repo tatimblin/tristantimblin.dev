@@ -16,14 +16,11 @@ import Knob from "@whois/design-system/Knob";
 import Chip from "@whois/design-system/Chip";
 import Button from "@whois/design-system/Button";
 import "@tristimb/dotted-grid/styles.css";
+import { media } from "../lib/media";
 
 const SOURCES = [
-	{
-		label: "fabric",
-		src: "/videos/fabric.web.mp4",
-		webm: "/videos/fabric.web.webm",
-	},
-	{ label: "beach", src: "/videos/beach.web.mp4", webm: "/videos/beach.web.webm" },
+	{ label: "fabric", src: media("videos/fabric.mp4"), webm: media("videos/fabric.webm") },
+	{ label: "beach", src: media("videos/beach.mp4"), webm: media("videos/beach.webm") },
 ];
 const SRC = SOURCES[0].src;
 const SRC_WEBM = SOURCES[0].webm;
@@ -102,7 +99,7 @@ const PREVIEWS = ["light", "dark", "split"];
 			</KnobGroup>
 			<KnobGroup legend="source" class="dotgrid-demo__chips">
 				{SOURCES.map((s, i) => (
-					<Chip as="button" type="button" data-src={s.src} data-webm={s.webm} aria-pressed={i === 0 ? "true" : "false"}>
+					<Chip as="button" type="button" data-src={s.src} data-webm={s.webm} data-source={s.label} aria-pressed={i === 0 ? "true" : "false"}>
 						{s.label}
 					</Chip>
 				))}
@@ -177,6 +174,7 @@ const PREVIEWS = ["light", "dark", "split"];
 		type Grid = HTMLElement & { refreshTone?: () => void };
 		type Colour = "ink" | "ink-hi" | "paper" | "glow";
 		type Preset = {
+			/** A source chip's label (its data-source); the URLs are R2's. */
 			source?: string;
 			polarity?: "positive" | "negative";
 			/** Colours left out are auto: the pane's theme decides them. */
@@ -188,15 +186,15 @@ const PREVIEWS = ["light", "dark", "split"];
 		// same numbers as src/styles/halftone.css); the rest are starting points.
 		const PRESETS: Record<string, Preset> = {
 			"fabric-cream": {
-				source: "/videos/fabric.web.mp4",
+				source: "fabric",
 				tone: { "dot-scale": 1.1, levels: 6, cutoff: 0.06, feather: 0.2, denoise: 0.3, gamma: 0.4, contrast: 1.05, "dot-shape": 1, bloom: 0, crosshatch: 0 },
 			},
 			"fabric-dark": {
-				source: "/videos/fabric.web.mp4",
+				source: "fabric",
 				tone: { "dot-scale": 1.15, levels: 6, cutoff: 0, feather: 0.65, denoise: 0.1, gamma: 0.55, contrast: 1.05, "dot-shape": 2, bloom: 0.5, crosshatch: 0.3 },
 			},
 			beach: {
-				source: "/videos/beach.web.mp4",
+				source: "beach",
 				colours: { ink: "#5f7891" },
 				tone: { "dot-scale": 1.1, levels: 6, cutoff: 0.06, feather: 0.3, denoise: 0.3, gamma: 0.5, contrast: 1.1, "dot-shape": 1, bloom: 0, crosshatch: 0 },
 			},
@@ -378,7 +376,7 @@ const PREVIEWS = ["light", "dark", "split"];
 					if (v) c.value = v;
 				}
 				press("[data-polarity]", $(`[data-polarity="${p.polarity ?? "positive"}"]`));
-				const src = p.source ? $<HTMLButtonElement>(`[data-src="${p.source}"]`) : null;
+				const src = p.source ? $<HTMLButtonElement>(`[data-source="${p.source}"]`) : null;
 				if (src) setSource(src);
 				press("[data-preset]", $(`[data-preset="${name}"]`));
 				applyTone();

@@ -17,6 +17,7 @@ import Github from "../widgets/github/Github.astro";
 import Videos from "../widgets/videos/Videos.astro";
 import Volo from "../widgets/volo/Volo.astro";
 import Readers from "../widgets/readers/Readers.astro";
+import { media } from "../lib/media";
 import "@whois/stories-heading/styles.css";
 import "@tristimb/dotted-grid/styles.css";
 import "@tristimb/video-carousel/styles.css";
@@ -34,8 +35,8 @@ import "@whois/wobble-text/styles.css";
 	<dotted-grid
 		slot="scene"
 		class="hero__video"
-		src="/videos/fabric.web.mp4"
-		src-webm="/videos/fabric.web.webm"
+		src={media("videos/fabric.mp4")}
+		src-webm={media("videos/fabric.webm")}
 		rate="0.93"
 		max-dpr="1"
 		cell-size="6"

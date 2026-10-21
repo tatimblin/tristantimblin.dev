@@ -5,8 +5,10 @@
 // element upgrades it. See @tristimb/video-carousel (github.com/tatimblin/dotgrid).
 import Mono from "@whois/design-system/Mono";
 import clipsData from "../data/video-clips.json";
+import { media } from "../lib/media";
 
 interface Clip {
+	/** A logical media name ("videos/IMG_0068.mp4"), resolved by src/lib/media.ts. */
 	src: string;
 	description: string;
 	location: string;
@@ -100,8 +102,11 @@ const {
 
 const first = clips[0];
 
-// Each clip's smaller AV1/VP9 .webm sits beside its .mp4 with the same stem.
-const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
+// Each clip's smaller AV1/VP9 .webm sits beside its .mp4 with the same stem;
+// both resolve to R2 URLs (src/lib/media.ts). <dotted-grid> loads them with
+// crossOrigin="anonymous", which the bucket's CORS policy answers.
+const mp4 = (src: string) => media(src);
+const webm = (src: string) => media(src.replace(/\.mp4$/, ".webm"));
 ---
 
 <video-carousel
@@ -123,8 +128,8 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 						type="button"
 						class="vc__tick vc__tick--major"
 						data-index={i}
-						data-src={clip.src}
-						data-src-webm={toWebm(clip.src)}
+						data-src={mp4(clip.src)}
+						data-src-webm={webm(clip.src)}
 						data-desc={clip.description}
 						data-loc={clip.location}
 						data-date={clip.date}
@@ -139,8 +144,8 @@ const toWebm = (src: string) => src.replace(/\.mp4$/, ".webm");
 			<dotted-grid
 				class="vc__grid"
 				data-vc-grid
-				src={first?.src}
-				src-webm={first ? toWebm(first.src) : undefined}
+				src={first ? mp4(first.src) : undefined}
+				src-webm={first ? webm(first.src) : undefined}
 				color-reveal
 				shimmer="1"
 				no-loop

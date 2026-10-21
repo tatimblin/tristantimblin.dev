@@ -35,9 +35,6 @@ jobs:
           # nightly.yml passes the data commit it just pushed; empty means the
           # triggering commit.
           ref: ${{ inputs.ref }}
-          # Pull the actual video/audio bytes (stored in Git LFS), not the
-          # pointer files — otherwise the build ships broken media.
-          lfs: true
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2

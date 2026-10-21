@@ -53,6 +53,22 @@ world-atlas — are root devDependencies that never ship) — so `build` does
 not bake; `glyphs:check` / `scenes:check` fail when a source and its file
 have drifted, and the unit tests hold the same line.
 
+## Media — videos live in R2, not git
+
+Videos are served from the R2 bucket `tristantimblin-dev-media` at
+`https://media.tristantimblin.dev`. `src/data/media.json` maps each logical
+name (`videos/fabric.mp4`) to an immutable, hash-named key
+(`videos/fabric.63d79c4a.mp4`); pages call `media(name)` from
+`src/lib/media.ts`, the one place the base URL lives. Never commit video files
+or add them to `public/`. To add or change one: put the render in `media/`
+(gitignored; `tools/dotgrid` writes there), run `bun run media:push`, commit
+`media.json`. Details in `tools/media/README.md`.
+
+**One bucket per project:** `<project>-media` served at
+`<project>-media.tristantimblin.dev`, so projects' assets never mix. Keep the
+hostname flat: Universal SSL covers `*.tristantimblin.dev` but not a nested
+`media.<project>.tristantimblin.dev`. This site is the exception, at `media.`.
+
 ## Design system — read before writing UI CSS
 
 The site is built on **`@whois/design-system`** (`packages/design-system`). It
