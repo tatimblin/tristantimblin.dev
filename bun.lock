@@ -7,12 +7,12 @@
         "@astrojs/mdx": "^7.0.5",
         "@astrojs/rss": "^4.0.19",
         "@astrojs/sitemap": "^3.7.3",
+        "@tristimb/dotted-grid": "https://github.com/tatimblin/dotgrid/releases/download/v0.1.0/tristimb-dotted-grid-0.1.0.tgz",
         "@tristimb/fleet-demo": "https://github.com/tatimblin/vscode-fleet/releases/download/v0.1.0/tristimb-fleet-demo-0.1.0.tgz",
         "@tristimb/spotify-stream-player": "^0.5.2",
+        "@tristimb/video-carousel": "https://github.com/tatimblin/dotgrid/releases/download/v0.1.0/tristimb-video-carousel-0.1.0.tgz",
         "@whois/design-system": "workspace:*",
-        "@whois/dotted-grid": "workspace:*",
         "@whois/stories-heading": "workspace:*",
-        "@whois/video-carousel": "workspace:*",
         "@whois/wobble-text": "workspace:*",
         "astro": "^7.1.6",
         "astro-seo": "^1.1.0",
@@ -42,16 +42,8 @@
         "react-dom": "^19",
       },
     },
-    "packages/dotted-grid": {
-      "name": "@whois/dotted-grid",
-      "version": "0.0.1",
-    },
     "packages/stories-heading": {
       "name": "@whois/stories-heading",
-      "version": "0.0.1",
-    },
-    "packages/video-carousel": {
-      "name": "@whois/video-carousel",
       "version": "0.0.1",
     },
     "packages/wobble-text": {
@@ -392,9 +384,13 @@
 
     "@stitches/react": ["@stitches/react@1.2.8", "", { "peerDependencies": { "react": ">= 16.3.0" } }, "sha512-9g9dWI4gsSVe8bNLlb+lMkBYsnIKCZTmvqvDG+Avnn69XfmHZKiaMrx7cgTaddq7aTPPmXiTsbFcUy0xgI4+wA=="],
 
+    "@tristimb/dotted-grid": ["@tristimb/dotted-grid@https://github.com/tatimblin/dotgrid/releases/download/v0.1.0/tristimb-dotted-grid-0.1.0.tgz", {}],
+
     "@tristimb/fleet-demo": ["@tristimb/fleet-demo@https://github.com/tatimblin/vscode-fleet/releases/download/v0.1.0/tristimb-fleet-demo-0.1.0.tgz", {}],
 
     "@tristimb/spotify-stream-player": ["@tristimb/spotify-stream-player@0.5.2", "", {}, "sha512-JTMTpE7us+377S1Hn1gmmIyhP9SZcFABfpT0AGn/WB+DWFTOzgi36mgYf8lT70RTr09EynMYpZwFUmPDBtpuOg=="],
+
+    "@tristimb/video-carousel": ["@tristimb/video-carousel@https://github.com/tatimblin/dotgrid/releases/download/v0.1.0/tristimb-video-carousel-0.1.0.tgz", {}],
 
     "@tybys/wasm-util": ["@tybys/wasm-util@0.10.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg=="],
 
@@ -448,11 +444,7 @@
 
     "@whois/design-system": ["@whois/design-system@workspace:packages/design-system"],
 
-    "@whois/dotted-grid": ["@whois/dotted-grid@workspace:packages/dotted-grid"],
-
     "@whois/stories-heading": ["@whois/stories-heading@workspace:packages/stories-heading"],
-
-    "@whois/video-carousel": ["@whois/video-carousel@workspace:packages/video-carousel"],
 
     "@whois/wobble-text": ["@whois/wobble-text@workspace:packages/wobble-text"],
 

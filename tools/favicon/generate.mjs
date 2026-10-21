@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Generates the halftone "T" favicon — a miniature of the <dotted-grid> effect
- * (packages/dotted-grid/src/index.ts), where texture comes through in DOT SIZE
+ * (@tristimb/dotted-grid, github.com/tatimblin/dotgrid), where texture comes through in DOT SIZE
  * rather than opacity or color.
  *
  * A tab favicon renders at 16 CSS px = 32 device px on a 2x display, so that is

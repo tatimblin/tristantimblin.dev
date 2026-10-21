@@ -12,8 +12,12 @@ Guidance for AI agents working in this repo.
 - **`packages/*`** — workspace packages (Bun workspaces, consumed as `@whois/*`,
   source exports, no build step):
   - `@whois/design-system` — the design system (tokens + Astro/CSS components).
-  - Web Components (custom elements): `dotted-grid`, `video-carousel`,
-    `stories-heading`, `wobble-text`.
+  - Web Components (custom elements): `stories-heading`, `wobble-text`.
+- **The halftone elements live in their own repo**,
+  [tatimblin/dotgrid](https://github.com/tatimblin/dotgrid):
+  `@tristimb/dotted-grid` (`<dotted-grid>`) and `@tristimb/video-carousel`
+  (`<video-carousel>`), installed from GitHub Release tarballs (see the URLs in
+  `package.json`). To change them, release there and bump the URL here.
 - **`tests/`** — Playwright, against the built site (`bun run test`);
   `bun run test:unit` runs the unit tests beside the code (`src/**/*.test.ts`
   and `packages/*/src/**/*.test.ts`; a bare `bun test` sees `src/` only — see
@@ -106,6 +110,8 @@ per-theme presets (hero, phone carousel, footer clip) live in
 `src/styles/halftone.css` under `[data-theme=…]`, inked from `--halftone-ink` /
 `--halftone-ink-soft`. Keep tuning out of the markup: an attribute pins its
 setting in both themes and silently beats the preset. Tune live at `/dotgrid`.
+The full attribute and variable reference is in the
+[dotgrid README](https://github.com/tatimblin/dotgrid#readme).
 
 **Fonts:** two faces, by role, never by family — DM Sans (400/500/700) for
 `--font-hero`, `--font-heading`, `--font-ui`, `--font-display`; Roboto Mono
