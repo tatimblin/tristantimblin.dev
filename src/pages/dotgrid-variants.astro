@@ -1,0 +1,61 @@
+---
+// /dotgrid-variants — prototype gallery: <dotted-grid> presets on the Vue re-skin.
+import Layout from "../layouts/Layout.astro";
+import "@whois/dotted-grid/styles.css";
+
+const FABRIC = { src: "/videos/fabric.web.mp4", "src-webm": "/videos/fabric.web.webm" };
+const BEACH = { src: "/videos/beach.web.mp4", "src-webm": "/videos/beach.web.webm" };
+const HERO = {
+	"cell-size": "6", "dot-scale": "1.15", levels: "6", gamma: "0.55", contrast: "1.05",
+	feather: "0.65", denoise: "0.1", bloom: "0.5", crosshatch: "0.3",
+};
+
+const variants = [
+	{ name: "01 · Hero, as re-skinned", note: "warm gray #c2b9a8 on cream", attrs: { ...FABRIC, ...HERO, color: "#c2b9a8" } },
+	{ name: "02 · Ink, inverted", note: "black dots where the video is dark", attrs: { ...FABRIC, ...HERO, color: "#191918", invert: "", gamma: "0.8", contrast: "1.2" } },
+	{ name: "03 · Link blue, inverted", note: "#0276fd, the old accent", attrs: { ...FABRIC, ...HERO, color: "#0276fd", invert: "", gamma: "0.9" } },
+	{ name: "04 · Newsprint", note: "coarse squares, 3 levels", attrs: { ...FABRIC, color: "#525250", "cell-size": "14", "dot-shape": "0", levels: "3", gamma: "0.8", contrast: "1.4" } },
+	{ name: "05 · Fine stipple", note: "3px circles", attrs: { ...FABRIC, color: "#aaa9a6", "cell-size": "3", "dot-shape": "1", levels: "8", gamma: "0.6", contrast: "1.2" } },
+	{ name: "06 · Crosshatch", note: "hatching, no bloom", attrs: { ...FABRIC, color: "#525250", "cell-size": "8", crosshatch: "1", gamma: "0.7", contrast: "1.2" } },
+	{ name: "07 · Beach, inverted", note: "the other source, slate blue", attrs: { ...BEACH, ...HERO, color: "#5f7891", invert: "", gamma: "0.8" } },
+	{ name: "08 · Code block", note: "cream dots on #191918", attrs: { ...FABRIC, ...HERO, color: "#fff8eb", background: "#191918" } },
+	{ name: "09 · Dashed rhythm", note: "pale blue #d1dbe4, big cells", attrs: { ...FABRIC, color: "#7f9bb8", "cell-size": "10", "dot-scale": "0.8", "dot-shape": "1", levels: "4", gamma: "0.6", contrast: "1.3" } },
+	{ name: "10 · Shimmer", note: "hero + 40% shimmer, blue", attrs: { ...FABRIC, ...HERO, color: "#0276fd", shimmer: "40", gamma: "0.7" } },
+];
+---
+
+<Layout title="Dotted grid variants" description="Prototype gallery" noindex>
+	<main class="dgv">
+		<h1>dotted-grid variants</h1>
+		<p>Ten presets of the hero halftone on the cream re-skin. "Inverted" puts dots where the video is dark, which suits a light page.</p>
+		<div class="dgv__grid">
+			{variants.map((v) => (
+				<section class="dgv__panel">
+					<header><span>{v.name}</span><small>{v.note}</small></header>
+					<dotted-grid {...v.attrs} max-dpr="1" style={v.attrs.background ? undefined : "--dotted-grid-bg: #fdfdfd"} />
+				</section>
+			))}
+		</div>
+	</main>
+	<script>import "@whois/dotted-grid";</script>
+</Layout>
+
+<style>
+	.dgv { max-width: 976px; margin: 0 auto; padding: 32px 16px; }
+	.dgv h1 { font-family: "DM Sans", sans-serif; font-weight: 500; font-size: 24px; margin: 0 0 8px; }
+	.dgv p { margin: 0 0 32px; }
+	.dgv__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+	@media (max-width: 640px) { .dgv__grid { grid-template-columns: 1fr; } }
+	.dgv__panel {
+		background: #fdfdfd; border: 1px dashed #aaa9a6; border-radius: 2.5px;
+		box-shadow: 0 1px 0 1px #d1dbe4; overflow: hidden;
+	}
+	.dgv__panel header {
+		display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+		padding: 8px 16px; border-bottom: 1px dashed #aaa9a6;
+		background: linear-gradient(#fdfdfd 50%, #f1f4f7);
+		font-family: "DM Sans", sans-serif; font-size: 14px; text-transform: uppercase; color: #525250;
+	}
+	.dgv__panel header small { font-size: 12px; text-transform: none; color: #aaa9a6; }
+	.dgv__panel dotted-grid { --dotted-grid-height: 260px; }
+</style>
