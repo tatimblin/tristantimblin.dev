@@ -109,10 +109,10 @@ const now =
 			}
 		: null;
 
-// The one accented row: the next game if there is one, else the last result.
+// The one accented row: the next game, or none in a finished season — a
+// played row carries its result's green or red instead (volo.css).
 const accentRow = (season: (typeof seasons)[number]) => {
-	const next = season.games.findIndex((game) => !game.result);
-	return next >= 0 ? next : season.games.length - 1;
+	return season.games.findIndex((game) => !game.result);
 };
 
 const opening = seasons[current];

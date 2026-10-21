@@ -21,7 +21,6 @@ export const getStaticPaths = (async () => {
 			title: p.data.title,
 			href: postHref(p.id),
 			date: p.data.date,
-			no: numbers.get(p.id)!,
 		};
 	return posts.map((post) => {
 		const { prev, next } = neighbours(posts, post.id);

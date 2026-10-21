@@ -28,13 +28,11 @@ import {
 	type CategoryId,
 } from "../lib/blog";
 
-/** A neighbouring post, as the index at the foot lists it. */
+/** A neighbouring post, as the foot card links it. */
 export interface Neighbour {
 	title: string;
 	href: string;
 	date: Date;
-	/** Its chronological number. */
-	no: number;
 }
 
 /** The post's hero image, from its frontmatter: the collection resolves the
@@ -157,7 +155,7 @@ const neighbours = [
 		     side by side — each half one big link: which way it goes, the title,
 		     the month — and its foot the post's tags as chip links. Where there
 		     is no neighbour the half says so, dimmed, and links nowhere. */}
-		<Card as="nav" class="post-more" aria-label="Keep reading" data-post-index="" title="Keep reading">
+		<Card as="nav" class="post-more" aria-label="Keep reading" data-post-more="" title="Keep reading">
 			<Mono slot="meta" tone="tertiary" class="post-more__count">
 				txt / {padNo(no)} of {padNo(total)}
 			</Mono>
@@ -167,7 +165,7 @@ const neighbours = [
 						<a
 							class={`post-more__half post-more__half--${key} ds-control`}
 							href={post.href}
-							data-index-row={key}
+							data-half={key}
 							data-neighbour={key}
 						>
 							<Mono class="post-more__dir">{label}</Mono>
@@ -177,7 +175,7 @@ const neighbours = [
 							</Mono>
 						</a>
 					) : (
-						<div class={`post-more__half post-more__half--${key} post-more__half--none`} data-index-row={key}>
+						<div class={`post-more__half post-more__half--${key} post-more__half--none`} data-half={key}>
 							<Mono tone="tertiary" class="post-more__dir">{label}</Mono>
 							<Text as="span" size={3} variant="tertiary" class="post-more__title">{none}</Text>
 						</div>
@@ -185,7 +183,7 @@ const neighbours = [
 				)}
 			</div>
 			{tags.length > 0 && (
-				<div class="post-more__tags" data-index-row="tags">
+				<div class="post-more__tags" data-half="tags">
 					<Mono tone="tertiary">Tagged</Mono>
 					<ul class="post-more__chips">
 						{tags.map((tag) => (
@@ -286,7 +284,7 @@ const neighbours = [
 	a.post-more__half:hover {
 		background: var(--wash-1);
 	}
-	.post-more__dir {
+	a.post-more__half .post-more__dir {
 		color: var(--text-secondary);
 	}
 	a.post-more__half:hover .post-more__dir {
@@ -338,9 +336,7 @@ const neighbours = [
 
 	/* ONE COLUMN, below the desktop step: the strip two by two (the date
 	   still on the right edge), no column numbers, the title a step down,
-	   the hero and the table full
-	   width. The table keeps three columns — label, number, title — and the
-	   FILED cell drops under the title (the header's is not drawn). */
+	   the hero full width. */
 	@media (max-width: 1023px) {
 		.post {
 			--ruled-columns: minmax(0, 1fr);

@@ -877,7 +877,7 @@ test.describe("/txt/<slug> — the post page", () => {
 	}) => {
 		await page.goto(NEWEST);
 		const card = page.getByRole("navigation", { name: "Keep reading" });
-		await expect(card).toHaveAttribute("data-post-index", "");
+		await expect(card).toHaveAttribute("data-post-more", "");
 		// A panel: the card's dashed edge, radius and gradient header.
 		await expect(card).toHaveCSS("border-top-style", "dashed");
 		await expect(card).toHaveCSS("border-top-left-radius", "2.5px");
@@ -887,7 +887,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		const { article } = await columns(page);
 		expect(Math.abs(cardBox.width - article.width)).toBeLessThanOrEqual(1);
 
-		const tags = card.locator('[data-index-row="tags"]');
+		const tags = card.locator('[data-half="tags"]');
 		await expect(tags).toHaveText(/tagged\s*ai\s*testing\s*agents\s*developer tools/i);
 		expect(
 			await tags.locator("a").evaluateAll((as) => as.map((a) => a.getAttribute("href"))),
@@ -901,7 +901,7 @@ test.describe("/txt/<slug> — the post page", () => {
 
 		// Side by side at desktop, a dashed rule between; the newer half reads
 		// from the right edge.
-		const next = card.locator('[data-index-row="next"]');
+		const next = card.locator('[data-half="next"]');
 		const prevBox = (await prev.boundingBox())!;
 		const nextBox = (await next.boundingBox())!;
 		expect(Math.abs(prevBox.y - nextBox.y)).toBeLessThanOrEqual(1);
@@ -916,7 +916,7 @@ test.describe("/txt/<slug> — the post page", () => {
 
 		await page.goto(OLDEST);
 		await expect(page.locator(".post__no")).toHaveText(/txt \/ 001/i);
-		await expect(page.locator('[data-index-row="prev"]')).toHaveText(/This is the first post/);
+		await expect(page.locator('[data-half="prev"]')).toHaveText(/This is the first post/);
 		await expect(page.locator("a.post-more__half--prev")).toHaveCount(0);
 		await expect(page.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/why-i-joined-fisker/");
 	});
@@ -935,6 +935,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		await page.addInitScript(() => localStorage.setItem("theme", "dark"));
 		await page.goto(NEWEST);
 		await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+		// A fill, not a hole: transparent would read back as black (0) too.
+		await expect(page.locator(".post-more")).not.toHaveCSS("background-color", TRANSPARENT);
 		expect(await luminance(page, ".post-more")).toBeLessThan(0.05);
 		expect(await luminance(page, ".post-more .ds-card-header__title", "color")).toBeGreaterThan(0.3);
 		// The slab sinks below the dark page, so the dashed edge is drawn round it
@@ -1016,14 +1018,14 @@ test.describe("/txt/<slug> — the post page", () => {
 		// on the left edge.
 		const panel = await box(page, ".post-more");
 		expect(Math.abs(panel.width - article.width)).toBeLessThanOrEqual(1);
-		const older = await box(page, '[data-index-row="prev"]');
-		const newer = await box(page, '[data-index-row="next"]');
+		const older = await box(page, '[data-half="prev"]');
+		const newer = await box(page, '[data-half="next"]');
 		expect(older.x + older.width).toBeLessThanOrEqual(article.x + article.width + 1);
 		expect(newer.y).toBeGreaterThanOrEqual(older.y + older.height - 1);
-		await expect(page.locator('[data-index-row="next"]')).toHaveCSS("text-align", "start");
+		await expect(page.locator('[data-half="next"]')).toHaveCSS("text-align", "start");
 	});
 
-	test("with scripting off the post reads: the sections, the figures and the index are static markup", async ({
+	test("with scripting off the post reads: the sections, the figures and the foot card are static markup", async ({
 		browser,
 	}) => {
 		const context = await browser.newContext({ javaScriptEnabled: false });
