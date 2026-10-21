@@ -75,16 +75,7 @@ html.maximeheckel-light .ds-fig img {
 	border-radius: 2.5px;
 }
 
-/* --- Halftones: dark ink on cream, newsprint-style ----------------------- */
-/* Not inverted: the clip's shadows stay bare cream and its folds print. The
-   hero's light tuning (gamma .4, no bloom/hatch) lives on the element. */
-html.maximeheckel-light :is(dotted-grid, video-carousel) {
-	--color-fg: #191918;
-}
-/* The footer-row clip IS the widget, so it keeps a bit more weight. */
-html.maximeheckel-light .wx-videos dotted-grid {
-	--color-fg: #8f8778;
-}
+/* (The halftones' per-theme tuning lives in src/styles/halftone.css.) */
 html.maximeheckel-light .wx-vl-game:not(:first-child) > :not(.wx-vl-round) {
 	border-block-start-style: dashed;
 }
