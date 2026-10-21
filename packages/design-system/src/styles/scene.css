@@ -173,7 +173,7 @@
 	/* GLOW (`glow`) — the CRT's bloom: a soft halo on the line work and the
 	 * readouts, on the DARK page only. The two shadows are the ART tokens'
 	 * --scene-glow / --scene-text-glow (tokens.overrides.css), which the light
-	 * theme sets to none — tokens rather than a `.maximeheckel-dark` selector
+	 * theme sets to none — tokens rather than a `[data-theme="dark"]` selector
 	 * here, so a light ThemePage nested on the dark page resolves to its own
 	 * theme's value, the nearest one. Host CSS on the frame's <svg> and the
 	 * readout layer, never inside a file (the language has no filters). Off

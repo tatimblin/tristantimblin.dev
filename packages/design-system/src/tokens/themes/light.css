@@ -1,0 +1,74 @@
+/* LIGHT — cream paper, near-white panels, warm-grey dashed edges, one blue.
+ *
+ * The palette of the old Vue site, as semantic tokens: every value that
+ * differs between the two themes is named here (dark.css names the same set),
+ * and everything that derives from them (--border, --shadow-panel, the
+ * header fill, the focus ring, the rank ramp) is in tokens.overrides.css on
+ * [data-theme], so it re-resolves under any wrapper carrying the attribute.
+ * Imported after the overrides, so these win over the generated palette and
+ * the derived defaults alike. The default theme: Layout.astro renders
+ * <html data-theme="light"> until a stored choice says otherwise. */
+[data-theme="light"] {
+	color-scheme: light;
+
+	/* SURFACES. The page, a panel on it, the tint a panel fades into. */
+	--background: #fff8eb;
+	--card-background: #fdfdfd;
+	--input-background: var(--card-background);
+
+	/* EDGES. The dashed rule's colour, and the pale blue-grey ring under a
+	   panel (--shadow-panel). */
+	--border-color: #aaa9a6;
+	--input-border: var(--border-color);
+	--panel-outline: #d1dbe4;
+
+	/* INK. Black for reading; three greys down for labels, quiet labels
+	   (a tag, a toggle) and the faintest meta. */
+	--text-primary: #000;
+	--text-secondary: #525250;
+	--text-subtle: #727270;
+	--text-tertiary: #aaa9a6;
+
+	/* WASHES — solid tints here, not ink alphas: the pale blue-grey of a tag
+	   and a header's fade, then the panel ring's blue a step and two up. */
+	--wash-1: #f1f4f7;
+	--wash-2: color-mix(in oklab, var(--panel-outline) 70%, var(--wash-1));
+	--wash-3: var(--panel-outline);
+	--tone-5: var(--panel-outline);
+
+	/* THE ACCENT: the link blue, with white on it. Darker under the pointer;
+	   lit tiles a paler, quieter blue, so a lit grid is state, not a row of
+	   buttons. */
+	--hyperlink: #0276fd;
+	--accent: var(--hyperlink);
+	--on-accent: #fff;
+	--accent-hover: oklch(from var(--accent) calc(l - 0.06) c h);
+	--lit: oklch(from var(--accent) calc(l + 0.08) calc(c * 0.55) h);
+
+	/* CODE. Inline code on the first wash; a fenced block is the old site's
+	   near-black slab, the darkest thing on the page. */
+	--code-snippet-background: var(--wash-1);
+	--code-bg: #191918;
+	--code-fg: #f5f5f3;
+	--code-border: none;
+
+	/* HALFTONE. Dark ink on cream, newsprint-style — the bridge hands these
+	   to <dotted-grid> / <video-carousel> as --color-fg. The footer-row clip
+	   IS its widget, so it prints a softer, warmer ink than the hero. */
+	--halftone-ink: #191918;
+	--halftone-ink-soft: #8f8778;
+
+	/* ART, ink on paper: the plate the first wash, the edge the dashed
+	   rule's colour, the line the secondary ink. The fills keep their hue and
+	   move only in lightness and chroma — darker and a touch more saturated,
+	   so a flat face and a 1px line hold against a near-white plate as they
+	   did against near-black. Ink on paper glows nothing. */
+	--art-plate: var(--wash-1);
+	--art-edge: var(--border-color);
+	--art-ink: var(--text-secondary);
+	--art-lavender: oklch(from #bda3ea calc(l - 0.12) calc(c * 1.3) h);
+	--art-cyan: oklch(from #5b8def calc(l - 0.08) calc(c * 1.1) h);
+	--art-green: oklch(from #5ee27f calc(l - 0.24) calc(c * 0.9) h);
+	--scene-glow: none;
+	--scene-text-glow: none;
+}

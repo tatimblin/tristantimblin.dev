@@ -21,12 +21,12 @@ type Props = ComponentProps<typeof Seo>;
 ---
 
 <!doctype html>
-{/* Dark is the site default. The DS's OKLCH palettes are applied via the
-     .maximeheckel-{light,dark} class on <html>; its ThemeProvider is React-only,
-     so we manage the class ourselves. The server renders the dark class and the
-     inline head script below re-applies any stored choice before first paint, so
-     tokens resolve with no JS dependency and no FOUC. */}
-<html lang="en" class="maximeheckel-light">
+{/* Light is the site default. The theme is the data-theme attribute on <html>
+     (light | dark), which the token layer keys off (tokens/themes/*.css). The
+     server renders light and the inline head script below re-applies any stored
+     choice before first paint, so tokens resolve with no JS dependency and no
+     FOUC. */}
+<html lang="en" data-theme="light">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -60,18 +60,23 @@ type Props = ComponentProps<typeof Seo>;
 		/>
 		<Seo {...Astro.props} />
 		{/* No-FOUC theme init: apply the stored choice before first paint, and
-		     re-apply after each view-transition swap. Dark is the fallback.
-		     window.__setTheme is the one class swap; the footer toggle calls it
-		     too (inline, so it cannot be an import). */}
+		     re-apply after each view-transition swap. Light is the fallback.
+		     window.__setTheme is the one attribute write; the footer toggle calls
+		     it too (inline, so it cannot be an import). */}
 		<script is:inline>
 			(function () {
 				window.__setTheme = function (t) {
-					var r = document.documentElement;
-					r.classList.remove("maximeheckel-light", "maximeheckel-dark");
-					r.classList.add("maximeheckel-" + t);
+					document.documentElement.setAttribute("data-theme", t === "dark" ? "dark" : "light");
 				};
+				function stored() {
+					try {
+						return localStorage.getItem("theme");
+					} catch (e) {
+						return null;
+					}
+				}
 				function apply() {
-					window.__setTheme(localStorage.getItem("theme") === "dark" ? "dark" : "light");
+					window.__setTheme(stored() === "dark" ? "dark" : "light");
 				}
 				apply();
 				document.addEventListener("astro:after-swap", apply);
@@ -122,7 +127,7 @@ type Props = ComponentProps<typeof Seo>;
 			declare global {
 				interface Window {
 					__lenis?: Lenis;
-					/** Swap the theme class on <html> (defined inline in <head>). */
+					/** Set data-theme on <html> (defined inline in <head>). */
 					__setTheme: (theme: "light" | "dark") => void;
 				}
 			}

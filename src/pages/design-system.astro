@@ -243,9 +243,9 @@ const iconVariants = ["default", "primary", "secondary", "tertiary"] as const;
 // ── Token control panel ─────────────────────────────────────────────────────
 // A three.js/lil-gui-style panel that live-edits the DS tokens driving every
 // component below. Utility tokens (--space-*, --border-radius-*, --font-*) are
-// defined on :root; color tokens are defined per-theme on .maximeheckel-*. The
-// `scope` field tells the copy-config export (and the agent applying it) which
-// selector each token belongs under in tokens.overrides.css.
+// defined on :root; color tokens are defined per-theme on [data-theme="…"]
+// (tokens/themes/*.css). The `scope` field tells the copy-config export (and
+// the agent applying it) which file and selector each token belongs under.
 type TokenControl = {
 	var: string; // CSS custom property, e.g. "--accent"
 	label: string;
@@ -257,7 +257,7 @@ type TokenControl = {
 };
 type TokenGroup = {
 	title: string;
-	scope: "root" | "themed"; // :root vs .maximeheckel-<theme>
+	scope: "root" | "themed"; // :root vs [data-theme="<theme>"]
 	controls: TokenControl[];
 };
 
@@ -491,7 +491,7 @@ const faces = [
 			<Flex direction="column" gap={2} alignItems="start">
 				<Text spaced size={4}>spaced — the body role's leading and tracking</Text>
 				<Text caps size={1} variant="secondary">caps — the uppercase label role</Text>
-				<div style="width:220px; border:1px dashed var(--hairline);">
+				<div style="width:220px; border: var(--border);">
 					<Text truncate size={4}>truncate this very long line that overflows its container</Text>
 				</div>
 			</Flex>
@@ -1632,7 +1632,7 @@ assertions:
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Box / Flex (foundation)</Heading>
 			<Flex gap={2} justifyContent="space-between"
-				style="border:1px solid var(--border-color); padding: var(--space-2);">
+				style="border: var(--border); padding: var(--space-2);">
 				<Box style="background:var(--blue-400); padding: var(--space-2);">flex a</Box>
 				<Box style="background:var(--blue-500); padding: var(--space-2);">flex b</Box>
 				<Box style="background:var(--blue-600); padding: var(--space-2);">flex c</Box>
@@ -1754,10 +1754,7 @@ assertions:
 					?.closest<HTMLElement>("[data-scope]");
 				return (fs?.dataset.scope as "root" | "themed") ?? "themed";
 			};
-			const currentTheme = () =>
-				root.classList.contains("maximeheckel-light")
-					? "maximeheckel-light"
-					: "maximeheckel-dark";
+			const currentTheme = () => (root.dataset.theme === "dark" ? "dark" : "light");
 
 			// Resolve any CSS color (incl. oklch) to #rrggbb by painting a pixel and
 			// reading its bytes — canvas serializes oklch as "oklch(...)", not hex, so
@@ -1810,7 +1807,7 @@ assertions:
 				});
 
 				const nameEl = panel.querySelector<HTMLElement>("[data-theme-name]");
-				if (nameEl) nameEl.textContent = currentTheme().replace("maximeheckel-", "");
+				if (nameEl) nameEl.textContent = currentTheme();
 			}
 
 			function apply(varName: string, value: string) {
@@ -1855,7 +1852,9 @@ assertions:
 					(scope === "root" ? rootTokens : themed)[varName] = value;
 				}
 				const config = {
+					// :root tokens go in the overrides; themed ones in the theme's file.
 					target: "packages/design-system/src/tokens/tokens.overrides.css",
+					themeTarget: `packages/design-system/src/tokens/themes/${currentTheme()}.css`,
 					theme: currentTheme(),
 					root: rootTokens,
 					themed,
@@ -1940,7 +1939,7 @@ assertions:
 	}
 	.ds-demo__section {
 		padding-block: var(--space-6);
-		border-top: 1px solid var(--hairline);
+		border-top: var(--border);
 	}
 	.ds-demo__rule-labels {
 		display: grid;
@@ -1971,7 +1970,7 @@ assertions:
 		inline-size: var(--space-6);
 		block-size: var(--space-6);
 		border-radius: var(--border-radius-0);
-		border: 1px solid var(--hairline);
+		border: var(--border);
 	}
 	.ds-demo__swatch--on {
 		display: inline-grid;

@@ -1,0 +1,67 @@
+/* DARK — the same design at night: a warm near-black page, panels a step up
+ * from it, the dashed edge a lighter warm grey, one blue.
+ *
+ * Names the same set as light.css, value for value. Not the generated dark
+ * palette (a blue-grey, keyed off --base-hue): the cream design is warm, so
+ * its night is warm too — every grey here sits at a stone hue — and the cool
+ * notes stay where the light theme has them, on the tints (the tag wash, the
+ * panel ring), which read as a slate blue against the warm page as the pale
+ * blue does against cream.
+ *
+ * The accent is the light theme's blue lifted, since #0276fd on near-black
+ * is too deep to read as a link (≈4:1); this one measures ≈6.7:1 on the page.
+ * Text on it is the dark ink, not white: white on a light blue fails AA. */
+[data-theme="dark"] {
+	color-scheme: dark;
+
+	/* SURFACES. */
+	--background: #151412;
+	--card-background: #1c1b18;
+	--input-background: var(--card-background);
+
+	/* EDGES. The dash a light warm grey, so it reads as a drawn line on the
+	   panel (≈2.9:1 on the page); the ring under a panel a deep slate. */
+	--border-color: #6b665d;
+	--input-border: var(--border-color);
+	--panel-outline: #262a30;
+
+	/* INK. A warm off-white, then three warm greys down. */
+	--text-primary: #f3eee4;
+	--text-secondary: #c4beb2;
+	--text-subtle: #a19b90;
+	--text-tertiary: #78736a;
+
+	/* WASHES — slate tints, the counterpart of the light theme's pale blue. */
+	--wash-1: #24262a;
+	--wash-2: color-mix(in oklab, var(--wash-3) 60%, var(--wash-1));
+	--wash-3: #343941;
+	--tone-5: var(--wash-3);
+
+	/* THE ACCENT, lifted for the dark page, dark ink on it. Lighter under the
+	   pointer; lit tiles a deeper, quieter blue, so a lit grid glows without
+	   shouting. */
+	--hyperlink: #5ca5ff;
+	--accent: var(--hyperlink);
+	--on-accent: #0b1220;
+	--accent-hover: oklch(from var(--accent) calc(l + 0.06) c h);
+	--lit: oklch(from var(--accent) calc(l - 0.12) calc(c * 0.75) h);
+
+	/* CODE. Inline code on the first wash. A fenced block sinks BELOW the
+	   page — the light theme's slab is the darkest thing on the page, and so
+	   is this — with the dashed edge drawn round it (prose.css) so it holds
+	   its shape against a page only a step lighter. */
+	--code-snippet-background: var(--wash-1);
+	--code-bg: #0c0b0a;
+	--code-fg: #ece7dd;
+	--code-border: var(--border);
+
+	/* HALFTONE. Light ink on the dark page; the footer clip a step softer. */
+	--halftone-ink: var(--text-primary);
+	--halftone-ink-soft: color-mix(in oklab, var(--text-primary) 78%, var(--background));
+
+	/* ART, warmed onto the dark panels: the plate the card, the edge the
+	   dashed rule's grey. The line and the fills stay the dark palette the
+	   language was sampled on (tokens.overrides.css, ART). */
+	--art-plate: var(--card-background);
+	--art-edge: #4a463f;
+}

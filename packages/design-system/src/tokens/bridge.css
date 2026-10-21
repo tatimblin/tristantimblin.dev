@@ -9,17 +9,18 @@
  * Site code reaches for the DS token itself (--text-primary, --background,
  * --accent, --hairline …); nothing in src/ reads a --color-* name.
  *
- * Imported LAST (after generated + overrides). The theme classes live on <html>
- * (which is also :root), so var(--text-primary) etc. resolve here.
+ * Imported LAST (after generated, overrides and the themes). data-theme lives
+ * on <html> (which is also :root), so var(--text-primary) etc. resolve here.
  *
  * Notes:
  * - The WebGL <dotted-grid> reads --color-fg / --color-bg through a canvas
- *   fillStyle. --color-fg aliases --text-primary and --color-bg the plain
- *   --gray-100 scale token (NOT the relative-color --foreground oklch(from …),
- *   to avoid any canvas relative-color support gap). Using --text-primary for
- *   the foreground keeps ONE colour across the whole lockup: the "tristan"
- *   wordmark + "&" fill with --text-primary, and "other stories" + the dotted
- *   grids + body text all resolve --color-fg to the same token.
+ *   fillStyle. --color-fg aliases --text-primary and --color-bg --background
+ *   (NOT the relative-color --foreground oklch(from …), to avoid any canvas
+ *   relative-color support gap), so the lockup is ONE colour: the wordmark,
+ *   "other stories" and body text all resolve --color-fg to the same token.
+ * - The halftones print in their own ink, --halftone-ink (a theme token: dark
+ *   ink on cream, light ink on the dark page), handed to the two halftone
+ *   elements as --color-fg below. The element re-reads it on `themechange`.
  * - --font-serif and --font-decorative are gone: the lockup reads --font-hero
  *   itself, and nothing else named a face by what it is rather than by its
  *   role. An alias that no longer describes anything is worse than no alias.
@@ -32,4 +33,10 @@
 	--color-muted: var(--text-tertiary);
 	--color-border: var(--border-color);
 	--color-accent: var(--accent);
+}
+
+/* The halftones' ink. On the elements rather than :root so the lockup's
+   --color-fg stays the text ink. */
+:is(dotted-grid, video-carousel) {
+	--color-fg: var(--halftone-ink);
 }

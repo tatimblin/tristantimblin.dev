@@ -402,7 +402,7 @@ const kinds = (entries: Entry[]) =>
 	<script>
 		import { onPage } from "@whois/design-system/lib/lifecycle";
 
-		// The sheet's theme (the theme class on the sheet, re-resolving every
+		// The sheet's theme (data-theme on the sheet, re-resolving every
 		// themed token inside, as ThemePage does) and play-all (data-art-play on
 		// the sheet, which every glyph under it obeys). Bound with onPage: the
 		// site uses the client router, and the teardown drops the listeners.
@@ -415,8 +415,8 @@ const kinds = (entries: Entry[]) =>
 			for (const b of buttons) {
 				b.addEventListener("click", () => {
 					const t = b.dataset.sheetTheme;
-					sheet.classList.remove("maximeheckel-light", "maximeheckel-dark");
-					if (t === "light" || t === "dark") sheet.classList.add(`maximeheckel-${t}`);
+					if (t === "light" || t === "dark") sheet.dataset.theme = t;
+					else delete sheet.dataset.theme;
 					sheet.toggleAttribute("data-themed", t !== "page");
 					for (const o of buttons) o.setAttribute("aria-pressed", String(o === b));
 				}, { signal });
@@ -470,7 +470,7 @@ const kinds = (entries: Entry[]) =>
 		padding: var(--space-2) var(--space-3);
 		margin-bottom: var(--space-6);
 		background: var(--background);
-		border: 1px solid var(--hairline);
+		border: var(--border);
 		border-radius: var(--border-radius-1);
 	}
 	.glyph-sheet-page__toggle {
@@ -495,7 +495,7 @@ const kinds = (entries: Entry[]) =>
 	}
 	.glyph-sheet[data-themed] {
 		padding: var(--space-5);
-		border: 1px solid var(--hairline);
+		border: var(--border);
 	}
 	.glyph-sheet__family {
 		display: grid;
