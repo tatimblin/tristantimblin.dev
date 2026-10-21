@@ -4,8 +4,6 @@
   "exclude": [
     "dist",
     "public/fleet-demo",
-    "packages/fleet-extension",
-    "packages/vscode-fleet-demo",
     "test-results",
     "playwright-report",
     "**/*.test.ts"

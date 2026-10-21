@@ -2,7 +2,7 @@
 // The playable version of the post's argument: a real VS Code workbench,
 // running the real fleet extension, booted inside the article.
 //
-// The element (packages/vscode-fleet-demo) owns the whole lifecycle — poster →
+// The element (@tristimb/fleet-demo, from github.com/tatimblin/vscode-fleet) owns the whole lifecycle — poster →
 // prefetch-on-approach → launch → iframe → ready. It launches at any width. This
 // file supplies only the two things a package cannot know: the light-DOM markup
 // it enhances, and how the frame sits on the ruled post page.
@@ -19,7 +19,7 @@
 // The launch button is the DS Button: the element only needs `[data-launch]`.
 import { Picture } from "astro:assets";
 import Button from "@whois/design-system/Button";
-import "@whois/vscode-fleet-demo/element.css";
+import "@tristimb/fleet-demo/element.css";
 import poster from "../assets/fleet-demo-poster.webp";
 import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 ---
@@ -45,7 +45,7 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 </fleet-demo>
 
 <script>
-	import "@whois/vscode-fleet-demo";
+	import "@tristimb/fleet-demo";
 </script>
 
 <style>

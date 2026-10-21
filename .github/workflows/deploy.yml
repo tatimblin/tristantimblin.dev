@@ -1,5 +1,12 @@
 name: Deploy site to Cloudflare Pages
 
+# What runs when:
+#   pull_request        → full Playwright suite (Chromium + the Firefox spec). Never deploys.
+#   push to master      → code changed: Chromium suite, then build + smoke + deploy.
+#                         only content/data changed: build + smoke + deploy, no suite.
+#   workflow_dispatch   → Chromium suite, then build + smoke + deploy.
+# The nightly data refresh (nightly.yml) pushes with GITHUB_TOKEN, which does NOT
+# trigger this workflow; it calls build-deploy.yml itself.
 on:
   push:
     branches: ["master"]
@@ -9,22 +16,54 @@ on:
     branches: ["master"]
   workflow_dispatch:
 
-# Allow one deployment at a time; let an in-progress deploy finish so a live
-# deploy is never interrupted. Keyed by ref so a PR's test-only run shares no
-# queue with a master deploy — and a new push to a PR supersedes its own run.
+# One run per ref at a time. A new push to a PR supersedes its own run; master
+# runs queue. The deploy job also holds its own repo-wide group (build-deploy.yml).
 concurrency:
   group: "cloudflare-pages-${{ github.ref }}"
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Decides whether a master push touched code. Only push events are filtered:
+  # PRs and manual runs always get the suite.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Checkout
+        if: github.event_name == 'push'
+        uses: actions/checkout@v5
+
+      # `every`: a file counts as code only if it matches ALL patterns, i.e. it is
+      # not excluded by any `!` line. So `code` is true when at least one changed
+      # file is outside the content/docs set. (Nightly data commits never reach
+      # here: they're pushed with GITHUB_TOKEN and deployed by nightly.yml.)
+      - name: Filter changed paths
+        id: filter
+        if: github.event_name == 'push'
+        uses: dorny/paths-filter@v3
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '**'
+              - '!src/content/**'
+              - '!**/*.md'
+
   # Layout invariants that only a real engine can confirm — chiefly the mobile hero
   # fold, where the heading group and the scene's bottom UI are in separate
   # coordinate systems and nothing in flow reserves space between them
   # (tests/hero-fold.spec.ts). Gates the deploy.
   test:
+    needs: changes
+    if: github.event_name != 'push' || needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    # Firefox runs one spec (scroll-fallback, see playwright.config.ts), and only
+    # on PRs: a master push has already passed it there. Master runs Chromium only.
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -40,11 +79,11 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: bunx playwright install --with-deps chromium firefox
+        run: bunx playwright install --with-deps ${{ github.event_name == 'pull_request' && 'chromium firefox' || 'chromium' }}
 
       # The Playwright config builds the site and serves it with `astro preview`.
       - name: Run layout tests
-        run: bun run test
+        run: bun run test ${{ github.event_name != 'pull_request' && '--project=chromium' || '' }}
 
       - name: Upload report on failure
         if: failure()
@@ -55,34 +94,18 @@ jobs:
           retention-days: 7
 
   deploy:
-    needs: test
-    # Publish only from master. On a PR the workflow runs solely to gate on `test`.
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    needs: [changes, test]
+    # Publish only from master (never on a PR). `test` is skipped for a
+    # content/data-only push, so a skip counts as a pass; a failure does not.
+    if: >-
+      !cancelled()
+      && github.event_name != 'pull_request'
+      && github.ref == 'refs/heads/master'
+      && needs.changes.result == 'success'
+      && (needs.test.result == 'success' || needs.test.result == 'skipped')
     permissions:
       contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          # Pull the actual video/audio bytes (stored in Git LFS), not the
-          # pointer files — otherwise the build ships broken media.
-          lfs: true
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Production build
-        run: bun run build
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=tristantimblin --branch=master
+    uses: ./.github/workflows/build-deploy.yml
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

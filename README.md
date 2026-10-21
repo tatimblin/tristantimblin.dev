@@ -9,16 +9,17 @@ elements (`<dotted-grid>`, `<video-carousel>`) come from
 
 ```sh
 bun install
-bunx astro dev        # Node — not `bunx --bun astro dev`, which breaks HMR
+bun run dev           # copy the fleet-demo embed, then `bunx astro dev` (Node — not `--bun`, which breaks HMR)
 ```
 
 ## Build and test
 
 ```sh
-bun run build         # the fleet-demo embed, then astro build
+bun run build         # copy the prebuilt fleet-demo embed, then astro build
 bun run test          # Playwright, against the built site
 bun run test:unit     # unit tests beside the code
 ```
 
 See [AGENTS.md](AGENTS.md) for the repo layout, the build chain, and the design
-system rules.
+system rules. The VS Code embed is built in
+[tatimblin/vscode-fleet](https://github.com/tatimblin/vscode-fleet).

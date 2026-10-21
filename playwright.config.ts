@@ -45,13 +45,7 @@ export default defineConfig({
 	],
 
 	webServer: {
-		// THE ROOT BUILD, not a bare `astro build`. `bun run build` chains
-		// build:fleet-demo (packages/fleet-extension → packages/vscode-fleet-demo →
-		// public/fleet-demo) before Astro copies public/ into dist. public/fleet-demo
-		// is gitignored, so calling astro build directly served a site with no embed
-		// at all: tests/fleet-demo.spec.ts would fail on a missing bundle rather than
-		// on the thing it means to check — or, written defensively, pass while
-		// asserting nothing. Costs ~4s (rolldown); well inside the timeout below.
+		// The root build: it copies the prebuilt fleet demo into public/ first.
 		command: "bun run build && bunx --bun astro preview --port 4321",
 		url: "http://localhost:4321",
 		reuseExistingServer: !process.env.CI,
