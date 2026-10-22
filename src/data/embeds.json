@@ -5,7 +5,7 @@
 		"stillFrame": true
 	},
 	"meet-lolla": {
-		"version": "0.1.1",
+		"version": "0.2.0",
 		"url": "https://tatimblin.github.io/meetLolla/",
 		"entry": "dist/index.js",
 		"webgl": false,
