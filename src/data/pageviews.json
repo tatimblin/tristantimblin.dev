@@ -1,9 +1,400 @@
 {
-	"updated": null,
+	"updated": "2026-10-21",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
-	"days": [],
-	"pathDays": [],
-	"paths": {}
+	"days": [
+		{
+			"date": "2026-07-30",
+			"visitors": 10
+		},
+		{
+			"date": "2026-07-31",
+			"visitors": 10
+		},
+		{
+			"date": "2026-08-01",
+			"visitors": 10
+		},
+		{
+			"date": "2026-08-02",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-03",
+			"visitors": 20
+		},
+		{
+			"date": "2026-08-04",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-05",
+			"visitors": 10
+		},
+		{
+			"date": "2026-08-06",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-07",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-08",
+			"visitors": 10
+		},
+		{
+			"date": "2026-08-09",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-10",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-11",
+			"visitors": 20
+		},
+		{
+			"date": "2026-08-12",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-13",
+			"visitors": 10
+		},
+		{
+			"date": "2026-08-14",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-15",
+			"visitors": 20
+		},
+		{
+			"date": "2026-08-16",
+			"visitors": 30
+		},
+		{
+			"date": "2026-08-17",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-18",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-19",
+			"visitors": 40
+		},
+		{
+			"date": "2026-08-20",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-21",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-22",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-23",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-24",
+			"visitors": 50
+		},
+		{
+			"date": "2026-08-25",
+			"visitors": 1
+		},
+		{
+			"date": "2026-08-26",
+			"visitors": 10
+		},
+		{
+			"date": "2026-08-27",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-28",
+			"visitors": 1
+		},
+		{
+			"date": "2026-08-29",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-30",
+			"visitors": 0
+		},
+		{
+			"date": "2026-08-31",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-01",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-02",
+			"visitors": 10
+		},
+		{
+			"date": "2026-09-03",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-04",
+			"visitors": 30
+		},
+		{
+			"date": "2026-09-05",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-06",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-07",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-08",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-09",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-10",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-11",
+			"visitors": 20
+		},
+		{
+			"date": "2026-09-12",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-13",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-14",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-15",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-16",
+			"visitors": 10
+		},
+		{
+			"date": "2026-09-17",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-18",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-19",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-20",
+			"visitors": 10
+		},
+		{
+			"date": "2026-09-21",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-22",
+			"visitors": 10
+		},
+		{
+			"date": "2026-09-23",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-24",
+			"visitors": 0
+		},
+		{
+			"date": "2026-09-25",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-26",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-27",
+			"visitors": 30
+		},
+		{
+			"date": "2026-09-28",
+			"visitors": 10
+		},
+		{
+			"date": "2026-09-29",
+			"visitors": 10
+		},
+		{
+			"date": "2026-09-30",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-01",
+			"visitors": 20
+		},
+		{
+			"date": "2026-10-02",
+			"visitors": 10
+		},
+		{
+			"date": "2026-10-03",
+			"visitors": 10
+		},
+		{
+			"date": "2026-10-04",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-05",
+			"visitors": 1
+		},
+		{
+			"date": "2026-10-06",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-07",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-08",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-09",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-10",
+			"visitors": 1
+		},
+		{
+			"date": "2026-10-11",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-12",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-13",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-14",
+			"visitors": 1
+		},
+		{
+			"date": "2026-10-15",
+			"visitors": 20
+		},
+		{
+			"date": "2026-10-16",
+			"visitors": 20
+		},
+		{
+			"date": "2026-10-17",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-18",
+			"visitors": 0
+		},
+		{
+			"date": "2026-10-19",
+			"visitors": 3
+		},
+		{
+			"date": "2026-10-20",
+			"visitors": 3
+		},
+		{
+			"date": "2026-10-21",
+			"visitors": 0
+		}
+	],
+	"pathDays": [
+		{
+			"date": "2026-08-25",
+			"path": "/txt/asserting-on-agent-behavior/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-04",
+			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
+			"visitors": 10
+		},
+		{
+			"date": "2026-09-10",
+			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-12",
+			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-25",
+			"path": "/txt/asserting-on-agent-behavior/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-09-28",
+			"path": "/txt/why-i-joined-fisker/",
+			"visitors": 10
+		},
+		{
+			"date": "2026-09-29",
+			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
+			"visitors": 10
+		},
+		{
+			"date": "2026-10-20",
+			"path": "/txt/why-i-joined-fisker/",
+			"visitors": 1
+		}
+	],
+	"paths": {
+		"/txt/asserting-on-agent-behavior/": {
+			"reads": 2,
+			"recent": 1
+		},
+		"/txt/no-honey-we-have-a-dashboard-at-home/": {
+			"reads": 22,
+			"recent": 10
+		},
+		"/txt/why-i-joined-fisker/": {
+			"reads": 11,
+			"recent": 11
+		}
+	}
 }
