@@ -1,7 +1,9 @@
 ---
 // /demo/<slug> — one demo: a live experiment (src/content/demos) filling the
 // viewport, not a written post. The scene is the full-screen <Embed> (poster
-// first, mounted at once, `touch-action: none` so a finger drags inside it);
+// first, mounted at once, `touch-action: none` so a finger drags inside it,
+// unless its embeds.json entry says otherwise, e.g. `auto` for a module that
+// scrolls inside its own root);
 // over it, one small panel in the top-left corner — the DS Card: the way back
 // to /txt and the controls (theme, info) in its header; the demo's number and
 // date, its title and its one-line description in the body; notes and credits
@@ -40,7 +42,7 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { demo, no } = Astro.props;
 const { title, description, date, tags, embed, poster, notes, credits } = demo.data;
-const { stillFrame } = resolveEmbed(embed);
+const { stillFrame, reducedMotion, touchAction = "none" } = resolveEmbed(embed);
 const ogImage = (await getImage({ src: poster.src, format: "jpg" })).src;
 const hasInfo = Boolean(notes || credits);
 ---
@@ -61,7 +63,7 @@ const hasInfo = Boolean(notes || credits);
 			poster={poster.src}
 			alt={poster.alt}
 			fullscreen
-			touchAction="none"
+			touchAction={touchAction}
 			label={`${title}, a live scene`}
 			describedby="demo-description"
 		/>
@@ -92,9 +94,11 @@ const hasInfo = Boolean(notes || credits);
 				<Heading as="h1" size={3} id="demo-title" class="demo__title">{title}</Heading>
 				<Body id="demo-description" class="demo__description">{description}</Body>
 				<Mono variant="text" class="demo__motion" data-demo-motion>
-					{stillFrame
-						? "Reduced motion is on: showing a still frame."
-						: "Reduced motion is on: showing the poster, not the live scene."}
+					{reducedMotion === "mount"
+						? "Reduced motion is on: running with its motion off."
+						: stillFrame
+							? "Reduced motion is on: showing a still frame."
+							: "Reduced motion is on: showing the poster, not the live scene."}
 				</Mono>
 				{hasInfo && (
 					<dl id="demo-info" class="demo__info" hidden data-demo-info>
