@@ -8,7 +8,9 @@
 // to /txt and the controls (theme, info) in its header; the demo's number and
 // date, its title and its one-line description in the body; notes and credits
 // behind the info toggle. On a phone the panel folds to its header and the
-// title; the info toggle opens the rest. Esc closes it. Under reduced motion
+// title; the info toggle opens the rest. Esc closes it. Its × hides the whole
+// panel, leaving a half-strength info button in the corner to bring it back.
+// Under reduced motion
 // the panel says what is showing instead of the live scene (a still frame, or
 // the poster).
 //
@@ -68,7 +70,20 @@ const hasInfo = Boolean(notes || credits);
 			describedby="demo-description"
 		/>
 
-		<Card as="aside" class="demo__panel" squeeze="title" aria-labelledby="demo-title" data-demo-panel>
+		<IconButton
+			variant="secondary"
+			size="sm"
+			class="demo__reopen"
+			aria-label="Show demo details"
+			aria-controls="demo-panel"
+			aria-expanded="false"
+			hidden
+			data-demo-reopen
+		>
+			<Icon name="info" />
+		</IconButton>
+
+		<Card as="aside" id="demo-panel" class="demo__panel" squeeze="title" aria-labelledby="demo-title" data-demo-panel>
 			<Anchor slot="title" variant="ink" arrow="left" href={TXT_HREF} class="demo__back">Writing</Anchor>
 			<div slot="meta" class="demo__controls">
 				<ThemeToggle />
@@ -84,6 +99,9 @@ const hasInfo = Boolean(notes || credits);
 						<Icon name="info" />
 					</IconButton>
 				)}
+				<IconButton variant="outline" size="xs" aria-label="Hide demo details" data-demo-close>
+					<Icon name="x" />
+				</IconButton>
 			</div>
 
 			<div class="demo__body">
@@ -154,6 +172,29 @@ const hasInfo = Boolean(notes || credits);
 			document.removeEventListener("keydown", onKey);
 		};
 	});
+
+	// Hiding the panel: its × puts it away for an unobstructed scene and leaves a
+	// faint info button in the corner to bring it back; focus follows the swap.
+	onPage(() => {
+		const panel = document.querySelector<HTMLElement>("[data-demo-panel]");
+		const close = panel?.querySelector<HTMLButtonElement>("[data-demo-close]");
+		const reopen = document.querySelector<HTMLButtonElement>("[data-demo-reopen]");
+		if (!panel || !close || !reopen) return;
+		const show = (visible: boolean) => {
+			panel.hidden = !visible;
+			reopen.hidden = visible;
+			reopen.setAttribute("aria-expanded", String(visible));
+			(visible ? close : reopen).focus();
+		};
+		const onClose = () => show(false);
+		const onReopen = () => show(true);
+		close.addEventListener("click", onClose);
+		reopen.addEventListener("click", onReopen);
+		return () => {
+			close.removeEventListener("click", onClose);
+			reopen.removeEventListener("click", onReopen);
+		};
+	});
 </script>
 
 <style>
@@ -178,6 +219,24 @@ const hasInfo = Boolean(notes || credits);
 		max-block-size: calc(100% - 2 * var(--space-4));
 		overflow-y: auto;
 		font-family: var(--font-ui);
+	}
+	.demo .demo__panel[hidden] {
+		display: none;
+	}
+	/* Where the panel was, at half strength so it doesn't sit on the scene. */
+	.demo .demo__reopen {
+		position: absolute;
+		inset-block-start: var(--space-4);
+		inset-inline-start: var(--space-4);
+		opacity: 0.5;
+		transition: opacity 150ms ease;
+	}
+	.demo .demo__reopen:hover,
+	.demo .demo__reopen:focus-visible {
+		opacity: 1;
+	}
+	.demo .demo__reopen[hidden] {
+		display: none;
 	}
 	.demo__controls {
 		display: inline-flex;
@@ -230,6 +289,10 @@ const hasInfo = Boolean(notes || credits);
 	/* Phone: the panel folds to its header and the title; the info toggle
 	   opens the number, the date, the description and the notes. */
 	@media (max-width: 639px) {
+		.demo .demo__reopen {
+			inset-block-start: var(--space-3);
+			inset-inline-start: var(--space-3);
+		}
 		.demo .demo__panel {
 			inset-block-start: var(--space-3);
 			inset-inline-start: var(--space-3);

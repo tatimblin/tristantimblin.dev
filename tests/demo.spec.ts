@@ -12,8 +12,9 @@ import { assetBase, embedUrls, realDist, serveEmbed, src } from "./fixtures/embe
  *  1. The scene IS the page: it fills the viewport and nothing scrolls.
  *  2. It mounts at once (no scrolling near), with a labelled canvas and
  *     touch-action none, over the poster.
- *  3. The panel: the info toggle opens the notes, Esc closes them; the back
- *     link goes to /txt.
+ *  3. The panel: the info toggle opens the notes, Esc closes them; the ×
+ *     hides the panel and an info button brings it back; the back link goes
+ *     to /txt.
  *  4. Under reduced motion, the still frame (or the poster) and a note.
  *  5. Listing: on /txt among the posts, with its DEMO chip and its own
  *     number; in the feed and the sitemap; a draft in none of them.
@@ -112,6 +113,25 @@ test.describe("/demo/sutro/", () => {
 		await toggle.click();
 		await toggle.click();
 		await expect(info).toBeHidden();
+	});
+
+	test("the × hides the panel; a half-strength info button brings it back", async ({ page }) => {
+		await serveEmbed(page);
+		await page.goto(DEMO);
+		const panel = page.locator("[data-demo-panel]");
+		const reopen = page.getByRole("button", { name: "Show demo details" });
+		await expect(reopen).toBeHidden();
+
+		await page.getByRole("button", { name: "Hide demo details" }).click();
+		await expect(panel).toBeHidden();
+		await expect(reopen).toBeVisible();
+		await expect(reopen).toBeFocused();
+		await expect(reopen).toHaveAttribute("aria-expanded", "false");
+
+		await reopen.click();
+		await expect(panel).toBeVisible();
+		await expect(reopen).toBeHidden();
+		await expect(page.getByRole("button", { name: "Hide demo details" })).toBeFocused();
 	});
 
 	test("the back link goes to /txt, which lists the demo", async ({ page }) => {
