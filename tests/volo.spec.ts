@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 
 /**
  * THE VOLO SEASON ARROWS. The ends of the range disable their arrow, and a

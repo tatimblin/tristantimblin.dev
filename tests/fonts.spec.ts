@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 
 /**
  * THE TWO SELF-HOSTED FACES, AND THE ROLES THEY FILL.

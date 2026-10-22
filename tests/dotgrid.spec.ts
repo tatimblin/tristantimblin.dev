@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 
 /**
  * THE /dotgrid PLAYGROUND wires its controls on astro:page-load, so they work

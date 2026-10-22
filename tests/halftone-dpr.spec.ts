@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 
 /**
  * THE FULL-BLEED HALFTONES RENDER AT 1x, THE CARD KEEPS 2x.

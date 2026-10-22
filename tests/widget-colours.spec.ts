@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 
 /**
  * THE WIDGETS' DATA COLOURS. Two widgets mirror charts people already read in
