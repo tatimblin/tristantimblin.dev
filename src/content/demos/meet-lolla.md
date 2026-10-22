@@ -1,13 +1,13 @@
 ---
 title: "meet Lolla"
-description: "A 2017 school project: a shuffle player for the Lollapalooza 2017 lineup, with 30-second previews and a raised-hands audio visualizer."
+description: "A 2017 school project: the Lollapalooza 2017 lineup as a shuffle player, with 30-second previews and a crowd of raised hands that moves with the music."
 date: 2017-06-14
 tags: ["web-audio", "music", "school-project"]
 embed: meet-lolla
 poster:
   src: ./images/meet-lolla.webp
-  alt: "The meet Lolla page: a red header with the meet Lolla logo and a mute button, a dark bar reading Lollapalooza Festival, August 3-6, 2017, Grant Park, Chicago, and a hand-lettered Lollapalooza title over a purple illustration of the Chicago skyline and river"
-notes: "Tap the arrow to shuffle to an artist and play a 30-second preview; the crowd's hands rise with the music. Built in June 2017, ported in 2026 to mount inside this page."
-credits: "Previews belong to the artists, used here for an educational project. Patua One and Ubuntu Condensed stand in for the original Typekit fonts."
+  alt: "The meet Lolla page in the style of the 2017 Lollapalooza poster: sky blue with a yellow sunburst and white clouds behind the Lollapalooza wordmark, August 3-6 2017 and Grant Park Chicago in navy, Thursday's lineup in white condensed capitals, and a crowd of raised hands and furry monster hands under an @lollapalooza sign above a navy player bar with a yellow Shuffle button"
+notes: "Tap a name, or Shuffle, to play a 30-second preview: the name dances to the music and the crowd's hands rise with it. Built at Drexel in June 2017; ported in 2026 to mount inside this page and restyled after the festival's official poster."
+credits: "Original design by Lollapalooza; previews belong to the artists, used here for an educational project. Yanone Kaffeesatz stands in for the poster's FF Prater Sans."
 draft: false
 ---
