@@ -222,7 +222,7 @@ stories-heading {
 .sh__heading {
 	position: relative;
 	margin: 0;
-	/* Shrink-wrap to the text: as a block <h2> it would be full page width, and
+	/* Shrink-wrap to the text: as a block element it would be full page width, and
 	   the absolutely-positioned .sh__solid (inset:0, opaque --color-bg backdrop)
 	   would then paint a full-width band across everything to its right (e.g. the
 	   carousel). fit-content confines that backdrop to the text itself. */
@@ -236,7 +236,7 @@ stories-heading {
 	   (and on the ≤900px stacked layout, where JS clears the fit prop). */
 	font-size: var(--sh-heading-fitsize, var(--sh-heading-size));
 	/* The OUTLINE layer's weight (the solid layer overrides it with its own). Stated
-	   here rather than left to inherit so the layer never picks up the UA <h2> bold.
+	   here rather than left to inherit so the layer never picks up a UA heading bold.
 	   The two layers no longer share a face — see .sh__solid — so they no longer
 	   share advance widths either; the JS fit sizes this box to the WIDER of the
 	   two, which is what keeps the clip-path from shaving either one. */
