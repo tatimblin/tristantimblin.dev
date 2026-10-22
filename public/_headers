@@ -42,3 +42,14 @@
 # every matching rule (see /fleet-demo above).
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Keep the pages.dev hosts out of search: the site is tristantimblin.dev, and
+# these serve the same pages. Pages already sends noindex on preview URLs, but
+# not on the production alias (<project>.pages.dev); the second rule covers
+# every branch and deployment subdomain (<branch|hash>.<project>.pages.dev).
+# Absolute patterns only match those hosts, never the custom domain.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex

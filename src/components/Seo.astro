@@ -1,95 +1,181 @@
 ---
 // All of the site's SEO surface lives here so Layout.astro can pull it in with
 // a single <Seo /> line. Owns: the astro-seo <SEO> component (title, meta
-// description, Open Graph, Twitter card, canonical) and the schema.org Person
-// JSON-LD that describes Tristan Timblin.
+// description, robots, Open Graph, Twitter card, canonical) and the schema.org
+// JSON-LD — one @graph per page, its nodes tied together by @id.
 import { SEO } from "astro-seo";
-import type { BlogPosting, Person, WithContext } from "schema-dts";
+import type {
+	BlogPosting,
+	CreativeWork,
+	Graph,
+	Person,
+	ProfilePage,
+	WebSite,
+} from "schema-dts";
 
 interface Props {
+	/** The <title>: "<name> — Tristan Timblin" everywhere but the home page. */
 	title?: string;
+	/** The page's own name without the site suffix: og:title, twitter:title
+	 *  and the JSON-LD headline. A post or a demo passes it; elsewhere the
+	 *  title stands in. */
+	headline?: string;
 	description?: string;
-	/** Path or absolute URL to the social card; defaults to /og-small.jpg.
+	/** Path or absolute URL to the social card; defaults to /og.jpg.
 	 *  A page that passes one gets the large card. */
 	image?: string;
 	/** What the social card shows, for og:image:alt / twitter:image:alt.
-	 *  Falls back to the page title for a custom card, the site name for
+	 *  Falls back to the headline for a custom card, the site name for
 	 *  the default. */
 	imageAlt?: string;
 	noindex?: boolean;
-	/** "article" switches OG type and emits BlogPosting JSON-LD. */
+	/** "article" switches OG type and emits the work's JSON-LD node. */
 	type?: "website" | "article";
+	/** The schema.org type of that node: a post is a BlogPosting, a demo (a
+	 *  live experiment, not writing) a CreativeWork. */
+	schemaType?: "BlogPosting" | "CreativeWork";
 	/** Override the canonical URL (e.g. a syndicated post's origin). */
 	canonical?: string;
 	/** Article dates (ignored unless type === "article"). */
 	publishDate?: Date;
 	modifiedDate?: Date | null;
 	tags?: string[];
+	/** A post's length, for the BlogPosting's wordCount. */
+	wordCount?: number;
+	/** A demo's notes and credits, for the CreativeWork's text and creditText. */
+	text?: string;
+	creditText?: string;
 }
 
 const SITE_NAME = "Tristan Timblin";
 const DEFAULT_DESCRIPTION =
 	"Tristan Timblin — a craftsman who builds things to be used, finding creativity through empathetic design.";
 
+// WHO THE SITE IS ABOUT: the one place the Person's facts are written. Every
+// page's graph carries this node, and the posts, the demos, the WebSite and
+// the ProfilePage point back at it by @id.
+const PERSON = {
+	name: "Tristan Timblin",
+	jobTitle: "Software Engineer",
+	description:
+		"A craftsman who builds things to be used, finding creativity through empathetic design.",
+	image: "/og.jpg",
+	sameAs: [
+		"https://github.com/tatimblin",
+		"https://www.linkedin.com/in/tristan-timblin/",
+		"https://bsky.app/profile/tristantimblin.dev",
+	],
+};
+
 const {
 	title = SITE_NAME,
+	headline = title,
 	description = DEFAULT_DESCRIPTION,
 	image,
 	imageAlt,
 	noindex = false,
 	type = "website",
+	schemaType = "BlogPosting",
 	canonical: canonicalOverride,
 	publishDate,
 	modifiedDate,
 	tags,
+	wordCount,
+	text,
+	creditText,
 } = Astro.props;
 
 // Astro.site is the configured origin (https://tristantimblin.dev). Everything
 // social/canonical must be absolute, so resolve against it.
-const canonical = canonicalOverride ?? new URL(Astro.url.pathname, Astro.site).href;
-// Default to the small square card (300×300). iMessage/Slack/Discord render a
-// compact preview from a small image rather than a full-width hero. Callers can
-// still pass a larger per-page image to opt into a big card.
-const ogImage = new URL(image ?? "/og-small.jpg", Astro.site).href;
+const site = Astro.site?.href ?? "https://tristantimblin.dev/";
+const canonical = canonicalOverride ?? new URL(Astro.url.pathname, site).href;
+// Default to the square card at full size (1200×1200): big enough for the
+// large previews (max-image-preview:large below), and still the compact
+// `summary` preview in iMessage/Slack/Discord since it is square. Callers can
+// pass a per-page image to opt into the large card.
+const ogImage = new URL(image ?? "/og.jpg", site).href;
 // Declared so consumers size the preview without downloading the image first.
 // Only trustworthy for the default card; a custom `image` may differ, so omit.
 const ogImageIsDefault = !image;
 // A custom card (a post's image or hero) is a real picture worth the large
-// preview; the default is the small square.
+// preview; the default is the square.
 const twitterCard = ogImageIsDefault ? "summary" : "summary_large_image";
-const ogImageAlt = imageAlt ?? (ogImageIsDefault ? SITE_NAME : title);
+const ogImageAlt = imageAlt ?? (ogImageIsDefault ? SITE_NAME : headline);
 
-const person: WithContext<Person> = {
-	"@context": "https://schema.org",
+// THE GRAPH. Stable @ids off the origin, so every page's nodes name the same
+// Person and WebSite and a crawler can join them across pages.
+const ids = {
+	person: `${site}#person`,
+	website: `${site}#website`,
+	profile: `${site}#profilepage`,
+};
+const isHome = Astro.url.pathname === "/";
+
+const person: Person = {
 	"@type": "Person",
-	name: "Tristan Timblin",
-	url: Astro.site?.href ?? "https://tristantimblin.dev/",
-	jobTitle: "Software Engineer",
-	description:
-		"A craftsman who builds things to be used, finding creativity through empathetic design.",
-	image: new URL("/og.jpg", Astro.site).href,
-	sameAs: [
-		"https://github.com/tatimblin",
-		"https://www.linkedin.com/in/tristan-timblin/",
-	],
+	"@id": ids.person,
+	url: site,
+	...PERSON,
+	image: new URL(PERSON.image, site).href,
 };
 
-// For posts, describe the article itself and attribute it to the same Person.
-const blogPosting: WithContext<BlogPosting> | null =
-	type === "article"
-		? {
-				"@context": "https://schema.org",
-				"@type": "BlogPosting",
-				headline: title,
-				description,
-				image: ogImage,
-				author: { "@type": "Person", name: person.name, url: person.url },
-				mainEntityOfPage: canonical,
-				...(publishDate && { datePublished: publishDate.toISOString() }),
-				...(modifiedDate && { dateModified: modifiedDate.toISOString() }),
-				...(tags?.length && { keywords: tags.join(", ") }),
-			}
-		: null;
+// The home page is the site's front door and Tristan's profile: it declares
+// the WebSite and a ProfilePage about the Person. Other pages only point at
+// them.
+const website: WebSite = {
+	"@type": "WebSite",
+	"@id": ids.website,
+	name: SITE_NAME,
+	alternateName: "tristantimblin.dev",
+	url: site,
+	inLanguage: "en",
+	publisher: { "@id": ids.person },
+};
+const profilePage: ProfilePage = {
+	"@type": "ProfilePage",
+	"@id": ids.profile,
+	url: site,
+	name: title,
+	isPartOf: { "@id": ids.website },
+	mainEntity: { "@id": ids.person },
+};
+
+// For a post or a demo, describe the work itself and attribute it to the same
+// Person. dateModified falls back to the publish date, as Google asks.
+const published = publishDate?.toISOString();
+const modified = (modifiedDate ?? publishDate)?.toISOString();
+const workBase = {
+	"@id": `${canonical}#${schemaType === "BlogPosting" ? "article" : "work"}`,
+	headline,
+	name: headline,
+	description,
+	image: ogImage,
+	url: canonical,
+	inLanguage: "en",
+	author: { "@type": "Person", "@id": ids.person, name: PERSON.name, url: site },
+	publisher: { "@id": ids.person },
+	isPartOf: { "@id": ids.website },
+	mainEntityOfPage: canonical,
+	...(published && { datePublished: published }),
+	...(modified && { dateModified: modified }),
+	...(tags?.length && { keywords: tags.join(", ") }),
+} as const;
+const work: BlogPosting | CreativeWork | null =
+	type !== "article"
+		? null
+		: schemaType === "BlogPosting"
+			? { "@type": "BlogPosting", ...workBase, ...(wordCount && { wordCount }) }
+			: {
+					"@type": "CreativeWork",
+					...workBase,
+					...(text && { text }),
+					...(creditText && { creditText }),
+				};
+
+const graph: Graph = {
+	"@context": "https://schema.org",
+	"@graph": [person, ...(isHome ? [website, profilePage] : []), ...(work ? [work] : [])],
+};
 ---
 
 <SEO
@@ -97,27 +183,23 @@ const blogPosting: WithContext<BlogPosting> | null =
 	description={description}
 	canonical={canonical}
 	noindex={noindex}
+	robotsExtras={noindex ? undefined : "max-image-preview:large"}
 	openGraph={{
-		basic: { title, type: type === "article" ? "article" : "website", image: ogImage, url: canonical },
+		basic: { title: headline, type: type === "article" ? "article" : "website", image: ogImage, url: canonical },
 		optional: { description, siteName: SITE_NAME },
 		image: ogImageIsDefault
-			? { alt: ogImageAlt, width: 300, height: 300 }
+			? { alt: ogImageAlt, width: 1200, height: 1200 }
 			: { alt: ogImageAlt },
 		...(type === "article" && {
 			article: {
-				...(publishDate && { publishedTime: publishDate.toISOString() }),
+				...(published && { publishedTime: published }),
 				...(modifiedDate && { modifiedTime: modifiedDate.toISOString() }),
-				authors: [person.url as string],
+				authors: [site],
 				...(tags?.length && { tags }),
 			},
 		}),
 	}}
-	twitter={{ card: twitterCard, title, description, image: ogImage, imageAlt: ogImageAlt }}
+	twitter={{ card: twitterCard, title: headline, description, image: ogImage, imageAlt: ogImageAlt }}
 />
 
-<script type="application/ld+json" set:html={JSON.stringify(person)} is:inline />
-{
-	blogPosting && (
-		<script type="application/ld+json" set:html={JSON.stringify(blogPosting)} is:inline />
-	)
-}
+<script type="application/ld+json" set:html={JSON.stringify(graph)} is:inline />

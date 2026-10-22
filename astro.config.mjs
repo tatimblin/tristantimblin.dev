@@ -4,6 +4,10 @@ import sitemap from '@astrojs/sitemap';
 import mdx from '@astrojs/mdx';
 import { unified } from '@astrojs/markdown-remark';
 import { rehypePostSections, remarkPostCode, shikiPostCode } from './src/lib/mdx/post-sections.ts';
+import { contentDates } from './src/lib/content-dates.ts';
+
+// Each post's and demo's last change, for its sitemap entry's lastmod.
+const lastmod = contentDates();
 
 // https://astro.build/config
 export default defineConfig({
@@ -50,6 +54,12 @@ export default defineConfig({
 					!pathname.startsWith('/dotgrid/') &&
 					!pathname.startsWith('/design-system/')
 				);
+			},
+			// A post or demo carries its `modified` (else `date`) as lastmod;
+			// the other pages have no content date and go without.
+			serialize: (item) => {
+				const date = lastmod.get(new URL(item.url).pathname);
+				return date ? { ...item, lastmod: date.toISOString() } : item;
 			},
 		}),
 	],
