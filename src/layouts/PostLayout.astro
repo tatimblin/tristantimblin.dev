@@ -99,7 +99,8 @@ const neighbours = [
 <BlogLayout
 	wide
 	type="article"
-	title={title}
+	title={`${title} — Tristan Timblin`}
+	headline={title}
 	description={description}
 	image={image}
 	imageAlt={imageAlt}
@@ -107,6 +108,7 @@ const neighbours = [
 	publishDate={date}
 	modifiedDate={modified}
 	tags={tags}
+	wordCount={stats.words}
 >
 	<article class="post" data-post>
 		<Grid templateColumns={COLUMNS} gapX={4} class="post__strip" data-post-strip>

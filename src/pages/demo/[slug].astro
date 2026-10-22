@@ -51,12 +51,16 @@ const hasInfo = Boolean(notes || credits);
 
 <Layout
 	title={`${title} — Tristan Timblin`}
+	headline={title}
 	description={description}
 	image={ogImage}
 	imageAlt={poster.alt}
 	type="article"
+	schemaType="CreativeWork"
 	publishDate={date}
 	tags={tags}
+	text={notes}
+	creditText={credits}
 	footer={false}
 >
 	<main class="demo" data-demo>
@@ -118,6 +122,9 @@ const hasInfo = Boolean(notes || credits);
 							? "Reduced motion is on: showing a still frame."
 							: "Reduced motion is on: showing the poster, not the live scene."}
 				</Mono>
+				{/* `hidden` until the info toggle opens it, but in the served HTML
+				     all the same; the notes and credits also ride in the page's
+				     CreativeWork JSON-LD (text, creditText) for crawlers. */}
 				{hasInfo && (
 					<dl id="demo-info" class="demo__info" hidden data-demo-info>
 						{notes && (
