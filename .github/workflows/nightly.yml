@@ -1,7 +1,7 @@
 name: Nightly data refresh
 
 # Replaces the four per-widget crons (baywheels-stats, github-stats, readers,
-# volo-seasons). Every fetcher runs as its own step and may fail without stopping
+# volo-seasons); readers is now GoatCounter's pageviews fetch. Every fetcher runs as its own step and may fail without stopping
 # the others; whatever changed lands as ONE commit, followed by ONE deploy with no
 # Playwright suite.
 #
@@ -18,6 +18,11 @@ on:
     # about running daily.
     - cron: "0 14 * * *"
   workflow_dispatch:
+    inputs:
+      pageviews_since:
+        description: "Pageviews: re-read GoatCounter from this date (YYYY-MM-DD) instead of the 45-day window"
+        required: false
+        default: ""
 
 concurrency:
   group: nightly-data
@@ -27,7 +32,7 @@ concurrency:
 env:
   DATA_BIKE: src/data/bike-stats.csv
   DATA_GITHUB: src/data/github.json
-  DATA_READERS: src/data/readers.json
+  DATA_PAGEVIEWS: src/data/pageviews.json
   DATA_VOLO: src/data/volo.json
 
 jobs:
@@ -123,21 +128,23 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
 
-      # ── Readers ────────────────────────────────────────────────────────────
-      # Reads Cloudflare Web Analytics (RUM) pageloads and MERGES the fresh window
-      # into readers.json rather than overwriting it — Cloudflare retains RUM for
-      # ~90 days, so the committed file is the widget's longer history. Exits
-      # non-zero if the window comes back empty (stale-auth guard).
-      #
-      # CLOUDFLARE_ANALYTICS_TOKEN is NOT the deploy's CLOUDFLARE_API_TOKEN: this
-      # one needs `Account → Account Analytics: Read` (RUM is account-scoped).
-      - name: "Readers: fetch stats"
-        id: readers
+      # ── Pageviews ──────────────────────────────────────────────────────────
+      # Reads hosted GoatCounter's per-day visitors (site-wide and per post/demo)
+      # and MERGES them into pageviews.json, which the readers widget, the post
+      # strip and /txt read at build time. (It replaced the Cloudflare Web
+      # Analytics readers fetch, whose sampled figures were unusable.) Re-reads the last 45 days; an empty ledger (the first
+      # run) backfills from 2026-07-01, and a manual run can re-read from any
+      # date with the pageviews_since input. Exits non-zero on an API error or
+      # an empty window once the ledger is a week old (stale-auth guard).
+      # GOATCOUNTER_TOKEN is a read-only API key.
+      - name: "Pageviews: fetch"
+        id: pageviews
         continue-on-error: true
-        run: bun tools/readers/fetch.mjs
+        run: bun tools/pageviews/fetch.mjs
         env:
-          CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
+          GOATCOUNTER_CODE: ${{ secrets.GOATCOUNTER_CODE }}
+          PAGEVIEWS_SINCE: ${{ inputs.pageviews_since }}
 
       # ── Volo ───────────────────────────────────────────────────────────────
       # Scheduled runs fetch Volo on Wednesday and Thursday (UTC) only, as the old
@@ -202,7 +209,7 @@ jobs:
             git checkout -- "$DATA_VOLO"
           fi
 
-          git add -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_READERS" "$DATA_VOLO"
+          git add -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_PAGEVIEWS" "$DATA_VOLO"
           if git diff --cached --quiet; then
             echo "No data changed — nothing to commit or deploy."
             echo "committed=false" >> "$GITHUB_OUTPUT"
