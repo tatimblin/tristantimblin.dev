@@ -1,12 +1,13 @@
 ---
-// Global site footer — a basic full-width bar with a copyright line and the
-// light/dark theme toggle. Themes automatically via DS tokens (--text-primary /
+// Global site footer — a basic full-width bar with a copyright line, the
+// privacy line (to /privacy/) and the light/dark theme toggle. Themes automatically via DS tokens (--text-primary /
 // --background / --border). Light is the site default; the toggle persists
 // the user's explicit choice in localStorage and re-tints the whole page,
 // including the <dotted-grid> visuals (they re-resolve their tone when
 // data-theme on <html> changes).
 import Text from "@whois/design-system/Text";
 import Chip from "@whois/design-system/Chip";
+import Anchor from "@whois/design-system/Anchor";
 import ThemeToggle from "./ThemeToggle.astro";
 
 const year = new Date().getFullYear();
@@ -19,7 +20,14 @@ const year = new Date().getFullYear();
 	     tertiary ink are both DS decisions, so they come from the component rather
 	     than being retyped as a font-size and a colour in the scoped block below.
 	     What stays local is only what the DS has no opinion about — the face. */}
-	<Text as="p" size={1} variant="tertiary" class="site-footer__note">© {year} Tristan Timblin</Text>
+	<div class="site-footer__notes">
+		<Text as="p" size={1} variant="tertiary" class="site-footer__note">© {year} Tristan Timblin</Text>
+		<Text as="p" size={1} variant="tertiary" class="site-footer__note" data-privacy-note>
+			<Anchor href="/privacy/" underline="always" class="site-footer__privacy">
+				No cookies. Page views are counted anonymously by GoatCounter.
+			</Anchor>
+		</Text>
+	</div>
 	<div class="site-footer__controls">
 		{/* The toggles are DS Chips as buttons — the tag-style caps control
 		     (/txt's filters are the same chip): the first wash, the ink under the
@@ -52,6 +60,16 @@ const year = new Date().getFullYear();
 	   variant="tertiary"> now carries them. */
 	.site-footer__note {
 		font-family: var(--font-ui);
+	}
+	/* Chrome, not copy: the footer's quiet ink, the way the DS asks for a
+	   quieter link (scoping --link-color, anchor.css). */
+	.site-footer__notes :global(.site-footer__privacy) {
+		--link-color: var(--text-tertiary);
+	}
+	.site-footer__notes {
+		display: grid;
+		gap: var(--space-1);
+		min-inline-size: 0;
 	}
 
 	.site-footer__controls {
