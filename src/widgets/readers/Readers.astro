@@ -4,15 +4,13 @@
 // the range (30d → 1y → all) between server-rendered DS Faces, so it fetches
 // nothing and works with the script blocked.
 //
-// It reads Cloudflare Web Analytics (RUM, so every bar is browsers), not the
-// zone's request counts, which are ~98% crawlers and scanners. That source is
-// thin — sampled, quantized to tens, half the days zero — so every bar is a
-// TRAILING SUM rather than a day; see buildView() in ./readers.ts. A count,
-// not a percentage: at figures rounded to tens a percentage claims precision
-// the data does not have.
+// It reads GoatCounter's visitors per day (counted in real browsers, exact, not
+// sampled). At this site's volume a day is a handful of people, so every bar
+// is a TRAILING SUM rather than a day; see buildView() in ./readers.ts.
 //
-// Data is read at build time from readers.json (./readers.ts), which the
-// readers Action regenerates daily. Props pass through to the <Widget>.
+// Data is read at build time from pageviews.json (./readers.ts), which the
+// nightly workflow refreshes. Before its first read the ledger is empty and
+// the tile says so. Props pass through to the <Widget>.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
@@ -25,6 +23,7 @@ import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import WidgetEmpty from "@whois/design-system/WidgetEmpty";
 import {
 	buildViews,
+	emptyNote,
 	formatCount,
 	formatSpan,
 	getReaderStats,
@@ -48,9 +47,8 @@ const initial = views[0];
 // With one range the pill stays a label rather than a button that does nothing.
 const cycles = views.length > 1;
 
-const sampledNote = stats.sampled
-	? "Cloudflare Web Analytics samples traffic, so these are estimates, rounded to the nearest ten."
-	: "";
+// What the figures are, on hover and to assistive tech.
+const sourceNote = "Exact counts of visitors per day, from GoatCounter.";
 
 // What the script needs to read a bar back, inlined once per range.
 const readings = (view: (typeof views)[number]) =>
@@ -114,10 +112,10 @@ const readings = (view: (typeof views)[number]) =>
 							values={view.points.map((p) => p.value)}
 							mark={view.peakIndex}
 							interactive
-							title={sampledNote || undefined}
+							title={sourceNote}
 						/>
 
-						<Figure unit="total" title={sampledNote || undefined}>
+						<Figure unit="total" title={sourceNote}>
 							{formatCount(view.total)}
 						</Figure>
 
@@ -126,13 +124,13 @@ const readings = (view: (typeof views)[number]) =>
 							{view.covered < view.span ? ` (${view.covered} days on record)` : ""}.
 							{" "}Busiest {view.window} days{" "}
 							{formatSpan(view.peak?.from ?? "", view.peak?.date ?? "")}, with{" "}
-							{view.peak?.value}. {sampledNote}
+							{view.peak?.value}. {sourceNote}
 						</VisuallyHidden>
 					</Face>
 				))}
 				</Faces>
 			) : (
-				<WidgetEmpty>No visitors yet.</WidgetEmpty>
+				<WidgetEmpty data-rd-empty>{emptyNote(stats.days)}</WidgetEmpty>
 			)
 		}
 	</CardBody>

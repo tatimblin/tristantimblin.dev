@@ -19,13 +19,19 @@ import "@whois/design-system/styles.css";
 import SiteFooter from "../components/SiteFooter.astro";
 import Seo from "../components/Seo.astro";
 import { MEDIA_BASE } from "../lib/media";
+import { normalisePath } from "../lib/analytics/path";
 
 type Props = ComponentProps<typeof Seo> & {
 	/** The site footer; a full-screen page (a demo) leaves it out. */
 	footer?: boolean;
+	/** The path this page is counted under (src/lib/analytics/count.ts).
+	 *  Defaults to the page's own; the 404 page sets one for every miss. */
+	hitPath?: string;
 };
 
-const { footer = true, ...seo } = Astro.props;
+const { footer = true, hitPath, ...seo } = Astro.props;
+const hit = normalisePath(hitPath ?? Astro.url.pathname);
+if (!hit) throw new Error(`Layout: "${hitPath ?? Astro.url.pathname}" is not a countable path.`);
 ---
 
 <!doctype html>
@@ -41,6 +47,9 @@ const { footer = true, ...seo } = Astro.props;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
+		{/* The path GoatCounter counts this page under, read by
+		     src/lib/analytics/count.ts on every page load (hard or soft). */}
+		<meta name="hit-path" content={hit} />
 		{/* Preload the faces every page paints above the fold, so the swap lands
 		     before first scroll rather than after fonts.css is parsed: the body
 		     face's Regular and DM Sans Medium (the hero lockup and headings).
@@ -135,6 +144,10 @@ const { footer = true, ...seo } = Astro.props;
 			import "../lib/reveal";
 			import Lenis from "lenis";
 			import "lenis/dist/lenis.css";
+			// Page-view counting: GoatCounter, on the production host only.
+			import { startCounting } from "../lib/analytics/count";
+
+			startCounting();
 
 			declare global {
 				interface Window {

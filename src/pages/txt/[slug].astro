@@ -12,6 +12,7 @@ import PostLayout, { type Neighbour } from "../../layouts/PostLayout.astro";
 import { mdxComponents } from "../../components/mdx-components";
 import { neighbours, postHref, postNumbers, readingStats } from "../../lib/blog";
 import { getPosts } from "../../lib/posts";
+import { formatReads, getPathStats } from "../../lib/pageviews";
 
 export const getStaticPaths = (async () => {
 	const posts = await getPosts();
@@ -65,6 +66,7 @@ const ogImage = card ? (await getImage({ src: card, format: "jpg" })).src : unde
 	no={no}
 	total={total}
 	stats={readingStats(post.body)}
+	reads={formatReads(getPathStats(postHref(post.id))?.reads)}
 	hero={hero}
 	prev={prev}
 	next={next}

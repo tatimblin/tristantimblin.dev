@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 
 /**
  * THE DESKTOP HERO (>900px): framed, the group on the floor, the carousel below

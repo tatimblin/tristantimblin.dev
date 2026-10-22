@@ -45,8 +45,10 @@
 // pages.
 //
 // DEMOS (src/content/demos) are interleaved by date: the same row, with a
-// DEMO chip after the title (and no meta line), the one-line description for
-// the excerpt, and VIEW for READ.
+// DEMO chip after the title (and no meta line, unless it has a view count:
+// "212 views"), the one-line description for the excerpt, and VIEW for READ.
+// A post's meta ends with its reads ("… · 212 reads"). Counts come from the
+// committed GoatCounter ledger (src/lib/pageviews.ts) and show from 10 up.
 import type { CollectionEntry } from "astro:content";
 import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
@@ -63,6 +65,7 @@ import {
 	postHref,
 	readingStats,
 } from "../../lib/blog";
+import { formatReads, getPathStats } from "../../lib/pageviews";
 
 type Entry = CollectionEntry<"txt"> | CollectionEntry<"demos">;
 
@@ -74,24 +77,28 @@ interface Props {
 const { posts, label = "Posts" } = Astro.props;
 const rows = byDateDesc(posts).map((entry) => {
 	if (entry.collection === "demos") {
+		const href = demoHref(entry.id);
 		return {
-			href: demoHref(entry.id),
+			href,
 			date: entry.data.date,
 			title: entry.data.title,
 			demo: true,
-			meta: null,
+			// Only a count: a demo has no category or word count.
+			meta: formatReads(getPathStats(href)?.reads, "views"),
 			excerpt: entry.data.description,
 			action: "View",
 		};
 	}
 	const cat = entry.data.category ? categories[entry.data.category] : null;
 	const { words } = readingStats(entry.body);
+	const href = postHref(entry.id);
+	const reads = formatReads(getPathStats(href)?.reads);
 	return {
-		href: postHref(entry.id),
+		href,
 		date: entry.data.date,
 		title: entry.data.title,
 		demo: false,
-		meta: [cat?.label, `${words.toLocaleString("en-US")} words`].filter(Boolean).join(" · "),
+		meta: [cat?.label, `${words.toLocaleString("en-US")} words`, reads].filter(Boolean).join(" · "),
 		excerpt: entry.data.excerpt,
 		action: "Read",
 	};

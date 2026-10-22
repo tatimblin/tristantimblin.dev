@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "./fixtures/test";
 
 /**
  * THE SOCIAL AND ARTICLE META (src/components/Seo.astro). A post is an

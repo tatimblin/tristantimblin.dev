@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 
 /**
  * THE 404 PAGE. Astro emits dist/404.html, which Cloudflare Pages (and

@@ -59,6 +59,8 @@ interface Props {
 	no: number;
 	total: number;
 	stats: { words: number; minutes: number };
+	/** "212 reads" (src/lib/pageviews.ts formatReads), or null to leave it off. */
+	reads?: string | null;
 	hero?: Hero | null;
 	prev?: Neighbour | null;
 	next?: Neighbour | null;
@@ -77,6 +79,7 @@ const {
 	no,
 	total,
 	stats,
+	reads = null,
 	hero = null,
 	prev = null,
 	next = null,
@@ -113,8 +116,12 @@ const neighbours = [
 			) : (
 				<span class="post__cell" />
 			)}
-			<Mono class="post__cell post__stats">
-				{stats.minutes} min · {stats.words.toLocaleString("en-US")} words
+			{/* Two unbreakable runs with one break between them, so a narrow
+			    cell wraps the reads onto a second line, never mid-figure. */}
+			<Mono class="post__cell post__stats" data-post-stats>
+				<span class="post__run">{stats.minutes} min · {stats.words.toLocaleString("en-US")} words{reads && " ·"}</span>{reads && (
+					<Fragment> <span class="post__run post__reads" data-post-reads>{reads}</span></Fragment>
+				)}
 			</Mono>
 			<Mono
 				as="time"
@@ -222,6 +229,13 @@ const neighbours = [
 	}
 	.post__cell--end {
 		text-align: end;
+	}
+	/* The stats may wrap, between its runs only (the caps Mono is nowrap). */
+	.post__stats {
+		white-space: normal;
+	}
+	.post__run {
+		white-space: nowrap;
 	}
 
 	/* THE COLUMN NUMBERS: tiny, over the columns, a step under the strip. */

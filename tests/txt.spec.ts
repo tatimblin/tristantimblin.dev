@@ -1,4 +1,4 @@
-import { test, expect, chromium, type Page } from "@playwright/test";
+import { test, expect, chromium, type Page } from "./fixtures/test";
 
 /**
  * THE BLOG: /txt, ITS TAG PAGES, AND A POST.
@@ -136,7 +136,10 @@ test.describe("/txt/", () => {
 		// place — no reading-time numeral.
 		const body = row.locator(".stack__body");
 		await expect(body.locator(".stack__time, .ds-figure")).toHaveCount(0);
-		await expect(body.locator(".stack__text .stack__meta")).toHaveText(/^Programming · [\d,]+ words$/);
+		// The reads follow once the post has 10 or more (src/data/pageviews.json).
+		await expect(body.locator(".stack__text .stack__meta")).toHaveText(
+			/^Programming · [\d,]+ words( · [\d,]+ reads)?$/,
+		);
 		await expect(body.locator(".stack__rail .stack__meta")).toHaveCount(0);
 		await expect(body.locator(".stack__excerpt")).toHaveText(/\S/);
 		const read = body.locator("a.stack__read");
@@ -616,7 +619,10 @@ test.describe("/txt/<slug> — the post page", () => {
 		const strip = page.locator("[data-post-strip]");
 		await expect(strip.locator(".post__no")).toHaveText(/txt \/ 005/i);
 		await expect(strip.locator(".post__category")).toHaveText(/Programming/);
-		await expect(strip.locator(".post__stats")).toHaveText(/^\s*3 min · \d{3} words\s*$/i);
+		// The reads follow once the post has 10 or more (src/data/pageviews.json).
+		await expect(strip.locator(".post__stats")).toHaveText(
+			/^\s*3 min · \d{3} words( · [\d,]+ reads)?\s*$/i,
+		);
 		await expect(strip.locator("time.post__date")).toHaveText("02.02.2026");
 		await expect(strip.locator("time.post__date")).toHaveAttribute("datetime", "2026-02-02");
 		// The date sits on the right edge of the row, the number on the left.

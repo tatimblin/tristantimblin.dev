@@ -1,4 +1,4 @@
-import { test, expect, type FrameLocator, type Page } from "@playwright/test";
+import { test, expect, type FrameLocator, type Page } from "./fixtures/test";
 
 /**
  * THE VS CODE EMBED IN THE POST: IT IS EITHER RUNNING, OR IT IS A PICTURE OF

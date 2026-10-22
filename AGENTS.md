@@ -24,7 +24,22 @@ Guidance for AI agents working in this repo.
 - **`tests/`** — Playwright, against the built site (`bun run test`);
   `bun run test:unit` runs the unit tests beside the code (`src/**/*.test.ts`
   and `theme/*/src/**/*.test.ts`; a bare `bun test` sees `src/` only — see
-  `bunfig.toml`).
+  `bunfig.toml`). Specs import `test` from `tests/fixtures/test.ts`, not
+  `@playwright/test`: it answers the media host from two tiny local clips
+  (`tests/fixtures/media-stub.*`, the only videos in git), so the suite never
+  streams from R2.
+
+## Page views — GoatCounter
+
+Pages are counted by hosted GoatCounter (`tristantimblin.goatcounter.com`):
+`src/lib/analytics/count.ts` loads the pinned `count.v5.js` on the production
+host only (never on localhost, a preview, or under `navigator.webdriver`) and
+counts each `astro:page-load` under the page's build-time
+`<meta name="hit-path">` (Layout's `hitPath` prop, normalised by
+`src/lib/analytics/path.ts`). The nightly `tools/pageviews/fetch.mjs` reads the
+API into `src/data/pageviews.json`, which the readers widget, the post strip
+and `/txt` read at build time; counts under 10 are not shown.
+`tests/hit.spec.ts` covers it.
 - Run the dev server with **`bun run dev`** (copies the fleet demo, then
   `bunx astro dev` under Node). Do **not** use
   `bunx --bun astro dev` — it crashes the HMR WebSocket.

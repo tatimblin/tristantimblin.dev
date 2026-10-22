@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
 import { GLYPH_NAMES } from "../theme/design-system/src/glyphs/names";
 
 /**
