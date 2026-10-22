@@ -45,7 +45,7 @@ export function normalisePath(input: string | null | undefined): string | null {
 }
 
 /** The hosts whose views count: production only, never a preview deploy. */
-export const COUNTED_HOSTS: readonly string[] = ["tristantimblin.dev", "www.tristantimblin.dev"];
+const COUNTED_HOSTS: readonly string[] = ["tristantimblin.dev", "www.tristantimblin.dev"];
 
 /**
  * Whether this browser should load GoatCounter at all. The script is never

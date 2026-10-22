@@ -1,9 +1,0 @@
-<!-- baked from recipes/battery.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64">
-  <path d="M 73.3 35.84 L 30 10.84 A 10 5 120 0 0 20 28.16 L 63.3 53.16 A 10 5 120 0 1 73.3 35.84 Z" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 63.3 53.16 A 10 5 120 1 0 73.3 35.84 A 10 5 120 1 0 63.3 53.16 Z" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 54.64 48.16025403784438 A 10 5 120 0 1 64.64 30.839745962155614" fill="none" stroke="var(--art-cyan)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 72.65 42.97 L 70.05 41.47 A 3.5 1.75 120 0 0 66.55 47.53 L 69.15 49.03 A 3.5 1.75 120 0 1 72.65 42.97 Z" fill="none" stroke="var(--art-cyan)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 69.15 49.03 A 3.5 1.75 120 1 0 72.65 42.97 A 3.5 1.75 120 1 0 69.15 49.03 Z" fill="none" stroke="var(--art-cyan)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="70.9" cy="46" r="1.25" fill="var(--art-coral)" />
-</svg>

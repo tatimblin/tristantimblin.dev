@@ -1,6 +1,0 @@
-<!-- baked from recipes/gate.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <polyline points="4,16 12,16" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0.01 3.99" />
-  <polyline points="36,16 44,16" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0.01 3.99" />
-  <rect x="15" y="13" width="18" height="6" fill="var(--art-green)" />
-</svg>

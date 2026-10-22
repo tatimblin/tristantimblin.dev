@@ -255,7 +255,7 @@ export function formatPlacing(season: VoloSeason): string | null {
 const MARGIN_CAP: Record<string, number> = { Volleyball: 2 };
 const DEFAULT_MARGIN_CAP = 20; // softball: covers all but the two biggest routs
 
-export function marginCap(sport: string): number {
+function marginCap(sport: string): number {
 	return MARGIN_CAP[sport] ?? DEFAULT_MARGIN_CAP;
 }
 
@@ -311,7 +311,7 @@ export function opponentStanding(
  * Returns null while a season is still running — an unplayed fixture means the
  * finish is not a fact yet.
  */
-export function finalPlacement(season: VoloSeason): number | null {
+function finalPlacement(season: VoloSeason): number | null {
 	if (season.games.some((game) => game.result === null)) return null;
 	if (season.champion) return 1;
 

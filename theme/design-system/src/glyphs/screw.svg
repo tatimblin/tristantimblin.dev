@@ -1,8 +1,0 @@
-<!-- baked from recipes/screw.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <path d="M 19 9 L 19 12 A 5 2.5 0 0 0 29 12 L 29 9 A 5 2.5 0 0 1 19 9 Z" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <ellipse cx="24" cy="9" rx="5" ry="2.5" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 21.23 7.4 L 26.77 10.6 M 26.77 7.4 L 21.23 10.6" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <polyline points="21.5,14.2 21.5,24 24,28 26.5,24 26.5,14.2" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 21.5 16 L 26.5 15 M 21.5 18.5 L 26.5 17.5 M 21.5 21 L 26.5 20 M 21.5 23.5 L 26.5 22.5" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" />
-</svg>

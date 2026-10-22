@@ -1,4 +1,0 @@
-<!-- baked from recipes/petals.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <path d="M19.29 7.83A5 5 0 0 1 28.71 7.83A5 5 0 0 1 33.43 16A5 5 0 0 1 28.71 24.17A5 5 0 0 1 19.29 24.17A5 5 0 0 1 14.57 16A5 5 0 0 1 19.29 7.83ZM21.5 16A2.5 2.5 0 1 0 26.5 16A2.5 2.5 0 1 0 21.5 16Z" fill="var(--art-lavender)" fill-rule="evenodd" />
-</svg>

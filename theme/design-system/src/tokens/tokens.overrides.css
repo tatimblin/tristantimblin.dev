@@ -1,9 +1,8 @@
 /* Site-level token overrides — the hand-owned layer.
  *
  * This file is imported AFTER tokens.generated.css, so any custom property set
- * here wins over the design system's generated value. Use it to retune the DS
- * look for this site (colors, spacing, type) WITHOUT editing the generated
- * artifact — which would be clobbered the next time gen-tokens.mjs runs.
+ * here wins over the base value. Use it to retune the DS look for this site
+ * (colors, spacing, type) rather than editing the frozen base set.
  *
  * Overrides go under :root (global) or [data-theme] (derived from a theme's
  * palette, so they re-resolve under any element carrying the attribute). What
@@ -165,13 +164,6 @@
 	/*   quick  — a micro-transition on a small control (a footer toggle's edge
 	 *            tinting, a hit area's wash): felt, not watched. */
 	--duration-quick: 120ms;
-	/*   loop   — one cycle of an art animation (art-frame.css): a reel's turn, a
-	 *            tape's period, a dot field's drift out and back. Slow, because
-	 *            the art only moves under the pointer and should feel like an
-	 *            instrument idling, not a loader. Each motion kind takes a fixed
-	 *            fraction of it (a blink is a quarter, a dash advance a sixth),
-	 *            and a file's data-speed divides it again. */
-	--duration-loop: 6s;
 	/*   standard — the chrome's own transition: a chip, a pill or a button
 	 *            washing in under the pointer. Paired with --ease-standard,
 	 *            an ease-in-out (the old site's), since the wash goes both
@@ -197,16 +189,13 @@
  * slide-in, which is hidden until it plays) still says so itself. The
  * packages keep their own handling: they are consumed standalone, so they
  * carry literal fallbacks and their own @media blocks, and this does not reach
- * those. --duration-loop is here too: a zero-length loop is an animation with
- * no active interval, so an artwork or a glyph holds its still frame — which
- * is the poster it was drawn as — without a reduced-motion rule of its own. */
+ * those. */
 @media (prefers-reduced-motion: reduce) {
 	:root {
 		--duration-reveal: 0s;
 		--duration-settle: 0s;
 		--duration-swap: 0s;
 		--duration-quick: 0s;
-		--duration-loop: 0s;
 		--duration-standard: 0s;
 	}
 }
@@ -400,50 +389,4 @@
 		4px 8px 8px hsl(var(--shadow-color) / 0.2),
 		8px 16px 16px hsl(var(--shadow-color) / 0.2),
 		16px 32px 32px hsl(var(--shadow-color) / 0.2);
-}
-
-/* ART ----------------------------------------------------------------------
- * The illustration language the art, the scenes and the glyphs are drawn in
- * (ArtFrame, art-frame.css; src/art/, src/scenes/, src/glyphs/): 1px line
- * work and flat fills in four colours on a plate. The plate, line and
- * lavender were sampled from a reference tile sheet; "coral" is now the site
- * accent, and cyan and green were retuned toward a synth panel's signal neon
- * (a cornflower blue and a bright signal green). An art file may name
- * NO colour but these — every fill and stroke in it is one of these tokens,
- * `none` or currentColor (the validator holds that line) — so the whole
- * language retunes here and nowhere else.
- *
- * The plate FOLLOWS THE THEME, and each theme file sets it and its edge
- * (--art-plate, --art-edge). Below is the dark palette the language was
- * sampled on (white line, the four fills); the light theme retunes it to a
- * dark ink and deeper fills, so a light page shows ink-on-paper tiles; the
- * dark one keeps it. The same drawing inverts: white line work and white
- * faces become dark line work and dark faces. Declared on [data-theme], not
- * :root, for two reasons: --art-coral is the site accent, which a theme sets;
- * and a wrapper carrying the other theme's attribute (the catalogue's
- * ThemePage shows a drawing in both themes side by side) then re-resolves
- * these in scope. */
-[data-theme] {
-	/* The line, and white fills. --art-ink-2 is the one dimming the language
-	 * allows — grids, dashed paths, ghost outlines — as the ink at 45% rather
-	 * than an opacity attribute, so it composes over any fill. */
-	--art-ink: oklch(97% 0 0);
-	--art-ink-2: color-mix(in oklab, var(--art-ink) 45%, transparent);
-	/* The four fills. "Coral" IS the accent — the link blue — so the art's
-	 * one strong colour is the page's one accent, never a second near-blue
-	 * beside it. The name outlives the sampled coral so no art file changes. */
-	--art-lavender: #bda3ea;
-	--art-coral: var(--accent);
-	/* Signal neon, not sampled: "cyan" is now a cornflower blue and green a
-	 * bright signal green. The names stay, so no art file changes. */
-	--art-cyan: #5b8def;
-	--art-green: #5ee27f;
-	/* The frame's corner: the reference's small radius is the surface step. */
-	--art-radius: var(--border-radius-1);
-	/* A scene's CRT bloom (Scene's `glow`, scene.css): a soft halo in the ink
-	 * on the line work, and each readout's own colour behind it. Tokens, so
-	 * the NEAREST [data-theme] decides — a light ThemePage on the dark page
-	 * has no phosphor, and themes/light.css turns both off. */
-	--scene-glow: drop-shadow(0 0 2px color-mix(in oklab, var(--art-ink) 40%, transparent));
-	--scene-text-glow: 0 0 0.25em color-mix(in oklab, currentColor 50%, transparent);
 }

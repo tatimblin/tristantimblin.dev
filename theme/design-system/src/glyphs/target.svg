@@ -1,7 +1,0 @@
-<!-- baked from recipes/target.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <circle cx="24" cy="16" r="12" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="24" cy="16" r="7.5" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="24" cy="16" r="3.5" fill="none" stroke="var(--art-cyan)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="24" cy="16" r="1.5" fill="var(--art-coral)" />
-</svg>

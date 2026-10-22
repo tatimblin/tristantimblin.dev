@@ -1,6 +1,6 @@
 /* The design-system token cascade. Import order matters — later wins:
- *   1. tokens.generated.css  — the published DS package's output, emitted by
- *                              scripts/gen-tokens.mjs (never hand-edited).
+ *   1. tokens.generated.css  — the base set: a frozen snapshot of the former
+ *                              upstream package's output, now hand-owned.
  *   2. tokens.overrides.css  — this site's hand-owned retunes, and the tokens
  *                              derived from a theme's palette ([data-theme]).
  *   3. themes/light.css,     — the two palettes, [data-theme="light|dark"]:

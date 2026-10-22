@@ -1,5 +1,0 @@
-<!-- baked from recipes/spring.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64">
-  <ellipse cx="48" cy="50" rx="14" ry="7" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0.01 3.99" />
-  <path d="M 48 57 C 55.33 56.29 62 52.25 62 47.88 C 62 43.5 55.33 39.46 48 38.75 C 40.67 38.04 34 40.67 34 43.63 C 34 46.58 40.67 49.21 48 48.5 C 55.33 47.79 62 43.75 62 39.38 C 62 35 55.33 30.96 48 30.25 C 40.67 29.54 34 32.17 34 35.13 C 34 38.08 40.67 40.71 48 40 C 55.33 39.29 62 35.25 62 30.88 C 62 26.5 55.33 22.46 48 21.75 C 40.67 21.04 34 23.67 34 26.62 C 34 29.58 40.67 32.21 48 31.5 C 55.33 30.79 62 26.75 62 22.37 C 62 18 55.33 13.96 48 13.25 C 40.67 12.54 34 15.17 34 18.12 C 34 21.08 40.67 23.71 48 23" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-</svg>

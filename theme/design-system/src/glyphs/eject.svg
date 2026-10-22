@@ -1,5 +1,0 @@
-<!-- baked from recipes/eject.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <polygon points="24,6 35,18 13,18" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <rect x="13" y="22" width="22" height="3" fill="var(--art-coral)" />
-</svg>

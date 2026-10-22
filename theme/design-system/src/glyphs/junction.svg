@@ -1,7 +1,0 @@
-<!-- baked from recipes/junction.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <line x1="8" y1="16" x2="40" y2="16" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <polyline points="23.88,18.12 26,16 23.88,13.88" fill="none" stroke="var(--art-green)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="8" cy="16" r="2.5" fill="var(--art-cyan)" />
-  <circle cx="40" cy="16" r="2.5" fill="var(--art-cyan)" />
-</svg>

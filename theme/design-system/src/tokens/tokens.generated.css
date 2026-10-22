@@ -1,6 +1,7 @@
-/* GENERATED from @maximeheckel/design-system via scripts/gen-tokens.mjs.
-   Do NOT edit by hand — re-run the script after upgrading the package.
-   Site-level overrides belong in tokens.overrides.css (which wins over this). */
+/* The base token set: a frozen snapshot of what the former upstream package
+   (@maximeheckel/design-system) once generated, now hand-owned. There is no
+   generator any more; edit it in place if a base value must change, though a
+   site retune usually belongs in tokens.overrides.css (which wins over this). */
 
 :root {
 	--border-radius-0:4px;
@@ -24,10 +25,6 @@
 	--space-14:256px;
 	--space-15:512px;
 	-webkit-font-smoothing:antialiased;
-	--font-fallback:-apple-system, 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-	--font-display:'Inter', var(--font-fallback);
-	--font-mono:'Fira Code', monospace;
-	--font-numeric:'Space Grotesk', var(--font-fallback);
 	--font-size-1:14px;
 	--font-size-3:16px;
 	--font-size-4:18px;

@@ -53,10 +53,10 @@ export function getReaderStats(raw: unknown = data): ReaderStats {
  * everything below, so the tile cannot end up showing a total in one unit and
  * a curve in another.
  */
-export const METRIC = "visitors" as const;
+const METRIC = "visitors" as const;
 
 /** Bars on every graph, whatever span it covers. */
-export const POINTS = 30;
+const POINTS = 30;
 
 /**
  * The smallest trailing window any graph smooths over.
@@ -66,7 +66,7 @@ export const POINTS = 30;
  * gaps rather than a shape. Summing over a trailing week is what turns it into
  * a shape.
  */
-export const MIN_WINDOW = 7;
+const MIN_WINDOW = 7;
 
 export interface RangeSpec {
 	key: string;
@@ -84,7 +84,7 @@ export interface RangeSpec {
  * resolves itself with time; it is not a case to special-case away, because
  * the two ARE the same answer today and the tile should not pretend otherwise.
  */
-export const RANGES: RangeSpec[] = [
+const RANGES: RangeSpec[] = [
 	{ key: "30d", label: "30 days", span: 30 },
 	{ key: "1y", label: "1 year", span: 365 },
 	{ key: "all", label: "All time", span: Number.POSITIVE_INFINITY },
@@ -119,7 +119,7 @@ export interface RangeView extends RangeSpec {
  * neighbours by more than half, which is what makes the line continuous instead
  * of a dot-to-dot. The floor holds the short ranges at a week.
  */
-export function buildView(days: ReaderDay[], spec: RangeSpec): RangeView {
+function buildView(days: ReaderDay[], spec: RangeSpec): RangeView {
 	const covered = Math.min(spec.span, days.length);
 	const step = covered / POINTS;
 	const window = Math.max(MIN_WINDOW, Math.round(step * 2.5));

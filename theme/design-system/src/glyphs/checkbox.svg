@@ -1,5 +1,0 @@
-<!-- baked from recipes/checkbox.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <rect x="16" y="8" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <polyline points="20,16 22.8,18.8 28,13.2" fill="none" stroke="var(--art-green)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-</svg>

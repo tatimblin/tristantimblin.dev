@@ -1,6 +1,0 @@
-<!-- baked from recipes/iso-shell.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64">
-  <path d="M 15.77 22 L 15.77 28 A 6.12 3.54 0 0 0 17.56 30.5 L 55.67 52.5 A 6.12 3.54 0 0 0 64.33 52.5 L 78.19 44.5 A 6.12 3.54 0 0 0 79.98 42 L 79.98 36 A 6.12 3.54 0 0 1 78.19 38.5 L 64.33 46.5 A 6.12 3.54 0 0 1 55.67 46.5 L 17.56 24.5 A 6.12 3.54 0 0 1 15.77 22 Z" fill="none" stroke="var(--art-lavender)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 64.33 46.5 L 78.19 38.5 A 6.12 3.54 0 0 0 78.19 33.5 L 40.08 11.5 A 6.12 3.54 0 0 0 31.42 11.5 L 17.56 19.5 A 6.12 3.54 0 0 0 17.56 24.5 L 55.67 46.5 A 6.12 3.54 0 0 0 64.33 46.5 Z" fill="none" stroke="var(--art-lavender)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 62.6 43.5 L 76.45 35.5 A 3.67 2.12 0 0 0 76.45 32.5 L 38.35 10.5 A 3.67 2.12 0 0 0 33.15 10.5 L 19.3 18.5 A 3.67 2.12 0 0 0 19.3 21.5 L 57.4 43.5 A 3.67 2.12 0 0 0 62.6 43.5 Z" fill="none" stroke="var(--art-lavender)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-</svg>
