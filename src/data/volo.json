@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-14T18:29:04.912Z",
+	"updated": "2026-10-22T00:35:16.765Z",
 	"username": "tristimb",
 	"seasons": [
 		{
@@ -1795,12 +1795,12 @@
 			},
 			"record": {
 				"wins": 1,
-				"losses": 0,
+				"losses": 1,
 				"ties": 0,
-				"pointsFor": 23,
-				"pointsAgainst": 12,
-				"differential": 11,
-				"rank": 2,
+				"pointsFor": 34,
+				"pointsAgainst": 27,
+				"differential": 7,
+				"rank": 3,
 				"teams": 6
 			},
 			"seed": null,
@@ -1809,7 +1809,7 @@
 				{
 					"startTime": "2026-10-14T03:00:00+00:00",
 					"opponent": "CPK",
-					"opponentRank": 5,
+					"opponentRank": 4,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
@@ -1823,15 +1823,15 @@
 				{
 					"startTime": "2026-10-21T04:00:00+00:00",
 					"opponent": "Arroz con Pacificos",
-					"opponentRank": 3,
+					"opponentRank": 2,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
 					"roundOrder": null,
 					"week": 2,
-					"result": null,
-					"for": null,
-					"against": null,
+					"result": "L",
+					"for": 11,
+					"against": 15,
 					"forfeit": false
 				},
 				{
@@ -1865,7 +1865,7 @@
 				{
 					"startTime": "2026-11-11T05:00:00+00:00",
 					"opponent": "H&O",
-					"opponentRank": 4,
+					"opponentRank": 5,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
@@ -1879,7 +1879,7 @@
 				{
 					"startTime": "2026-11-18T04:00:00+00:00",
 					"opponent": "CPK",
-					"opponentRank": 5,
+					"opponentRank": 4,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
