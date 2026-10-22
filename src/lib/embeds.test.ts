@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { embed, EMBEDS, JSDELIVR } from "./embeds";
+import { embed, EMBEDS } from "./embeds";
 
 describe("embeds", () => {
 	afterEach(() => {
@@ -16,21 +16,21 @@ describe("embeds", () => {
 		});
 	});
 
-	test("resolves a jsDelivr name to the repo at its tag, with its entry and opt-outs", () => {
-		const { version } = EMBEDS["meet-lolla"];
-		const assetBase = `https://cdn.jsdelivr.net/gh/tatimblin/meetLolla@v${version}/`;
+	test("resolves a fixed-URL name to that URL, with its entry and opt-outs", () => {
+		const assetBase = "https://tatimblin.github.io/meetLolla/";
 		expect(embed("meet-lolla")).toEqual({
 			src: `${assetBase}dist/index.js`,
 			assetBase,
 			stillFrame: false,
 			reducedMotion: "mount",
 			webgl: false,
+			touchAction: "auto",
 		});
 	});
 
-	test("a jsDelivr entry without `entry` loads index.js", () => {
-		EMBEDS["test-entry"] = { version: "1.2.3", jsdelivr: "o/r" };
-		expect(embed("test-entry").src).toBe(`${JSDELIVR}/o/r@v1.2.3/index.js`);
+	test("a fixed-URL entry without `entry` loads index.js", () => {
+		EMBEDS["test-entry"] = { version: "1.2.3", url: "https://o.github.io/r/" };
+		expect(embed("test-entry").src).toBe("https://o.github.io/r/index.js");
 	});
 
 	test("throws on an unknown name", () => {
@@ -38,7 +38,7 @@ describe("embeds", () => {
 	});
 
 	test("throws on an entry with both hosts, or neither", () => {
-		EMBEDS["test-entry"] = { version: "1.0.0", base: "https://x.dev", jsdelivr: "o/r" };
+		EMBEDS["test-entry"] = { version: "1.0.0", base: "https://x.dev", url: "https://y.dev/" };
 		expect(() => embed("test-entry")).toThrow(/exactly one/);
 		EMBEDS["test-entry"] = { version: "1.0.0" };
 		expect(() => embed("test-entry")).toThrow(/exactly one/);
@@ -49,9 +49,9 @@ describe("embeds", () => {
 			expect(entry.version, name).toMatch(/^\d+\.\d+\.\d+$/);
 			if (entry.base) {
 				expect(entry.base, name).toMatch(/^https:\/\/[^/]+$/);
-				expect(entry.jsdelivr, name).toBeUndefined();
+				expect(entry.url, name).toBeUndefined();
 			} else {
-				expect(entry.jsdelivr, name).toMatch(/^[\w.-]+\/[\w.-]+$/);
+				expect(entry.url, name).toMatch(/^https:\/\/.+\/$/);
 			}
 			if (entry.entry) expect(entry.entry, name).toMatch(/^[^/].*\.js$/);
 		}

@@ -98,10 +98,10 @@ test.describe("Embed", () => {
 		});
 	});
 
-	// A jsDelivr embed that draws DOM, not WebGL (meet-lolla's registry entry:
-	// `webgl: false`, `reducedMotion: "mount"`). No page uses one yet, so the
-	// catalogue's frame is pointed at it before it is scrolled near.
-	test.describe("a non-WebGL DOM embed from jsDelivr", () => {
+	// A GitHub Pages embed that draws DOM, not WebGL (meet-lolla's registry
+	// entry: `webgl: false`, `reducedMotion: "mount"`). No post uses one, so
+	// the catalogue's frame is pointed at it before it is scrolled near.
+	test.describe("a non-WebGL DOM embed from a fixed URL", () => {
 		const lolla = embedUrls("meet-lolla");
 
 		test.beforeEach(async ({ page }) => {

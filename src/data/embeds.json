@@ -5,10 +5,11 @@
 		"stillFrame": true
 	},
 	"meet-lolla": {
-		"version": "0.1.0",
-		"jsdelivr": "tatimblin/meetLolla",
+		"version": "0.1.1",
+		"url": "https://tatimblin.github.io/meetLolla/",
 		"entry": "dist/index.js",
 		"webgl": false,
-		"reducedMotion": "mount"
+		"reducedMotion": "mount",
+		"touchAction": "auto"
 	}
 }

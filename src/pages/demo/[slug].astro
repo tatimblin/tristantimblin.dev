@@ -1,7 +1,9 @@
 ---
 // /demo/<slug> — one demo: a live experiment (src/content/demos) filling the
 // viewport, not a written post. The scene is the full-screen <Embed> (poster
-// first, mounted at once, `touch-action: none` so a finger drags inside it);
+// first, mounted at once, `touch-action: none` so a finger drags inside it,
+// unless its embeds.json entry says otherwise, e.g. `auto` for a module that
+// scrolls inside its own root);
 // over it, one small panel in the top-left corner — the DS Card: the way back
 // to /txt and the controls (theme, info) in its header; the demo's number and
 // date, its title and its one-line description in the body; notes and credits
@@ -40,7 +42,7 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { demo, no } = Astro.props;
 const { title, description, date, tags, embed, poster, notes, credits } = demo.data;
-const { stillFrame, reducedMotion } = resolveEmbed(embed);
+const { stillFrame, reducedMotion, touchAction = "none" } = resolveEmbed(embed);
 const ogImage = (await getImage({ src: poster.src, format: "jpg" })).src;
 const hasInfo = Boolean(notes || credits);
 ---
@@ -61,7 +63,7 @@ const hasInfo = Boolean(notes || credits);
 			poster={poster.src}
 			alt={poster.alt}
 			fullscreen
-			touchAction="none"
+			touchAction={touchAction}
 			label={`${title}, a live scene`}
 			describedby="demo-description"
 		/>

@@ -99,24 +99,29 @@ viewport, calls its `mount(el, { assetBase })`, and calls `destroy()` once it's
 far away or on navigation. Nothing is installed and CI needs no secrets. To
 move a post to a new release, cut it in the experiment's repo and bump the
 version here. `PUBLIC_EMBED_BASE` points a build's R2 embeds at a local
-stand-in (jsDelivr ones ignore it).
+stand-in (`url` ones ignore it).
 `tests/embed.spec.ts` routes the bucket to a stub module (set
 `PAINTERLY_DIST=<painterly-scene>/dist` to use the real bundle).
 
-**jsDelivr variant** (a public repo, e.g. `tatimblin/meetLolla`): no bucket.
-The entry is `{"version", "jsdelivr": "<owner/repo>", "entry": "dist/index.js"}`
-and resolves to `assetBase = https://cdn.jsdelivr.net/gh/<owner/repo>@v<version>/`,
-`src = <assetBase><entry>`. The media stays in the project's GitHub repo at its
-usual paths (the module resolves them against `assetBase`); the built `dist/`
-is committed at the tag; never move or re-tag a released version (jsDelivr
-caches it for good), cut a new one. Per-entry opt-outs, for any host:
-`"webgl": false` mounts without WebGL (it's required by default), and
-`"reducedMotion": "mount"` mounts under prefers-reduced-motion because the
-module turns its own motion off (otherwise only a `stillFrame` embed mounts
-then). A module that draws DOM instead of a canvas has its stage labelled
-(`role="region"`) instead. `tests/fixtures/test.ts` 404s all of
-`https://cdn.jsdelivr.net/**`; `serveEmbed(page, name, stub)` routes one
-embed to `embed-stub.js` (canvas) or `embed-stub-dom.js` (DOM).
+**GitHub Pages variant** (a public repo, e.g. `tatimblin/meetLolla`): no
+bucket. The repo's `pages.yml` deploys the repo as tagged to GitHub Pages on
+every `v*` tag, built `dist/` included, and the entry is
+`{"version", "url": "https://tatimblin.github.io/<repo>/", "entry": "dist/index.js"}`:
+`assetBase = url`, `src = <url><entry>`, and the media stays at its usual repo
+paths. Pages serves only the latest deployed tag at that unversioned URL, so
+`version` is informational (the release this site was checked against) and a
+new tag changes what the site loads: tag only releases that keep `mount()`'s
+contract. Not jsDelivr: its GitHub CDN refuses repos over 50 MB (meetLolla's
+audio is more), intermittently 403s them and caches the 403.
+Per-entry opt-outs, for any host: `"webgl": false` mounts without WebGL (it's
+required by default); `"reducedMotion": "mount"` mounts under
+prefers-reduced-motion because the module turns its own motion off (otherwise
+only a `stillFrame` embed mounts then); `"touchAction"` replaces the demo
+page's `none` (`auto` for a module that scrolls inside its own root). A module
+that draws DOM instead of a canvas has its stage labelled (`role="region"`)
+instead. `tests/fixtures/test.ts` 404s all of `https://tatimblin.github.io/**`;
+`serveEmbed(page, name, stub)` routes one embed to `embed-stub.js` (canvas) or
+`embed-stub-dom.js` (DOM).
 
 **Demos** are the full-screen form: `src/content/demos/<slug>.md` (all
 frontmatter: title, a one-line description, date, tags, `embed` — a key in

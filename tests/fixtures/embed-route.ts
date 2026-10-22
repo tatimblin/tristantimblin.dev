@@ -5,7 +5,7 @@ import registry from "../../src/data/embeds.json" with { type: "json" };
 
 /**
  * Embed bundles live on other hosts (src/data/embeds.json: an R2 bucket, or
- * jsDelivr), which CI must not depend on, so the embed specs route an embed's
+ * GitHub Pages), which CI must not depend on, so the embed specs route an embed's
  * asset base:
  *   - by default to tests/fixtures/embed-stub.js, a module with the same
  *     mount()/destroy() shape that draws a 2D canvas and counts its calls;
@@ -14,7 +14,7 @@ import registry from "../../src/data/embeds.json" with { type: "json" };
  *     locally.
  */
 
-type Entry = { version: string; base?: string; jsdelivr?: string; entry?: string };
+type Entry = { version: string; base?: string; url?: string; entry?: string };
 const EMBEDS: Record<string, Entry> = registry;
 
 /** The URLs src/lib/embeds.ts builds from the registry (its unit test pins the
@@ -22,9 +22,7 @@ const EMBEDS: Record<string, Entry> = registry;
 export function embedUrls(name: string): { assetBase: string; src: string } {
 	const e = EMBEDS[name];
 	if (!e) throw new Error(`embed-route: "${name}" is not in src/data/embeds.json`);
-	const assetBase = e.jsdelivr
-		? `https://cdn.jsdelivr.net/gh/${e.jsdelivr}@v${e.version}/`
-		: `${e.base}/v${e.version}/`;
+	const assetBase = e.url ?? `${e.base}/v${e.version}/`;
 	return { assetBase, src: `${assetBase}${e.entry ?? "index.js"}` };
 }
 

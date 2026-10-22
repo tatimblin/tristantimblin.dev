@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { test, expect, type Page } from "./fixtures/test";
-import { assetBase, realDist, serveEmbed, src } from "./fixtures/embed-route";
+import { assetBase, embedUrls, realDist, serveEmbed, src } from "./fixtures/embed-route";
 
 /**
  * A DEMO: /demo/<slug>, a live experiment filling the viewport (the
@@ -169,6 +169,40 @@ test.describe("/demo/sutro/", () => {
 		await page.goto(DEMO);
 		await expect(frame(page)).toHaveAttribute("data-state", "failed");
 		await expect(frame(page).locator("img")).toBeVisible();
+	});
+});
+
+// meet Lolla: a DOM + Web Audio module from GitHub Pages (embed-stub-dom.js
+// stands in), no WebGL, scrolling inside its own root.
+test.describe("/demo/meet-lolla/", () => {
+	const LOLLA = "/demo/meet-lolla/";
+	const lolla = embedUrls("meet-lolla");
+
+	test("mounts at once, labels its stage as a region, and passes touch-action auto", async ({ page }) => {
+		const requests = await serveEmbed(page, "meet-lolla", "embed-stub-dom.js");
+		await page.goto(LOLLA);
+		await expect(frame(page)).toHaveAttribute("data-state", "live");
+		expect(requests).toEqual([lolla.src]);
+		expect(await page.evaluate(() => (window as any).__embedStub)).toMatchObject({
+			mounts: 1,
+			assetBase: lolla.assetBase,
+		});
+		await expect(frame(page)).toHaveAttribute("data-touch-action", "auto");
+		const stage = frame(page).locator("[data-embed-stage]");
+		await expect(stage).toHaveAttribute("role", "region");
+		await expect(page.getByRole("region", { name: "meet Lolla, a live scene" })).toBeVisible();
+		await expect(stage).toHaveAccessibleDescription(/Lollapalooza 2017/);
+	});
+
+	test("is on /txt with its DEMO chip, and in the feed and the sitemap", async ({ page, request }) => {
+		await page.goto("/txt/");
+		const row = page.locator(".stack__post").filter({ has: page.locator(`a[href="${LOLLA}"]`) });
+		await expect(row).toHaveCount(1);
+		await expect(row.locator(".stack__title .ds-chip")).toHaveText(/demo/i);
+		const rss = await (await request.get("/rss.xml")).text();
+		expect(rss).toContain(`https://tristantimblin.dev${LOLLA}`);
+		const sitemap = await (await request.get("/sitemap-0.xml")).text();
+		expect(sitemap).toContain(`https://tristantimblin.dev${LOLLA}`);
 	});
 });
 

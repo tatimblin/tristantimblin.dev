@@ -31,10 +31,11 @@ const STUBS = {
 
 export const MEDIA_PATTERN = `${MEDIA_BASE}/**`;
 
-/** jsDelivr, where public embeds are served from (src/lib/embeds.ts). No spec
- *  reaches it: whatever a spec hasn't routed on its page itself (serveEmbed in
- *  tests/fixtures/embed-route.ts, which wins over this) gets a 404. */
-export const JSDELIVR_PATTERN = "https://cdn.jsdelivr.net/**";
+/** GitHub Pages, where public embeds are served from (src/data/embeds.json's
+ *  `url`s). No spec reaches it: whatever a spec hasn't routed on its page
+ *  itself (serveEmbed in tests/fixtures/embed-route.ts, which wins over this)
+ *  gets a 404. */
+export const PAGES_PATTERN = "https://tatimblin.github.io/**";
 
 const routed = new WeakSet<BrowserContext>();
 
@@ -49,7 +50,7 @@ export async function routeMedia(context: BrowserContext): Promise<void> {
 		if (!stub) return route.fulfill({ status: 404, headers });
 		return route.fulfill({ path: stub.path, contentType: stub.contentType, headers });
 	});
-	await context.route(JSDELIVR_PATTERN, (route) =>
+	await context.route(PAGES_PATTERN, (route) =>
 		route.fulfill({ status: 404, headers: { "access-control-allow-origin": "*", "x-media-stub": "1" } }),
 	);
 }

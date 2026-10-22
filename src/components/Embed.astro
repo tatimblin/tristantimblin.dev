@@ -301,10 +301,13 @@ const widths = fullscreen
 	}
 
 	/* The stage sits over the poster, hidden until mount() has returned, then
-	   eased in, so the poster shows through any load or failure. */
+	   eased in, so the poster shows through any load or failure. Its own
+	   stacking context keeps a module's z-indexes inside it, under the page's
+	   chrome (a demo's panel). */
 	.embed__stage {
 		position: absolute;
 		inset: 0;
+		isolation: isolate;
 		opacity: 0;
 		transition: opacity var(--duration-standard) var(--ease-standard);
 	}
