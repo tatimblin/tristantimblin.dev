@@ -1,72 +1,59 @@
-// Readers — read at build time (frontmatter runs in Node) from readers.json,
-// which the readers GitHub Action regenerates daily (the Action's fetch script
-// writes to this file's path — keep them in sync). Readers.astro consumes the
+// Readers — read at build time (frontmatter runs in Node) from pageviews.json,
+// the GoatCounter ledger the nightly workflow refreshes (tools/pageviews/fetch.mjs
+// writes it; .github/workflows/nightly.yml runs it). Readers.astro consumes the
 // normalized shape and the plot geometry returned from here.
 //
 // Vite inlines the JSON at build time, so the data is bundled with the page — no
 // filesystem read or API call at render time, and no token shipped to the
-// client. See tools/readers/fetch.mjs for the shape and
-// .github/workflows/readers.yml for the pipeline (mirrors the github/volo
-// setup).
+// client.
 //
-// WHAT THE NUMBERS ARE. Cloudflare Web Analytics counts pageloads that actually
-// executed its JavaScript beacon, so everything here is a real browser — the
-// zone's own request counts for this site are ~98% crawlers and scanners and are
-// deliberately not used. The figures are SAMPLED and pre-scaled by Cloudflare,
-// which is why they always arrive as multiples of ten: one person is reported
-// as "10". They are estimates, and the widget labels them so.
-import data from "../../data/readers.json";
+// WHAT THE NUMBERS ARE. GoatCounter's site-wide visitors per day: counted by
+// its script in a real browser (so not the crawlers and scanners that make up
+// most of this site's raw requests), and exact, not sampled. Its history
+// before the beacon shipped was imported into GoatCounter and arrives through
+// the same fetch.
+import data from "../../data/pageviews.json";
 
 export interface ReaderDay {
-	date: string; // YYYY-MM-DD, UTC
-	pageloads: number;
-	visits: number; // pageloads that entered the site cold, rather than clicked through
+	date: string; // YYYY-MM-DD, GoatCounter's day
+	visitors: number;
 }
 
 export interface ReaderStats {
+	/** The last whole day in the ledger, or "" before the first nightly read. */
 	updated: string;
-	sampled: boolean;
 	days: ReaderDay[];
 }
 
-// Defensive normalization: readers.json is generated, but tolerate missing or
+// Defensive normalization: pageviews.json is generated, but tolerate missing or
 // partial fields so a bad data file renders an empty widget rather than
 // throwing the build (same contract as getGithubStats()).
-export function getReaderStats(): ReaderStats {
-	const raw = (data ?? {}) as Record<string, unknown>;
+export function getReaderStats(raw: unknown = data): ReaderStats {
+	const ledger = (raw ?? {}) as Record<string, unknown>;
 
-	const days: ReaderDay[] = Array.isArray(raw.days)
-		? (raw.days as Array<Record<string, unknown>>)
+	const days: ReaderDay[] = Array.isArray(ledger.days)
+		? (ledger.days as Array<Record<string, unknown>>)
 				.map((day) => ({
 					date: typeof day.date === "string" ? day.date : "",
-					pageloads: Number(day.pageloads) || 0,
-					visits: Number(day.visits) || 0,
+					visitors: Number(day.visitors) || 0,
 				}))
 				.filter((day) => day.date !== "")
 				.sort((a, b) => a.date.localeCompare(b.date))
 		: [];
 
 	return {
-		updated: typeof raw.updated === "string" ? raw.updated : "",
-		sampled: raw.sampled !== false,
+		updated: typeof ledger.updated === "string" ? ledger.updated : "",
 		days,
 	};
 }
 
 /**
- * WHICH FIGURE THE TILE COUNTS.
- *
- * `visits` is Cloudflare's count of pageloads that arrived from off-site, so it
- * is one per person per visit rather than one per page they then clicked
- * through to — which is what "visitors" means, and what `pageloads` does not.
- * The two diverge sharply here: 370 pageloads over the last 30 days against 130
- * visits, because a reader who lands on the home page and opens two posts is
- * one visitor and three pageloads.
- *
- * Named once, and read by everything below, so the tile cannot end up showing a
- * total in one unit and a curve in another.
+ * WHICH FIGURE THE TILE COUNTS: GoatCounter's visitors, the only daily figure
+ * its API has (it keeps no separate pageview count). Named once, and read by
+ * everything below, so the tile cannot end up showing a total in one unit and
+ * a curve in another.
  */
-export const METRIC = "visits" as const;
+export const METRIC = "visitors" as const;
 
 /** Bars on every graph, whatever span it covers. */
 export const POINTS = 30;
@@ -74,11 +61,10 @@ export const POINTS = 30;
 /**
  * The smallest trailing window any graph smooths over.
  *
- * The raw daily series cannot be plotted: at this site's volume roughly half of
- * all days are zero and the non-zero ones are quantized to multiples of ten, so
- * a direct line is a row of spikes between gaps rather than a shape. Summing
- * over a trailing week is what turns it into a shape — and it is also the more
- * honest reading, since a single day's figure is one or two sampled events.
+ * The raw daily series is too spiky to plot: at this site's volume a day is a
+ * handful of people, often none, so a direct line is a row of spikes between
+ * gaps rather than a shape. Summing over a trailing week is what turns it into
+ * a shape.
  */
 export const MIN_WINDOW = 7;
 
@@ -94,10 +80,9 @@ export interface RangeSpec {
  * The ranges the pill cycles through, in order.
  *
  * Until the committed ledger is older than a year, "1 year" and "All time"
- * necessarily draw the same thing — the file is the only history there is (see
- * the merge note in tools/readers/fetch.mjs). That resolves itself by keeping
- * the Action running; it is not a case to special-case away, because the two
- * ARE the same answer today and the tile should not pretend otherwise.
+ * necessarily draw the same thing — the ledger starts in July 2026. That
+ * resolves itself with time; it is not a case to special-case away, because
+ * the two ARE the same answer today and the tile should not pretend otherwise.
  */
 export const RANGES: RangeSpec[] = [
 	{ key: "30d", label: "30 days", span: 30 },
@@ -260,6 +245,23 @@ export function formatSpan(from: string, to: string): string {
 	return sameMonth || shortSpan
 		? `${head}–${Number(toDay)}`
 		: `${head} – ${toName} ${Number(toDay)}`;
+}
+
+/** "Jul 30, 2026" from an ISO date; "" for anything else. */
+export function formatDay(date: string): string {
+	const [year, month, day] = date.split("-");
+	const name = MONTHS[Number(month) - 1];
+	return name && day ? `${name} ${Number(day)}, ${year}` : "";
+}
+
+/**
+ * The tile's empty state, which has to be honest about which kind of empty it
+ * is: a ledger with nothing in it yet (before the first nightly read), or one
+ * that has started but is too short to draw.
+ */
+export function emptyNote(days: ReaderDay[]): string {
+	const first = days.find((day) => day.visitors > 0);
+	return first ? `Counting since ${formatDay(first.date)}.` : "No visitors counted yet.";
 }
 
 /** Whole days from one ISO date to another. Both are UTC, so no zone maths. */

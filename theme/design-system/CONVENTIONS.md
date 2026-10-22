@@ -402,8 +402,9 @@ article, the tokens the ruled `Prose`, `Fig` and `Index` read, so the page's
 rows and the body's sections fall on the same lines — under the site header:
 
 1. the STATUS STRIP, one `Grid` row between two `--hairline-strong` rules in
-   the caps `Mono`: `TXT / 005` (the ink) · the category · `3 MIN · 541 WORDS` · the date `02.02.2026` on the
-   right edge (the ink, a `time`);
+   the caps `Mono`: `TXT / 005` (the ink) · the category · `3 MIN · 541 WORDS · 212 READS` · the date `02.02.2026` on the
+   right edge (the ink, a `time`). READS is the post's GoatCounter count from
+   the committed ledger (`src/lib/pageviews.ts`), left off under 10;
 2. the column numbers `01 02 03 04`, aria-hidden;
 3. the TITLE (`Heading as="h1" size={6} responsive` — 72px, 44px below 1024)
    across the first three columns, `--line-height-heading` retuned to 0.95 in

@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "./fixtures/test";
 import { assetBase, realDist, serveEmbed, src } from "./fixtures/embed-route";
 
 /**
@@ -179,7 +179,9 @@ test.describe("demos in the index, the feed and the sitemap", () => {
 		await expect(row).toHaveCount(1);
 		await expect(row).toHaveAttribute("data-demo", "");
 		await expect(row.locator(".stack__title .ds-chip")).toHaveText(/demo/i);
-		await expect(row.locator(".stack__meta")).toHaveCount(0);
+		// No meta line, unless it has 10 or more views (src/data/pageviews.json).
+		const meta = row.locator(".stack__meta");
+		if ((await meta.count()) > 0) await expect(meta).toHaveText(/^[\d,]+ views$/);
 		await expect(row.locator("a.stack__read")).toHaveText(/view/i);
 		// Interleaved by date: the rows run newest first across both kinds.
 		const dates = await page
