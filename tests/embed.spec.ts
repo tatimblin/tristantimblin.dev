@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "./fixtures/test";
-import { assetBase, realDist, serveEmbed, src } from "./fixtures/embed-route";
+import { assetBase, embedUrls, realDist, serveEmbed, src } from "./fixtures/embed-route";
 
 /**
  * <Embed>: A POSTER THAT BECOMES THE REAL THING NEAR THE VIEWPORT.
@@ -95,6 +95,78 @@ test.describe("Embed", () => {
 			await page.waitForTimeout(500);
 			await expect(frame(page)).toHaveAttribute("data-state", "poster");
 			expect(requests).toEqual([]);
+		});
+	});
+
+	// A jsDelivr embed that draws DOM, not WebGL (meet-lolla's registry entry:
+	// `webgl: false`, `reducedMotion: "mount"`). No page uses one yet, so the
+	// catalogue's frame is pointed at it before it is scrolled near.
+	test.describe("a non-WebGL DOM embed from jsDelivr", () => {
+		const lolla = embedUrls("meet-lolla");
+
+		test.beforeEach(async ({ page }) => {
+			// A browser without WebGL.
+			await page.addInitScript(() => {
+				const get = HTMLCanvasElement.prototype.getContext;
+				HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...rest: any[]) {
+					return /webgl/.test(type) ? null : (get as any).call(this, type, ...rest);
+				} as any;
+			});
+		});
+
+		const asLolla = (page: Page) =>
+			frame(page).evaluate((el: HTMLElement, { src, assetBase }) => {
+				el.dataset.src = src;
+				el.dataset.assetBase = assetBase;
+				delete el.dataset.webgl;
+				delete el.dataset.stillFrame;
+				el.dataset.reducedMotion = "mount";
+			}, lolla);
+
+		test("an embed that needs WebGL keeps its poster without it", async ({ page }) => {
+			const requests = await serveEmbed(page);
+			await page.goto(PAGE);
+			await frame(page).scrollIntoViewIfNeeded();
+			await page.waitForTimeout(500);
+			await expect(frame(page)).toHaveAttribute("data-state", "poster");
+			expect(requests).toEqual([]);
+		});
+
+		test("mounts without WebGL and labels the stage, not a canvas", async ({ page }) => {
+			const requests = await serveEmbed(page, "meet-lolla", "embed-stub-dom.js");
+			await page.goto(PAGE);
+			await asLolla(page);
+			await frame(page).scrollIntoViewIfNeeded();
+			await expect(frame(page)).toHaveAttribute("data-state", "live");
+			expect(requests).toEqual([lolla.src]);
+			expect(await page.evaluate(() => (window as any).__embedStub)).toEqual({
+				mounts: 1,
+				destroys: 0,
+				assetBase: lolla.assetBase,
+			});
+			const stage = frame(page).locator("[data-embed-stage]");
+			await expect(stage).toHaveAttribute("role", "region");
+			const name = (await frame(page).getAttribute("data-label"))!;
+			expect(name).toBeTruthy();
+			await expect(stage).toHaveAttribute("aria-label", name);
+			await expect(page.getByRole("region", { name, exact: true })).toBeVisible();
+			await expect(frame(page).locator("img")).toHaveAttribute("aria-hidden", "true");
+
+			// Far away: torn down, and the stage's name goes with it.
+			await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+			await expect(frame(page)).toHaveAttribute("data-state", "poster");
+			await expect(stage).toBeEmpty();
+			await expect(stage).not.toHaveAttribute("role", /.*/);
+			expect(await page.evaluate(() => (window as any).__embedStub.destroys)).toBe(1);
+		});
+
+		test("mounts under reduced motion (the module turns its own motion off)", async ({ page }) => {
+			await page.emulateMedia({ reducedMotion: "reduce" });
+			await serveEmbed(page, "meet-lolla", "embed-stub-dom.js");
+			await page.goto(PAGE);
+			await asLolla(page);
+			await frame(page).scrollIntoViewIfNeeded();
+			await expect(frame(page)).toHaveAttribute("data-state", "live");
 		});
 	});
 });

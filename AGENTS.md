@@ -98,9 +98,25 @@ poster, `import()`s `<base>/v<version>/index.js` when the frame nears the
 viewport, calls its `mount(el, { assetBase })`, and calls `destroy()` once it's
 far away or on navigation. Nothing is installed and CI needs no secrets. To
 move a post to a new release, cut it in the experiment's repo and bump the
-version here. `PUBLIC_EMBED_BASE` points a build at a local stand-in.
+version here. `PUBLIC_EMBED_BASE` points a build's R2 embeds at a local
+stand-in (jsDelivr ones ignore it).
 `tests/embed.spec.ts` routes the bucket to a stub module (set
 `PAINTERLY_DIST=<painterly-scene>/dist` to use the real bundle).
+
+**jsDelivr variant** (a public repo, e.g. `tatimblin/meetLolla`): no bucket.
+The entry is `{"version", "jsdelivr": "<owner/repo>", "entry": "dist/index.js"}`
+and resolves to `assetBase = https://cdn.jsdelivr.net/gh/<owner/repo>@v<version>/`,
+`src = <assetBase><entry>`. The media stays in the project's GitHub repo at its
+usual paths (the module resolves them against `assetBase`); the built `dist/`
+is committed at the tag; never move or re-tag a released version (jsDelivr
+caches it for good), cut a new one. Per-entry opt-outs, for any host:
+`"webgl": false` mounts without WebGL (it's required by default), and
+`"reducedMotion": "mount"` mounts under prefers-reduced-motion because the
+module turns its own motion off (otherwise only a `stillFrame` embed mounts
+then). A module that draws DOM instead of a canvas has its stage labelled
+(`role="region"`) instead. `tests/fixtures/test.ts` 404s all of
+`https://cdn.jsdelivr.net/**`; `serveEmbed(page, name, stub)` routes one
+embed to `embed-stub.js` (canvas) or `embed-stub-dom.js` (DOM).
 
 **Demos** are the full-screen form: `src/content/demos/<slug>.md` (all
 frontmatter: title, a one-line description, date, tags, `embed` — a key in

@@ -3,5 +3,12 @@
 		"version": "0.1.0",
 		"base": "https://painterly-scene-media.tristantimblin.dev",
 		"stillFrame": true
+	},
+	"meet-lolla": {
+		"version": "0.1.0",
+		"jsdelivr": "tatimblin/meetLolla",
+		"entry": "dist/index.js",
+		"webgl": false,
+		"reducedMotion": "mount"
 	}
 }
