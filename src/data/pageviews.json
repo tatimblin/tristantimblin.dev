@@ -338,7 +338,7 @@
 		},
 		{
 			"date": "2026-10-21",
-			"visitors": 0
+			"visitors": 2
 		}
 	],
 	"pathDays": [
@@ -381,11 +381,20 @@
 			"date": "2026-10-20",
 			"path": "/txt/why-i-joined-fisker/",
 			"visitors": 1
+		},
+		{
+			"date": "2026-10-21",
+			"path": "/txt/mega-desk/",
+			"visitors": 1
 		}
 	],
 	"paths": {
 		"/txt/asserting-on-agent-behavior/": {
 			"reads": 2,
+			"recent": 1
+		},
+		"/txt/mega-desk/": {
+			"reads": 1,
 			"recent": 1
 		},
 		"/txt/no-honey-we-have-a-dashboard-at-home/": {
