@@ -190,8 +190,8 @@ test.describe("/demo/meet-lolla/", () => {
 		await expect(frame(page)).toHaveAttribute("data-touch-action", "auto");
 		const stage = frame(page).locator("[data-embed-stage]");
 		await expect(stage).toHaveAttribute("role", "region");
-		await expect(page.getByRole("region", { name: "meet Lolla, a live scene" })).toBeVisible();
-		await expect(stage).toHaveAccessibleDescription(/Lollapalooza 2017/);
+		await expect(page.getByRole("region", { name: "Lollapalooza interactive line up, a live scene" })).toBeVisible();
+		await expect(stage).toHaveAccessibleDescription(/lineup poster as an interactive listening experience/);
 	});
 
 	test("is on /txt with its DEMO chip, and in the feed and the sitemap", async ({ page, request }) => {
