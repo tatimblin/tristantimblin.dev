@@ -1,6 +1,6 @@
 ---
-title: "meet Lolla"
-description: "A 2017 school project: the Lollapalooza 2017 lineup as a shuffle player, with 30-second previews and a crowd of raised hands that moves with the music."
+title: "Lollapalooza interactive line up"
+description: "Reimagine the festival's lineup poster as an interactive listening experience."
 date: 2017-06-14
 tags: ["web-audio", "music", "school-project"]
 embed: meet-lolla
