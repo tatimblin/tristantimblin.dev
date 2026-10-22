@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <!-- In and out: dim stubs with dot terminals -->
-  <path d="M 2 16 H 8 M 42 16 H 46" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" />
-  <circle cx="2" cy="16" r="1.5" fill="var(--glyph-dim)" />
-  <circle cx="46" cy="16" r="1.5" fill="var(--glyph-dim)" />
-  <!-- The amplifier: its base sits left, so a readout over the tile's centre lands on the wide half -->
-  <polygon points="8,4 8,28 42,16" fill="none" stroke="var(--art-green)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
-</svg>

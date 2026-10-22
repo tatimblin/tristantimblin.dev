@@ -1,7 +1,0 @@
-<!-- baked from recipes/phase-invert.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <g transform="matrix(1 0 0 -1 0 32)">
-    <path d="M 4 16 C 5.63 11.91 7.19 8 9 8 C 10.81 8 12.37 11.91 14 16 C 15.63 20.09 17.19 24 19 24 C 20.81 24 22.37 20.09 24 16 C 25.63 11.91 27.19 8 29 8 C 30.81 8 32.37 11.91 34 16 C 35.63 20.09 37.19 24 39 24 C 40.81 24 42.37 20.09 44 16" fill="none" stroke="var(--glyph-dim)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  </g>
-  <path d="M 4 16 C 5.63 11.91 7.19 8 9 8 C 10.81 8 12.37 11.91 14 16 C 15.63 20.09 17.19 24 19 24 C 20.81 24 22.37 20.09 24 16 C 25.63 11.91 27.19 8 29 8 C 30.81 8 32.37 11.91 34 16 C 35.63 20.09 37.19 24 39 24 C 40.81 24 42.37 20.09 44 16" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-</svg>

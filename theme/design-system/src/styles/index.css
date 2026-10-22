@@ -18,10 +18,8 @@
  * rules off DS elements (`:not(.ds-heading)`).
  *
  * NOT EVERY COMPONENT IS HERE. What only the catalogue pages and the
- * playgrounds render — the micrographics (art-frame, glyph, motion, scene,
- * readout-stack, formula, number-stream), the spec sheet's labels
- * (rule-label, dimension-label), stat-strip, button, and the tooling (knobs,
- * theme-page) — is imported by its component's frontmatter instead, so Astro
+ * playgrounds render — button, and the tooling (knobs, theme-page) — is
+ * imported by its component's frontmatter instead, so Astro
  * bundles it only on a page that uses one, and every page does not pay for
  * it. Each such file wraps itself in `@layer ds.components { … }` and lands
  * in the same layer as this list; the order statement below comes first on
@@ -66,4 +64,3 @@
 @import "./prose.css" layer(ds.components);
 @import "./blockquote.css" layer(ds.components);
 @import "./fig.css" layer(ds.components);
-@import "./index-table.css" layer(ds.components);

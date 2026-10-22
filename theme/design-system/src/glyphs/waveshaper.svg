@@ -1,6 +1,0 @@
-<!-- baked from recipes/waveshaper.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <polyline points="8,16 40,16" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0.01 3.99" />
-  <polyline points="24,4 24,28" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0.01 3.99" />
-  <path d="M 12 27 L 13.2 24.02 L 14 22.37 L 14.8 20.96 L 15.6 19.77 L 16.4 18.79 L 17.2 18 L 18 17.38 L 19.2 16.7 L 20.8 16.21 L 22.4 16.03 L 26 15.95 L 27.6 15.7 L 28.4 15.46 L 29.2 15.1 L 30 14.63 L 30.8 14 L 31.6 13.21 L 32.4 12.23 L 33.6 10.37 L 34.8 7.98 L 36 5" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-</svg>

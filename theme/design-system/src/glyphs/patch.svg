@@ -1,8 +1,0 @@
-<!-- baked from recipes/patch.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <circle cx="10" cy="10" r="4.5" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="38" cy="10" r="4.5" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 10 10 C 12 34 36 34 38 10" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="10" cy="10" r="2" fill="var(--art-coral)" />
-  <circle cx="38" cy="10" r="2" fill="var(--art-coral)" />
-</svg>

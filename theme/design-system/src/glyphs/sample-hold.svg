@@ -1,5 +1,0 @@
-<!-- baked from recipes/sample-hold.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <path d="M 4 19.42 L 5.5 20.91 L 7 10.96 L 8.5 18.22 L 10 8.53 L 11.5 17.66 L 13 19.96 L 14.5 15.25 L 16 23.3 L 17.5 11.13 L 19 21.04 L 20.5 20.33 L 22 18.89" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 22 18.89 L 22 9 L 26.4 9 L 26.4 20 L 30.8 20 L 30.8 13 L 35.2 13 L 35.2 24 L 39.6 24 L 39.6 11 L 44 11" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" />
-</svg>

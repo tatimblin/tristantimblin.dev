@@ -3,11 +3,11 @@
 // theme-page.css): a box carrying data-theme, the page colour, the
 // primary ink and a hairline, labelled with the theme's name. The catalogue
 // shows the same specimen on both pages side by side with two of these;
-// every themed token — the art palette, the washes, the accent — re-resolves
+// every themed token — the edges, the washes, the accent — re-resolves
 // in scope under the wrapper's attribute (which is why the instrument tokens sit
 // on [data-theme] rather than :root).
 //
-//   <ThemePage theme="light"><ArtFrame svg={raw} label="…" /></ThemePage>
+//   <ThemePage theme="light"><Card title="panel">…</Card></ThemePage>
 import "../styles/theme-page.css";
 import { cx } from "../lib/cx";
 import Mono from "./Mono.astro";

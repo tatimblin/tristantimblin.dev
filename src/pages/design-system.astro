@@ -32,12 +32,9 @@ import Mono from "@whois/design-system/Mono";
 import Figure from "@whois/design-system/Figure";
 import Stat from "@whois/design-system/Stat";
 import Hairline from "@whois/design-system/Hairline";
-import RuleLabel from "@whois/design-system/RuleLabel";
-import DimensionLabel from "@whois/design-system/DimensionLabel";
 import TickRuler from "@whois/design-system/TickRuler";
-// The ruled screen: the boxed chip and the stat strip.
+// The ruled screen: the boxed chip.
 import Chip from "@whois/design-system/Chip";
-import StatStrip from "@whois/design-system/StatStrip";
 import BarGraph from "@whois/design-system/BarGraph";
 import Legend from "@whois/design-system/Legend";
 import LegendItem from "@whois/design-system/LegendItem";
@@ -53,23 +50,6 @@ import PostGroup from "@whois/design-system/PostGroup";
 import PostRow from "@whois/design-system/PostRow";
 import Prose from "@whois/design-system/Prose";
 import Blockquote from "@whois/design-system/Blockquote";
-// The art: the frame, and the file every artwork starts from.
-import ArtFrame from "@whois/design-system/ArtFrame";
-import artTemplate from "@whois/design-system/art/_template.svg?raw";
-import Glyph from "@whois/design-system/Glyph";
-import GlyphTile from "@whois/design-system/GlyphTile";
-import Wave from "@whois/design-system/Wave";
-import Filter from "@whois/design-system/Filter";
-import Gauge from "@whois/design-system/Gauge";
-import Dial from "@whois/design-system/Dial";
-import Ladder from "@whois/design-system/Ladder";
-import Fan from "@whois/design-system/Fan";
-import Matrix from "@whois/design-system/Matrix";
-import ReadoutStack from "@whois/design-system/ReadoutStack";
-import Formula from "@whois/design-system/Formula";
-import NumberStream from "@whois/design-system/NumberStream";
-import Scene from "@whois/design-system/Scene";
-import SceneLabel from "@whois/design-system/SceneLabel";
 // The new primitives.
 import Fig from "@whois/design-system/Fig";
 import Img from "../components/mdx/Img.astro";
@@ -77,123 +57,12 @@ import aptitudePass from "../content/txt/images/aptitude-pass.webp";
 import aptitudeFail from "../content/txt/images/aptitude-fail.webp";
 import Embed from "../components/Embed.astro";
 import sutroPoster from "../content/demos/images/sutro.webp";
-import Index from "@whois/design-system/Index";
-import IndexRow from "@whois/design-system/IndexRow";
 import HitArea from "@whois/design-system/HitArea";
 import WidgetEmpty from "@whois/design-system/WidgetEmpty";
 import Knobs from "@whois/design-system/Knobs";
 import KnobGroup from "@whois/design-system/KnobGroup";
 import Knob from "@whois/design-system/Knob";
 import ThemePage from "@whois/design-system/ThemePage";
-
-// Art tokens, for the swatch row: name → what it is for.
-const artTokens = [
-	["--art-plate", "the tile fill — near-black on dark, bone (--gray-300) on light"],
-	["--art-edge", "the tile's 1px edge"],
-	["--art-ink", "line work and white fills — near-white on dark, dark (--gray-1200) on light"],
-	["--art-ink-2", "the ink at 45% — grids, dashed paths, ghost outlines"],
-	["--art-lavender", "fill"],
-	["--art-coral", "fill — the site accent"],
-	["--art-cyan", "fill"],
-	["--art-green", "fill"],
-	["--art-radius", "the frame's corner (--border-radius-1)"],
-	["--duration-loop", "one cycle of an art animation (6s; 0s under reduced motion)"],
-] as const;
-
-// Small drawings in the language, one per thing the frame owns. Written here
-// rather than as files in the package. Each is the template's shape: viewBox 0 0 320 180, token
-// colours only, non-scaling strokes, at most one data-motion group.
-const line = 'fill="none" stroke="var(--art-ink)" class="art-line" vector-effect="non-scaling-stroke"';
-const line2 = 'fill="none" stroke="var(--art-ink-2)" class="art-line" vector-effect="non-scaling-stroke"';
-const open = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">';
-// The two weights and the two dash patterns, top to bottom.
-const artLines = `${open}
-	<path d="M 20 40 H 300" ${line} />
-	<path d="M 20 70 H 300" fill="none" stroke="var(--art-ink)" class="art-line--2" vector-effect="non-scaling-stroke" />
-	<path d="M 20 100 H 300" ${line2} />
-	<path d="M 20 130 H 300" ${line2} stroke-dasharray="4 4" />
-	<path d="M 20 160 H 300" ${line2} stroke-dasharray="2 6" />
-</svg>`;
-// Ticks every 10 units from 0 to 360 — one period (40) past the right edge,
-// since the slide moves the group left by exactly 40.
-const tall = Array.from({ length: 10 }, (_, i) => `M ${i * 40} 120 v 16`).join(" ");
-const short = Array.from({ length: 37 }, (_, i) => i * 10)
-	.filter((x) => x % 40 !== 0)
-	.map((x) => `M ${x} 120 v 8`)
-	.join(" ");
-const dots = [
-	[150, 40, 3, "lavender"], [190, 70, 2, "ink"], [230, 30, 2.5, "lavender"],
-	[270, 60, 1.5, "ink"], [300, 100, 3, "lavender"], [210, 110, 2, "lavender"],
-	[250, 140, 1.5, "ink"], [170, 150, 2.5, "lavender"], [290, 150, 2, "ink"],
-	[130, 100, 1.5, "lavender"], [320, 30, 2.5, "lavender"], [110, 60, 2, "ink"],
-] as const;
-const artMotions: Array<[string, string, string]> = [
-	[
-		"spin",
-		`${open}
-	<path d="M -10 90 H 200" ${line} />
-	<circle cx="200" cy="90" r="2.5" fill="var(--art-ink)" />
-	<circle cx="270" cy="90" r="60" ${line2} />
-	<g data-motion="spin">
-		<circle cx="270" cy="90" r="44" ${line} />
-		<path d="M 270 46 V 134 M 226 90 H 314 M 238.9 58.9 L 301.1 121.1 M 301.1 58.9 L 238.9 121.1" ${line} />
-		<circle cx="270" cy="58" r="3" fill="var(--art-cyan)" />
-		<circle cx="270" cy="90" r="6" fill="var(--art-ink)" />
-	</g>
-</svg>`,
-		"a reel turning about its own centre — one turn per loop",
-	],
-	[
-		"drift",
-		`${open}
-	<path d="M 40 -10 V 190 M 80 -10 V 190" ${line2} stroke-dasharray="2 6" />
-	<path d="M 40 130 H 80" ${line} />
-	<circle cx="80" cy="130" r="2.5" fill="var(--art-ink)" />
-	<g data-motion="drift">
-		${dots.map(([x, y, r, c]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--art-${c})" />`).join("\n\t\t")}
-	</g>
-</svg>`,
-		"a dot field easing out and back — a slow alternate translate",
-	],
-	[
-		"slide",
-		`${open}
-	<path d="M -10 120 H 330" ${line} />
-	<g data-motion="slide">
-		<path d="${tall}" ${line} />
-		<path d="${short}" ${line2} />
-	</g>
-	<rect x="158" y="96" width="4" height="40" rx="2" fill="var(--art-coral)" />
-	<path d="M 160 -10 V 90" ${line2} stroke-dasharray="4 4" />
-</svg>`,
-		"a rule repeating every 40 units, moved left by 40 — seamless",
-	],
-	[
-		"blink",
-		`${open}
-	<path d="M -10 100 H 60 V 60 H 140 M 140 60 H 220 V 100 H 330" ${line} />
-	<circle cx="60" cy="100" r="2.5" fill="var(--art-ink)" />
-	<circle cx="220" cy="100" r="2.5" fill="var(--art-ink)" />
-	<circle cx="140" cy="60" r="14" ${line2} />
-	<g data-motion="blink">
-		<circle cx="140" cy="60" r="8" fill="var(--art-coral)" />
-	</g>
-</svg>`,
-		"a node dimming and lighting — a hard step, four per loop",
-	],
-	[
-		"dash",
-		`${open}
-	<path d="M -10 40 H 60 V 120 H 160 V 60 H 260 V 140 H 330" ${line} />
-	<g data-motion="dash">
-		<path d="M -10 60 H 40 V 140 H 140 V 80 H 240 V 160 H 330" fill="none" stroke="var(--art-green)" stroke-dasharray="4 4" class="art-line" vector-effect="non-scaling-stroke" />
-	</g>
-	<circle cx="60" cy="40" r="2.5" fill="var(--art-ink)" />
-	<circle cx="260" cy="140" r="2.5" fill="var(--art-ink)" />
-</svg>`,
-		"a dashed trace advancing by one period — stroke-dashoffset, six per loop",
-	],
-];
 
 // Instrument tokens, for the swatch row: name → what it is for.
 const instrumentTokens = [
@@ -655,7 +524,7 @@ const faces = [
 				whichever the site is on: cream with a near-black code slab, and the warm night
 				with the slab sunk below the page and the dashed edge drawn round it.
 			</p>
-			<div class="ds-demo__art-themes">
+			<div class="ds-demo__themes">
 				{(["light", "dark"] as const).map((t) => (
 					<ThemePage theme={t}>
 						<Card title={`panel · ${t}`} data-edge-demo={t}>
@@ -731,27 +600,6 @@ const faces = [
 			<p class="ds-demo__note">A rule: the one edge (<code>--border</code>, dashed) drawn across its container. <code>variant="fade"</code> opts into the divider that fades out at both ends (<code>--hairline-fade</code>, a solid 1px gradient). An <code>hr</code>, or <code>as="span"</code> when decorative.</p>
 			<Hairline />
 			<Hairline variant="fade" style="margin-top: var(--space-4);" />
-		</section>
-
-		<section class="ds-demo__section" id="rule-label">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">RuleLabel · DimensionLabel — the spec sheet's labels</Heading>
-			<p class="ds-demo__note">
-				<code>RuleLabel</code>: a caps label under a 1px dotted hairline — an optional
-				leading <code>no</code> in the accent, the label, an optional trailing <code>meta</code> slot in the tertiary ink. <code>truncate</code> holds it to
-				one line. <code>DimensionLabel</code>: the label centred on a dimension line —
-				end ticks, a hairline, dots on an even pitch.
-			</p>
-			<div class="ds-demo__rule-labels">
-				<RuleLabel no="05">Asserting on agent behavior</RuleLabel>
-				<RuleLabel no="04">Tahoe mountain hair<Mono slot="meta">Latest</Mono></RuleLabel>
-				<RuleLabel no="01" truncate>No honey, we have a dashboard at home</RuleLabel>
-				<RuleLabel no="01">No honey, we have a dashboard at home</RuleLabel>
-			</div>
-			<Flex direction="column" gap={5} style="margin-top: var(--space-6);">
-				<DimensionLabel>Entries</DimensionLabel>
-				<DimensionLabel>Signal chain</DimensionLabel>
-				<DimensionLabel style="max-inline-size: 16rem;">In focus</DimensionLabel>
-			</Flex>
 		</section>
 
 		<section class="ds-demo__section">
@@ -903,7 +751,7 @@ const faces = [
 				where a Pill is the capsule with a wash. As an <code>a</code> or <code>button</code> it is a chip button (the strong hairline under the pointer,
 				the focus ring). SELECTED is read off the chip's own ARIA — <code>aria-current</code> on a link, <code>aria-pressed="true"</code> on a toggle
 				— and fills it with the ink, so what a reader is told and what is drawn cannot
-				fall out of step. The readout TAGS (see <a href="#readouts">Readouts</a>): <code>tone="accent"</code> draws the edge and caps in the accent, and <code>variant="arrow"</code> is a filled tag cut to a chevron — the ink, or the accent with <code>tone="accent"</code>.
+				fall out of step. The TAGS: <code>tone="accent"</code> draws the edge and caps in the accent, and <code>variant="arrow"</code> is a filled tag cut to a chevron — the ink, or the accent with <code>tone="accent"</code>.
 			</p>
 			<Flex gap={2} wrap="wrap" alignItems="center">
 				<Chip>projects</Chip>
@@ -1001,30 +849,6 @@ const faces = [
 						))}
 					</TileGrid>
 				</div>
-			</Flex>
-		</section>
-
-		<section class="ds-demo__section" id="stat-strip">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">StatStrip — hairline-cut stat cells and the accent action</Heading>
-			<p class="ds-demo__note">
-				A row of cells under a hairline, each child a cell with a hairline on its right
-				edge and an equal share of the width — put <code>Stat</code> pairs in
-				it — and the <code>action</code> slot as the last cell, fixed width, filled with
-				the accent and <code>--on-accent</code> on it: give it the link.
-			</p>
-			<Flex direction="column" gap={4} alignItems="stretch">
-				<StatStrip>
-					<Stat label="read">3 min</Stat>
-					<Stat label="words">541</Stat>
-					<Stat label="published">feb 2026</Stat>
-					<a slot="action" href="#">read <span aria-hidden="true">→</span></a>
-				</StatStrip>
-				<StatStrip>
-					<Stat value="12" label="rides" />
-					<Stat value="240 km" label="distance" />
-					<Stat value="9h 12m" label="moving" />
-					<Stat value="1,204 m" label="climbed" />
-				</StatStrip>
 			</Flex>
 		</section>
 
@@ -1248,36 +1072,6 @@ assertions:
 			</div>
 		</section>
 
-		<section class="ds-demo__section" id="index">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Index · IndexRow — a ruled index table</Heading>
-			<p class="ds-demo__note">
-				Rows on the page's column template, cut by hairlines, opened by an inverted <code>head</code> row; a <code>dim</code> row is an end with nothing beyond it.
-				Three cell classes: <code>ds-index__title</code> (the reading-size cell), <code>ds-index__span</code> (takes the rest of the row), <code>ds-index__fold</code> (the fourth column, which folds under the title
-				below 1024). The links are <code>Anchor variant="ink"</code>.
-			</p>
-			<Index aria-label="Sample index" style="--ruled-columns: repeat(4, minmax(0, 1fr));">
-				<IndexRow head>
-					<Mono>index</Mono><Mono>no.</Mono><Mono>title</Mono><Mono class="ds-index__fold">filed</Mono>
-				</IndexRow>
-				<IndexRow>
-					<Mono>tags</Mono><Mono tone="primary">005</Mono>
-					<Mono tone="primary" class="ds-index__span">
-						<Anchor variant="ink" href="#">ai</Anchor> · <Anchor variant="ink" href="#">testing</Anchor> · <Anchor variant="ink" href="#">agents</Anchor>
-					</Mono>
-				</IndexRow>
-				<IndexRow>
-					<Mono>← previous</Mono><Mono tone="primary">004</Mono>
-					<Anchor variant="ink" href="#" class="ds-index__title">Tahoe Mountain Hair</Anchor>
-					<Mono class="ds-index__fold">jun 2025</Mono>
-				</IndexRow>
-				<IndexRow dim>
-					<Mono>next →</Mono><Mono>—</Mono>
-					<Text as="span" size={3} variant="tertiary" class="ds-index__title">Nothing newer</Text>
-					<Mono class="ds-index__fold">—</Mono>
-				</IndexRow>
-			</Index>
-		</section>
-
 		<section class="ds-demo__section" id="hit-area">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">HitArea · WidgetEmpty · Legend swatches</Heading>
 			<p class="ds-demo__note">
@@ -1342,323 +1136,6 @@ assertions:
 				<Button slot="actions" variant="primary" type="button">Copy</Button>
 				<Button slot="actions" variant="tertiary" type="button">Reset</Button>
 			</Knobs>
-		</section>
-
-		{/* ART ------------------------------------------------------------ */}
-		<section class="ds-demo__section" id="art">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Art — tokens and the frame</Heading>
-			<p class="ds-demo__note">
-				The illustration language the plates are drawn in (tokens.overrides.css →
-				ART; <code>ArtFrame</code>; art-frame.css): white 1px line work and flat fills
-				in four colours on a near-black landscape plate. The plate follows the
-				theme: on the cream page it is the first wash (<code>--wash-1</code>) and the
-				ink is the secondary ink, so the same drawing reads as ink on paper, with the
-				white faces dark and the fills a step deeper; at night it is the card. A file names no colour but these tokens, and the frame owns the
-				plate, the edge, the corner, the line weights and the motion, so the whole
-				language retunes in one place. Every file starts from <code>theme/design-system/src/art/_template.svg</code>.
-			</p>
-			<div class="ds-demo__swatches">
-				{artTokens.map(([name, note]) => (
-					<div class="ds-demo__swatch-row">
-						{name === "--art-plate" || name === "--art-edge" ? (
-							<span class="ds-demo__swatch" style={`background: var(${name}); border-color: var(--art-edge)`} />
-						) : name === "--art-radius" ? (
-							<span class="ds-demo__swatch" style="background: var(--art-plate); border-color: var(--art-edge); border-radius: var(--art-radius)" />
-						) : name === "--duration-loop" ? (
-							<span class="ds-demo__swatch" style="border-style: dashed" />
-						) : (
-							<span class="ds-demo__swatch ds-demo__swatch--art" style={`--swatch: var(${name})`}><i /></span>
-						)}
-						<Mono variant="value">{name}</Mono>
-						<Mono variant="text">{note}</Mono>
-					</div>
-				))}
-			</div>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">The frame — the template at tile size and hero size</h2>
-			<p class="ds-demo__note">
-				<code>&lt;ArtFrame svg={"{raw}"} label="…" /&gt;</code> inlines the file on the
-				plate (<code>role="img"</code>); with no label, or <code>decorative</code>, it is
-				aria-hidden and the link around it names it. The box is the file's 16:9
-				and clips (<code>--art-ratio</code> retunes it in scope). Strokes are <code>vector-effect="non-scaling-stroke"</code>, so the line is 1px at 230px
-				and at 720px alike.
-			</p>
-			<div class="ds-demo__art-sizes">
-				<ArtFrame svg={artTemplate} label="_template.svg at tile size" />
-				<ArtFrame svg={artTemplate} label="_template.svg at hero size" />
-			</div>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">Both themes — the plate follows the page</h2>
-			<p class="ds-demo__note">
-				The same file on each theme's page (<code>ThemePage</code>): the warm dark
-				plate and white line on the dark page, the pale wash and the dark ink on cream.
-			</p>
-			<div class="ds-demo__art-themes">
-				{(["light", "dark"] as const).map((t) => (
-					<ThemePage theme={t}>
-						<ArtFrame svg={artTemplate} label={`_template.svg on the ${t} theme`} />
-					</ThemePage>
-				))}
-			</div>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">Line weights</h2>
-			<p class="ds-demo__note">
-				Top to bottom: <code>.art-line</code> (1, the inherited default), <code>.art-line--2</code> (1.5, one emphasis outline), <code>--art-ink-2</code> for the secondary line, and the two dash patterns, <code>4 4</code> and <code>2 6</code>.
-			</p>
-			<div class="ds-demo__art-sizes">
-				<ArtFrame svg={artLines} label="the two line weights and two dash patterns, at tile size" />
-				<ArtFrame svg={artLines} label="the two line weights and two dash patterns, at hero size" />
-			</div>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">Motion — five kinds, paused until hovered</h2>
-			<p class="ds-demo__note">
-				A file marks one group <code>data-motion</code> and the frame owns the
-				keyframes, timed by <code>--duration-loop</code> (<code>data-speed</code> 0.5 / 1 / 2
-				divides it). Paused at rest — the still frame is the poster — and running on
-				hover, focus, inside a hovered link, or with <code>play</code> (<code>data-art-play</code>). Under reduced motion the loop is 0s and nothing
-				moves. The first frame sits inside a link.
-			</p>
-			<label class="ds-demo__art-toggle">
-				<input type="checkbox" data-art-play-toggle />
-				<Mono variant="text">play all — sets data-art-play on each frame</Mono>
-			</label>
-			<div class="ds-demo__art-grid">
-				{artMotions.map(([kind, svg, note], i) => (
-					<figure class="ds-demo__art-fig">
-						{i === 0 ? (
-							<a href="#art" class="ds-demo__art-link" aria-label={`${kind} demo, inside a link`}>
-								<ArtFrame svg={svg} decorative data-art-demo />
-							</a>
-						) : (
-							<ArtFrame svg={svg} label={`${kind} demo`} data-art-demo />
-						)}
-						<figcaption class="ds-demo__art-cap">
-							<Mono variant="value">data-motion="{kind}"</Mono>
-							<Mono variant="text">{note}</Mono>
-						</figcaption>
-					</figure>
-				))}
-			</div>
-
-		</section>
-
-		{/* GLYPHS --------------------------------------------------------- */}
-		<section class="ds-demo__section" id="glyphs">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Glyphs — micrographics and the keycap tile</Heading>
-			<p class="ds-demo__note">
-				The micrographics (<code>theme/design-system/src/glyphs/</code>; <code>Glyph</code>, <code>GlyphTile</code>; glyph.css and motion.css): hairline
-				marks on a 48×32 grid, inlined beside text. Their line work is <code>currentColor</code> — the ink of the text they sit in, dimmed through <code>--glyph-dim</code> (that ink at 40%, resolved on the glyph) — and their
-				colour is the art palette, so a glyph follows the theme as the art does. A
-				glyph is BAKED from a recipe (<code>src/glyphs/recipes/&lt;name&gt;.ts</code>, a
-				few lines on the L0 kit; <code>bun run glyphs:bake</code> writes the file under a
-				header, <code>glyphs:check</code> fails on a stale one) or hand-drawn; the
-				registry (<code>glyphs.ts</code>, <code>GLYPH_NAMES</code>) reads only the files.
-				Where <code>Icon</code> is a UI affordance — a 2px stroke in the ink, a meaning —
-				a glyph is a mark: decorative or data, hairline, aria-hidden unless it says <code>label</code>.
-			</p>
-			<p class="ds-demo__note">
-				<Anchor href="/design-system/glyphs/" arrow="right">The glyph tile sheet</Anchor> shows every glyph and a spread of every generator in tiles, grouped by family (A waves to I bold shapes), a type &amp; modules specimen, with the L3 signal chain and a readouts panel; one tile is <code>/design-system/glyphs#glyph-&lt;name&gt;</code>.
-			</p>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">Inline — in a line of text, and on the size scale</h2>
-			<p class="ds-demo__note"> <code>&lt;Glyph name /&gt;</code> in text is 1em tall, as wide as the viewBox
-				makes it (3:2), centred on the x-height, in the text's ink. <code>size</code> is its height on the space scale, numbered as <code>Icon</code>'s size is: 6 (32px, the viewBox at 1×), 8, 10 (2×), 12 (3×).
-			</p>
-			<Body>
-				A red <Glyph name="plus" /> beside a word, a signal <Glyph name="ring-in" label="a signal arriving" /> arriving
-				(that one has a label, so it is an image), and a <Glyph name="toggle" /> toggle,
-				whose pill is the dimmed ink: three glyphs in a reading line.
-			</Body>
-			<div class="ds-demo__glyph-sizes">
-				{([6, 8, 10, 12] as const).map((s) => (
-					<figure class="ds-demo__glyph-size">
-						<Glyph name="ring-in" size={s} />
-						<figcaption><Mono variant="text">size={s}</Mono></figcaption>
-					</figure>
-				))}
-				<figure class="ds-demo__glyph-size" style="color: var(--art-green)">
-					<Glyph name="toggle" size={10} />
-					<figcaption><Mono variant="text">size={10}, coloured</Mono></figcaption>
-				</figure>
-			</div>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">Tiles — the keycap, on both pages</h2>
-			<p class="ds-demo__note"> <code>&lt;GlyphTile label&gt;</code>: a 3:2 cap in the rim's hairline
-				(<code>--art-edge</code>) on a wash, the caps label under it (a prop, or the <code>label</code> slot), and a <code>readout</code> slot drawn over the mark in
-				the thin numeral. The tile sizes the glyph and fills its column, so a row of
-				them sits on a <code>Grid</code>. Hover a tile and its glyph's motion runs (the
-				ring's dash crawls); <code>play</code> on the glyph, or <code>data-art-play</code> on any ancestor, runs it from the start; under reduced motion nothing moves.
-			</p>
-			<div class="ds-demo__art-themes">
-				{(["light", "dark"] as const).map((t) => (
-					<ThemePage theme={t}>
-						<Grid templateColumns="repeat(3, minmax(0, 1fr))" gap={4} data-glyph-tiles={t}>
-							<GlyphTile label="plus"><Glyph name="plus" /></GlyphTile>
-							<GlyphTile label="ring-in"><Glyph name="ring-in" /></GlyphTile>
-							<GlyphTile label="toggle"><Glyph name="toggle" /></GlyphTile>
-							<GlyphTile label="readout"><Glyph name="ring-in" /><span slot="readout">34</span></GlyphTile>
-							<GlyphTile label="play"><Glyph name="ring-in" play /></GlyphTile>
-							<GlyphTile><Mono slot="label" tone="primary">label slot</Mono><Glyph name="toggle" /></GlyphTile>
-						</Grid>
-					</ThemePage>
-				))}
-			</div>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">Generators — a mark drawn from props, one per family</h2>
-			<p class="ds-demo__note"> A generator (<code>Wave</code>, <code>Envelope</code>, <code>Filter</code>, <code>Curve</code>, <code>Gauge</code>, <code>Dial</code>, <code>Ladder</code>, <code>Segments</code>, <code>Selector</code>, <code>Fan</code>, <code>Rings</code>, <code>Matrix</code>) is a pure function in <code>lib/micro/gen/</code> behind a thin component, rendered through the same host as <code>Glyph</code>: the same size, label, play and ARIA. A labelled <code>Gauge</code>, <code>Dial</code> or <code>Ladder</code> is a <code>role="meter"</code>. Every variant is on the sheet.
-			</p>
-			<Grid templateColumns="repeat(auto-fill, minmax(calc(var(--space-12) * 1.5), 1fr))" gap={4} data-glyph-generators>
-				<GlyphTile label="A · wave"><Wave shape="sine" /></GlyphTile>
-				<GlyphTile label="B · filter"><Filter type="bp" q={3} /></GlyphTile>
-				<GlyphTile label="C · gauge"><Gauge value={0.62} label="Level" /></GlyphTile>
-				<GlyphTile label="D · fan"><Fan /></GlyphTile>
-				<GlyphTile label="E · matrix"><Matrix hot={[2, 2]} /></GlyphTile>
-			</Grid>
-		</section>
-
-		<section class="ds-demo__section" id="readouts">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Readouts — the text beside a mark</Heading>
-			<p class="ds-demo__note">
-				The synth panel pairs its marks with small typographic readouts, and they are HTML text, never inside an SVG (family G on the <Anchor href="/design-system/glyphs/#family-G">glyph sheet</Anchor>). Label and thin numeral is <code>Stat variant="numeral"</code>; the boxed and arrow tags are <code>Chip</code>'s <code>tone="accent"</code> and <code>variant="arrow"</code>. The three below are new: each sits centred in a <code>GlyphTile</code>'s cap where a glyph would.
-			</p>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">ReadoutStack — values, one emphasised</h2>
-			<p class="ds-demo__note">
-				<code>&lt;ReadoutStack values active&gt;</code>: a list, the emphasised value <code>aria-current="true"</code> — drawn in the thin numeral (<code>--font-display</code> at <code>--font-size-6</code>), the rest the label voice in the tertiary ink. <code>active</code> is an index, clamped. Name it with <code>aria-label</code>.
-			</p>
-			<Flex gap={8} wrap="wrap" alignItems="center" data-readout-stacks>
-				<ReadoutStack values={["32.0k", "44.1k", "96.0k"]} active={1} aria-label="Sample rate" />
-				<ReadoutStack values={["1/4", "1/8", "1/16"]} active={0} aria-label="Division" />
-				<ReadoutStack values={["lo", "mid", "hi", "air"]} active={3} aria-label="Band" />
-			</Flex>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">Formula — real superscripts and subscripts</h2>
-			<p class="ds-demo__note">
-				<code>&lt;Formula value&gt;</code>: <code>^</code> raises and <code>_</code> lowers the next run (a <code>{"{…}"}</code> group, or a sign and letters or digits); a hyphen is a minus. The drawing is aria-hidden and a visually hidden twin says <code>label</code>, or the formula spoken — "z to the minus 1".
-			</p>
-			<Flex gap={8} wrap="wrap" alignItems="baseline" data-formulas>
-				<Formula value="z^-1" />
-				<Formula value="x^3" />
-				<Formula value="f_c" label="cutoff frequency" />
-				<Formula value="x_n^{2}" />
-				<Formula value="1/(1-z^-1)" />
-			</Flex>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">NumberStream — rows of digits from a seed</h2>
-			<p class="ds-demo__note">
-				<code>&lt;NumberStream seed rows digits&gt;</code>: the label voice, tabular, the same digits for the same seed. Decorative (aria-hidden) unless it has a <code>label</code>. <code>motion</code> steps the rows up on the art's clock and gating — paused at rest, running under the pointer or with <code>play</code>; still under reduced motion.
-			</p>
-			<Flex gap={8} wrap="wrap" alignItems="start" data-number-streams>
-				<NumberStream />
-				<NumberStream seed={42} rows={4} digits={8} />
-				<NumberStream motion play rows={3} label="Packet counter" />
-			</Flex>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">In tiles, on both pages</h2>
-			<div class="ds-demo__art-themes">
-				{(["light", "dark"] as const).map((t) => (
-					<ThemePage theme={t}>
-						<Grid templateColumns="repeat(3, minmax(0, 1fr))" gap={4} data-readout-tiles={t}>
-							<GlyphTile label="Rate"><ReadoutStack values={["32.0k", "44.1k", "96.0k"]} active={1} aria-label="Sample rate" /></GlyphTile>
-							<GlyphTile label="Delay"><Formula value="z^-1" /></GlyphTile>
-							<GlyphTile label="Stream"><NumberStream motion /></GlyphTile>
-							<GlyphTile label="Mode"><Chip tone="accent">Telematic</Chip></GlyphTile>
-							<GlyphTile label="Action"><Chip variant="arrow" tone="accent">Replace</Chip></GlyphTile>
-							<GlyphTile label="Baud"><Stat variant="numeral" value="45" label="Baud" /></GlyphTile>
-						</Grid>
-					</ThemePage>
-				))}
-			</div>
-		</section>
-
-		{/* SCENES --------------------------------------------------------- */}
-		<section class="ds-demo__section" id="scenes">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Scenes — L4, a baked illustration and its readouts</Heading>
-			<p class="ds-demo__note">
-				A scene is a whole illustration in the art language — a projected globe, a sliced mesh, an exploded assembly — drawn by a source in <code>tools/scenes/&lt;name&gt;/scene.ts</code> with whatever it needs at bake time (d3-geo, a mesh reader: root devDependencies that never ship) and baked by <code>bun run scenes:bake</code> to <code>theme/design-system/src/scenes/&lt;name&gt;.svg</code> under the scene profile: art's rules with a 400×400 panel beside the plate, a budget for a coastline (≤ 400 elements, ≤ 64 KB), one wash fill, a dot-dash and two motions. <code>Scene</code> is an <code>ArtFrame</code> with a layer of HTML readouts over it — <code>SceneLabel</code>, anchored (<code>at</code>) or at a point (<code>x</code> / <code>y</code>), sized by the scene's width — and the file's credit under it; <code>tone</code> is the console's colour, <code>glow</code> the CRT's bloom on the dark page only. Hover a scene: the orbit turns and the marker blinks.
-			</p>
-			<div class="ds-demo__art-themes">
-				{(["light", "dark"] as const).map((t) => (
-					<ThemePage theme={t}>
-						<Scene name="globe" label={`The Earth over the Atlantic, tracked, on the ${t} page`} tone="green" glow data-scene-demo={t}>
-							<SceneLabel x={11} y={5}>300.733 MHz</SceneLabel>
-							<SceneLabel x={43} y={5}>1 U FS</SceneLabel>
-							<SceneLabel x={62} y={5}>C7</SceneLabel>
-							<SceneLabel x={75} y={5}>4:126.6</SceneLabel>
-							<SceneLabel x={11} y={10.5}><Chip tone="accent">Earth 001</Chip></SceneLabel>
-							<SceneLabel x={11} y={20} tone="dim" size="sm">LUX.NA<br />00.1 NASA.P0</SceneLabel>
-							<SceneLabel x={93} y={13} align="end" size="sm" box>stop 801.000 MHz<br />1.5.on | 30</SceneLabel>
-							<SceneLabel x={3.5} y={60}><ReadoutStack values={["3", "0", "2"]} active={2} aria-label="Channel" /></SceneLabel>
-							<SceneLabel x={97} y={57} align="end" variant="numeral" size="lg">06<br />90<br />K5</SceneLabel>
-							<SceneLabel x={20} y={82} size="lg">010</SceneLabel>
-							<SceneLabel x={80} y={82} align="end" size="lg">P.45</SceneLabel>
-							<SceneLabel x={89} y={89.6} align="end" size="sm">stop 801.000 MHz</SceneLabel>
-						</Scene>
-					</ThemePage>
-				))}
-			</div>
-
-			<h2 class="ds-demo__h ds-demo__h--sub">hud — the hand-vector route</h2>
-			<p class="ds-demo__note">
-				Drawn in an editor with the placeholder swatches (<code>tools/scenes/SWATCHES.md</code>, importable as <code>swatches.svg</code>) and exported as <code>tools/scenes/hud/source.svg</code> — a Figma frame at 2×, ids, a <code>style=</code>, the frame's clip and mask and all — then imported by <code>tools/scenes/lib/import-vector.ts</code>: stripped, flattened, each swatch swapped for its <code>--art-*</code> token, a fill opacity ≤ 25% made a wash, the 2 and 3 strokes made 1 and 1.5, the dashes snapped, refitted to the plate and rounded. The centre line's dashes run under the dash motion. The readouts are HTML: the two tuners' FREQ and <code>Dial</code>, blue and red, FF, and the <code>colour-bars</code> glyph.
-			</p>
-			<div class="ds-demo__art-themes">
-				{(["light", "dark"] as const).map((t) => (
-					<ThemePage theme={t}>
-						<Scene name="hud" label={`A driving HUD: a perspective road into a skyline, the gear knob, on the ${t} page`} glow data-scene-demo={`hud-${t}`}>
-							<SceneLabel x={5} y={5} size="sm" tone="blue">Freq</SceneLabel>
-							<SceneLabel x={5} y={13} variant="numeral" size="lg" tone="blue">88.1</SceneLabel>
-							<SceneLabel x={18} y={5} size="xl" tone="blue"><Dial value={0.3} paint="blue" /></SceneLabel>
-							<SceneLabel x={95} y={5} align="end" size="sm" tone="red">Freq</SceneLabel>
-							<SceneLabel x={95} y={13} align="end" variant="numeral" size="lg" tone="red">104.7</SceneLabel>
-							<SceneLabel x={80} y={5} align="end" size="xl" tone="red"><Dial value={0.72} paint="red" /></SceneLabel>
-							<SceneLabel x={5} y={87} size="lg"><Glyph name="colour-bars" /></SceneLabel>
-							<SceneLabel x={17} y={88} size="sm" box>FF</SceneLabel>
-						</Scene>
-					</ThemePage>
-				))}
-			</div>
-			{/* The exploded phone — the constructed route (tools/scenes/phone/). */}
-			<p class="ds-demo__note">
-				The constructed route: <code>phone</code> is the family-H iso part recipes run again with the scene kit — each placed by <code>part(k, recipe, {"{"} at, scale, recolour {"}"})</code> (<code>scenes/parts.ts</code>) along one explosion axis on the plate — with the shells recoloured to the ink so the scene keeps three colours. The outer thirds are the readouts'. Hover it: the axis's dashes march.
-			</p>
-			<div class="ds-demo__art-themes">
-				{(["light", "dark"] as const).map((t) => (
-					<ThemePage theme={t}>
-						<Scene name="phone" label={`A telephone exploded into its parts, on the ${t} page`} glow data-scene-demo={`phone-${t}`}>
-							<SceneLabel x={4} y={7}>Tone</SceneLabel>
-							<SceneLabel x={4} y={14}><Dial value={0.62} ticks={7} paint="red" size={8} /></SceneLabel>
-							<SceneLabel x={4} y={56}>Phonic</SceneLabel>
-							<SceneLabel x={4} y={63} variant="numeral" size="xl">45</SceneLabel>
-							<SceneLabel x={96} y={7} align="end">Baud</SceneLabel>
-							<SceneLabel x={96} y={14} align="end" size="lg">45</SceneLabel>
-							<SceneLabel x={96} y={27} align="end"><Chip tone="accent">Telematic</Chip></SceneLabel>
-							<SceneLabel x={96} y={64} align="end" variant="numeral" size="xl">45</SceneLabel>
-						</Scene>
-					</ThemePage>
-				))}
-			</div>
-			{/* The head — the 3D → line route (tools/scenes/head/, tools/scenes/lib/mesh-lines.ts). */}
-			<p class="ds-demo__note">
-				<code>head</code> is the <strong>3D → line</strong> route: a scanned head read from a <code>.glb</code> at bake time by <code>tools/scenes/lib/mesh-lines.ts</code> — vertices welded, 38 horizontal plane slices (green) over the bust and 9 vertical ones (red) below the chin on the far side, the eye plane in lavender as the scanner's marching line, the silhouette in ink, a z-buffer removing the hidden lines, orthographic at yaw −20° / pitch 8°. The reticle sits on the near eye because the source projected the eye's model point with the same fit; the readouts are HTML as always. The scan is licensed CC BY 3.0, so the credit under the frame is the recipe's and stays wherever the scene goes. Hover: the eye plane marches and the reticle's centre blinks.
-			</p>
-			<div class="ds-demo__art-themes">
-				{(["light", "dark"] as const).map((t) => (
-					<ThemePage theme={t}>
-						<Scene name="head" label={`A scanned head as the contour lines of a scan, turned twenty degrees, on the ${t} page`} tone="green" glow data-scene-demo={`head-${t}`}>
-							<SceneLabel x={9} y={5}><Chip tone="accent">[SCAN]-SUBJ.07</Chip></SceneLabel>
-							<SceneLabel x={9} y={15} tone="dim">LPS.IR<br />CC-BY 3.0</SceneLabel>
-							<SceneLabel x={91} y={5} align="end" size="sm" box>38 SLC | 09 SECT<br />Y −20.0 P 08.0</SceneLabel>
-							<SceneLabel x={91} y={14} align="end" tone="dim">MESH 17684 T</SceneLabel>
-							{/* The reticle is at panel (208.3, 146.1) — 52.1%, 36.5% — so its tag ends just left of it, over the brow. */}
-							<SceneLabel x={46} y={27.5} align="end" size="sm" tone="lavender">L.EYE<br />1.05 1.60 1.70</SceneLabel>
-							<SceneLabel x={9} y={87} size="lg">YAW −20°</SceneLabel>
-							<SceneLabel x={9} y={93.5} size="sm" tone="dim">EPS 0.08 · Z×2</SceneLabel>
-							<SceneLabel x={91} y={86} align="end"><Ladder value={0.72} axis="horizontal" paint="green" size={8} label="Scan progress" /></SceneLabel>
-						</Scene>
-					</ThemePage>
-				))}
-			</div>
 		</section>
 
 		<section class="ds-demo__section">
@@ -1977,16 +1454,6 @@ assertions:
 			}, { signal });
 		}
 
-		// The art demo: the checkbox sets data-art-play on every demo frame, the
-		// attribute ArtFrame's `play` sets.
-		function initArtDemo(signal: AbortSignal) {
-			const toggle = document.querySelector<HTMLInputElement>("[data-art-play-toggle]");
-			const frames = document.querySelectorAll<HTMLElement>("[data-art-demo]");
-			toggle?.addEventListener("change", () => {
-				for (const frame of frames) frame.toggleAttribute("data-art-play", toggle.checked);
-			}, { signal });
-		}
-
 		// Bound with onPage: on every page load (the client router swaps the
 		// DOM), every listener on the bind's signal, so the teardown before a
 		// swap removes them — the theme observer on <html> included.
@@ -1994,7 +1461,6 @@ assertions:
 			const ac = new AbortController();
 			initTokenControls(ac.signal);
 			initFacesDemo(ac.signal);
-			initArtDemo(ac.signal);
 			return () => ac.abort();
 		});
 	</script>
@@ -2026,11 +1492,6 @@ assertions:
 	.ds-demo__section {
 		padding-block: var(--space-6);
 		border-top: var(--border);
-	}
-	.ds-demo__rule-labels {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-		gap: var(--space-5) var(--space-6);
 	}
 	.ds-demo__h {
 		margin-bottom: var(--space-4);
@@ -2073,90 +1534,16 @@ assertions:
 		line-height: 1;
 	}
 
-	/* Art swatches: the ink and the fills are only ever seen on the plate, so
-	   each sits on a plate square. */
-	.ds-demo__swatch--art {
-		display: grid;
-		place-items: center;
-		background: var(--art-plate);
-		border-color: var(--art-edge);
-	}
-	.ds-demo__swatch--art > i {
-		display: block;
-		inline-size: 60%;
-		block-size: 60%;
-		border-radius: var(--border-radius-tile);
-		background: var(--swatch);
-	}
-	/* A small (230px) frame beside a
-	   hero-width frame: the same file, the same 1px line. */
-	.ds-demo__art-sizes {
-		display: grid;
-		grid-template-columns: 230px minmax(0, 1fr);
-		gap: var(--space-4);
-		align-items: start;
-	}
 	/* The edge specimen's prose: the paragraph and the slab a step apart. */
 	.ds-demo__edge-prose {
 		display: grid;
 		gap: var(--space-3);
 	}
-	/* The template on each theme's page (ThemePage), side by side. */
-	.ds-demo__art-themes {
+	/* The same specimen on each theme's page (ThemePage), side by side. */
+	.ds-demo__themes {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 		gap: var(--space-4);
-	}
-	.ds-demo__art-toggle {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-2);
-		margin-bottom: var(--space-4);
-		cursor: pointer;
-	}
-	.ds-demo__art-toggle input {
-		accent-color: var(--accent);
-	}
-	.ds-demo__art-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-		gap: var(--space-4);
-	}
-	.ds-demo__art-fig {
-		margin: 0;
-		display: grid;
-		gap: var(--space-2);
-	}
-	.ds-demo__art-cap {
-		display: grid;
-		gap: var(--space-1);
-	}
-	.ds-demo__art-link {
-		display: block;
-		border-radius: var(--art-radius);
-	}
-	.ds-demo__art-link:focus-visible {
-		outline: var(--focus-ring);
-		outline-offset: var(--focus-ring-offset);
-	}
-	/* The glyph size row: the steps on one baseline, each captioned. */
-	.ds-demo__glyph-sizes {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: flex-end;
-		gap: var(--space-6);
-		margin-top: var(--space-5);
-	}
-	.ds-demo__glyph-size {
-		margin: 0;
-		display: grid;
-		gap: var(--space-2);
-		justify-items: center;
-	}
-	@media (max-width: 640px) {
-		.ds-demo__art-sizes {
-			grid-template-columns: minmax(0, 1fr);
-		}
 	}
 
 	.ds-demo__note {

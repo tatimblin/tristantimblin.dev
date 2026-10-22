@@ -12,7 +12,7 @@
  */
 import { readFile } from "node:fs/promises";
 
-export const isoDay = (date) => date.toISOString().slice(0, 10);
+const isoDay = (date) => date.toISOString().slice(0, 10);
 
 /** The UTC date `n` days before `from` (default now), as YYYY-MM-DD. */
 export function daysAgo(n, from = new Date()) {

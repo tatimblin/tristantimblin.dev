@@ -1,5 +1,0 @@
-<!-- baked from recipes/skyline.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <path d="M 6 24 V 17.18 M 8.4 24 V 16.33 M 10.8 24 V 15.16 M 13.2 24 V 14.43 M 15.6 24 V 11.9 M 18 24 V 13.16 M 20.4 24 V 16.05 M 22.8 24 V 11.66 M 25.2 24 V 10.99 M 27.6 24 V 13.08 M 30 24 V 13.59 M 32.4 24 V 11.95 M 34.8 24 V 15.42 M 37.2 24 V 14.84 M 39.6 24 V 15.67 M 42 24 V 18.45" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" />
-  <line x1="5" y1="25" x2="43" y2="25" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-</svg>

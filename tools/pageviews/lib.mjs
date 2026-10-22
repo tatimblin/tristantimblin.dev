@@ -15,7 +15,7 @@ import { normalisePath } from "../../src/lib/analytics/path.ts";
 import { addDays, dateRange, daysAgo } from "../lib/ledger.mjs";
 
 /** How far back a normal night re-reads. */
-export const REFRESH_DAYS = 45;
+const REFRESH_DAYS = 45;
 
 /**
  * Where a first run (an empty ledger) starts: before the history imported into
@@ -25,18 +25,18 @@ export const REFRESH_DAYS = 45;
 export const BACKFILL_FROM = "2026-07-01";
 
 /** Days per request. A long range is split so no one response is huge. */
-export const CHUNK_DAYS = 30;
+const CHUNK_DAYS = 30;
 
 /** /stats/hits page size: the API's maximum. */
-export const HITS_LIMIT = 100;
+const HITS_LIMIT = 100;
 
 /** "reads" in a page's `recent` figure. */
-export const RECENT_DAYS = 30;
+const RECENT_DAYS = 30;
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Whether a ledger has anything in it yet. */
-export const isEmptyLedger = (ledger) => !ledger?.days?.length && !ledger?.pathDays?.length;
+const isEmptyLedger = (ledger) => !ledger?.days?.length && !ledger?.pathDays?.length;
 
 /**
  * The days to (re-)read: through yesterday (UTC; today is a part-day), from

@@ -27,11 +27,11 @@ export const GOATCOUNTER_ENDPOINT = "https://tristantimblin.goatcounter.com/coun
  * version's URL and hash from that page.
  */
 export const GOATCOUNTER_SRC = "https://gc.zgo.at/count.v5.js";
-export const GOATCOUNTER_INTEGRITY =
+const GOATCOUNTER_INTEGRITY =
 	"sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ";
 
 /** count.js's settings: no automatic count on load (this module counts). */
-export const GOATCOUNTER_SETTINGS = { no_onload: true } as const;
+const GOATCOUNTER_SETTINGS = { no_onload: true } as const;
 
 interface CountVars {
 	path: string;

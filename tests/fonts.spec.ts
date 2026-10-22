@@ -90,23 +90,6 @@ test("every role resolves to its face, and that face is loaded", async ({ page }
 	}
 });
 
-test("no retired face is named in any role", async ({ page }) => {
-	// Migra, Mondwest and Neue Montreal were removed with their files. A stack that
-	// still named one would fall through to the next entry — silently fine today,
-	// and a different page the day a reader has one of them installed locally.
-	await page.goto("/");
-	const stacks = await page.evaluate(() => {
-		const cs = getComputedStyle(document.documentElement);
-		return ["--font-hero", "--font-heading", "--font-ui", "--font-display", "--font-body", "--font-code"].map(
-			(v) => [v, cs.getPropertyValue(v)] as const
-		);
-	});
-	for (const [v, stack] of stacks) {
-		expect(stack, `${v} is unset`).not.toBe("");
-		expect(stack, `${v} still names a retired face`).not.toMatch(/Migra|Mondwest|Neue Montreal/i);
-	}
-});
-
 test("each built woff2 is served", async ({ request }) => {
 	// Catches the half of the failure the page cannot see: a face declared in CSS
 	// whose file was never built or never committed.

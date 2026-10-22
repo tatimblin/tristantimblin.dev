@@ -1,9 +1,0 @@
-<!-- baked from recipes/cards.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <path d="M 16 7 V 5 Q 16 3 18 3 H 38 Q 40 3 40 5 V 17 Q 40 19 38 19 H 36" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 12 11 V 9 Q 12 7 14 7 H 34 Q 36 7 36 9 V 21 Q 36 23 34 23 H 32" fill="none" stroke="var(--glyph-dim)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <rect x="8" y="11" width="24" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <g transform="translate(10 12.5) scale(0.5)">
-    <path d="M 5 26 L 9.56 6 Q 11.23 15 17.92 15 L 29.32 15 Q 32.06 26 43 26" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  </g>
-</svg>

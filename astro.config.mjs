@@ -45,7 +45,7 @@ export default defineConfig({
 		mdx(),
 		// Keep noindex pages out of the sitemap: the /txt tag lists (thin
 		// archive — /txt and the posts carry the content), and the
-		// workbenches, /dotgrid and /design-system (with /design-system/glyphs).
+		// workbenches, /dotgrid and /design-system.
 		sitemap({
 			filter: (page) => {
 				const { pathname } = new URL(page);

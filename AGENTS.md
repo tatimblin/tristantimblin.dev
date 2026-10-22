@@ -64,13 +64,6 @@ locally, `bun run build` in vscode-fleet and copy its `demo/dist` over
 `public/fleet-demo/`. `tests/fleet-demo.spec.ts` boots the embed in the post;
 the demo's own build and bundle-size guard live in vscode-fleet.
 
-**Baked drawings are committed** — the glyphs (`bun run glyphs:bake` from
-`theme/design-system/src/glyphs/recipes/`) and the scenes (`bun run
-scenes:bake` from `tools/scenes/<name>/scene.ts`, whose heavy deps — d3-geo,
-world-atlas — are root devDependencies that never ship) — so `build` does
-not bake; `glyphs:check` / `scenes:check` fail when a source and its file
-have drifted, and the unit tests hold the same line.
-
 ## Media — videos live in R2, not git
 
 Videos are served from the R2 bucket `tristantimblin-dev-media` at
@@ -143,7 +136,7 @@ ad-hoc.
 **The gate (work top-down, stop at the first match):**
 
 1. Maps to a component (text/heading, layout, button, card, pill, chip, link,
-   list, icon, glyph / glyph tile, figure, index table, hit area)? → **use the
+   list, icon, figure, hit area)? → **use the
    DS component.**
 2. Bespoke layout/visual with no matching component? → **write your own CSS but
    consume DS tokens** (`var(--space-*)`, `var(--font-size-*)`, colors, radii).

@@ -75,10 +75,4 @@
 	   needs no softening (its tuning thins it instead, halftone.css). */
 	--halftone-ink: var(--text-primary);
 	--halftone-ink-soft: var(--halftone-ink);
-
-	/* ART, warmed onto the dark panels: the plate the card, the edge the
-	   dashed rule's grey. The line and the fills stay the dark palette the
-	   language was sampled on (tokens.overrides.css, ART). */
-	--art-plate: var(--card-background);
-	--art-edge: #4a463f;
 }

@@ -1,7 +1,0 @@
-<!-- baked from recipes/scale.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <path d="M 6 17 V 9 M 9 17 V 14 M 12 17 V 14 M 15 17 V 11.5 M 18 17 V 14 M 21 17 V 14 M 24 17 V 9 M 27 17 V 14 M 33 17 V 11.5 M 36 17 V 14 M 39 17 V 14 M 42 17 V 9" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" />
-  <line x1="6" y1="17" x2="42" y2="17" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 30 17 V 14" fill="none" stroke="var(--art-cyan)" stroke-width="1" vector-effect="non-scaling-stroke" />
-  <polygon points="30,18.5 32.6,23 27.4,23" fill="var(--art-cyan)" />
-</svg>

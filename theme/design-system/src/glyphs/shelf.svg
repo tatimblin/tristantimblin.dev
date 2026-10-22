@@ -1,5 +1,0 @@
-<!-- baked from recipes/shelf.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <polyline points="4,7 44,7" fill="none" stroke="var(--glyph-dim)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0.01 3.99" />
-  <path d="M 4 22.12 L 6 21.27 L 8.5 19.87 L 10.5 18.53 L 15 15.27 L 17.5 13.66 L 20 12.37 L 22.5 11.45 L 24 11.06 L 26 10.68 L 30 10.27 L 35 10.08 L 44 10.01" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-</svg>

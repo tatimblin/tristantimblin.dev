@@ -1,7 +1,0 @@
-<!-- baked from recipes/crossfade.ts — edit the recipe -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <path d="M 6 9 H 14 C 24 9 24 23 34 23 H 42" fill="none" stroke="var(--art-cyan)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 6 23 H 14 C 24 23 24 9 34 9 H 42" fill="none" stroke="var(--art-coral)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="6" cy="9" r="1.5" fill="var(--art-cyan)" />
-  <circle cx="6" cy="23" r="1.5" fill="var(--art-coral)" />
-</svg>
