@@ -998,8 +998,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		for (const t of await times.all()) {
 			await expect(t).toHaveAttribute("datetime", /^\d{4}-\d{2}-\d{2}$/);
 		}
-		// The column numbers are decoration.
-		await expect(page.locator(".post__colnos")).toHaveAttribute("aria-hidden", "true");
+		// No column numbers over the title.
+		await expect(page.locator(".post__colnos")).toHaveCount(0);
 	});
 
 	test("at 375px: one column, no horizontal scroll, the heads over their text, the hero and the table full width", async ({
@@ -1034,7 +1034,9 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(lead.y).toBeGreaterThanOrEqual(title.y + title.height);
 		const hero = await box(page, "[data-post-hero] img");
 		expect(Math.abs(hero.width - article.width)).toBeLessThanOrEqual(1);
-		await expect(page.locator(".post__colnos")).toBeHidden();
+		// The path's root shortens to `~` on a phone.
+		await expect(page.locator(".site-header__home")).toBeVisible();
+		await expect(page.locator(".site-header__domain")).toBeHidden();
 
 		// The section head is in flow above its text, both the full column.
 		const head = page.locator(".ds-prose-section__head").nth(1);

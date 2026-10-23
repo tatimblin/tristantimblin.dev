@@ -139,12 +139,6 @@ const neighbours = [
 			</Mono>
 		</Grid>
 
-		<Grid templateColumns={COLUMNS} gapX={4} class="post__colnos" aria-hidden="true">
-			{["01", "02", "03", "04"].map((n) => (
-				<Mono>{n}</Mono>
-			))}
-		</Grid>
-
 		<Grid as="header" templateColumns={COLUMNS} gapX={4} class="post__head">
 			<Heading as="h1" size={6} responsive class="post__title">{title}</Heading>
 			{description && (
@@ -248,17 +242,13 @@ const neighbours = [
 	}
 
 	/* THE COLUMN NUMBERS: tiny, over the columns, a step under the strip. */
-	.post__colnos {
-		margin-block-start: var(--space-8);
-	}
-
 	/* THE TITLE AND THE LEAD. The title at the display step (72px, 44px
 	   below 1024) across three columns, balanced so two lines share the
 	   words; the lead a step down in the second and third. */
 	.post__title {
 		grid-column: 1 / span 3;
 		grid-row: 1;
-		margin-block-start: var(--space-5);
+		margin-block-start: var(--space-10);
 		text-wrap: balance;
 		overflow-wrap: anywhere;
 	}
@@ -271,9 +261,13 @@ const neighbours = [
 	}
 
 	/* THE HERO (a ruled Fig): its rows are the component's; the page places
-	   it. */
+	   it. The post's main image stands on its own, without the dashed edge
+	   the body's figures keep. */
 	.post__fig {
 		margin: var(--space-11) 0 0;
+	}
+	.post__fig :global(img) {
+		border: 0;
 	}
 
 	/* THE FOOT CARD. The two halves split the body down a dashed rule; each is
@@ -369,10 +363,8 @@ const neighbours = [
 		.post__strip {
 			--ruled-columns: auto minmax(0, 1fr) auto;
 		}
-		.post__colnos {
-			display: none;
-		}
 		.post__title {
+			margin-block-start: var(--space-5);
 			grid-column: 1;
 			grid-row: auto;
 			text-wrap: pretty;

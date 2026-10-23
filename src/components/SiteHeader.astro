@@ -41,7 +41,9 @@ const isCurrent = (href: string) => href !== "/" && path.startsWith(href);
      the footer. */}
 <header class:list={["site-header", "container", variant === "flow" && "site-header--flow"]}>
 	<span class="site-header__path">
-		<Anchor variant="ink" class="site-header__brand" href="/">tristantimblin.dev</Anchor>
+		<Anchor variant="ink" class="site-header__brand" href="/" aria-label="tristantimblin.dev">
+			<span class="site-header__domain">tristantimblin.dev</span><span class="site-header__home" aria-hidden="true">~</span>
+		</Anchor>
 		{trail.length > 0 && (
 			<span class="site-header__trail" data-trail>
 				{trail.map((step, i) => (
@@ -164,5 +166,18 @@ const isCurrent = (href: string) => href !== "/" && path.startsWith(href);
 	}
 	.site-header__step--here {
 		color: var(--accent);
+	}
+
+	/* On a phone, a path's root is home: the domain shortens to `~`. */
+	.site-header__home {
+		display: none;
+	}
+	@media (max-width: 639px) {
+		.site-header__path:has(.site-header__trail) .site-header__domain {
+			display: none;
+		}
+		.site-header__path:has(.site-header__trail) .site-header__home {
+			display: inline;
+		}
 	}
 </style>
