@@ -130,8 +130,17 @@ export function neighbours<T extends Dated & { id: string }>(
 	return { prev: asc[i - 1] ?? null, next: asc[i + 1] ?? null };
 }
 
-/** The ruled post page's status-strip date: `02.02.2026` — day, month, year,
- *  each padded, dotted; UTC like the rest. */
+/** The post page's date: `Feb 2, 2026`; UTC like the rest. */
+export const longDate = (d: Date) =>
+	new Date(d).toLocaleDateString("en-US", {
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+		timeZone: "UTC",
+	});
+
+/** A dotted date: `02.02.2026` — day, month, year, each padded; UTC like the
+ *  rest. */
 export const dottedDate = (d: Date) => {
 	const date = new Date(d);
 	const day = String(date.getUTCDate()).padStart(2, "0");

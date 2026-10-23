@@ -14,13 +14,15 @@ import Fig from "@whois/design-system/Fig";
 import Grid from "@whois/design-system/Grid";
 import Heading from "@whois/design-system/Heading";
 import Card from "@whois/design-system/Card";
+import CardBody from "@whois/design-system/CardBody";
+import Stat from "@whois/design-system/Stat";
 import Chip from "@whois/design-system/Chip";
 import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
 import Prose from "@whois/design-system/Prose";
 import {
 	categories,
-	dottedDate,
+	longDate,
 	filedDate,
 	isoDate,
 	padNo,
@@ -112,35 +114,24 @@ const neighbours = [
 	trail={[{ label: "txt", href: "/txt/" }, { label: padNo(no) }]}
 >
 	<article class="post" data-post>
-		{/* THE STATUS STRIP, ruled straight under the site header so the two
-		    read as one masthead: the header names the post (its number is the
-		    last step of the path), the strip describes it. */}
-		<Grid templateColumns={COLUMNS} gapX={4} class="post__strip" data-post-strip>
-			{cat && category ? (
-				<Mono class="post__cell post__category">{cat.label}</Mono>
-			) : (
-				<span class="post__cell" />
-			)}
-			{/* Unbreakable runs with breaks between them, so a narrow cell wraps
-			    a run onto a second line, never mid-figure; a phone keeps only
-			    the minutes. */}
-			<Mono class="post__cell post__stats" data-post-stats>
-				<span class="post__run">{stats.minutes} min</span> <span class="post__run post__words">· {stats.words.toLocaleString("en-US")} words</span>{reads && (
-					<Fragment> <span class="post__run post__words post__reads" data-post-reads>· {reads}</span></Fragment>
-				)}
-			</Mono>
-			<Mono
-				as="time"
-				tone="primary"
-				datetime={isoDate(date)}
-				class="post__cell post__cell--end post__date"
-			>
-				{dottedDate(date)}
-			</Mono>
-		</Grid>
-
 		<Grid as="header" templateColumns={COLUMNS} gapX={4} class="post__head">
 			<Heading as="h1" size={6} responsive class="post__title">{title}</Heading>
+		{/* THE DETAILS: a DS Card of Stat pairs (value over its label), in
+		    the first column beside the lead on desktop, between the title and
+		    the lead below 1024. */}
+		<Card class="post__strip" data-post-strip>
+			<CardBody class="post__facts">
+				<Stat label="Date"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
+				{cat && category && <Stat label="Topic"><span class="post__category">{cat.label}</span></Stat>}
+				<Stat label="Length">
+					{/* Unbreakable runs with breaks between them, so a narrow cell
+					    wraps a run onto a second line, never mid-figure. */}
+					<span class="post__stats" data-post-stats><span class="post__run">{stats.minutes} min</span> <span class="post__run">· {stats.words.toLocaleString("en-US")} words</span>{reads && (
+						<Fragment> <span class="post__run post__reads" data-post-reads>· {reads}</span></Fragment>
+					)}</span>
+				</Stat>
+			</CardBody>
+		</Card>
 			{description && (
 				<Text as="p" size={5} responsive variant="primary" family="ui" class="post__lead">
 					{description}
@@ -217,21 +208,21 @@ const neighbours = [
 		--font-heading-weight: var(--font-weight-500);
 	}
 
-	/* THE STATUS STRIP. One row between the strong hairlines, straight under
-	   the site header (BlogLayout's headless main adds no top pad on
-	   desktop), the date on the right edge. */
+	/* THE DETAILS. The Card is the DS's; the page only places it — the first
+	   column, level with the lead — and stacks its Stats a step apart. */
 	.post__strip {
-		border-block: var(--border);
+		grid-column: 1;
+		grid-row: 2;
+		align-self: start;
+		margin-block-start: var(--space-8);
 	}
-	.post__date {
-		grid-column: -2 / -1;
+	.post__facts {
+		display: grid;
+		gap: var(--space-4);
 	}
-	.post__cell {
-		padding-block: var(--space-2);
-		min-inline-size: 0;
-	}
-	.post__cell--end {
-		text-align: end;
+	/* Each Stat reads label first, then the value (a form's order). */
+	.post__facts :global(.ds-stat) {
+		flex-direction: column-reverse;
 	}
 	/* The stats may wrap, between its runs only (the caps Mono is nowrap). */
 	.post__stats {
@@ -241,7 +232,6 @@ const neighbours = [
 		white-space: nowrap;
 	}
 
-	/* THE COLUMN NUMBERS: tiny, over the columns, a step under the strip. */
 	/* THE TITLE AND THE LEAD. The title at the display step (72px, 44px
 	   below 1024) across three columns, balanced so two lines share the
 	   words; the lead a step down in the second and third. */
@@ -351,17 +341,19 @@ const neighbours = [
 		}
 	}
 
-	/* ONE COLUMN, below the desktop step: the strip two by two (the date
-	   still on the right edge), no column numbers, the title a step down,
-	   the hero full width. */
+	/* ONE COLUMN, below the desktop step: the details card under the title,
+	   its Stats side by side, the title a step down, the hero full width. */
 	@media (max-width: 1023px) {
 		.post {
 			--ruled-columns: minmax(0, 1fr);
 		}
-		/* The strip on one line: the category and the reading time on the
-		   left, the date on the right edge. */
 		.post__strip {
-			--ruled-columns: auto minmax(0, 1fr) auto;
+			grid-column: 1;
+			grid-row: auto;
+			margin-block-start: var(--space-5);
+		}
+		.post__facts {
+			grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
 		}
 		.post__title {
 			margin-block-start: var(--space-5);
@@ -376,12 +368,6 @@ const neighbours = [
 		}
 		.post__fig {
 			margin-block-start: var(--space-9);
-		}
-	}
-	/* Phone: the minutes only, so the strip stays one line. */
-	@media (max-width: 639px) {
-		.post__words {
-			display: none;
 		}
 	}
 </style>

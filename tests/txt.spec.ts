@@ -615,25 +615,28 @@ const TRANSPARENT = "rgba(0, 0, 0, 0)";
 test.describe("/txt/<slug> — the post page", () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
 
-	test("the status strip: the number, the category, the stats, the date", async ({
+	test("the number in the path, the details card beside the lead", async ({
 		page,
 	}) => {
 		await page.goto(NEWEST);
 		const strip = page.locator("[data-post-strip]");
 		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 005/i);
+		await expect(strip).toHaveClass(/ds-card/);
+		await expect(strip.locator(".ds-stat__label")).toHaveText(["Date", "Topic", "Length"]);
 		await expect(strip.locator(".post__category")).toHaveText(/Programming/);
 		// The reads follow once the post has 10 or more (src/data/pageviews.json).
 		await expect(strip.locator(".post__stats")).toHaveText(
 			/^\s*3 min · \d{3} words( · [\d,]+ reads)?\s*$/i,
 		);
-		await expect(strip.locator("time.post__date")).toHaveText("02.02.2026");
+		await expect(strip.locator("time.post__date")).toHaveText("Feb 2, 2026");
 		await expect(strip.locator("time.post__date")).toHaveAttribute("datetime", "2026-02-02");
-		// The date sits on the right edge of the row, the number on the left.
-		const row = await box(page, "[data-post-strip]");
-		const date = await box(page, "time.post__date");
-		const no = await box(page, ".post__category");
-		expect(Math.abs(date.x + date.width - (row.x + row.width))).toBeLessThanOrEqual(2);
-		expect(Math.abs(no.x - row.x)).toBeLessThanOrEqual(1);
+		// The card takes the first column, level with the lead in the next.
+		const { article, col } = await columns(page);
+		const card = await box(page, "[data-post-strip]");
+		const lead = await box(page, ".post__lead");
+		expect(Math.abs(card.x - article.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(card.width - col)).toBeLessThanOrEqual(1);
+		expect(Math.abs(card.y - lead.y)).toBeLessThanOrEqual(24);
 	});
 
 	test("no reading ruler, no contents rail, no neighbour cards", async ({ page }) => {
@@ -766,7 +769,7 @@ test.describe("/txt/<slug> — the post page", () => {
 
 		await page.goto(NO_H2S);
 		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 003/i);
-		await expect(page.locator("time.post__date")).toHaveText("06.04.2025");
+		await expect(page.locator("time.post__date")).toHaveText("Apr 6, 2025");
 		const sections = page.locator(".ds-prose--variant-ruled > .ds-prose-section");
 		await expect(sections).toHaveCount(1);
 		await expect(sections).toHaveAttribute("data-section", "00");
@@ -1016,20 +1019,20 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(article.x + article.width).toBeLessThanOrEqual(375 - 16 + 1);
 
 		// The title steps down twice on a phone (72 → 44 → 32) and the lead
-		// once (20 → 18); the strip sits right under the header, number and
-		// date on its first line; the lead stacks under the title; the hero and the index take the whole
-		// column.
+		// once (20 → 18); the details card sits between the title and the
+		// lead, date and topic side by side; the hero and the index take the
+		// whole column.
 		await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveCSS("font-size", "32px");
 		await expect(page.locator(".post__lead")).toHaveCSS("font-size", "18px");
-		const header = await box(page, ".site-header");
 		const strip = await box(page, "[data-post-strip]");
-		expect(strip.y - (header.y + header.height)).toBeLessThanOrEqual(40);
 		const no = await box(page, ".post__category");
 		const date = await box(page, ".post__date");
 		expect(date.y).toBeCloseTo(no.y, 0);
 		const title = await box(page, ".post__title");
 		const lead = await box(page, ".post__lead");
-		expect(lead.y).toBeGreaterThanOrEqual(title.y + title.height);
+		expect(strip.y).toBeGreaterThanOrEqual(title.y + title.height);
+		expect(lead.y).toBeGreaterThanOrEqual(strip.y + strip.height);
+		expect(Math.abs(strip.width - article.width)).toBeLessThanOrEqual(1);
 		const hero = await box(page, "[data-post-hero] img");
 		expect(Math.abs(hero.width - article.width)).toBeLessThanOrEqual(1);
 		// The path's root shortens to `~` on a phone.
