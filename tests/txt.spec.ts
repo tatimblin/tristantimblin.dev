@@ -620,7 +620,7 @@ test.describe("/txt/<slug> — the post page", () => {
 	}) => {
 		await page.goto(NEWEST);
 		const strip = page.locator("[data-post-strip]");
-		await expect(strip.locator(".post__no")).toHaveText(/txt \/ 005/i);
+		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 005/i);
 		await expect(strip.locator(".post__category")).toHaveText(/Programming/);
 		// The reads follow once the post has 10 or more (src/data/pageviews.json).
 		await expect(strip.locator(".post__stats")).toHaveText(
@@ -631,7 +631,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		// The date sits on the right edge of the row, the number on the left.
 		const row = await box(page, "[data-post-strip]");
 		const date = await box(page, "time.post__date");
-		const no = await box(page, ".post__no");
+		const no = await box(page, ".post__category");
 		expect(Math.abs(date.x + date.width - (row.x + row.width))).toBeLessThanOrEqual(2);
 		expect(Math.abs(no.x - row.x)).toBeLessThanOrEqual(1);
 	});
@@ -767,7 +767,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		const withH2s = await box(page, ".ds-prose-section__body > .ds-body");
 
 		await page.goto(NO_H2S);
-		await expect(page.locator(".post__no")).toHaveText(/txt \/ 003/i);
+		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 003/i);
 		await expect(page.locator("time.post__date")).toHaveText("06.04.2025");
 		const sections = page.locator(".ds-prose--variant-ruled > .ds-prose-section");
 		await expect(sections).toHaveCount(1);
@@ -945,13 +945,13 @@ test.describe("/txt/<slug> — the post page", () => {
 
 		// The latest post has no newer: the half says so and links nowhere.
 		await page.goto(LATEST);
-		await expect(page.locator(".post__no")).toHaveText(/txt \/ 006/i);
+		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 006/i);
 		await expect(page.locator('[data-half="next"]')).toHaveText(/newer →\s*This is the latest post/i);
 		await expect(page.locator('[data-half="next"] a')).toHaveCount(0);
 		await expect(page.locator("a.post-more__half--next")).toHaveCount(0);
 
 		await page.goto(OLDEST);
-		await expect(page.locator(".post__no")).toHaveText(/txt \/ 001/i);
+		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 001/i);
 		await expect(page.locator('[data-half="prev"]')).toHaveText(/This is the first post/);
 		await expect(page.locator("a.post-more__half--prev")).toHaveCount(0);
 		await expect(page.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/why-i-joined-fisker/");
@@ -1026,7 +1026,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		const header = await box(page, ".site-header");
 		const strip = await box(page, "[data-post-strip]");
 		expect(strip.y - (header.y + header.height)).toBeLessThanOrEqual(40);
-		const no = await box(page, ".post__no");
+		const no = await box(page, ".post__category");
 		const date = await box(page, ".post__date");
 		expect(date.y).toBeCloseTo(no.y, 0);
 		const title = await box(page, ".post__title");

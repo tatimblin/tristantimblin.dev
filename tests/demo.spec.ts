@@ -249,7 +249,7 @@ test.describe("demos in the index, the feed and the sitemap", () => {
 		await page.goto("/txt/");
 		const posts = await page.locator('.stack__post:not([data-demo]) a.stack__title').count();
 		await page.goto("/txt/subhumans/");
-		await expect(page.locator(".post__no")).toHaveText(`txt / ${String(posts).padStart(3, "0")}`);
+		await expect(page.locator(".site-header [data-trail]")).toHaveText(new RegExp(`txt / ${String(posts).padStart(3, "0")}$`));
 	});
 
 	test("Sutro is in the feed and the sitemap", async ({ request }) => {

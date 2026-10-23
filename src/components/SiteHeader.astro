@@ -11,29 +11,60 @@
 //   flow     in the normal flow at the top of a page — the blog's quiet top bar
 //            (BlogLayout, which PostLayout wraps).
 //
-// Nav is data-driven; pass `links` to change it per page. The brand and the
-// links are DS Anchors in the ink variant — the primary ink at rest, the
-// accent under the pointer or focus, the one focus ring — so the bar carries
-// no link, hover or ring rules of its own.
+// Nav is data-driven; pass `links` to change it per page, and `trail` to put
+// the page's path after the brand (a post: `/ txt / 006`). The brand, the
+// trail and the links are DS Anchors with the bar's own colours: the primary
+// ink at rest, the accent under the pointer, no underline (see below).
 import Anchor from "@whois/design-system/Anchor";
 
 interface Props {
 	links?: Array<{ label: string; href: string }>;
 	variant?: "overlay" | "flow";
+	/** Where the page sits, after the brand: `tristantimblin.dev / txt / 006`.
+	 *  A step with an href links up; the last one is the page itself. */
+	trail?: Array<{ label: string; href?: string }>;
 }
 
-const { links = [{ label: "Writing", href: "/txt/" }], variant = "overlay" } = Astro.props;
+const {
+	links = [{ label: "Writing", href: "/txt/" }],
+	variant = "overlay",
+	trail = [],
+} = Astro.props;
+
+// The nav link for the section the page is in reads in the accent.
+const path = Astro.url.pathname;
+const isCurrent = (href: string) => href !== "/" && path.startsWith(href);
 ---
 
 {/* A .container row (global.css): the brand and nav sit on the same line as
      every contained row on the site — the homepage's, the blog's wide column,
      the footer. */}
 <header class:list={["site-header", "container", variant === "flow" && "site-header--flow"]}>
-	<Anchor variant="ink" class="site-header__brand" href="/">tristantimblin.dev</Anchor>
+	<span class="site-header__path">
+		<Anchor variant="ink" class="site-header__brand" href="/">tristantimblin.dev</Anchor>
+		{trail.length > 0 && (
+			<span class="site-header__trail" data-trail>
+				{trail.map((step, i) => (
+					<Fragment>
+						<span class="site-header__sep" aria-hidden="true"> / </span>
+						{step.href ? (
+							<Anchor variant="ink" class="site-header__step" href={step.href}>{step.label}</Anchor>
+						) : (
+							<span class="site-header__step site-header__step--here" aria-current={i === trail.length - 1 ? "page" : undefined}>{step.label}</span>
+						)}
+					</Fragment>
+				))}
+			</span>
+		)}
+	</span>
 	<nav class="site-header__nav" aria-label="Primary">
 		{
 			links.map((link) => (
-				<Anchor variant="ink" class="site-header__link" href={link.href}>
+				<Anchor
+					variant="ink"
+					class:list={["site-header__link", isCurrent(link.href) && "site-header__link--current"]}
+					href={link.href}
+				>
 					{link.label}
 				</Anchor>
 			))
@@ -98,5 +129,40 @@ const { links = [{ label: "Writing", href: "/txt/" }], variant = "overlay" } = A
 		display: inline-flex;
 		align-items: center;
 		gap: var(--space-5);
+	}
+
+	/* The bar is chrome, not prose: the site's links are blue and underlined
+	   at rest (anchor.css), which read here as two links dropped in a
+	   sentence. The bar takes the ink instead, and the accent under the
+	   pointer and for the section the page is in. */
+	.site-header :global(.ds-anchor) {
+		--link-color: var(--text-primary);
+		--link-hover-color: var(--accent);
+		text-decoration-line: none;
+	}
+	.site-header :global(.site-header__link--current) {
+		--link-color: var(--accent);
+	}
+
+	/* THE PATH: the brand, then where the page sits, in the code face so it
+	   reads as a path. One line; the steps never wrap apart. */
+	.site-header__path {
+		display: inline-flex;
+		align-items: baseline;
+		min-inline-size: 0;
+		white-space: nowrap;
+	}
+	.site-header__trail,
+	.site-header__path:has(.site-header__trail) :global(.site-header__brand) {
+		font-family: var(--font-code);
+		font-size: var(--font-size-0);
+		letter-spacing: 0;
+	}
+	.site-header__sep {
+		color: var(--text-tertiary);
+		white-space: pre;
+	}
+	.site-header__step--here {
+		color: var(--accent);
 	}
 </style>

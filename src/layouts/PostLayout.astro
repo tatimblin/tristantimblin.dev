@@ -109,20 +109,24 @@ const neighbours = [
 	modifiedDate={modified}
 	tags={tags}
 	wordCount={stats.words}
+	trail={[{ label: "txt", href: "/txt/" }, { label: padNo(no) }]}
 >
 	<article class="post" data-post>
+		{/* THE STATUS STRIP, ruled straight under the site header so the two
+		    read as one masthead: the header names the post (its number is the
+		    last step of the path), the strip describes it. */}
 		<Grid templateColumns={COLUMNS} gapX={4} class="post__strip" data-post-strip>
-			<Mono tone="primary" class="post__cell post__no">txt / {padNo(no)}</Mono>
 			{cat && category ? (
 				<Mono class="post__cell post__category">{cat.label}</Mono>
 			) : (
 				<span class="post__cell" />
 			)}
-			{/* Two unbreakable runs with one break between them, so a narrow
-			    cell wraps the reads onto a second line, never mid-figure. */}
+			{/* Unbreakable runs with breaks between them, so a narrow cell wraps
+			    a run onto a second line, never mid-figure; a phone keeps only
+			    the minutes. */}
 			<Mono class="post__cell post__stats" data-post-stats>
-				<span class="post__run">{stats.minutes} min · {stats.words.toLocaleString("en-US")} words{reads && " ·"}</span>{reads && (
-					<Fragment> <span class="post__run post__reads" data-post-reads>{reads}</span></Fragment>
+				<span class="post__run">{stats.minutes} min</span> <span class="post__run post__words">· {stats.words.toLocaleString("en-US")} words</span>{reads && (
+					<Fragment> <span class="post__run post__words post__reads" data-post-reads>· {reads}</span></Fragment>
 				)}
 			</Mono>
 			<Mono
@@ -219,11 +223,14 @@ const neighbours = [
 		--font-heading-weight: var(--font-weight-500);
 	}
 
-	/* THE STATUS STRIP. One row between the strong hairlines, the date on
-	   the right edge. */
+	/* THE STATUS STRIP. One row between the strong hairlines, straight under
+	   the site header (BlogLayout's headless main adds no top pad on
+	   desktop), the date on the right edge. */
 	.post__strip {
-		margin-block-start: var(--space-10);
 		border-block: var(--border);
+	}
+	.post__date {
+		grid-column: -2 / -1;
 	}
 	.post__cell {
 		padding-block: var(--space-2);
@@ -357,22 +364,10 @@ const neighbours = [
 		.post {
 			--ruled-columns: minmax(0, 1fr);
 		}
-		/* The strip two by two, read as two label/value lines: the number
-		   and the date on the first, the category and the reading time on
-		   the second, the right-hand cells on the right edge. */
+		/* The strip on one line: the category and the reading time on the
+		   left, the date on the right edge. */
 		.post__strip {
-			--ruled-columns: repeat(2, minmax(0, 1fr));
-		}
-		.post__date {
-			order: 1;
-		}
-		.post__category,
-		.post__strip > .post__cell:nth-child(2) {
-			order: 2;
-		}
-		.post__stats {
-			order: 3;
-			text-align: end;
+			--ruled-columns: auto minmax(0, 1fr) auto;
 		}
 		.post__colnos {
 			display: none;
@@ -391,11 +386,10 @@ const neighbours = [
 			margin-block-start: var(--space-9);
 		}
 	}
-	/* Phone: the strip sits right under <main>'s top pad (BlogLayout), so
-	   the post starts in the first screen, not after a band of nothing. */
+	/* Phone: the minutes only, so the strip stays one line. */
 	@media (max-width: 639px) {
-		.post__strip {
-			margin-block-start: 0;
+		.post__words {
+			display: none;
 		}
 	}
 </style>
