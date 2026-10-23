@@ -270,8 +270,18 @@ import "@whois/wobble-text/styles.css";
 		pointer-events: auto;
 	}
 
-	/* CONTENT ROW. No top spacing: the hero's pinned travel already separates it
-	   from "other stories", which it rises into and pushes away. */
+	/* CONTENT ROW. The copy rises into "other stories" and pushes it away; the
+	   pin lets go when the riser's top edge meets it, so this padding (opaque,
+	   inside the riser) is the gap held between the pinned heading and the
+	   paragraph. */
+	.home__grid {
+		padding-block-start: var(--space-6);
+	}
+	@media (max-width: 900px) {
+		.home__grid {
+			padding-block-start: var(--space-4);
+		}
+	}
 	.home__copy :global(p + p) {
 		margin-block-start: var(--space-5);
 	}

@@ -56,6 +56,9 @@ stories-heading {
 	   "other stories" tracks --sh-heading-size. */
 	--sh-amp-size: 8rem;
 	--sh-heading-size: 2rem;
+	/* "other stories"'s width as a share of the wordmark's; fitHeading() in
+	   index.ts reads it. Larger on phones (below), where the wordmark is narrow. */
+	--sh-heading-ratio: 0.5;
 	/* Vertical offset from "tristan" to "other stories": the wordmark's baseline down
 	   to the heading's box top. Drives both the track's flow margin and the --sh-top
 	   sticky line together, so they stay coincident (zero slack at rest). NEGATIVE in
@@ -433,6 +436,7 @@ stories-heading {
 @media (max-width: 900px) {
 	stories-heading {
 		--sh-heading-size: 2rem;
+		--sh-heading-ratio: 0.7;
 		/* Half the desktop intro separation (64px → 32px): the tighter single column
 		   wants less air between "other stories" and the intro. */
 		--sh-sub-gap: var(--space-3);

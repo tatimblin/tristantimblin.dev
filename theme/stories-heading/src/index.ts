@@ -145,12 +145,10 @@ export class StoriesHeadingElement extends HTMLElement {
 	    where they cross rather than colliding with it. */
 	private static readonly TUCK_CLEARANCE = -0.12;
 
-	/** "other stories"'s single-line width as a fraction of the wordmark's. One
-	    proportion at every width (see fitHeading). The live site's serif heading ran
-	    ~0.6 of its wordmark, but DM Sans is far wider and taller in the x-height at a
-	    given width, so the same fraction reads as too big; this keeps the heading
-	    clearly subordinate. */
-	private static readonly HEADING_RATIO = 0.42;
+	/** "other stories"'s single-line width as a fraction of the wordmark's, when
+	    the CSS sets no --sh-heading-ratio (styles.css sets one per breakpoint: a
+	    phone's wordmark is narrow, so the heading takes a larger share of it). */
+	private static readonly HEADING_RATIO = 0.5;
 
 	connectedCallback() {
 		this.track = this.querySelector<HTMLElement>("[data-sh-track]");
@@ -586,7 +584,10 @@ export class StoriesHeadingElement extends HTMLElement {
 			this.style.removeProperty("--sh-heading-fitsize");
 			return;
 		}
-		const target = StoriesHeadingElement.HEADING_RATIO * wmWidth;
+		const ratio =
+			parseFloat(getComputedStyle(this).getPropertyValue("--sh-heading-ratio")) ||
+			StoriesHeadingElement.HEADING_RATIO;
+		const target = ratio * wmWidth;
 
 		// Natural single-line ink width of "other stories" at a reference px size.
 		const REF = 100;

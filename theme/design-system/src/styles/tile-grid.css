@@ -38,6 +38,13 @@
 	grid-template-rows: repeat(var(--tile-grid-rows, 7), var(--tile));
 	justify-content: end;
 	align-content: end;
+	/* Only WHOLE columns show: the grid is cut to the widest run of columns
+	   (each a tile plus its gap) that fits the box, pushed to the end, and
+	   clips the older columns that overflow its start — so the left edge
+	   falls between two columns, never through one. */
+	inline-size: calc(round(down, 100cqi + var(--tile-gap), var(--tile) + var(--tile-gap)) - var(--tile-gap));
+	margin-inline-start: auto;
+	overflow: hidden;
 }
 
 .ds-tile {
