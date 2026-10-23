@@ -144,8 +144,9 @@
    the page says otherwise), opened by a hairline: the first column holds the
    section's number and its heading and STICKS while the text scrolls past;
    the next two hold the text — a subgrid, so a block that says
-   `data-prose-bleed` can take every column to the right edge, or with
-   `="full"` the head's column as well — and the
+   `data-prose-bleed` can take every column to the right edge, with
+   `="full"` the head's column as well, or with `="window"` the whole
+   viewport, past the page's margins — and the
    fourth is air. The sectioned markup comes from the site's rehype plugin
    (see Prose.astro for the shape); the mono voice inside it (the numbers,
    the captions, a code block's header, a quote's attribution) is the
@@ -202,6 +203,17 @@
 	z-index: 1;
 	margin-inline-start: calc(-1 * var(--bleed-reach));
 	inline-size: calc(100% + var(--bleed-reach));
+}
+/* `data-prose-bleed="window"` goes past the page's margins to the viewport's
+   edges: a live demo that wants the room. From the whole row (the body plus
+   the reach, centred on the page) it steps out by half of what is left of
+   100vw. The page clips overflow-x, so 100vw's scrollbar never scrolls. */
+.ds-prose-section__body > [data-prose-bleed="window"] {
+	--bleed-reach: calc((100% - 2 * var(--ruled-gap, var(--space-4))) / 3 + var(--ruled-gap, var(--space-4)));
+	position: relative;
+	z-index: 1;
+	margin-inline-start: calc(-1 * var(--bleed-reach) - (100vw - 100% - var(--bleed-reach)) / 2);
+	inline-size: 100vw;
 }
 /* A sub-heading holds onto what it introduces: more room before, less after. */
 .ds-prose-section__body > :is(h3, h4) {
@@ -263,5 +275,8 @@
 	.ds-prose-section__body > [data-prose-bleed="full"] {
 		margin-inline-start: 0;
 		inline-size: auto;
+	}
+	.ds-prose-section__body > [data-prose-bleed="window"] {
+		--bleed-reach: 0px;
 	}
 }

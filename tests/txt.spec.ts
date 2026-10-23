@@ -891,10 +891,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		page,
 	}) => {
 		await page.goto(OLDEST);
-		const { article } = await columns(page);
-		const demo = await box(page, "fleet-demo[data-prose-bleed='full']");
-		expect(Math.abs(demo.x - article.x)).toBeLessThanOrEqual(1);
-		expect(Math.abs(demo.width - article.width)).toBeLessThanOrEqual(1);
+		// The whole window, past the page's margins (data-prose-bleed="window").
+		const demo = await box(page, "fleet-demo[data-prose-bleed='window']");
+		const vw = await page.evaluate(() => window.innerWidth);
+		expect(Math.abs(demo.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(demo.width - vw)).toBeLessThanOrEqual(1);
 		// The Button's box, not element.css's fallback dress.
 		const launch = page.locator("fleet-demo [data-launch]");
 		await expect(launch).toHaveClass(/ds-button--variant-primary/);

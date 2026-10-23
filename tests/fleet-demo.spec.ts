@@ -60,7 +60,8 @@ async function boot(page: Page): Promise<FrameLocator> {
 	await page.goto(POST);
 	const demo = page.locator("fleet-demo");
 	await demo.scrollIntoViewIfNeeded();
-	await demo.locator("[data-launch]").click();
+	// A desktop launches it on view (src/lib/demo-launch.ts); a phone taps.
+	if (page.viewportSize()!.width < 1024) await demo.locator("[data-launch]").click();
 	await expect(demo).toHaveAttribute("data-state", "ready", { timeout: 90_000 });
 
 	const frame = page.frameLocator("iframe[data-fleet-demo-frame]");
@@ -104,7 +105,18 @@ async function runCommand(page: Page, frame: FrameLocator, title: string) {
 	await page.keyboard.press("Enter");
 }
 
-test("the demo stays out of the page until summoned", async ({ page }) => {
+test("a desktop launches the demo as it comes into view, no click", async ({ page }) => {
+	await page.goto(POST);
+	const demo = page.locator("fleet-demo");
+	await expect(demo).toHaveAttribute("data-state", "poster");
+	await demo.scrollIntoViewIfNeeded();
+	await expect(demo).toHaveAttribute("data-state", /launching|ready/);
+});
+
+test("on a phone the demo stays out of the page until summoned", async ({ page }) => {
+	// A phone waits for the button (src/lib/demo-launch.ts); a desktop would
+	// launch on view, the test above.
+	await page.setViewportSize({ width: 393, height: 659 });
 	const asked: string[] = [];
 	page.on("request", (request) => {
 		if (isEmbedRequest(request.url())) asked.push(new URL(request.url()).pathname);
