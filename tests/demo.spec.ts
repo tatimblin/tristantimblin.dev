@@ -248,7 +248,7 @@ test.describe("demos in the index, the feed and the sitemap", () => {
 		// The newest post's number is the count of posts: a demo would push it up.
 		await page.goto("/txt/");
 		const posts = await page.locator('.stack__post:not([data-demo]) a.stack__title').count();
-		await page.goto("/txt/asserting-on-agent-behavior/");
+		await page.goto("/txt/subhumans/");
 		await expect(page.locator(".post__no")).toHaveText(`txt / ${String(posts).padStart(3, "0")}`);
 	});
 

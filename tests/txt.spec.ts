@@ -120,7 +120,7 @@ test.describe("/txt/", () => {
 		const links = await postLinks(page);
 		expect(links.length, "the index should link some posts").toBeGreaterThan(0);
 		expect(new Set(links).size, `duplicate post links: ${links}`).toBe(links.length);
-		expect(links.slice(0, 2)).toEqual(["/txt/asserting-on-agent-behavior/", "/txt/tahoe-mountain-hair/"]);
+		expect(links.slice(0, 2)).toEqual(["/txt/subhumans/", "/txt/asserting-on-agent-behavior/"]);
 		// No year groups, no PostList: the stack alone.
 		await expect(page.locator(".ds-post-group, .ds-post-list")).toHaveCount(0);
 		// The first row (the newest entry, a post or a demo: demos are
@@ -555,8 +555,10 @@ test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) 
  * THE POST PAGE (src/layouts/PostLayout.astro) — the ruled page.
  *
  * Numbers are chronological: 001 the dashboard (May 2023, the oldest), 002
- * Fisker, 003 the Mega Desk, 004 Tahoe, 005 Asserting on Agent Behavior (the
- * newest). `prev` is the older neighbour, `next` the newer. The Mega Desk has
+ * Fisker, 003 the Mega Desk, 004 Tahoe, 005 Asserting on Agent Behavior, 006
+ * sub-human (the latest). Most checks run on Asserting (NEWEST, from when it
+ * was); the ends are checked on LATEST and OLDEST. `prev` is the older
+ * neighbour, `next` the newer. The Mega Desk has
  * no h2s, so it is one section; Asserting has three h2s, so four. Fisker has
  * no hero; the other two of those three do.
  *
@@ -573,6 +575,7 @@ test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) 
  * the geometry.
  */
 const NEWEST = "/txt/asserting-on-agent-behavior/";
+const LATEST = "/txt/subhumans/";
 const NO_H2S = "/txt/mega-desk/";
 const OLDEST = "/txt/no-honey-we-have-a-dashboard-at-home/";
 const NO_HERO = "/txt/why-i-joined-fisker/";
@@ -910,7 +913,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		// A panel: the card's dashed edge, radius and gradient header.
 		await expect(card).toHaveCSS("border-top-style", "dashed");
 		await expect(card).toHaveCSS("border-top-left-radius", "2.5px");
-		await expect(card.locator(".ds-card-header")).toHaveText(/keep reading\s*txt \/ 005 of 005/i);
+		await expect(card.locator(".ds-card-header")).toHaveText(/keep reading\s*txt \/ 005 of 006/i);
 		await expect(card.locator(".ds-card-header")).toHaveCSS("background-image", /linear-gradient/);
 		const cardBox = await box(page, ".post-more");
 		const { article } = await columns(page);
@@ -938,10 +941,14 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(next).toHaveCSS("border-left-style", "dashed");
 		await expect(next).toHaveCSS("text-align", "end");
 
-		// The newest post has no newer: the half says so and links nowhere.
-		await expect(next).toHaveText(/newer →\s*This is the latest post/i);
-		await expect(next.locator("a")).toHaveCount(0);
-		await expect(card.locator("a.post-more__half--next")).toHaveCount(0);
+		await expect(card.locator('a[data-neighbour="next"]')).toHaveAttribute("href", LATEST);
+
+		// The latest post has no newer: the half says so and links nowhere.
+		await page.goto(LATEST);
+		await expect(page.locator(".post__no")).toHaveText(/txt \/ 006/i);
+		await expect(page.locator('[data-half="next"]')).toHaveText(/newer →\s*This is the latest post/i);
+		await expect(page.locator('[data-half="next"] a')).toHaveCount(0);
+		await expect(page.locator("a.post-more__half--next")).toHaveCount(0);
 
 		await page.goto(OLDEST);
 		await expect(page.locator(".post__no")).toHaveText(/txt \/ 001/i);
