@@ -52,6 +52,7 @@ import Prose from "@whois/design-system/Prose";
 import Blockquote from "@whois/design-system/Blockquote";
 // The new primitives.
 import Fig from "@whois/design-system/Fig";
+import Sequence from "@whois/design-system/Sequence";
 import Img from "../components/mdx/Img.astro";
 import aptitudePass from "../content/txt/images/aptitude-pass.webp";
 import aptitudeFail from "../content/txt/images/aptitude-fail.webp";
@@ -1052,6 +1053,54 @@ assertions:
 			</div>
 		</section>
 
+		<section class="ds-demo__section" id="sequence">
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Sequence — a sequence diagram from props</Heading>
+			<p class="ds-demo__note">
+				A <code>Fig</code> holding a diagram: <code>actors</code> (key → name, in lane order)
+				head dashed lifelines, and <code>steps</code> run down them — a note
+				(<code>{"{ note, over }"}</code>, <code>over</code> one key or a <code>[from, to]</code> range),
+				a message (<code>{"{ from, to, text }"}</code>, either direction, the arrowhead at the
+				receiver), or an array of them sharing a row. <code>tone</code> is <code>accent</code> or <code>success</code>.
+				The steps are an <code>ol</code>, and each item opens with hidden words naming its
+				lanes. No script; below 480px of its own width the words drop to the label step.
+			</p>
+			<div class="ds-demo__sequences">
+				<div style="max-inline-size: var(--measure-prose);">
+					<Sequence
+						caption="No messages pasted between chats"
+						actors={{ jess: "Jess", jc: "Jess’s Claude", tc: "Tristan’s Claude", tristan: "Tristan" }}
+						steps={[
+							{ note: "Agree on a plan for paging the orders API", over: ["jess", "tristan"] },
+							[
+								{ note: "Builds the API", over: "jc" },
+								{ note: "Builds the store", over: "tc" },
+							],
+							{ from: "jess", to: "jc", text: "Paginate by cursor instead" },
+							{ note: "Changes the API", over: "jc" },
+							{ from: "jc", to: "tc", text: "The API pages by cursor now", tone: "accent" },
+							{ note: "Updates the store to match", over: "tc" },
+							[
+								{ note: "Tests pass", over: "jc", tone: "success" },
+								{ note: "Tests pass", over: "tc", tone: "success" },
+							],
+						]}
+					/>
+				</div>
+				<div style="max-inline-size: 24rem;">
+					<Sequence
+						caption="Two lanes, both directions"
+						actors={{ client: "Client", server: "Server" }}
+						steps={[
+							{ from: "client", to: "server", text: "GET /orders?cursor=abc" },
+							{ note: "Reads a page", over: "server" },
+							{ from: "server", to: "client", text: "200, next cursor" },
+							{ note: "Done", over: ["client", "server"], tone: "success" },
+						]}
+					/>
+				</div>
+			</div>
+		</section>
+
 		<section class="ds-demo__section" id="embed">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Embed — a live experiment in a Fig</Heading>
 			<p class="ds-demo__note">
@@ -1495,6 +1544,10 @@ assertions:
 	}
 	.ds-demo__h {
 		margin-bottom: var(--space-4);
+	}
+	.ds-demo__sequences {
+		display: grid;
+		gap: var(--space-6);
 	}
 	/* A sub-heading inside a section: the next block of the same section. A
 	   bare h2, so set a step under the section's own Heading (size 2) — the

@@ -81,14 +81,14 @@ such rules off DS elements (`h2:where(:not(.ds-heading))`, global.css).
 — including columns/gutters/breakpoints for `Grid`. Open it instead of guessing a prop; this doc
 deliberately does not duplicate per-component API tables.
 
-**Components available (51):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
+**Components available (52):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
 `Strong`, `Heading`, `H1`–`H4`, `Body`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Pill`, `Chip`, `Anchor`, `List`, `ListItem`, `Icon`,
 `VisuallyHidden`, `WidgetGrid`, `Widget`, `WidgetEmpty`, `HitArea` — the
 instrument UI (next section): `Mono`, `Figure`, `Stat`, `Hairline`,
 `TickRuler`, `BarGraph`, `Legend`, `LegendItem`,
 `TileGrid`, `Tile`, `Faces`, `Face` — the reading UI (the section after it):
-`PostList`, `PostGroup`, `PostRow`, `Prose`, `Blockquote`, `Fig` — and the
+`PostList`, `PostGroup`, `PostRow`, `Prose`, `Blockquote`, `Fig`, `Sequence` — and the
 catalogue's tooling: `Knobs`, `KnobGroup`, `Knob`, `ThemePage`.
 
 **Client helpers** (`@whois/design-system/lib/*`, plain TS, no DOM at import):
@@ -351,6 +351,15 @@ the UI face, where the accent appears once, on a hovered title.
   `layout="flow"` (the caption line under the image — what the plugin emits)
   `| "ruled"` (a row on the page's columns: the label in the first, the image
   and caption across the other three; stacks below 1024 — the post's hero).
+- `Sequence` — a sequence diagram as a flow `Fig`, from props, no script:
+  `actors` (`{ key: "Name" }`, lane order), `steps` — each a note
+  (`{ note, over }`, `over` a key or a `[from, to]` range), a message
+  (`{ from, to, text }`, either direction, the arrowhead at the receiver), or
+  an array of them sharing a row — `tone: "accent" | "success"` on any item,
+  and `caption`. Dashed actor boxes and lifelines, notes on the page colour;
+  the steps are an `ol` and each item opens with VisuallyHidden words naming
+  its lanes. The stage is a container: below 480px of its own width the words
+  drop to the label step. Pass `data-prose-bleed` to widen it in a post.
 - `Blockquote` — the quote on the ruled page, and the one design: no fill, a
   `--bar-width` bar of the accent down the left edge, the words a step up (the
   body role's size and leading retuned in scope), an attribution as a `footer`

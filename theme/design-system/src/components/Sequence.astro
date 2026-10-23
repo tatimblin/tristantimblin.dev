@@ -1,0 +1,157 @@
+---
+// Sequence — a sequence diagram from props, for a post (styles/sequence.css).
+// No script and no library: a grid of one column per actor, dashed lifelines
+// down the column centres, notes as small dashed boxes and messages as a
+// line between two lane centres with the arrowhead at the receiver. It is a
+// `Fig` (the caption line under it in the caps mono), so it sits in a post
+// like any other figure and follows the theme through the tokens.
+//
+//   <Sequence
+//     caption="…"
+//     actors={{ jess: "Jess", jc: "Jess’s Claude" }}
+//     steps={[
+//       { note: "Agree on a plan", over: ["jess", "jc"] },   a note over a range
+//       [{ note: "Builds", over: "jc" }, { … }],             several in one row
+//       { from: "jess", to: "jc", text: "Paginate by cursor" }, a message
+//       { note: "Tests pass", over: "jc", tone: "success" },
+//     ]}
+//   />
+//
+// `actors` is an object in lane order, key → name. A step is one item or an
+// array of items sharing a row (items whose lanes overlap stack inside it).
+// An item is a NOTE (`note`, `over`: a key, or `[from, to]` keys for a
+// range) or a MESSAGE (`from`, `to`, `text`; either direction). `tone`
+// colours one: `accent` (the DS's one accent — the message that matters)
+// or `success`.
+//
+// READ WITHOUT THE PICTURE: the actors are a list, the steps an <ol> in
+// reading order, and every item opens with visually hidden words naming its
+// lanes ("Jess to Jess’s Claude:", "Jess’s Claude:"); the lifelines and the
+// lines are aria-hidden. Everything else passes through to the figure
+// (`data-prose-bleed` widens it in a post).
+import { cx } from "../lib/cx";
+import Fig from "./Fig.astro";
+import Mono from "./Mono.astro";
+import VisuallyHidden from "./VisuallyHidden.astro";
+
+type Tone = "accent" | "success";
+interface Note {
+	note: string;
+	/** One actor's key, or the first and last of a range. */
+	over: string | [string, string];
+	tone?: Tone;
+}
+interface Message {
+	from: string;
+	to: string;
+	text: string;
+	tone?: Tone;
+}
+type Item = Note | Message;
+type Step = Item | Item[];
+
+interface Props {
+	/** Key → display name, in lane order (left to right). */
+	actors: Record<string, string>;
+	steps: Step[];
+	caption?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { actors, steps, caption, class: className, ...rest } = Astro.props;
+
+const keys = Object.keys(actors);
+const lane = (key: string) => {
+	const i = keys.indexOf(key);
+	if (i < 0) throw new Error(`Sequence: unknown actor "${key}" (actors: ${keys.join(", ")})`);
+	return i;
+};
+
+const isNote = (item: Item): item is Note => "note" in item;
+
+/** One item, resolved to its columns (1-based grid lines) and its words. */
+function resolve(item: Item) {
+	if (isNote(item)) {
+		const [a, b] = Array.isArray(item.over) ? item.over : [item.over, item.over];
+		const lo = Math.min(lane(a), lane(b));
+		const hi = Math.max(lane(a), lane(b));
+		const who =
+			lo === hi
+				? actors[keys[lo]]
+				: lo === 0 && hi === keys.length - 1
+					? "Everyone"
+					: `${actors[keys[lo]]} to ${actors[keys[hi]]}`;
+		return { kind: "note" as const, lo, hi, who, text: item.note, tone: item.tone };
+	}
+	const from = lane(item.from);
+	const to = lane(item.to);
+	if (from === to) throw new Error(`Sequence: a message needs two actors ("${item.from}" to itself)`);
+	return {
+		kind: "message" as const,
+		lo: Math.min(from, to),
+		hi: Math.max(from, to),
+		dir: to > from ? ("right" as const) : ("left" as const),
+		who: `${actors[item.from]} to ${actors[item.to]}`,
+		text: item.text,
+		tone: item.tone,
+	};
+}
+
+const rows = steps.map((step) => (Array.isArray(step) ? step : [step]).map(resolve));
+---
+
+<Fig caption={caption} class={cx("ds-sequence", className)} {...rest}>
+	<div class="ds-sequence__stage" style={`--sequence-lanes: ${keys.length}`}>
+		<ul class="ds-sequence__actors">
+			{keys.map((key) => <li class="ds-sequence__actor">
+					<span class="ds-mono ds-caps">{actors[key]}</span>
+				</li>)}
+		</ul>
+		<div class="ds-sequence__body">
+			<div class="ds-sequence__lifelines" aria-hidden="true">
+				{keys.map(() => <span />)}
+			</div>
+			<ol class="ds-sequence__steps">
+				{
+					rows.map((items) => (
+						<li class="ds-sequence__step">
+							{items.map((it) =>
+								it.kind === "note" ? (
+									<p
+										class={cx(
+											"ds-sequence__note",
+											it.lo !== it.hi && "ds-sequence__note--span",
+											it.tone && `ds-sequence__item--tone-${it.tone}`,
+										)}
+										style={`grid-column: ${it.lo + 1} / ${it.hi + 2}`}>
+										<VisuallyHidden as="span">{`${it.who}: `}</VisuallyHidden>
+										{it.text}
+									</p>
+								) : (
+									<div
+										class={cx(
+											"ds-sequence__message",
+											`ds-sequence__message--dir-${it.dir}`,
+											it.tone && `ds-sequence__item--tone-${it.tone}`,
+										)}
+										style={`grid-column: ${it.lo + 1} / ${it.hi + 2}; --sequence-span: ${it.hi - it.lo + 1}`}>
+										<Mono as="p" variant="text" class="ds-sequence__label">
+											<VisuallyHidden as="span">{`${it.who}: `}</VisuallyHidden>
+											{it.text}
+										</Mono>
+										<span class="ds-sequence__line" aria-hidden="true">
+											<svg class="ds-sequence__head" viewBox="0 0 8 8" focusable="false">
+												<path d="M0 0 8 4 0 8Z" fill="currentColor" />
+											</svg>
+										</span>
+									</div>
+								),
+							)}
+						</li>
+					))
+				}
+			</ol>
+		</div>
+	</div>
+</Fig>

@@ -1,0 +1,186 @@
+/* Sequence — a sequence diagram on the instrument page's edges
+ * (Sequence.astro). The stage is a dashed box at the box corner, as a Fig's
+ * image is; inside it, one equal column per actor (--sequence-lanes, set on
+ * the stage) and NO column gap, so a lane's centre is always half a column
+ * in from its edge and a message can find it with a percentage:
+ *
+ *   actors      a row of dashed boxes, the names in the caps mono, wrapping.
+ *   lifelines   a layer under the steps: a dashed rule down each lane's
+ *               centre, from the boxes to the foot of the stage.
+ *   steps       the <ol>, one grid row per step, each on the same columns;
+ *               a step's items are placed by grid-column (inline style) and
+ *               packed dense, so items in different lanes share the row and
+ *               items whose lanes overlap stack.
+ *   note        a dashed box on the page colour (the lifeline runs behind
+ *               it), centred on its lane, or across its range.
+ *   message     the label over a solid line from the sender's lane centre to
+ *               the receiver's, the arrowhead (a tiny svg in currentColor)
+ *               at the receiver. A message spans --sequence-span lanes; its
+ *               line is inset half a lane at each end — 100% / (2 × span) of
+ *               its own width.
+ *
+ * The ink is --sequence-ink: the secondary ink, or a tone's colour (the
+ * accent, --success), which a note's edge and words and a message's line and
+ * label all read. The stage is a container: below the DS's xs step (480) of
+ * its OWN width — a phone's column, four lanes of ~80px — the words drop to
+ * the label step and the boxes close up, so it fits the column it is given
+ * rather than the viewport. */
+.ds-sequence__stage {
+	--sequence-ink: var(--text-secondary);
+	--sequence-columns: repeat(var(--sequence-lanes, 2), minmax(0, 1fr));
+	container: sequence / inline-size;
+	padding: var(--space-4) var(--space-2) 0;
+	border: var(--border);
+	border-radius: var(--radius-box);
+}
+
+.ds-sequence__actors,
+.ds-sequence__steps {
+	display: grid;
+	grid-template-columns: var(--sequence-columns);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* The actors: equal-height boxes (the row stretches them), the names
+   centred and allowed to wrap — a lane is narrow on a phone. */
+.ds-sequence__actor {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 var(--space-1);
+	padding: var(--space-2) var(--space-1);
+	border: var(--border);
+	border-radius: var(--radius-box);
+	text-align: center;
+	overflow-wrap: anywhere;
+}
+.ds-sequence__actor > .ds-mono {
+	line-height: var(--line-height-ui);
+	color: var(--text-primary);
+}
+
+/* The lifelines and the steps share one cell, the lines underneath. */
+.ds-sequence__body {
+	display: grid;
+}
+.ds-sequence__body > * {
+	grid-area: 1 / 1;
+}
+.ds-sequence__lifelines {
+	display: grid;
+	grid-template-columns: var(--sequence-columns);
+}
+.ds-sequence__lifelines > span {
+	justify-self: center;
+	border-inline-start: var(--border);
+}
+
+.ds-sequence__steps {
+	position: relative;
+	row-gap: var(--space-4);
+	padding-block: var(--space-4);
+}
+.ds-sequence__step {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: var(--sequence-columns);
+	grid-auto-flow: dense;
+	row-gap: var(--space-2);
+	align-items: center;
+	margin: 0;
+}
+
+/* Tone — one colour for a note's edge and words, a message's line and label. */
+.ds-sequence__item--tone-accent {
+	--sequence-ink: var(--accent);
+}
+.ds-sequence__item--tone-success {
+	--sequence-ink: var(--success);
+}
+
+.ds-sequence__note {
+	justify-self: center;
+	box-sizing: border-box;
+	max-inline-size: calc(100% - var(--space-2));
+	margin: 0;
+	padding: var(--space-1) var(--space-2);
+	border: var(--border);
+	border-radius: var(--radius-box);
+	background: var(--background);
+	font-family: var(--font-ui);
+	font-size: var(--font-size-1);
+	line-height: var(--line-height-ui);
+	text-align: center;
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+	color: var(--text-primary);
+}
+/* A range takes its lanes edge to edge, a gutter in. */
+.ds-sequence__note--span {
+	justify-self: stretch;
+}
+.ds-sequence__note.ds-sequence__item--tone-accent,
+.ds-sequence__note.ds-sequence__item--tone-success {
+	border-color: var(--sequence-ink);
+	color: var(--sequence-ink);
+}
+
+.ds-sequence__message {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-inline-size: 0;
+	color: var(--sequence-ink);
+}
+/* The label: the Mono text voice, in the message's ink, centred over the
+   line and wrapping across the lanes it spans — on the page colour, so a
+   lifeline it crosses passes behind the words rather than through them. */
+.ds-sequence .ds-sequence__label {
+	align-self: center;
+	max-inline-size: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding-inline: var(--space-1);
+	background: var(--background);
+	text-align: center;
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+	color: inherit;
+}
+.ds-sequence__line {
+	position: relative;
+	display: block;
+	block-size: var(--border-width);
+	margin-inline: calc(100% / (2 * var(--sequence-span, 1)));
+	background: currentColor;
+}
+.ds-sequence__head {
+	position: absolute;
+	inset-block-start: 50%;
+	inline-size: var(--space-2);
+	block-size: var(--space-2);
+	translate: 0 -50%;
+}
+.ds-sequence__message--dir-right .ds-sequence__head {
+	inset-inline-end: 0;
+}
+.ds-sequence__message--dir-left .ds-sequence__head {
+	inset-inline-start: 0;
+	scale: -1 1;
+}
+
+/* A narrow stage (a phone's column): the words at the label step, the
+   boxes closed up. */
+@container sequence (max-width: 479px) {
+	.ds-sequence__note {
+		max-inline-size: calc(100% - var(--space-1));
+		padding: var(--space-1);
+		font-size: var(--font-size-0);
+	}
+	.ds-sequence__actor {
+		margin: 0 calc(var(--space-1) / 2);
+		padding-inline: 0;
+	}
+}

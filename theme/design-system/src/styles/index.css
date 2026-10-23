@@ -64,3 +64,4 @@
 @import "./prose.css" layer(ds.components);
 @import "./blockquote.css" layer(ds.components);
 @import "./fig.css" layer(ds.components);
+@import "./sequence.css" layer(ds.components);
