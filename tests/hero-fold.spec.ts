@@ -240,7 +240,10 @@ test.describe("hero fold — mobile", () => {
 			"the lede should spend the whole lead within 16 repetitions"
 		).toBeGreaterThan(0);
 
-		for (const times of [spentAt, spentAt * 2]) {
+		// From one PAST the boundary: at spentAt itself the lead can land exactly on
+		// its minimum with nothing left over, which is the hero at precisely one
+		// screen — correct, but zero growth to observe.
+		for (const times of [spentAt + 1, spentAt * 2]) {
 			await stretchLede(page, times);
 			const grown = await readMobileFold(page);
 			expect(grown.clearance).toBeGreaterThanOrEqual(MIN_GAP);
