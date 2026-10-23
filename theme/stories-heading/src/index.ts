@@ -150,7 +150,7 @@ export class StoriesHeadingElement extends HTMLElement {
 	    ~0.6 of its wordmark, but DM Sans is far wider and taller in the x-height at a
 	    given width, so the same fraction reads as too big; this keeps the heading
 	    clearly subordinate. */
-	private static readonly HEADING_RATIO = 0.42;
+	private static readonly HEADING_RATIO = 0.5;
 
 	connectedCallback() {
 		this.track = this.querySelector<HTMLElement>("[data-sh-track]");
