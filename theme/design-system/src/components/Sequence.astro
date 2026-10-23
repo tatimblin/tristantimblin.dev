@@ -27,8 +27,9 @@
 // READ WITHOUT THE PICTURE: the actors are a list, the steps an <ol> in
 // reading order, and every item opens with visually hidden words naming its
 // lanes ("Jess to Jess’s Claude:", "Jess’s Claude:"); the lifelines and the
-// lines are aria-hidden. Everything else passes through to the figure
-// (`data-prose-bleed` widens it in a post).
+// lines are aria-hidden. Everything else passes through to the figure.
+// In a post it bleeds past the text column like every other figure
+// (`data-prose-bleed`); pass `data-prose-bleed="full"` for the whole row.
 import { cx } from "../lib/cx";
 import Fig from "./Fig.astro";
 import Mono from "./Mono.astro";
@@ -101,7 +102,7 @@ function resolve(item: Item) {
 const rows = steps.map((step) => (Array.isArray(step) ? step : [step]).map(resolve));
 ---
 
-<Fig caption={caption} class={cx("ds-sequence", className)} {...rest}>
+<Fig caption={caption} class={cx("ds-sequence", className)} data-prose-bleed="" {...rest}>
 	<div class="ds-sequence__stage" style={`--sequence-lanes: ${keys.length}`}>
 		<ul class="ds-sequence__actors">
 			{keys.map((key) => <li class="ds-sequence__actor">
