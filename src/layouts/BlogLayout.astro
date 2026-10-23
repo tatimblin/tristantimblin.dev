@@ -18,15 +18,17 @@ type Props = ComponentProps<typeof Layout> & {
 	kicker?: string;
 	/** The site container instead of the reading measure. */
 	wide?: boolean;
+	/** The page's path in the site header, after the brand (SiteHeader). */
+	trail?: ComponentProps<typeof SiteHeader>["trail"];
 };
 
-const { heading, kicker, wide = false, ...layout } = Astro.props;
+const { heading, kicker, wide = false, trail, ...layout } = Astro.props;
 const hasLede = Astro.slots.has("lede");
 ---
 
 <Layout {...layout}>
 	<div class="blog">
-		<SiteHeader variant="flow" />
+		<SiteHeader variant="flow" trail={trail} />
 		<main
 			class:list={[
 				"blog__main",
@@ -95,9 +97,9 @@ const hasLede = Astro.slots.has("lede");
 		.blog__main {
 			padding-block: var(--space-8) var(--space-10);
 		}
-		/* A post starts a step under the header, in the first screen. */
+		/* A post's strip rules straight under the header (PostLayout). */
 		.blog__main--headless {
-			padding-block-start: var(--space-5);
+			padding-block-start: 0;
 		}
 		.blog__header {
 			margin-block-end: var(--space-6);

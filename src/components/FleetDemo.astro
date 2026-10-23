@@ -24,7 +24,7 @@ import poster from "../assets/fleet-demo-poster.webp";
 import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 ---
 
-<fleet-demo class="fleet-demo" data-prose-bleed="full">
+<fleet-demo class="fleet-demo" data-prose-bleed="window">
 	{/* [data-poster] is the OVERLAY, not the image: element.css lays it out as a
 	    centered flex column stacked over the (later) iframe, with the screenshot
 	    absolutely filling it and the button/caption riding on top. */}
@@ -46,6 +46,30 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 
 <script>
 	import "@tristimb/fleet-demo";
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+	import { launchesOnView } from "../lib/demo-launch";
+
+	// The site's demo rule (src/lib/demo-launch.ts): on a desktop it launches
+	// once a quarter of it is in view; on a phone it waits for its button.
+	// Pressing the element's own [data-launch] keeps its state machine the
+	// only way in.
+	onPage(() => {
+		const demos = document.querySelectorAll("fleet-demo");
+		if (!demos.length) return;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (!entry.isIntersecting || !launchesOnView()) continue;
+					observer.unobserve(entry.target);
+					const launch = entry.target.querySelector<HTMLButtonElement>("[data-launch]");
+					if (launch && !launch.disabled) launch.click();
+				}
+			},
+			{ threshold: 0.25 },
+		);
+		demos.forEach((demo) => observer.observe(demo));
+		return () => observer.disconnect();
+	});
 </script>
 
 <style>
@@ -63,14 +87,16 @@ import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 		   gives both themes alike, so it does not flip. */
 		--color-muted: color-mix(in oklch, var(--blue-400) 86%, transparent);
 
-		/* THE ROW. The post's text sits in two of the page's four columns; a
-		   workbench needs more than that, so the element says
-		   data-prose-bleed="full" and the ruled Prose gives it every column,
-		   edge to edge — 1136px at 1440, on the page's own lines. Prose sets its
-		   width and inline margin, so none is set here (this sheet is
-		   unlayered and would win). The element's own children (poster, iframe)
-		   are `position: absolute; inset: 0`, so the box IS the frame. */
+		/* THE ROW. A workbench needs the room, so the element says
+		   data-prose-bleed="window" and the ruled Prose gives it the whole
+		   viewport, past the page's margins; Prose sets its width and inline
+		   margin, so none is set here (this sheet is unlayered and would win).
+		   Edge to edge, so no side edges or corners against the window. The
+		   element's own children (poster, iframe) are `position: absolute;
+		   inset: 0`, so the box IS the frame. */
 		margin-block: 0;
+		border-inline: 0;
+		border-radius: 0;
 	}
 
 	/* The poster's <picture> wrapper contributes no box: the overlay is a flex

@@ -615,25 +615,28 @@ const TRANSPARENT = "rgba(0, 0, 0, 0)";
 test.describe("/txt/<slug> — the post page", () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
 
-	test("the status strip: the number, the category, the stats, the date", async ({
+	test("the number in the path, the details card beside the lead", async ({
 		page,
 	}) => {
 		await page.goto(NEWEST);
 		const strip = page.locator("[data-post-strip]");
-		await expect(strip.locator(".post__no")).toHaveText(/txt \/ 005/i);
+		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 005/i);
+		await expect(strip).toHaveClass(/ds-card/);
+		await expect(strip.locator(".ds-stat__label")).toHaveText(["Date", "Topic", "Length"]);
 		await expect(strip.locator(".post__category")).toHaveText(/Programming/);
 		// The reads follow once the post has 10 or more (src/data/pageviews.json).
 		await expect(strip.locator(".post__stats")).toHaveText(
 			/^\s*3 min · \d{3} words( · [\d,]+ reads)?\s*$/i,
 		);
-		await expect(strip.locator("time.post__date")).toHaveText("02.02.2026");
+		await expect(strip.locator("time.post__date")).toHaveText("Feb 2, 2026");
 		await expect(strip.locator("time.post__date")).toHaveAttribute("datetime", "2026-02-02");
-		// The date sits on the right edge of the row, the number on the left.
-		const row = await box(page, "[data-post-strip]");
-		const date = await box(page, "time.post__date");
-		const no = await box(page, ".post__no");
-		expect(Math.abs(date.x + date.width - (row.x + row.width))).toBeLessThanOrEqual(2);
-		expect(Math.abs(no.x - row.x)).toBeLessThanOrEqual(1);
+		// The card takes the first column, level with the lead in the next.
+		const { article, col } = await columns(page);
+		const card = await box(page, "[data-post-strip]");
+		const lead = await box(page, ".post__lead");
+		expect(Math.abs(card.x - article.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(card.width - col)).toBeLessThanOrEqual(1);
+		expect(Math.abs(card.y - lead.y)).toBeLessThanOrEqual(24);
 	});
 
 	test("no reading ruler, no contents rail, no neighbour cards", async ({ page }) => {
@@ -687,10 +690,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		const image = await box(page, "[data-post-hero] img");
 		expect(Math.abs(image.x - (article.x + col + gap))).toBeLessThanOrEqual(1);
 		expect(Math.abs(image.x + image.width - (article.x + article.width))).toBeLessThanOrEqual(1);
-		// Framed like every box: the dashed edge and the one corner.
-		await expect(img).toHaveCSS("border-top-width", "1px");
-		await expect(img).toHaveCSS("border-top-style", "dashed");
-		await expect(img).toHaveCSS("border-top-left-radius", "2.5px");
+		// The main image stands bare: no dashed edge (the body's figures keep it).
+		await expect(img).toHaveCSS("border-top-width", "0px");
 		// It is not in the body any more: the body's first figure is Fig. 02.
 		await expect(page.locator('.ds-prose img[src*="/aptitude-pass."]')).toHaveCount(0);
 		await expect(page.locator(".ds-prose .ds-fig figcaption").first()).toHaveText(/^fig\. 02 \//i);
@@ -767,8 +768,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		const withH2s = await box(page, ".ds-prose-section__body > .ds-body");
 
 		await page.goto(NO_H2S);
-		await expect(page.locator(".post__no")).toHaveText(/txt \/ 003/i);
-		await expect(page.locator("time.post__date")).toHaveText("06.04.2025");
+		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 003/i);
+		await expect(page.locator("time.post__date")).toHaveText("Apr 6, 2025");
 		const sections = page.locator(".ds-prose--variant-ruled > .ds-prose-section");
 		await expect(sections).toHaveCount(1);
 		await expect(sections).toHaveAttribute("data-section", "00");
@@ -890,10 +891,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		page,
 	}) => {
 		await page.goto(OLDEST);
-		const { article } = await columns(page);
-		const demo = await box(page, "fleet-demo[data-prose-bleed='full']");
-		expect(Math.abs(demo.x - article.x)).toBeLessThanOrEqual(1);
-		expect(Math.abs(demo.width - article.width)).toBeLessThanOrEqual(1);
+		// The whole window, past the page's margins (data-prose-bleed="window").
+		const demo = await box(page, "fleet-demo[data-prose-bleed='window']");
+		const vw = await page.evaluate(() => window.innerWidth);
+		expect(Math.abs(demo.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(demo.width - vw)).toBeLessThanOrEqual(1);
 		// The Button's box, not element.css's fallback dress.
 		const launch = page.locator("fleet-demo [data-launch]");
 		await expect(launch).toHaveClass(/ds-button--variant-primary/);
@@ -945,13 +947,13 @@ test.describe("/txt/<slug> — the post page", () => {
 
 		// The latest post has no newer: the half says so and links nowhere.
 		await page.goto(LATEST);
-		await expect(page.locator(".post__no")).toHaveText(/txt \/ 006/i);
+		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 006/i);
 		await expect(page.locator('[data-half="next"]')).toHaveText(/newer →\s*This is the latest post/i);
 		await expect(page.locator('[data-half="next"] a')).toHaveCount(0);
 		await expect(page.locator("a.post-more__half--next")).toHaveCount(0);
 
 		await page.goto(OLDEST);
-		await expect(page.locator(".post__no")).toHaveText(/txt \/ 001/i);
+		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 001/i);
 		await expect(page.locator('[data-half="prev"]')).toHaveText(/This is the first post/);
 		await expect(page.locator("a.post-more__half--prev")).toHaveCount(0);
 		await expect(page.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/why-i-joined-fisker/");
@@ -998,8 +1000,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		for (const t of await times.all()) {
 			await expect(t).toHaveAttribute("datetime", /^\d{4}-\d{2}-\d{2}$/);
 		}
-		// The column numbers are decoration.
-		await expect(page.locator(".post__colnos")).toHaveAttribute("aria-hidden", "true");
+		// No column numbers over the title.
+		await expect(page.locator(".post__colnos")).toHaveCount(0);
 	});
 
 	test("at 375px: one column, no horizontal scroll, the heads over their text, the hero and the table full width", async ({
@@ -1018,23 +1020,25 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(article.x + article.width).toBeLessThanOrEqual(375 - 16 + 1);
 
 		// The title steps down twice on a phone (72 → 44 → 32) and the lead
-		// once (20 → 18); the strip sits right under the header, number and
-		// date on its first line; the lead stacks under the title; the hero and the index take the whole
-		// column.
+		// once (20 → 18); the details card sits between the title and the
+		// lead, date and topic side by side; the hero and the index take the
+		// whole column.
 		await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveCSS("font-size", "32px");
 		await expect(page.locator(".post__lead")).toHaveCSS("font-size", "18px");
-		const header = await box(page, ".site-header");
 		const strip = await box(page, "[data-post-strip]");
-		expect(strip.y - (header.y + header.height)).toBeLessThanOrEqual(40);
-		const no = await box(page, ".post__no");
+		const no = await box(page, ".post__category");
 		const date = await box(page, ".post__date");
 		expect(date.y).toBeCloseTo(no.y, 0);
 		const title = await box(page, ".post__title");
 		const lead = await box(page, ".post__lead");
-		expect(lead.y).toBeGreaterThanOrEqual(title.y + title.height);
+		expect(strip.y).toBeGreaterThanOrEqual(title.y + title.height);
+		expect(lead.y).toBeGreaterThanOrEqual(strip.y + strip.height);
+		expect(Math.abs(strip.width - article.width)).toBeLessThanOrEqual(1);
 		const hero = await box(page, "[data-post-hero] img");
 		expect(Math.abs(hero.width - article.width)).toBeLessThanOrEqual(1);
-		await expect(page.locator(".post__colnos")).toBeHidden();
+		// The path's root shortens to `~` on a phone.
+		await expect(page.locator(".site-header__home")).toBeVisible();
+		await expect(page.locator(".site-header__domain")).toBeHidden();
 
 		// The section head is in flow above its text, both the full column.
 		const head = page.locator(".ds-prose-section__head").nth(1);

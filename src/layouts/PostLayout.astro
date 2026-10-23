@@ -14,13 +14,15 @@ import Fig from "@whois/design-system/Fig";
 import Grid from "@whois/design-system/Grid";
 import Heading from "@whois/design-system/Heading";
 import Card from "@whois/design-system/Card";
+import CardBody from "@whois/design-system/CardBody";
+import Stat from "@whois/design-system/Stat";
 import Chip from "@whois/design-system/Chip";
 import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
 import Prose from "@whois/design-system/Prose";
 import {
 	categories,
-	dottedDate,
+	longDate,
 	filedDate,
 	isoDate,
 	padNo,
@@ -109,40 +111,27 @@ const neighbours = [
 	modifiedDate={modified}
 	tags={tags}
 	wordCount={stats.words}
+	trail={[{ label: "txt", href: "/txt/" }, { label: padNo(no) }]}
 >
 	<article class="post" data-post>
-		<Grid templateColumns={COLUMNS} gapX={4} class="post__strip" data-post-strip>
-			<Mono tone="primary" class="post__cell post__no">txt / {padNo(no)}</Mono>
-			{cat && category ? (
-				<Mono class="post__cell post__category">{cat.label}</Mono>
-			) : (
-				<span class="post__cell" />
-			)}
-			{/* Two unbreakable runs with one break between them, so a narrow
-			    cell wraps the reads onto a second line, never mid-figure. */}
-			<Mono class="post__cell post__stats" data-post-stats>
-				<span class="post__run">{stats.minutes} min · {stats.words.toLocaleString("en-US")} words{reads && " ·"}</span>{reads && (
-					<Fragment> <span class="post__run post__reads" data-post-reads>{reads}</span></Fragment>
-				)}
-			</Mono>
-			<Mono
-				as="time"
-				tone="primary"
-				datetime={isoDate(date)}
-				class="post__cell post__cell--end post__date"
-			>
-				{dottedDate(date)}
-			</Mono>
-		</Grid>
-
-		<Grid templateColumns={COLUMNS} gapX={4} class="post__colnos" aria-hidden="true">
-			{["01", "02", "03", "04"].map((n) => (
-				<Mono>{n}</Mono>
-			))}
-		</Grid>
-
 		<Grid as="header" templateColumns={COLUMNS} gapX={4} class="post__head">
 			<Heading as="h1" size={6} responsive class="post__title">{title}</Heading>
+		{/* THE DETAILS: a DS Card of Stat pairs (value over its label), in
+		    the first column beside the lead on desktop, between the title and
+		    the lead below 1024. */}
+		<Card class="post__strip" data-post-strip>
+			<CardBody class="post__facts">
+				<Stat label="Date"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
+				{cat && category && <Stat label="Topic"><span class="post__category">{cat.label}</span></Stat>}
+				<Stat label="Length">
+					{/* Unbreakable runs with breaks between them, so a narrow cell
+					    wraps a run onto a second line, never mid-figure. */}
+					<span class="post__stats" data-post-stats><span class="post__run">{stats.minutes} min</span> <span class="post__run">· {stats.words.toLocaleString("en-US")} words</span>{reads && (
+						<Fragment> <span class="post__run post__reads" data-post-reads>· {reads}</span></Fragment>
+					)}</span>
+				</Stat>
+			</CardBody>
+		</Card>
 			{description && (
 				<Text as="p" size={5} responsive variant="primary" family="ui" class="post__lead">
 					{description}
@@ -219,18 +208,21 @@ const neighbours = [
 		--font-heading-weight: var(--font-weight-500);
 	}
 
-	/* THE STATUS STRIP. One row between the strong hairlines, the date on
-	   the right edge. */
+	/* THE DETAILS. The Card is the DS's; the page only places it — the first
+	   column, level with the lead — and stacks its Stats a step apart. */
 	.post__strip {
-		margin-block-start: var(--space-10);
-		border-block: var(--border);
+		grid-column: 1;
+		grid-row: 2;
+		align-self: start;
+		margin-block-start: var(--space-8);
 	}
-	.post__cell {
-		padding-block: var(--space-2);
-		min-inline-size: 0;
+	.post__facts {
+		display: grid;
+		gap: var(--space-4);
 	}
-	.post__cell--end {
-		text-align: end;
+	/* Each Stat reads label first, then the value (a form's order). */
+	.post__facts :global(.ds-stat) {
+		flex-direction: column-reverse;
 	}
 	/* The stats may wrap, between its runs only (the caps Mono is nowrap). */
 	.post__stats {
@@ -240,18 +232,13 @@ const neighbours = [
 		white-space: nowrap;
 	}
 
-	/* THE COLUMN NUMBERS: tiny, over the columns, a step under the strip. */
-	.post__colnos {
-		margin-block-start: var(--space-8);
-	}
-
 	/* THE TITLE AND THE LEAD. The title at the display step (72px, 44px
 	   below 1024) across three columns, balanced so two lines share the
 	   words; the lead a step down in the second and third. */
 	.post__title {
 		grid-column: 1 / span 3;
 		grid-row: 1;
-		margin-block-start: var(--space-5);
+		margin-block-start: var(--space-10);
 		text-wrap: balance;
 		overflow-wrap: anywhere;
 	}
@@ -264,9 +251,13 @@ const neighbours = [
 	}
 
 	/* THE HERO (a ruled Fig): its rows are the component's; the page places
-	   it. */
+	   it. The post's main image stands on its own, without the dashed edge
+	   the body's figures keep. */
 	.post__fig {
 		margin: var(--space-11) 0 0;
+	}
+	.post__fig :global(img) {
+		border: 0;
 	}
 
 	/* THE FOOT CARD. The two halves split the body down a dashed rule; each is
@@ -350,34 +341,22 @@ const neighbours = [
 		}
 	}
 
-	/* ONE COLUMN, below the desktop step: the strip two by two (the date
-	   still on the right edge), no column numbers, the title a step down,
-	   the hero full width. */
+	/* ONE COLUMN, below the desktop step: the details card under the title,
+	   its Stats side by side, the title a step down, the hero full width. */
 	@media (max-width: 1023px) {
 		.post {
 			--ruled-columns: minmax(0, 1fr);
 		}
-		/* The strip two by two, read as two label/value lines: the number
-		   and the date on the first, the category and the reading time on
-		   the second, the right-hand cells on the right edge. */
 		.post__strip {
-			--ruled-columns: repeat(2, minmax(0, 1fr));
+			grid-column: 1;
+			grid-row: auto;
+			margin-block-start: var(--space-5);
 		}
-		.post__date {
-			order: 1;
-		}
-		.post__category,
-		.post__strip > .post__cell:nth-child(2) {
-			order: 2;
-		}
-		.post__stats {
-			order: 3;
-			text-align: end;
-		}
-		.post__colnos {
-			display: none;
+		.post__facts {
+			grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
 		}
 		.post__title {
+			margin-block-start: var(--space-5);
 			grid-column: 1;
 			grid-row: auto;
 			text-wrap: pretty;
@@ -389,13 +368,6 @@ const neighbours = [
 		}
 		.post__fig {
 			margin-block-start: var(--space-9);
-		}
-	}
-	/* Phone: the strip sits right under <main>'s top pad (BlogLayout), so
-	   the post starts in the first screen, not after a band of nothing. */
-	@media (max-width: 639px) {
-		.post__strip {
-			margin-block-start: 0;
 		}
 	}
 </style>
