@@ -108,7 +108,8 @@ async function runCommand(page: Page, frame: FrameLocator, title: string) {
 test("a desktop launches the demo as it comes into view, no click", async ({ page }) => {
 	await page.goto(POST);
 	const demo = page.locator("fleet-demo");
-	await expect(demo).toHaveAttribute("data-state", "poster");
+	// Below the fold it has not launched (the element may not have set a state yet).
+	await expect(demo).not.toHaveAttribute("data-state", /launching|ready/);
 	await demo.scrollIntoViewIfNeeded();
 	await expect(demo).toHaveAttribute("data-state", /launching|ready/);
 });
