@@ -687,10 +687,8 @@ test.describe("/txt/<slug> — the post page", () => {
 		const image = await box(page, "[data-post-hero] img");
 		expect(Math.abs(image.x - (article.x + col + gap))).toBeLessThanOrEqual(1);
 		expect(Math.abs(image.x + image.width - (article.x + article.width))).toBeLessThanOrEqual(1);
-		// Framed like every box: the dashed edge and the one corner.
-		await expect(img).toHaveCSS("border-top-width", "1px");
-		await expect(img).toHaveCSS("border-top-style", "dashed");
-		await expect(img).toHaveCSS("border-top-left-radius", "2.5px");
+		// The main image stands bare: no dashed edge (the body's figures keep it).
+		await expect(img).toHaveCSS("border-top-width", "0px");
 		// It is not in the body any more: the body's first figure is Fig. 02.
 		await expect(page.locator('.ds-prose img[src*="/aptitude-pass."]')).toHaveCount(0);
 		await expect(page.locator(".ds-prose .ds-fig figcaption").first()).toHaveText(/^fig\. 02 \//i);
