@@ -14,7 +14,9 @@
 //
 // The flip follows the GitHub card: a DS HitArea over the body, with
 // aria-pressed carrying the state; the header glyph and the share's text
-// follow the widget's data-mode in CSS. The bike's slide-in rides the page's
+// follow the widget's data-mode in CSS. The glyph flips it too, for the
+// pointer: it presses the HitArea, which stays the one control assistive
+// tech and the keyboard see. The bike's slide-in rides the page's
 // reveal (src/lib/reveal.ts): the coordinator marks the card
 // `data-reveal-state="in"` and the bike's CSS keys on that.
 //
@@ -60,7 +62,8 @@ const inkAspect = pngAspect(readFileSync(`public${INK}`));
 	onPage(() => {
 		const widget = document.querySelector<HTMLElement>(".wx-baywheels");
 		const flip = widget?.querySelector<HTMLButtonElement>("[data-bw-flip]");
-		if (!widget || !flip) return;
+		const glyph = widget?.querySelector<HTMLButtonElement>(".wx-bw-glyph");
+		if (!widget || !flip || !glyph) return;
 
 		const shares = { us: Number(widget.dataset.shareUs), earth: Number(widget.dataset.shareEarth) };
 		const ring = mountRing(widget, shares.us);
@@ -73,9 +76,13 @@ const inkAspect = pngAspect(readFileSync(`public${INK}`));
 			ring.setShare(earth ? shares.earth : shares.us);
 		};
 
+		const onGlyph = () => flip.click();
+
 		flip.addEventListener("click", onClick);
+		glyph.addEventListener("click", onGlyph);
 		return () => {
 			flip.removeEventListener("click", onClick);
+			glyph.removeEventListener("click", onGlyph);
 			ring.destroy();
 		};
 	});
@@ -91,11 +98,13 @@ const inkAspect = pngAspect(readFileSync(`public${INK}`));
 		data-share-earth={share.earth}
 		{...rest}
 	>
-		{/* Which distance the ring is measuring: the map of the US, or the globe. */}
-		<span slot="meta" class="wx-bw-glyph" aria-hidden="true">
+		{/* Which distance the ring is measuring: the map of the US, or the globe.
+		     A pointer target for the flip, hidden from AT and out of the tab
+		     order: it only presses the HitArea below. */}
+		<button slot="meta" type="button" class="wx-bw-glyph" tabindex="-1" aria-hidden="true">
 			<span class="wx-bw-glyph--us" set:html={usGlyph} />
 			<span class="wx-bw-glyph--earth" set:html={globeGlyph} />
-		</span>
+		</button>
 
 		<CardBody class="wx-bw-body">
 			{/* Decoration, laid out by ./ring.ts; the share is in the text below. */}
@@ -200,10 +209,22 @@ const inkAspect = pngAspect(readFileSync(`public${INK}`));
 
 	/* The header glyph, on the widget type scale so it scales with the card:
 	   the solid map reads heavier than the globe, so it takes a step smaller. */
+	/* A bare button: no chrome of its own, a pad of hit area round the glyph
+	   (given back as margin, so it sits where it did), and it inks up under
+	   the pointer. */
 	.wx-bw-glyph {
 		display: flex;
 		align-items: center;
+		padding: var(--space-1);
+		margin: calc(-1 * var(--space-1));
+		border: none;
+		background: none;
 		color: var(--text-tertiary);
+		cursor: pointer;
+		transition: color var(--duration-standard) var(--ease-standard);
+	}
+	.wx-bw-glyph:hover {
+		color: var(--text-secondary);
 	}
 	.wx-bw-glyph :global(svg) {
 		display: block;
