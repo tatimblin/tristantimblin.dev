@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-21",
+	"updated": "2026-10-23",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
@@ -339,6 +339,14 @@
 		{
 			"date": "2026-10-21",
 			"visitors": 4
+		},
+		{
+			"date": "2026-10-22",
+			"visitors": 11
+		},
+		{
+			"date": "2026-10-23",
+			"visitors": 12
 		}
 	],
 	"pathDays": [
@@ -386,20 +394,57 @@
 			"date": "2026-10-21",
 			"path": "/txt/mega-desk/",
 			"visitors": 1
+		},
+		{
+			"date": "2026-10-22",
+			"path": "/demo/meet-lolla/",
+			"visitors": 4
+		},
+		{
+			"date": "2026-10-22",
+			"path": "/demo/sutro/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-10-22",
+			"path": "/txt/asserting-on-agent-behavior/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-10-23",
+			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
+			"visitors": 2
+		},
+		{
+			"date": "2026-10-23",
+			"path": "/txt/subhumans/",
+			"visitors": 3
 		}
 	],
 	"paths": {
-		"/txt/asserting-on-agent-behavior/": {
-			"reads": 2,
+		"/demo/meet-lolla/": {
+			"reads": 4,
+			"recent": 4
+		},
+		"/demo/sutro/": {
+			"reads": 1,
 			"recent": 1
+		},
+		"/txt/asserting-on-agent-behavior/": {
+			"reads": 3,
+			"recent": 2
 		},
 		"/txt/mega-desk/": {
 			"reads": 1,
 			"recent": 1
 		},
 		"/txt/no-honey-we-have-a-dashboard-at-home/": {
-			"reads": 22,
-			"recent": 10
+			"reads": 24,
+			"recent": 12
+		},
+		"/txt/subhumans/": {
+			"reads": 3,
+			"recent": 3
 		},
 		"/txt/why-i-joined-fisker/": {
 			"reads": 11,
