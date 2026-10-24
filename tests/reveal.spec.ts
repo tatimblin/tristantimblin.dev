@@ -212,19 +212,20 @@ test.describe("reveal — safety", () => {
 	test("7. LIFECYCLE: widget-owned reveals re-arm after a round trip", async ({
 		page,
 	}) => {
-		// The bike drawing has its OWN IntersectionObserver (BikeStats.astro), separate
-		// from the reveal coordinator. Astro executes a component's bundled script exactly
-		// once, but ClientRouter replaces the DOM on every navigation — so an observer
-		// wired at module scope ends up watching a detached node while the fresh element
-		// never gets `.is-in`. Its resting state is `opacity: 0`, so the regression is
-		// INVISIBLE CONTENT, not a missing flourish. (Measured on the old ::before
-		// watermark before the fix: 0.66 on first load, 0 after a round trip.)
+		// The bike drawing (BikeStats.astro) is hidden while the page is armed and its
+		// card hasn't been marked `data-reveal-state="in"` by the reveal coordinator.
+		// Astro executes a component's bundled script exactly once, but ClientRouter
+		// replaces the DOM on every navigation — so anything that marks the card from
+		// module scope ends up on a detached node and the fresh card never comes in.
+		// Its resting state is then `opacity: 0`, so the regression is INVISIBLE
+		// CONTENT, not a missing flourish. (Measured on the old ::before watermark,
+		// which had its own observer: 0.66 on first load, 0 after a round trip.)
 		const bikeOpacity = () =>
 			page
 				.locator(".wx-baywheels .wx-bw-bike")
 				.evaluate((el: Element) => parseFloat(getComputedStyle(el).opacity));
 
-		// POLL, don't sample. `.is-in` starts a CSS TRANSITION on .wx-bw-bike, so
+		// POLL, don't sample. Coming in starts a CSS TRANSITION on .wx-bw-bike, so
 		// the bike takes ~1s to reach its resting opacity of 1 — and settleReveal() does not
 		// cover it (that waits on the [data-reveal] coordinator's opacity, which is a
 		// different mechanism on a different element). Sampling once therefore caught the

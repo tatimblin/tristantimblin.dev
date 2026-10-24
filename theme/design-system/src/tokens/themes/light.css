@@ -46,15 +46,17 @@
 	--lit: oklch(from var(--accent) calc(l + 0.08) calc(c * 0.55) h);
 
 	/* SIGNAL. The two colours that carry a sign — up and down, a win and a
-	   loss — and GitHub's contribution greens, so a widget that mirrors a
-	   familiar chart can speak its colours. Off-palette on purpose: data, not
-	   chrome. */
+	   loss — GitHub's contribution greens, so a widget that mirrors a
+	   familiar chart can speak its colours, and the Bay Wheels violet (its
+	   brand blue-violet, muted for the paper). Off-palette on purpose: data,
+	   not chrome. */
 	--positive: #1a7f37;
 	--negative: #cf222e;
 	--contrib-1: #9be9a8;
 	--contrib-2: #40c463;
 	--contrib-3: #30a14e;
 	--contrib-4: #216e39;
+	--baywheels: #6f63c9;
 
 	/* CODE. Inline code on the first wash; a fenced block is the old site's
 	   near-black slab, the darkest thing on the page. */

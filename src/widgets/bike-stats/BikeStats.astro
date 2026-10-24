@@ -1,27 +1,35 @@
 ---
 // Bike Stats (Bay Wheels) — a 1×1 card in the instrument UI, built from the
-// design system's pieces (theme/design-system/CONVENTIONS.md → Instrument
-// UI). The header names the service and dates the reading; the body is the
-// rides / hours as stat pairs at the top with the miles ridden as the big
-// figure at the foot (where every widget's headline figure sits — Github's
-// total, the visitors' — so the row reads on one line), and the Lyft e-bike
-// drawn in ink on the right, cropped off the card's edge like the posters'
-// cropped type. Everything is read at build time from bike-stats.csv (see
-// ./bike-stats.ts), which the baywheels-stats GitHub Action appends to daily;
-// the only client-side code is the date's tooltip. The bike's slide-in rides
-// the page's reveal (src/lib/reveal.ts): the coordinator marks the card
-// `data-reveal-state="in"` when its row fades in, and the bike's CSS keys on
-// that, so there is no second observer here and nothing to re-arm.
+// design system's pieces (theme/design-system/CONVENTIONS.md → Instrument UI).
+//
+// The body is a gauge: a ring of hairline ticks round the card, lit in the
+// Bay Wheels violet for how far the lifetime miles would take you — across the
+// US by default, round the Earth when the card is tapped (the header's glyph
+// says which). The month's average speed sits top-left as a Stat, the lifetime
+// miles bottom-left as the Figure (where every widget's headline figure sits),
+// and the Lyft e-bike is drawn in ink, facing right, its tail fading out under
+// the readings. The ring and the bike's box are laid out client-side against
+// the card as drawn (./ring.ts); everything else is read at build time from
+// bike-stats.csv (./bike-stats.ts).
+//
+// The flip follows the GitHub card: a DS HitArea over the body, with
+// aria-pressed carrying the state; the header glyph and the share's text
+// follow the widget's data-mode in CSS. The bike's slide-in rides the page's
+// reveal (src/lib/reveal.ts): the coordinator marks the card
+// `data-reveal-state="in"` and the bike's CSS keys on that.
 //
 // Props pass through to the <Widget> (a class, the page's data-reveal
 // choreography): the page owns where the card sits and when it fades in.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
-import Mono from "@whois/design-system/Mono";
 import Figure from "@whois/design-system/Figure";
 import Stat from "@whois/design-system/Stat";
-import Flex from "@whois/design-system/Flex";
-import { getBikeStats } from "./bike-stats";
+import HitArea from "@whois/design-system/HitArea";
+import VisuallyHidden from "@whois/design-system/VisuallyHidden";
+import usGlyph from "./icons/us.svg?raw";
+import globeGlyph from "./icons/globe.svg?raw";
+import { readFileSync } from "node:fs";
+import { getBikeStats, percent, pngAspect, ringShares } from "./bike-stats";
 
 interface Props {
 	class?: string;
@@ -32,123 +40,185 @@ const { class: className, ...rest } = Astro.props;
 
 const bike = getBikeStats();
 
-const fmt = (n: number) => n.toLocaleString("en-US");
+const share = bike && ringShares(bike.miles);
 
-// "Sep 14" — the day of the latest snapshot, parsed as UTC so the build
-// machine's zone can't shift it a day.
-const monthDay = (date: string) =>
-	new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
-		month: "short",
-		day: "numeric",
-		timeZone: "UTC",
-	});
+// The e-bike drawing: the mask in CSS (--bw-ink), and its proportions for
+// ./ring.ts (data-aspect), read off the file at build so the script needn't
+// load the image itself. Builds run from the repo root, where public/ sits.
+const INK = "/images/lyft-ebike-ink.png";
+const inkAspect = pngAspect(readFileSync(`public${INK}`));
 ---
 
 <script>
-	// The date's tooltip says how long ago the reading was ("Today", "3 days
-	// ago"), computed here against the visitor's today rather than at build,
-	// where it would go stale. Both days are UTC calendar days, as the label's
-	// monthDay() is. onPage runs it on every page load, since ClientRouter
-	// replaces the DOM on each navigation (tests/reveal.spec.ts test 7 guards
-	// the bike's own reveal across that round trip).
+	// Flip the gauge between the US crossing and the lap of the Earth. onPage
+	// runs on every page load (ClientRouter replaces the DOM each navigation)
+	// and tears the ring's resize observer down before the next swap
+	// (tests/reveal.spec.ts test 7 guards the bike across that round trip).
 	import { onPage } from "@whois/design-system/lib/lifecycle";
-
-	function ago(date: string): string {
-		const then = Date.parse(`${date}T00:00:00Z`);
-		if (Number.isNaN(then)) return "";
-		const now = new Date();
-		const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-		const diff = Math.round((today - then) / 86_400_000);
-		if (diff <= 0) return "Today";
-		if (diff === 1) return "Yesterday";
-		return `${diff} days ago`;
-	}
+	import { mountRing } from "./ring";
 
 	onPage(() => {
-		const time = document.querySelector<HTMLTimeElement>(".wx-baywheels time[datetime]");
-		if (time) time.title = ago(time.dateTime);
+		const widget = document.querySelector<HTMLElement>(".wx-baywheels");
+		const flip = widget?.querySelector<HTMLButtonElement>("[data-bw-flip]");
+		if (!widget || !flip) return;
+
+		const shares = { us: Number(widget.dataset.shareUs), earth: Number(widget.dataset.shareEarth) };
+		const ring = mountRing(widget, shares.us);
+		if (!ring) return;
+
+		const onClick = () => {
+			const earth = widget.dataset.mode !== "earth";
+			widget.dataset.mode = earth ? "earth" : "us";
+			flip.setAttribute("aria-pressed", String(earth));
+			ring.setShare(earth ? shares.earth : shares.us);
+		};
+
+		flip.addEventListener("click", onClick);
+		return () => {
+			flip.removeEventListener("click", onClick);
+			ring.destroy();
+		};
 	});
 </script>
 
-{bike && (
-	<Widget size="1x1" title="bay wheels" class:list={["wx-baywheels", className]} {...rest}>
-		<Mono
-			slot="meta"
-			as="time"
-			variant="text"
-			datetime={bike.date}
-		>
-			{monthDay(bike.date)}
-		</Mono>
+{bike && share && (
+	<Widget
+		size="1x1"
+		title="bay wheels"
+		class:list={["wx-baywheels", className]}
+		data-mode="us"
+		data-share-us={share.us}
+		data-share-earth={share.earth}
+		{...rest}
+	>
+		{/* Which distance the ring is measuring: the map of the US, or the globe. */}
+		<span slot="meta" class="wx-bw-glyph" aria-hidden="true">
+			<span class="wx-bw-glyph--us" set:html={usGlyph} />
+			<span class="wx-bw-glyph--earth" set:html={globeGlyph} />
+		</span>
 
 		<CardBody class="wx-bw-body">
-			<Flex direction="column" alignItems="flex-start" gap={2} class="wx-bw-reading">
-				<Stat value={fmt(bike.rides)} label="rides" />
-				<Stat value={fmt(bike.hours)} label="hours" />
-			</Flex>
-			<Figure unit="miles" class="wx-bw-reading">{fmt(bike.miles)}</Figure>
-			{/* Decoration: the figures above carry the content. A masked box, not an
-			     <img>, so the drawing takes its colour from the ink token. */}
-			<div class="wx-bw-bike" aria-hidden="true"></div>
+			{/* Decoration, laid out by ./ring.ts; the share is in the text below. */}
+			<svg class="wx-bw-ring" aria-hidden="true"></svg>
+			<div class="wx-bw-bike" aria-hidden="true" data-aspect={inkAspect} style={`--bw-ink: url("${INK}")`}></div>
+
+			<Stat value={bike.mph.toFixed(1)} label="mph" class="wx-bw-reading wx-bw-speed" />
+			<Figure unit="miles" class="wx-bw-reading">
+				<span class="wx-bw-miles">{bike.miles.toLocaleString("en-US")}</span>
+			</Figure>
+			<VisuallyHidden class="wx-bw-share--us">{percent(share.us)} of the way across the US</VisuallyHidden>
+			<VisuallyHidden class="wx-bw-share--earth">{percent(share.earth)} of the way around the Earth</VisuallyHidden>
+
+			{/* The flip surface, last so the readings come first. */}
+			<HitArea data-bw-flip aria-pressed="false" aria-label="Measure against a lap of the Earth" />
 		</CardBody>
 	</Widget>
 )}
 
 <style>
-	/* The card chrome, header, figure and stat pairs are design-system
-	   components; this lays them down the left and draws the bike on the right.
-	   Scoped: the DS spreads the scope attribute onto each component's root,
-	   and its CSS sits in a layer under this. */
+	/* The card chrome, header, Stat, Figure and flip surface are design-system
+	   components; this lays out the gauge behind the readings. Scoped: the DS
+	   spreads the scope attribute onto each component's root, and its CSS sits
+	   in a layer under this. */
 
-	/* The stat pairs at the top, the figure at the foot: a left column of
-	   readings, with the bike filling the space to their right. The readings
-	   are positioned so they paint OVER the bike where the two meet (the
-	   figure's unit runs onto its front wheel, type over the picture as on the
-	   posters) — an absolutely positioned box would otherwise paint above
-	   in-flow text whatever the DOM order. */
 	.wx-bw-body {
 		justify-content: space-between;
 	}
+	/* The readings paint over the ring and the bike. */
 	.wx-bw-reading {
 		position: relative;
 		z-index: 1;
 	}
+	/* The speed sits inside the ring's corner. */
+	.wx-bw-speed {
+		margin: var(--space-3) 0 0 var(--space-3);
+	}
+	/* The number gets the card's own surface, feathered at its edge, so the
+	   bike's back wheel fades out behind it as its tail does before the ticks.
+	   The number only: the front wheel stands just above MILES. */
+	.wx-bw-miles {
+		background: var(--card-background);
+		box-shadow: 0 0 var(--space-2) var(--space-1) var(--card-background);
+		border-radius: var(--radius-box);
+	}
+
+	/* The ring: 1px hairlines, the unlit ones half-way to the card so the lit
+	   run carries it. The ticks are drawn by ./ring.ts, hence :global. */
+	.wx-bw-ring {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		pointer-events: none;
+	}
+	.wx-bw-ring :global(line) {
+		stroke: color-mix(in srgb, var(--hairline) 50%, var(--card-background));
+		stroke-width: 1px;
+	}
+	.wx-bw-ring :global(line.is-lit) {
+		stroke: var(--baywheels);
+	}
 
 	/* The Lyft e-bike, drawn in ink. /images/lyft-ebike-ink.png is an alpha mask
-	   derived from the product render (tools/bike-stats/lyft-ebike-sideview.png,
-	   kept out of public/ because only the mask ships): tonal darkness plus
-	   traced edges, cropped to the bike, floor shadow removed. As a mask it has
-	   no colour of its own; the box's fill gives it one, so it is the ink token
-	   in either theme (dark on bone, light on the dark card) with no blend-mode
-	   guesswork. It sits on the body's bottom padding line, level with the
-	   figure, and runs off the card's right edge: the front wheel, basket and bars
-	   stay in view and the rear wheel is cropped, like the posters' cropped
-	   type. It is absolutely positioned so it never takes layout space from the
-	   readings; the left inset keeps it clear of the stat column. */
+	   built from the product render by tools/bike-stats/ink-mask.mjs; as a mask
+	   it takes the box's fill, so it's the ink token in either theme. Flipped to
+	   face right; ./ring.ts sets its box (until then it has no size) and where
+	   its tail fades out, measured from the front wheel.
+	   Two masks on two boxes, not two layers composited on one: the box carries
+	   the tail's fade, its ::before the drawing. (WebKit composites the layers
+	   unreliably: a hard edge where the fade should be, a hairline of fill
+	   along the box's bottom.) */
 	.wx-bw-bike {
 		position: absolute;
-		inset-inline-start: 44%;
-		inset-block-end: var(--widget-pad);
-		block-size: 62%;
-		aspect-ratio: 1000 / 607;
-		background: var(--text-secondary);
-		mask: url("/images/lyft-ebike-ink.png") no-repeat left bottom / contain;
+		mask: linear-gradient(to right, black var(--bw-fade-from), transparent var(--bw-fade-to));
+		scale: -1 1;
 		pointer-events: none;
 		transition:
-			transform var(--duration-reveal) var(--ease-reveal),
+			translate var(--duration-reveal) var(--ease-reveal),
 			opacity var(--duration-reveal) var(--ease-reveal);
 	}
+	/* The drawing: anchored at the front and sized to the box's HEIGHT, so it
+	   keeps its proportions and its tail runs off the box (`contain` would
+	   shrink the whole bike into a narrow phone box instead of cropping it). */
+	.wx-bw-bike::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: var(--text-secondary);
+		mask: var(--bw-ink) no-repeat left bottom / auto 100%;
+	}
 	/* THE SLIDE-IN rides the page's reveal (src/styles/reveal.css, the same
-	   two conditions): hidden and offset only while the document is ARMED
-	   and the card has not been marked in. The coordinator sets
-	   data-reveal-state="in" on the card as its row fades up, and the bike
-	   rolls in from the right with it. Every failure path lands on visible —
-	   no JS never arms, a broken bundle disarms on the head script's backstop,
-	   reduced motion never arms (and the durations are 0s there anyway). */
+	   two conditions): hidden and offset only while the document is ARMED and
+	   the card has not been marked in, so every failure path lands on visible.
+	   It rolls in forward, from the left. */
 	@media (prefers-reduced-motion: no-preference) {
 		:global(html.reveal-armed) .wx-baywheels:not([data-reveal-state="in"]) .wx-bw-bike {
 			opacity: 0;
-			transform: translateX(var(--space-8));
+			translate: calc(-1 * var(--space-8)) 0;
 		}
+	}
+
+	/* The header glyph, on the widget type scale so it scales with the card:
+	   the solid map reads heavier than the globe, so it takes a step smaller. */
+	.wx-bw-glyph {
+		display: flex;
+		align-items: center;
+		color: var(--text-tertiary);
+	}
+	.wx-bw-glyph :global(svg) {
+		display: block;
+		inline-size: auto;
+	}
+	.wx-bw-glyph--us :global(svg) {
+		block-size: var(--widget-font-sm);
+	}
+	.wx-bw-glyph--earth :global(svg) {
+		block-size: var(--widget-font-md);
+	}
+
+	/* One mode at a time: the glyph and the share's text follow data-mode. */
+	.wx-baywheels[data-mode="us"] :is(.wx-bw-glyph--earth, .wx-bw-share--earth),
+	.wx-baywheels[data-mode="earth"] :is(.wx-bw-glyph--us, .wx-bw-share--us) {
+		display: none;
 	}
 </style>
