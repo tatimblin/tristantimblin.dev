@@ -8,6 +8,8 @@
 //   rides    — integer count
 //   distance — miles (float; the API's totalDistance.value)
 //   duration — seconds (float/int)
+// Every row is a LIFETIME total as of that day, not the day's riding: the
+// difference between two rows is what was ridden between them.
 // Vite inlines the CSV contents as a string at build time, so the data is
 // bundled with the page — no filesystem read at render time.
 import csv from "../../data/bike-stats.csv?raw";
@@ -19,20 +21,21 @@ interface Row {
 	duration: number;
 }
 
+/** The distances the card's ring measures the lifetime miles against. */
+export const COAST_TO_COAST_MILES = 2900; // San Francisco to New York by road
+export const EARTH_MILES = 24901; // the equator
+
 export interface BikeStats {
-	rides: number;
+	/** Lifetime miles, whole. */
 	miles: number;
-	hours: number;
-	/** The newest row's day, YYYY-MM-DD (a UTC calendar day). How long ago
-	 *  that was is worked out in the browser, against the visitor's today —
-	 *  a build-time "Today" would be wrong by the next morning. */
-	date: string;
+	/** Average speed over the latest month with riding in it (mph). */
+	mph: number;
 }
 
 // Minimal CSV parse — the file is a flat numeric table with a header row, so a
 // hand-rolled split avoids pulling in a parser dependency.
-function parse(csv: string): Row[] {
-	const lines = csv.split(/\r?\n/).filter((l) => l.trim() !== "");
+function parse(text: string): Row[] {
+	const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
 	return lines
 		.slice(1) // drop header
 		.map((line) => {
@@ -44,25 +47,43 @@ function parse(csv: string): Row[] {
 				duration: Number(duration),
 			};
 		})
-		.filter((r) => r.date !== "" && Number.isFinite(r.rides));
+		.filter((r) => r.date !== "" && Number.isFinite(r.distance) && Number.isFinite(r.duration));
+}
+
+/** Average speed over the newest month with riding in it: the miles and time
+ *  between consecutive rows, each gap credited to the LATER row's month, summed
+ *  for that month. Null when no two rows differ (one row, or no riding yet). */
+function latestMonthMph(rows: Row[]): number | null {
+	let month: string | null = null;
+	let miles = 0;
+	let secs = 0;
+	for (let i = rows.length - 1; i > 0; i--) {
+		const dm = rows[i].distance - rows[i - 1].distance;
+		const ds = rows[i].duration - rows[i - 1].duration;
+		if (dm <= 0 || ds <= 0) continue;
+		const m = rows[i].date.slice(0, 7);
+		if (month === null) month = m;
+		else if (m !== month) break;
+		miles += dm;
+		secs += ds;
+	}
+	return secs > 0 ? miles / (secs / 3600) : null;
 }
 
 /** The newest reading, or null when the CSV has no rows (a fresh or
  *  truncated file must not fail the build; the widget is left out). */
-export function getBikeStats(): BikeStats | null {
-	const rows = parse(csv);
+export function getBikeStats(text: string = csv): BikeStats | null {
+	// Sorted by date (YYYY-MM-DD compares as a string). The writer upserts one
+	// sorted row per date; the sort is a cheap guard against a stray reorder.
+	const rows = parse(text).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 	if (rows.length === 0) return null;
+	const latest = rows[rows.length - 1];
 
-	// Pick the newest row by date. The writer upserts one sorted row per date,
-	// so the last line is already the newest — but max-date is kept as a cheap
-	// safeguard against any stray ordering regression in the write path. The
-	// dates are YYYY-MM-DD, so they compare as strings.
-	const latest = rows.reduce((max, r) => (r.date > max.date ? r : max), rows[0]);
+	// Falls back to the lifetime average when there's no month to measure.
+	const lifetime = latest.duration > 0 ? latest.distance / (latest.duration / 3600) : 0;
 
 	return {
-		rides: latest.rides,
 		miles: Math.floor(latest.distance),
-		hours: Math.floor(latest.duration / 3600),
-		date: latest.date,
+		mph: latestMonthMph(rows) ?? lifetime,
 	};
 }
