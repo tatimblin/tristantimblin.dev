@@ -55,7 +55,10 @@ const b64 = await page.evaluate(
 				if (opacity[i] < 0.6 || x < 3 || x > W - 4 || y < 3) continue;
 				const gx = at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x - 1, y) - at(x - 1, y + 1);
 				const gy = at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x, y - 1) - at(x + 1, y - 1);
-				alpha[i] = Math.min(1, (1 - lum[i]) * 0.7 + Math.hypot(gx, gy) * 0.8);
+				const a = Math.min(1, (1 - lum[i]) * 0.7 + Math.hypot(gx, gy) * 0.8);
+				// Near-transparent ink is the shadow's faint fringe, which the passes
+				// below (thresholded at the same level) wouldn't otherwise reach.
+				alpha[i] = a > 0.05 ? a : 0;
 			}
 		}
 
@@ -72,6 +75,19 @@ const b64 = await page.evaluate(
 		const before = alpha.slice();
 		for (let y = Math.floor(H * 0.9); y < H; y++) {
 			for (let x = 0; x < W; x++) if (before[(y - 8) * W + x] < 0.05) alpha[y * W + x] = 0;
+		}
+		// ...and where the crank does sit above it, the line still runs on past
+		// the tyre. Near the floor a tyre is a short arc (a chord of ~0.11 of the
+		// width at most, this close to its bottom), so any longer run of ink in
+		// those rows is shadow.
+		for (let y = Math.floor(H * 0.98); y < H; y++) {
+			for (let x = 0; x < W; ) {
+				if (alpha[y * W + x] <= 0.05) { x++; continue; }
+				let end = x;
+				while (end < W && alpha[y * W + end] > 0.05) end++;
+				if (end - x > 0.13 * W) alpha.fill(0, y * W + x, y * W + end);
+				x = end;
+			}
 		}
 
 		// Crop to the drawing, 4px clear.

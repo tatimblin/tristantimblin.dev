@@ -1,5 +1,17 @@
 import { describe, expect, test } from "bun:test";
-import { getBikeStats, percent, ringShares } from "./bike-stats";
+import { readFileSync } from "node:fs";
+import { getBikeStats, percent, pngAspect, ringShares } from "./bike-stats";
+
+describe("pngAspect", () => {
+	test("reads the shipped drawing's proportions off its header", () => {
+		const png = readFileSync(new URL("../../../public/images/lyft-ebike-ink.png", import.meta.url));
+		expect(pngAspect(png)).toBeCloseTo(1000 / 610, 6);
+	});
+
+	test("not a PNG: NaN", () => {
+		expect(pngAspect(new Uint8Array(32))).toBeNaN();
+	});
+});
 
 const csv = (...rows: string[]) => ["date,rides,distance,duration", ...rows].join("\n");
 

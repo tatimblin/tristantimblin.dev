@@ -28,7 +28,8 @@ import HitArea from "@whois/design-system/HitArea";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import usGlyph from "./icons/us.svg?raw";
 import globeGlyph from "./icons/globe.svg?raw";
-import { getBikeStats, percent, ringShares } from "./bike-stats";
+import { readFileSync } from "node:fs";
+import { getBikeStats, percent, pngAspect, ringShares } from "./bike-stats";
 
 interface Props {
 	class?: string;
@@ -41,9 +42,11 @@ const bike = getBikeStats();
 
 const share = bike && ringShares(bike.miles);
 
-// The e-bike drawing: the mask in CSS (--bw-ink) and, for its proportions,
-// ./ring.ts (data-src) read the one path.
+// The e-bike drawing: the mask in CSS (--bw-ink), and its proportions for
+// ./ring.ts (data-aspect), read off the file at build so the script needn't
+// load the image itself. Builds run from the repo root, where public/ sits.
 const INK = "/images/lyft-ebike-ink.png";
+const inkAspect = pngAspect(readFileSync(`public${INK}`));
 ---
 
 <script>
@@ -97,7 +100,7 @@ const INK = "/images/lyft-ebike-ink.png";
 		<CardBody class="wx-bw-body">
 			{/* Decoration, laid out by ./ring.ts; the share is in the text below. */}
 			<svg class="wx-bw-ring" aria-hidden="true"></svg>
-			<div class="wx-bw-bike" aria-hidden="true" data-src={INK} style={`--bw-ink: url("${INK}")`}></div>
+			<div class="wx-bw-bike" aria-hidden="true" data-aspect={inkAspect} style={`--bw-ink: url("${INK}")`}></div>
 
 			<Stat value={bike.mph.toFixed(1)} label="mph" class="wx-bw-reading wx-bw-speed" />
 			<Figure unit="miles" class="wx-bw-reading">
@@ -160,22 +163,29 @@ const INK = "/images/lyft-ebike-ink.png";
 	   built from the product render by tools/bike-stats/ink-mask.mjs; as a mask
 	   it takes the box's fill, so it's the ink token in either theme. Flipped to
 	   face right; ./ring.ts sets its box (until then it has no size) and where
-	   its tail fades out, measured from the front wheel. The mask is anchored
-	   at the front and sized to the box's HEIGHT, so the drawing keeps its
-	   proportions and its tail runs off the box: `contain` would shrink the
-	   whole bike into a narrow (phone) box instead of cropping it. */
+	   its tail fades out, measured from the front wheel.
+	   Two masks on two boxes, not two layers composited on one: the box carries
+	   the tail's fade, its ::before the drawing. (WebKit composites the layers
+	   unreliably: a hard edge where the fade should be, a hairline of fill
+	   along the box's bottom.) */
 	.wx-bw-bike {
 		position: absolute;
-		background: var(--text-secondary);
-		mask:
-			var(--bw-ink) no-repeat left bottom / auto 100%,
-			linear-gradient(to right, black var(--bw-fade-from), transparent var(--bw-fade-to));
-		mask-composite: intersect;
+		mask: linear-gradient(to right, black var(--bw-fade-from), transparent var(--bw-fade-to));
 		scale: -1 1;
 		pointer-events: none;
 		transition:
 			translate var(--duration-reveal) var(--ease-reveal),
 			opacity var(--duration-reveal) var(--ease-reveal);
+	}
+	/* The drawing: anchored at the front and sized to the box's HEIGHT, so it
+	   keeps its proportions and its tail runs off the box (`contain` would
+	   shrink the whole bike into a narrow phone box instead of cropping it). */
+	.wx-bw-bike::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: var(--text-secondary);
+		mask: var(--bw-ink) no-repeat left bottom / auto 100%;
 	}
 	/* THE SLIDE-IN rides the page's reveal (src/styles/reveal.css, the same
 	   two conditions): hidden and offset only while the document is ARMED and

@@ -31,6 +31,15 @@ export const ringShares = (miles: number) => ({
 	earth: Math.min(1, miles / EARTH_MILES),
 });
 
+/** A PNG's width / height, from its IHDR chunk (width and height are the
+ *  big-endian words at bytes 16 and 20). NaN if it isn't a PNG. */
+export function pngAspect(png: Uint8Array): number {
+	const isPng = png[1] === 0x50 && png[2] === 0x4e && png[3] === 0x47; // "PNG"
+	if (!isPng || png.length < 24) return NaN;
+	const view = new DataView(png.buffer, png.byteOffset, png.byteLength);
+	return view.getUint32(16) / view.getUint32(20);
+}
+
 /** "57%", "6.6%": a decimal only where a whole percent would round it away. */
 export const percent = (share: number) => `${(share * 100).toFixed(share < 0.1 ? 1 : 0)}%`;
 
