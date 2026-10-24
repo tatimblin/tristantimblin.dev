@@ -40,6 +40,10 @@ const { class: className, ...rest } = Astro.props;
 const bike = getBikeStats();
 
 const share = bike && ringShares(bike.miles);
+
+// The e-bike drawing: the mask in CSS (--bw-ink) and, for its proportions,
+// ./ring.ts (data-src) read the one path.
+const INK = "/images/lyft-ebike-ink.png";
 ---
 
 <script>
@@ -93,7 +97,7 @@ const share = bike && ringShares(bike.miles);
 		<CardBody class="wx-bw-body">
 			{/* Decoration, laid out by ./ring.ts; the share is in the text below. */}
 			<svg class="wx-bw-ring" aria-hidden="true"></svg>
-			<div class="wx-bw-bike" aria-hidden="true"></div>
+			<div class="wx-bw-bike" aria-hidden="true" data-src={INK} style={`--bw-ink: url("${INK}")`}></div>
 
 			<Stat value={bike.mph.toFixed(1)} label="mph" class="wx-bw-reading wx-bw-speed" />
 			<Figure unit="miles" class="wx-bw-reading">
@@ -157,12 +161,14 @@ const share = bike && ringShares(bike.miles);
 	   it takes the box's fill, so it's the ink token in either theme. Flipped to
 	   face right; ./ring.ts sets its box (until then it has no size) and where
 	   its tail fades out, measured from the front wheel. The mask is anchored
-	   at the front and contained, so the drawing keeps its proportions. */
+	   at the front and sized to the box's HEIGHT, so the drawing keeps its
+	   proportions and its tail runs off the box: `contain` would shrink the
+	   whole bike into a narrow (phone) box instead of cropping it. */
 	.wx-bw-bike {
 		position: absolute;
 		background: var(--text-secondary);
 		mask:
-			url("/images/lyft-ebike-ink.png") no-repeat left bottom / contain,
+			var(--bw-ink) no-repeat left bottom / auto 100%,
 			linear-gradient(to right, black var(--bw-fade-from), transparent var(--bw-fade-to));
 		mask-composite: intersect;
 		scale: -1 1;

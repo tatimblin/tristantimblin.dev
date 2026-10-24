@@ -27,7 +27,12 @@ const MAJOR_LENGTH = 0.65;
 const GAP_PAD = 0.5; // clearance round the Figure's ink
 const BIKE_INSET = 1.7; // the bike's top and right edges from the body's
 const BIKE_CLEARANCE = 0.2; // between the front wheel and the unit's caps
-const FADE_LENGTH = 1.7; // the tail's fade; it ends a ring inset + one pad in
+
+/** The tail's fade, as shares of the drawing's width from the front wheel:
+ *  out by the rear wheel, so the same part of the bike shows at any card
+ *  size (a fade set in px leaves half a rear wheel on a phone). */
+const FADE_FROM = 0.7;
+const FADE_TO = 0.86;
 
 interface Point {
 	th: number;
@@ -85,6 +90,7 @@ export function mountRing(widget: HTMLElement, share: number) {
 	let ticks: SVGLineElement[] = [];
 	let current = share;
 	let live = true;
+	let aspect = 0; // the drawing's width / height, once its image has loaded
 
 	const light = () => {
 		const lit = litCount(current, ticks.length);
@@ -131,18 +137,34 @@ export function mountRing(widget: HTMLElement, share: number) {
 
 		// The bike: from the left ring inset to BIKE_INSET off the right, its
 		// front wheel standing just above the unit's caps. The mask is anchored
-		// at the front (left, before the flip) and contained, so the drawing
-		// keeps its own proportions within the box; the tail fades out a ring
-		// inset and a pad in from the left, measured from the front.
+		// at the front (left, before the flip) and sized to the box's height, so
+		// the drawing keeps its proportions and runs off the box's far end. The
+		// tail fades out at the same place on the drawing whatever its size, and
+		// never later than a ring inset and a pad in from the left. Measured from
+		// the front.
 		const u = unit.getBoundingClientRect();
 		const capTop = u.top - box.top + (u.height - parseFloat(getComputedStyle(unit).fontSize) * CAP_HEIGHT) / 2;
 		const right = BIKE_INSET * pad;
 		const bottom = h - capTop + BIKE_CLEARANCE * pad;
 		bike.style.inset = `${right}px ${right}px ${bottom}px ${inset}px`;
-		const fadeTo = w - right - inset - pad;
-		bike.style.setProperty("--bw-fade-from", `${fadeTo - FADE_LENGTH * pad}px`);
+		const drawn = (h - right - bottom) * aspect; // 0 until the image is in
+		const fadeTo = Math.min(w - right - inset - pad, drawn ? FADE_TO * drawn : Infinity);
+		const fadeFrom = drawn ? FADE_FROM * drawn : fadeTo;
+		bike.style.setProperty("--bw-fade-from", `${Math.min(fadeFrom, fadeTo)}px`);
 		bike.style.setProperty("--bw-fade-to", `${fadeTo}px`);
 	};
+
+	// The drawing's proportions, from the mask image itself (so rebuilding it
+	// can't put them out of step). Its path is on the element (data-src), not
+	// read back from the CSS, which may not have applied yet.
+	if (bike.dataset.src) {
+		const img = new Image();
+		img.src = bike.dataset.src;
+		img.decode().then(() => {
+			aspect = img.naturalWidth / img.naturalHeight;
+			layout();
+		}, () => {});
+	}
 
 	layout();
 	const resize = new ResizeObserver(layout);
