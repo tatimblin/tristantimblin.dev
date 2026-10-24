@@ -28,7 +28,7 @@ import HitArea from "@whois/design-system/HitArea";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import usGlyph from "./icons/us.svg?raw";
 import globeGlyph from "./icons/globe.svg?raw";
-import { COAST_TO_COAST_MILES, EARTH_MILES, getBikeStats } from "./bike-stats";
+import { getBikeStats, percent, ringShares } from "./bike-stats";
 
 interface Props {
 	class?: string;
@@ -39,19 +39,14 @@ const { class: className, ...rest } = Astro.props;
 
 const bike = getBikeStats();
 
-// The ring's two readings: lifetime miles as a share of each distance.
-const share = bike && {
-	us: Math.min(1, bike.miles / COAST_TO_COAST_MILES),
-	earth: Math.min(1, bike.miles / EARTH_MILES),
-};
-// "57%", "6.6%": a decimal only where a whole percent would round it away.
-const percent = (s: number) => `${(s * 100).toFixed(s < 0.1 ? 1 : 0)}%`;
+const share = bike && ringShares(bike.miles);
 ---
 
 <script>
 	// Flip the gauge between the US crossing and the lap of the Earth. onPage
 	// runs on every page load (ClientRouter replaces the DOM each navigation)
-	// and tears the ring's resize observer down before the next swap.
+	// and tears the ring's resize observer down before the next swap
+	// (tests/reveal.spec.ts test 7 guards the bike across that round trip).
 	import { onPage } from "@whois/design-system/lib/lifecycle";
 	import { mountRing } from "./ring";
 
@@ -101,8 +96,8 @@ const percent = (s: number) => `${(s * 100).toFixed(s < 0.1 ? 1 : 0)}%`;
 			<div class="wx-bw-bike" aria-hidden="true"></div>
 
 			<Stat value={bike.mph.toFixed(1)} label="mph" class="wx-bw-reading wx-bw-speed" />
-			<Figure unit="miles" class="wx-bw-reading wx-bw-miles">
-				{bike.miles.toLocaleString("en-US")}
+			<Figure unit="miles" class="wx-bw-reading">
+				<span class="wx-bw-miles">{bike.miles.toLocaleString("en-US")}</span>
 			</Figure>
 			<VisuallyHidden class="wx-bw-share--us">{percent(share.us)} of the way across the US</VisuallyHidden>
 			<VisuallyHidden class="wx-bw-share--earth">{percent(share.earth)} of the way around the Earth</VisuallyHidden>
@@ -131,15 +126,13 @@ const percent = (s: number) => `${(s * 100).toFixed(s < 0.1 ? 1 : 0)}%`;
 	.wx-bw-speed {
 		margin: var(--space-3) 0 0 var(--space-3);
 	}
-	/* The number gets the card's own surface, padded and feathered, so the
+	/* The number gets the card's own surface, feathered at its edge, so the
 	   bike's back wheel fades out behind it as its tail does before the ticks.
-	   The negative margin keeps the digits where they were. */
-	.wx-bw-miles :global(.ds-figure__num) {
+	   The number only: the front wheel stands just above MILES. */
+	.wx-bw-miles {
 		background: var(--card-background);
-		box-shadow: 0 0 10px 8px var(--card-background);
-		border-radius: var(--space-2);
-		padding-inline: var(--space-2);
-		margin-inline: calc(-1 * var(--space-2));
+		box-shadow: 0 0 var(--space-2) var(--space-1) var(--card-background);
+		border-radius: var(--radius-box);
 	}
 
 	/* The ring: 1px hairlines, the unlit ones half-way to the card so the lit
@@ -153,24 +146,20 @@ const percent = (s: number) => `${(s * 100).toFixed(s < 0.1 ? 1 : 0)}%`;
 	}
 	.wx-bw-ring :global(line) {
 		stroke: color-mix(in srgb, var(--hairline) 50%, var(--card-background));
-		stroke-width: 1;
+		stroke-width: 1px;
 	}
 	.wx-bw-ring :global(line.is-lit) {
 		stroke: var(--baywheels);
-		stroke-width: 1.25;
 	}
 
 	/* The Lyft e-bike, drawn in ink. /images/lyft-ebike-ink.png is an alpha mask
 	   built from the product render by tools/bike-stats/ink-mask.mjs; as a mask
 	   it takes the box's fill, so it's the ink token in either theme. Flipped to
-	   face right; ./ring.ts sizes it from the card (until then it has no size)
-	   and sets where its tail fades out, measured from the front wheel. */
+	   face right; ./ring.ts sets its box (until then it has no size) and where
+	   its tail fades out, measured from the front wheel. The mask is anchored
+	   at the front and contained, so the drawing keeps its proportions. */
 	.wx-bw-bike {
 		position: absolute;
-		inset-block-start: var(--bw-bike-top);
-		inset-inline-start: var(--bw-bike-left);
-		inline-size: var(--bw-bike-width, 0);
-		block-size: var(--bw-bike-height, 0);
 		background: var(--text-secondary);
 		mask:
 			url("/images/lyft-ebike-ink.png") no-repeat left bottom / contain,
@@ -193,8 +182,8 @@ const percent = (s: number) => `${(s * 100).toFixed(s < 0.1 ? 1 : 0)}%`;
 		}
 	}
 
-	/* The header glyph, sized to the title: the solid map reads heavier than
-	   the globe, so it is set a little smaller. */
+	/* The header glyph, on the widget type scale so it scales with the card:
+	   the solid map reads heavier than the globe, so it takes a step smaller. */
 	.wx-bw-glyph {
 		display: flex;
 		align-items: center;
@@ -205,10 +194,10 @@ const percent = (s: number) => `${(s * 100).toFixed(s < 0.1 ? 1 : 0)}%`;
 		inline-size: auto;
 	}
 	.wx-bw-glyph--us :global(svg) {
-		block-size: 1.05em;
+		block-size: var(--widget-font-sm);
 	}
 	.wx-bw-glyph--earth :global(svg) {
-		block-size: 1.25em;
+		block-size: var(--widget-font-md);
 	}
 
 	/* One mode at a time: the glyph and the share's text follow data-mode. */

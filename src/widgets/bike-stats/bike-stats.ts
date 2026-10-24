@@ -16,14 +16,23 @@ import csv from "../../data/bike-stats.csv?raw";
 
 interface Row {
 	date: string;
-	rides: number;
 	distance: number;
 	duration: number;
 }
 
 /** The distances the card's ring measures the lifetime miles against. */
-export const COAST_TO_COAST_MILES = 2900; // San Francisco to New York by road
-export const EARTH_MILES = 24901; // the equator
+const COAST_TO_COAST_MILES = 2900; // San Francisco to New York by road
+const EARTH_MILES = 24901; // the equator
+
+/** The ring's two readings: lifetime miles as a share of each distance, at
+ *  most the whole way. */
+export const ringShares = (miles: number) => ({
+	us: Math.min(1, miles / COAST_TO_COAST_MILES),
+	earth: Math.min(1, miles / EARTH_MILES),
+});
+
+/** "57%", "6.6%": a decimal only where a whole percent would round it away. */
+export const percent = (share: number) => `${(share * 100).toFixed(share < 0.1 ? 1 : 0)}%`;
 
 export interface BikeStats {
 	/** Lifetime miles, whole. */
@@ -39,10 +48,9 @@ function parse(text: string): Row[] {
 	return lines
 		.slice(1) // drop header
 		.map((line) => {
-			const [date, rides, distance, duration] = line.split(",");
+			const [date, , distance, duration] = line.split(","); // rides: not shown
 			return {
 				date: date?.trim() ?? "",
-				rides: Number(rides),
 				distance: Number(distance),
 				duration: Number(duration),
 			};
@@ -75,7 +83,7 @@ function latestMonthMph(rows: Row[]): number | null {
 export function getBikeStats(text: string = csv): BikeStats | null {
 	// Sorted by date (YYYY-MM-DD compares as a string). The writer upserts one
 	// sorted row per date; the sort is a cheap guard against a stray reorder.
-	const rows = parse(text).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+	const rows = parse(text).sort((a, b) => a.date.localeCompare(b.date));
 	if (rows.length === 0) return null;
 	const latest = rows[rows.length - 1];
 

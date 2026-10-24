@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getBikeStats } from "./bike-stats";
+import { getBikeStats, percent, ringShares } from "./bike-stats";
 
 const csv = (...rows: string[]) => ["date,rides,distance,duration", ...rows].join("\n");
 
@@ -43,5 +43,25 @@ describe("getBikeStats", () => {
 	test("an empty file is null, not a throw", () => {
 		expect(getBikeStats(csv())).toBeNull();
 		expect(getBikeStats("")).toBeNull();
+	});
+});
+
+describe("ringShares", () => {
+	test("lifetime miles over a US crossing and a lap of the Earth", () => {
+		const s = ringShares(1640);
+		expect(s.us).toBeCloseTo(1640 / 2900, 6);
+		expect(s.earth).toBeCloseTo(1640 / 24901, 6);
+	});
+
+	test("never past the whole way", () => {
+		expect(ringShares(30000)).toEqual({ us: 1, earth: 1 });
+	});
+});
+
+describe("percent", () => {
+	test("whole percents, with a decimal under 10%", () => {
+		expect(percent(0.5655)).toBe("57%");
+		expect(percent(0.0659)).toBe("6.6%");
+		expect(percent(1)).toBe("100%");
 	});
 });

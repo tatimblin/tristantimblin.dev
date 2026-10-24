@@ -104,7 +104,6 @@ const b64 = await page.evaluate(
 		return btoa(s);
 	},
 	{ dataUrl, WIDTH },
-);
-await browser.close();
+).finally(() => browser.close());
 writeFileSync(out, Buffer.from(b64, "base64"));
 console.log(`wrote ${out}`);
