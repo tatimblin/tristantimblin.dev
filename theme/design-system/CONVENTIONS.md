@@ -174,7 +174,7 @@ unless noted; the per-theme values in `themes/*.css`):
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px) — `:root` | the steps below the generated scales. |
 | `--ticks-image`, `--ticks-image-ink` | the tick ruler as a gradient (hairlines on `--tick-pitch`) in currentColor, and in the ink — for a box that should read as a ruler and cannot take the classes (the player's progress bar). TickRuler draws its own on the same pitch. |
 | `--focus-ring`, `--focus-ring-offset`, `--focus-ring-inset` | the focus ring for everything focusable that is not a native control, drawn by `control.css` for every `ds-control`; the offset, and the inset form of it for a control that rings inside its box (set `--control-ring-offset: var(--focus-ring-inset)` in scope). |
-| `--playhead-dot` | a playhead's dot — the Volo season track's, the video carousel's. |
+| `--playhead-dot` | a playhead's dot — the video carousel's. |
 | `--shadow-3` | the upstream shadow scale's step 3 on the theme's `--shadow-color`, for the few things that float — a control panel. Cards take `--shadow-panel`. |
 | `--voice-mono-*`, `--voice-figure-*` | the label voice (family, size, tracking) and the figure voice (family, weight, tracking, size) as custom properties, for a shadow-DOM consumer styled through `::part()`. Mono and Figure read them; a WidgetGrid redefines the sizes on its scale. |
 | `--duration-reveal / -settle / -swap / -quick / -loop`, `--ease-reveal` | the motion vocabulary; all `0s` under `prefers-reduced-motion: reduce`, so a transition timed by a token is a cut for that visitor and no component needs a reduced-motion block of its own. |
@@ -187,13 +187,12 @@ sets `--control-ring-offset: var(--focus-ring-inset)`.
 
 **Card chrome.** `<Widget size title>` is a `Card` with the size class
 (`ds-widget--size-2x1`, …): both draw the header through `CardHeader` —
-`title` as a caps `Mono` on the left (the prop, or a `title` slot for a title a
-script rewrites: put the hook on your own element), the `meta` slot on the
+`title` as a `Mono variant="title"` on the left (the prop, or a `title` slot for
+a title a script rewrites: put the hook on your own element; the same variant
+heads a panel inside a card in the header's voice), the `meta` slot on the
 right, the fading hairline under — and `<CardBody>` fills the rest of the cell
 as a flex column with `--widget-gap`; put `slot="meta"` on a `Pill`/`Mono`.
-`squeeze="title"` flips which side gives in a narrow row; `headerClass` puts a
-class of yours on the header row (Volo makes it a query container) so nothing
-selects `.ds-card-header` from outside. `chrome={false}` drops the frame, fill
+`squeeze="title"` flips which side gives in a narrow row. `chrome={false}` drops the frame, fill
 and clip for content that sits straight on the page. There is one card: flat
 (no `variant`, `depth` or `glass`). `<WidgetEmpty>` is a tile's empty state,
 centred in the body's room. Inside a `WidgetGrid`, every voice below scales
@@ -305,7 +304,7 @@ than observing on its own. The HEADLINE FIGURE sits at the FOOT of the body
 (the contributions total, the visitors, the miles), with the graphic or the
 stat pairs above it, so a row of tiles reads its figures on one line. A
 widget's own rules go in a scoped `<style>` unless one has to reach a DS
-element the widget does not render (Volo's header container) or a shadow
+element the widget does not render (an Icon's svg inside a button) or a shadow
 DOM (`::part`); the DS spreads the scope attribute onto each component's
 root, so a plain class applies, and its CSS sits in a layer under the
 site's, so no prefix or doubled selector is ever needed to win.

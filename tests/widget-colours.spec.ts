@@ -26,5 +26,8 @@ for (const [theme, c] of Object.entries(THEMES)) {
 		await expect(page.locator('.wx-vl-game[data-result="W"] .wx-vl-bar').first()).toHaveCSS("background-color", c.positive);
 		await expect(page.locator('.wx-vl-game[data-result="L"] .wx-vl-result').first()).toHaveCSS("color", c.negative);
 		await expect(page.locator('.wx-vl-game[data-result="L"] .wx-vl-bar').first()).toHaveCSS("background-color", c.negative);
+		// The chart's playoff games, at full strength.
+		await expect(page.locator('.wx-vl-seg[data-kind="PW"]').first()).toHaveCSS("background-color", c.positive);
+		await expect(page.locator('.wx-vl-seg[data-kind="PL"]').first()).toHaveCSS("background-color", c.negative);
 	});
 }

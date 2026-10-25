@@ -1,39 +1,47 @@
 ---
-// Volo widget — a 2×2 card: the season in the header (sport, month, team,
-// standing pill, arrows), one season's fixtures as a mono table, and below
-// them a step chart of where EVERY season ended, which does not move when
-// the arrows do. Data is read at build time from volo.json (./volo.ts, which
-// the volo-seasons Action regenerates weekly); every season is rendered
-// server-side as a panel in a DS Faces stack, so the arrows fetch nothing.
+// Volo widget — a 2×2 card: every season as a stacked bar (one segment per
+// game: the regular season's wins, ties and losses, then the playoff games
+// stacked apart above them) on an accent band, the selected season's schedule
+// in a tray under it, and the career record as the headline at the foot.
+// A bar picks its season; the header's arrows page the chart when there are
+// more seasons than fit; the tray's heading slides it up over the chart to
+// show every game. Data is read at build time from volo.json (./volo.ts,
+// which the volo-seasons Action regenerates weekly); every season is rendered
+// server-side as a panel in a DS Faces stack, so nothing is fetched.
 // Props pass through to the <Widget> (a class, the page's data-reveal choreography).
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
 import Face from "@whois/design-system/Face";
+import Figure from "@whois/design-system/Figure";
+import HitArea from "@whois/design-system/HitArea";
 import Mono from "@whois/design-system/Mono";
-import Pill from "@whois/design-system/Pill";
 import IconButton from "@whois/design-system/IconButton";
-import Hairline from "@whois/design-system/Hairline";
 import Icon from "@whois/design-system/Icon";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import WidgetEmpty from "@whois/design-system/WidgetEmpty";
-import HitArea from "@whois/design-system/HitArea";
-import Legend from "@whois/design-system/Legend";
-import LegendItem from "@whois/design-system/LegendItem";
 import {
+	careerSummary,
 	currentSeasonIndex,
 	formatGameDate,
 	formatGameTime,
-	formatPlacing,
 	formatRecord,
 	formatRound,
-	formatSeasonLabel,
 	formatTally,
 	getVoloSeasons,
 	marginRatio,
+	nextGameIndex,
 	opponentStanding,
 	ordinal,
-	rankSeries,
+	peekStart,
+	PENDING_BRACKET,
+	PEEK_ROWS,
+	placeMark,
+	seasonName,
+	seasonOutcome,
+	seasonStack,
+	seasonYear,
+	stackHeight,
 } from "./volo";
 import "./volo.css";
 
@@ -44,143 +52,57 @@ interface Props {
 
 const { class: className, ...rest } = Astro.props;
 
-const seasons = getVoloSeasons();
-const current = currentSeasonIndex(seasons);
-const rank = rankSeries(seasons);
-
-// The plot is drawn in an abstract box and stretched to the tile's width
-// (preserveAspectRatio="none"; strokes opt out via vector-effect in volo.css).
-// The x axis is TIME, not season count: every year gets an equal slot and its
-// seasons divide it, so the year labels sit evenly without lying about where a
-// year falls.
-const years = [...new Set(rank.points.map((point) => point.year))];
-const seasonsPerYear = new Map<string, number>();
-for (const point of rank.points) {
-	seasonsPerYear.set(point.year, (seasonsPerYear.get(point.year) ?? 0) + 1);
+let seasons = getVoloSeasons();
+// DEV ONLY: `?volo-seasons=30` pads the history with copies of the real
+// seasons, to see the chart page. (Never read in a build: DEV is false there.)
+const demo = import.meta.env.DEV ? Number(Astro.url.searchParams.get("volo-seasons")) : 0;
+if (demo > seasons.length) {
+	const extra = Array.from({ length: demo - seasons.length }, (_, i) => {
+		const source = seasons[i % (seasons.length - 1)];
+		const start = new Date(seasons[0].startDate);
+		start.setMonth(start.getMonth() - 4 * (demo - seasons.length - i));
+		return { ...source, id: `demo-${i}`, startDate: start.toISOString(), seasonLabel: null };
+	});
+	seasons = [...extra, ...seasons];
 }
-const placed = new Map<string, number>();
-const spans = rank.points.map((point) => {
-	const nth = placed.get(point.year) ?? 0;
-	placed.set(point.year, nth + 1);
-	const slot = years.indexOf(point.year) * 10;
-	const share = 10 / (seasonsPerYear.get(point.year) as number);
-	return { x0: slot + nth * share, x1: slot + (nth + 1) * share };
-});
 
-const PLOT = { w: Math.max(1, years.length) * 10, h: 100, pad: 7 };
-const plotY = (placing: number) => PLOT.pad + (1 - placing) * (PLOT.h - PLOT.pad * 2);
+const current = currentSeasonIndex(seasons);
+const career = careerSummary(seasons);
+const stacks = seasons.map(seasonStack);
+// Every bar is scaled against the tallest season, so a game is the same
+// height in every column.
+const tallest = Math.max(1, ...stacks.map(stackHeight));
 
-// A step, not a slope: a season holds one placing for its whole run. A season
-// with no value breaks the line (`M` starts a fresh subpath) rather than being
-// bridged across a finish that is not known yet.
-const stepPath = (key: "placing" | "seedPlacing") => {
-	let open = false;
-	return rank.points
-		.map((point) => {
-			const value = point[key];
-			if (value === null) {
-				open = false;
-				return "";
-			}
-			const { x0, x1 } = spans[point.index];
-			const y = plotY(value);
-			const move = open ? `L${x0},${y}` : `M${x0},${y}`;
-			open = true;
-			return `${move}L${x1},${y}`;
-		})
-		.join("");
-};
-
-const finishPath = stepPath("placing");
-const seedPath = stepPath("seedPlacing");
-
-// The accent marks NOW: the season in progress, at its finish once decided or
-// its seed while still being played.
-const nowPoint = rank.points[current];
-const nowValue = nowPoint ? (nowPoint.placing ?? nowPoint.seedPlacing) : null;
-const nowSpan = nowPoint ? spans[nowPoint.index] : null;
-const now =
-	nowPoint && nowSpan && nowValue !== null
-		? {
-				path: `M${nowSpan.x0},${plotY(nowValue)}L${nowSpan.x1},${plotY(nowValue)}`,
-				left: (nowSpan.x1 / PLOT.w) * 100,
-				top: (plotY(nowValue) / PLOT.h) * 100,
-				dashed: nowPoint.placing === null,
-			}
-		: null;
-
-// The one accented row: the next game, or none in a finished season — a
-// played row carries its result's green or red instead (volo.css).
-const accentRow = (season: (typeof seasons)[number]) => {
-	return season.games.findIndex((game) => !game.result);
-};
-
-const opening = seasons[current];
-
-// "1st · " (the separator travels with the placing), or nothing.
-const placeLabel = (season: (typeof seasons)[number]) => {
-	const place = formatPlacing(season);
-	return place ? `${place} · ` : "";
-};
-
-// "SOFTBALL • AUG 2026" — the header's caps voice uppercases it.
-const seasonHeading = (season: (typeof seasons)[number]) =>
-	`${season.sport} • ${formatSeasonLabel(season)}`;
+// Seasons on show at once. More than this and the header's arrows page.
+const PAGE = 12;
+const paged = seasons.length > PAGE;
+// The chart opens on the latest page.
+const firstShown = Math.max(0, seasons.length - PAGE);
+// A year is labelled on its first season on the page.
+const yearShown = (i: number) =>
+	i === 0 || i === firstShown || seasonYear(seasons[i]) !== seasonYear(seasons[i - 1]);
 ---
 
 <Widget
 	size="2x2"
 	class:list={["wx-volo", className]}
 	squeeze="title"
-	headerClass="wx-vl-head"
+	data-expanded="false"
+	style={`--vl-page:${Math.min(PAGE, seasons.length)};--vl-tallest:${tallest};--vl-peek-rows:${PEEK_ROWS}`}
 	{...rest}
 >
-	{/* The header sits outside the panel stack, so the script rewrites it from
-	    the panel's data when the season changes. squeeze="title": the meta
-	    manages its own width (volo.css drops the team, then the placing) and the
-	    heading ellipsises as the last resort. */}
-	<span slot="title" data-volo-heading>{opening ? seasonHeading(opening) : "volo"}</span>
-	{opening && (
-		<span slot="meta" class="wx-vl-meta">
-			<Mono class="wx-vl-team" tone="tertiary" truncate data-volo-team>{opening.team.name}</Mono>
-			<Pill class="wx-vl-standing" data-volo-standing>
-				<span
-					class="wx-vl-dot"
-					data-volo-dot
-					style={opening.team.color ? `background:${opening.team.color}` : undefined}
-				/>
-				<span class="wx-vl-star" data-volo-star hidden={!opening.champion} title="Won the league" aria-hidden="true">★</span>
-				{/* The placing is its own span so a narrow header can drop it. */}
-				<span>
-					<span class="wx-vl-place" data-volo-place>{placeLabel(opening)}</span>
-					<span data-volo-tally>{formatTally(opening)}</span>
-				</span>
-			</Pill>
-			{/* Rendered `hidden` and unhidden by the script, so a reader without JS
-			    gets one clean season rather than two dead arrows. A span, not a
-			    <nav>: the meta slot is phrasing content. */}
-			<span class="wx-vl-nav" role="group" aria-label="Season" hidden>
-				<IconButton
-					class="wx-vl-arrow wx-vl-arrow--prev"
-					size="xs"
-					rounded
-					type="button"
-					data-volo-prev
-					aria-label="Previous season"
-				>
-					<Icon name="arrow" size={3} />
-				</IconButton>
-				<IconButton
-					class="wx-vl-arrow"
-					size="xs"
-					rounded
-					type="button"
-					data-volo-next
-					aria-label="Next season"
-				>
-					<Icon name="arrow" size={3} />
-				</IconButton>
-			</span>
+	{/* The selected season's sport; the script rewrites it. */}
+	<span slot="title">Volo <span data-volo-sport>{seasons[current]?.sport ?? ""}</span></span>
+	{paged && (
+		/* Rendered `hidden` and unhidden by the script: without it the chart
+		   shows its latest page and two dead arrows would only mislead. */
+		<span slot="meta" class="wx-vl-nav" role="group" aria-label="Seasons" hidden>
+			<IconButton class="wx-vl-arrow wx-vl-arrow--prev" size="xs" rounded type="button" data-volo-prev aria-label="Earlier seasons">
+				<Icon name="arrow" size={3} />
+			</IconButton>
+			<IconButton class="wx-vl-arrow" size="xs" rounded type="button" data-volo-next aria-label="Later seasons">
+				<Icon name="arrow" size={3} />
+			</IconButton>
 		</span>
 	)}
 
@@ -190,192 +112,175 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 			<WidgetEmpty>No seasons yet.</WidgetEmpty>
 		) : (
 			<>
-				{/* Not `fill`: the stack holds the tallest season's height, so the
-				    chart below sits still as the arrows move. */}
-				<Faces class="wx-vl-panels" data-volo-panels>
-					{seasons.map((season, i) => {
-						const lit = accentRow(season);
-						return (
-						<Face
-							as="section"
-							class="wx-vl-panel"
-							inactive={i !== current}
-							data-volo-panel={i}
-							data-heading={seasonHeading(season)}
-							data-team={season.team.name}
-							data-color={season.team.color ?? ""}
-							data-place={placeLabel(season)}
-							data-tally={formatTally(season)}
-							data-champion={season.champion ? "true" : undefined}
-							aria-label={`${formatSeasonLabel(season)} — ${season.sport}`}
-						>
-							{/* A screen reader reads the panel, not the rewritten header. */}
-							<VisuallyHidden>
-								{seasonHeading(season)}: {season.team.name}, {formatRecord(season)}
-								{season.champion ? ". League champions." : "."}
-							</VisuallyHidden>
-
-							<ol class="wx-vl-games">
-								{season.games.map((game, gameIndex) => (
-									<li
-										class="wx-vl-game"
-										data-result={game.result ?? "upcoming"}
-										data-playoff={game.playoff ? "true" : undefined}
-										data-lit={gameIndex === lit ? "true" : undefined}
-									>
-										{/* Out of flow against the grid (volo.css); --vl-i is the row
-										    it sits above. */}
-										{game.playoff && (
+				{/* The chart and the schedule tray share this box: the tray rests at
+				    its foot and slides up over the chart. */}
+				<div class="wx-vl-main">
+					{/* A window PAGE seasons wide over a track of all of them. Each
+					    bar is a picture with a HitArea laid over it, so the bar's
+					    segments stay out of the control's name. */}
+					<div class="wx-vl-chart" data-volo-chart>
+						<div class="wx-vl-window">
+							<ol class="wx-vl-track" data-volo-track style={`--vl-start:${firstShown}`}>
+								{seasons.map((season, i) => {
+									const stack = stacks[i];
+									const mark = placeMark(season);
+									const seg = (k: number, kind: string) =>
+										k > 0 && <span class="wx-vl-seg" data-kind={kind} style={`--k:${k}`} />;
+									return (
+										<li class="wx-vl-season">
+											<span class="wx-vl-stack" aria-hidden="true">
+												{seg(stack.wins, "W")}
+												{seg(stack.ties, "T")}
+												{seg(stack.losses, "L")}
+												{seg(stack.unplayed, "upcoming")}
+												{(stack.playoffs.length > 0 || stack.bracketPending) && <span class="wx-vl-break" />}
+												{stack.bracketPending
+													? seg(PENDING_BRACKET, "bracket")
+													: stack.playoffs.map((result) => seg(1, `P${result}`))}
+											</span>
 											<Mono
+												variant="value"
 												tone="tertiary"
-												class="wx-vl-round"
-												style={`--vl-i:${gameIndex}`}
+												class:list={["wx-vl-year", season.champion && "is-title", (season.champion || yearShown(i)) && "is-shown"]}
+												data-year={seasonYear(season)}
+												aria-hidden="true"
 											>
-												{formatRound(game.round) ?? "PLAYOFF"}
+												{/* A title wears its trophy in place of the year, always;
+												    the selected bar says where its season finished. */}
+												<span class="wx-vl-yr">
+													{season.champion ? <span class="wx-vl-medal">🏆</span> : `'${seasonYear(season)}`}
+												</span>
+												<span class="wx-vl-place">
+													{mark.medal ? <span class="wx-vl-medal">{mark.text}</span> : mark.text}
+												</span>
 											</Mono>
-										)}
-										<Mono variant="value" tone="tertiary" class="wx-vl-date" title={game.playoff ? "Playoff game" : undefined}>
-											{formatGameDate(game.startTime, season.timezone)}
-										</Mono>
-										<Mono variant="value" class="wx-vl-opp">
-											<Mono as="span" variant="value" truncate class="wx-vl-opp-name">{game.opponent}</Mono>
-											{/* A bracket game names their SEED; anything else where they finished. */}
-											{(() => {
-												const standing = opponentStanding(game);
-												return standing ? (
-													<Mono
-														as="span"
-														variant="value"
-														tone="tertiary"
-														class="wx-vl-rank"
-														title={
-															standing.kind === "seed"
-																? `${ordinal(standing.value)} seed`
-																: `Finished ${ordinal(standing.value)} in the league`
-														}
-													>
-														{standing.value}
-													</Mono>
-												) : null;
-											})()}
-										</Mono>
-										{/* Always rendered: the rows are `display: contents` over one
-										    grid, so a skipped cell would shift every column after it. */}
-										<Mono tone="tertiary" class="wx-vl-result">{game.result}</Mono>
-										{game.result ? (
-											game.forfeit && !game.for && !game.against ? (
-												/* A forfeit recorded as 0–0 is not a 0–0 game. */
-												<Mono tone="tertiary" class="wx-vl-score wx-vl-score--ff">FF</Mono>
-											) : (
-												<Mono
-													variant="value"
-													class="wx-vl-score"
-													style={`--m:${marginRatio(game, season.sport).toFixed(3)}`}
-													data-forfeit={game.forfeit ? "true" : undefined}
-												>
-													{game.for}<span class="wx-vl-dash">–</span>{game.against}
-													<span class="wx-vl-bar" />
-												</Mono>
-											)
-										) : (
-											<Mono variant="value" tone="secondary" class="wx-vl-time">
-												{formatGameTime(game.startTime, season.timezone)}
-											</Mono>
-										)}
-									</li>
-								))}
+											{/* Disabled until the script runs; the selected bar is the
+											    one tab stop (the arrow keys walk the rest). */}
+											<HitArea
+												class="wx-vl-pick"
+												data-volo-season={i}
+												aria-current={i === current ? "true" : undefined}
+												aria-label={`${seasonName(season)} ${season.sport}: ${formatTally(season)}, ${seasonOutcome(season)}`}
+												tabindex={i === current ? 0 : -1}
+												disabled
+											/>
+										</li>
+									);
+								})}
 							</ol>
-						</Face>
-						);
-					})}
-				</Faces>
-
-				{/* RANK BY SEASON — fixed; the constant the seasons are read against. */}
-				<figure class="wx-vl-career">
-					<Hairline as="span" />
-					<figcaption class="wx-vl-career-cap">
-						<Mono class="wx-vl-career-label">Rank by season</Mono>
-						<Legend class="wx-vl-legend" aria-label="Key">
-							<LegendItem label="Seed" swatch="dashed" color="var(--text-tertiary)" />
-							<LegendItem label="Finish" swatch="line" color="var(--text-primary)" />
-						</Legend>
-						<Mono variant="value" class="wx-vl-career-stats">
-							{rank.record.wins}–{rank.record.losses}
-							{rank.record.ties > 0 && <>–{rank.record.ties}</>}
-							{" · "}{rank.titles} title{rank.titles === 1 ? "" : "s"}
-						</Mono>
-					</figcaption>
-
-					<div class="wx-vl-chart">
-						<div class="wx-vl-axis">
-							<Mono tone="tertiary">1st</Mono>
-							<Mono tone="tertiary">Last</Mono>
 						</div>
-
-						<div class="wx-vl-plotwrap">
-						<svg
-							class="wx-vl-plot"
-							viewBox={`0 0 ${PLOT.w} ${PLOT.h}`}
-							preserveAspectRatio="none"
-							role="img"
-							aria-label={
-								`Playoff seed and final finish across ${rank.points.length} seasons, oldest first. ` +
-								`Top of the chart is winning the league. ` +
-								`All-time record ${rank.record.wins}–${rank.record.losses}` +
-								`${rank.record.ties ? `–${rank.record.ties}` : ""}. ` +
-								rank.points
-									.map(
-										(p) =>
-											`${p.label}: seeded ${p.seed ? ordinal(p.seed) : "unseeded"}, ` +
-											`${p.rank ? `finished ${ordinal(p.rank)} of ${p.teams}` : "still playing"}`,
-									)
-									.join(". ")
-							}
-						>
-							<path class="wx-vl-rule" d={`M0,${plotY(1)}H${PLOT.w}M0,${plotY(0)}H${PLOT.w}`} />
-							<path class="wx-vl-seed" d={seedPath} />
-							<path class="wx-vl-line" d={finishPath} />
-							{now && <path class:list={["wx-vl-now-line", now.dashed && "is-seed"]} d={now.path} />}
-						</svg>
-
-						{now && (
-							<span
-								class="wx-vl-now"
-								style={`left:${now.left.toFixed(2)}%;top:${now.top.toFixed(2)}%`}
-								aria-hidden="true"
-							/>
-						)}
-
-						{/* One hit area per season, over the span its steps occupy (as a
-						    percentage, so it tracks the stretched SVG). Rendered disabled;
-						    the script enables them above the compact step (see syncBands). */}
-						<div class="wx-vl-hits">
-							{rank.points.map((point, i) => (
-								<HitArea
-									wash
-									data-volo-jump={i}
-									disabled
-									aria-current={i === current ? "true" : undefined}
-									style={`inset-inline-start:${(spans[i].x0 / PLOT.w) * 100}%;inline-size:${((spans[i].x1 - spans[i].x0) / PLOT.w) * 100}%`}
-								>
-									<VisuallyHidden as="span">
-										{point.label}:{" "}
-										{point.rank
-											? `finished ${ordinal(point.rank)} of ${point.teams}`
-											: "still playing"}
-									</VisuallyHidden>
-								</HitArea>
-							))}
-						</div>
-						</div>
-
-						<ol class="wx-vl-years" style={`--vl-cols:${years.length}`}>
-							{years.map((year) => (
-								<li class="wx-vl-year"><Mono tone="tertiary">'{year.slice(2)}</Mono></li>
-							))}
-						</ol>
 					</div>
-				</figure>
+
+					{/* The selected season's schedule, as a tray. Resting, it shows
+					    PEEK_ROWS rows — the last result and what is next, or how a
+					    finished season ended — and its heading pulls it up over the
+					    chart to show every game. */}
+					<div class="wx-vl-slot" />
+					<section class="wx-vl-sched" aria-label="Schedule">
+						<div class="wx-vl-sched-head">
+							<Mono variant="title" truncate data-volo-heading>{seasonName(seasons[current])} season</Mono>
+							<Icon name="chevron" size={3} class="wx-vl-chevron" />
+							<Mono variant="value" tone="tertiary" class="wx-vl-sched-tally" data-volo-tally>{formatTally(seasons[current])}</Mono>
+							{/* The whole row is the handle. Enabled by the script; without it
+							    the tray rests. */}
+							<HitArea data-volo-expand aria-expanded="false" disabled>
+								<VisuallyHidden as="span" data-volo-expand-label>Show every game</VisuallyHidden>
+							</HitArea>
+						</div>
+						<Faces fill class="wx-vl-panels" data-volo-panels>
+							{seasons.map((season, i) => {
+								const next = nextGameIndex(season);
+								const peek = peekStart(season);
+								return (
+									<Face
+										as="div"
+										class="wx-vl-panel"
+										inactive={i !== current}
+										data-volo-panel={i}
+										data-heading={`${seasonName(season)} season`}
+										data-sport={season.sport}
+										data-tally={formatTally(season)}
+										style={`--vl-peek:${peek}`}
+									>
+										<VisuallyHidden>
+											{season.sport} • {seasonName(season)}: {season.team.name}, {formatRecord(season)}
+											{season.champion ? ". League champions." : "."}
+										</VisuallyHidden>
+										<ol class="wx-vl-games">
+											{season.games.map((game, gameIndex) => (
+												<li
+													class="wx-vl-game"
+													data-result={game.result ?? "upcoming"}
+													data-playoff={game.playoff ? "true" : undefined}
+													data-lit={gameIndex === next ? "true" : undefined}
+													data-above={gameIndex < peek ? "true" : undefined}
+													data-peek-first={gameIndex === peek ? "true" : undefined}
+												>
+													{game.playoff && (
+														<Mono tone="tertiary" class="wx-vl-round" style={`--vl-i:${gameIndex}`}>
+															{formatRound(game.round) ?? "PLAYOFF"}
+														</Mono>
+													)}
+													<Mono variant="value" tone="tertiary">
+														{formatGameDate(game.startTime, season.timezone)}
+													</Mono>
+													<Mono variant="value" class="wx-vl-opp">
+														<Mono as="span" variant="value" truncate class="wx-vl-opp-name">{game.opponent}</Mono>
+														{(() => {
+															const standing = opponentStanding(game);
+															return standing ? (
+																<Mono
+																	as="span"
+																	variant="value"
+																	tone="tertiary"
+																	class="wx-vl-rank"
+																	title={standing.kind === "seed" ? `${ordinal(standing.value)} seed` : `Finished ${ordinal(standing.value)} in the league`}
+																>
+																	{standing.value}
+																</Mono>
+															) : null;
+														})()}
+													</Mono>
+													{/* Always rendered: the rows are `display: contents` over one
+													    grid, so a skipped cell would shift every column after it. */}
+													<Mono tone="tertiary" class="wx-vl-result">{game.result}</Mono>
+													{game.result ? (
+														game.forfeit && !game.for && !game.against ? (
+															/* A forfeit recorded as 0–0 is not a 0–0 game. */
+															<Mono tone="tertiary" class="wx-vl-score">FF</Mono>
+														) : (
+															<Mono
+																variant="value"
+																class="wx-vl-score"
+																style={`--m:${marginRatio(game, season.sport).toFixed(3)}`}
+																data-forfeit={game.forfeit ? "true" : undefined}
+															>
+																{game.for}<span class="wx-vl-dash">–</span>{game.against}
+																<span class="wx-vl-bar" />
+															</Mono>
+														)
+													) : (
+														<Mono variant="value" tone="secondary" class="wx-vl-time">
+															{formatGameTime(game.startTime, season.timezone)}
+														</Mono>
+													)}
+												</li>
+											))}
+										</ol>
+									</Face>
+								);
+							})}
+						</Faces>
+					</section>
+				</div>
+
+				{/* The headline, at the foot like the other tiles' big figures. */}
+				<Figure class="wx-vl-career">
+					{career.wins}–{career.losses}{career.ties > 0 && <>–{career.ties}</>}
+					<Fragment slot="unit">
+						{career.finals} final{career.finals === 1 ? "" : "s"} · {career.titles} title{career.titles === 1 ? "" : "s"}
+					</Fragment>
+				</Figure>
 			</>
 		)
 	}
@@ -383,109 +288,136 @@ const seasonHeading = (season: (typeof seasons)[number]) =>
 </Widget>
 
 <script>
-	import { showFace, shownFace } from "@whois/design-system/lib/faces";
+	import { showFace } from "@whois/design-system/lib/faces";
 	import { stepFromKey } from "@whois/design-system/lib/keys";
 	import { onPage } from "@whois/design-system/lib/lifecycle";
-	import { WIDGET_WIDE_MQ } from "@whois/design-system/lib/breakpoints";
 
 	onPage(() => {
 		const widget = document.querySelector<HTMLElement>(".wx-volo");
-		const nav = widget?.querySelector<HTMLElement>(".wx-vl-nav");
+		const chart = widget?.querySelector<HTMLElement>("[data-volo-chart]");
+		const track = widget?.querySelector<HTMLElement>("[data-volo-track]");
 		const stack = widget?.querySelector<HTMLElement>("[data-volo-panels]");
-		if (!widget || !nav || !stack) return;
+		const expand = widget?.querySelector<HTMLButtonElement>("[data-volo-expand]");
+		if (!widget || !chart || !track || !stack || !expand) return;
 
-		const panels = Array.from(
-			stack.querySelectorAll<HTMLElement>("[data-volo-panel]"),
-		);
-		const hits = Array.from(
-			widget.querySelectorAll<HTMLButtonElement>("[data-volo-jump]"),
-		);
+		const bars = Array.from(track.querySelectorAll<HTMLButtonElement>("[data-volo-season]"));
+		const panels = Array.from(stack.querySelectorAll<HTMLElement>("[data-volo-panel]"));
+		const years = Array.from(track.querySelectorAll<HTMLElement>("[data-year]"));
 		const title = widget.querySelector<HTMLElement>("[data-volo-heading]");
-		const teamName = widget.querySelector<HTMLElement>("[data-volo-team]");
-		const dot = widget.querySelector<HTMLElement>("[data-volo-dot]");
-		const star = widget.querySelector<HTMLElement>("[data-volo-star]");
-		const place = widget.querySelector<HTMLElement>("[data-volo-place]");
 		const tally = widget.querySelector<HTMLElement>("[data-volo-tally]");
-		const prev = nav.querySelector<HTMLButtonElement>("[data-volo-prev]");
-		const next = nav.querySelector<HTMLButtonElement>("[data-volo-next]");
-		if (panels.length === 0 || !prev || !next) return;
+		const sport = widget.querySelector<HTMLElement>("[data-volo-sport]");
+		const expandLabel = widget.querySelector<HTMLElement>("[data-volo-expand-label]");
+		const nav = widget.querySelector<HTMLElement>(".wx-vl-nav");
+		const prev = nav?.querySelector<HTMLButtonElement>("[data-volo-prev]");
+		const next = nav?.querySelector<HTMLButtonElement>("[data-volo-next]");
 
-		let index = shownFace(stack);
-		if (index < 0) index = panels.length - 1;
+		const page = Number(getComputedStyle(widget).getPropertyValue("--vl-page")) || bars.length;
+		const lastStart = Math.max(0, bars.length - page);
+		let start = lastStart;
+		let index = Math.max(0, bars.findIndex((bar) => bar.hasAttribute("aria-current")));
+
+		const onShownPage = (i: number) => i >= start && i < start + page;
+
+		// One tab stop: the selected bar, or the page's first when the selected
+		// one has been paged out of view.
+		const rove = () => {
+			const stop = onShownPage(index) ? index : start;
+			bars.forEach((bar, i) => (bar.tabIndex = i === stop ? 0 : -1));
+		};
+
+		// A year is labelled on its first season ON THE PAGE, so a page that
+		// opens mid-year still says which year it is. A title's trophy always
+		// shows.
+		const label = () => {
+			years.forEach((el, i) => {
+				const first = i === start || el.dataset.year !== years[i - 1]?.dataset.year;
+				el.classList.toggle("is-shown", first || el.classList.contains("is-title"));
+			});
+		};
+
+		const pageTo = (to: number) => {
+			start = Math.min(lastStart, Math.max(0, to));
+			track.style.setProperty("--vl-start", String(start));
+			if (prev && next) {
+				// A disabled arrow cannot hold focus: hand it to the sibling
+				// rather than drop it to <body>.
+				const focused = document.activeElement;
+				prev.disabled = start === 0;
+				next.disabled = start === lastStart;
+				if (focused === next && next.disabled) prev.focus();
+				else if (focused === prev && prev.disabled) next.focus();
+			}
+			label();
+			rove();
+		};
 
 		const select = (to: number) => {
-			const clamped = Math.min(panels.length - 1, Math.max(0, to));
-			if (clamped === index) return;
-			index = clamped;
-			showFace(stack, index);
-			const { heading, team, color, place: placing, tally: wl, champion } = panels[index].dataset;
-			if (title && heading) title.textContent = heading;
-			if (teamName && team) teamName.textContent = team;
-			if (dot) dot.style.background = color ?? "";
-			if (star) star.hidden = champion !== "true";
-			if (place) place.textContent = placing ?? "";
-			if (tally && wl) tally.textContent = wl;
-			// The wash follows aria-current (HitArea's own rule).
-			hits.forEach((hit, i) => {
-				if (i === index) hit.setAttribute("aria-current", "true");
-				else hit.removeAttribute("aria-current");
+			index = Math.min(bars.length - 1, Math.max(0, to));
+			bars.forEach((bar, i) => {
+				if (i === index) bar.setAttribute("aria-current", "true");
+				else bar.removeAttribute("aria-current");
 			});
-			sync();
+			showFace(stack, index);
+			const { heading, sport: game, tally: wl } = panels[index].dataset;
+			if (title && heading) title.textContent = heading;
+			if (sport && game) sport.textContent = game;
+			if (tally && wl) tally.textContent = wl;
+			// Keep the selection on the page.
+			if (index < start) pageTo(index);
+			else if (index >= start + page) pageTo(index - page + 1);
+			else rove();
 		};
 
-		// Disabling the FOCUSED arrow drops focus to <body>, where the keys no
-		// longer reach the widget, so focus moves to the sibling first.
-		const sync = () => {
-			const focused = document.activeElement;
-			prev.disabled = index === 0;
-			next.disabled = index === panels.length - 1;
-			if (focused === next && next.disabled && !prev.disabled) prev.focus();
-			else if (focused === prev && prev.disabled && !next.disabled) next.focus();
+		// Open, the tray covers the chart: the bars go inert so focus cannot
+		// land under it.
+		const setExpanded = (open: boolean) => {
+			widget.dataset.expanded = String(open);
+			expand.setAttribute("aria-expanded", String(open));
+			chart.inert = open;
+			if (expandLabel) expandLabel.textContent = open ? "Show less" : "Show every game";
 		};
 
-		const onPrev = () => select(index - 1);
-		const onNext = () => select(index + 1);
-		// Bound on the WIDGET: the arrows are siblings of the panel stack, so a
-		// keydown while one is focused never reaches the stack.
+		const onBar = (event: Event) => select(Number((event.currentTarget as HTMLElement).dataset.voloSeason));
+		const onPrev = () => pageTo(start - page);
+		const onNext = () => pageTo(start + page);
+		const onExpand = () => setExpanded(widget.dataset.expanded !== "true");
 		const onKey = (event: KeyboardEvent) => {
-			const step = stepFromKey(event, index, panels.length - 1);
+			if (event.key === "Escape" && widget.dataset.expanded === "true") {
+				setExpanded(false);
+				expand.focus();
+				return;
+			}
+			if (!(event.target as HTMLElement).closest("[data-volo-season]")) return;
+			const step = stepFromKey(event, index, bars.length - 1);
 			if (step === null) return;
 			event.preventDefault();
 			select(step);
+			bars[index].focus();
 		};
 
-		const onJump = (event: Event) => {
-			const target = (event.currentTarget as HTMLElement).dataset.voloJump;
-			if (target !== undefined) select(Number(target));
-		};
-
-		// The bands stay disabled at the grid's compact step: a year with four
-		// seasons leaves the narrowest band ~11px, under any touch target. The
-		// arrows are the control there.
-		const wide = window.matchMedia(WIDGET_WIDE_MQ);
-		const syncBands = () => {
-			for (const hit of hits) hit.disabled = !wide.matches;
-		};
-
-		prev.addEventListener("click", onPrev);
-		next.addEventListener("click", onNext);
+		for (const bar of bars) {
+			bar.addEventListener("click", onBar);
+			bar.disabled = false;
+		}
+		prev?.addEventListener("click", onPrev);
+		next?.addEventListener("click", onNext);
+		expand.addEventListener("click", onExpand);
 		widget.addEventListener("keydown", onKey);
-		for (const hit of hits) hit.addEventListener("click", onJump);
-		wide.addEventListener("change", syncBands);
-		syncBands();
 
-		nav.hidden = false;
-		sync();
+		pageTo(start);
+		if (nav) nav.hidden = false;
+		expand.disabled = false;
 
 		return () => {
-			prev.removeEventListener("click", onPrev);
-			next.removeEventListener("click", onNext);
-			widget.removeEventListener("keydown", onKey);
-			wide.removeEventListener("change", syncBands);
-			for (const hit of hits) {
-				hit.removeEventListener("click", onJump);
-				hit.disabled = true;
+			for (const bar of bars) {
+				bar.removeEventListener("click", onBar);
+				bar.disabled = true;
 			}
+			prev?.removeEventListener("click", onPrev);
+			next?.removeEventListener("click", onNext);
+			expand.removeEventListener("click", onExpand);
+			expand.disabled = true;
+			widget.removeEventListener("keydown", onKey);
 		};
 	});
 </script>

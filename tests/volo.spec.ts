@@ -1,52 +1,93 @@
 import { test, expect } from "./fixtures/test";
 
-/**
- * THE VOLO SEASON ARROWS. The ends of the range disable their arrow, and a
- * disabled button cannot hold focus — so pressing End (or Home) while the arrow
- * that is about to be disabled is focused used to drop focus to <body>, and the
- * arrow keys, bound on the widget, went nowhere after that. The script hands
- * focus to the enabled sibling instead.
- */
-test("the season arrows keep focus at the ends of the range", async ({ page }) => {
+// Plain scroll, NOT locator.scrollIntoViewIfNeeded() — the widget row never
+// settles (see the same note in reveal.spec.ts), so waiting for a stable box
+// times out on a CI runner.
+const open = async (page: import("@playwright/test").Page) => {
 	await page.goto("/");
 	const widget = page.locator(".wx-volo");
-	const prev = widget.locator("[data-volo-prev]");
-	const next = widget.locator("[data-volo-next]");
-	const heading = widget.locator("[data-volo-heading]");
-	// Plain scroll, NOT locator.scrollIntoViewIfNeeded() — the widget row never
-	// settles (see the same note in reveal.spec.ts), so waiting for a stable box
-	// times out on a CI runner.
 	await widget.waitFor({ state: "attached" });
 	await page.evaluate(() =>
 		document.querySelector(".wx-volo")?.scrollIntoView({ block: "center" })
 	);
-	await expect(widget.locator(".wx-vl-nav")).toBeVisible();
+	return widget;
+};
 
-	// The widget opens on the latest season that has STARTED, not the last one —
-	// a season Volo has announced but not yet begun sits after it, with "next"
-	// enabled — so walk to the end first rather than assume where it opened.
-	// "previous" is enabled either way: there is always an earlier season.
-	await prev.focus();
-	await page.keyboard.press("End");
+/**
+ * THE SEASON BARS. Each bar is a control that picks its season: the tray's
+ * heading follows it, exactly one bar is current, and that bar is the one
+ * tab stop. The arrow keys walk the bars from a focused one.
+ */
+test("a bar picks its season, by click and by key", async ({ page }) => {
+	const widget = await open(page);
+	const bars = widget.locator("[data-volo-season]");
+	const heading = widget.locator("[data-volo-heading]");
+	const current = widget.locator("[data-volo-season][aria-current]");
+	const stops = widget.locator('[data-volo-season][tabindex="0"]');
+	await expect(bars.first()).toBeEnabled();
+	await expect(current).toHaveCount(1);
+	await expect(stops).toHaveCount(1);
+	const opening = await heading.textContent();
+
+	const count = await bars.count();
+	const earlier = bars.nth(count - 2);
+	await earlier.click();
+	await expect(earlier).toHaveAttribute("aria-current", "true");
+	await expect(current).toHaveCount(1);
+	await expect(earlier).toHaveAttribute("tabindex", "0");
+	await expect(heading).not.toHaveText(opening ?? "");
+
+	await page.keyboard.press("ArrowRight");
+	await expect(bars.nth(count - 1)).toHaveAttribute("aria-current", "true");
+	await expect(bars.nth(count - 1)).toBeFocused();
+});
+
+/**
+ * THE PAGE ARROWS. More seasons than the window holds: the chart opens on the
+ * latest page, "earlier" slides it back, and a disabled arrow cannot hold
+ * focus — so focus moves to its sibling rather than dropping to <body>.
+ */
+test("the page arrows slide the chart and keep focus at the ends", async ({ page }) => {
+	const widget = await open(page);
+	const nav = widget.locator(".wx-vl-nav");
+	test.skip((await nav.count()) === 0, "every season fits on one page");
+	const prev = widget.locator("[data-volo-prev]");
+	const next = widget.locator("[data-volo-next]");
+	const bars = widget.locator("[data-volo-season]");
+
+	await expect(nav).toBeVisible();
 	await expect(next).toBeDisabled();
-	await expect(prev).toBeFocused();
-	const newest = await heading.textContent();
+	await expect(bars.first()).toHaveAttribute("tabindex", "-1");
 
-	// Home from "previous": prev disables, focus lands on next.
-	await page.keyboard.press("Home");
+	await prev.focus();
+	await prev.click();
 	await expect(prev).toBeDisabled();
 	await expect(next).toBeFocused();
-	const oldest = await heading.textContent();
-	expect(oldest).not.toBe(newest);
+	await expect(bars.first()).toHaveAttribute("tabindex", "0");
 
-	// End from "next": next disables, focus lands on prev.
-	await page.keyboard.press("End");
+	await next.click();
 	await expect(next).toBeDisabled();
 	await expect(prev).toBeFocused();
-	await expect(heading).toHaveText(newest ?? "");
+});
 
-	// And the keys still reach the widget from there.
-	await page.keyboard.press("ArrowLeft");
-	await expect(next).toBeEnabled();
-	await expect(heading).not.toHaveText(newest ?? "");
+/**
+ * THE SCHEDULE TRAY. Its heading opens it over the chart — which goes inert,
+ * so focus cannot land under the tray — and closes it again; Escape closes it
+ * too, handing focus back to the heading.
+ */
+test("the tray opens from its heading and closes on Escape", async ({ page }) => {
+	const widget = await open(page);
+	const handle = widget.locator("[data-volo-expand]");
+	await expect(handle).toBeEnabled();
+	await expect(handle).toHaveAttribute("aria-expanded", "false");
+
+	await handle.click();
+	await expect(handle).toHaveAttribute("aria-expanded", "true");
+	await expect(widget).toHaveAttribute("data-expanded", "true");
+	await expect(widget.locator("[data-volo-chart]")).toHaveJSProperty("inert", true);
+
+	await page.keyboard.press("Escape");
+	await expect(widget.locator("[data-volo-chart]")).toHaveJSProperty("inert", false);
+	await expect(handle).toHaveAttribute("aria-expanded", "false");
+	await expect(handle).toBeFocused();
 });

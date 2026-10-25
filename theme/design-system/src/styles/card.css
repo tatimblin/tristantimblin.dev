@@ -47,14 +47,9 @@
 	background: var(--panel-header-bg);
 	border-block-end: var(--border);
 }
-/* The title: the heading face at the small step, uppercase, untracked — a
-   panel's name, not a kicker. The caps role reads --tracking-caps, so the
-   tracking is retuned in scope rather than fought. */
+/* The title is Mono's title variant (mono.css): the heading face at the
+   small step, uppercase, untracked — a panel's name, not a kicker. */
 .ds-card-header__title {
-	--tracking-caps: 0;
-	font-family: var(--font-heading);
-	font-size: var(--font-size-1);
-	font-weight: var(--font-heading-weight);
 	color: var(--text-secondary);
 }
 /* Both slots reserve a Pill's height, so a header is the same height whether

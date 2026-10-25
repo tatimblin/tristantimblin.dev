@@ -8,11 +8,12 @@
 //   <Mono>github</Mono>                          caps label (default)
 //   <Mono variant="text">Allocated</Mono>        dim sentence case
 //   <Mono variant="value" size={1}>90%</Mono>    a figure at label size
+//   <Mono variant="title">Volo softball</Mono>   a panel's name (CardHeader's)
 //   <Mono as="a" variant="text" href="…">@handle</Mono>
 //   <Mono truncate>a label that ellipsises</Mono>
 import { cx } from "../lib/cx";
 
-type Variant = "caps" | "text" | "value";
+type Variant = "caps" | "text" | "value" | "title";
 type Size = 0 | 1;
 type Tone = "primary" | "secondary" | "tertiary" | "accent";
 
@@ -44,7 +45,7 @@ const cls = cx(
 	`ds-mono--variant-${variant}`,
 	// The caps role (caps.css) owns uppercase + tracking; compose it rather
 	// than repeat it.
-	variant === "caps" && "ds-caps",
+	(variant === "caps" || variant === "title") && "ds-caps",
 	size !== 0 && `ds-mono--size-${size}`,
 	tone && `ds-mono--tone-${tone}`,
 	truncate && "ds-mono--truncate-true",

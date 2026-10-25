@@ -312,7 +312,7 @@ export function opponentStanding(
  * finish is not a fact yet.
  */
 function finalPlacement(season: VoloSeason): number | null {
-	if (season.games.some((game) => game.result === null)) return null;
+	if (!isOver(season)) return null;
 	if (season.champion) return 1;
 
 	const playoffs = season.games.filter((game) => game.playoff);
@@ -331,75 +331,113 @@ function finalPlacement(season: VoloSeason): number | null {
 	return 2 ** depth + 1;
 }
 
-export interface RankPoint {
-	index: number;
-	label: string; // "Summer 2026"
-	year: string; // "2026"
-	rank: number | null; // FINAL placement, after the playoffs
-	seed: number | null; // where they went INTO the playoffs
-	teams: number;
-	/** 1 = won the league, 0 = finished last. See rankSeries(). */
-	placing: number | null;
-	/** The same scale, for the seed. */
-	seedPlacing: number | null;
+/** The first game with no result yet, or -1 once the season is over. */
+export function nextGameIndex(season: VoloSeason): number {
+	return season.games.findIndex((game) => !game.result);
 }
 
-export interface RankSeries {
-	points: RankPoint[];
-	titles: number;
-	/** Every game ever played, which is the caption's headline. */
-	record: { wins: number; losses: number; ties: number };
+/** Every game has a result: the finish is a fact. */
+export function isOver(season: VoloSeason): boolean {
+	return nextGameIndex(season) < 0;
+}
+
+/** "Fall 2026" — Volo's own label, or the month and year when it has none. */
+export function seasonName(season: VoloSeason): string {
+	return season.seasonLabel ?? formatSeasonLabel(season);
+}
+
+/** "26" — the season's two-digit year, for the chart's axis. */
+export function seasonYear(season: VoloSeason): string {
+	return season.startDate.slice(2, 4);
 }
 
 /**
- * Placing per season, for the rank chart.
- *
- * The rank here is the FINAL placement — see finalPlacement() — so the top of
- * the chart means winning the thing, not topping the table.
- *
- * NORMALISED, and it has to be. Leagues here run from 6 teams to 14, so the raw
- * rank is not comparable down the series: 2nd of 14 is a better season than 1st
- * of 6, and a chart of raw ranks would draw it as worse. `placing` is the share
- * of the league finished ahead of — 1 for a title, 0 for last — which is the
- * only quantity that means the same thing in every season.
+ * Where a season finished, as its selected bar says it: the trophy for a
+ * title, a medal for losing the final (2nd) or a semifinal (3rd) once the
+ * season is over, the ordinal otherwise — a season still running shows its
+ * live table position, which is no medal yet — and the year when there is no
+ * placing at all.
  */
-export function rankSeries(seasons: VoloSeason[]): RankSeries {
-	const scale = (position: number | null, teams: number) =>
-		position && teams > 1
-			? 1 - (position - 1) / (teams - 1)
-			: position === 1
-				? 1
-				: null;
+export function placeMark(season: VoloSeason): { text: string; medal: boolean } {
+	if (season.champion) return { text: "🏆", medal: true };
+	const place = formatPlacing(season);
+	if (isOver(season) && place === "2nd") return { text: "🥈", medal: true };
+	if (isOver(season) && place === "3rd") return { text: "🥉", medal: true };
+	return { text: place ?? `'${seasonYear(season)}`, medal: false };
+}
 
-	const points: RankPoint[] = seasons.map((season, index) => {
-		const { teams } = season.record;
-		const rank = finalPlacement(season);
-		// The seed ranks only the teams that QUALIFIED, but they are the top of
-		// the table, so seed s sits at league position s — which puts it on the
-		// same axis as the final placement. Seasons that missed the bracket have
-		// no seed; their table position is where they went in.
-		const seed = season.seed ?? season.record.rank;
-		return {
-			index,
-			label: season.seasonLabel ?? formatSeasonLabel(season),
-			year: season.startDate.slice(0, 4),
-			rank,
-			seed,
-			teams,
-			placing: scale(rank, teams),
-			seedPlacing: scale(seed, teams),
-		};
-	});
+/** "lost in the Finals" — how a season ended, for its bar's accessible name. */
+export function seasonOutcome(season: VoloSeason): string {
+	if (season.champion) return "won the league";
+	if (!isOver(season)) return "still playing";
+	const exit = season.games.filter((game) => game.playoff).at(-1);
+	return exit ? `lost in the ${exit.round ?? "playoffs"}` : "missed the playoffs";
+}
 
-	const games = seasons.flatMap((season) => season.games);
+/* ── Season stacks ─────────────────────────────────────────────────────────── */
 
+export interface SeasonStack {
+	/** Regular-season games by outcome, bottom up: wins, ties, losses, unplayed. */
+	wins: number;
+	ties: number;
+	losses: number;
+	unplayed: number;
+	/** One entry per playoff game played, in order. */
+	playoffs: GameResult[];
+	/** A season still running: room is held for a bracket it has not reached. */
+	bracketPending: boolean;
+}
+
+/** Games a pending bracket is drawn as: a semifinal and a final. */
+export const PENDING_BRACKET = 2;
+
+export function seasonStack(season: VoloSeason): SeasonStack {
+	const regular = season.games.filter((game) => !game.playoff);
+	const count = (result: GameResult) =>
+		regular.filter((game) => game.result === result).length;
+	const playoffs = season.games
+		.filter((game) => game.playoff && game.result)
+		.map((game) => game.result as GameResult);
 	return {
-		points,
-		titles: seasons.filter((s) => s.champion).length,
-		record: {
-			wins: games.filter((g) => g.result === "W").length,
-			losses: games.filter((g) => g.result === "L").length,
-			ties: games.filter((g) => g.result === "T").length,
-		},
+		wins: count("W"),
+		ties: count("T"),
+		losses: count("L"),
+		unplayed: regular.filter((game) => !game.result).length,
+		playoffs,
+		bracketPending: !playoffs.length && !isOver(season),
 	};
+}
+
+/** A stack's height in games, the unit the chart is scaled in. */
+export function stackHeight(stack: SeasonStack): number {
+	return (
+		stack.wins + stack.ties + stack.losses + stack.unplayed +
+		(stack.bracketPending ? PENDING_BRACKET : stack.playoffs.length)
+	);
+}
+
+/** The headline: every game ever played, finals reached and titles won. */
+export function careerSummary(seasons: VoloSeason[]) {
+	const games = seasons.flatMap((season) => season.games);
+	return {
+		wins: games.filter((g) => g.result === "W").length,
+		losses: games.filter((g) => g.result === "L").length,
+		ties: games.filter((g) => g.result === "T").length,
+		finals: seasons.filter((s) => s.games.some((g) => g.round === "Finals")).length,
+		titles: seasons.filter((s) => s.champion).length,
+	};
+}
+
+/** Rows the collapsed schedule shows. */
+export const PEEK_ROWS = 3;
+
+/**
+ * The first of the rows the collapsed schedule shows: the last result and the
+ * games after it in a season still running, the last games (how it ended) in
+ * one that is over.
+ */
+export function peekStart(season: VoloSeason): number {
+	const next = nextGameIndex(season);
+	const at = next < 0 ? season.games.length - PEEK_ROWS : next - 1;
+	return Math.max(0, Math.min(at, season.games.length - PEEK_ROWS));
 }

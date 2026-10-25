@@ -1,100 +1,291 @@
 /* Volo widget styles.
  *
- * Plain CSS (not an Astro scoped <style>) because one rule reaches a DS
- * element the widget does not render itself: the card header, which the
- * Widget draws and this file makes a query container through `headerClass`.
- * The .wx-volo/.wx-vl-* prefix keeps the rules contained; nothing else is
- * needed — the package's CSS sits in a cascade layer under the site's, so a
- * plain class here always wins.
+ * Plain CSS (not an Astro scoped <style>) because one rule reaches inside a
+ * DS element the widget does not render itself: the Icon's svg in the "earlier"
+ * arrow. The .wx-volo/.wx-vl-* prefix keeps the rules contained; the
+ * package's CSS sits in a cascade layer under the site's, so a plain class
+ * here always wins.
  *
- * The card chrome, the header, the standing pill, the round buttons, the mono
- * voices (each Mono says its own tone), the panel stack, the divider, the
- * chart's key (a Legend) and its season bands (HitAreas) are design-system
- * components (Volo.astro). What is here is the tile's own layout — the shared
- * table grid, the margin tick, the step chart — and the few STATE colours
- * that ARE the design: green for a win, red for a loss (--positive /
- * --negative), the accent for the next game's time and for the season in
- * progress on the chart. The only
- * literal colour is the team's own, which comes from Volo per team and is
- * inline on its dot. */
+ * The card chrome, the career figure, the round buttons, the bars' and the
+ * tray's controls (HitAreas), the mono voices and the panel stack are
+ * design-system components (Volo.astro). What is here is the tile's own
+ * layout — the season bars, the schedule tray, the shared table grid and its
+ * margin tick — and the STATE colours that ARE the design: green for a win,
+ * red for a loss (--positive / --negative), the accent for the selected
+ * season, the chart's band and the next game's time. */
 
 .wx-volo {
-	/* One game row. Fluid off the cell like the type it holds, so the list keeps
-	   its proportions as the tile grows. The floor and ceiling are space steps;
-	   the ceiling is set by the worst case: nine games plus the header plus the
-	   career field have to fit the square. */
-	--vl-row: clamp(var(--space-5), calc(var(--widget-cell) * 0.112), var(--space-6));
+	/* One game row. Fluid off the cell like the type it holds. */
+	--vl-row: clamp(var(--space-5), calc(var(--widget-cell) * 0.1), var(--space-6));
 	/* The score column's width, which is also the margin scale: the zero point
 	   sits at its centre and a full-cap margin reaches its edge. */
 	--vl-range: clamp(var(--space-10), calc(var(--widget-cell) * 0.3), var(--space-12));
+	/* Between bars. */
+	--vl-gap: clamp(var(--space-1), calc(var(--widget-cell) * 0.02), var(--space-2));
+	/* A segment's corner: soft, scaled with the bar. The tile radius
+	   (--border-radius-tile) is for cells a few pixels wide and reads square
+	   on a bar this size; this one is the design's. */
+	--vl-seg-radius: calc(var(--widget-pad) * 0.2);
+	/* The tray's resting height: its heading row and the peek rows. */
+	--vl-tray-head: calc(var(--vl-row) * 1.3);
+	--vl-drawer: calc(var(--vl-tray-head) + var(--vl-row) * var(--vl-peek-rows) + var(--border-width));
+	/* The chart's band: a light tint of the accent. */
+	--vl-tint: color-mix(in srgb, var(--card-background), var(--accent) 6%);
 }
 
-/* The standing pill's glyph: the team's Volo colour. A hairline ring keeps a
-   white or near-background team readable in both themes. */
-.wx-vl-dot {
-	flex: none;
-	inline-size: 0.7em;
-	block-size: 0.7em;
-	border-radius: var(--border-radius-pill);
-	background: var(--text-tertiary);
-	box-shadow: 0 0 0 var(--border-width) var(--hairline);
-}
-
-/* HEADER META -------------------------------------------------------------
-   Team name, standing pill, then the season buttons, right of the heading.
-   The header row (the widget's headerClass) is a query container: on a phone
-   the team name goes, then the placing, so the season heading stays readable;
-   the header's squeeze="title" leaves the meta unclipped for this and lets the
-   heading ellipsise as the last resort. The HEADER, not the card: cqi units
-   resolve against the nearest container, and the DS fluid scale inside the
-   body (--widget-cell, 100cqi) must keep resolving against the grid. */
-.wx-vl-head {
-	container: vl-head / inline-size;
-}
-.wx-vl-meta {
-	display: flex;
-	align-items: center;
-	gap: var(--space-3);
-	min-inline-size: 0;
-}
-/* The team is the give: a long name (22 characters, in one season) ellipsises
-   (Mono's truncate) before the heading, the pill or the buttons move. */
-.wx-vl-team {
-	min-inline-size: 0;
-}
+/* The DS icon set has one arrow and it points right; prev is it, turned round. */
 .wx-vl-nav {
 	display: flex;
 	gap: var(--space-2);
 }
-/* The DS icon set has one arrow and it points right; prev is it, turned round. */
 .wx-vl-arrow--prev svg {
 	transform: rotate(180deg);
 }
 
-/* Narrower (a phone): the team name goes — ellipsised to "WHO …" it said
-   nothing and squeezed the heading to "AUG …"; the pill's dot still carries the
-   team colour, and each season panel keeps the name for screen readers. The
-   pill keeps its dot and the tally and drops the placing (the rank chart at the
-   foot of the tile is where the placings are). */
-@container vl-head (max-width: 480px) {
-	.wx-vl-team,
-	.wx-vl-place {
-		display: none;
-	}
+.wx-vl-body {
+	/* The body's top padding, owned here so the band and the open tray can
+	   run up through it to the header. */
+	--vl-body-top: var(--space-4);
+	padding-block-start: var(--vl-body-top);
 }
-/* Narrowest: a tighter gap in the meta group (the heading's own ellipsis is
-   the header's squeeze="title"). */
-@container vl-head (max-width: 430px) {
-	.wx-vl-meta {
-		gap: var(--space-2);
+
+/* The chart and the tray's box: everything above the figure. No gap: the
+   chart's band runs right down to the tray's rule. */
+.wx-vl-main {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+}
+
+/* The headline, at the foot. */
+.wx-vl-career {
+	flex: none;
+}
+
+/* SEASON BARS --------------------------------------------------------------
+   On the accent band, card edge to card edge and up to the header: one fill
+   instead of a frame of dashed edges. A window --vl-page bars wide over a
+   track of every season, slid by --vl-start. The bars are sized as a share of
+   the WINDOW (the track is the window's width; its overflow runs off to the
+   left and is clipped). */
+.wx-vl-chart {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	display: flex;
+	flex-direction: column;
+	margin: calc(-1 * var(--vl-body-top)) calc(-1 * var(--widget-pad)) 0;
+	padding: var(--vl-body-top) var(--widget-pad) var(--space-1);
+	background: var(--vl-tint);
+}
+/* The clip, inside the chart so the chart's own box can bleed. */
+.wx-vl-window {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	overflow: hidden;
+	/* Room for a medal's foot, inside the clip. */
+	padding-block-end: var(--space-2);
+}
+.wx-vl-track {
+	--vl-col: calc((100% - (var(--vl-page) - 1) * var(--vl-gap)) / var(--vl-page));
+	display: flex;
+	gap: var(--vl-gap);
+	block-size: 100%;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	transform: translateX(calc(-1 * var(--vl-start, 0) * (var(--vl-col) + var(--vl-gap))));
+	transition: transform var(--duration-settle) var(--ease-reveal);
+}
+/* One season: its bar over its label, and a HitArea over both. */
+.wx-vl-season {
+	position: relative;
+	flex: 0 0 var(--vl-col);
+	min-inline-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+/* The bar: segments bottom up, each --k games tall on a scale where the
+   tallest season fills the column. */
+.wx-vl-stack {
+	--vl-break: var(--space-2);
+	flex: 1 1 auto;
+	min-block-size: 0;
+	display: flex;
+	flex-direction: column-reverse;
+	gap: var(--widget-tile-gap);
+}
+.wx-vl-seg {
+	flex: none;
+	block-size: calc(var(--k) / var(--vl-tallest) * (100% - var(--vl-break)) - var(--widget-tile-gap));
+	border-radius: var(--vl-seg-radius);
+	transition: opacity var(--duration-quick) var(--ease-reveal);
+}
+/* The space between the regular season and the playoffs. */
+.wx-vl-break {
+	flex: none;
+	block-size: calc(var(--vl-break) - var(--widget-tile-gap));
+}
+/* Regular season, set back; the playoffs at full strength. */
+.wx-vl-seg[data-kind="W"] {
+	background: color-mix(in srgb, var(--positive) 45%, var(--card-background));
+}
+.wx-vl-seg[data-kind="L"] {
+	background: color-mix(in srgb, var(--negative) 35%, var(--card-background));
+}
+.wx-vl-seg[data-kind="T"] {
+	background: color-mix(in srgb, var(--text-tertiary) 55%, var(--card-background));
+}
+.wx-vl-seg[data-kind="PW"] {
+	background: var(--positive);
+}
+.wx-vl-seg[data-kind="PL"] {
+	background: var(--negative);
+}
+/* Still to play, fixtures and a bracket not yet reached alike: dashed. */
+.wx-vl-seg[data-kind="upcoming"],
+.wx-vl-seg[data-kind="bracket"] {
+	border: var(--border);
+}
+@media (hover: hover) {
+	.wx-vl-season:has(.wx-vl-pick:hover:not(:disabled)) .wx-vl-seg {
+		opacity: 0.75;
 	}
 }
 
-/* PANEL STACK --------------------------------------------------------------
-   A DS Faces stack (Volo.astro says why it is not `fill`); a panel only
-   tightens the face's gap to the table's rhythm. */
-.wx-vl-panel {
+/* The label under a bar: its year on the first season of a year on the page,
+   a title's trophy always, and where the season finished when it is the one
+   selected — in the accent, over the accent rule. */
+.wx-vl-year {
+	flex: none;
+	text-align: center;
+	white-space: nowrap;
+	border-block-start: var(--bar-width) solid transparent;
+	padding-block-start: var(--space-1);
+	/* One fixed line, so a medal (taller than the figures) cannot shorten
+	   its bar: every column's bar ends at the same baseline. */
+	block-size: var(--space-5);
+	line-height: var(--space-5);
+}
+.wx-vl-year:not(.is-shown) {
+	visibility: hidden;
+}
+.wx-vl-place,
+.wx-vl-season:has([aria-current]) .wx-vl-yr {
+	display: none;
+}
+.wx-vl-season:has([aria-current]) .wx-vl-place {
+	display: inline;
+}
+.wx-vl-season:has([aria-current]) .wx-vl-year {
+	visibility: visible;
+	color: var(--accent);
+	border-block-start-color: var(--accent);
+}
+/* The trophy and medals, a step up the scale from the caption so they read
+   as pictures; a line-height of 1 keeps the label row from growing. */
+.wx-vl-medal {
+	font-size: var(--widget-font-md);
+	line-height: 1;
+	vertical-align: -0.1em;
+}
+
+/* SCHEDULE TRAY ------------------------------------------------------------
+   Laid out over the foot of the main box (the slot holds its room in the
+   flow), so opening it grows it up over the chart rather than pushing the
+   card taller. Resting, it shows --vl-peek-rows games, the list slid up to
+   the peek; open, it runs up to the header and the list rides back to its
+   first game. Card edge to card edge, under one dashed rule. */
+.wx-vl-slot {
+	flex: none;
+	block-size: var(--vl-drawer);
+}
+.wx-vl-sched {
+	position: absolute;
+	z-index: 2;
+	inset-inline: calc(-1 * var(--widget-pad));
+	inset-block-end: 0;
+	block-size: var(--vl-drawer);
+	display: flex;
+	flex-direction: column;
+	background: var(--card-background);
+	border-block-start: var(--border);
+	transition: block-size var(--duration-settle) var(--ease-reveal);
+}
+.wx-volo[data-expanded="true"] .wx-vl-sched {
+	block-size: calc(100% + var(--vl-body-top));
+}
+
+/* The tray's heading: the season in the card header's voice (Mono's title
+   variant), a chevron that points the way the tray will go, the tally, and a
+   HitArea over the whole row as the handle. */
+.wx-vl-sched-head {
+	position: relative;
+	flex: none;
+	display: flex;
+	align-items: center;
 	gap: var(--space-2);
+	block-size: var(--vl-tray-head);
+	padding-inline: var(--widget-pad);
+}
+.wx-vl-sched-tally {
+	flex: none;
+	margin-inline-start: auto;
+}
+.wx-vl-chevron {
+	flex: none;
+	color: var(--text-tertiary);
+	transform: rotate(180deg);
+	transition:
+		transform var(--duration-settle) var(--ease-reveal),
+		color var(--duration-quick) var(--ease-reveal);
+}
+/* No script, no tray to pull: no chevron promising one. */
+.wx-vl-sched-head:has([data-volo-expand]:disabled) .wx-vl-chevron {
+	visibility: hidden;
+}
+.wx-volo[data-expanded="true"] .wx-vl-chevron {
+	transform: none;
+}
+@media (hover: hover) {
+	.wx-vl-sched-head:has([data-volo-expand]:hover:not(:disabled)) .wx-vl-chevron {
+		color: var(--text-primary);
+	}
+}
+
+/* The panel stack is a DS Faces with `fill`; the tray only clips it, and
+   scrolls it once open. */
+.wx-vl-panels {
+	overflow: hidden;
+	padding-inline: var(--widget-pad);
+}
+.wx-volo[data-expanded="true"] .wx-vl-panels {
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+.wx-vl-panel {
+	gap: 0;
+}
+.wx-vl-panel .wx-vl-games {
+	transform: translateY(calc(-1 * var(--vl-peek, 0) * var(--vl-row)));
+	transition: transform var(--duration-settle) var(--ease-reveal);
+}
+.wx-volo[data-expanded="true"] .wx-vl-panel .wx-vl-games {
+	transform: none;
+}
+/* Resting, the rows above the peek are slid out of the tray; they fade, so
+   their margin ticks (which sit on their bottom edge) do not show at the
+   tray's top, and fade back in as it opens. The first row on show keeps its
+   bracket round off the tray's top edge too, where it would be cut in half. */
+.wx-vl-game > * {
+	transition: opacity var(--duration-settle) var(--ease-reveal);
+}
+.wx-volo:not([data-expanded="true"]) .wx-vl-game[data-above] > *,
+.wx-volo:not([data-expanded="true"]) .wx-vl-game[data-peek-first] > .wx-vl-round {
+	opacity: 0;
 }
 
 /* GAME ROWS ----------------------------------------------------------------
@@ -103,10 +294,9 @@
    different x on every line. The rows are `display: contents` so their cells
    become items of THIS grid and the tracks are shared.
 
-   Rows are ONE FIXED HEIGHT and the list does not stretch to fill: seasons run
-   6–9 games, and dividing the space made the rhythm change under the reader
-   every time the arrows moved. The slack at the bottom is where the career
-   field sits. */
+   Rows are ONE FIXED HEIGHT and the list does not stretch to fill: the tray
+   slides the list by whole rows (--vl-peek × --vl-row), and seasons run 6–9
+   games. */
 .wx-vl-games {
 	display: grid;
 	/* date | opponent | result | score. The bracket round has no column of its
@@ -128,6 +318,12 @@
 	/* Stretch so the rule is drawn at the ROW's top edge, and the four cells'
 	   rules meet as one hairline. */
 	align-self: stretch;
+	/* Unruled between regular-season games (the margin tracks keep the rows);
+	   the bracket is ruled off, dashed, with its round set on the rule. The
+	   transparent edge keeps every row the same height either way. */
+	border-block-start: var(--border-width) solid transparent;
+}
+.wx-vl-game[data-playoff] > :not(.wx-vl-round) {
 	border-block-start: var(--border);
 }
 .wx-vl-game:first-child > :not(.wx-vl-round) {
@@ -212,16 +408,15 @@
 }
 
 /* MARGIN TICK --------------------------------------------------------------
-   How decisive the result was, drawn on the hairline beneath the score.
-   ZERO-ANCHORED: every tick starts from the centre of the score column (marked
-   by a hairline notch) and runs right for a win, left for a loss, so the sign
-   reads before the length. Normalised against a FIXED per-sport cap (see
-   marginCap() in volo.ts), so the scale holds as the arrows move. */
+   How decisive the result was, drawn on its track beneath the score.
+   ZERO-ANCHORED: every tick starts from the centre of the score column and
+   runs right for a win, left for a loss, so the sign reads before the length.
+   Normalised against a FIXED per-sport cap (see marginCap() in volo.ts), so
+   the scale holds from season to season. */
 .wx-vl-bar {
 	position: absolute;
-	/* Straddles the divider, and sits over it: the next row's hairline is
-	   painted later and would otherwise cover it. */
-		z-index: 1;
+	/* Over its track (below). */
+	z-index: 2;
 	inset-block-end: -1px;
 	block-size: var(--bar-width);
 	inline-size: calc(50% * var(--m));
@@ -241,15 +436,24 @@
 	inset-inline-start: calc(50% - var(--bar-width));
 	inline-size: calc(2 * var(--bar-width));
 }
-/* The zero itself, on every played row, so the origin reads as a column. */
-.wx-vl-score:not(.wx-vl-score--ff)::after {
+/* The tick's track: a solid light rule on the row's edge, the width of the
+   column — the tick drawn on it once played, the bare track while the game
+   is still to come. Where a playoff rule runs along the same edge, the rule
+   stops at the score column and the track starts a step after it, so the
+   two read as one line with a gap rather than overlapping. */
+.wx-vl-score::after,
+.wx-vl-time::after {
 	content: "";
 	position: absolute;
-	inset-block-end: -3px;
-	inset-inline-start: 50%;
-	inline-size: 1px;
-	block-size: 5px;
+	inset-block-end: -1px;
+	inset-inline: var(--space-2) 0;
+	block-size: var(--bar-width);
 	background: var(--wash-3);
+	/* Over the next row's divider, which is painted after this cell. */
+	z-index: 1;
+}
+.wx-vl-game[data-playoff] > :is(.wx-vl-score, .wx-vl-time) {
+	border-block-start-color: transparent;
 }
 
 /* The bracket round, centred across the row and set ON the divider above it.
@@ -262,154 +466,10 @@
 	inset-block-start: calc(var(--vl-row) * var(--vl-i, 0));
 	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
-		padding-inline: var(--space-2);
+	padding-inline: var(--space-2);
+	/* Smaller than the label step, by design: a note on the rule, quieter
+	   than the rows it divides. */
+	font-size: 0.75em;
 	/* The card's own surface (card.css paints the card with it). */
 	background: var(--card-background);
-}
-
-/* RANK BY SEASON -----------------------------------------------------------
-   A step chart of where the team finished, season by season, pinned to the
-   bottom of the tile and deliberately STATIC — the arrows move the schedule
-   above it, never this. The y axis is the FINAL placement after the playoffs,
-   normalised by league size (finalPlacement()/rankSeries() in volo.ts).
-   `margin-block-start: auto` pins it: every pixel of slack lands above. */
-.wx-vl-career {
-	/* The inline reset matters — this is a <figure>, and the UA indents it. */
-	margin: auto 0 0;
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-3);
-}
-.wx-vl-career-cap {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	/* Wraps rather than truncates on a narrow tile: without the legend the two
-	   lines are unlabelled. */
-	flex-wrap: wrap;
-	gap: var(--space-2) var(--space-4);
-}
-/* The key (a DS Legend, whose rows stack by default): in a row here, on the
-   caption line, pushed up against the label. */
-.wx-vl-legend {
-	flex-direction: row;
-	gap: var(--space-3);
-	margin-inline-end: auto;
-}
-
-.wx-vl-chart {
-	display: grid;
-	grid-template-columns: auto minmax(0, 1fr);
-	column-gap: var(--space-3);
-	row-gap: var(--space-2);
-}
-/* 1st at the top, last at the bottom — the two ends of the axis, and nothing
-   in between: there is no meaningful midpoint across leagues of different
-   sizes. */
-.wx-vl-axis {
-	grid-area: 1 / 1;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-}
-
-/* The plot and its hit areas share a box so the bands are positioned against
-   exactly the width the SVG stretches to. */
-.wx-vl-plotwrap {
-	grid-area: 1 / 2;
-	position: relative;
-}
-.wx-vl-plot {
-	display: block;
-	inline-size: 100%;
-		block-size: clamp(var(--space-7), calc(var(--widget-cell) * 0.2), var(--space-11));
-	overflow: visible;
-}
-.wx-vl-plot path {
-	fill: none;
-	/* The plot box stretches to the tile's width; without this the horizontals
-	   go fat while the verticals stay thin. */
-	vector-effect: non-scaling-stroke;
-	stroke-width: 1;
-}
-.wx-vl-rule {
-	stroke: var(--hairline);
-}
-.wx-vl-line {
-	stroke: var(--text-primary);
-}
-/* Where each season went INTO the playoffs — the reference, so set back:
-   dashed and dim. The gap between the two lines is the thing worth seeing. */
-.wx-vl-seed {
-	stroke: var(--text-tertiary);
-	stroke-dasharray: 2 2;
-}
-/* The season in progress: the accent, drawn over whichever line it sits on. */
-.wx-vl-plot .wx-vl-now-line {
-	stroke: var(--accent);
-	stroke-width: 1.5;
-}
-.wx-vl-plot .wx-vl-now-line.is-seed {
-	stroke-dasharray: 2 2;
-}
-/* …and the playhead dot at its end (the DS playhead's dot, --playhead-dot),
-   in HTML so the stretched SVG cannot squash it into an ellipse. */
-.wx-vl-now {
-	position: absolute;
-	z-index: 1;
-	inline-size: var(--playhead-dot);
-	block-size: var(--playhead-dot);
-	border-radius: var(--border-radius-pill);
-	background: var(--accent);
-	transform: translate(-50%, -50%);
-	pointer-events: none;
-}
-
-/* SEASON BANDS -------------------------------------------------------------
-   One per season (a DS HitArea, `wash`), full plot height and exactly that
-   season's width: hover to pick a season out, click to jump the schedule
-   above to it, and the one on show keeps the wash (aria-current) — even
-   while disabled on a phone. This box is what they are positioned in. */
-.wx-vl-hits {
-	position: absolute;
-	inset: 0;
-}
-
-.wx-vl-years {
-	grid-area: 2 / 2;
-	display: grid;
-	grid-template-columns: repeat(var(--vl-cols, 6), 1fr);
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	color: var(--text-tertiary);
-}
-/* One equal column per year, matching the plot's time axis. */
-.wx-vl-year {
-	justify-self: center;
-}
-
-/* THE COMPACT STEP (the grid's own, widget-grid.css; WIDGET_WIDE_MQ for the
-   script's bands) ------------------------------------------------------------
-   The grid drops to two columns, so a 2×2 is full-bleed — and the fluid scale
-   is keyed to ONE CELL, now half this tile's width, so every value lands on its
-   floor. Rescale the row and the plot off the width this tile ACTUALLY
-   occupies. And release the square: a nine-game season plus the header plus
-   the chart does not fit ~343px (the videos tile set the precedent). A
-   viewport query, as the grid's is — this follows the column count. */
-@media (max-width: 900px) {
-	.wx-volo {
-		aspect-ratio: auto;
-		--vl-tile: calc(var(--widget-cell) * 2 + var(--widget-grid-gap));
-		--vl-row: clamp(var(--space-6), calc(var(--vl-tile) * 0.095), var(--space-7));
-	}
-	.wx-vl-round {
-		padding-inline: var(--space-3);
-	}
-	.wx-vl-career {
-		padding-block-start: var(--space-4);
-	}
-	.wx-vl-plot {
-				block-size: clamp(var(--space-8), calc(var(--vl-tile) * 0.17), var(--space-11));
-	}
 }

@@ -3,13 +3,14 @@
  * Everything on a card that labels rather than says — the header, a unit, a
  * legend row, a pill, a stat's caption — is set small, in the UI face (the
  * name is from when this voice was a monospace; the classes and the component
- * keep it, since the plugin, the tests and every widget speak it). Three
- * variants, which are the three jobs that voice does:
+ * keep it, since the plugin, the tests and every widget speak it). Four
+ * variants, which are the jobs that voice does:
  *
  *   caps    uppercase, tracked out: the panel label. The default.
  *   text    sentence case, the quiet ink: a handle, a stat's label, a caption.
  *   value   the ink, tabular: a figure read at label size (`90%` beside a
  *           `10%`), so it lines up with the caps around it.
+ *   title   a panel's name, in the heading face: the card header's title.
  *
  * Tabular figures on all three, since a mono label is as likely to hold a
  * count as a word and a count that changes should not shift. Sizes come from
@@ -45,6 +46,17 @@
 	text-transform: none;
 	letter-spacing: 0;
 	color: var(--text-primary);
+}
+/* title — a panel's name, not a kicker: the heading face at the small step,
+   uppercase, untracked. CardHeader's title, and anything that heads a panel
+   inside a card in the same voice. The caps role reads --tracking-caps, so
+   the tracking is retuned in scope rather than fought. */
+.ds-mono--variant-title {
+	--tracking-caps: 0;
+	font-family: var(--font-heading);
+	font-size: var(--font-size-1);
+	font-weight: var(--font-heading-weight);
+	white-space: nowrap;
 }
 
 /* size. 0 is the label step (default); 1 the next one up, for a value or a
