@@ -25,9 +25,9 @@
 }
 .ds-tile-grid {
 	display: grid;
-	/* The gap scales with the cell when inside a widget; a hair under the
-	   smallest space step otherwise, since tiles are small. */
-	--tile-gap: clamp(2px, calc(var(--widget-cell, 300px) * 0.01), var(--space-1));
+	/* The gap scales with the cell when inside a widget (widget-grid.css);
+	   outside one, the reference 300px cell's. */
+	--tile-gap: var(--widget-tile-gap, 3px);
 	gap: var(--tile-gap);
 	grid-template-columns: repeat(var(--tile-grid-cols, 8), minmax(0, 1fr));
 }

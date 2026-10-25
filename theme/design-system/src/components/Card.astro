@@ -2,9 +2,7 @@
 // Card — the flat card (styles/card.css). Renders via Box (polymorphic `as`).
 // With a `title` (prop or slot) and/or something in the `meta` slot, a
 // CardHeader carrying them is rendered first and the body content follows as
-// children; `squeeze` is CardHeader's, and `headerClass` puts a class of the
-// caller's on the header row (a container to query, say) so no one has to
-// select the DS's own. `chrome={false}` drops the frame, the fill and the clip
+// children; `squeeze` is CardHeader's. `chrome={false}` drops the frame, the fill and the clip
 // for content that sits straight on the page (a halftone filling its cell)
 // while keeping the card's radius and its place in a grid.
 //
@@ -19,7 +17,6 @@ interface Props {
 	chrome?: boolean;
 	title?: string;
 	squeeze?: "meta" | "title";
-	headerClass?: string;
 	class?: string;
 	[key: string]: unknown;
 }
@@ -29,7 +26,6 @@ const {
 	chrome = true,
 	title,
 	squeeze,
-	headerClass,
 	class: className,
 	...rest
 } = Astro.props;
@@ -49,7 +45,7 @@ const hasMeta = await filled("meta");
 <Box as={as} class={cls} {...rest}>
 	{
 		title || hasTitle || hasMeta ? (
-			<CardHeader title={title} squeeze={squeeze} class={headerClass}>
+			<CardHeader title={title} squeeze={squeeze}>
 				{hasTitle ? (
 					<Fragment slot="title">
 						<slot name="title" />
