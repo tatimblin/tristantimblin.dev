@@ -1,21 +1,58 @@
 ---
 title: "Your Car Knows You're Getting Sick"
-date: 2024-07-11
+date: 2023-11-15
+modified: 2026-10-25
 category: thoughts
 tags: ["career", "machine-learning", "automotive", "health"]
-excerpt: "I joined Fisker to build a health product from vehicle signal data — steering patterns, braking behavior, and acceleration habits can detect cognitive decline."
+excerpt: "A survey of how often people drive predicts cognitive decline. Your car doesn't need to ask."
 ---
 
-In 2023, I joined Fisker before they even shipped a single car. I'd been building software for years, and I wanted to work on something physical — something that actually interacts with the world. But the real reason I joined wasn't electric vehicles.
+When people talk about machine learning and cars, they mean self-driving. That makes sense, since autonomy is one of the hardest problems in the field. But a car is also a sensor platform that rides along with you every day, and some of the best uses for that data are ones it was never built for.
 
-Luke Miller, a friend of mine at LSU had published [research](https://repository.lsu.edu/gradschool_theses/5644/) showing that vehicle signal data — steering patterns, braking behavior, acceleration habits — could be used to detect cognitive decline in the driver. Not with special medical equipment. Not with a clinical visit. Just from how you drive. I read that, and wanted to build a real-time solution.
+Here's one. Ask older adults how often they drive, and their answers predict who will lose cognitive function faster. Your car doesn't need to ask.
 
-Your car could flag early signs of neurological deterioration before your doctor suspects anything. The sensors already exist. The data is already being generated. It just wasn't being made available.
+## The research
 
-Fisker was building on Magna's brand new EV platform and already wanted to pull signals off the car for machine learning — performance tuning, predictive maintenance, and driver assist. But they were small enough that the ML direction wasn't completely set yet.
+Luke Miller, a friend of mine from LSU, [studied](https://repository.lsu.edu/gradschool_theses/5644/) 1,426 older adults from the Rush Memory and Aging Project, who took cognitive tests every year for an average of almost seven years. People who drove less had worse cognition at the start, and they declined faster from there. That held after accounting for depression, general mobility and demographics.
 
-Autonomous driving from Waymo, Applied Intuition, and Zoox understandably dominates the conversation around ML and vehicles. But there's also room for a novel application of the same data: treating a car as a health product.
+Driving frequency in that study came from a questionnaire. Luke's suggested next step was to look at how driving habits *change* over time, which is hard to do with a survey and trivial for a car.
 
-We built the data pipeline — processing 2 million messages a second off the cars, preparing signal data for training, storing 8TB of signals in parquet files a day. The most notable win was the model to gain the last 10 miles of range on the Ocean, surpassing the Tesla Model Y. The infrastructure for a health application was there and we were accumulating data fast.
+Other researchers have started on the sensor side. A team at Washington University [put GPS loggers](https://pmc.ncbi.nlm.nih.gov/articles/PMC8204509/) in the cars of 139 cognitively normal older adults for a year. From driving data alone, a model picked out the ones with preclinical Alzheimer's disease (confirmed by spinal fluid biomarkers) with an F1 score of 0.82. Those are people with no symptoms yet.
 
-Then Fisker imploded — [somewhat spectacularly](https://www.youtube.com/watch?v=38JvHX41hRU). Once the factory line shut down, a health application built on vehicle signal data wasn't going to happen there. But I'm really happy I got a shot at building something unique.
+A plug-in logger sees speed, distance and hard braking. A modern car sees far more, on every trip, without anyone installing anything.
+
+## Why Fisker
+
+I read Luke's work and wanted to build the real-time version. That's why I'm at Fisker.
+
+We're early. The Ocean only started shipping this summer, on Magna's brand new EV platform. The obvious ML work is L3 driver assist, and that's where most of the attention goes. But the team is small enough that the ML direction isn't set, and the same signals that feed driver assist can feed other models too. I've written software for years and wanted to build something new that touches the physical world, and this is about as physical as it gets.
+
+## What we're building
+
+Every ML application on the car needs the same foundation: clean signals, at volume, ready to train on. So that's what we're building first.
+
+- 2 million messages a second off the cars
+- 8TB of signals a day, stored as parquet
+- Signal data prepared for training
+
+Once that exists, each new application is mostly a new model. One of our first finds the last 10 miles of range on the Ocean, enough to pass the Tesla Model Y. Nobody would call range an ML problem, and it's already paying off.
+
+## What a health model needs
+
+Detecting decline from driving is harder than detecting it in a study. A few things have to be true.
+
+- **Passive.** The research uses surveys and add-on devices. The point of doing it in the car is that the driver does nothing.
+- **A baseline per driver.** Decline is a change, not a number. A cautious driver isn't impaired, so the model has to compare you to yourself, which means months of history before it can say anything.
+- **Knowing who's driving.** Shared cars mix two people's baselines. The car has to tell drivers apart before it can track one of them.
+- **Consent first.** This is health data inferred from behavior. Drivers have to opt in, and they have to own what the car concludes about them.
+- **Clinical validation.** The evidence so far is a few promising studies with hundreds of people, not thousands. A flag from your car should start a conversation with a doctor, never stand in for one.
+
+None of these is a modeling problem. They're product and data problems, and the pipeline is where most of them get solved.
+
+## Look past the obvious
+
+Waymo, Zoox and Applied Intuition rightly dominate the conversation about ML and vehicles. But if you only treat the car as something that should drive itself, you leave most of its data on the table. Range, predictive maintenance and health all come from signals the car already has.
+
+If you work on vehicle data, it's worth asking what else it can tell you, especially about the person driving. A car will know you better than almost any other device you own.
+
+*Edited October 25, 2026: Fisker [imploded](https://www.youtube.com/watch?v=38JvHX41hRU) in 2024, and a health product built on its signal data went with it. I didn't get to finish what I started, but the idea still holds. The sensors are on every car, and the data is still waiting for someone to use it.*
