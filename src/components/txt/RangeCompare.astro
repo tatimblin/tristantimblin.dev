@@ -1,0 +1,100 @@
+---
+// RangeCompare — two EPA range ratings as horizontal bars, for
+// /txt/why-i-joined-fisker. A one-off figure (the DS BarGraph is a hairline
+// sparkline with no labels), so it is hand-rolled on DS tokens and set in a
+// DS Fig for the caption line. The bars are drawn to scale from zero.
+import Fig from "@whois/design-system/Fig";
+
+interface Car {
+	name: string;
+	miles: number;
+	mark?: boolean;
+}
+
+interface Props {
+	cars: Car[];
+	caption?: string;
+	/** The axis end, in miles (default: the next 100 above the largest). */
+	max?: number;
+}
+
+const { cars, caption, max } = Astro.props;
+const top = max ?? Math.ceil(Math.max(...cars.map((c) => c.miles)) / 100) * 100;
+const label = cars.map((c) => `${c.name}: ${c.miles} miles`).join(", ");
+---
+
+<Fig caption={caption} class="range-compare" data-prose-bleed="">
+	<div class="range-compare__plot" role="img" aria-label={`EPA-rated range. ${label}`}>
+		{
+			cars.map((c) => (
+				<div class:list={["range-compare__row", c.mark && "range-compare__row--mark"]}>
+					<span class="range-compare__name">{c.name}</span>
+					<span class="range-compare__track">
+						<span class="range-compare__bar" style={`--range-share:${(c.miles / top) * 100}%`} />
+						<span class="range-compare__value">{c.miles} mi</span>
+					</span>
+				</div>
+			))
+		}
+	</div>
+</Fig>
+
+<style>
+	.range-compare__plot {
+		display: grid;
+		gap: var(--space-3);
+		padding-block: var(--space-4);
+		font-family: var(--font-ui);
+		font-size: var(--font-size-3);
+		color: var(--text-primary);
+	}
+
+	.range-compare__row {
+		display: grid;
+		grid-template-columns: minmax(0, 14em) minmax(0, 1fr);
+		align-items: center;
+		gap: var(--space-3);
+	}
+
+	.range-compare__name {
+		color: var(--text-secondary);
+	}
+
+	.range-compare__track {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.range-compare__bar {
+		display: block;
+		inline-size: calc(var(--range-share) * 0.82);
+		block-size: var(--space-5);
+		border-radius: var(--radius-box);
+		background: var(--text-tertiary);
+		opacity: 0.45;
+	}
+
+	.range-compare__value {
+		color: var(--text-secondary);
+		white-space: nowrap;
+	}
+
+	.range-compare__row--mark .range-compare__name,
+	.range-compare__row--mark .range-compare__value {
+		color: var(--text-primary);
+		font-weight: var(--font-heading-weight);
+	}
+
+	.range-compare__row--mark .range-compare__bar {
+		background: var(--accent);
+		opacity: 1;
+	}
+
+	@media (max-width: 640px) {
+		.range-compare__row {
+			grid-template-columns: minmax(0, 1fr);
+			gap: var(--space-1);
+		}
+	}
+</style>
