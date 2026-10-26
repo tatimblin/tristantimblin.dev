@@ -64,7 +64,7 @@ test("a post's title carries the site name; its og:title does not", async ({ pag
 });
 
 test("a post without a picture, and a page: the square card, no article meta", async ({ page }) => {
-	await page.goto("/txt/why-i-joined-fisker/");
+	await page.goto("/txt/tahoe-mountain-hair/");
 	await expect(meta(page, "twitter:card")).toHaveAttribute("content", "summary");
 	await expect(meta(page, "og:image")).toHaveAttribute("content", "https://tristantimblin.dev/og.jpg");
 

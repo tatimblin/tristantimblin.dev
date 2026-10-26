@@ -559,7 +559,7 @@ test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) 
  * sub-human (the latest). Most checks run on Asserting (NEWEST, from when it
  * was); the ends are checked on LATEST and OLDEST. `prev` is the older
  * neighbour, `next` the newer. The Mega Desk has
- * no h2s, so it is one section; Asserting has three h2s, so four. Fisker has
+ * no h2s, so it is one section; Asserting has three h2s, so four. Tahoe has
  * no hero; the other two of those three do.
  *
  * TEXT. The mono voice is lowercase in the DOM and capitals on screen, so the
@@ -578,7 +578,7 @@ const NEWEST = "/txt/asserting-on-agent-behavior/";
 const LATEST = "/txt/subhumans/";
 const NO_H2S = "/txt/mega-desk/";
 const OLDEST = "/txt/no-honey-we-have-a-dashboard-at-home/";
-const NO_HERO = "/txt/why-i-joined-fisker/";
+const NO_HERO = "/txt/tahoe-mountain-hair/";
 
 const box = async (page: Page, sel: string) => (await page.locator(sel).first().boundingBox())!;
 

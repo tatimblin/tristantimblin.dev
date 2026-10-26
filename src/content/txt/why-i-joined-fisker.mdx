@@ -4,11 +4,14 @@ date: 2023-11-15
 modified: 2026-10-25
 category: thoughts
 tags: ["career", "machine-learning", "automotive", "health"]
+hero:
+  src: ./images/fisker-ocean-platform.webp
+  alt: "The Fisker Ocean's bare platform on a show stand: an aluminum chassis on four wheels, its orange drive units exposed front and rear, with no body on top"
+  caption: "The Ocean's platform on Magna's stand"
 excerpt: "We're building an ML platform on the Fisker fleet. We've had early wins on battery efficiency, and aim to build a general system capable of answering more insights."
 ---
 
 import Sequence from "@whois/design-system/Sequence";
-import RangeCompare from "../../components/txt/RangeCompare.astro";
 
 Most vehicle data gets read as a record of the car: battery, speed, location. But every trip is also a record of the person driving it: where they go, when, how fast they react. If you build a system that faithfully maps the physical world, you can test hypotheses later that nobody had when the data was collected. That's what drew me to automotive.
 
@@ -26,13 +29,7 @@ Every ML application on the car needs the same foundation: clean signals, at vol
 
 Once that exists, each new application is mostly a new model. One of our first found the last 10 miles of range, taking the Ocean Extreme One to a 360-mile EPA rating, 30 more than the Tesla Model Y Long Range. Nobody would call range an ML problem, and it's already paying off.
 
-<RangeCompare
-  caption="EPA-rated range, Ocean Extreme One against the Model Y Long Range"
-  cars={[
-    { name: "Fisker Ocean Extreme One", miles: 360, mark: true },
-    { name: "Tesla Model Y Long Range", miles: 330 },
-  ]}
-/>
+![EPA ratings on fueleconomy.gov: the 2023 Fisker Ocean Extreme One at 360 miles of total range, beside the 2023 Tesla Model Y Long Range AWD at 330, the Model Y Performance at 303 and the Mustang Mach-E GT Performance at 260](./images/fisker-ocean-epa-range.webp "EPA range on fueleconomy.gov — 360 miles for the Ocean Extreme One")
 
 If the car can learn its battery, it can learn its driver.
 
