@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-23",
+	"updated": "2026-10-26",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
@@ -347,6 +347,18 @@
 		{
 			"date": "2026-10-23",
 			"visitors": 12
+		},
+		{
+			"date": "2026-10-24",
+			"visitors": 11
+		},
+		{
+			"date": "2026-10-25",
+			"visitors": 6
+		},
+		{
+			"date": "2026-10-26",
+			"visitors": 9
 		}
 	],
 	"pathDays": [
@@ -419,6 +431,26 @@
 			"date": "2026-10-23",
 			"path": "/txt/subhumans/",
 			"visitors": 3
+		},
+		{
+			"date": "2026-10-24",
+			"path": "/txt/subhumans/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-10-25",
+			"path": "/txt/why-i-joined-fisker/",
+			"visitors": 2
+		},
+		{
+			"date": "2026-10-26",
+			"path": "/demo/sutro/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-10-26",
+			"path": "/txt/why-i-joined-fisker/",
+			"visitors": 3
 		}
 	],
 	"paths": {
@@ -427,12 +459,12 @@
 			"recent": 4
 		},
 		"/demo/sutro/": {
-			"reads": 1,
-			"recent": 1
+			"reads": 2,
+			"recent": 2
 		},
 		"/txt/asserting-on-agent-behavior/": {
 			"reads": 3,
-			"recent": 2
+			"recent": 1
 		},
 		"/txt/mega-desk/": {
 			"reads": 1,
@@ -443,12 +475,12 @@
 			"recent": 12
 		},
 		"/txt/subhumans/": {
-			"reads": 3,
-			"recent": 3
+			"reads": 4,
+			"recent": 4
 		},
 		"/txt/why-i-joined-fisker/": {
-			"reads": 11,
-			"recent": 11
+			"reads": 16,
+			"recent": 16
 		}
 	}
 }
