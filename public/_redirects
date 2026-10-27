@@ -9,3 +9,16 @@
 /gallery / 301
 /gallery/ / 301
 /gallery/* / 301
+
+# Sutro moved from a post to a full-screen demo.
+/txt/painterly-sutro /demo/sutro/ 301
+/txt/painterly-sutro/ /demo/sutro/ 301
+
+# Per-category pages are gone; /txt lists every post with its category.
+/txt/category/* /txt/ 301
+
+# The design-system subpages were folded into one page.
+/design-system/art /design-system/ 301
+/design-system/art/ /design-system/ 301
+/design-system/glyphs /design-system/ 301
+/design-system/glyphs/ /design-system/ 301
