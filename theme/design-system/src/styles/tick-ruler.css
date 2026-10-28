@@ -21,10 +21,11 @@
 	/* The ruler owns its gradient. A custom property substitutes its var()s
 	   where it is DECLARED, so the --ticks-image token on :root fixes the
 	   pitch at the root's value; spelled here, --tick-pitch resolves on the
-	   segment, so a ruler may retune it in scope. */
+	   segment, so a ruler may retune it in scope. --tick-width likewise: a
+	   hairline by default, heavier for a segment that must carry a colour. */
 	background: repeating-linear-gradient(
 		to right,
-		currentColor 0 1px,
-		transparent 1px var(--tick-pitch)
+		currentColor 0 var(--tick-width, 1px),
+		transparent var(--tick-width, 1px) var(--tick-pitch)
 	);
 }

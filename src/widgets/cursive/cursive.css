@@ -57,14 +57,17 @@
 .wx-cursive:not([data-usage]) .wx-cs-usage {
 	visibility: hidden;
 }
-/* Ten ticks, one a tenth: the pitch opened to --space-2 so they read apart,
-   and the box ten pitches wide plus the ruler's gap between its two
-   segments. */
+/* A level meter: eighteen ticks at the ruler's own dense pitch, in a short
+   bar of fixed width (plus the ruler's gap between its two segments). The
+   lit ticks are two pixels, so their colour — the red above all — reads at
+   a glance on the light card as well as the dark. */
 .wx-cs-ruler {
-	--tick-pitch: var(--space-2);
 	flex: none;
-	inline-size: calc(10 * var(--tick-pitch) + var(--space-1));
+	inline-size: calc(18 * var(--tick-pitch) + var(--space-1));
 	block-size: var(--space-3);
+}
+.wx-cs-ruler > :first-child {
+	--tick-width: 2px;
 }
 /* Paused: there is no honest number, so the ruler recedes with the reading. */
 .wx-cursive[data-usage="paused"] .wx-cs-ruler {
