@@ -17,6 +17,7 @@ import Github from "../widgets/github/Github.astro";
 import Videos from "../widgets/videos/Videos.astro";
 import Volo from "../widgets/volo/Volo.astro";
 import Readers from "../widgets/readers/Readers.astro";
+import Cursive from "../widgets/cursive/Cursive.astro";
 import { media } from "../lib/media";
 import "@whois/stories-heading/styles.css";
 import "@tristimb/dotted-grid/styles.css";
@@ -119,6 +120,10 @@ import "@whois/wobble-text/styles.css";
 	{/* WIDGETS. Mixed sizes in non-packed DOM order; grid-auto-flow: dense re-packs
 	     them, so data-reveal-order follows the VISUAL left-to-right packing rather
 	     than DOM order (the 1×2 video cell is authored first but lands last).
+	     The DOM order is what packs on desktop: the videos pin the right column
+	     of rows 1–2, so now playing and bay wheels stack beside Volo there, and
+	     the cursive 2×2 opens rows 3–4 with github and visitors beside it. The
+	     only gap is the short end of the last row (14 cells over 4 columns).
 	     The videos card is its own reveal group: a group waits for every member to
 	     be in view, and this card paints ~90vh above its slot (the dock lift), so
 	     grouped with the row it stayed invisible until the row arrived and the
@@ -130,13 +135,15 @@ import "@whois/wobble-text/styles.css";
 
 			<NowPlaying data-reveal data-reveal-group="widgets" data-reveal-order="0" />
 
-			<BikeStats data-reveal data-reveal-group="widgets" data-reveal-order="1" />
+			<Volo data-reveal data-reveal-group="widgets" data-reveal-order="1" />
 
-			<Github data-reveal data-reveal-group="widgets" data-reveal-order="2" />
+			<BikeStats data-reveal data-reveal-group="widgets" data-reveal-order="2" />
 
-			<Volo data-reveal data-reveal-group="widgets" data-reveal-order="3" />
+			<Cursive data-reveal data-reveal-group="widgets" data-reveal-order="3" />
 
-			<Readers data-reveal data-reveal-group="widgets" data-reveal-order="4" />
+			<Github data-reveal data-reveal-group="widgets" data-reveal-order="4" />
+
+			<Readers data-reveal data-reveal-group="widgets" data-reveal-order="5" />
 		</WidgetGrid>
 	</div>
 

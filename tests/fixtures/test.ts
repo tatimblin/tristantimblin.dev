@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { test as base, chromium, expect, type BrowserContext } from "@playwright/test";
+import { routeCursive } from "./cursive-route";
 
 /** src/lib/media.ts's MEDIA_BASE (that module imports JSON in a form the runner can't load). */
 export const MEDIA_BASE = "https://media.tristantimblin.dev";
@@ -53,6 +54,8 @@ export async function routeMedia(context: BrowserContext): Promise<void> {
 	await context.route(PAGES_PATTERN, (route) =>
 		route.fulfill({ status: 404, headers: { "access-control-allow-origin": "*", "x-media-stub": "1" } }),
 	);
+	// The cursive card's bundle and agent (./cursive-route.ts).
+	await routeCursive(context);
 }
 
 export const test = base.extend<{ mediaStub: void }, { mediaStubBrowser: void }>({

@@ -1,0 +1,176 @@
+---
+// Cursive — a 2×2 card around the live agent from cursive.info: a
+// <cursive-terminal> on the `tristan` profile, which searches Tristan's own
+// records (meals, reviews, articles) and can open what his friends and the
+// community wrote about the same places, each attributed to whoever wrote it.
+// Visitors ask without signing in.
+//
+// The element is agent-web's (packages/cursive-terminal), loaded at runtime
+// from the agent's host rather than bundled, so the card tracks the backend
+// without a dependency bump; ./config.ts holds the bundle URL and decides, at
+// build time, which agent this build talks to. The script below imports the
+// bundle the first time the card nears the viewport and swaps in the DS empty
+// state if it fails or takes too long. Above the terminal, a Stat and a
+// TickRuler read today's shared model budget off the element's
+// `cursive-usage` event; they stay hidden until the first one arrives, so the
+// card never shows a made-up 0%.
+//
+// Props pass through to the <Widget> (a class, the page's data-reveal
+// choreography): the page owns where the card sits and when it fades in.
+import Widget from "@whois/design-system/Widget";
+import CardHeader from "@whois/design-system/CardHeader";
+import CardBody from "@whois/design-system/CardBody";
+import Mono from "@whois/design-system/Mono";
+import Stat from "@whois/design-system/Stat";
+import TickRuler from "@whois/design-system/TickRuler";
+import WidgetEmpty from "@whois/design-system/WidgetEmpty";
+import { agentEndpoint, CURSIVE_TERMINAL } from "./config";
+import "./cursive.css";
+
+interface Props {
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { class: className, ...rest } = Astro.props;
+
+const endpoint = agentEndpoint({
+	dev: import.meta.env.DEV,
+	pagesBranch: process.env.CF_PAGES_BRANCH,
+	override: import.meta.env.PUBLIC_CURSIVE_AGENT,
+});
+const bundleOrigin = new URL(CURSIVE_TERMINAL).origin;
+---
+
+<Widget size="2x2" class:list={["wx-cursive", className]} data-state="idle" {...rest}>
+	{/* The product's name, linked: the card is a window onto cursive.info. */}
+	<CardHeader>
+		<Mono
+			as="a"
+			variant="title"
+			class="ds-card-header__title"
+			href="https://cursive.info"
+			target="_blank"
+			rel="noopener"
+		>
+			cursive.info
+		</Mono>
+	</CardHeader>
+
+	<CardBody class="wx-cs-body">
+		{/* Today's shared model budget: the demo runs on a free daily
+		    allocation, so this is the honest "how much is left". The ruler's
+		    shares are rewritten by the script on every reading. */}
+		<div class="wx-cs-usage" data-cursive-usage>
+			<Stat value="0%" label="used today" class="wx-cs-stat" />
+			<TickRuler
+				class="wx-cs-ruler"
+				segments={[
+					{ share: 0, color: "var(--cs-used)" },
+					{ share: 100, color: "var(--cs-left)" },
+				]}
+			/>
+		</div>
+		<cursive-terminal
+			endpoint={endpoint}
+			profile="tristan"
+			greeting="Ask about where I've eaten"
+			prompts="Where have you eaten in Madrid?|Best steak you've had?|Anywhere you'd skip?"
+		></cursive-terminal>
+		<WidgetEmpty class="wx-cs-empty">The agent is offline right now.</WidgetEmpty>
+	</CardBody>
+
+	{/* Warm the two connections the card will open: the bundle (an anonymous
+	    CORS fetch, hence crossorigin) and the agent (credentialed, so its own
+	    pool). One host in production, two on staging. */}
+	<link rel="preconnect" href={bundleOrigin} crossorigin />
+	<link rel="preconnect" href={endpoint} />
+</Widget>
+
+<script>
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+	import { CURSIVE_TERMINAL, LOAD_TIMEOUT_MS } from "./config";
+	import { usageReading, type UsageDetail } from "./cursive";
+
+	// The element's module, once per document: it defines <cursive-terminal>,
+	// which upgrades every copy on every later page by itself. (A failed import
+	// stays failed in the module map, so there is nothing to retry.)
+	let bundle: Promise<unknown> | null = null;
+
+	// The element's stylesheet, linked inside the card rather than the head:
+	// the client router drops head nodes the next page doesn't declare, while
+	// the card's own nodes go and come back with the card.
+	function stylesheet(widget: HTMLElement): Promise<void> {
+		return new Promise((resolve, reject) => {
+			const link = Object.assign(document.createElement("link"), {
+				rel: "stylesheet",
+				href: `${CURSIVE_TERMINAL}.css`,
+			});
+			link.addEventListener("load", () => resolve(), { once: true });
+			link.addEventListener("error", () => reject(new Error(`${link.href} failed`)), { once: true });
+			widget.append(link);
+		});
+	}
+
+	const at = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+	onPage(() => {
+		const widget = document.querySelector<HTMLElement>(".wx-cursive");
+		const usage = widget?.querySelector<HTMLElement>("[data-cursive-usage]");
+		if (!widget || !usage) return;
+		const value = usage.querySelector<HTMLElement>(".ds-stat__value");
+		const label = usage.querySelector<HTMLElement>(".ds-stat__label");
+		const [used, left] = usage.querySelectorAll<HTMLElement>(".ds-tick-ruler__seg");
+
+		let live = true;
+		let timer: ReturnType<typeof setTimeout> | undefined;
+
+		const load = async () => {
+			widget.dataset.state = "loading";
+			const timeout = new Promise<never>((_, reject) => {
+				timer = setTimeout(() => reject(new Error(`timed out after ${LOAD_TIMEOUT_MS}ms`)), LOAD_TIMEOUT_MS);
+			});
+			bundle ??= import(/* @vite-ignore */ `${CURSIVE_TERMINAL}.js`);
+			try {
+				await Promise.race([Promise.all([bundle, stylesheet(widget)]), timeout]);
+				if (live) widget.dataset.state = "ready";
+			} catch (err) {
+				console.warn("[cursive] the terminal didn't load; showing the empty state.", err);
+				if (live) widget.dataset.state = "failed";
+			} finally {
+				clearTimeout(timer);
+			}
+		};
+
+		// The first time the card is within a screen of the viewport.
+		const near = new IntersectionObserver(
+			(entries) => {
+				if (!entries.some((e) => e.isIntersecting)) return;
+				near.disconnect();
+				void load();
+			},
+			{ rootMargin: "100% 0px" },
+		);
+		near.observe(widget);
+
+		// The meter, from the event the terminal fires (bubbling) on load and
+		// after every answer.
+		const onUsage = (event: Event) => {
+			const reading = usageReading((event as CustomEvent<UsageDetail>).detail, at);
+			if (value) value.textContent = reading.value;
+			if (label) label.textContent = reading.label;
+			used?.style.setProperty("--tick-share", String(reading.share));
+			left?.style.setProperty("--tick-share", String(100 - reading.share));
+			usage.title = reading.title;
+			widget.dataset.usage = reading.state;
+		};
+		widget.addEventListener("cursive-usage", onUsage);
+
+		return () => {
+			live = false;
+			clearTimeout(timer);
+			near.disconnect();
+			widget.removeEventListener("cursive-usage", onUsage);
+		};
+	});
+</script>
