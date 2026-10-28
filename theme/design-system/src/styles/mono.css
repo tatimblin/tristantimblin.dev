@@ -86,13 +86,20 @@
 	color: var(--accent);
 }
 
-/* As a link (as="a"): the link reset, and the ink on hover. A handle in a
-   header is a link that should not look like one until it is pointed at. */
-a.ds-mono {
+/* As a link (as="a"), or a link that IS a title (a card's `title` slot
+   holding an <a>): the link reset, and the ink on hover. A handle or a name
+   in a header is a link that should not look like one until it is pointed at. */
+.ds-mono--variant-title > a {
+	color: inherit;
+}
+a.ds-mono,
+.ds-mono--variant-title > a {
 	text-decoration: none;
 	transition: color var(--duration-swap) var(--ease-reveal);
 }
 a.ds-mono:hover,
-a.ds-mono:focus-visible {
+a.ds-mono:focus-visible,
+.ds-mono--variant-title > a:hover,
+.ds-mono--variant-title > a:focus-visible {
 	color: var(--text-primary);
 }

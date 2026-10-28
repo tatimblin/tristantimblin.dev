@@ -11,34 +11,31 @@
  */
 export const CURSIVE_TERMINAL = "https://agent.cursive.info/terminal/v1";
 
+/** Production accepts only this site's origins. */
 export const CURSIVE_AGENT_PROD = "https://agent.cursive.info";
-/** Staging allows localhost and the Pages preview origins; production only this site. */
+/** Staging also accepts localhost (any port) and https://*.tristantimblin.pages.dev. */
 export const CURSIVE_AGENT_STAGING = "https://staging.agent.cursive.info";
 
-/** The branch Cloudflare Pages serves as production (build-deploy.yml deploys `--branch=master`). */
-export const PRODUCTION_BRANCH = "master";
-
-/** How long the bundle may take before the card gives up and says so. */
+/** How long the bundle, and then the agent's first reading, may take before
+ *  the card gives up and says so. */
 export const LOAD_TIMEOUT_MS = 8_000;
 
 interface BuildEnv {
 	/** `astro dev`. */
 	dev: boolean;
-	/** CF_PAGES_BRANCH: set when Cloudflare Pages runs the build itself. */
-	pagesBranch?: string;
 	/** PUBLIC_CURSIVE_AGENT: an explicit endpoint, beating the rest. */
 	override?: string;
 }
 
 /**
  * The agent a build talks to, decided at build time and rendered into the
- * element's `endpoint` attribute. A production build gets production; the dev
- * server, and a Pages build of any branch but production, get staging (the
- * production agent refuses their origins).
+ * element's `endpoint` attribute: staging under `astro dev`, production in a
+ * build. A production build served anywhere but this site (a local
+ * `astro preview`) is refused by production, so build it pointed at staging:
+ *
+ *   PUBLIC_CURSIVE_AGENT=https://staging.agent.cursive.info bun run build
  */
-export function agentEndpoint({ dev, pagesBranch, override }: BuildEnv): string {
+export function agentEndpoint({ dev, override }: BuildEnv): string {
 	if (override) return override.replace(/\/+$/, "");
-	if (dev) return CURSIVE_AGENT_STAGING;
-	if (pagesBranch && pagesBranch !== PRODUCTION_BRANCH) return CURSIVE_AGENT_STAGING;
-	return CURSIVE_AGENT_PROD;
+	return dev ? CURSIVE_AGENT_STAGING : CURSIVE_AGENT_PROD;
 }

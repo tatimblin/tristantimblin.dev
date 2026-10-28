@@ -46,8 +46,10 @@ test("renders the terminal, on the production agent, with today's budget", async
 	const usage = card(page).locator("[data-cursive-usage]");
 	await expect(card(page)).toHaveAttribute("data-usage", /ok|high|exhausted|paused/, { timeout: 15_000 });
 	await expect(usage).toBeVisible();
-	await expect(usage.locator(".ds-stat__label")).toHaveText(/used today|used up for today|not answering/);
-	if (!realCursive) await expect(usage.locator(".ds-stat__value")).toHaveText("42%");
+	await expect(usage.locator("[data-cursive-label]")).toHaveText(/used today|used up for today|not answering/);
+	if (!realCursive) await expect(usage.locator("[data-cursive-value]")).toHaveText("42%");
+	// It lives in the header, so the terminal keeps its rows.
+	await expect(card(page).locator(".ds-card-header [data-cursive-usage]")).toBeVisible();
 });
 
 test("Tab moves into the terminal and on out of the card", async ({ page }) => {
@@ -95,4 +97,18 @@ test("gives up on a bundle that never arrives", async ({ page }) => {
 	await page.clock.runFor(8_100);
 	await expect(card(page)).toHaveAttribute("data-state", "failed");
 	await expect(card(page).locator(".wx-cs-empty")).toBeVisible();
+});
+
+test("gives up when the bundle loads but the agent doesn't answer", async ({ page }) => {
+	await page.clock.install();
+	await page.route("https://agent.cursive.info/session**", (route) =>
+		route.fulfill({ status: 404, headers: { "access-control-allow-origin": "*" } }),
+	);
+	await page.goto("/");
+	await reach(page);
+	await expect(card(page)).toHaveAttribute("data-state", "ready");
+	await page.clock.runFor(8_100);
+	await expect(card(page)).toHaveAttribute("data-state", "failed");
+	await expect(card(page).locator(".wx-cs-empty")).toBeVisible();
+	await expect(card(page).locator("cursive-terminal")).toBeHidden();
 });
