@@ -13,14 +13,19 @@
  * them and the element re-reads them when data-theme changes. */
 
 .wx-cursive {
-	/* The meter's ruler: the used stretch in the accent, the warning colour
-	   from 85% (and once used up), the rest in the quiet ink. */
+	/* The meter: the used ticks in the accent, the rest in the quiet ink.
+	   Over 90%, and once used up, the used ticks and the figure take the
+	   loss red (--negative, the theme's own in light and dark). */
 	--cs-used: var(--accent);
 	--cs-left: var(--text-tertiary);
 }
 .wx-cursive[data-usage="high"],
 .wx-cursive[data-usage="exhausted"] {
 	--cs-used: var(--negative);
+}
+.wx-cursive[data-usage="high"] .wx-cs-value,
+.wx-cursive[data-usage="exhausted"] .wx-cs-value {
+	color: var(--negative);
 }
 
 .wx-cursive > .ds-card-body.wx-cs-body,
@@ -41,8 +46,8 @@
 	}
 }
 
-/* THE METER, in the header's meta: a short ruler, then the figure and its
-   label on the header's one line. Hidden until the terminal's first reading;
+/* THE METER, in the header's meta: a short ruler, then the figure (its
+   meaning is visually hidden). Hidden until the terminal's first reading;
    the header holds its height either way. */
 .wx-cs-usage {
 	display: inline-flex;
@@ -52,9 +57,13 @@
 .wx-cursive:not([data-usage]) .wx-cs-usage {
 	visibility: hidden;
 }
+/* Ten ticks, one a tenth: the pitch opened to --space-2 so they read apart,
+   and the box ten pitches wide plus the ruler's gap between its two
+   segments. */
 .wx-cs-ruler {
+	--tick-pitch: var(--space-2);
 	flex: none;
-	inline-size: var(--space-10);
+	inline-size: calc(10 * var(--tick-pitch) + var(--space-1));
 	block-size: var(--space-3);
 }
 /* Paused: there is no honest number, so the ruler recedes with the reading. */

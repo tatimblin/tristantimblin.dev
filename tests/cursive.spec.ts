@@ -46,10 +46,40 @@ test("renders the terminal, on the production agent, with today's budget", async
 	const usage = card(page).locator("[data-cursive-usage]");
 	await expect(card(page)).toHaveAttribute("data-usage", /ok|high|exhausted|paused/, { timeout: 15_000 });
 	await expect(usage).toBeVisible();
-	await expect(usage.locator("[data-cursive-label]")).toHaveText(/used today|used up for today|not answering/);
+	// The figure alone on screen; what it means is for screen readers.
+	await expect(usage.locator("[data-cursive-label]")).toHaveClass(/ds-visually-hidden/);
+	await expect(usage.locator("[data-cursive-label]")).toHaveText(/today's free budget|isn't answering/);
 	if (!realCursive) await expect(usage.locator("[data-cursive-value]")).toHaveText("42%");
 	// It lives in the header, so the terminal keeps its rows.
 	await expect(card(page).locator(".ds-card-header [data-cursive-usage]")).toBeVisible();
+});
+
+test("over 90%, the used ticks and the figure turn the loss red", async ({ page }) => {
+	// Allowed for the page's origin with credentials: the real element sends them.
+	await page.route("https://agent.cursive.info/session**", (route) =>
+		route.fulfill({
+			json: { signedIn: false, usage: { used: 95, budget: 100, exhausted: false, resetsAt: "2026-10-29T00:00:00Z" } },
+			headers: {
+				"access-control-allow-origin": route.request().headers()["origin"] ?? "*",
+				"access-control-allow-credentials": "true",
+			},
+		}),
+	);
+	await page.goto("/");
+	await reach(page);
+	await expect(card(page)).toHaveAttribute("data-usage", "high", { timeout: 15_000 });
+	const value = card(page).locator("[data-cursive-value]");
+	await expect(value).toHaveText("95%");
+	const negative = await page.evaluate(() => {
+		const probe = document.createElement("span");
+		probe.style.color = "var(--negative)";
+		document.querySelector(".wx-cursive")!.append(probe);
+		const c = getComputedStyle(probe).color;
+		probe.remove();
+		return c;
+	});
+	await expect(value).toHaveCSS("color", negative);
+	await expect(card(page).locator(".ds-tick-ruler__seg").first()).toHaveCSS("color", negative);
 });
 
 test("Tab moves into the terminal and on out of the card", async ({ page }) => {

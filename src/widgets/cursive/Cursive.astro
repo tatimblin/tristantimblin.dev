@@ -23,6 +23,7 @@ import CardBody from "@whois/design-system/CardBody";
 import Mono from "@whois/design-system/Mono";
 import TickRuler from "@whois/design-system/TickRuler";
 import WidgetEmpty from "@whois/design-system/WidgetEmpty";
+import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import { agentEndpoint, CURSIVE_TERMINAL } from "./config";
 import "./cursive.css";
 
@@ -45,8 +46,10 @@ const bundleOrigin = new URL(CURSIVE_TERMINAL).origin;
 	<a slot="title" href="https://cursive.info" target="_blank" rel="noopener">cursive.info</a>
 
 	{/* Today's shared model budget: the demo runs on a free daily allocation,
-	    so this is the honest "how much is left". The script rewrites the
-	    ruler's shares and the two labels on every reading. */}
+	    so this is the honest "how much is left". About ten ticks, a tick a
+	    tenth, and the figure; what the figure means is for screen readers
+	    only. The script rewrites the ruler's shares and both texts on every
+	    reading. */}
 	<span slot="meta" class="wx-cs-usage" data-cursive-usage>
 		<TickRuler
 			class="wx-cs-ruler"
@@ -55,8 +58,8 @@ const bundleOrigin = new URL(CURSIVE_TERMINAL).origin;
 				{ share: 100, color: "var(--cs-left)" },
 			]}
 		/>
-		<Mono variant="value" data-cursive-value>0%</Mono>
-		<Mono variant="text" data-cursive-label>used today</Mono>
+		<Mono variant="value" class="wx-cs-value" data-cursive-value>0%</Mono>
+		<VisuallyHidden as="span" data-cursive-label>of today's free budget used</VisuallyHidden>
 	</span>
 
 	<CardBody class="wx-cs-body">

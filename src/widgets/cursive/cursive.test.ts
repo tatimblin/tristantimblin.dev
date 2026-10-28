@@ -16,17 +16,17 @@ describe("usageReading", () => {
 	const base = { fraction: 0.123, exhausted: false, resetsAt: "2026-10-29T00:00:00Z" };
 
 	test("a share of the day, rounded", () => {
-		expect(usageReading(base)).toEqual({ state: "ok", value: "12%", label: "used today", share: 12 });
+		expect(usageReading(base)).toEqual({ state: "ok", value: "12%", label: "of today's free budget used", share: 12 });
 	});
-	test("high from 85%", () => {
-		expect(usageReading({ ...base, fraction: 0.85 }).state).toBe("high");
-		expect(usageReading({ ...base, fraction: 0.849 }).state).toBe("ok");
+	test("high above 90%", () => {
+		expect(usageReading({ ...base, fraction: 0.95 })).toMatchObject({ state: "high", value: "95%" });
+		expect(usageReading({ ...base, fraction: 0.9 }).state).toBe("ok");
 	});
 	test("used up says so, full", () => {
 		expect(usageReading({ ...base, fraction: 0.9, exhausted: true })).toEqual({
 			state: "exhausted",
 			value: "100%",
-			label: "used up for today",
+			label: "today's free budget is used up",
 			share: 100,
 		});
 	});
