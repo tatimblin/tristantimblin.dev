@@ -1,0 +1,144 @@
+import { test, expect, type Page } from "./fixtures/test";
+import { CURSIVE_TERMINAL, realCursive } from "./fixtures/cursive-route";
+
+/**
+ * THE CURSIVE CARD: <cursive-terminal> from the agent's host, imported the
+ * first time the card nears the viewport. Every context answers the agent's
+ * hosts with a stub element (tests/fixtures/cursive-route.ts); CURSIVE_REAL=1
+ * runs the same specs against the real bundle and the production agent.
+ *
+ * What a visitor would never notice going wrong, and so what is asserted:
+ *  1. The bundle loading while the card is screens away.
+ *  2. The build talking to the wrong agent (a production build must render
+ *     the production endpoint, server-side).
+ *  3. Focus trapped inside the terminal: Tab must leave the card.
+ *  4. A failed or hung import leaving a blank card, rather than the DS empty
+ *     state.
+ */
+
+const card = (page: Page) => page.locator(".wx-cursive");
+
+// Plain scroll, as volo.spec.ts does: the widget row never settles.
+const reach = (page: Page) =>
+	page.evaluate(() => document.querySelector(".wx-cursive")?.scrollIntoView({ block: "center" }));
+
+test("loads nothing until the card nears the viewport", async ({ page }) => {
+	const bundle: string[] = [];
+	page.on("request", (r) => r.url().startsWith(CURSIVE_TERMINAL) && bundle.push(r.url()));
+	await page.goto("/");
+	await expect(card(page)).toHaveAttribute("data-state", "idle");
+	await page.waitForTimeout(500);
+	expect(bundle, "the bundle loaded with the card screens away").toEqual([]);
+});
+
+test("renders the terminal, on the production agent, with today's budget", async ({ page }) => {
+	await page.goto("/");
+	await reach(page);
+	await expect(card(page)).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
+
+	const terminal = card(page).locator("cursive-terminal");
+	await expect(terminal).toHaveAttribute("endpoint", "https://agent.cursive.info");
+	await expect(terminal.locator(".ct-input")).toBeVisible();
+	await expect(card(page).getByRole("link", { name: "cursive.info" })).toHaveAttribute("href", "https://cursive.info");
+	await expect(card(page).locator(".wx-cs-empty")).toBeHidden();
+
+	// The meter shows only once the terminal has reported.
+	const usage = card(page).locator("[data-cursive-usage]");
+	await expect(card(page)).toHaveAttribute("data-usage", /ok|high|exhausted|paused/, { timeout: 15_000 });
+	await expect(usage).toBeVisible();
+	// The figure alone on screen; what it means is for screen readers.
+	await expect(usage.locator("[data-cursive-label]")).toHaveClass(/ds-visually-hidden/);
+	await expect(usage.locator("[data-cursive-label]")).toHaveText(/today's free budget|isn't answering/);
+	if (!realCursive) await expect(usage.locator("[data-cursive-value]")).toHaveText("42%");
+	// It lives in the header, so the terminal keeps its rows.
+	await expect(card(page).locator(".ds-card-header [data-cursive-usage]")).toBeVisible();
+});
+
+test("over 90%, the used ticks and the figure turn the loss red", async ({ page }) => {
+	// Allowed for the page's origin with credentials: the real element sends them.
+	await page.route("https://agent.cursive.info/session**", (route) =>
+		route.fulfill({
+			json: { signedIn: false, usage: { used: 95, budget: 100, exhausted: false, resetsAt: "2026-10-29T00:00:00Z" } },
+			headers: {
+				"access-control-allow-origin": route.request().headers()["origin"] ?? "*",
+				"access-control-allow-credentials": "true",
+			},
+		}),
+	);
+	await page.goto("/");
+	await reach(page);
+	await expect(card(page)).toHaveAttribute("data-usage", "high", { timeout: 15_000 });
+	const value = card(page).locator("[data-cursive-value]");
+	await expect(value).toHaveText("95%");
+	const negative = await page.evaluate(() => {
+		const probe = document.createElement("span");
+		probe.style.color = "var(--negative)";
+		document.querySelector(".wx-cursive")!.append(probe);
+		const c = getComputedStyle(probe).color;
+		probe.remove();
+		return c;
+	});
+	await expect(value).toHaveCSS("color", negative);
+	await expect(card(page).locator(".ds-tick-ruler__seg").first()).toHaveCSS("color", negative);
+});
+
+test("Tab moves into the terminal and on out of the card", async ({ page }) => {
+	await page.goto("/");
+	await reach(page);
+	await expect(card(page)).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
+	const input = card(page).locator(".ct-input");
+	await expect(input).toBeVisible();
+	// Let the real element finish booting xterm (it adds its own focusables).
+	if (realCursive) await expect(card(page).locator(".xterm")).toBeAttached({ timeout: 15_000 });
+
+	await card(page).getByRole("link", { name: "cursive.info" }).focus();
+	await page.keyboard.press("Tab");
+	await expect(input).toBeFocused();
+
+	// On out: within a few presses (the element may offer a stop button),
+	// focus lands outside the card.
+	let outside = false;
+	for (let i = 0; i < 4 && !outside; i++) {
+		await page.keyboard.press("Tab");
+		outside = await page.evaluate(() => !document.activeElement?.closest(".wx-cursive"));
+	}
+	expect(outside, "Tab stayed inside the cursive card").toBe(true);
+});
+
+test("shows the empty state when the bundle is blocked", async ({ page }) => {
+	await page.route(`${CURSIVE_TERMINAL}.js`, (route) => route.abort());
+	await page.goto("/");
+	await reach(page);
+	await expect(card(page)).toHaveAttribute("data-state", "failed");
+	await expect(card(page).locator(".wx-cs-empty")).toHaveText("The agent is offline right now.");
+	await expect(card(page).locator(".wx-cs-empty")).toBeVisible();
+	await expect(card(page).locator("cursive-terminal")).toBeHidden();
+	await expect(card(page).locator("[data-cursive-usage]")).toBeHidden();
+});
+
+test("gives up on a bundle that never arrives", async ({ page }) => {
+	await page.clock.install();
+	await page.route(`${CURSIVE_TERMINAL}.js`, () => {
+		/* never answered */
+	});
+	await page.goto("/");
+	await reach(page);
+	await expect(card(page)).toHaveAttribute("data-state", "loading");
+	await page.clock.runFor(8_100);
+	await expect(card(page)).toHaveAttribute("data-state", "failed");
+	await expect(card(page).locator(".wx-cs-empty")).toBeVisible();
+});
+
+test("gives up when the bundle loads but the agent doesn't answer", async ({ page }) => {
+	await page.clock.install();
+	await page.route("https://agent.cursive.info/session**", (route) =>
+		route.fulfill({ status: 404, headers: { "access-control-allow-origin": "*" } }),
+	);
+	await page.goto("/");
+	await reach(page);
+	await expect(card(page)).toHaveAttribute("data-state", "ready");
+	await page.clock.runFor(8_100);
+	await expect(card(page)).toHaveAttribute("data-state", "failed");
+	await expect(card(page).locator(".wx-cs-empty")).toBeVisible();
+	await expect(card(page).locator("cursive-terminal")).toBeHidden();
+});

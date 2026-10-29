@@ -1,7 +1,11 @@
 /* WidgetEmpty — centred in the card body's room, both ways: the body is a
- * flex column, so auto margins take the slack. */
+ * flex column, so the line grows to take the slack and centres its text in
+ * it (align-content on a block box), keeping inline children in normal flow.
+ * Not auto margins: the element is a <p>, and the site's unlayered `p {
+ * margin: 0 }` reset beats anything in this layer, so they never applied. */
 .ds-widget-empty {
-	margin: auto;
+	flex: 1 1 auto;
+	align-content: center;
 	text-align: center;
 	white-space: normal;
 }

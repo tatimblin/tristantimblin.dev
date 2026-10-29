@@ -1,0 +1,114 @@
+/* Cursive card styles.
+ *
+ * Plain CSS, not an Astro scoped <style>: <cursive-terminal> builds its own
+ * light DOM at runtime, where the scope hash would not reach. The .wx-cursive
+ * prefix keeps it contained; the element's own rules are :where()-wrapped, so
+ * these win without !important.
+ *
+ * The terminal IS the card body, not a panel inside it: the body's padding is
+ * dropped so it runs edge to edge on the card's own surface, and it re-applies
+ * the card's inset (--widget-pad) inline, so its text lines up with the header
+ * while the scrollbar sits on the card's edge. Its palette and type come from
+ * DS tokens through the element's --ct-* properties; the themes re-resolve
+ * them and the element re-reads them when data-theme changes. */
+
+.wx-cursive {
+	/* The meter: the used ticks in the accent, the rest in the quiet ink.
+	   Over 90%, and once used up, the used ticks and the figure take the
+	   loss red (--negative, the theme's own in light and dark). */
+	--cs-used: var(--accent);
+	--cs-left: var(--text-tertiary);
+}
+.wx-cursive[data-usage="high"],
+.wx-cursive[data-usage="exhausted"] {
+	--cs-used: var(--negative);
+}
+.wx-cursive[data-usage="high"] .wx-cs-value,
+.wx-cursive[data-usage="exhausted"] .wx-cs-value {
+	color: var(--negative);
+}
+
+.wx-cursive > .ds-card-body.wx-cs-body,
+.wx-cursive > .ds-card-header + .ds-card-body.wx-cs-body {
+	padding: 0;
+	gap: 0;
+}
+
+/* THE COMPACT GRID (two columns, WIDGET_COMPACT_MQ): a square two cells wide
+   is a dozen terminal rows on a phone, one short of the agent's greeting, so
+   it opens with its first line scrolled away. Released from the square (the
+   :where() spans in widget-grid.css give way to this), the card takes two
+   rows more. */
+@media (max-width: 900px) {
+	.wx-cursive {
+		aspect-ratio: auto;
+		block-size: calc(2 * var(--widget-cell) + var(--widget-grid-gap) + var(--space-8));
+	}
+}
+
+/* THE METER, in the header's meta: a short ruler, then the figure (its
+   meaning is visually hidden). Hidden until the terminal's first reading;
+   the header holds its height either way. */
+.wx-cs-usage {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+.wx-cursive:not([data-usage]) .wx-cs-usage {
+	visibility: hidden;
+}
+/* A level meter: ten ticks at the ruler's own dense pitch, in a short
+   bar of fixed width. */
+.wx-cs-ruler {
+	flex: none;
+	inline-size: calc(10 * var(--tick-pitch));
+	block-size: var(--space-3);
+}
+/* Paused: there is no honest number, so the ruler recedes with the reading. */
+.wx-cursive[data-usage="paused"] .wx-cs-ruler {
+	opacity: 0.45;
+}
+
+.wx-cursive cursive-terminal {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	inline-size: 100%;
+	border: 0;
+	--ct-bg: var(--card-background);
+	--ct-fg: var(--text-primary);
+	--ct-dim: var(--text-subtle);
+	--ct-community: var(--text-subtle);
+	--ct-accent: var(--accent);
+	--ct-you: var(--accent);
+	--ct-follow: var(--positive);
+	--ct-fof: var(--text-secondary);
+	--ct-error: var(--negative);
+	--ct-selection: color-mix(in srgb, var(--accent) 25%, transparent);
+	--ct-border: var(--hairline);
+	--ct-focus: var(--focus-ring-color);
+	--ct-font: var(--font-code);
+	--ct-font-size: var(--font-size-0);
+	--ct-radius: var(--radius-square);
+	--ct-height: auto;
+	--ct-pad-inline: var(--widget-pad);
+	--ct-pad-top: var(--space-3);
+}
+/* The input row's rule is the DS edge (dashed), not the element's solid one. */
+.wx-cursive .ct-form {
+	border-block-start: var(--border);
+}
+
+/* Until the bundle and its stylesheet are in, the element is an unknown tag
+   (or, on a return visit, upgrades a beat before its cached CSS applies):
+   keep it out of sight rather than flash it unstyled. */
+.wx-cursive:not([data-state="ready"]) cursive-terminal {
+	visibility: hidden;
+}
+
+/* FAILED: the import errored or ran out of time. The DS empty state takes the
+   body; the terminal and the meter go. */
+.wx-cursive:not([data-state="failed"]) .wx-cs-empty,
+.wx-cursive[data-state="failed"] cursive-terminal,
+.wx-cursive[data-state="failed"] .wx-cs-usage {
+	display: none;
+}

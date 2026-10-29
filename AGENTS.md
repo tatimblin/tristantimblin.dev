@@ -125,6 +125,18 @@ are interleaved by date on `/txt` (a DEMO chip), ride in the feed and the
 sitemap, and are numbered on their own (`demo / 001`), never as a txt.
 `tests/demo.spec.ts` covers them.
 
+## The cursive card — a live agent
+
+`src/widgets/cursive/` wraps agent-web's `<cursive-terminal>`, imported at
+runtime from `https://agent.cursive.info/terminal/v1.js` (floating `v1` on
+purpose; see `config.ts`). The endpoint is rendered at build time: staging
+under `astro dev`, production in a build. Production refuses every origin but
+this site's, so to try a build locally with `astro preview`, build it against
+staging (which allows localhost and `*.tristantimblin.pages.dev`):
+`PUBLIC_CURSIVE_AGENT=https://staging.agent.cursive.info bun run build`.
+`tests/cursive.spec.ts` runs on a stub element (`tests/fixtures/cursive-route.ts`,
+routed for every context); `CURSIVE_REAL=1` uses the real bundle and agent.
+
 ## Design system — read before writing UI CSS
 
 The site is built on **`@whois/design-system`** (`theme/design-system`). It

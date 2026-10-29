@@ -367,8 +367,11 @@
 
 	/* The focus ring, for everything focusable that is not a native control:
 	 * a pill or a button, a graph that became a slider, a flip surface. One
-	 * width and colour, so focus looks the same on every card. */
-	--focus-ring: 2px solid var(--accent);
+	 * width and colour, so focus looks the same on every card. The colour
+	 * alone is its own token, for a consumer that draws the ring itself (a
+	 * web component's --ct-focus). */
+	--focus-ring-color: var(--accent);
+	--focus-ring: 2px solid var(--focus-ring-color);
 
 	/* The tick ruler in the INK — the elapsed stretch of the player's
 	 * progress bar, which paints on a pseudo-element whose currentColor
