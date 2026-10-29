@@ -57,11 +57,11 @@
 .wx-cursive:not([data-usage]) .wx-cs-usage {
 	visibility: hidden;
 }
-/* A level meter: eighteen ticks at the ruler's own dense pitch, in a short
-   bar of fixed width (plus the ruler's gap between its two segments). */
+/* A level meter: ten ticks at the ruler's own dense pitch, in a short
+   bar of fixed width. */
 .wx-cs-ruler {
 	flex: none;
-	inline-size: calc(18 * var(--tick-pitch) + var(--space-1));
+	inline-size: calc(10 * var(--tick-pitch));
 	block-size: var(--space-3);
 }
 /* Paused: there is no honest number, so the ruler recedes with the reading. */
