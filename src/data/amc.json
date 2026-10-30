@@ -1,6 +1,326 @@
 {
-	"updated": "2026-10-30T05:26:44Z",
+	"updated": "2026-10-30T14:45:12.368284+00:00",
 	"movies": [
+		{
+			"name": "Ferrari",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1699911805/amc-cdn/production/2/movies/74100/74138/PosterDynamic/160412.jpg",
+			"theatre": "AMC Kabuki 8",
+			"date": "January 10, 2024",
+			"time": "7:45pm",
+			"day": "Wednesday"
+		},
+		{
+			"name": "Mean Girls",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1701715366/amc-cdn/production/2/movies/74800/74845/PosterDynamic/161007.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "January 12, 2024",
+			"time": "7:00pm",
+			"day": "Friday"
+		},
+		{
+			"name": "The Book of Clarence",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1701184061/amc-cdn/production/2/movies/72900/72878/PosterDynamic/160748.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "January 13, 2024",
+			"time": "11:45am",
+			"day": "Saturday"
+		},
+		{
+			"name": "American Fiction",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1703023050/amc-cdn/production/2/movies/73600/73648/PosterDynamic/161486.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "January 20, 2024",
+			"time": "3:45pm",
+			"day": "Saturday"
+		},
+		{
+			"name": "Migration",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1697428147/amc-cdn/production/2/movies/53000/53042/PosterDynamic/159394.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "January 24, 2024",
+			"time": "5:00pm",
+			"day": "Wednesday"
+		},
+		{
+			"name": "Bob Marley: One Love",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1701788151/amc-cdn/production/2/movies/69200/69206/PosterDynamic/161038.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "February 14, 2024",
+			"time": "6:00pm",
+			"day": "Wednesday"
+		},
+		{
+			"name": "Demon Slayer: Kimetsu No Yaiba - To the Hashira Training",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1706150777/amc-cdn/production/2/movies/75700/75739/PosterDynamic/162476.png",
+			"theatre": "AMC Metreon 16",
+			"date": "February 24, 2024",
+			"time": "12:00pm",
+			"day": "Saturday"
+		},
+		{
+			"name": "Dune: Part Two",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1709222099/amc-cdn/production/2/movies/68100/68123/PosterDynamic/163503.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "March 13, 2024",
+			"time": "6:00pm",
+			"day": "Wednesday"
+		},
+		{
+			"name": "Kung Fu Panda 4",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1702493212/amc-cdn/production/2/movies/70400/70406/PosterDynamic/161281.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "March 23, 2024",
+			"time": "2:30pm",
+			"day": "Saturday"
+		},
+		{
+			"name": "The American Society of Magical Negroes",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1708702489/amc-cdn/production/2/movies/75400/75417/PosterDynamic/163377.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "April 3, 2024",
+			"time": "9:45pm",
+			"day": "Wednesday"
+		},
+		{
+			"name": "Monkey Man",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1706554972/amc-cdn/production/2/movies/72800/72776/PosterDynamic/162667.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "April 13, 2024",
+			"time": "7:00pm",
+			"day": "Saturday"
+		},
+		{
+			"name": "Civil War",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1710518753/amc-cdn/production/2/movies/75700/75698/PosterDynamic/163907.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "April 17, 2024",
+			"time": "5:15pm",
+			"day": "Wednesday"
+		},
+		{
+			"name": "The Ministry of Ungentlemanly Warfare",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1709055208/amc-cdn/production/2/movies/75800/75829/PosterDynamic/163466.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "April 20, 2024",
+			"time": "8:30pm",
+			"day": "Saturday"
+		},
+		{
+			"name": "Sasquatch Sunset",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1707763449/amc-cdn/production/2/movies/75800/75796/PosterDynamic/163103.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "April 27, 2024",
+			"time": "7:50pm",
+			"day": "Saturday"
+		},
+		{
+			"name": "The Fall Guy",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1709921464/amc-cdn/production/2/movies/70800/70790/PosterDynamic/163689.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "May 2, 2024",
+			"time": "8:15pm",
+			"day": "Thursday"
+		},
+		{
+			"name": "Kingdom of the Planet of the Apes",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1712593232/amc-cdn/production/2/movies/67500/67468/PosterDynamic/164492.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "May 9, 2024",
+			"time": "6:30pm",
+			"day": "Thursday"
+		},
+		{
+			"name": "Furiosa: A Mad Max Saga",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1715975605/amc-cdn/production/2/movies/65800/65797/PosterDynamic/165170.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "June 10, 2024",
+			"time": "6:05pm",
+			"day": "Monday"
+		},
+		{
+			"name": "IF (2024)",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1712066088/amc-cdn/production/2/movies/66400/66375/PosterDynamic/164415.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "June 19, 2024",
+			"time": "10:45am",
+			"day": "Wednesday"
+		},
+		{
+			"name": "Inside Out 2",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1717521746/amc-cdn/production/2/movies/67500/67476/PosterDynamic/165402.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "June 20, 2024",
+			"time": "7:00pm",
+			"day": "Thursday"
+		},
+		{
+			"name": "The Bikeriders",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1717184212/amc-cdn/production/2/movies/72500/72460/PosterDynamic/165389.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "July 1, 2024",
+			"time": "6:05pm",
+			"day": "Monday"
+		},
+		{
+			"name": "Fly Me to the Moon",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1720451665/amc-cdn/production/2/movies/75700/75736/PosterDynamic/166134.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "July 13, 2024",
+			"time": "4:00pm",
+			"day": "Saturday"
+		},
+		{
+			"name": "Horizon: An American Saga Chapter 1",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1715886300/amc-cdn/production/2/movies/75000/74988/PosterDynamic/165149.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "July 14, 2024",
+			"time": "10:00am",
+			"day": "Sunday"
+		},
+		{
+			"name": "Trap",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1721183486/amc-cdn/production/2/movies/72800/72762/PosterDynamic/166258.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "August 5, 2024",
+			"time": "7:05pm",
+			"day": "Monday"
+		},
+		{
+			"name": "Borderlands",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1717510315/amc-cdn/production/2/movies/74200/74227/PosterDynamic/165398.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "August 8, 2024",
+			"time": "6:30pm",
+			"day": "Thursday"
+		},
+		{
+			"name": "Beetlejuice Beetlejuice",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1721915661/amc-cdn/production/2/movies/73500/73545/PosterDynamic/166328.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "September 12, 2024",
+			"time": "7:00pm",
+			"day": "Thursday"
+		},
+		{
+			"name": "Megalopolis",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1724169258/amc-cdn/production/2/movies/77400/77359/PosterDynamic/166816.jpg",
+			"theatre": "AMC Georgetown 14",
+			"date": "September 30, 2024",
+			"time": "4:05pm",
+			"day": "Monday"
+		},
+		{
+			"name": "The Wild Robot",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1737134551/amc-cdn/production/2/movies/73400/73399/PosterDynamic/169179.jpg",
+			"theatre": "AMC Tysons Corner 16",
+			"date": "October 7, 2024",
+			"time": "9:10pm",
+			"day": "Monday"
+		},
+		{
+			"name": "Transformers One",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1729866611/amc-cdn/production/2/movies/68800/68780/PosterDynamic/167757.jpg",
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "October 15, 2024",
+			"time": "8:10pm",
+			"day": "Tuesday"
+		},
+		{
+			"name": "Piece By Piece",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1726677974/amc-cdn/production/2/movies/76000/75990/PosterDynamic/167283.jpg",
+			"theatre": "AMC Hoffman Center 22",
+			"date": "October 17, 2024",
+			"time": "6:45pm",
+			"day": "Thursday"
+		},
+		{
+			"name": "Let's Start A Cult",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1728923497/amc-cdn/production/2/movies/78200/78198/PosterDynamic/167611.jpg",
+			"theatre": "AMC Hoffman Center 22",
+			"date": "October 26, 2024",
+			"time": "10:30pm",
+			"day": "Saturday"
+		},
+		{
+			"name": "Red One",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1729172848/amc-cdn/production/2/movies/75700/75719/PosterDynamic/167661.jpg",
+			"theatre": "AMC Hoffman Center 22",
+			"date": "November 14, 2024",
+			"time": "7:00pm",
+			"day": "Thursday"
+		},
+		{
+			"name": "Wicked",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1739548975/amc-cdn/production/2/movies/51300/51318/PosterDynamic/169745.jpg",
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "November 21, 2024",
+			"time": "5:30pm",
+			"day": "Thursday"
+		},
+		{
+			"name": "Gladiator II",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1728431322/amc-cdn/production/2/movies/72600/72641/PosterDynamic/167558.jpg",
+			"theatre": "AMC Tysons Corner 16",
+			"date": "December 1, 2024",
+			"time": "4:15pm",
+			"day": "Sunday"
+		},
+		{
+			"name": "Moana 2",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1730126297/amc-cdn/production/2/movies/72500/72475/PosterDynamic/167791.jpg",
+			"theatre": "AMC Kabuki 8",
+			"date": "December 8, 2024",
+			"time": "6:45pm",
+			"day": "Sunday"
+		},
+		{
+			"name": "Lord of the Rings: The War of the Rohirrim",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1729787864/amc-cdn/production/2/movies/68600/68576/PosterDynamic/167747.jpg",
+			"theatre": "AMC Hoffman Center 22",
+			"date": "December 28, 2024",
+			"time": "9:30am",
+			"day": "Saturday"
+		},
+		{
+			"name": "A Complete Unknown",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1741127403/amc-cdn/production/2/movies/77800/77798/PosterDynamic/169974.jpg",
+			"theatre": "AMC Hoffman Center 22",
+			"date": "January 12, 2025",
+			"time": "3:00pm",
+			"day": "Sunday"
+		},
+		{
+			"name": "Dog Man",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1731947444/amc-cdn/production/2/movies/73400/73401/PosterDynamic/168175.jpg",
+			"theatre": "AMC Tysons Corner 16",
+			"date": "February 8, 2025",
+			"time": "2:35pm",
+			"day": "Saturday"
+		},
+		{
+			"name": "Paddington in Peru",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1733512440/amc-cdn/production/2/movies/75200/75158/PosterDynamic/168362.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "March 11, 2025",
+			"time": "6:15pm",
+			"day": "Tuesday"
+		},
+		{
+			"name": "Mickey 17",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1737562704/amc-cdn/production/2/movies/72100/72112/PosterDynamic/169243.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "March 17, 2025",
+			"time": "6:00pm",
+			"day": "Monday"
+		},
+		{
+			"name": "Black Bag",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1740503641/amc-cdn/production/2/movies/77700/77664/PosterDynamic/169874.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "April 3, 2025",
+			"time": "4:30pm",
+			"day": "Thursday"
+		},
 		{
 			"name": "Project Hail Mary",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1771004553/amc-cdn/content/general/sn9nf3jgxanedjfwwqwd.jpg",
@@ -19,4 +339,3 @@
 		}
 	]
 }
-

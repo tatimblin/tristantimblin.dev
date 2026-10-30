@@ -118,7 +118,7 @@ async function graphql(query, variables, session) {
 			"x-amc-device-os-type": "ios",
 			"x-amc-device-app-version": "7.0.142+152",
 			"x-amc-device-os-version": "27.2",
-			cookie: `session=${session}`,
+			cookie: session,
 		},
 		body: JSON.stringify({ operationName: "pastMovies", query, variables }),
 		signal: AbortSignal.timeout(30_000),
@@ -163,7 +163,7 @@ async function main() {
 	const now = new Date();
 	const fmt = (d) =>
 		`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-	const start = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+	const start = new Date(2023, 3, 1);
 	const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 	const startDate = fmt(start);
 	const endDate = fmt(end);
