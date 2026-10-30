@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-26",
+	"updated": "2026-10-29",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
@@ -359,6 +359,18 @@
 		{
 			"date": "2026-10-26",
 			"visitors": 9
+		},
+		{
+			"date": "2026-10-27",
+			"visitors": 2
+		},
+		{
+			"date": "2026-10-28",
+			"visitors": 6
+		},
+		{
+			"date": "2026-10-29",
+			"visitors": 4
 		}
 	],
 	"pathDays": [
@@ -451,6 +463,11 @@
 			"date": "2026-10-26",
 			"path": "/txt/why-i-joined-fisker/",
 			"visitors": 3
+		},
+		{
+			"date": "2026-10-28",
+			"path": "/demo/sutro/",
+			"visitors": 1
 		}
 	],
 	"paths": {
@@ -459,8 +476,8 @@
 			"recent": 4
 		},
 		"/demo/sutro/": {
-			"reads": 2,
-			"recent": 2
+			"reads": 3,
+			"recent": 3
 		},
 		"/txt/asserting-on-agent-behavior/": {
 			"reads": 3,
@@ -472,7 +489,7 @@
 		},
 		"/txt/no-honey-we-have-a-dashboard-at-home/": {
 			"reads": 24,
-			"recent": 12
+			"recent": 2
 		},
 		"/txt/subhumans/": {
 			"reads": 4,
@@ -480,7 +497,7 @@
 		},
 		"/txt/why-i-joined-fisker/": {
 			"reads": 16,
-			"recent": 16
+			"recent": 6
 		}
 	}
 }
