@@ -34,6 +34,7 @@ env:
   DATA_GITHUB: src/data/github.json
   DATA_PAGEVIEWS: src/data/pageviews.json
   DATA_VOLO: src/data/volo.json
+  DATA_AMC: src/data/amc.json
 
 jobs:
   collect:
@@ -146,6 +147,17 @@ jobs:
           GOATCOUNTER_CODE: ${{ secrets.GOATCOUNTER_CODE }}
           PAGEVIEWS_SINCE: ${{ inputs.pageviews_since }}
 
+      # ── AMC ──────────────────────────────────────────────────────────────
+      # Pulls A-List watch history from the AMC GraphQL API. The session cookie
+      # was captured via mitmproxy and stored as AMC_SESSION; when it expires the
+      # capture must be re-run (see tatimblin/amc-stats).
+      - name: "AMC: fetch watch history"
+        id: amc
+        continue-on-error: true
+        run: bun tools/amc/fetch.mjs
+        env:
+          AMC_SESSION: ${{ secrets.AMC_SESSION }}
+
       # ── Volo ───────────────────────────────────────────────────────────────
       # Scheduled runs fetch Volo on Wednesday and Thursday (UTC) only, as the old
       # '0 14 * * 3,4' cron did. Every game so far has been on a Tuesday evening
@@ -208,8 +220,11 @@ jobs:
           if git diff --quiet -I'^[[:space:]]*"updated": ' -- "$DATA_VOLO"; then
             git checkout -- "$DATA_VOLO"
           fi
+          if git diff --quiet -I'^[[:space:]]*"updated": ' -- "$DATA_AMC"; then
+            git checkout -- "$DATA_AMC"
+          fi
 
-          git add -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_PAGEVIEWS" "$DATA_VOLO"
+          git add -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_PAGEVIEWS" "$DATA_VOLO" "$DATA_AMC"
           if git diff --cached --quiet; then
             echo "No data changed — nothing to commit or deploy."
             echo "committed=false" >> "$GITHUB_OUTPUT"

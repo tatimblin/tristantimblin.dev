@@ -1,0 +1,22 @@
+{
+	"updated": "2026-10-30T05:26:44Z",
+	"movies": [
+		{
+			"name": "Project Hail Mary",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1771004553/amc-cdn/content/general/sn9nf3jgxanedjfwwqwd.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "March 29, 2026",
+			"time": "4:00pm",
+			"day": "Sunday"
+		},
+		{
+			"name": "Star Wars: The Mandalorian and Grogu",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1777914945/amc-cdn/content/general/w7xewp7excf6dnk9qcln.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "May 26, 2026",
+			"time": "4:15pm",
+			"day": "Tuesday"
+		}
+	]
+}
+

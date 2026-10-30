@@ -1,0 +1,47 @@
+---
+// AMC A-List — a 2×1 poster carousel of movies seen at AMC this year.
+// Posters scroll horizontally; each shows the movie title, theatre and date
+// below. The card chrome and header come from the design system.
+import Widget from "@whois/design-system/Widget";
+import CardBody from "@whois/design-system/CardBody";
+import Figure from "@whois/design-system/Figure";
+import Mono from "@whois/design-system/Mono";
+import amc from "../../data/amc.json";
+import "./amc.css";
+
+interface Props {
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { class: className, ...rest } = Astro.props;
+
+const { movies } = amc;
+---
+
+{movies.length > 0 && (
+	<Widget size="2x1" title="a-list" class:list={["wx-amc", className]} {...rest}>
+		<Mono slot="meta" variant="text">{movies.length} films</Mono>
+		<CardBody class="wx-amc-body">
+			<ul class="wx-amc-track" role="list">
+				{movies.map((m) => (
+					<li class="wx-amc-slide">
+						{m.poster && (
+							<img
+								class="wx-amc-poster"
+								src={m.poster}
+								alt={`${m.name} poster`}
+								loading="lazy"
+								decoding="async"
+							/>
+						)}
+						<div class="wx-amc-caption">
+							<span class="wx-amc-title">{m.name}</span>
+							<span class="wx-amc-meta">{m.theatre} · {m.date}</span>
+						</div>
+					</li>
+				))}
+			</ul>
+		</CardBody>
+	</Widget>
+)}
