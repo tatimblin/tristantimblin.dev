@@ -9,7 +9,9 @@
  * AMC's mobile app talks to a GraphQL endpoint (graph.amctheatres.com) using a
  * cookie-based session. There is no refresh token or OAuth grant: the session
  * cookie was captured once via mitmproxy (see the amc-stats repo) and is stored
- * as the AMC_SESSION GitHub secret. When it expires the capture must be re-run.
+ * as the AMC_SESSION GitHub secret. The authToken inside the cookie rotates on
+ * first use; the nightly workflow persists the rotated cookie back to the secret
+ * so the next run authenticates with a fresh token.
  *
  * The pastMovies query returns the account's watch history for a date range,
  * including poster URLs from AMC's Cloudinary CDN. No TMDB lookup needed.
@@ -131,7 +133,30 @@ async function graphql(query, variables, session) {
 	if (body.errors?.length) {
 		throw new Error(body.errors.map((e) => e.message).join("; "));
 	}
-	return body.data;
+	return { data: body.data, headers: response.headers };
+}
+
+function extractRotatedCookie(responseHeaders, originalCookie) {
+	const setCookies = responseHeaders.getSetCookie?.() ?? [];
+	if (!setCookies.length) return null;
+
+	let newAuthToken = null;
+	for (const sc of setCookies) {
+		const match = sc.match(/^authToken=([^;]+)/);
+		if (match) {
+			newAuthToken = match[1];
+			break;
+		}
+	}
+	if (!newAuthToken) return null;
+
+	const origMatch = originalCookie.match(/(?:^|;\s*)authToken=([^;]+)/);
+	if (origMatch && origMatch[1] === newAuthToken) return null;
+
+	const sessionMatch = originalCookie.match(/(?:^|;\s*)session=([^;]+)/);
+	const sessionValue = sessionMatch ? sessionMatch[1] : "";
+
+	return `authToken=${newAuthToken}; session=${sessionValue}`;
 }
 
 function toMovie(node) {
@@ -168,7 +193,18 @@ async function main() {
 	const startDate = fmt(start);
 	const endDate = fmt(end);
 
-	const data = await graphql(PAST_MOVIES, { startDate, endDate }, session);
+	const { data, headers } = await graphql(PAST_MOVIES, { startDate, endDate }, session);
+
+	const rotatedCookie = extractRotatedCookie(headers, session);
+	if (rotatedCookie) {
+		mask(rotatedCookie);
+		const rotatedPath = process.env.AMC_ROTATED_COOKIE_FILE;
+		if (rotatedPath) {
+			await writeFile(rotatedPath, rotatedCookie, { encoding: "utf8", mode: 0o600 });
+			console.log("Session cookie rotated — written for the workflow to persist.");
+		}
+	}
+
 	const edges = data?.viewer?.user?.account?.past?.edges ?? [];
 
 	if (!edges.length) {

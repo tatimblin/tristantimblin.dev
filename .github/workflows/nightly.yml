@@ -157,6 +157,23 @@ jobs:
         run: bun tools/amc/fetch.mjs
         env:
           AMC_SESSION: ${{ secrets.AMC_SESSION }}
+          AMC_ROTATED_COOKIE_FILE: ${{ runner.temp }}/amc-rotated
+
+      # AMC rotates the authToken cookie on first use, so the secret must be
+      # replaced or tomorrow's run authenticates with a dead credential.
+      - name: "AMC: persist rotated cookie"
+        id: amc_token
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ ! -s "$RUNNER_TEMP/amc-rotated" ]; then
+            echo "Cookie did not rotate — nothing to persist."
+            exit 0
+          fi
+          gh secret set AMC_SESSION --body "$(cat "$RUNNER_TEMP/amc-rotated")"
+          rm -f "$RUNNER_TEMP/amc-rotated"
 
       # ── Volo ───────────────────────────────────────────────────────────────
       # Scheduled runs fetch Volo on Wednesday and Thursday (UTC) only, as the old
