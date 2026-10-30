@@ -89,13 +89,15 @@ test("the mode glyph sorts by genre and back, the film staying put", async ({ pa
 	const title = widget.locator(".wx-amc-title");
 	const film = await title.textContent();
 
-	// The glyph of the mode the card is in, named for it.
-	await expect(mode).toHaveAccessibleName("Sort by date");
+	// A toggle, "Sort by genre", pressed while it is; the glyph shows the mode.
+	await expect(mode).toHaveAccessibleName("Sort by genre");
+	await expect(mode).toHaveAttribute("aria-pressed", "false");
 	await expect(mode.locator(".wx-amc-glyph--date")).toHaveCSS("opacity", "1");
 	await expect(mode.locator(".wx-amc-glyph--genre")).toHaveCSS("opacity", "0");
 	await mode.click();
 	await expect(widget).toHaveAttribute("data-mode", "genre");
 	await expect(mode).toHaveAccessibleName("Sort by genre");
+	await expect(mode).toHaveAttribute("aria-pressed", "true");
 	await expect(mode.locator(".wx-amc-glyph--genre")).toHaveCSS("opacity", "1");
 	await expect(mode.locator(".wx-amc-glyph--date")).toHaveCSS("opacity", "0");
 	await expect(title).toHaveText(film ?? "");
@@ -107,6 +109,16 @@ test("the mode glyph sorts by genre and back, the film staying put", async ({ pa
 
 	await mode.click();
 	await expect(widget).toHaveAttribute("data-mode", "date");
+	await expect(title).toHaveText(film ?? "");
+
+	// Toggled again mid-shuffle: it morphs back from where it was and settles
+	// in DATE, the needle up, the capsules gone, the film the same.
+	await mode.click();
+	await page.waitForTimeout(150);
+	await mode.click();
+	await expect(widget).toHaveAttribute("data-mode", "date");
+	await expect.poll(() => widget.locator(".wx-amc-needle").evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
+	await expect.poll(() => widget.locator(".wx-amc-capsule").first().evaluate((el) => getComputedStyle(el).opacity)).toBe("0");
 	await expect(title).toHaveText(film ?? "");
 });
 

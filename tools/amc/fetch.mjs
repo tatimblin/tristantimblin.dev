@@ -19,15 +19,13 @@
  * NEVER RUN THIS LOCALLY against AMC: the rotated cookie would only land on
  * your disk and the secret's token would be dead for the next nightly run.
  *
- * Two steps:
+ * At most two requests a run:
  *   1. pastMovies — the watch history (`events(type: Previous …)`). Required:
  *      no results means a dead session, and the run fails.
- *   2. booked tickets — best effort. The `type` enum's value is discovered by
- *      introspection (the enum behind Account.events' `type` argument, its
- *      value matching /upcom|future/), falling back to "Upcoming" (what the
- *      app sends, per a 2026-10 mitmproxy capture) then "Future" when
- *      introspection is off. Any failure here is a ::warning:: and the past
- *      films are written regardless.
+ *   2. upcomingMovies — the booked tickets, `events(type: Upcoming)` with no
+ *      other argument, exactly as the app sends it (seen in a mitmproxy
+ *      capture, 2026-10). Best effort: any failure is a ::warning:: and the
+ *      past films are written regardless.
  *
  * ONLY THIS ACCOUNT'S OWN DATA. The query returns movies, theatres and
  * showtimes — no personal details beyond what the widget displays.
@@ -39,7 +37,32 @@ const OUT_PATH = fileURLToPath(new URL("../../src/data/amc.json", import.meta.ur
 
 const ENDPOINT = "https://graph.amctheatres.com";
 
-const TICKET = `
+export const PAST_MOVIES = `
+query pastMovies($startDate: Date!, $endDate: Date!) {
+  __typename
+  viewer {
+    __typename
+    user {
+      __typename
+      id
+      account {
+        __typename
+        id
+        past: events(type: Previous, startDate: $startDate, endDate: $endDate, first: 300) {
+          __typename
+          edges {
+            __typename
+            node {
+              __typename
+              ...ticket
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 fragment ticket on AccountEvent {
   __typename
   id
@@ -62,7 +85,6 @@ fragment ticket on AccountEvent {
   showtime {
     __typename
     id
-    showDateTimeUtc
     display {
       __typename
       id
@@ -93,8 +115,9 @@ fragment ticket on AccountEvent {
   }
 }`;
 
-const PAST_MOVIES = `
-query pastMovies($startDate: Date!, $endDate: Date!) {
+/** The booked tickets, with pastMovies' own `ticket` fragment. */
+export const UPCOMING_MOVIES = `
+query upcomingMovies {
   __typename
   viewer {
     __typename
@@ -104,7 +127,7 @@ query pastMovies($startDate: Date!, $endDate: Date!) {
       account {
         __typename
         id
-        past: events(type: Previous, startDate: $startDate, endDate: $endDate, first: 300) {
+        upcoming: events(type: Upcoming) {
           __typename
           edges {
             __typename
@@ -118,86 +141,11 @@ query pastMovies($startDate: Date!, $endDate: Date!) {
     }
   }
 }
-${TICKET}`;
 
-/** The `events` field of the account's type and its arguments, each argument's
- *  type unwrapped three levels (NON_NULL → LIST → NON_NULL → named) with the
- *  enum values at every level, so one request finds the enum and its values. */
-const EVENTS_ARGS = `
-query eventTypes($account: String!) {
-  __type(name: $account) {
-    name
-    fields {
-      name
-      args {
-        name
-        type {
-          kind
-          name
-          enumValues { name }
-          ofType {
-            kind
-            name
-            enumValues { name }
-            ofType {
-              kind
-              name
-              enumValues { name }
-              ofType { kind name enumValues { name } }
-            }
-          }
-        }
-      }
-    }
-  }
-}`;
-
-/** The booked tickets, for an enum value found at run time. The value is an
- *  enum literal, so it is spliced into the document (checked against
- *  ENUM_LITERAL first). The app itself sends `events(type: Upcoming)` with no
- *  other argument (seen in a mitmproxy capture, 2026-10), so the date range
- *  is passed only when introspection says the field REQUIRES one. */
-const upcomingQuery = (value, withDates) => `
-query upcomingMovies${withDates ? "($startDate: Date!, $endDate: Date!)" : ""} {
-  __typename
-  viewer {
-    __typename
-    user {
-      __typename
-      id
-      account {
-        __typename
-        id
-        upcoming: events(type: ${value}${withDates ? ", startDate: $startDate, endDate: $endDate" : ""}) {
-          __typename
-          edges {
-            __typename
-            node {
-              __typename
-              ...ticket
-            }
-          }
-        }
-      }
-    }
-  }
-}
-${TICKET}`;
-
-const ENUM_LITERAL = /^[_A-Za-z][_0-9A-Za-z]*$/;
+${PAST_MOVIES.slice(PAST_MOVIES.indexOf("fragment ticket"))}`;
 
 function mask(secret) {
 	if (secret && process.env.GITHUB_ACTIONS) console.log(`::add-mask::${secret}`);
-}
-
-/** The cookie jar: whatever AMC sent last. Every request goes through
- *  `graphql`, which sends it and folds any rotation back into it. */
-const jar = { cookie: "", rotated: false };
-
-async function persistCookie() {
-	const path = process.env.AMC_ROTATED_COOKIE_FILE;
-	if (!path) return;
-	await writeFile(path, jar.cookie, { encoding: "utf8", mode: 0o600 });
 }
 
 /**
@@ -228,40 +176,52 @@ export function rotateCookie(setCookies, cookie) {
 	return changed ? pairs.map(([n, v]) => `${n}=${v}`).join("; ") : null;
 }
 
-async function graphql(operationName, query, variables) {
-	const response = await fetch(ENDPOINT, {
-		method: "POST",
-		headers: {
-			"content-type": "application/json",
-			accept: "*/*",
-			"user-agent": "Dart/3.12 (dart:io)",
-			"x-amc-device-os-type": "ios",
-			"x-amc-device-app-version": "7.0.142+152",
-			"x-amc-device-os-version": "27.2",
-			cookie: jar.cookie,
+/**
+ * A GraphQL client holding the cookie jar: each request sends the latest
+ * cookie, and a response that rotates it (an error response included) has
+ * the new cookie written to `rotatedPath` before anything else happens.
+ * `fetchImpl` is for the tests. Exported for the tests.
+ */
+export function createClient({ cookie, rotatedPath, fetchImpl = fetch }) {
+	const client = {
+		cookie,
+		rotated: false,
+		async request(operationName, query, variables) {
+			const response = await fetchImpl(ENDPOINT, {
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					accept: "*/*",
+					"user-agent": "Dart/3.12 (dart:io)",
+					"x-amc-device-os-type": "ios",
+					"x-amc-device-app-version": "7.0.142+152",
+					"x-amc-device-os-version": "27.2",
+					cookie: client.cookie,
+				},
+				body: JSON.stringify({ operationName, query, variables }),
+				signal: AbortSignal.timeout(30_000),
+			});
+
+			const next = rotateCookie(response.headers.getSetCookie?.() ?? [], client.cookie);
+			if (next) {
+				client.cookie = next;
+				client.rotated = true;
+				mask(next);
+				if (rotatedPath) await writeFile(rotatedPath, next, { encoding: "utf8", mode: 0o600 });
+				console.log(`Session cookie rotated (${operationName}) — written for the workflow to persist.`);
+			}
+
+			if (!response.ok) {
+				throw new Error(`${response.status} ${response.statusText} from AMC API (${operationName})`);
+			}
+			const body = await response.json();
+			if (body.errors?.length) {
+				throw new Error(`${operationName}: ${body.errors.map((e) => e.message).join("; ")}`);
+			}
+			return body.data;
 		},
-		body: JSON.stringify({ operationName, query, variables }),
-		signal: AbortSignal.timeout(30_000),
-	});
-
-	// Rotation first: an error response may still carry a new token.
-	const next = rotateCookie(response.headers.getSetCookie?.() ?? [], jar.cookie);
-	if (next) {
-		jar.cookie = next;
-		jar.rotated = true;
-		mask(next);
-		await persistCookie();
-		console.log(`Session cookie rotated (${operationName}) — written for the workflow to persist.`);
-	}
-
-	if (!response.ok) {
-		throw new Error(`${response.status} ${response.statusText} from AMC API (${operationName})`);
-	}
-	const body = await response.json();
-	if (body.errors?.length) {
-		throw new Error(`${operationName}: ${body.errors.map((e) => e.message).join("; ")}`);
-	}
-	return body.data;
+	};
+	return client;
 }
 
 const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
@@ -304,71 +264,8 @@ export function toMovie(node, upcoming = false) {
 		day: display?.prefix ?? null,
 		iso,
 		start,
-		utc: showtime?.showDateTimeUtc ?? null,
 		...(upcoming ? { upcoming: true } : {}),
 	};
-}
-
-/** An introspected type unwrapped to its named type (enum values and all). */
-function namedType(type) {
-	let t = type;
-	while (t && !t.name && t.ofType) t = t.ofType;
-	return t ?? null;
-}
-
-/**
- * From the account type's introspection: the enum values of the `events`
- * field's `type` argument, the one for booked tickets (matching
- * /upcom|future/), and whether the field takes a date range. `value` is null
- * when no enum value matches; `withDates` when the field requires a range.
- * Exported for the tests.
- */
-export function pickUpcoming(accountType) {
-	const events = accountType?.fields?.find((f) => f.name === "events");
-	const typeArg = events?.args?.find((a) => a.name === "type");
-	const values = (namedType(typeArg?.type)?.enumValues ?? []).map((v) => v.name);
-	const value = values.find((v) => /upcom|future/i.test(v) && ENUM_LITERAL.test(v)) ?? null;
-	const required = (name) => events?.args?.find((a) => a.name === name)?.type?.kind === "NON_NULL";
-	return { value, values, withDates: required("startDate") || required("endDate") };
-}
-
-/** Step 2: the booked tickets, or [] (with a ::warning::) on any failure. */
-async function fetchUpcoming(accountTypeName, range) {
-	let candidates;
-	try {
-		const data = await graphql("eventTypes", EVENTS_ARGS, { account: accountTypeName });
-		const found = pickUpcoming(data?.__type);
-		if (!found.value) {
-			console.log(
-				`::warning::AMC: no upcoming value on ${accountTypeName}.events(type:) — ` +
-					`enum values: ${found.values.join(", ") || "none found"}.`,
-			);
-			return [];
-		}
-		console.log(`AMC: booked tickets are events(type: ${found.value}).`);
-		candidates = [found];
-	} catch (err) {
-		// Introspection is often off in production. "Upcoming" is what the
-		// app sends (the 2026-10 capture); "Future" is a last guess.
-		console.log(`AMC: introspection failed (${err?.message ?? err}); trying the known enum values.`);
-		candidates = [
-			{ value: "Upcoming", withDates: false },
-			{ value: "Future", withDates: false },
-		];
-	}
-
-	const errors = [];
-	for (const { value, withDates } of candidates) {
-		try {
-			const data = await graphql("upcomingMovies", upcomingQuery(value, withDates), withDates ? range : {});
-			const edges = data?.viewer?.user?.account?.upcoming?.edges ?? [];
-			return edges.map((e) => toMovie(e.node, true)).filter(Boolean);
-		} catch (err) {
-			errors.push(`${value}: ${err?.message ?? err}`);
-		}
-	}
-	console.log(`::warning::AMC: could not read booked tickets — ${errors.join(" | ")}`);
-	return [];
 }
 
 const fmtDate = (d) =>
@@ -384,16 +281,14 @@ async function main() {
 		process.exit(1);
 	}
 	mask(session);
-	jar.cookie = session;
+	const client = createClient({ cookie: session, rotatedPath: process.env.AMC_ROTATED_COOKIE_FILE });
 
 	const now = new Date();
-	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 	const startDate = fmtDate(new Date(2023, 3, 1));
-	const endDate = fmtDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
+	const endDate = fmtDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
 
-	const data = await graphql("pastMovies", PAST_MOVIES, { startDate, endDate });
-	const account = data?.viewer?.user?.account;
-	const edges = account?.past?.edges ?? [];
+	const data = await client.request("pastMovies", PAST_MOVIES, { startDate, endDate });
+	const edges = data?.viewer?.user?.account?.past?.edges ?? [];
 
 	if (!edges.length) {
 		console.error(
@@ -410,12 +305,12 @@ async function main() {
 
 	let upcoming = [];
 	try {
-		upcoming = await fetchUpcoming(account.__typename || "Account", {
-			startDate: fmtDate(today),
-			endDate: fmtDate(new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())),
-		});
+		const booked = await client.request("upcomingMovies", UPCOMING_MOVIES, {});
+		upcoming = (booked?.viewer?.user?.account?.upcoming?.edges ?? [])
+			.map((e) => toMovie(e.node, true))
+			.filter(Boolean);
 	} catch (err) {
-		console.log(`::warning::AMC: booked tickets skipped — ${err?.message ?? err}`);
+		console.log(`::warning::AMC: could not read booked tickets — ${err?.message ?? err}`);
 	}
 	// A booked ticket for a showing already in the history is that showing.
 	const seen = new Set(past.map((m) => `${m.name}|${m.start ?? m.date}`));
@@ -428,7 +323,7 @@ async function main() {
 
 	await writeFile(OUT_PATH, `${JSON.stringify(out, null, "\t")}\n`, "utf8");
 	console.log(`Wrote ${past.length} seen and ${upcoming.length} booked movies to ${OUT_PATH}`);
-	if (!jar.rotated) console.log("Cookie did not rotate.");
+	if (!client.rotated) console.log("Cookie did not rotate.");
 }
 
 // Only as a script, so the tests can import the pure parts without a request.

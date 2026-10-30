@@ -68,9 +68,12 @@ const json = JSON.stringify(films).replace(/</g, "\\u003c");
 
 {latest && (
 	<Widget size="1x1" title="AMC A-List" class:list={["wx-amc", className]} data-mode="date" {...rest}>
-		{/* The sort: the mode it is in as a glyph (a calendar, the theatre's
-		     masks), tapped for the other; the two cross-fade on data-mode. */}
-		<button slot="meta" type="button" class="wx-amc-mode ds-control" data-amc-mode aria-label="Sort by date" title="Sort by date">
+		{/* The sort, a toggle (aria-pressed, as the card flips are): the mode
+		     the card is in as a glyph (a calendar, the theatre's masks); the
+		     two cross-fade on data-mode. A bare glyph in the accent, as the bay
+		     wheels header's is: IconButton's hairline box would outweigh the
+		     meta slot's text-sized voice. */}
+		<button slot="meta" type="button" class="wx-amc-mode ds-control" data-amc-mode aria-label="Sort by genre" aria-pressed="false" title="Sort by genre">
 			<span class="wx-amc-glyph wx-amc-glyph--date" set:html={calendarGlyph} />
 			<span class="wx-amc-glyph wx-amc-glyph--genre" set:html={dramaGlyph} />
 		</button>
@@ -201,7 +204,7 @@ const json = JSON.stringify(films).replace(/</g, "\\u003c");
 		justify-content: center;
 		gap: calc(var(--amc-pw) * 0.02);
 		background: color-mix(in oklab, var(--card-background) 90%, transparent);
-		box-shadow: 0 1px 6px -1px rgb(0 0 0 / 0.35);
+		box-shadow: var(--poster-badge-shadow);
 		opacity: 0;
 		transition: opacity var(--duration-quick) var(--ease-standard);
 	}

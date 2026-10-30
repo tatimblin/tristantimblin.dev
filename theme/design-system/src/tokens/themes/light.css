@@ -73,10 +73,12 @@
 	--genre-mute: 34%;
 
 	/* POSTERS. A film poster on a card: its hairline ring, the shadow it
-	   lifts on, and how far a poster off the centre dims (none on paper). */
+	   lifts on, how far a poster off the centre dims (none on paper), and the
+	   shadow under a disc laid on one. */
 	--poster-ring: rgb(0 0 0 / 0.14);
 	--poster-shadow: 0 6px 14px -8px rgb(40 30 10 / 0.45);
 	--poster-dim: 1;
+	--poster-badge-shadow: 0 1px 6px -1px rgb(0 0 0 / 0.35);
 
 	/* CODE. Inline code on the first wash; a fenced block is the old site's
 	   near-black slab, the darkest thing on the page. */

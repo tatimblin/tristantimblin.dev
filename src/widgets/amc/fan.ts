@@ -143,6 +143,9 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 	let active = -1;
 	let blend = 0; // 0 DATE … 1 GENRE, tweened by a toggle
 	let shuffling = false;
+	/** Each poster's offset from the centre as last drawn, so a toggle starts
+	 *  its shuffle from where the posters are, mid-glide or mid-shuffle. */
+	const shown = films.map(() => 0);
 	let raf = 0;
 	let idleTimer = 0;
 	let roIdle = false;
@@ -219,6 +222,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		const top = g.py - g.rad - g.ph / 2;
 		cards.forEach((c, i) => {
 			const d = offset(i);
+			shown[i] = d;
 			const p = fanPose(d, g.rad);
 			if (p.hidden) {
 				c.style.display = "none";
@@ -368,17 +372,19 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 	};
 
 	/* ── moving ── */
-	/** Stops whatever is animating; a shuffle cut short lands where it was
-	 *  going. */
 	/** Where a glide is headed, so keys pressed during it step on from there. */
 	let goal: number | null = null;
 	const here = () => goal ?? Math.round(pos);
-	const stop = () => {
+
+	/** Stops whatever is animating. A shuffle cut short lands where it was
+	 *  going, unless `keepBlend` (a re-toggle, which morphs on from here). */
+	const stop = (keepBlend = false) => {
 		cancelAnimationFrame(raf);
 		goal = null;
 		if (shuffling) {
 			shuffling = false;
-			blend = mode === "genre" ? 1 : 0;
+			if (!keepBlend) blend = mode === "genre" ? 1 : 0;
+			if (relayoutPending) relayout();
 		}
 	};
 	const clamp = (x: number) => Math.max(0, Math.min(N - 1, x));
@@ -401,8 +407,9 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		};
 		raf = requestAnimationFrame(step);
 	};
-	const jumpGenre = (dir: number) => {
-		const at = here();
+	/** To the start of this genre (going back, from inside it) or the next
+	 *  one, counting from `at`. */
+	const jumpGenre = (dir: number, at = here()) => {
 		const G = groupAt(groups, at);
 		if (dir < 0 && at > G.start) return animateTo(G.start);
 		const k = G.k + dir;
@@ -411,18 +418,19 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 
 	/* ── the mode ── */
 	const setHeader = () => {
-		// The glyph shows the mode the card is in (CSS, on data-mode), and the
-		// name says it; pressing it sorts the other way.
-		const label = `Sort by ${mode}`;
-		modeBtn.setAttribute("aria-label", label);
-		modeBtn.title = label;
+		// A toggle, as the card flips are (CONVENTIONS → HitArea): one name,
+		// "Sort by genre", and aria-pressed says whether it is. The glyph shows
+		// the mode the card is in (CSS, on data-mode).
+		modeBtn.setAttribute("aria-pressed", String(mode === "genre"));
 		widget.dataset.mode = mode;
 	};
 	const setMode = (next: Mode) => {
 		if (next === mode) return;
-		stop();
+		// From wherever everything is right now: the posters' live offsets (mid
+		// glide or mid shuffle), and the gauge's live blend.
+		const before = shown.slice();
+		stop(true);
 		const film = orderOf[mode][Math.round(pos)];
-		const before = films.map((_, i) => placeOf[mode][i] - Math.round(pos));
 		mode = next;
 		pos = placeOf[mode][film];
 		const after = films.map((_, i) => placeOf[mode][i] - pos);
@@ -448,7 +456,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 			const e = easeOut(t);
 			place(
 				(i) => C(before[i]) + (C(after[i]) - C(before[i])) * e,
-				(i) => (before[i] === after[i] ? 0 : Math.sin(Math.PI * Math.min(1, t * 1.4)) * hop),
+				(i) => (Math.abs(before[i] - after[i]) < 1e-3 ? 0 : Math.sin(Math.PI * Math.min(1, t * 1.4)) * hop),
 			);
 			blend = lerp(b0, b1, t);
 			drawGauge();
@@ -456,7 +464,8 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 			else {
 				shuffling = false;
 				blend = b1;
-				render();
+				if (relayoutPending) relayout();
+				else render();
 			}
 		};
 		raf = requestAnimationFrame(step);
@@ -473,6 +482,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		return placeAtAngle(groups, geo.arcs, th, N);
 	};
 	on(scrub, "pointerdown", (e) => {
+		if (e.button !== 0) return;
 		stop();
 		scrub.setPointerCapture(e.pointerId);
 		const x0 = trackX(e);
@@ -540,10 +550,10 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 			fan.removeEventListener("pointerup", end);
 			fan.removeEventListener("pointercancel", end);
 			if (moved) {
-				if (mode === "genre" && Math.abs(vx) > 0.5) {
-					pos = p0;
-					jumpGenre(vx < 0 ? 1 : -1);
-				} else animateTo(Math.round(pos));
+				// A flick: the next genre on from where the drag began, glided to
+				// from where the posters are now.
+				if (mode === "genre" && Math.abs(vx) > 0.5) jumpGenre(vx < 0 ? 1 : -1, Math.round(p0));
+				else animateTo(Math.round(pos));
 				return;
 			}
 			if (ev.type === "pointercancel") return;
@@ -575,12 +585,18 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 	);
 
 	/* ── layout, now and whenever the card resizes or the face lands ── */
-	const relayout = () => {
-		if (shuffling) return;
+	// A resize mid-shuffle waits for the shuffle to end (or be cut short).
+	let relayoutPending = false;
+	function relayout() {
+		if (shuffling) {
+			relayoutPending = true;
+			return;
+		}
+		relayoutPending = false;
 		geo = measure();
 		active = -1;
 		render();
-	};
+	}
 	scrub.setAttribute("aria-valuemin", "1");
 	scrub.setAttribute("aria-valuemax", String(N));
 	setHeader();

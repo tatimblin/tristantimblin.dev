@@ -5,7 +5,8 @@
  * with the cache entries tools/amc/enrich.mjs would add.
  *
  * Used by src/widgets/amc/amc.test.ts, tests/amc.spec.ts (which swaps it into
- * the built page's film list) and, in `astro dev` only, `/?amc-fixture=upcoming`.
+ * the built page's film list) and the dev-only page /dev/amc/
+ * (src/pages/dev/[fixture].astro, never built).
  */
 import type { CacheEntry, Movie } from "../../src/widgets/amc/amc";
 

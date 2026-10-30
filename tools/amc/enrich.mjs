@@ -6,10 +6,11 @@
  * Runs in the nightly Action after tools/amc/fetch.mjs. For every film in
  * src/data/amc.json that the cache doesn't know yet, it asks Wikidata (keyless
  * SPARQL: a title search, narrowed to films with an IMDb id released within a
- * year of the screening) for the IMDb id and genre labels, and buckets them with
- * genreBucket (src/widgets/amc/genres.ts). A film Wikidata can't place is
- * cached as Other with no IMDb id, and the widget links it to an IMDb search;
- * a request that FAILS caches nothing, so tomorrow's run tries again.
+ * year either side of the screening) for the IMDb id and genre labels, and
+ * buckets them with genreBucket (src/widgets/amc/genres.ts). A SEEN film
+ * Wikidata can't place is cached as Other with no IMDb id, and the widget
+ * links it to an IMDb search; a BOOKED film it can't place, or a request that
+ * FAILS, caches nothing, so tomorrow's run tries again.
  *
  * The cache is never rewritten, only added to: an existing entry keeps every
  * field as it is (fix a genre or an id by hand and it stays fixed), and only
@@ -68,8 +69,8 @@ SELECT ?item ?ordinal ?imdb ?date ?genre ?type WHERE {
 
 /**
  * The best candidate from the SPARQL rows: films whose earliest release is
- * within a year of the screening (a January showing of a December release),
- * nearest year first, then Wikidata's search rank. Its genre labels include
+ * within a year either side of the screening (a January showing of a
+ * December release; an early showing of next January's), nearest year first, then Wikidata's search rank. Its genre labels include
  * its instance-of labels ("animated feature film" lives there, not in genre).
  * Null when nothing fits. Exported for the tests.
  */
@@ -86,7 +87,7 @@ export function pickCandidate(bindings, year) {
 		items.set(id, it);
 	}
 	const fits = [...items.values()]
-		.filter((it) => year == null || (Number.isFinite(it.year) && it.year >= year - 1 && it.year <= year))
+		.filter((it) => year == null || (Number.isFinite(it.year) && it.year >= year - 1 && it.year <= year + 1))
 		.sort((a, b) => (year == null ? 0 : Math.abs(year - a.year) - Math.abs(year - b.year)) || a.ordinal - b.ordinal);
 	const best = fits[0];
 	return best ? { imdb_id: best.imdb, labels: [...best.labels].sort() } : null;
@@ -113,6 +114,7 @@ export async function enrich(movies, cache, lookupFn) {
 	const byAmcId = new Map(Object.entries(out).filter(([, e]) => e?.amc_id).map(([k, e]) => [String(e.amc_id), k]));
 	const added = [];
 	const failed = [];
+	const pending = [];
 	let changed = false;
 	for (const movie of movies) {
 		if (!movie?.name) continue;
@@ -127,6 +129,13 @@ export async function enrich(movies, cache, lookupFn) {
 		}
 		try {
 			const hit = await lookupFn(movie);
+			// A booked film may not be on Wikidata yet (or not with its IMDb id
+			// and release date): a miss is retried every night until the
+			// showing is seen, and only then cached as Other.
+			if (!hit && movie.upcoming) {
+				pending.push(movie.name);
+				continue;
+			}
 			out[key] = {
 				title: movie.name,
 				imdb_id: hit?.imdb_id ?? null,
@@ -141,7 +150,7 @@ export async function enrich(movies, cache, lookupFn) {
 		}
 	}
 	const sorted = Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
-	return { cache: sorted, changed, added, failed };
+	return { cache: sorted, changed, added, failed, pending };
 }
 
 async function main() {
@@ -161,6 +170,7 @@ async function main() {
 
 	for (const a of result.added) console.log(`Added ${a}`);
 	for (const f of result.failed) console.log(`::warning::AMC enrich: ${f} — will retry next run.`);
+	for (const p of result.pending) console.log(`AMC enrich: ${p} is booked and not on Wikidata yet — will retry next run.`);
 	if (result.changed) {
 		await writeFile(CACHE_PATH, `${JSON.stringify(result.cache, null, "\t")}\n`, "utf8");
 		console.log(`Wrote ${Object.keys(result.cache).length} films to ${CACHE_PATH}`);

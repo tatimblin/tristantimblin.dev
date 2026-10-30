@@ -1,7 +1,11 @@
-// The AMC tools' pure parts. Nothing here talks to AMC or Wikidata: the
-// fetcher must never run locally (its cookie rotates; see fetch.mjs).
+// The AMC tools' pure parts, and the fetcher's client on a stubbed fetch.
+// Nothing here talks to AMC or Wikidata: the fetcher must never run locally
+// (its cookie rotates; see fetch.mjs).
 import { describe, expect, test } from "bun:test";
-import { isoShowtime, pickUpcoming, rotateCookie, toMovie } from "./fetch.mjs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createClient, isoShowtime, PAST_MOVIES, rotateCookie, toMovie, UPCOMING_MOVIES } from "./fetch.mjs";
 import { enrich, pickCandidate, screeningYear, searchTitle } from "./enrich.mjs";
 
 describe("fetch: rotateCookie", () => {
@@ -43,14 +47,11 @@ describe("fetch: showtimes", () => {
 		expect(isoShowtime({ monthDate: "Today", year: 2025 })).toEqual({ iso: null, start: null });
 	});
 
-	test("toMovie: refunds dropped, booked flagged, AMC ids and UTC kept", () => {
+	test("toMovie: refunds dropped, booked flagged, the AMC id kept", () => {
 		const node = {
 			movie: { id: "TW92aWU6NzQxMzg=", name: "Ferrari", preferredPoster: { url: "https://p/x.jpg" } },
 			theatre: { name: "AMC Kabuki 8" },
-			showtime: {
-				showDateTimeUtc: "2024-01-11T03:45:00.000Z",
-				display: { prefix: "Wednesday", monthDate: "January 10", year: 2024, time: "7:45", amPm: "pm" },
-			},
+			showtime: { display: { prefix: "Wednesday", monthDate: "January 10", year: 2024, time: "7:45", amPm: "pm" } },
 			order: { isRefunded: false },
 		};
 		expect(toMovie(node)).toEqual({
@@ -63,56 +64,64 @@ describe("fetch: showtimes", () => {
 			day: "Wednesday",
 			iso: "2024-01-10",
 			start: "2024-01-10T19:45",
-			utc: "2024-01-11T03:45:00.000Z",
 		});
 		expect(toMovie(node, true)?.upcoming).toBe(true);
 		expect(toMovie({ ...node, order: { isRefunded: true } })).toBeNull();
 	});
 });
 
-describe("fetch: pickUpcoming", () => {
-	// Introspection as AMC would answer it: events(type: AccountEventType!, …).
-	const account = (values: string[], dateKind = "SCALAR") => ({
-		name: "Account",
-		fields: [
-			{ name: "id", args: [] },
-			{
-				name: "events",
-				args: [
-					{
-						name: "type",
-						type: {
-							kind: "NON_NULL",
-							name: null,
-							enumValues: null,
-							ofType: { kind: "ENUM", name: "AccountEventType", enumValues: values.map((name) => ({ name })), ofType: null },
-						},
-					},
-					{ name: "startDate", type: { kind: dateKind, name: dateKind === "SCALAR" ? "Date" : null } },
-					{ name: "endDate", type: { kind: dateKind, name: dateKind === "SCALAR" ? "Date" : null } },
-					{ name: "first", type: { kind: "SCALAR", name: "Int" } },
-				],
-			},
-		],
+describe("fetch: the queries", () => {
+	test("upcomingMovies asks as the app does, with pastMovies' ticket fragment", () => {
+		expect(UPCOMING_MOVIES).toContain("upcoming: events(type: Upcoming) {");
+		const fragment = (q: string) => q.slice(q.indexOf("fragment ticket"));
+		expect(fragment(UPCOMING_MOVIES)).toBe(fragment(PAST_MOVIES));
+	});
+});
+
+describe("fetch: the cookie file", () => {
+	const dir = mkdtempSync(join(tmpdir(), "amc-cookie-"));
+	const file = join(dir, "rotated");
+
+	/** A fetch that answers each call with the next canned response. */
+	const stub = (responses: Response[]) => {
+		const sent: string[] = [];
+		const impl = async (_url: string, init: RequestInit) => {
+			sent.push(String((init.headers as Record<string, string>).cookie));
+			return responses.shift()!;
+		};
+		return { impl, sent };
+	};
+	const res = (status: number, setCookie: string[], body: unknown = { data: {} }) => {
+		const headers = new Headers({ "content-type": "application/json" });
+		for (const c of setCookie) headers.append("set-cookie", c);
+		return new Response(JSON.stringify(body), { status, headers });
+	};
+
+	test("a 500 that rotates the cookie still writes it, before the error", async () => {
+		rmSync(file, { force: true });
+		const { impl } = stub([res(500, ["authToken=fresh; Path=/; HttpOnly"])]);
+		const client = createClient({ cookie: "authToken=old; session=s1", rotatedPath: file, fetchImpl: impl });
+		await expect(client.request("pastMovies", PAST_MOVIES, {})).rejects.toThrow(/500/);
+		expect(readFileSync(file, "utf8")).toBe("authToken=fresh; session=s1");
 	});
 
-	test("finds the upcoming value through NON_NULL", () => {
-		expect(pickUpcoming(account(["Previous", "Upcoming"]))).toEqual({
-			value: "Upcoming",
-			values: ["Previous", "Upcoming"],
-			withDates: false,
-		});
-		expect(pickUpcoming(account(["PAST", "FUTURE"])).value).toBe("FUTURE");
+	test("two rotations: the second request sends the first's cookie, the file holds the latest", async () => {
+		rmSync(file, { force: true });
+		const { impl, sent } = stub([res(200, ["authToken=t1"]), res(200, ["authToken=t2; Path=/"])]);
+		const client = createClient({ cookie: "authToken=t0; session=s1", rotatedPath: file, fetchImpl: impl });
+		await client.request("pastMovies", PAST_MOVIES, {});
+		await client.request("upcomingMovies", UPCOMING_MOVIES, {});
+		expect(sent).toEqual(["authToken=t0; session=s1", "authToken=t1; session=s1"]);
+		expect(readFileSync(file, "utf8")).toBe("authToken=t2; session=s1");
+		expect(client.rotated).toBe(true);
 	});
 
-	test("a date range only when the field requires one", () => {
-		expect(pickUpcoming(account(["Upcoming"], "NON_NULL")).withDates).toBe(true);
-	});
-
-	test("no match, no events field, nothing: a null value", () => {
-		expect(pickUpcoming(account(["Previous", "All"])).value).toBeNull();
-		expect(pickUpcoming({ fields: [] }).value).toBeNull();
-		expect(pickUpcoming(null).value).toBeNull();
+	test("no rotation, no file", async () => {
+		rmSync(file, { force: true });
+		const { impl } = stub([res(200, [])]);
+		const client = createClient({ cookie: "authToken=t0; session=s1", rotatedPath: file, fetchImpl: impl });
+		await client.request("pastMovies", PAST_MOVIES, {});
+		expect(existsSync(file)).toBe(false);
 	});
 });
 
@@ -135,14 +144,27 @@ describe("enrich", () => {
 		...(type ? { type: { value: type } } : {}),
 	});
 
-	test("pickCandidate: released within a year of the screening, nearest first", () => {
+	test("pickCandidate: released within a year either side of the screening, nearest first", () => {
 		const rows = [
 			row("Q1", 0, "tt0098", "1989-01-01", "drama film"),
 			row("Q2", 3, "tt3758542", "2023-08-31", "biographical film", "film"),
 			row("Q2", 3, "tt3758542", "2023-12-25", "drama film", "film"),
 		];
 		expect(pickCandidate(rows, 2024)).toEqual({ imdb_id: "tt3758542", labels: ["biographical film", "drama film", "film"] });
+		expect(pickCandidate(rows, 2022)).toEqual({ imdb_id: "tt3758542", labels: ["biographical film", "drama film", "film"] });
 		expect(pickCandidate(rows, 2026)).toBeNull();
+		expect(pickCandidate(rows, 2021)).toBeNull();
+	});
+
+	test("a booked film Wikidata can't place yet is retried, not cached; once seen, it is", async () => {
+		const booked = { id: "m9", name: "Not Out Yet", iso: "2026-12-01", upcoming: true };
+		const miss = async () => null;
+		const r = await enrich([booked], {}, miss);
+		expect(r.cache).toEqual({});
+		expect(r.pending).toEqual(["Not Out Yet"]);
+		expect(r.changed).toBe(false);
+		const seen = await enrich([{ ...booked, upcoming: undefined }], r.cache, miss);
+		expect(seen.cache["not-out-yet"]).toMatchObject({ imdb_id: null, primary_genre: "Other" });
 	});
 
 	test("hand edits survive; new films are looked up; a failed lookup caches nothing", async () => {

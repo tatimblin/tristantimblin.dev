@@ -79,6 +79,7 @@
 	--poster-ring: rgb(255 255 255 / 0.1);
 	--poster-shadow: 0 8px 16px -8px rgb(0 0 0 / 0.8);
 	--poster-dim: 0.78;
+	--poster-badge-shadow: 0 1px 6px -1px rgb(0 0 0 / 0.5);
 
 	/* CODE. Inline code on the first wash. A fenced block sinks BELOW the
 	   page — the light theme's slab is the darkest thing on the page, and so
