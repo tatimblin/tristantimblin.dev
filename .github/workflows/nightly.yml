@@ -35,6 +35,7 @@ env:
   DATA_PAGEVIEWS: src/data/pageviews.json
   DATA_VOLO: src/data/volo.json
   DATA_AMC: src/data/amc.json
+  DATA_AMC_FILMS: src/data/amc-films.json
 
 jobs:
   collect:
@@ -148,37 +149,25 @@ jobs:
           PAGEVIEWS_SINCE: ${{ inputs.pageviews_since }}
 
       # ── AMC ──────────────────────────────────────────────────────────────
-      # Scheduled runs fetch AMC on Monday (UTC) only — catches weekend movies.
-      # Manual runs always fetch.
-      - name: "AMC: is today a fetch day?"
-        id: amc_day
-        env:
-          FORCE: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          DOW="$(date -u +%u)"
-          if [ "$FORCE" = "true" ] || [ "$DOW" = 1 ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Day $DOW is not Monday; skipping AMC."
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # Pulls A-List watch history from the AMC GraphQL API. The session cookie
-      # was captured via mitmproxy and stored as AMC_SESSION (see tatimblin/amc-stats).
-      - name: "AMC: fetch watch history"
+      # Daily, so a new booking shows on the card the next morning. Pulls the
+      # A-List watch history and the booked tickets from the AMC GraphQL API
+      # (the bookings are best effort: a failure there is a warning and the
+      # history still lands). The session cookie was captured via mitmproxy and
+      # stored as AMC_SESSION (see tatimblin/amc-stats).
+      - name: "AMC: fetch tickets"
         id: amc
-        if: steps.amc_day.outputs.run == 'true'
         continue-on-error: true
         run: bun tools/amc/fetch.mjs
         env:
           AMC_SESSION: ${{ secrets.AMC_SESSION }}
           AMC_ROTATED_COOKIE_FILE: ${{ runner.temp }}/amc-rotated
 
-      # AMC rotates the authToken cookie on first use, so the secret must be
-      # replaced or tomorrow's run authenticates with a dead credential.
+      # AMC can rotate the authToken cookie on any response, so the secret must
+      # be replaced or tomorrow's run authenticates with a dead credential. The
+      # fetch rewrites the file with the LATEST cookie after every request.
       - name: "AMC: persist rotated cookie"
         id: amc_token
-        if: always() && steps.amc_day.outputs.run == 'true'
+        if: always()
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -189,6 +178,15 @@ jobs:
           fi
           gh secret set AMC_SESSION --body "$(cat "$RUNNER_TEMP/amc-rotated")"
           rm -f "$RUNNER_TEMP/amc-rotated"
+
+      # Each film's genre bucket and IMDb id, for films the committed cache
+      # doesn't know yet: keyless Wikidata SPARQL. Adds entries, never rewrites
+      # one (hand edits stay); a lookup that fails is retried tomorrow, and the
+      # script exits 0 regardless (an uncached film renders as Other).
+      - name: "AMC: enrich film metadata"
+        id: amc_enrich
+        continue-on-error: true
+        run: bun tools/amc/enrich.mjs
 
       # ── Volo ───────────────────────────────────────────────────────────────
       # Scheduled runs fetch Volo on Wednesday and Thursday (UTC) only, as the old
@@ -256,7 +254,7 @@ jobs:
             git checkout -- "$DATA_AMC"
           fi
 
-          git add -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_PAGEVIEWS" "$DATA_VOLO" "$DATA_AMC"
+          git add -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_PAGEVIEWS" "$DATA_VOLO" "$DATA_AMC" "$DATA_AMC_FILMS"
           if git diff --cached --quiet; then
             echo "No data changed — nothing to commit or deploy."
             echo "committed=false" >> "$GITHUB_OUTPUT"

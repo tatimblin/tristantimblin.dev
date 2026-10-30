@@ -1,0 +1,212 @@
+{
+	"a-complete-unknown": {
+		"title": "A Complete Unknown",
+		"imdb_id": "tt11563598",
+		"primary_genre": "Biopic"
+	},
+	"american-fiction": {
+		"title": "American Fiction",
+		"imdb_id": "tt23561236",
+		"primary_genre": "Comedy"
+	},
+	"beetlejuice-beetlejuice": {
+		"title": "Beetlejuice Beetlejuice",
+		"imdb_id": "tt2049403",
+		"primary_genre": "Comedy"
+	},
+	"black-bag": {
+		"title": "Black Bag",
+		"imdb_id": "tt30988739",
+		"primary_genre": "Thriller"
+	},
+	"bob-marley-one-love": {
+		"title": "Bob Marley: One Love",
+		"imdb_id": "tt8521778",
+		"primary_genre": "Biopic"
+	},
+	"borderlands": {
+		"title": "Borderlands",
+		"imdb_id": "tt4978420",
+		"primary_genre": "Action"
+	},
+	"civil-war": {
+		"title": "Civil War",
+		"imdb_id": "tt17279496",
+		"primary_genre": "Thriller"
+	},
+	"demon-slayer-kimetsu-no-yaiba-to-the-hashira-training": {
+		"title": "Demon Slayer: Kimetsu No Yaiba - To the Hashira Training",
+		"imdb_id": "tt30395619",
+		"primary_genre": "Animation"
+	},
+	"dog-man": {
+		"title": "Dog Man",
+		"imdb_id": "tt10954718",
+		"primary_genre": "Animation"
+	},
+	"dune-part-two": {
+		"title": "Dune: Part Two",
+		"imdb_id": "tt15239678",
+		"primary_genre": "Sci-Fi"
+	},
+	"ferrari": {
+		"title": "Ferrari",
+		"imdb_id": "tt3758542",
+		"primary_genre": "Biopic"
+	},
+	"fly-me-to-the-moon": {
+		"title": "Fly Me to the Moon",
+		"imdb_id": "tt1896747",
+		"primary_genre": "Comedy"
+	},
+	"furiosa-a-mad-max-saga": {
+		"title": "Furiosa: A Mad Max Saga",
+		"imdb_id": "tt12037194",
+		"primary_genre": "Action"
+	},
+	"gladiator-ii": {
+		"title": "Gladiator II",
+		"imdb_id": "tt9218128",
+		"primary_genre": "Action"
+	},
+	"horizon-an-american-saga-chapter-1": {
+		"title": "Horizon: An American Saga Chapter 1",
+		"imdb_id": "tt17505010",
+		"primary_genre": "Drama"
+	},
+	"if-2024": {
+		"title": "IF (2024)",
+		"imdb_id": "tt11152168",
+		"primary_genre": "Other"
+	},
+	"inside-out-2": {
+		"title": "Inside Out 2",
+		"imdb_id": "tt22022452",
+		"primary_genre": "Animation"
+	},
+	"kingdom-of-the-planet-of-the-apes": {
+		"title": "Kingdom of the Planet of the Apes",
+		"imdb_id": "tt11389872",
+		"primary_genre": "Sci-Fi"
+	},
+	"kung-fu-panda-4": {
+		"title": "Kung Fu Panda 4",
+		"imdb_id": "tt21692408",
+		"primary_genre": "Animation"
+	},
+	"lets-start-a-cult": {
+		"title": "Let's Start A Cult",
+		"imdb_id": "tt24805876",
+		"primary_genre": "Comedy"
+	},
+	"lord-of-the-rings-the-war-of-the-rohirrim": {
+		"title": "Lord of the Rings: The War of the Rohirrim",
+		"imdb_id": "tt14824600",
+		"primary_genre": "Animation"
+	},
+	"mean-girls": {
+		"title": "Mean Girls",
+		"imdb_id": "tt11762114",
+		"primary_genre": "Other"
+	},
+	"megalopolis": {
+		"title": "Megalopolis",
+		"imdb_id": "tt10128846",
+		"primary_genre": "Drama"
+	},
+	"mickey-17": {
+		"title": "Mickey 17",
+		"imdb_id": "tt12299608",
+		"primary_genre": "Sci-Fi"
+	},
+	"migration": {
+		"title": "Migration",
+		"imdb_id": "tt6495056",
+		"primary_genre": "Animation"
+	},
+	"moana-2": {
+		"title": "Moana 2",
+		"imdb_id": "tt13622970",
+		"primary_genre": "Animation"
+	},
+	"monkey-man": {
+		"title": "Monkey Man",
+		"imdb_id": "tt9214772",
+		"primary_genre": "Action"
+	},
+	"paddington-in-peru": {
+		"title": "Paddington in Peru",
+		"imdb_id": "tt5822536",
+		"primary_genre": "Other"
+	},
+	"piece-by-piece": {
+		"title": "Piece By Piece",
+		"imdb_id": "tt31064841",
+		"primary_genre": "Animation"
+	},
+	"project-hail-mary": {
+		"title": "Project Hail Mary",
+		"imdb_id": "tt12042730",
+		"primary_genre": "Sci-Fi"
+	},
+	"red-one": {
+		"title": "Red One",
+		"imdb_id": "tt14948432",
+		"primary_genre": "Action"
+	},
+	"sasquatch-sunset": {
+		"title": "Sasquatch Sunset",
+		"imdb_id": "tt30180830",
+		"primary_genre": "Comedy"
+	},
+	"star-wars-the-mandalorian-and-grogu": {
+		"title": "Star Wars: The Mandalorian and Grogu",
+		"imdb_id": "tt30825738",
+		"primary_genre": "Sci-Fi"
+	},
+	"the-american-society-of-magical-negroes": {
+		"title": "The American Society of Magical Negroes",
+		"imdb_id": "tt30007864",
+		"primary_genre": "Comedy"
+	},
+	"the-bikeriders": {
+		"title": "The Bikeriders",
+		"imdb_id": "tt21454134",
+		"primary_genre": "Drama"
+	},
+	"the-book-of-clarence": {
+		"title": "The Book of Clarence",
+		"imdb_id": "tt22866358",
+		"primary_genre": "Comedy"
+	},
+	"the-fall-guy": {
+		"title": "The Fall Guy",
+		"imdb_id": "tt1684562",
+		"primary_genre": "Action"
+	},
+	"the-ministry-of-ungentlemanly-warfare": {
+		"title": "The Ministry of Ungentlemanly Warfare",
+		"imdb_id": "tt5177120",
+		"primary_genre": "Action"
+	},
+	"the-wild-robot": {
+		"title": "The Wild Robot",
+		"imdb_id": "tt29623480",
+		"primary_genre": "Animation"
+	},
+	"transformers-one": {
+		"title": "Transformers One",
+		"imdb_id": "tt8864596",
+		"primary_genre": "Animation"
+	},
+	"trap": {
+		"title": "Trap",
+		"imdb_id": "tt26753003",
+		"primary_genre": "Thriller"
+	},
+	"wicked": {
+		"title": "Wicked",
+		"imdb_id": "tt1262426",
+		"primary_genre": "Other"
+	}
+}
