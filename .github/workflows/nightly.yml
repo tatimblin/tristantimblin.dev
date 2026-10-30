@@ -148,11 +148,26 @@ jobs:
           PAGEVIEWS_SINCE: ${{ inputs.pageviews_since }}
 
       # ── AMC ──────────────────────────────────────────────────────────────
+      # Scheduled runs fetch AMC on Monday (UTC) only — catches weekend movies.
+      # Manual runs always fetch.
+      - name: "AMC: is today a fetch day?"
+        id: amc_day
+        env:
+          FORCE: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          DOW="$(date -u +%u)"
+          if [ "$FORCE" = "true" ] || [ "$DOW" = 1 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Day $DOW is not Monday; skipping AMC."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # Pulls A-List watch history from the AMC GraphQL API. The session cookie
-      # was captured via mitmproxy and stored as AMC_SESSION; when it expires the
-      # capture must be re-run (see tatimblin/amc-stats).
+      # was captured via mitmproxy and stored as AMC_SESSION (see tatimblin/amc-stats).
       - name: "AMC: fetch watch history"
         id: amc
+        if: steps.amc_day.outputs.run == 'true'
         continue-on-error: true
         run: bun tools/amc/fetch.mjs
         env:
@@ -163,7 +178,7 @@ jobs:
       # replaced or tomorrow's run authenticates with a dead credential.
       - name: "AMC: persist rotated cookie"
         id: amc_token
-        if: always()
+        if: always() && steps.amc_day.outputs.run == 'true'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
