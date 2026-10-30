@@ -62,6 +62,25 @@
 	--contrib-4: #39d353;
 	--baywheels: #958be0;
 
+	/* GENRES. Lifted for the dark card, and muted less: a third-strength mix
+	   into near-black left the idle buckets one muddy value. */
+	--genre-animation: oklch(0.72 0.16 345);
+	--genre-action: oklch(0.67 0.17 28);
+	--genre-comedy: oklch(0.84 0.14 88);
+	--genre-sci-fi: oklch(0.76 0.11 195);
+	--genre-biopic: oklch(0.78 0.13 58);
+	--genre-thriller: oklch(0.64 0.15 298);
+	--genre-drama: oklch(0.7 0.14 145);
+	--genre-other: oklch(0.7 0.03 70);
+	--genre-mute: 52%;
+
+	/* POSTERS. A ring of light on the dark card, a deeper shadow, and the
+	   posters off the centre dimmed. */
+	--poster-ring: rgb(255 255 255 / 0.1);
+	--poster-shadow: 0 8px 16px -8px rgb(0 0 0 / 0.8);
+	--poster-dim: 0.78;
+	--poster-badge-shadow: 0 1px 6px -1px rgb(0 0 0 / 0.5);
+
 	/* CODE. Inline code on the first wash. A fenced block sinks BELOW the
 	   page — the light theme's slab is the darkest thing on the page, and so
 	   is this — with the dashed edge drawn round it (prose.css) so it holds

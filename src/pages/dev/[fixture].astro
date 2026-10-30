@@ -1,0 +1,36 @@
+---
+// DEV ONLY: widgets on fixture data that the real data can't show yet.
+// getStaticPaths returns nothing in a build, so no page ships.
+//
+//   /dev/amc/   the A-List card with two booked films (tests/fixtures/amc.ts)
+import Layout from "../../layouts/Layout.astro";
+import WidgetGrid from "@whois/design-system/WidgetGrid";
+import Amc from "../../widgets/amc/Amc.astro";
+import { buildFilms, type CacheEntry, type Movie } from "../../widgets/amc/amc";
+import amc from "../../data/amc.json";
+import cache from "../../data/amc-films.json";
+import { upcomingCache, upcomingMovies } from "../../../tests/fixtures/amc";
+
+export function getStaticPaths() {
+	return import.meta.env.DEV ? [{ params: { fixture: "amc" } }] : [];
+}
+
+const films = buildFilms([...(amc.movies as Movie[]), ...upcomingMovies()], {
+	...(cache as Record<string, CacheEntry>),
+	...upcomingCache,
+});
+---
+
+<Layout title="Fixtures — dev" description="Widgets on fixture data (dev only)." noindex>
+	<div class="container dev-fixture">
+		<WidgetGrid cols={4}>
+			<Amc films={films} />
+		</WidgetGrid>
+	</div>
+</Layout>
+
+<style>
+	.dev-fixture {
+		padding-block: var(--space-8);
+	}
+</style>

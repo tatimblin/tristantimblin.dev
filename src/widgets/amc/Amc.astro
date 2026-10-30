@@ -1,47 +1,337 @@
 ---
-// AMC A-List — a 2×1 poster carousel of movies seen at AMC this year.
-// Posters scroll horizontally; each shows the movie title, theatre and date
-// below. The card chrome and header come from the design system.
+// AMC A-List — a 1×1 card in the instrument UI: every film seen at AMC (and
+// every one booked) as a fan of posters on an arc, over a gauge that shares
+// the fan's pivot. DATE: watch order over evenly spaced ticks (one per film,
+// taller at a year's start) under a fixed needle, the readout the showing's
+// date. GENRE: grouped by genre, the ticks merged into one capsule per genre
+// in its own colour, a notch cut into the current one, the readout
+// "SCI-FI 5 OF 5" until the card has been still a moment, then the date again.
+// The header's mode glyph (a calendar, the theatre's masks) toggles the two. A booked film's poster stays grey;
+// at the centre it carries a calendar disc and the readout counts the days.
+// The centre poster and the title open the film on IMDb.
+//
+// The films are read at build time (./amc.ts: amc.json joined with the
+// amc-films.json genre/IMDb cache) and handed to the client as JSON; ./fan.ts
+// builds the posters and the gauge from them and lays both out against the
+// card as drawn (the geometry in ./arc.ts). The caption is rendered here for
+// the latest film, so the card reads before the script runs.
+//
+// Props pass through to the <Widget> (a class, the page's data-reveal
+// choreography): the page owns where the card sits and when it fades in.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
-import Figure from "@whois/design-system/Figure";
-import Mono from "@whois/design-system/Mono";
-import amc from "../../data/amc.json";
-import "./amc.css";
+import Anchor from "@whois/design-system/Anchor";
+import calendarGlyph from "./icons/calendar.svg?raw";
+import dramaGlyph from "./icons/drama.svg?raw";
+import { getFilms, type Film } from "./amc";
+import { dateWords } from "./arc";
 
 interface Props {
+	/** The films, for the dev fixture page (src/pages/dev/[fixture].astro);
+	 *  the real ones by default. */
+	films?: Film[];
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { class: className, ...rest } = Astro.props;
+const { films = getFilms(), class: className, ...rest } = Astro.props;
 
-const { movies } = amc;
+// The caption before the script: the latest film seen.
+const latest = films.findLast((f) => !f.u) ?? films[0];
+const [dow, md, yr] = latest ? dateWords(latest.d) : ["", "", ""];
+// In a <script type="application/json">: only "</" could end it early.
+const json = JSON.stringify(films).replace(/</g, "\\u003c");
 ---
 
-{movies.length > 0 && (
-	<Widget size="2x1" title="a-list" class:list={["wx-amc", className]} {...rest}>
-		<Mono slot="meta" variant="text">{movies.length} films</Mono>
+<script>
+	// The fan, the gauge and the readout (./fan.ts). onPage runs on every
+	// page load (ClientRouter replaces the DOM each navigation) and tears the
+	// fan's observers, timers and listeners down before the next swap.
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+	import { mountFan } from "./fan";
+	import type { Film } from "./amc";
+
+	onPage(() => {
+		const widget = document.querySelector<HTMLElement>(".wx-amc");
+		const data = widget?.querySelector<HTMLScriptElement>("[data-amc-films]");
+		if (!widget || !data) return;
+		let films: Film[];
+		try {
+			films = JSON.parse(data.textContent ?? "[]");
+		} catch {
+			return;
+		}
+		const fan = mountFan(widget, films);
+		return () => fan?.destroy();
+	});
+</script>
+
+{latest && (
+	<Widget size="1x1" title="AMC A-List" class:list={["wx-amc", className]} data-mode="date" {...rest}>
+		{/* The sort, a toggle (aria-pressed, as the card flips are): the mode
+		     the card is in as a glyph (a calendar, the theatre's masks); the
+		     two cross-fade on data-mode. A bare glyph in the accent, as the bay
+		     wheels header's is: IconButton's hairline box would outweigh the
+		     meta slot's text-sized voice. */}
+		<button slot="meta" type="button" class="wx-amc-mode ds-control" data-amc-mode aria-label="Sort by genre" aria-pressed="false" title="Sort by genre">
+			<span class="wx-amc-glyph wx-amc-glyph--date" set:html={calendarGlyph} />
+			<span class="wx-amc-glyph wx-amc-glyph--genre" set:html={dramaGlyph} />
+		</button>
+
 		<CardBody class="wx-amc-body">
-			<ul class="wx-amc-track" role="list">
-				{movies.map((m) => (
-					<li class="wx-amc-slide">
-						{m.poster && (
-							<img
-								class="wx-amc-poster"
-								src={m.poster}
-								alt={`${m.name} poster`}
-								loading="lazy"
-								decoding="async"
-							/>
-						)}
-						<div class="wx-amc-caption">
-							<span class="wx-amc-title">{m.name}</span>
-							<span class="wx-amc-meta">{m.theatre} · {m.date}</span>
-						</div>
-					</li>
-				))}
-			</ul>
+			{/* Decoration, laid out by ./fan.ts; the slider and the caption say it. */}
+			<div class="wx-amc-fan" aria-hidden="true"></div>
+			<svg class="wx-amc-gauge" aria-hidden="true"></svg>
+			{/* The gauge as the keyboard and AT see it: one film per step. */}
+			<div class="wx-amc-scrub ds-control" role="slider" tabindex="0" aria-label="Film"></div>
+
+			<div class="wx-amc-cap">
+				<div class="wx-amc-ro" aria-hidden="true">
+					<span class="ds-mono ds-caps wx-amc-small">{dow}</span><b class="wx-amc-num">{md}</b><span class="ds-mono ds-caps wx-amc-small">{yr}</span>
+				</div>
+				<Anchor class="wx-amc-title" href={latest.h} target="_blank" rel="noopener" title={`${latest.n} on IMDb`}>
+					{latest.n}
+				</Anchor>
+			</div>
+			<script type="application/json" data-amc-films set:html={json} />
 		</CardBody>
 	</Widget>
 )}
+
+<style>
+	/* The card chrome, header and title link are design-system
+	   components; this draws the fan, the gauge and the readout. Scoped, with
+	   :global for what ./fan.ts creates. Lengths that belong to the drawing are
+	   in --amc-u, the px per unit of the 210px mock (set by ./fan.ts), so the
+	   drawing scales with the card. */
+
+	/* The mode glyph: a bare button in the accent, a pad of hit area round
+	   the glyph (given back as margin, so it sits where the meta text would),
+	   the two glyphs stacked in one cell and cross-faded on the widget's
+	   data-mode (the motion token is 0s under reduced motion). */
+	.wx-amc-mode {
+		display: grid;
+		place-items: center;
+		background: none;
+		border: 0;
+		padding: var(--space-1);
+		margin: calc(-1 * var(--space-1));
+		border-radius: var(--radius-box);
+		color: var(--accent);
+		transition: color var(--duration-standard) var(--ease-standard);
+	}
+	.wx-amc-mode:hover {
+		color: var(--accent-hover);
+	}
+	.wx-amc-glyph {
+		grid-area: 1 / 1;
+		display: flex;
+		transition: opacity var(--duration-quick) var(--ease-standard);
+	}
+	.wx-amc-glyph :global(svg) {
+		display: block;
+		block-size: var(--widget-font-md);
+		inline-size: auto;
+	}
+	.wx-amc[data-mode="date"] .wx-amc-glyph--genre,
+	.wx-amc[data-mode="genre"] .wx-amc-glyph--date {
+		opacity: 0;
+	}
+
+	/* The body: the fan and the gauge laid over it, the caption at its foot. */
+	.wx-amc-body {
+		position: relative;
+		justify-content: flex-end;
+		overflow: hidden;
+		padding-inline: 0;
+	}
+
+	/* The fan, faded out at both sides. */
+	.wx-amc-fan {
+		position: absolute;
+		inset: 0;
+		touch-action: pan-y;
+		cursor: grab;
+		user-select: none;
+		-webkit-user-select: none;
+		mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+	}
+	.wx-amc-fan:active {
+		cursor: grabbing;
+	}
+	.wx-amc-fan :global(.wx-amc-card) {
+		--gray: 0;
+		position: absolute;
+		inline-size: var(--amc-pw);
+		aspect-ratio: 2 / 3;
+		border-radius: var(--radius-box);
+		overflow: hidden;
+		background: var(--wash-1);
+		box-shadow:
+			0 0 0 1px var(--poster-ring),
+			var(--poster-shadow);
+		filter: grayscale(var(--gray)) brightness(var(--poster-dim));
+		will-change: transform;
+	}
+	.wx-amc-fan :global(.wx-amc-card[data-active]) {
+		filter: none;
+		cursor: pointer;
+	}
+	.wx-amc-fan :global(.wx-amc-art) {
+		display: block;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		pointer-events: none;
+	}
+	/* A booked film: grey art wherever it stands, even at the centre. */
+	.wx-amc-fan :global(.wx-amc-card--up .wx-amc-art) {
+		filter: grayscale(1) contrast(0.9) brightness(1.04);
+	}
+	/* Its calendar disc, at the centre only: the month in tiny caps over the
+	   day, small enough to sit inside the circle with room round it. */
+	.wx-amc-fan :global(.wx-amc-badge) {
+		position: absolute;
+		inset-inline-start: 50%;
+		inset-block-start: 46%;
+		translate: -50% -50%;
+		inline-size: calc(var(--amc-pw) * 0.66);
+		aspect-ratio: 1;
+		border-radius: 50%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: calc(var(--amc-pw) * 0.02);
+		background: color-mix(in oklab, var(--card-background) 90%, transparent);
+		box-shadow: var(--poster-badge-shadow);
+		opacity: 0;
+		transition: opacity var(--duration-quick) var(--ease-standard);
+	}
+	.wx-amc-fan :global(.wx-amc-card[data-active] .wx-amc-badge) {
+		opacity: 1;
+	}
+	.wx-amc-fan :global(.wx-amc-badge .ds-mono) {
+		font-size: max(7px, calc(var(--amc-pw) * 0.13));
+		font-weight: var(--font-weight-500);
+		color: var(--accent);
+	}
+	.wx-amc-fan :global(.wx-amc-badge b) {
+		font: var(--font-weight-700) max(11px, calc(var(--amc-pw) * 0.24)) / 1 var(--font-ui);
+		font-variant-numeric: tabular-nums;
+		color: var(--text-primary);
+	}
+
+	/* The gauge: hairline ticks, a year's in the secondary ink, a booked
+	   film's dashed in the accent; the capsules muted but the current one. */
+	.wx-amc-gauge {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		pointer-events: none;
+		overflow: visible;
+	}
+	.wx-amc-gauge :global(.wx-amc-tick) {
+		stroke: var(--hairline);
+		stroke-width: 1px;
+	}
+	.wx-amc-gauge :global(.wx-amc-tick[data-major]) {
+		stroke: var(--text-secondary);
+	}
+	.wx-amc-gauge :global(.wx-amc-tick[data-up]) {
+		stroke: var(--accent);
+		stroke-dasharray: 2 1;
+	}
+	.wx-amc-gauge :global(.wx-amc-capsule) {
+		fill: none;
+		stroke: color-mix(in oklab, var(--gc) var(--genre-mute), var(--card-background));
+		stroke-linecap: round;
+		transition: stroke var(--duration-standard) var(--ease-standard);
+	}
+	.wx-amc-gauge :global(.wx-amc-capsule[data-on]) {
+		stroke: var(--gc);
+	}
+	.wx-amc-gauge :global(.wx-amc-needle) {
+		stroke: var(--accent);
+		stroke-linecap: round;
+	}
+	.wx-amc-gauge :global(.wx-amc-halo) {
+		stroke: var(--card-background);
+		stroke-linecap: round;
+	}
+	/* GENRE's marker: cut into the current capsule in the card's colour. */
+	.wx-amc-gauge :global(.wx-amc-notch) {
+		stroke: var(--card-background);
+		stroke-linecap: round;
+	}
+	.wx-amc-gauge :global(.wx-amc-now) {
+		fill: var(--accent);
+	}
+
+	/* The gauge's slider: a band over it, ringed inside. */
+	.wx-amc-scrub {
+		position: absolute;
+		inset-inline: 0;
+		cursor: ew-resize;
+		touch-action: none;
+		--control-ring-offset: var(--focus-ring-inset);
+		border-radius: var(--radius-box);
+	}
+
+	/* The caption: the readout, then the title, centred at the body's foot. */
+	.wx-amc-cap {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: calc(var(--amc-u, 1px) * 6);
+		padding-inline: var(--widget-pad);
+		pointer-events: none;
+	}
+	.wx-amc-cap > :global(*) {
+		pointer-events: auto;
+	}
+	/* The readout, in the complication's voice: bold figures, tiny caps. */
+	.wx-amc-ro {
+		display: flex;
+		align-items: baseline;
+		justify-content: center;
+		gap: var(--space-1);
+		white-space: nowrap;
+		line-height: 1;
+	}
+	.wx-amc-ro :global(.wx-amc-small) {
+		color: var(--text-tertiary);
+	}
+	.wx-amc-ro :global(.wx-amc-num) {
+		font: var(--font-weight-700) var(--widget-font-sm) / 1 var(--font-ui);
+		font-variant-numeric: tabular-nums;
+		color: var(--text-primary);
+		text-transform: uppercase;
+		letter-spacing: 0.01em;
+	}
+	.wx-amc-ro:global([data-up]) :global(.wx-amc-num),
+	.wx-amc-ro:global([data-up]) :global(.wx-amc-small:first-child) {
+		color: var(--accent);
+	}
+	.wx-amc-ro :global(.wx-amc-gname) {
+		color: color-mix(in oklab, var(--gc) 78%, var(--text-primary));
+		font-weight: var(--font-weight-500);
+	}
+	/* The title reads as the film's name, in the ink: the link (to IMDb)
+	   shows under the pointer, retuned through the --link-* tokens in scope. */
+	.wx-amc-title {
+		--link-color: var(--text-primary);
+		--link-hover-color: var(--accent);
+		--link-decoration: none;
+		--link-decoration-hover: underline;
+		max-inline-size: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: var(--widget-font-sm);
+		font-weight: var(--font-weight-500);
+		line-height: 1.15;
+	}
+</style>
