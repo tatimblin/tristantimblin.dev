@@ -38,7 +38,94 @@ env:
   DATA_AMC_FILMS: src/data/amc-films.json
 
 jobs:
+  # ── AMC gate ─────────────────────────────────────────────────────────────
+  # A lightweight job on ubuntu-latest that decides whether the self-hosted
+  # runner needs to wake up. Without this, a skipped-but-queued amc-fetch job
+  # would block the collect job for up to 24h if the runner is offline.
+  amc-gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - name: "AMC: is today a fetch day?"
+        id: check
+        env:
+          FORCE: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          DOW="$(date -u +%u)"
+          if [ "$FORCE" = "true" ] || [ "$DOW" = 1 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Day $DOW is not Monday; skipping AMC."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── AMC fetch (self-hosted runner) ───────────────────────────────────────
+  # Runs on the homelab MacBook's residential IP so Puppeteer can clear
+  # Cloudflare's JS challenge. Uploads amc.json + amc-films.json as an
+  # artifact for the collect job to download and commit.
+  amc-fetch:
+    needs: [amc-gate]
+    if: needs.amc-gate.outputs.run == 'true'
+    runs-on: [self-hosted, linux, homelab, residential]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: "AMC: fetch watch history"
+        id: amc
+        continue-on-error: true
+        run: bun tools/amc/fetch.mjs
+        env:
+          AMC_SESSION: ${{ secrets.AMC_SESSION }}
+          AMC_ROTATED_COOKIE_FILE: ${{ runner.temp }}/amc-rotated
+
+      # The cookie rotates on ANY response (including errors), so persist it
+      # before checking whether the fetch itself succeeded.
+      - name: "AMC: persist rotated cookie"
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ ! -s "$RUNNER_TEMP/amc-rotated" ]; then
+            echo "Cookie did not rotate — nothing to persist."
+            exit 0
+          fi
+          gh secret set AMC_SESSION --body "$(cat "$RUNNER_TEMP/amc-rotated")"
+          rm -f "$RUNNER_TEMP/amc-rotated"
+
+      - name: "AMC: enrich film metadata"
+        if: always() && steps.amc.outcome == 'success'
+        continue-on-error: true
+        run: bun tools/amc/enrich.mjs
+
+      - name: Upload AMC data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: amc-data
+          path: |
+            src/data/amc.json
+            src/data/amc-films.json
+          retention-days: 1
+          if-no-files-found: ignore
+
+  # ── Collect (ubuntu-latest) ──────────────────────────────────────────────
   collect:
+    needs: [amc-gate, amc-fetch]
+    # Run even when amc-fetch is skipped (non-Monday) or fails (runner offline).
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
       contents: write # commit and push the refreshed data
@@ -58,6 +145,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Download the AMC data that the self-hosted runner produced.
+      - name: "AMC: download data from self-hosted runner"
+        if: needs.amc-fetch.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: amc-data
+          path: .
 
       # ── BayWheels ──────────────────────────────────────────────────────────
       # The query action lives in the private tatimblin/baywheels-stats repo and
@@ -147,60 +242,6 @@ jobs:
           GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
           GOATCOUNTER_CODE: ${{ secrets.GOATCOUNTER_CODE }}
           PAGEVIEWS_SINCE: ${{ inputs.pageviews_since }}
-
-      # ── AMC ──────────────────────────────────────────────────────────────
-      # Scheduled runs fetch AMC on Monday (UTC) only — catches weekend movies.
-      # Manual runs always fetch.
-      - name: "AMC: is today a fetch day?"
-        id: amc_day
-        env:
-          FORCE: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          DOW="$(date -u +%u)"
-          if [ "$FORCE" = "true" ] || [ "$DOW" = 1 ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Day $DOW is not Monday; skipping AMC."
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # Pulls A-List watch history from the AMC GraphQL API. The session cookie
-      # was captured via mitmproxy and stored as AMC_SESSION (see tatimblin/amc-stats).
-      - name: "AMC: fetch watch history"
-        id: amc
-        if: steps.amc_day.outputs.run == 'true'
-        continue-on-error: true
-        run: bun tools/amc/fetch.mjs
-        env:
-          AMC_SESSION: ${{ secrets.AMC_SESSION }}
-          AMC_ROTATED_COOKIE_FILE: ${{ runner.temp }}/amc-rotated
-
-      # AMC rotates the authToken cookie on first use, so the secret must be
-      # replaced or tomorrow's run authenticates with a dead credential.
-      - name: "AMC: persist rotated cookie"
-        id: amc_token
-        if: always() && steps.amc_day.outputs.run == 'true'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          if [ ! -s "$RUNNER_TEMP/amc-rotated" ]; then
-            echo "Cookie did not rotate — nothing to persist."
-            exit 0
-          fi
-          gh secret set AMC_SESSION --body "$(cat "$RUNNER_TEMP/amc-rotated")"
-          rm -f "$RUNNER_TEMP/amc-rotated"
-
-      # Each film's genre bucket and IMDb id, for films the committed cache
-      # doesn't know yet: keyless Wikidata SPARQL, on AMC's fetch day only.
-      # Adds entries, never rewrites one (hand edits stay); a lookup that fails,
-      # or a booked film Wikidata can't place yet, is retried next time. Exits 0
-      # regardless (an uncached film renders as Other).
-      - name: "AMC: enrich film metadata"
-        id: amc_enrich
-        if: always() && steps.amc_day.outputs.run == 'true'
-        continue-on-error: true
-        run: bun tools/amc/enrich.mjs
 
       # ── Volo ───────────────────────────────────────────────────────────────
       # Scheduled runs fetch Volo on Wednesday and Thursday (UTC) only, as the old
