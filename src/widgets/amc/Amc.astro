@@ -1,7 +1,5 @@
 ---
-// AMC A-List — a 2×1 card in the instrument UI (drawn on a 1×1 mock; the
-// extra width flattens the arc and fits more posters on it, ./arc.ts
-// wideArc): every film seen at AMC (and
+// AMC A-List — a 1×1 card in the instrument UI: every film seen at AMC (and
 // every one booked) as a fan of posters on an arc, over a gauge that shares
 // the fan's pivot. DATE: watch order over evenly spaced ticks (one per film,
 // taller at a year's start) under a fixed needle, the readout the showing's
@@ -69,7 +67,7 @@ const json = JSON.stringify(films).replace(/</g, "\\u003c");
 </script>
 
 {latest && (
-	<Widget size="2x1" title="AMC A-List" class:list={["wx-amc", className]} data-mode="date" {...rest}>
+	<Widget size="1x1" title="AMC A-List" class:list={["wx-amc", className]} data-mode="date" {...rest}>
 		{/* The sort, a toggle (aria-pressed, as the card flips are): the mode
 		     the card is in as a glyph (a calendar, the theatre's masks); the
 		     two cross-fade on data-mode. A bare glyph in the accent, as the bay

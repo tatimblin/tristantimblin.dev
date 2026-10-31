@@ -189,25 +189,18 @@ test("the fan recycles a few cards, and requests only the posters on it", async 
 	// Every film still has its tick: the gauge is the whole history.
 	await expect(widget.locator(".wx-amc-tick")).toHaveCount(FILMS);
 
-	// At rest: a window of films round the centre, K either side (the
-	// outermost pair clear). K is however many fit the card's width: on the
-	// 2×1, more than the 1×1's three.
+	// At rest: the centre and three either side (the outermost pair clear),
+	// on a pool of at most 16 cards (fan.ts's POOL).
 	const now = Number(await slider.getAttribute("aria-valuenow")) - 1;
-	const drawn = () =>
-		widget.locator(".wx-amc-card:visible").evaluateAll((els) => els.map((el) => Number((el as HTMLElement).dataset.film)).sort((a, b) => a - b));
-	const atLoad = await drawn();
-	const K = now - atLoad[0];
-	expect(K).toBeGreaterThan(3);
-	const hi = Math.min(FILMS - 1, now + K);
-	expect(atLoad).toEqual(Array.from({ length: hi - (now - K) + 1 }, (_, k) => now - K + k));
-	// The pool: a window leaving and one arriving, and two piles (arc.ts poolSize).
-	const pool = 2 * (2 * K + 1) + 2;
+	const lo = Math.max(0, now - 3);
+	const hi = Math.min(FILMS - 1, now + 3);
 	const cards = widget.locator(".wx-amc-card");
-	expect(await cards.count()).toBeLessThanOrEqual(pool);
+	await expect(widget.locator(".wx-amc-card:visible")).toHaveCount(hi - lo + 1);
+	expect(await cards.count()).toBeLessThanOrEqual(16);
 
-	// Only those posters were asked for.
+	// Only those posters were asked for: the films within three of the centre.
 	const films = await widget.locator("[data-amc-films]").evaluate((el) => JSON.parse(el.textContent ?? "[]"));
-	const near = new Set(atLoad.map((i) => films[i].p));
+	const near = new Set(films.slice(lo, hi + 1).map((f: { p: string | null }) => f.p));
 	await expect.poll(() => requested.size).toBeGreaterThan(0);
 	for (const url of requested) expect(near).toContain(url);
 
@@ -219,11 +212,11 @@ test("the fan recycles a few cards, and requests only the posters on it", async 
 	const mode = widget.locator("[data-amc-mode]");
 	await mode.click();
 	await page.waitForTimeout(150);
-	expect(await cards.count()).toBeLessThanOrEqual(pool);
+	expect(await cards.count()).toBeLessThanOrEqual(16);
 	await mode.click();
 	await expect(slider).toHaveAttribute("aria-valuenow", String(now + 1 - 12));
-	await expect.poll(() => widget.locator(".wx-amc-card:visible").count()).toBe(2 * K + 1);
-	expect(await cards.count()).toBeLessThanOrEqual(pool);
-	// Still nowhere near one request per film: the windows passed through.
-	expect(requested.size).toBeLessThan(4 * (2 * K + 1) + 20);
+	await expect.poll(() => widget.locator(".wx-amc-card:visible").count()).toBe(7);
+	expect(await cards.count()).toBeLessThanOrEqual(16);
+	// Still nowhere near one request per film.
+	expect(requested.size).toBeLessThan(60);
 });
