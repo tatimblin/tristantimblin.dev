@@ -39,24 +39,28 @@ env:
 
 jobs:
   # ── AMC gate ─────────────────────────────────────────────────────────────
-  # A lightweight job on ubuntu-latest that decides whether the self-hosted
-  # runner needs to wake up. Without this, a skipped-but-queued amc-fetch job
-  # would block the collect job for up to 24h if the runner is offline.
+  # The AMC fetch runs daily, but only on the homelab runner. A job routed to
+  # an offline self-hosted runner doesn't fail, it queues for up to 24h — and
+  # collect waits on it, holding up every other fetcher. So this checks, on
+  # ubuntu-latest, that a runner carrying the `residential` label is online,
+  # and skips AMC (with a warning) for the day if not.
   amc-gate:
     runs-on: ubuntu-latest
     outputs:
       run: ${{ steps.check.outputs.run }}
     steps:
-      - name: "AMC: is today a fetch day?"
+      - name: "AMC: is the homelab runner online?"
         id: check
         env:
-          FORCE: ${{ github.event_name == 'workflow_dispatch' }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          DOW="$(date -u +%u)"
-          if [ "$FORCE" = "true" ] || [ "$DOW" = 1 ]; then
+          online="$(gh api "repos/${{ github.repository }}/actions/runners" \
+            --jq '[.runners[] | select(.status == "online" and any(.labels[]; .name == "residential"))] | length' \
+            || echo 0)"
+          if [ "${online:-0}" -gt 0 ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Day $DOW is not Monday; skipping AMC."
+            echo "::warning::No online runner with the 'residential' label; skipping AMC today."
             echo "run=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -130,7 +134,7 @@ jobs:
   # ── Collect (ubuntu-latest) ──────────────────────────────────────────────
   collect:
     needs: [amc-gate, amc-fetch]
-    # Run even when amc-fetch is skipped (non-Monday) or fails (runner offline).
+    # Run even when amc-fetch is skipped (runner offline) or fails.
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
