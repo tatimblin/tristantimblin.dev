@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * AMC A-List tickets — every movie seen at AMC, and every one booked, with
  * poster, theatre and showtime.
@@ -16,15 +16,8 @@
  * is written to AMC_ROTATED_COOKIE_FILE as soon as it changes, so the workflow
  * persists it back to the secret whatever happens after.
  *
- * The GraphQL endpoint is behind Cloudflare bot protection, so plain fetch()
- * gets 403'd. This script uses Puppeteer with a persistent browser profile to
- * solve the Cloudflare JS challenge, then makes GraphQL requests via
- * page.evaluate(fetch(…)) so the browser attaches all cookies (including
- * httpOnly cf_clearance) automatically.
- *
  * NEVER RUN THIS LOCALLY against AMC: the rotated cookie would only land on
  * your disk and the secret's token would be dead for the next nightly run.
- * This script is designed to run ONLY in CI on the self-hosted runner.
  *
  * At most two requests a run:
  *   1. pastMovies — the watch history (`events(type: Previous …)`). Required:
@@ -38,20 +31,11 @@
  * showtimes — no personal details beyond what the widget displays.
  */
 import { writeFile } from "node:fs/promises";
-import { existsSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { resolve, dirname } from "node:path";
-import puppeteer from "puppeteer";
 
 const OUT_PATH = fileURLToPath(new URL("../../src/data/amc.json", import.meta.url));
 
 const ENDPOINT = "https://graph.amctheatres.com";
-const AMC_ORIGIN = "https://www.amctheatres.com";
-
-/** Persistent browser profile, so Cloudflare sees a returning session. */
-const BROWSER_PROFILE_DIR = process.env.AMC_BROWSER_PROFILE_DIR
-	? resolve(process.env.AMC_BROWSER_PROFILE_DIR)
-	: resolve(dirname(fileURLToPath(import.meta.url)), ".browser-profile");
 
 export const PAST_MOVIES = `
 query pastMovies($startDate: Date!, $endDate: Date!) {
@@ -287,139 +271,7 @@ export function toMovie(node, upcoming = false) {
 const fmtDate = (d) =>
 	`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-// ─── Puppeteer-based main flow ───────────────────────────────────────────────
-
-/**
- * Parse the AMC_SESSION cookie string ("authToken=xxx; session=yyy") into
- * individual Puppeteer cookie objects for injection.
- */
-function parseCookiesToPuppeteerFormat(cookieString) {
-	return cookieString
-		.split(/;\s*/)
-		.filter(Boolean)
-		.map((pair) => {
-			const i = pair.indexOf("=");
-			const name = pair.slice(0, i);
-			const value = pair.slice(i + 1);
-			return {
-				name,
-				value,
-				domain: ".amctheatres.com",
-				path: "/",
-				httpOnly: true,
-				secure: true,
-				sameSite: "None",
-			};
-		});
-}
-
-/**
- * Reconstruct the flat cookie string from the browser's current cookies for
- * the AMC domain — only the names present in the original AMC_SESSION jar.
- * Returns null when nothing changed vs `currentCookie`.
- */
-function reconstructCookie(browserCookies, originalNames, currentCookie) {
-	const pairs = currentCookie
-		.split(/;\s*/)
-		.filter(Boolean)
-		.map((p) => {
-			const i = p.indexOf("=");
-			return [p.slice(0, i), p.slice(i + 1)];
-		});
-
-	let changed = false;
-	for (const bc of browserCookies) {
-		if (!originalNames.has(bc.name)) continue;
-		const pair = pairs.find(([n]) => n === bc.name);
-		if (!pair) continue;
-		if (pair[1] !== bc.value && bc.value) {
-			pair[1] = bc.value;
-			changed = true;
-		}
-	}
-	return changed ? pairs.map(([n, v]) => `${n}=${v}`).join("; ") : null;
-}
-
-/**
- * Get all cookies from the browser via CDP (catches httpOnly cookies that
- * page.cookies() on specific URLs might miss).
- */
-async function getAllCookies(page) {
-	const client = await page.createCDPSession();
-	try {
-		const { cookies } = await client.send("Network.getAllCookies");
-		return cookies;
-	} finally {
-		await client.detach();
-	}
-}
-
-/**
- * Make a GraphQL request from inside the page via page.evaluate(fetch(…)).
- * The browser attaches all cookies (httpOnly, cf_clearance, etc.) since it's
- * a same-origin request from the AMC origin. Returns the parsed JSON body.
- */
-async function browserGraphQL(page, operationName, query, variables) {
-	const result = await page.evaluate(
-		async (endpoint, opName, q, vars) => {
-			const res = await fetch(endpoint, {
-				method: "POST",
-				credentials: "include",
-				headers: {
-					"content-type": "application/json",
-					accept: "*/*",
-					// No x-amc-device-* (iOS app) headers: next to a desktop
-					// Chrome user agent they are the kind of mismatch a WAF
-					// rule keys on.
-				},
-				body: JSON.stringify({ operationName: opName, query: q, variables: vars }),
-			});
-			const text = await res.text();
-			return {
-				status: res.status,
-				statusText: res.statusText,
-				body: text,
-				// Tells a Cloudflare block (server: cloudflare, cf-mitigated) from
-				// an AMC auth refusal (a GraphQL/JSON body).
-				server: res.headers.get("server"),
-				mitigated: res.headers.get("cf-mitigated"),
-				contentType: res.headers.get("content-type"),
-			};
-		},
-		ENDPOINT,
-		operationName,
-		query,
-		variables,
-	);
-
-	if (!result || result.status >= 400) {
-		const snippet = (result?.body ?? "").replace(/\s+/g, " ").slice(0, 300);
-		throw new Error(
-			`${result?.status ?? "?"} ${result?.statusText ?? ""} from AMC API (${operationName}); ` +
-				`server=${result?.server} cf-mitigated=${result?.mitigated} type=${result?.contentType}; body: ${snippet}`,
-		);
-	}
-
-	let body;
-	try {
-		body = JSON.parse(result.body);
-	} catch {
-		throw new Error(`Non-JSON response from AMC API (${operationName}): ${result.body.slice(0, 200)}`);
-	}
-
-	if (body.errors?.length) {
-		throw new Error(`${operationName}: ${body.errors.map((e) => e.message).join("; ")}`);
-	}
-
-	return body.data;
-}
-
 async function main() {
-	// ── NEVER RUN THIS LOCALLY ──────────────────────────────────────────
-	// This script is designed for CI on the self-hosted runner only.
-	// Running locally would consume the rotated cookie and break the next
-	// nightly run. The residential IP on the runner is what clears Cloudflare.
-
 	const session = process.env.AMC_SESSION;
 	if (!session) {
 		console.error(
@@ -429,175 +281,53 @@ async function main() {
 		process.exit(1);
 	}
 	mask(session);
+	const client = createClient({ cookie: session, rotatedPath: process.env.AMC_ROTATED_COOKIE_FILE });
 
-	const rotatedPath = process.env.AMC_ROTATED_COOKIE_FILE;
+	const now = new Date();
+	const startDate = fmtDate(new Date(2023, 3, 1));
+	const endDate = fmtDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
 
-	// The names in the original jar — only these are tracked for rotation.
-	const originalNames = new Set(
-		session
-			.split(/;\s*/)
-			.filter(Boolean)
-			.map((p) => p.slice(0, p.indexOf("="))),
-	);
+	const data = await client.request("pastMovies", PAST_MOVIES, { startDate, endDate });
+	const edges = data?.viewer?.user?.account?.past?.edges ?? [];
 
-	let currentCookie = session;
-	let rotated = false;
-
-	// ── Launch Puppeteer with a persistent profile ──────────────────────
-	if (!existsSync(BROWSER_PROFILE_DIR)) {
-		mkdirSync(BROWSER_PROFILE_DIR, { recursive: true });
+	if (!edges.length) {
+		console.error(
+			"::error::pastMovies returned no results — session may be expired. " +
+				"Re-capture with the amc-stats mitmproxy setup.",
+		);
+		process.exit(1);
 	}
 
-	console.log(`Launching browser (profile: ${BROWSER_PROFILE_DIR})…`);
-	const browser = await puppeteer.launch({
-		headless: true,
-		args: [
-			"--no-sandbox",
-			"--disable-setuid-sandbox",
-			"--disable-dev-shm-usage",
-			"--disable-accelerated-2d-canvas",
-			"--disable-gpu",
-			"--disable-extensions",
-			"--disable-sync",
-			"--disable-background-networking",
-			"--no-first-run",
-			"--disable-component-update",
-		],
-		userDataDir: BROWSER_PROFILE_DIR,
-	});
+	const past = edges
+		.map((e) => toMovie(e.node))
+		.filter(Boolean)
+		.reverse();
 
-	let page;
-	let checkRotation;
+	let upcoming = [];
 	try {
-		page = await browser.newPage();
-		await page.setViewport({ width: 1280, height: 800 });
-
-		// Headless Chrome announces itself as "HeadlessChrome", which
-		// Cloudflare's WAF blocks outright (a 403 HTML page, not a challenge).
-		// Present as the same Chrome build, headed. Set before the first
-		// navigation: cf_clearance is bound to the user agent that earned it.
-		const ua = (await browser.userAgent()).replace("HeadlessChrome", "Chrome");
-		await page.setUserAgent(ua);
-
-		// ── Inject AMC session cookies ──────────────────────────────────
-		const puppeteerCookies = parseCookiesToPuppeteerFormat(session);
-		for (const cookie of puppeteerCookies) {
-			await page.setCookie(cookie);
-		}
-		console.log(`Injected ${puppeteerCookies.length} session cookies.`);
-
-		// ── Navigate to AMC to clear the Cloudflare JS challenge ────────
-		// The first load on a fresh profile may show the Cloudflare
-		// interstitial. networkidle0 waits until the page is fully settled
-		// (no open connections for 500ms), which is enough for the JS
-		// challenge to complete and set cf_clearance.
-		console.log("Navigating to AMC to clear Cloudflare challenge…");
-		await page.goto(AMC_ORIGIN, {
-			waitUntil: "networkidle0",
-			timeout: 60_000,
-		});
-
-		// Give a little extra time for Cloudflare's challenge script to
-		// finish and set its cookies, in case networkidle0 fired early.
-		await new Promise((resolve) => setTimeout(resolve, 3_000));
-
-		const landedUrl = page.url();
-		console.log(`Landed on: ${landedUrl}`);
-
-		// ── Move to the API's own origin ────────────────────────────────
-		// The API is on graph.amctheatres.com, a DIFFERENT origin from www.
-		// A fetch from www with the x-amc-* headers is a CORS preflight that
-		// the API refuses ("TypeError: Failed to fetch"). Loading any page on
-		// the API origin makes the fetch below same-origin, and clears a
-		// Cloudflare challenge on that host too. The status of this GET is
-		// irrelevant — only the page's origin matters.
-		console.log("Navigating to the API origin…");
-		await page.goto(`${ENDPOINT}/`, { waitUntil: "networkidle0", timeout: 60_000 });
-		await new Promise((resolve) => setTimeout(resolve, 2_000));
-		console.log(`On API origin: ${new URL(page.url()).origin}`);
-
-		// ── Helper: check cookie rotation after each request ────────────
-		checkRotation = async (operationName) => {
-			const allCookies = await getAllCookies(page);
-			const amcCookies = allCookies.filter(
-				(c) => c.domain === ".amctheatres.com" || c.domain === "amctheatres.com" || c.domain === "graph.amctheatres.com",
-			);
-			const next = reconstructCookie(amcCookies, originalNames, currentCookie);
-			if (next) {
-				currentCookie = next;
-				rotated = true;
-				mask(next);
-				if (rotatedPath) {
-					await writeFile(rotatedPath, next, { encoding: "utf8", mode: 0o600 });
-				}
-				console.log(`Session cookie rotated (${operationName}) — written for the workflow to persist.`);
-			}
-		};
-
-		// ── pastMovies (required) ───────────────────────────────────────
-		const now = new Date();
-		const startDate = fmtDate(new Date(2023, 3, 1));
-		const endDate = fmtDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
-
-		const data = await browserGraphQL(page, "pastMovies", PAST_MOVIES, { startDate, endDate });
-		await checkRotation("pastMovies");
-
-		const edges = data?.viewer?.user?.account?.past?.edges ?? [];
-		if (!edges.length) {
-			console.error(
-				"::error::pastMovies returned no results — session may be expired. " +
-					"Re-capture with the amc-stats mitmproxy setup.",
-			);
-			process.exit(1);
-		}
-
-		const past = edges
-			.map((e) => toMovie(e.node))
-			.filter(Boolean)
-			.reverse();
-
-		// ── upcomingMovies (best effort) ────────────────────────────────
-		let upcoming = [];
-		try {
-			const booked = await browserGraphQL(page, "upcomingMovies", UPCOMING_MOVIES, {});
-			await checkRotation("upcomingMovies");
-			upcoming = (booked?.viewer?.user?.account?.upcoming?.edges ?? [])
-				.map((e) => toMovie(e.node, true))
-				.filter(Boolean);
-		} catch (err) {
-			console.log(`::warning::AMC: could not read booked tickets — ${err?.message ?? err}`);
-		}
-
-		// A booked ticket for a showing already in the history is that showing.
-		const seen = new Set(past.map((m) => `${m.name}|${m.start ?? m.date}`));
-		upcoming = upcoming
-			.filter((m) => !seen.has(`${m.name}|${m.start ?? m.date}`))
-			.sort((a, b) => String(a.start ?? a.iso).localeCompare(String(b.start ?? b.iso)));
-
-		const movies = [...past, ...upcoming];
-		const out = { updated: now.toISOString(), movies };
-
-		await writeFile(OUT_PATH, `${JSON.stringify(out, null, "\t")}\n`, "utf8");
-		console.log(`Wrote ${past.length} seen and ${upcoming.length} booked movies to ${OUT_PATH}`);
-		if (!rotated) console.log("Cookie did not rotate.");
-	} finally {
-		// A request that failed after reaching AMC may still have rotated the
-		// session. Persist it anyway, or the only copy dies with this profile.
-		if (checkRotation) {
-			try {
-				await checkRotation("final");
-			} catch (err) {
-				console.log(`::warning::AMC: final rotation check failed — ${err?.message ?? err}`);
-			}
-		}
-		await browser.close();
+		const booked = await client.request("upcomingMovies", UPCOMING_MOVIES, {});
+		upcoming = (booked?.viewer?.user?.account?.upcoming?.edges ?? [])
+			.map((e) => toMovie(e.node, true))
+			.filter(Boolean);
+	} catch (err) {
+		console.log(`::warning::AMC: could not read booked tickets — ${err?.message ?? err}`);
 	}
+	// A booked ticket for a showing already in the history is that showing.
+	const seen = new Set(past.map((m) => `${m.name}|${m.start ?? m.date}`));
+	upcoming = upcoming
+		.filter((m) => !seen.has(`${m.name}|${m.start ?? m.date}`))
+		.sort((a, b) => String(a.start ?? a.iso).localeCompare(String(b.start ?? b.iso)));
+
+	const movies = [...past, ...upcoming];
+	const out = { updated: now.toISOString(), movies };
+
+	await writeFile(OUT_PATH, `${JSON.stringify(out, null, "\t")}\n`, "utf8");
+	console.log(`Wrote ${past.length} seen and ${upcoming.length} booked movies to ${OUT_PATH}`);
+	if (!client.rotated) console.log("Cookie did not rotate.");
 }
 
 // Only as a script, so the tests can import the pure parts without a request.
-// import.meta.main is Bun-specific; the argv check covers Node.
-const isMain = import.meta.main ?? (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]));
-if (isMain) {
+if (import.meta.main) {
 	main().catch((err) => {
 		console.error(`::error::${err?.stack ?? err}`);
 		process.exit(1);

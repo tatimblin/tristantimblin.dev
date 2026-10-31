@@ -40,6 +40,3 @@ media-src/
 # The made-for-web renders (tools/dotgrid writes them here). They live in R2,
 # not git: bun run media:push uploads them and rewrites src/data/media.json.
 /media/
-
-# Puppeteer persistent browser profile (lives on the self-hosted runner only).
-tools/amc/.browser-profile/

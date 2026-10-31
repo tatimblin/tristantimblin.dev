@@ -61,9 +61,11 @@ jobs:
           fi
 
   # ── AMC fetch (self-hosted runner) ───────────────────────────────────────
-  # Runs on the homelab MacBook's residential IP so Puppeteer can clear
-  # Cloudflare's JS challenge. Uploads amc.json + amc-films.json as an
-  # artifact for the collect job to download and commit.
+  # Runs on the homelab MacBook's residential IP: Cloudflare's WAF in front of
+  # graph.amctheatres.com blocks the app's request from GitHub's datacenter
+  # IPs. The request itself is the AMC app's own (tools/amc/fetch.mjs).
+  # Uploads amc.json + amc-films.json as an artifact for the collect job to
+  # download and commit.
   amc-fetch:
     needs: [amc-gate]
     if: needs.amc-gate.outputs.run == 'true'
