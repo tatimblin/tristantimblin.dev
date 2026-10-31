@@ -19,9 +19,6 @@ on:
     # once; each retries its push on top of the other anyway.
     - cron: "0 13 * * *"
   workflow_dispatch:
-  push: # TEMPORARY: test run on the PR branch; removed before merge
-    branches: [feat/amc-tmdb-posters]
-    paths: [.github/workflows/amc.yml]
 
 concurrency:
   # Not nightly-data: a run queued for an offline runner must not hold the
