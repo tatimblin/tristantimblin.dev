@@ -94,7 +94,8 @@
 		"title": "Castle in the Sky",
 		"imdb_id": null,
 		"primary_genre": "Other",
-		"tmdb_id": 10515
+		"tmdb_id": 10515,
+		"tmdb_poster": "/41XxSsJc5OrulP0m7TrrUeO2hoz.jpg"
 	},
 	"civil-war": {
 		"title": "Civil War",
@@ -665,7 +666,8 @@
 		"title": "The Matrix - 25th Anniversary - DOLBY Exclusive",
 		"imdb_id": null,
 		"primary_genre": "Other",
-		"tmdb_id": 603
+		"tmdb_id": 603,
+		"tmdb_poster": "/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg"
 	},
 	"the-ministry-of-ungentlemanly-warfare": {
 		"title": "The Ministry of Ungentlemanly Warfare",
