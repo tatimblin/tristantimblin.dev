@@ -368,9 +368,9 @@ async function browserGraphQL(page, operationName, query, variables) {
 				headers: {
 					"content-type": "application/json",
 					accept: "*/*",
-					"x-amc-device-os-type": "ios",
-					"x-amc-device-app-version": "7.0.142+152",
-					"x-amc-device-os-version": "27.2",
+					// No x-amc-device-* (iOS app) headers: next to a desktop
+					// Chrome user agent they are the kind of mismatch a WAF
+					// rule keys on.
 				},
 				body: JSON.stringify({ operationName: opName, query: q, variables: vars }),
 			});
@@ -471,6 +471,13 @@ async function main() {
 	try {
 		page = await browser.newPage();
 		await page.setViewport({ width: 1280, height: 800 });
+
+		// Headless Chrome announces itself as "HeadlessChrome", which
+		// Cloudflare's WAF blocks outright (a 403 HTML page, not a challenge).
+		// Present as the same Chrome build, headed. Set before the first
+		// navigation: cf_clearance is bound to the user agent that earned it.
+		const ua = (await browser.userAgent()).replace("HeadlessChrome", "Chrome");
+		await page.setUserAgent(ua);
 
 		// ── Inject AMC session cookies ──────────────────────────────────
 		const puppeteerCookies = parseCookiesToPuppeteerFormat(session);
