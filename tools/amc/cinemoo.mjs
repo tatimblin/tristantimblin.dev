@@ -100,14 +100,19 @@ export function mapColumns(header) {
 		}
 		return -1;
 	};
+	// Cinemoo's columns (2026-10): showLocalDate | showLocalTime | movieTitle |
+	// titleRaw | format | theatreName | auditorium | seats | rating | valueCents
+	// | valueSource | excluded | status | source | notes | … The looser
+	// patterns are a fallback should they be renamed.
 	return {
-		name: find(/^(film|movie|title)(name|title)?$/, /film|movie|title/),
-		theatre: find(/^(theat(er|re)|cinema|venue|location)(name)?$/, /theat(er|re)|cinema/),
+		name: find(/^movietitle$/, /^(film|movie|title)(name|title)?$/, /film|movie|title/),
+		theatre: find(/^theatrename$/, /^(theat(er|re)|cinema|venue|location)(name)?$/, /theat(er|re)|cinema/),
 		// One combined showtime column, or a date and a time column.
 		showtime: find(/^(showtime|showtimeat|startsat|start|datetime|showdatetime)$/),
-		date: find(/^(date|showdate|visitdate|showtimedate)$/, /date/),
-		time: find(/^(time|showtimetime|starttime)$/),
-		status: find(/^(status|state)$/, /refund|cancel/),
+		date: find(/^showlocaldate$/, /^(date|showdate|visitdate|showtimedate)$/, /date/),
+		time: find(/^showlocaltime$/, /^(time|showtimetime|starttime)$/, /time$/),
+		status: find(/^status$/, /^state$/),
+		excluded: find(/^excluded$/),
 	};
 }
 
@@ -166,7 +171,11 @@ export function toMovies(rows, known = new Map(), now = new Date()) {
 	for (const r of body) {
 		const name = r[col.name]?.trim();
 		if (!name) continue;
-		if (col.status >= 0 && /refund|cancel/i.test(r[col.status] ?? "")) continue;
+		// An import Cinemoo flagged "please check" carries the email subject
+		// as its title until it is confirmed in the app; it is not a film yet.
+		if (/order number/i.test(name)) continue;
+		if (col.status >= 0 && /refund|cancel|review|check|fail|unread|pending/i.test(r[col.status] ?? "")) continue;
+		if (col.excluded >= 0 && /^(true|yes|1|x)$/i.test(r[col.excluded]?.trim() ?? "")) continue;
 		const when =
 			col.showtime >= 0 ? parseShowtime(r[col.showtime]) : parseShowtime(r[col.date], col.time >= 0 ? r[col.time] : "");
 		if (!when) continue;

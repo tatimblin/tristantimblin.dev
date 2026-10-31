@@ -62,6 +62,17 @@ describe("toMovies", () => {
 		expect(movies[2].upcoming).toBe(true);
 		expect(movies[0].upcoming).toBeUndefined();
 	});
+	test("Cinemoo's real header: times kept; unconfirmed and excluded rows dropped", () => {
+		const real = [
+			["showLocalDate", "showLocalTime", "movieTitle", "titleRaw", "format", "theatreName", "excluded", "status"],
+			["2024-01-10", "19:45", "Ferrari", "FERRARI", "Laser", "AMC Kabuki 8", "false", "ok"],
+			["2023-12-25", "", "Your AMC Order Number 781465127 from 12/25/2023", "", "", "", "false", "needs_review"],
+			["2025-03-05", "12:00", "Some Film", "", "", "AMC Metreon 16", "true", "ok"],
+		];
+		const out = toMovies(real, new Map(), new Date(2026, 9, 31));
+		expect(out).toHaveLength(1);
+		expect(out[0]).toMatchObject({ name: "Ferrari", theatre: "AMC Kabuki 8", time: "7:45pm", start: "2024-01-10T19:45" });
+	});
 	test("names the header when it cannot map it", () => {
 		expect(() => toMovies([["a", "b"]])).toThrow("[a | b]");
 	});

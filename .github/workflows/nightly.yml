@@ -152,13 +152,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Download the AMC data that the self-hosted runner produced.
+      # Download the AMC data that the self-hosted runner produced. The
+      # artifact stores the files without their common src/data/ prefix, so
+      # they must land back in src/data, not the repo root.
       - name: "AMC: download data from self-hosted runner"
-        if: needs.amc-fetch.result == 'success'
+        if: needs.amc-fetch.outputs.fetch == 'success'
         uses: actions/download-artifact@v4
         with:
           name: amc-data
-          path: .
+          path: src/data
 
       # ── BayWheels ──────────────────────────────────────────────────────────
       # The query action lives in the private tatimblin/baywheels-stats repo and
