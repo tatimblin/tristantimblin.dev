@@ -196,6 +196,9 @@ export function createClient({ cookie, rotatedPath, fetchImpl = fetch }) {
 					"x-amc-device-os-type": "ios",
 					"x-amc-device-app-version": "7.0.142+152",
 					"x-amc-device-os-version": "27.2",
+					// The app sends its device id too (see amc-stats' README);
+					// optional so a missing secret changes nothing.
+					...(process.env.AMC_DEVICE_ID ? { "x-amc-device-id": process.env.AMC_DEVICE_ID } : {}),
 					cookie: client.cookie,
 				},
 				body: JSON.stringify({ operationName, query, variables }),
@@ -212,7 +215,14 @@ export function createClient({ cookie, rotatedPath, fetchImpl = fetch }) {
 			}
 
 			if (!response.ok) {
-				throw new Error(`${response.status} ${response.statusText} from AMC API (${operationName})`);
+				// server=cloudflare with an HTML body is the WAF; JSON is AMC itself
+				// (an expired session, say).
+				const text = (await response.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 300);
+				throw new Error(
+					`${response.status} ${response.statusText} from AMC API (${operationName}); ` +
+						`server=${response.headers.get("server")} cf-mitigated=${response.headers.get("cf-mitigated")} ` +
+						`type=${response.headers.get("content-type")}; body: ${text}`,
+				);
 			}
 			const body = await response.json();
 			if (body.errors?.length) {
