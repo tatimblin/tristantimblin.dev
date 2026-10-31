@@ -61,11 +61,11 @@ jobs:
           fi
 
   # ── AMC fetch (self-hosted runner) ───────────────────────────────────────
-  # Runs on the homelab MacBook's residential IP: Cloudflare's WAF in front of
-  # graph.amctheatres.com blocks the app's request from GitHub's datacenter
-  # IPs. The request itself is the AMC app's own (tools/amc/fetch.mjs).
-  # Uploads amc.json + amc-films.json as an artifact for the collect job to
-  # download and commit.
+  # The watch history comes from Cinemoo's CSV export (tools/amc/cinemoo.mjs):
+  # AMC's own API refuses every client but its app. Cinemoo builds it from the
+  # AMC ticket emails Gmail forwards to it. Runs on the homelab runner's
+  # residential IP, since Cinemoo is behind Cloudflare too. Uploads amc.json +
+  # amc-films.json as an artifact for the collect job to download and commit.
   amc-fetch:
     needs: [amc-gate]
     if: needs.amc-gate.outputs.run == 'true'
@@ -88,32 +88,28 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: "AMC: fetch watch history"
+      - name: "AMC: fetch watch history from Cinemoo"
         id: amc
         continue-on-error: true
-        # Node, not Bun: Cloudflare 403s Bun's client on this endpoint even
-        # with the app's exact headers and cookies from this same IP.
-        run: node tools/amc/fetch.mjs
+        run: bun tools/amc/cinemoo.mjs
         env:
-          AMC_SESSION: ${{ secrets.AMC_SESSION }}
-          AMC_DEVICE_ID: ${{ secrets.AMC_DEVICE_ID }}
-          AMC_ACCOUNT_ID: ${{ secrets.AMC_ACCOUNT_ID }}
-          AMC_ROTATED_COOKIE_FILE: ${{ runner.temp }}/amc-rotated
+          CINEMOO_SESSION: ${{ secrets.CINEMOO_SESSION }}
+          CINEMOO_ROTATED_COOKIE_FILE: ${{ runner.temp }}/cinemoo-rotated
 
-      # The cookie rotates on ANY response (including errors), so persist it
-      # before checking whether the fetch itself succeeded.
-      - name: "AMC: persist rotated cookie"
+      # Auth.js slides the session forward on use; persist a reissued token
+      # (whether or not the export then succeeded) so it never lapses.
+      - name: "AMC: persist refreshed Cinemoo session"
         if: always()
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          if [ ! -s "$RUNNER_TEMP/amc-rotated" ]; then
-            echo "Cookie did not rotate — nothing to persist."
+          if [ ! -s "$RUNNER_TEMP/cinemoo-rotated" ]; then
+            echo "Session was not reissued — nothing to persist."
             exit 0
           fi
-          gh secret set AMC_SESSION --body "$(cat "$RUNNER_TEMP/amc-rotated")"
-          rm -f "$RUNNER_TEMP/amc-rotated"
+          gh secret set CINEMOO_SESSION --body "$(cat "$RUNNER_TEMP/cinemoo-rotated")"
+          rm -f "$RUNNER_TEMP/cinemoo-rotated"
 
       - name: "AMC: enrich film metadata"
         if: always() && steps.amc.outcome == 'success'
