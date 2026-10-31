@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures/test";
+import { test, expect, POSTER_STUB, TMDB_PATTERN } from "./fixtures/test";
 import type { Page } from "@playwright/test";
 import { upcomingCache, upcomingMovies } from "./fixtures/amc";
 
@@ -11,9 +11,10 @@ import { upcomingCache, upcomingMovies } from "./fixtures/amc";
  * page rather than assumed.
  */
 
-// Posters come from AMC's Cloudinary (and the fixture's from Wikipedia): not
-// fetched in the suite; a card without its art is the wash.
-// `requested`, if given, collects the poster URLs asked for.
+// Posters come from TMDB's CDN, else AMC's Cloudinary (and the fixture's
+// from Wikipedia). TMDB's are answered with a tiny stub image
+// (tests/fixtures/test.ts); the others 404, and the card falls back to its
+// placeholder. `requested`, if given, collects the poster URLs asked for.
 const routePosters = async (page: Page, requested?: Set<string>) => {
 	for (const host of ["https://amc-theatres-res.cloudinary.com/**", "https://upload.wikimedia.org/**"]) {
 		await page.route(host, (route) => {
@@ -21,7 +22,35 @@ const routePosters = async (page: Page, requested?: Set<string>) => {
 			return route.fulfill({ status: 404 });
 		});
 	}
+	await page.route(TMDB_PATTERN, (route) => {
+		requested?.add(route.request().url());
+		// A poster named broken.jpg fails, to test the fallback.
+		if (route.request().url().endsWith("/broken.jpg")) return route.fulfill({ status: 404 });
+		return route.fulfill({ path: POSTER_STUB, contentType: "image/jpeg" });
+	});
 };
+
+type FilmJson = { n: string; d: string; g: string; h: string; p: string | null; u?: true };
+
+/** The built home page with the card's films rewritten by `edit`. */
+const withFilms = async (page: Page, edit: (films: FilmJson[]) => FilmJson[]) => {
+	await page.route(
+		(url) => url.pathname === "/" && url.origin === new URL(test.info().project.use.baseURL ?? "http://localhost").origin,
+		async (route) => {
+			const res = await route.fetch();
+			const html = (await res.text()).replace(
+				/(<script type="application\/json" data-amc-films[^>]*>)([\s\S]*?)(<\/script>)/,
+				(_, open: string, json: string, close: string) =>
+					open + JSON.stringify(edit(JSON.parse(json))).replace(/</g, "\\u003c") + close,
+			);
+			await route.fulfill({ response: res, body: html });
+		},
+	);
+};
+
+/** Navigator.connection.saveData, as a browser with Data Saver on reports it. */
+const saveData = (page: Page) =>
+	page.addInitScript(() => Object.defineProperty(navigator, "connection", { value: { saveData: true }, configurable: true }));
 
 /** The built home page with the fixture's two bookings added to the card's
  *  films, as the build would have written them. */
@@ -182,6 +211,9 @@ test("the fan recycles a few cards, and requests only the posters on it", async 
 			await route.fulfill({ response: res, body: html });
 		},
 	);
+	// Data Saver on: this counts the posters the fan itself asks for, so the
+	// prefetch the focus below would start (tested on its own) stays off.
+	await saveData(page);
 	const requested = new Set<string>();
 	const widget = await open(page, requested);
 	const slider = widget.locator('[role="slider"]');
@@ -219,4 +251,102 @@ test("the fan recycles a few cards, and requests only the posters on it", async 
 	expect(await cards.count()).toBeLessThanOrEqual(16);
 	// Still nowhere near one request per film.
 	expect(requested.size).toBeLessThan(60);
+});
+
+test("a film with no poster shows its title on its genre's tint; a booked one's is grey; a failed poster falls back", async ({ page }) => {
+	let latest = "";
+	let failing = "";
+	const booked = "A Booked Film";
+	await withFilms(page, (films) => {
+		const seen = films.filter((f) => !f.u);
+		const last = seen[seen.length - 1];
+		const prev = seen[seen.length - 2];
+		latest = last.n;
+		failing = prev.n;
+		last.p = null;
+		prev.p = "https://image.tmdb.org/t/p/w185/broken.jpg";
+		return [...seen, { n: booked, d: "2099-01-01", g: "Drama", h: "https://www.imdb.com/find/?q=x", p: null, u: true }];
+	});
+	const widget = await open(page);
+	const active = widget.locator(".wx-amc-card[data-active]");
+	await expect(widget.locator(".wx-amc-title")).toHaveText(latest);
+	await expect(active).toHaveAttribute("data-ph", "");
+	await expect(active.locator(".wx-amc-ph")).toBeVisible();
+	await expect(active.locator(".wx-amc-ph")).toHaveText(latest);
+	await expect(active.locator(".wx-amc-art")).toHaveCount(0);
+	// The tint is the genre's colour mixed into the card, not the plain wash.
+	const tint = await active.locator(".wx-amc-ph").evaluate((el) => getComputedStyle(el).backgroundColor);
+	const wash = await active.evaluate((el) => getComputedStyle(el).backgroundColor);
+	expect(tint).not.toBe(wash);
+
+	// The poster before it 404s: its card shows the placeholder, not a blank.
+	const failed = widget.locator(".wx-amc-card", { has: page.locator(".wx-amc-ph", { hasText: failing }) }).first();
+	await expect(failed).toHaveAttribute("data-ph", "");
+	await expect(failed.locator(".wx-amc-ph")).toBeVisible();
+
+	// The booked film's placeholder is grey, even at the centre.
+	const slider = widget.locator('[role="slider"]');
+	await slider.focus();
+	await page.keyboard.press("End");
+	await expect(widget.locator(".wx-amc-title")).toHaveText(booked);
+	await expect(active).toHaveClass(/wx-amc-card--up/);
+	await expect(active.locator(".wx-amc-ph")).toHaveText(booked);
+	await expect(active.locator(".wx-amc-ph")).toHaveCSS("filter", /grayscale\(1\)/);
+});
+
+/** Every film a TMDB poster of its own; the returned function reads how many. */
+const tmdbFilms = async (page: Page) => {
+	let count = 0;
+	await withFilms(page, (films) => {
+		count = films.length;
+		return films.map((f, k) => ({ ...f, p: `https://image.tmdb.org/t/p/w185/film-${k}.jpg` }));
+	});
+	return () => count;
+};
+
+test("posters are prefetched on the first hover, not on load", async ({ page }) => {
+	const total = await tmdbFilms(page);
+	const requested = new Set<string>();
+	const widget = await open(page, requested);
+	await page.waitForTimeout(500);
+	// On load: only the fan's own seven (the centre ±3).
+	expect(requested.size).toBeGreaterThan(0);
+	expect(requested.size).toBeLessThanOrEqual(7);
+	expect(await widget.getAttribute("data-prefetch")).toBeNull();
+
+	await widget.locator(".wx-amc-fan").hover();
+	await expect(widget).toHaveAttribute("data-prefetch", "on");
+	await expect.poll(() => requested.size).toBe(total());
+
+	// Recycled onto a card, a warmed poster shows at once: no hidden art.
+	const slider = widget.locator('[role="slider"]');
+	await slider.focus();
+	await page.keyboard.press("Home");
+	await expect(slider).toHaveAttribute("aria-valuenow", "1");
+	await page.waitForTimeout(600); // the glide lands
+	const arts = widget.locator(".wx-amc-card:visible .wx-amc-art");
+	await expect(arts).not.toHaveCount(0);
+	for (const art of await arts.all()) await expect(art).not.toHaveCSS("visibility", "hidden");
+});
+
+test("focus starts the prefetch too; Data Saver turns it off", async ({ page, browser }) => {
+	const total = await tmdbFilms(page);
+	const requested = new Set<string>();
+	const widget = await open(page, requested);
+	await widget.locator('[role="slider"]').focus();
+	await expect(widget).toHaveAttribute("data-prefetch", "on");
+	await expect.poll(() => requested.size).toBe(total());
+
+	const ctx = await browser.newContext();
+	const saver = await ctx.newPage();
+	await saveData(saver);
+	await tmdbFilms(saver);
+	const asked = new Set<string>();
+	const w2 = await open(saver, asked);
+	await w2.locator(".wx-amc-fan").hover();
+	await w2.locator('[role="slider"]').focus();
+	await expect(w2).toHaveAttribute("data-prefetch", "off");
+	await saver.waitForTimeout(500);
+	expect(asked.size).toBeLessThanOrEqual(7);
+	await ctx.close();
 });

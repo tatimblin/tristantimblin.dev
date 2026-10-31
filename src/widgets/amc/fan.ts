@@ -42,6 +42,9 @@ type Mode = "date" | "genre";
 interface Slot {
 	el: HTMLDivElement;
 	img: HTMLImageElement;
+	/** The placeholder: the film's title on its genre's tint, for a film with
+	 *  no poster (or one that failed to load). */
+	ph: HTMLSpanElement;
 	badge: HTMLSpanElement | null;
 	/** The film it was last handed, -1 before any. */
 	film: number;
@@ -54,6 +57,10 @@ interface Slot {
  *  most seven each) plus one per stack of posters riding an identical path
  *  across it. Past this the posters nearest the edges are left out. */
 export const POOL = 16;
+
+/** Posters warmed at once once the visitor shows intent (hover, focus,
+ *  touch). */
+export const PREFETCH_CONCURRENCY = 6;
 
 const NS = "http://www.w3.org/2000/svg";
 const DEG = Math.PI / 180;
@@ -109,11 +116,24 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 	   loaded when they slide in), mid-shuffle whatever is crossing the fan.
 	   Each frame a film keeps the card it had; a film coming in takes a card
 	   no longer needed and the card's art, class, disc and index are swapped
-	   to it. Posters off the fan are never requested. */
+	   to it. Until the visitor shows intent (prefetch, below), posters off
+	   the fan are never requested. */
 	const slots: Slot[] = [];
 	/** The card each film was last drawn on (it may since have been parked). */
 	const slotOf = new Map<number, Slot>();
+	/** Poster URLs already decoded (by the prefetch, or shown on a card), and
+	 *  those that failed to load. */
+	const decoded = new Set<string>();
+	const failed = new Set<string>();
 	fan.replaceChildren();
+
+	/** The card shows the placeholder (the title on the genre's tint) in
+	 *  place of art: no poster, or one that failed. */
+	const showPlaceholder = (s: Slot, on: boolean) => {
+		s.el.toggleAttribute("data-ph", on);
+		if (on) s.img.remove();
+		else if (!s.img.isConnected) s.el.prepend(s.img);
+	};
 
 	const newSlot = (): Slot => {
 		const el = document.createElement("div");
@@ -125,12 +145,32 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		img.loading = "lazy";
 		img.decoding = "async";
 		img.draggable = false;
+		const ph = document.createElement("span");
+		ph.className = "wx-amc-ph";
+		el.append(ph);
+		const s: Slot = { el, img, ph, badge: null, film: -1, on: false };
 		// Shown once the art it was handed has loaded, so a recycled card
 		// never flashes the film it held before: the wash until then, as a
-		// fresh card's lazy art would.
-		const reveal = () => (img.style.visibility = "");
-		img.addEventListener("load", reveal, { signal: ac.signal });
-		const s: Slot = { el, img, badge: null, film: -1, on: false };
+		// fresh card's lazy art would. A poster that fails falls back to the
+		// placeholder rather than staying hidden.
+		img.addEventListener(
+			"load",
+			() => {
+				img.style.visibility = "";
+				decoded.add(img.currentSrc || img.src);
+			},
+			{ signal: ac.signal },
+		);
+		img.addEventListener(
+			"error",
+			() => {
+				const src = img.getAttribute("src");
+				if (!src) return;
+				failed.add(src);
+				if (s.film >= 0 && films[s.film].p === src) showPlaceholder(s, true);
+			},
+			{ signal: ac.signal },
+		);
 		fan.append(el);
 		slots.push(s);
 		return s;
@@ -144,15 +184,19 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		const f = films[i];
 		s.el.className = up[i] ? "wx-amc-card wx-amc-card--up" : "wx-amc-card";
 		s.el.dataset.film = String(i);
-		if (f.p) {
+		s.el.style.setProperty("--gc", genreVar(f.g));
+		s.ph.textContent = f.n;
+		if (f.p && !failed.has(f.p)) {
 			if (s.img.getAttribute("src") !== f.p) {
 				s.img.src = f.p;
-				s.img.style.visibility = s.img.complete && s.img.naturalWidth ? "" : "hidden";
+				// Already decoded (warmed, or shown before): in this frame, no
+				// wait for load. Otherwise hidden until it loads.
+				s.img.style.visibility = decoded.has(f.p) || (s.img.complete && s.img.naturalWidth) ? "" : "hidden";
 			}
-			if (!s.img.isConnected) s.el.prepend(s.img);
+			showPlaceholder(s, false);
 		} else {
-			// No poster: the card's wash alone.
-			s.img.remove();
+			// No poster, or it failed: the title on the genre's tint.
+			showPlaceholder(s, true);
 		}
 		if (up[i]) {
 			// The booked showing's calendar disc: month over day.
@@ -722,6 +766,49 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		{ passive: false },
 	);
 
+	/* ── prefetch on intent: the first hover, focus or touch on the card warms
+	   every poster, nearest the centre first, a few at a time, so a held
+	   arrow key or a fast drag finds them decoded (on 4G, posters asked for
+	   only as they reach the fan were blank most of the way). Never on load,
+	   and never under Save-Data. Each decoded image is kept (by film), so the
+	   browser holds on to it. ── */
+	const warm = new Map<number, HTMLImageElement>();
+	const prefetch = () => {
+		if (widget.dataset.prefetch) return;
+		const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+		widget.dataset.prefetch = saveData ? "off" : "on";
+		if (saveData) return;
+		const at = placeOf[mode];
+		const centre = pos;
+		const seenUrl = new Set<string>();
+		const queue = films
+			.map((f, i) => ({ i, url: f.p, d: Math.abs(at[i] - centre) }))
+			.filter((q): q is { i: number; url: string; d: number } => {
+				if (!q.url || seenUrl.has(q.url) || decoded.has(q.url) || failed.has(q.url)) return false;
+				seenUrl.add(q.url);
+				return true;
+			})
+			.sort((a, b) => a.d - b.d);
+		const worker = async () => {
+			for (let q = queue.shift(); q && !ac.signal.aborted; q = queue.shift()) {
+				const img = new Image();
+				img.decoding = "async";
+				img.src = q.url;
+				try {
+					await img.decode();
+					decoded.add(q.url);
+					warm.set(q.i, img);
+				} catch {
+					failed.add(q.url);
+				}
+			}
+		};
+		for (let k = 0; k < PREFETCH_CONCURRENCY; k++) void worker();
+	};
+	for (const type of ["pointerenter", "focusin", "touchstart"] as const) {
+		on(widget, type, prefetch, { once: true, passive: true });
+	}
+
 	/* ── layout, now and whenever the card resizes or the face lands ── */
 	// A resize mid-shuffle waits for the shuffle to end (or be cut short).
 	let relayoutPending = false;
@@ -759,6 +846,8 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 			clearTimeout(wheelTimer);
 			readout.getAnimations?.().forEach((a) => a.cancel());
 			delete widget.dataset.ready;
+			delete widget.dataset.prefetch;
+			warm.clear();
 		},
 	};
 }

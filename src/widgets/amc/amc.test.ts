@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildFilms, getFilms, imdbHref, isoDate, posterUrl, type CacheEntry } from "./amc";
+import { buildFilms, getFilms, imdbHref, isoDate, posterUrl, tmdbPosterUrl, type CacheEntry } from "./amc";
 import { asGenre, filmKey, genreBucket, GENRES } from "./genres";
 import cache from "../../data/amc-films.json";
 import amc from "../../data/amc.json";
@@ -103,7 +103,13 @@ describe("buildFilms", () => {
 		const dunes = films.filter((f) => f.n === "Dune: Part Two");
 		expect(dunes.map((f) => f.d)).toEqual(["2024-03-08", "2024-03-13"]);
 		expect(dunes[1]).toMatchObject({ g: "Sci-Fi", h: "https://www.imdb.com/title/tt15239678/" });
-		expect(dunes[1].p).toContain("/image/upload/c_fill,ar_2:3,w_240/");
+		expect(dunes[1].p).toMatch(/^https:\/\/image\.tmdb\.org\/t\/p\/w185\/|\/image\/upload\/c_fill,ar_2:3,w_240\//);
+		// Every film with a TMDB poster path shows it from TMDB's CDN.
+		const c = cache as Record<string, CacheEntry>;
+		for (const f of films) {
+			const tmdb = c[filmKey(f.n)]?.tmdb_poster;
+			if (tmdb && !c[filmKey(f.n)]?.poster) expect(f.p).toBe(`https://image.tmdb.org/t/p/w185${tmdb}`);
+		}
 		// Booked films, if any, are the ones after the data was written.
 		const written = amc.updated.slice(0, 10);
 		for (const f of films) expect(Boolean(f.u)).toBe(f.d > written);
@@ -130,5 +136,18 @@ describe("buildFilms", () => {
 		expect(f).toMatchObject({ n: "New Film", g: "Other", h: "https://www.imdb.com/find/?q=New%20Film" });
 		const [g] = buildFilms([{ name: "X", iso: "2026-12-01" }], { x: { primary_genre: "Drama", poster: "https://example.com/p.jpg" } });
 		expect(g).toMatchObject({ g: "Drama", p: "https://example.com/p.jpg" });
+	});
+
+	test("the poster: a hand-set one, then TMDB's at w185, then AMC's, else none", () => {
+		const amcPoster = "https://amc-theatres-res.cloudinary.com/v1/a.jpg";
+		const pick = (entry: CacheEntry, poster: string | null = amcPoster) =>
+			buildFilms([{ name: "X", iso: "2026-01-01", poster }], { x: { primary_genre: "Drama", ...entry } })[0].p;
+		expect(pick({ tmdb_poster: "/abc.jpg" })).toBe("https://image.tmdb.org/t/p/w185/abc.jpg");
+		expect(pick({ tmdb_poster: "/abc.jpg", poster: "https://example.com/p.jpg" })).toBe("https://example.com/p.jpg");
+		expect(pick({})).toBe(posterUrl(amcPoster));
+		expect(pick({ tmdb_poster: null })).toBe(posterUrl(amcPoster));
+		expect(pick({}, null)).toBeNull();
+		expect(tmdbPosterUrl("/x.jpg", "w342")).toBe("https://image.tmdb.org/t/p/w342/x.jpg");
+		expect(tmdbPosterUrl("https://evil.example/x.jpg")).toBeNull();
 	});
 });

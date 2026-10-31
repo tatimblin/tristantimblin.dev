@@ -22,3 +22,7 @@
 /design-system/art/ /design-system/ 301
 /design-system/glyphs /design-system/ 301
 /design-system/glyphs/ /design-system/ 301
+
+# /privacy became the one "Credits & privacy" page.
+/privacy /credits/ 301
+/privacy/ /credits/ 301

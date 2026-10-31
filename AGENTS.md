@@ -27,7 +27,9 @@ Guidance for AI agents working in this repo.
   `bunfig.toml`). Specs import `test` from `tests/fixtures/test.ts`, not
   `@playwright/test`: it answers the media host from two tiny local clips
   (`tests/fixtures/media-stub.*`, the only videos in git), so the suite never
-  streams from R2.
+  streams from R2. It answers TMDB's image CDN (the A-List card's posters,
+  hotlinked; `tools/amc/posters.mjs` caches each film's poster path) with
+  `tests/fixtures/poster-stub.jpg` the same way.
 
 ## Page views — GoatCounter
 
