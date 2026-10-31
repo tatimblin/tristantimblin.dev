@@ -1,341 +1,1337 @@
 {
-	"updated": "2026-10-30T14:45:12.368284+00:00",
+	"updated": "2026-10-31T16:41:58.790Z",
 	"movies": [
 		{
+			"id": null,
+			"name": "Dr. Seuss' The Grinch",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "December 25, 2018",
+			"time": "2:40pm",
+			"day": "Tuesday",
+			"iso": "2018-12-25",
+			"start": "2018-12-25T14:40"
+		},
+		{
+			"id": null,
+			"name": "Spider-Man: No Way Home",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "December 18, 2021",
+			"time": "5:40pm",
+			"day": "Saturday",
+			"iso": "2021-12-18",
+			"start": "2021-12-18T17:40"
+		},
+		{
+			"id": null,
+			"name": "The Batman",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "March 4, 2022",
+			"time": "10:30pm",
+			"day": "Friday",
+			"iso": "2022-03-04",
+			"start": "2022-03-04T22:30"
+		},
+		{
+			"id": null,
+			"name": "Avatar: The Way of Water",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "December 17, 2022",
+			"time": "5:45pm",
+			"day": "Saturday",
+			"iso": "2022-12-17",
+			"start": "2022-12-17T17:45"
+		},
+		{
+			"id": null,
+			"name": "Dungeons & Dragons: Honor Among Thieves",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "April 12, 2023",
+			"time": "7:50pm",
+			"day": "Wednesday",
+			"iso": "2023-04-12",
+			"start": "2023-04-12T19:50"
+		},
+		{
+			"id": null,
+			"name": "The Super Mario Bros. Movie",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "April 13, 2023",
+			"time": "4:30pm",
+			"day": "Thursday",
+			"iso": "2023-04-13",
+			"start": "2023-04-13T16:30"
+		},
+		{
+			"id": null,
+			"name": "John Wick: Chapter 4",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "April 14, 2023",
+			"time": "8:00pm",
+			"day": "Friday",
+			"iso": "2023-04-14",
+			"start": "2023-04-14T20:00"
+		},
+		{
+			"id": null,
+			"name": "John Wick: Chapter 4",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "April 15, 2023",
+			"time": "8:15pm",
+			"day": "Saturday",
+			"iso": "2023-04-15",
+			"start": "2023-04-15T20:15"
+		},
+		{
+			"id": null,
+			"name": "Air",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "April 19, 2023",
+			"time": "8:05pm",
+			"day": "Wednesday",
+			"iso": "2023-04-19",
+			"start": "2023-04-19T20:05"
+		},
+		{
+			"id": null,
+			"name": "Air",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "April 20, 2023",
+			"time": "8:10pm",
+			"day": "Thursday",
+			"iso": "2023-04-20",
+			"start": "2023-04-20T20:10"
+		},
+		{
+			"id": null,
+			"name": "Suzume",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "April 22, 2023",
+			"time": "4:50pm",
+			"day": "Saturday",
+			"iso": "2023-04-22",
+			"start": "2023-04-22T16:50"
+		},
+		{
+			"id": null,
+			"name": "Renfield",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "April 23, 2023",
+			"time": "7:40pm",
+			"day": "Sunday",
+			"iso": "2023-04-23",
+			"start": "2023-04-23T19:40"
+		},
+		{
+			"id": null,
+			"name": "Guy Ritchie's The Covenant",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "April 25, 2023",
+			"time": "4:05pm",
+			"day": "Tuesday",
+			"iso": "2023-04-25",
+			"start": "2023-04-25T16:05"
+		},
+		{
+			"id": null,
+			"name": "Sisu",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "April 28, 2023",
+			"time": "9:35pm",
+			"day": "Friday",
+			"iso": "2023-04-28",
+			"start": "2023-04-28T21:35"
+		},
+		{
+			"id": null,
+			"name": "Polite Society",
+			"poster": null,
+			"theatre": "AMC Georgetown 14",
+			"date": "May 3, 2023",
+			"time": "2:15pm",
+			"day": "Wednesday",
+			"iso": "2023-05-03",
+			"start": "2023-05-03T14:15"
+		},
+		{
+			"id": null,
+			"name": "Guardians of the Galaxy Vol. 3",
+			"poster": null,
+			"theatre": "AMC Georgetown 14",
+			"date": "May 4, 2023",
+			"time": "6:15pm",
+			"day": "Thursday",
+			"iso": "2023-05-04",
+			"start": "2023-05-04T18:15"
+		},
+		{
+			"id": null,
+			"name": "Polite Society",
+			"poster": null,
+			"theatre": "AMC Georgetown 14",
+			"date": "May 4, 2023",
+			"time": "8:00pm",
+			"day": "Thursday",
+			"iso": "2023-05-04",
+			"start": "2023-05-04T20:00"
+		},
+		{
+			"id": null,
+			"name": "Get ready for some movie magic.",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "May 5, 2023",
+			"time": "4:50pm",
+			"day": "Friday",
+			"iso": "2023-05-05",
+			"start": "2023-05-05T16:50"
+		},
+		{
+			"id": null,
+			"name": "Hypnotic",
+			"poster": null,
+			"theatre": "AMC Georgetown 14",
+			"date": "May 11, 2023",
+			"time": "8:20pm",
+			"day": "Thursday",
+			"iso": "2023-05-11",
+			"start": "2023-05-11T20:20"
+		},
+		{
+			"id": null,
+			"name": "Guardians of the Galaxy Vol. 3",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "May 11, 2023",
+			"time": "8:30pm",
+			"day": "Thursday",
+			"iso": "2023-05-11",
+			"start": "2023-05-11T20:30"
+		},
+		{
+			"id": null,
+			"name": "Hypnotic",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "May 14, 2023",
+			"time": "8:00pm",
+			"day": "Sunday",
+			"iso": "2023-05-14",
+			"start": "2023-05-14T20:00"
+		},
+		{
+			"id": null,
+			"name": "Fool's Paradise",
+			"poster": null,
+			"theatre": "AMC Georgetown 14",
+			"date": "May 16, 2023",
+			"time": "5:35pm",
+			"day": "Tuesday",
+			"iso": "2023-05-16",
+			"start": "2023-05-16T17:35"
+		},
+		{
+			"id": null,
+			"name": "The Machine",
+			"poster": null,
+			"theatre": "AMC Georgetown 14",
+			"date": "May 30, 2023",
+			"time": "7:05pm",
+			"day": "Tuesday",
+			"iso": "2023-05-30",
+			"start": "2023-05-30T19:05"
+		},
+		{
+			"id": null,
+			"name": "Fast X",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "May 30, 2023",
+			"time": "7:30pm",
+			"day": "Tuesday",
+			"iso": "2023-05-30",
+			"start": "2023-05-30T19:30"
+		},
+		{
+			"id": null,
+			"name": "Spider-Man: Across the Spider-Verse",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "June 3, 2023",
+			"time": "6:30pm",
+			"day": "Saturday",
+			"iso": "2023-06-03",
+			"start": "2023-06-03T18:30"
+		},
+		{
+			"id": null,
+			"name": "Fast X",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "June 5, 2023",
+			"time": "7:40pm",
+			"day": "Monday",
+			"iso": "2023-06-05",
+			"start": "2023-06-05T19:40"
+		},
+		{
+			"id": null,
+			"name": "Transformers: Rise of the Beasts",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "June 14, 2023",
+			"time": "9:00pm",
+			"day": "Wednesday",
+			"iso": "2023-06-14",
+			"start": "2023-06-14T21:00"
+		},
+		{
+			"id": null,
+			"name": "Elemental",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "June 21, 2023",
+			"time": "5:20pm",
+			"day": "Wednesday",
+			"iso": "2023-06-21",
+			"start": "2023-06-21T17:20"
+		},
+		{
+			"id": null,
+			"name": "Asteroid City",
+			"poster": null,
+			"theatre": "AMC Georgetown 14",
+			"date": "June 24, 2023",
+			"time": "10:35am",
+			"day": "Saturday",
+			"iso": "2023-06-24",
+			"start": "2023-06-24T10:35"
+		},
+		{
+			"id": null,
+			"name": "Asteroid City",
+			"poster": null,
+			"theatre": "AMC Georgetown 14",
+			"date": "June 24, 2023",
+			"time": "3:25pm",
+			"day": "Saturday",
+			"iso": "2023-06-24",
+			"start": "2023-06-24T15:25"
+		},
+		{
+			"id": null,
+			"name": "The Blackening",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "June 27, 2023",
+			"time": "10:20pm",
+			"day": "Tuesday",
+			"iso": "2023-06-27",
+			"start": "2023-06-27T22:20"
+		},
+		{
+			"id": null,
+			"name": "Ruby Gillman, Teenage Kraken",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "July 1, 2023",
+			"time": "9:30pm",
+			"day": "Saturday",
+			"iso": "2023-07-01",
+			"start": "2023-07-01T21:30"
+		},
+		{
+			"id": null,
+			"name": "Indiana Jones and the Dial of Destiny",
+			"poster": null,
+			"theatre": "AMC Georgetown 14",
+			"date": "July 3, 2023",
+			"time": "9:20pm",
+			"day": "Monday",
+			"iso": "2023-07-03",
+			"start": "2023-07-03T21:20"
+		},
+		{
+			"id": null,
+			"name": "No Hard Feelings",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "July 12, 2023",
+			"time": "7:40pm",
+			"day": "Wednesday",
+			"iso": "2023-07-12",
+			"start": "2023-07-12T19:40"
+		},
+		{
+			"id": null,
+			"name": "Mission: Impossible - Dead Reckoning Part One",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "July 18, 2023",
+			"time": "6:30pm",
+			"day": "Tuesday",
+			"iso": "2023-07-18",
+			"start": "2023-07-18T18:30"
+		},
+		{
+			"id": null,
+			"name": "Oppenheimer",
+			"poster": null,
+			"theatre": "AMC Georgetown 14",
+			"date": "July 26, 2023",
+			"time": "9:15pm",
+			"day": "Wednesday",
+			"iso": "2023-07-26",
+			"start": "2023-07-26T21:15"
+		},
+		{
+			"id": null,
+			"name": "Teenage Mutant Ninja Turtles: Mutant Mayhem",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "July 29, 2023",
+			"time": "2:00pm",
+			"day": "Saturday",
+			"iso": "2023-07-29",
+			"start": "2023-07-29T14:00"
+		},
+		{
+			"id": null,
+			"name": "Haunted Mansion",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "August 14, 2023",
+			"time": "7:40pm",
+			"day": "Monday",
+			"iso": "2023-08-14",
+			"start": "2023-08-14T19:40"
+		},
+		{
+			"id": null,
+			"name": "Haunted Mansion",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "August 15, 2023",
+			"time": "6:35pm",
+			"day": "Tuesday",
+			"iso": "2023-08-15",
+			"start": "2023-08-15T18:35"
+		},
+		{
+			"id": null,
+			"name": "Landscape with Invisible Hand",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "August 20, 2023",
+			"time": "7:10pm",
+			"day": "Sunday",
+			"iso": "2023-08-20",
+			"start": "2023-08-20T19:10"
+		},
+		{
+			"id": null,
+			"name": "Blue Beetle",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "August 20, 2023",
+			"time": "8:30pm",
+			"day": "Sunday",
+			"iso": "2023-08-20",
+			"start": "2023-08-20T20:30"
+		},
+		{
+			"id": null,
+			"name": "Strays",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "August 22, 2023",
+			"time": "5:00pm",
+			"day": "Tuesday",
+			"iso": "2023-08-22",
+			"start": "2023-08-22T17:00"
+		},
+		{
+			"id": null,
+			"name": "Retribution",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "August 26, 2023",
+			"time": "7:10pm",
+			"day": "Saturday",
+			"iso": "2023-08-26",
+			"start": "2023-08-26T19:10"
+		},
+		{
+			"id": null,
+			"name": "Gran Turismo: Based on a True Story",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "September 1, 2023",
+			"time": "7:00pm",
+			"day": "Friday",
+			"iso": "2023-09-01",
+			"start": "2023-09-01T19:00"
+		},
+		{
+			"id": null,
+			"name": "The Equalizer 3",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "September 4, 2023",
+			"time": "11:00am",
+			"day": "Monday",
+			"iso": "2023-09-04",
+			"start": "2023-09-04T11:00"
+		},
+		{
+			"id": null,
+			"name": "Bottoms",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "September 4, 2023",
+			"time": "9:45pm",
+			"day": "Monday",
+			"iso": "2023-09-04",
+			"start": "2023-09-04T21:45"
+		},
+		{
+			"id": null,
+			"name": "Bottoms",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "September 5, 2023",
+			"time": "7:00pm",
+			"day": "Tuesday",
+			"iso": "2023-09-05",
+			"start": "2023-09-05T19:00"
+		},
+		{
+			"id": null,
+			"name": "A Haunting in Venice",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "September 15, 2023",
+			"time": "10:00pm",
+			"day": "Friday",
+			"iso": "2023-09-15",
+			"start": "2023-09-15T22:00"
+		},
+		{
+			"id": null,
+			"name": "A Haunting in Venice",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "September 17, 2023",
+			"time": "7:00pm",
+			"day": "Sunday",
+			"iso": "2023-09-17",
+			"start": "2023-09-17T19:00"
+		},
+		{
+			"id": null,
+			"name": "Dumb Money",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "September 22, 2023",
+			"time": "6:15pm",
+			"day": "Friday",
+			"iso": "2023-09-22",
+			"start": "2023-09-22T18:15"
+		},
+		{
+			"id": null,
+			"name": "Relax, I'm from the Future",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "September 25, 2023",
+			"time": "6:15pm",
+			"day": "Monday",
+			"iso": "2023-09-25",
+			"start": "2023-09-25T18:15"
+		},
+		{
+			"id": null,
+			"name": "The Creator",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "September 30, 2023",
+			"time": "7:00pm",
+			"day": "Saturday",
+			"iso": "2023-09-30",
+			"start": "2023-09-30T19:00"
+		},
+		{
+			"id": null,
+			"name": "The Creator",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "October 1, 2023",
+			"time": "6:00pm",
+			"day": "Sunday",
+			"iso": "2023-10-01",
+			"start": "2023-10-01T18:00"
+		},
+		{
+			"id": null,
+			"name": "Expend4bles",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "October 6, 2023",
+			"time": "4:25pm",
+			"day": "Friday",
+			"iso": "2023-10-06",
+			"start": "2023-10-06T16:25"
+		},
+		{
+			"id": null,
+			"name": "She Came to Me",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "October 7, 2023",
+			"time": "9:25pm",
+			"day": "Saturday",
+			"iso": "2023-10-07",
+			"start": "2023-10-07T21:25"
+		},
+		{
+			"id": null,
+			"name": "She Came to Me",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "October 11, 2023",
+			"time": "5:15pm",
+			"day": "Wednesday",
+			"iso": "2023-10-11",
+			"start": "2023-10-11T17:15"
+		},
+		{
+			"id": null,
+			"name": "Five Nights at Freddy's",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "November 4, 2023",
+			"time": "9:15pm",
+			"day": "Saturday",
+			"iso": "2023-11-04",
+			"start": "2023-11-04T21:15"
+		},
+		{
+			"id": null,
+			"name": "Five Nights at Freddy's",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "November 4, 2023",
+			"time": "10:45pm",
+			"day": "Saturday",
+			"iso": "2023-11-04",
+			"start": "2023-11-04T22:45"
+		},
+		{
+			"id": null,
+			"name": "Sing Along",
+			"poster": null,
+			"theatre": "AMC Kabuki 8",
+			"date": "November 8, 2023",
+			"time": "5:30pm",
+			"day": "Wednesday",
+			"iso": "2023-11-08",
+			"start": "2023-11-08T17:30"
+		},
+		{
+			"id": null,
+			"name": "The Marvels",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "November 10, 2023",
+			"time": "4:45pm",
+			"day": "Friday",
+			"iso": "2023-11-10",
+			"start": "2023-11-10T16:45"
+		},
+		{
+			"id": null,
+			"name": "Next Goal Wins",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "November 17, 2023",
+			"time": "4:45pm",
+			"day": "Friday",
+			"iso": "2023-11-17",
+			"start": "2023-11-17T16:45"
+		},
+		{
+			"id": null,
+			"name": "The Hunger Games: The Ballad of Songbirds & Snakes",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "November 20, 2023",
+			"time": "7:45pm",
+			"day": "Monday",
+			"iso": "2023-11-20",
+			"start": "2023-11-20T19:45"
+		},
+		{
+			"id": null,
+			"name": "The Hunger Games: The Ballad of Songbirds & Snakes",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "November 22, 2023",
+			"time": "3:00pm",
+			"day": "Wednesday",
+			"iso": "2023-11-22",
+			"start": "2023-11-22T15:00"
+		},
+		{
+			"id": null,
+			"name": "Napoleon",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "November 24, 2023",
+			"time": "6:45pm",
+			"day": "Friday",
+			"iso": "2023-11-24",
+			"start": "2023-11-24T18:45"
+		},
+		{
+			"id": null,
+			"name": "Wish",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "November 25, 2023",
+			"time": "7:00pm",
+			"day": "Saturday",
+			"iso": "2023-11-25",
+			"start": "2023-11-25T19:00"
+		},
+		{
+			"id": null,
+			"name": "Silent Night",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "December 1, 2023",
+			"time": "4:45pm",
+			"day": "Friday",
+			"iso": "2023-12-01",
+			"start": "2023-12-01T16:45"
+		},
+		{
+			"id": null,
+			"name": "Poor Things",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "December 7, 2023",
+			"time": "6:00pm",
+			"day": "Thursday",
+			"iso": "2023-12-07",
+			"start": "2023-12-07T18:00"
+		},
+		{
+			"id": null,
+			"name": "The Boy and the Heron",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "December 9, 2023",
+			"time": "11:00am",
+			"day": "Saturday",
+			"iso": "2023-12-09",
+			"start": "2023-12-09T11:00"
+		},
+		{
+			"id": null,
+			"name": "The Boys in the Boat",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "December 26, 2023",
+			"time": "6:45pm",
+			"day": "Tuesday",
+			"iso": "2023-12-26",
+			"start": "2023-12-26T18:45"
+		},
+		{
+			"id": null,
+			"name": "Aquaman and the Lost Kingdom",
+			"poster": null,
+			"theatre": "AMC Tysons Corner 16",
+			"date": "December 27, 2023",
+			"time": "7:00pm",
+			"day": "Wednesday",
+			"iso": "2023-12-27",
+			"start": "2023-12-27T19:00"
+		},
+		{
+			"id": null,
 			"name": "Ferrari",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1699911805/amc-cdn/production/2/movies/74100/74138/PosterDynamic/160412.jpg",
 			"theatre": "AMC Kabuki 8",
 			"date": "January 10, 2024",
 			"time": "7:45pm",
-			"day": "Wednesday"
+			"day": "Wednesday",
+			"iso": "2024-01-10",
+			"start": "2024-01-10T19:45"
 		},
 		{
+			"id": null,
 			"name": "Mean Girls",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1701715366/amc-cdn/production/2/movies/74800/74845/PosterDynamic/161007.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "January 12, 2024",
 			"time": "7:00pm",
-			"day": "Friday"
+			"day": "Friday",
+			"iso": "2024-01-12",
+			"start": "2024-01-12T19:00"
 		},
 		{
+			"id": null,
 			"name": "The Book of Clarence",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1701184061/amc-cdn/production/2/movies/72900/72878/PosterDynamic/160748.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "January 13, 2024",
 			"time": "11:45am",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2024-01-13",
+			"start": "2024-01-13T11:45"
 		},
 		{
+			"id": null,
 			"name": "American Fiction",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1703023050/amc-cdn/production/2/movies/73600/73648/PosterDynamic/161486.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "January 20, 2024",
 			"time": "3:45pm",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2024-01-20",
+			"start": "2024-01-20T15:45"
 		},
 		{
+			"id": null,
 			"name": "Migration",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1697428147/amc-cdn/production/2/movies/53000/53042/PosterDynamic/159394.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "January 24, 2024",
 			"time": "5:00pm",
-			"day": "Wednesday"
+			"day": "Wednesday",
+			"iso": "2024-01-24",
+			"start": "2024-01-24T17:00"
 		},
 		{
+			"id": null,
+			"name": "The Beekeeper",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "January 28, 2024",
+			"time": "8:25pm",
+			"day": "Sunday",
+			"iso": "2024-01-28",
+			"start": "2024-01-28T20:25"
+		},
+		{
+			"id": null,
 			"name": "Bob Marley: One Love",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1701788151/amc-cdn/production/2/movies/69200/69206/PosterDynamic/161038.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "February 14, 2024",
 			"time": "6:00pm",
-			"day": "Wednesday"
+			"day": "Wednesday",
+			"iso": "2024-02-14",
+			"start": "2024-02-14T18:00"
 		},
 		{
-			"name": "Demon Slayer: Kimetsu No Yaiba - To the Hashira Training",
-			"poster": "https://amc-theatres-res.cloudinary.com/v1706150777/amc-cdn/production/2/movies/75700/75739/PosterDynamic/162476.png",
+			"id": null,
+			"name": "Demon Slayer: Kimetsu no Yaiba -To the Hashira Training-",
+			"poster": null,
 			"theatre": "AMC Metreon 16",
 			"date": "February 24, 2024",
 			"time": "12:00pm",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2024-02-24",
+			"start": "2024-02-24T12:00"
 		},
 		{
+			"id": null,
+			"name": "Madame Web",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "March 2, 2024",
+			"time": "7:10pm",
+			"day": "Saturday",
+			"iso": "2024-03-02",
+			"start": "2024-03-02T19:10"
+		},
+		{
+			"id": null,
+			"name": "Dune: Part Two",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1709222099/amc-cdn/production/2/movies/68100/68123/PosterDynamic/163503.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "March 8, 2024",
+			"time": "10:00pm",
+			"day": "Friday",
+			"iso": "2024-03-08",
+			"start": "2024-03-08T22:00"
+		},
+		{
+			"id": null,
 			"name": "Dune: Part Two",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1709222099/amc-cdn/production/2/movies/68100/68123/PosterDynamic/163503.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "March 13, 2024",
 			"time": "6:00pm",
-			"day": "Wednesday"
+			"day": "Wednesday",
+			"iso": "2024-03-13",
+			"start": "2024-03-13T18:00"
 		},
 		{
+			"id": null,
+			"name": "The Matrix - 25th Anniversary - DOLBY Exclusive",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "March 20, 2024",
+			"time": "7:00pm",
+			"day": "Wednesday",
+			"iso": "2024-03-20",
+			"start": "2024-03-20T19:00"
+		},
+		{
+			"id": null,
 			"name": "Kung Fu Panda 4",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1702493212/amc-cdn/production/2/movies/70400/70406/PosterDynamic/161281.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "March 23, 2024",
 			"time": "2:30pm",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2024-03-23",
+			"start": "2024-03-23T14:30"
 		},
 		{
+			"id": null,
+			"name": "The American Society of Magical Negroes",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1708702489/amc-cdn/production/2/movies/75400/75417/PosterDynamic/163377.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "March 24, 2024",
+			"time": "7:10pm",
+			"day": "Sunday",
+			"iso": "2024-03-24",
+			"start": "2024-03-24T19:10"
+		},
+		{
+			"id": null,
 			"name": "The American Society of Magical Negroes",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1708702489/amc-cdn/production/2/movies/75400/75417/PosterDynamic/163377.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "April 3, 2024",
 			"time": "9:45pm",
-			"day": "Wednesday"
+			"day": "Wednesday",
+			"iso": "2024-04-03",
+			"start": "2024-04-03T21:45"
 		},
 		{
+			"id": null,
+			"name": "Civil War",
+			"poster": "https://amc-theatres-res.cloudinary.com/v1710518753/amc-cdn/production/2/movies/75700/75698/PosterDynamic/163907.jpg",
+			"theatre": "AMC Metreon 16",
+			"date": "April 11, 2024",
+			"time": "7:30pm",
+			"day": "Thursday",
+			"iso": "2024-04-11",
+			"start": "2024-04-11T19:30"
+		},
+		{
+			"id": null,
 			"name": "Monkey Man",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1706554972/amc-cdn/production/2/movies/72800/72776/PosterDynamic/162667.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "April 13, 2024",
 			"time": "7:00pm",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2024-04-13",
+			"start": "2024-04-13T19:00"
 		},
 		{
+			"id": null,
 			"name": "Civil War",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1710518753/amc-cdn/production/2/movies/75700/75698/PosterDynamic/163907.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "April 17, 2024",
 			"time": "5:15pm",
-			"day": "Wednesday"
+			"day": "Wednesday",
+			"iso": "2024-04-17",
+			"start": "2024-04-17T17:15"
 		},
 		{
+			"id": null,
 			"name": "The Ministry of Ungentlemanly Warfare",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1709055208/amc-cdn/production/2/movies/75800/75829/PosterDynamic/163466.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "April 20, 2024",
 			"time": "8:30pm",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2024-04-20",
+			"start": "2024-04-20T20:30"
 		},
 		{
+			"id": null,
 			"name": "Sasquatch Sunset",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1707763449/amc-cdn/production/2/movies/75800/75796/PosterDynamic/163103.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "April 27, 2024",
 			"time": "7:50pm",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2024-04-27",
+			"start": "2024-04-27T19:50"
 		},
 		{
+			"id": null,
 			"name": "The Fall Guy",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1709921464/amc-cdn/production/2/movies/70800/70790/PosterDynamic/163689.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "May 2, 2024",
 			"time": "8:15pm",
-			"day": "Thursday"
+			"day": "Thursday",
+			"iso": "2024-05-02",
+			"start": "2024-05-02T20:15"
 		},
 		{
+			"id": null,
 			"name": "Kingdom of the Planet of the Apes",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1712593232/amc-cdn/production/2/movies/67500/67468/PosterDynamic/164492.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "May 9, 2024",
 			"time": "6:30pm",
-			"day": "Thursday"
+			"day": "Thursday",
+			"iso": "2024-05-09",
+			"start": "2024-05-09T18:30"
 		},
 		{
+			"id": null,
+			"name": "Castle in the Sky",
+			"poster": null,
+			"theatre": "AMC Kabuki 8",
+			"date": "May 20, 2024",
+			"time": "7:00pm",
+			"day": "Monday",
+			"iso": "2024-05-20",
+			"start": "2024-05-20T19:00"
+		},
+		{
+			"id": null,
 			"name": "Furiosa: A Mad Max Saga",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1715975605/amc-cdn/production/2/movies/65800/65797/PosterDynamic/165170.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "June 10, 2024",
 			"time": "6:05pm",
-			"day": "Monday"
+			"day": "Monday",
+			"iso": "2024-06-10",
+			"start": "2024-06-10T18:05"
 		},
 		{
-			"name": "IF (2024)",
-			"poster": "https://amc-theatres-res.cloudinary.com/v1712066088/amc-cdn/production/2/movies/66400/66375/PosterDynamic/164415.jpg",
+			"id": null,
+			"name": "IF",
+			"poster": null,
 			"theatre": "AMC Metreon 16",
 			"date": "June 19, 2024",
 			"time": "10:45am",
-			"day": "Wednesday"
+			"day": "Wednesday",
+			"iso": "2024-06-19",
+			"start": "2024-06-19T10:45"
 		},
 		{
+			"id": null,
 			"name": "Inside Out 2",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1717521746/amc-cdn/production/2/movies/67500/67476/PosterDynamic/165402.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "June 20, 2024",
 			"time": "7:00pm",
-			"day": "Thursday"
+			"day": "Thursday",
+			"iso": "2024-06-20",
+			"start": "2024-06-20T19:00"
 		},
 		{
+			"id": null,
 			"name": "The Bikeriders",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1717184212/amc-cdn/production/2/movies/72500/72460/PosterDynamic/165389.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "July 1, 2024",
 			"time": "6:05pm",
-			"day": "Monday"
+			"day": "Monday",
+			"iso": "2024-07-01",
+			"start": "2024-07-01T18:05"
 		},
 		{
+			"id": null,
 			"name": "Fly Me to the Moon",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1720451665/amc-cdn/production/2/movies/75700/75736/PosterDynamic/166134.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "July 13, 2024",
 			"time": "4:00pm",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2024-07-13",
+			"start": "2024-07-13T16:00"
 		},
 		{
-			"name": "Horizon: An American Saga Chapter 1",
-			"poster": "https://amc-theatres-res.cloudinary.com/v1715886300/amc-cdn/production/2/movies/75000/74988/PosterDynamic/165149.jpg",
+			"id": null,
+			"name": "Horizon: An American Saga - Chapter 1",
+			"poster": null,
 			"theatre": "AMC Metreon 16",
 			"date": "July 14, 2024",
 			"time": "10:00am",
-			"day": "Sunday"
+			"day": "Sunday",
+			"iso": "2024-07-14",
+			"start": "2024-07-14T10:00"
 		},
 		{
+			"id": null,
 			"name": "Trap",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1721183486/amc-cdn/production/2/movies/72800/72762/PosterDynamic/166258.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "August 5, 2024",
 			"time": "7:05pm",
-			"day": "Monday"
+			"day": "Monday",
+			"iso": "2024-08-05",
+			"start": "2024-08-05T19:05"
 		},
 		{
-			"name": "Borderlands",
-			"poster": "https://amc-theatres-res.cloudinary.com/v1717510315/amc-cdn/production/2/movies/74200/74227/PosterDynamic/165398.jpg",
-			"theatre": "AMC Metreon 16",
-			"date": "August 8, 2024",
-			"time": "6:30pm",
-			"day": "Thursday"
-		},
-		{
+			"id": null,
 			"name": "Beetlejuice Beetlejuice",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1721915661/amc-cdn/production/2/movies/73500/73545/PosterDynamic/166328.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "September 12, 2024",
 			"time": "7:00pm",
-			"day": "Thursday"
+			"day": "Thursday",
+			"iso": "2024-09-12",
+			"start": "2024-09-12T19:00"
 		},
 		{
+			"id": null,
 			"name": "Megalopolis",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1724169258/amc-cdn/production/2/movies/77400/77359/PosterDynamic/166816.jpg",
 			"theatre": "AMC Georgetown 14",
 			"date": "September 30, 2024",
 			"time": "4:05pm",
-			"day": "Monday"
+			"day": "Monday",
+			"iso": "2024-09-30",
+			"start": "2024-09-30T16:05"
 		},
 		{
+			"id": null,
 			"name": "The Wild Robot",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1737134551/amc-cdn/production/2/movies/73400/73399/PosterDynamic/169179.jpg",
 			"theatre": "AMC Tysons Corner 16",
 			"date": "October 7, 2024",
 			"time": "9:10pm",
-			"day": "Monday"
+			"day": "Monday",
+			"iso": "2024-10-07",
+			"start": "2024-10-07T21:10"
 		},
 		{
+			"id": null,
 			"name": "Transformers One",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1729866611/amc-cdn/production/2/movies/68800/68780/PosterDynamic/167757.jpg",
 			"theatre": "AMC Courthouse Plaza 8",
 			"date": "October 15, 2024",
 			"time": "8:10pm",
-			"day": "Tuesday"
+			"day": "Tuesday",
+			"iso": "2024-10-15",
+			"start": "2024-10-15T20:10"
 		},
 		{
-			"name": "Piece By Piece",
+			"id": null,
+			"name": "Saturday Night",
+			"poster": null,
+			"theatre": "AMC Courthouse Plaza 8",
+			"date": "October 17, 2024",
+			"time": "5:20pm",
+			"day": "Thursday",
+			"iso": "2024-10-17",
+			"start": "2024-10-17T17:20"
+		},
+		{
+			"id": null,
+			"name": "Piece by Piece",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1726677974/amc-cdn/production/2/movies/76000/75990/PosterDynamic/167283.jpg",
 			"theatre": "AMC Hoffman Center 22",
 			"date": "October 17, 2024",
 			"time": "6:45pm",
-			"day": "Thursday"
+			"day": "Thursday",
+			"iso": "2024-10-17",
+			"start": "2024-10-17T18:45"
 		},
 		{
-			"name": "Let's Start A Cult",
+			"id": null,
+			"name": "Let's Start a Cult",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1728923497/amc-cdn/production/2/movies/78200/78198/PosterDynamic/167611.jpg",
 			"theatre": "AMC Hoffman Center 22",
 			"date": "October 26, 2024",
 			"time": "10:30pm",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2024-10-26",
+			"start": "2024-10-26T22:30"
 		},
 		{
+			"id": null,
 			"name": "Red One",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1729172848/amc-cdn/production/2/movies/75700/75719/PosterDynamic/167661.jpg",
 			"theatre": "AMC Hoffman Center 22",
 			"date": "November 14, 2024",
 			"time": "7:00pm",
-			"day": "Thursday"
+			"day": "Thursday",
+			"iso": "2024-11-14",
+			"start": "2024-11-14T19:00"
 		},
 		{
+			"id": null,
 			"name": "Wicked",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1739548975/amc-cdn/production/2/movies/51300/51318/PosterDynamic/169745.jpg",
 			"theatre": "AMC Courthouse Plaza 8",
 			"date": "November 21, 2024",
 			"time": "5:30pm",
-			"day": "Thursday"
+			"day": "Thursday",
+			"iso": "2024-11-21",
+			"start": "2024-11-21T17:30"
 		},
 		{
+			"id": null,
 			"name": "Gladiator II",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1728431322/amc-cdn/production/2/movies/72600/72641/PosterDynamic/167558.jpg",
 			"theatre": "AMC Tysons Corner 16",
 			"date": "December 1, 2024",
 			"time": "4:15pm",
-			"day": "Sunday"
+			"day": "Sunday",
+			"iso": "2024-12-01",
+			"start": "2024-12-01T16:15"
 		},
 		{
+			"id": null,
 			"name": "Moana 2",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1730126297/amc-cdn/production/2/movies/72500/72475/PosterDynamic/167791.jpg",
 			"theatre": "AMC Kabuki 8",
 			"date": "December 8, 2024",
 			"time": "6:45pm",
-			"day": "Sunday"
+			"day": "Sunday",
+			"iso": "2024-12-08",
+			"start": "2024-12-08T18:45"
 		},
 		{
+			"id": null,
 			"name": "Lord of the Rings: The War of the Rohirrim",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1729787864/amc-cdn/production/2/movies/68600/68576/PosterDynamic/167747.jpg",
 			"theatre": "AMC Hoffman Center 22",
 			"date": "December 28, 2024",
 			"time": "9:30am",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2024-12-28",
+			"start": "2024-12-28T09:30"
 		},
 		{
+			"id": null,
 			"name": "A Complete Unknown",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1741127403/amc-cdn/production/2/movies/77800/77798/PosterDynamic/169974.jpg",
 			"theatre": "AMC Hoffman Center 22",
 			"date": "January 12, 2025",
 			"time": "3:00pm",
-			"day": "Sunday"
+			"day": "Sunday",
+			"iso": "2025-01-12",
+			"start": "2025-01-12T15:00"
 		},
 		{
+			"id": null,
 			"name": "Dog Man",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1731947444/amc-cdn/production/2/movies/73400/73401/PosterDynamic/168175.jpg",
 			"theatre": "AMC Tysons Corner 16",
 			"date": "February 8, 2025",
 			"time": "2:35pm",
-			"day": "Saturday"
+			"day": "Saturday",
+			"iso": "2025-02-08",
+			"start": "2025-02-08T14:35"
 		},
 		{
+			"id": null,
 			"name": "Paddington in Peru",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1733512440/amc-cdn/production/2/movies/75200/75158/PosterDynamic/168362.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "March 11, 2025",
 			"time": "6:15pm",
-			"day": "Tuesday"
+			"day": "Tuesday",
+			"iso": "2025-03-11",
+			"start": "2025-03-11T18:15"
 		},
 		{
+			"id": null,
 			"name": "Mickey 17",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1737562704/amc-cdn/production/2/movies/72100/72112/PosterDynamic/169243.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "March 17, 2025",
 			"time": "6:00pm",
-			"day": "Monday"
+			"day": "Monday",
+			"iso": "2025-03-17",
+			"start": "2025-03-17T18:00"
 		},
 		{
+			"id": null,
 			"name": "Black Bag",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1740503641/amc-cdn/production/2/movies/77700/77664/PosterDynamic/169874.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "April 3, 2025",
 			"time": "4:30pm",
-			"day": "Thursday"
+			"day": "Thursday",
+			"iso": "2025-04-03",
+			"start": "2025-04-03T16:30"
 		},
 		{
+			"id": null,
 			"name": "Project Hail Mary",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1771004553/amc-cdn/content/general/sn9nf3jgxanedjfwwqwd.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "March 29, 2026",
 			"time": "4:00pm",
-			"day": "Sunday"
+			"day": "Sunday",
+			"iso": "2026-03-29",
+			"start": "2026-03-29T16:00"
 		},
 		{
+			"id": null,
 			"name": "Star Wars: The Mandalorian and Grogu",
 			"poster": "https://amc-theatres-res.cloudinary.com/v1777914945/amc-cdn/content/general/w7xewp7excf6dnk9qcln.jpg",
 			"theatre": "AMC Metreon 16",
 			"date": "May 26, 2026",
 			"time": "4:15pm",
-			"day": "Tuesday"
+			"day": "Tuesday",
+			"iso": "2026-05-26",
+			"start": "2026-05-26T16:15"
+		},
+		{
+			"id": null,
+			"name": "Wildwood",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "October 31, 2026",
+			"time": "7:15pm",
+			"day": "Saturday",
+			"iso": "2026-10-31",
+			"start": "2026-10-31T19:15"
+		},
+		{
+			"id": null,
+			"name": "How to Rob a Bank",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "November 12, 2026",
+			"time": "4:00pm",
+			"day": "Thursday",
+			"iso": "2026-11-12",
+			"start": "2026-11-12T16:00",
+			"upcoming": true
 		}
 	]
 }
