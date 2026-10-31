@@ -13,7 +13,7 @@
  * CINEMOO_ROTATED_COOKIE_FILE for the workflow to persist, so the session
  * never lapses while this keeps running.
  *
- * Writes src/data/amc.json in the shape tools/amc/fetch.mjs did, keeping the
+ * Writes src/data/amc.json in the shape src/widgets/amc/amc.ts reads, keeping the
  * AMC poster and id already on file for a film (matched by name).
  */
 import { readFile, writeFile } from "node:fs/promises";
