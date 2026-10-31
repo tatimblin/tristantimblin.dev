@@ -199,6 +199,7 @@ export function createClient({ cookie, rotatedPath, fetchImpl = fetch }) {
 					// The app sends its device id too (see amc-stats' README);
 					// optional so a missing secret changes nothing.
 					...(process.env.AMC_DEVICE_ID ? { "x-amc-device-id": process.env.AMC_DEVICE_ID } : {}),
+					...(process.env.AMC_ACCOUNT_ID ? { "x-amc-account-id": process.env.AMC_ACCOUNT_ID } : {}),
 					cookie: client.cookie,
 				},
 				body: JSON.stringify({ operationName, query, variables }),

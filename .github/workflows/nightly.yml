@@ -95,6 +95,7 @@ jobs:
         env:
           AMC_SESSION: ${{ secrets.AMC_SESSION }}
           AMC_DEVICE_ID: ${{ secrets.AMC_DEVICE_ID }}
+          AMC_ACCOUNT_ID: ${{ secrets.AMC_ACCOUNT_ID }}
           AMC_ROTATED_COOKIE_FILE: ${{ runner.temp }}/amc-rotated
 
       # The cookie rotates on ANY response (including errors), so persist it
