@@ -2,526 +2,732 @@
 	"a-complete-unknown": {
 		"title": "A Complete Unknown",
 		"imdb_id": "tt11563598",
-		"primary_genre": "Biopic"
+		"primary_genre": "Biopic",
+		"tmdb_id": 661539,
+		"tmdb_poster": "/llWl3GtNoXosbvYboelmoT459NM.jpg"
 	},
 	"a-haunting-in-venice": {
 		"title": "A Haunting in Venice",
 		"imdb_id": "tt22687790",
-		"primary_genre": "Thriller"
+		"primary_genre": "Thriller",
+		"tmdb_id": 945729,
+		"tmdb_poster": "/l6iwxT0NbVw6QiF08YTIuTnXS82.jpg"
 	},
 	"air": {
 		"title": "Air",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 964980,
+		"tmdb_poster": "/76AKQPdH3M8cvsFR9K8JsOzVlY5.jpg"
 	},
 	"american-fiction": {
 		"title": "American Fiction",
 		"imdb_id": "tt23561236",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 1056360,
+		"tmdb_poster": "/57MFWGHarg9jid7yfDTka4RmcMU.jpg"
 	},
 	"aquaman-and-the-lost-kingdom": {
 		"title": "Aquaman and the Lost Kingdom",
 		"imdb_id": "tt9663764",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 572802,
+		"tmdb_poster": "/7lTnXOy0iNtBAdRP3TZvaKJ77F6.jpg"
 	},
 	"asteroid-city": {
 		"title": "Asteroid City",
 		"imdb_id": "tt14230388",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 747188,
+		"tmdb_poster": "/hfo7pvL9Fys7rocfL4VOzw9qDEQ.jpg"
 	},
 	"avatar-the-way-of-water": {
 		"title": "Avatar: The Way of Water",
 		"imdb_id": "tt1630029",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 76600,
+		"tmdb_poster": "/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg"
 	},
 	"beetlejuice-beetlejuice": {
 		"title": "Beetlejuice Beetlejuice",
 		"imdb_id": "tt2049403",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 917496,
+		"tmdb_poster": "/kKgQzkUCnQmeTPkyIwHly2t6ZFI.jpg"
 	},
 	"black-bag": {
 		"title": "Black Bag",
 		"imdb_id": "tt30988739",
-		"primary_genre": "Thriller"
+		"primary_genre": "Thriller",
+		"tmdb_id": 1233575,
+		"tmdb_poster": "/hHPovtU4b96LHcoeEwRkGHI5btw.jpg"
 	},
 	"blue-beetle": {
 		"title": "Blue Beetle",
 		"imdb_id": "tt9362930",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 565770,
+		"tmdb_poster": "/mXLOHHc1Zeuwsl4xYKjKh2280oL.jpg"
 	},
 	"bob-marley-one-love": {
 		"title": "Bob Marley: One Love",
 		"imdb_id": "tt8521778",
-		"primary_genre": "Biopic"
+		"primary_genre": "Biopic",
+		"tmdb_id": 802219,
+		"tmdb_poster": "/1lQftpEARVVB9op4TaYiIbactzG.jpg"
 	},
 	"borderlands": {
 		"title": "Borderlands",
 		"imdb_id": "tt4978420",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 365177,
+		"tmdb_poster": "/4JGoZu1ZKFpMJTWAP35PCfkMgu8.jpg"
 	},
 	"bottoms": {
 		"title": "Bottoms",
 		"imdb_id": "tt17527468",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 814776,
+		"tmdb_poster": "/jeyTQrNEpyE1LZIgVlswYh3sc34.jpg"
 	},
 	"castle-in-the-sky": {
 		"title": "Castle in the Sky",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_checked": "2026-10-31"
 	},
 	"civil-war": {
 		"title": "Civil War",
 		"imdb_id": "tt17279496",
-		"primary_genre": "Thriller"
+		"primary_genre": "Thriller",
+		"tmdb_id": 929590,
+		"tmdb_poster": "/sh7Rg8Er3tFcN9BpKIPOMvALgZd.jpg"
 	},
 	"demon-slayer-kimetsu-no-yaiba-to-the-hashira-training": {
 		"title": "Demon Slayer: Kimetsu No Yaiba - To the Hashira Training",
 		"imdb_id": "tt30395619",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 1216221,
+		"tmdb_poster": "/3daOEMQCOGU2n9EbUC0PICnUCek.jpg"
 	},
 	"dog-man": {
 		"title": "Dog Man",
 		"imdb_id": "tt10954718",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 774370,
+		"tmdb_poster": "/89wNiexZdvLQ41OQWIsQy4O6jAQ.jpg"
 	},
 	"dr-seuss-the-grinch": {
 		"title": "Dr. Seuss' The Grinch",
 		"imdb_id": "tt2709692",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 360920,
+		"tmdb_poster": "/Al7DMUp8bqUN4JwXVNxfJYyv5cH.jpg"
 	},
 	"dumb-money": {
 		"title": "Dumb Money",
 		"imdb_id": "tt13957560",
-		"primary_genre": "Biopic"
+		"primary_genre": "Biopic",
+		"tmdb_id": 792293,
+		"tmdb_poster": "/e9u7luSxFKOZgPTB9XHFnPArGdP.jpg"
 	},
 	"dune-part-two": {
 		"title": "Dune: Part Two",
 		"imdb_id": "tt15239678",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 693134,
+		"tmdb_poster": "/6izwz7rsy95ARzTR3poZ8H6c5pp.jpg"
 	},
 	"dungeons-and-dragons-honor-among-thieves": {
 		"title": "Dungeons & Dragons: Honor Among Thieves",
 		"imdb_id": "tt2906216",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 493529,
+		"tmdb_poster": "/v7UF7ypAqjsFZFdjksjQ7IUpXdn.jpg"
 	},
 	"elemental": {
 		"title": "Elemental",
 		"imdb_id": "tt15789038",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 976573,
+		"tmdb_poster": "/4Y1WNkd88JXmGfhtWR7dmDAo1T2.jpg"
 	},
 	"expend4bles": {
 		"title": "Expend4bles",
 		"imdb_id": "tt3291150",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 299054,
+		"tmdb_poster": "/iwsMu0ehRPbtaSxqiaUDQB9qMWT.jpg"
 	},
 	"fast-x": {
 		"title": "Fast X",
 		"imdb_id": "tt5433140",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 385687,
+		"tmdb_poster": "/fiVW06jE7z9YnO4trhaMEdclSiC.jpg"
 	},
 	"ferrari": {
 		"title": "Ferrari",
 		"imdb_id": "tt3758542",
-		"primary_genre": "Biopic"
+		"primary_genre": "Biopic",
+		"tmdb_id": 365620,
+		"tmdb_poster": "/LyCOcGqOTyTmaXu2TK8LfGveIb.jpg"
 	},
 	"five-nights-at-freddys": {
 		"title": "Five Nights at Freddy's",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 507089,
+		"tmdb_poster": "/7BpNtNfxuocYEVREzVMO75hso1l.jpg"
 	},
 	"fly-me-to-the-moon": {
 		"title": "Fly Me to the Moon",
 		"imdb_id": "tt1896747",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 956842,
+		"tmdb_poster": "/gjk8YdXpItoC1in53FCrZMFIuBx.jpg"
 	},
 	"fools-paradise": {
 		"title": "Fool's Paradise",
 		"imdb_id": "tt9013340",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 553147,
+		"tmdb_poster": "/pPv4KYbcG16xmr2Q0rlV2Brqh6g.jpg"
 	},
 	"furiosa-a-mad-max-saga": {
 		"title": "Furiosa: A Mad Max Saga",
 		"imdb_id": "tt12037194",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 786892,
+		"tmdb_poster": "/iADOJ8Zymht2JPMoy3R7xceZprc.jpg"
 	},
 	"get-ready-for-some-movie-magic": {
 		"title": "Get ready for some movie magic.",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_checked": "2026-10-31"
 	},
 	"gladiator-ii": {
 		"title": "Gladiator II",
 		"imdb_id": "tt9218128",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 558449,
+		"tmdb_poster": "/2cxhvwyEwRlysAmRH4iodkvo0z5.jpg"
 	},
 	"gran-turismo-based-on-a-true-story": {
 		"title": "Gran Turismo: Based on a True Story",
 		"imdb_id": "tt4495098",
-		"primary_genre": "Biopic"
+		"primary_genre": "Biopic",
+		"tmdb_id": 980489,
+		"tmdb_poster": "/51tqzRtKMMZEYUpSYkrUE7v9ehm.jpg"
 	},
 	"guardians-of-the-galaxy-vol-3": {
 		"title": "Guardians of the Galaxy Vol. 3",
 		"imdb_id": "tt6791350",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 447365,
+		"tmdb_poster": "/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg"
 	},
 	"guy-ritchies-the-covenant": {
 		"title": "Guy Ritchie's The Covenant",
 		"imdb_id": "tt4873118",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 882569,
+		"tmdb_poster": "/kVG8zFFYrpyYLoHChuEeOGAd6Ru.jpg"
 	},
 	"haunted-mansion": {
 		"title": "Haunted Mansion",
 		"imdb_id": "tt1695843",
-		"primary_genre": "Thriller"
+		"primary_genre": "Thriller",
+		"tmdb_id": 616747,
+		"tmdb_poster": "/8Im6DknDVxRiGXc5t8rVOJyzuNx.jpg"
 	},
 	"horizon-an-american-saga-chapter-1": {
 		"title": "Horizon: An American Saga Chapter 1",
 		"imdb_id": "tt17505010",
-		"primary_genre": "Drama"
+		"primary_genre": "Drama",
+		"tmdb_id": 932086,
+		"tmdb_poster": "/hqDkO0W9uk4aiwzn3pTeLO7NPZD.jpg"
 	},
 	"hypnotic": {
 		"title": "Hypnotic",
 		"imdb_id": "tt8080204",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 536437,
+		"tmdb_poster": "/3IhGkkalwXguTlceGSl8XUJZOVI.jpg"
 	},
 	"if": {
 		"title": "IF",
 		"imdb_id": "tt11152168",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 639720,
+		"tmdb_poster": "/xbKFv4KF3sVYuWKllLlwWDmuZP7.jpg"
 	},
 	"if-2024": {
 		"title": "IF (2024)",
 		"imdb_id": "tt11152168",
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 639720,
+		"tmdb_poster": "/xbKFv4KF3sVYuWKllLlwWDmuZP7.jpg"
 	},
 	"indiana-jones-and-the-dial-of-destiny": {
 		"title": "Indiana Jones and the Dial of Destiny",
 		"imdb_id": "tt1462764",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 335977,
+		"tmdb_poster": "/Af4bXE63pVsb2FtbW8uYIyPBadD.jpg"
 	},
 	"inside-out-2": {
 		"title": "Inside Out 2",
 		"imdb_id": "tt22022452",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 1022789,
+		"tmdb_poster": "/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg"
 	},
 	"john-wick-chapter-4": {
 		"title": "John Wick: Chapter 4",
 		"imdb_id": "tt10366206",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 603692,
+		"tmdb_poster": "/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg"
 	},
 	"kingdom-of-the-planet-of-the-apes": {
 		"title": "Kingdom of the Planet of the Apes",
 		"imdb_id": "tt11389872",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 653346,
+		"tmdb_poster": "/gKkl37BQuKTanygYQG1pyYgLVgf.jpg"
 	},
 	"kung-fu-panda-4": {
 		"title": "Kung Fu Panda 4",
 		"imdb_id": "tt21692408",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 1011985,
+		"tmdb_poster": "/kDp1vUBnMpe8ak4rjgl3cLELqjU.jpg"
 	},
 	"landscape-with-invisible-hand": {
 		"title": "Landscape with Invisible Hand",
 		"imdb_id": "tt7645334",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 777411,
+		"tmdb_poster": "/cnXvfZrj1azU5Rvbb8D7Fz0wkyt.jpg"
 	},
 	"lets-start-a-cult": {
 		"title": "Let's Start A Cult",
 		"imdb_id": "tt24805876",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 1327649,
+		"tmdb_poster": "/kPb27onkJijmlKyEnFIufRL4mlI.jpg"
 	},
 	"lord-of-the-rings-the-war-of-the-rohirrim": {
 		"title": "Lord of the Rings: The War of the Rohirrim",
 		"imdb_id": "tt14824600",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 839033,
+		"tmdb_poster": "/23WCoDo6wzBfzbX7BGTNwVUqZfi.jpg"
 	},
 	"madame-web": {
 		"title": "Madame Web",
 		"imdb_id": "tt11057302",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 634492,
+		"tmdb_poster": "/rULWuutDcN5NvtiZi4FRPzRYWSh.jpg"
 	},
 	"mean-girls": {
 		"title": "Mean Girls",
 		"imdb_id": "tt11762114",
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 673593,
+		"tmdb_poster": "/fbbj3viSUDEGT1fFFMNpHP1iUjw.jpg"
 	},
 	"megalopolis": {
 		"title": "Megalopolis",
 		"imdb_id": "tt10128846",
-		"primary_genre": "Drama"
+		"primary_genre": "Drama",
+		"tmdb_id": 592831,
+		"tmdb_poster": "/doVWgLdNyK36nEyyZgVsEWFCO1e.jpg"
 	},
 	"mickey-17": {
 		"title": "Mickey 17",
 		"imdb_id": "tt12299608",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 696506,
+		"tmdb_poster": "/edKpE9B5qN3e559OuMCLZdW1iBZ.jpg"
 	},
 	"migration": {
 		"title": "Migration",
 		"imdb_id": "tt6495056",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 940551,
+		"tmdb_poster": "/ldfCF9RhR40mppkzmftxapaHeTo.jpg"
 	},
 	"mission-impossible-dead-reckoning-part-one": {
 		"title": "Mission: Impossible - Dead Reckoning Part One",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 575264,
+		"tmdb_poster": "/NNxYkU70HPurnNCSiCjYAmacwm.jpg"
 	},
 	"moana-2": {
 		"title": "Moana 2",
 		"imdb_id": "tt13622970",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 1241982,
+		"tmdb_poster": "/aLVkiINlIeCkcZIzb7XHzPYgO6L.jpg"
 	},
 	"monkey-man": {
 		"title": "Monkey Man",
 		"imdb_id": "tt9214772",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 560016,
+		"tmdb_poster": "/4lhR4L2vzzjl68P1zJyCH755Oz4.jpg"
 	},
 	"napoleon": {
 		"title": "Napoleon",
 		"imdb_id": "tt13287846",
-		"primary_genre": "Biopic"
+		"primary_genre": "Biopic",
+		"tmdb_id": 753342,
+		"tmdb_poster": "/ytFOXyghxLzAM4KZyazDdEkM66q.jpg"
 	},
 	"next-goal-wins": {
 		"title": "Next Goal Wins",
 		"imdb_id": "tt10767052",
-		"primary_genre": "Biopic"
+		"primary_genre": "Biopic",
+		"tmdb_id": 621587,
+		"tmdb_poster": "/xTQCL1zGugIck8MgvJ2lXSrxENR.jpg"
 	},
 	"no-hard-feelings": {
 		"title": "No Hard Feelings",
 		"imdb_id": "tt15671028",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 884605,
+		"tmdb_poster": "/gD72DhJ7NbfxvtxGiAzLaa0xaoj.jpg"
 	},
 	"oppenheimer": {
 		"title": "Oppenheimer",
 		"imdb_id": "tt15398776",
-		"primary_genre": "Biopic"
+		"primary_genre": "Biopic",
+		"tmdb_id": 872585,
+		"tmdb_poster": "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
 	},
 	"paddington-in-peru": {
 		"title": "Paddington in Peru",
 		"imdb_id": "tt5822536",
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 516729,
+		"tmdb_poster": "/1ffZAucqfvQu36x1C49XfOdjuOG.jpg"
 	},
 	"piece-by-piece": {
 		"title": "Piece By Piece",
 		"imdb_id": "tt31064841",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 1236419,
+		"tmdb_poster": "/fmOPcP8WRvm8cok4Hz3REwD7rlJ.jpg"
 	},
 	"polite-society": {
 		"title": "Polite Society",
 		"imdb_id": "tt18257464",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 977223,
+		"tmdb_poster": "/Af1izSvHbGu6JiFTVzgfKxWQOfs.jpg"
 	},
 	"poor-things": {
 		"title": "Poor Things",
 		"imdb_id": "tt14230458",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 792307,
+		"tmdb_poster": "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg"
 	},
 	"project-hail-mary": {
 		"title": "Project Hail Mary",
 		"imdb_id": "tt12042730",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 687163,
+		"tmdb_poster": "/iOb2fjXLbpJgyQXe46n1WtGCnaa.jpg"
 	},
 	"red-one": {
 		"title": "Red One",
 		"imdb_id": "tt14948432",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 845781,
+		"tmdb_poster": "/cdqLnri3NEGcmfnqwk2TSIYtddg.jpg"
 	},
 	"relax-im-from-the-future": {
 		"title": "Relax, I'm from the Future",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 994133,
+		"tmdb_poster": "/iPrNuDIfbBdrTRxHvZiooPLxPB8.jpg"
 	},
 	"renfield": {
 		"title": "Renfield",
 		"imdb_id": "tt11358390",
-		"primary_genre": "Thriller"
+		"primary_genre": "Thriller",
+		"tmdb_id": 649609,
+		"tmdb_poster": "/p6yUjhvNGQpFZilKwOKbxQ1eHlo.jpg"
 	},
 	"retribution": {
 		"title": "Retribution",
 		"imdb_id": "tt6906292",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 762430,
+		"tmdb_poster": "/oUmmY7QWWn7OhKlcPOnirHJpP1F.jpg"
 	},
 	"ruby-gillman-teenage-kraken": {
 		"title": "Ruby Gillman, Teenage Kraken",
 		"imdb_id": "tt27155038",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 1040148,
+		"tmdb_poster": "/8ChIb3WzYAcza1vrXR56v510MWk.jpg"
 	},
 	"sasquatch-sunset": {
 		"title": "Sasquatch Sunset",
 		"imdb_id": "tt30180830",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 1015634,
+		"tmdb_poster": "/9zdqkbwVGrUl0biGCqCOgvbgaM5.jpg"
 	},
 	"saturday-night": {
 		"title": "Saturday Night",
 		"imdb_id": "tt27657135",
-		"primary_genre": "Biopic"
+		"primary_genre": "Biopic",
+		"tmdb_id": 1120911,
+		"tmdb_poster": "/oCf5O6uxooTvRwKVnLHwGqZUifq.jpg"
 	},
 	"she-came-to-me": {
 		"title": "She Came to Me",
 		"imdb_id": "tt6689014",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 503417,
+		"tmdb_poster": "/2lG18RqCK8qTk7R5jA1L7ZRMWXu.jpg"
 	},
 	"silent-night": {
 		"title": "Silent Night",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 891699,
+		"tmdb_poster": "/nJCP1ZNTPKlZ7S0Kv3gbmuraAT4.jpg"
 	},
 	"sing-along": {
 		"title": "Sing Along",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_checked": "2026-10-31"
 	},
 	"sisu": {
 		"title": "Sisu",
 		"imdb_id": "tt14846026",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 840326,
+		"tmdb_poster": "/xgb30M1wL4nibyFvlHh3w4XlDYq.jpg"
 	},
 	"spider-man-across-the-spider-verse": {
 		"title": "Spider-Man: Across the Spider-Verse",
 		"imdb_id": "tt9362722",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 569094,
+		"tmdb_poster": "/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg"
 	},
 	"spider-man-no-way-home": {
 		"title": "Spider-Man: No Way Home",
 		"imdb_id": "tt10872600",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 634649,
+		"tmdb_poster": "/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg"
 	},
 	"star-wars-the-mandalorian-and-grogu": {
 		"title": "Star Wars: The Mandalorian and Grogu",
 		"imdb_id": "tt30825738",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 1228710,
+		"tmdb_poster": "/uwMKWjcNID0D9jjplsjkQS2OrB4.jpg"
 	},
 	"strays": {
 		"title": "Strays",
 		"imdb_id": "tt15153532",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 912908,
+		"tmdb_poster": "/n1hqbSCtyBAxaXEl1Dj3ipXJAJG.jpg"
 	},
 	"suzume": {
 		"title": "Suzume",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 916224,
+		"tmdb_poster": "/yStW1TXF5s7Tbtu9KjIZEaWl6HL.jpg"
 	},
 	"teenage-mutant-ninja-turtles-mutant-mayhem": {
 		"title": "Teenage Mutant Ninja Turtles: Mutant Mayhem",
 		"imdb_id": "tt8589698",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 614930,
+		"tmdb_poster": "/gyh0eECE2IqrW8GWl3KoHBfc45j.jpg"
 	},
 	"the-american-society-of-magical-negroes": {
 		"title": "The American Society of Magical Negroes",
 		"imdb_id": "tt30007864",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 1039773,
+		"tmdb_poster": "/czV7JRPPPGk9bqUsnJuJUYn34mM.jpg"
 	},
 	"the-batman": {
 		"title": "The Batman",
 		"imdb_id": "tt1877830",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 414906,
+		"tmdb_poster": "/74xTEgt7R36Fpooo50r9T25onhq.jpg"
 	},
 	"the-beekeeper": {
 		"title": "The Beekeeper",
 		"imdb_id": "tt15314262",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 866398,
+		"tmdb_poster": "/A7EByudX0eOzlkQ2FIbogzyazm2.jpg"
 	},
 	"the-bikeriders": {
 		"title": "The Bikeriders",
 		"imdb_id": "tt21454134",
-		"primary_genre": "Drama"
+		"primary_genre": "Drama",
+		"tmdb_id": 1008409,
+		"tmdb_poster": "/ApMuukdDAOR2rgaFDZIcjfigi64.jpg"
 	},
 	"the-blackening": {
 		"title": "The Blackening",
 		"imdb_id": "tt11703244",
-		"primary_genre": "Thriller"
+		"primary_genre": "Thriller",
+		"tmdb_id": 1008392,
+		"tmdb_poster": "/n2aS9FE0C3VUHtSb3Ak41aU9K3y.jpg"
 	},
 	"the-book-of-clarence": {
 		"title": "The Book of Clarence",
 		"imdb_id": "tt22866358",
-		"primary_genre": "Comedy"
+		"primary_genre": "Comedy",
+		"tmdb_id": 976584,
+		"tmdb_poster": "/hZuq34U1dWuIIWgTa6wZNPeDinS.jpg"
 	},
 	"the-boy-and-the-heron": {
 		"title": "The Boy and the Heron",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 508883,
+		"tmdb_poster": "/f4oZTcfGrVTXKTWg157AwikXqmP.jpg"
 	},
 	"the-boys-in-the-boat": {
 		"title": "The Boys in the Boat",
 		"imdb_id": "tt1856080",
-		"primary_genre": "Biopic"
+		"primary_genre": "Biopic",
+		"tmdb_id": 823452,
+		"tmdb_poster": "/ncJMztHprw3gLRAnDjNnnT23CIt.jpg"
 	},
 	"the-creator": {
 		"title": "The Creator",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 670292,
+		"tmdb_poster": "/3dSivDtOuyxLDxPH4v2tcNG1fP7.jpg"
 	},
 	"the-equalizer-3": {
 		"title": "The Equalizer 3",
 		"imdb_id": "tt17024450",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 926393,
+		"tmdb_poster": "/b0Ej6fnXAP8fK75hlyi2jKqdhHz.jpg"
 	},
 	"the-fall-guy": {
 		"title": "The Fall Guy",
 		"imdb_id": "tt1684562",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 746036,
+		"tmdb_poster": "/e7olqFmzcIX5c23kX4zSmLPJi8c.jpg"
 	},
 	"the-hunger-games-the-ballad-of-songbirds-and-snakes": {
 		"title": "The Hunger Games: The Ballad of Songbirds & Snakes",
 		"imdb_id": "tt10545296",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 695721,
+		"tmdb_poster": "/mBaXZ95R2OxueZhvQbcEWy2DqyO.jpg"
 	},
 	"the-machine": {
 		"title": "The Machine",
 		"imdb_id": "tt11040844",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 647250,
+		"tmdb_poster": "/x9dGI7LIOMMlFzyIBUta1svft2Y.jpg"
 	},
 	"the-marvels": {
 		"title": "The Marvels",
 		"imdb_id": "tt10676048",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 609681,
+		"tmdb_poster": "/9GBhzXMFjgcZ3FdR9w3bUMMTps5.jpg"
 	},
 	"the-matrix-25th-anniversary-dolby-exclusive": {
 		"title": "The Matrix - 25th Anniversary - DOLBY Exclusive",
 		"imdb_id": null,
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_checked": "2026-10-31"
 	},
 	"the-ministry-of-ungentlemanly-warfare": {
 		"title": "The Ministry of Ungentlemanly Warfare",
 		"imdb_id": "tt5177120",
-		"primary_genre": "Action"
+		"primary_genre": "Action",
+		"tmdb_id": 799583,
+		"tmdb_poster": "/8aF0iAKH9MJMYAZdi0Slg77RYa2.jpg"
 	},
 	"the-super-mario-bros-movie": {
 		"title": "The Super Mario Bros. Movie",
 		"imdb_id": "tt6718170",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 502356,
+		"tmdb_poster": "/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg"
 	},
 	"the-wild-robot": {
 		"title": "The Wild Robot",
 		"imdb_id": "tt29623480",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 1184918,
+		"tmdb_poster": "/wTnV3PCVW5O92JMrFvvrRcV39RU.jpg"
 	},
 	"transformers-one": {
 		"title": "Transformers One",
 		"imdb_id": "tt8864596",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 698687,
+		"tmdb_poster": "/iRCgqpdVE4wyLQvGYU3ZP7pAtUc.jpg"
 	},
 	"transformers-rise-of-the-beasts": {
 		"title": "Transformers: Rise of the Beasts",
 		"imdb_id": "tt5090568",
-		"primary_genre": "Sci-Fi"
+		"primary_genre": "Sci-Fi",
+		"tmdb_id": 667538,
+		"tmdb_poster": "/gPbM0MK8CP8A174rmUwGsADNYKD.jpg"
 	},
 	"trap": {
 		"title": "Trap",
 		"imdb_id": "tt26753003",
-		"primary_genre": "Thriller"
+		"primary_genre": "Thriller",
+		"tmdb_id": 1032823,
+		"tmdb_poster": "/jwoaKYVqPgYemFpaANL941EF94R.jpg"
 	},
 	"wicked": {
 		"title": "Wicked",
 		"imdb_id": "tt1262426",
-		"primary_genre": "Other"
+		"primary_genre": "Other",
+		"tmdb_id": 402431,
+		"tmdb_poster": "/xDGbZ0JJ3mYaGKy4Nzd9Kph6M9L.jpg"
 	},
 	"wildwood": {
 		"title": "Wildwood",
 		"imdb_id": "tt2056785",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 791523,
+		"tmdb_poster": "/snFM00mpNAfUzUtkdEW0uDEvXA0.jpg"
 	},
 	"wish": {
 		"title": "Wish",
 		"imdb_id": "tt11304740",
-		"primary_genre": "Animation"
+		"primary_genre": "Animation",
+		"tmdb_id": 1022796,
+		"tmdb_poster": "/nesuSdJakNkf0zs7OfoasB6Clxf.jpg"
 	}
 }
