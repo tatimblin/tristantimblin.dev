@@ -52,9 +52,9 @@ test.describe("off the production host", () => {
 	}) => {
 		const requests = recordGoatCounter(context);
 
-		await page.goto("/privacy/");
+		await page.goto("/credits/");
 		expect(await page.evaluate(() => navigator.webdriver)).toBe(true);
-		expect(await hitPath(page)).toBe("/privacy/");
+		expect(await hitPath(page)).toBe("/credits/");
 
 		await softNavigate(page, '.site-header a[href="/txt/"]', /\/txt\/$/);
 		expect(await hitPath(page)).toBe("/txt/");
@@ -156,9 +156,9 @@ test.describe("on the production host (simulated)", () => {
 			if (r.url().includes("gc.zgo.at")) scripts.push(r.url());
 		});
 
-		await page.goto(`${PROD}/privacy/?utm_source=x`);
+		await page.goto(`${PROD}/credits/?utm_source=x`);
 		await expect.poll(() => beacons(page)).toEqual([
-			{ endpoint: GOATCOUNTER_ENDPOINT, p: "/privacy/", r: null },
+			{ endpoint: GOATCOUNTER_ENDPOINT, p: "/credits/", r: null },
 		]);
 		await expect(page.locator("script[data-goatcounter]")).toHaveAttribute(
 			"data-goatcounter-settings",
@@ -171,7 +171,7 @@ test.describe("on the production host (simulated)", () => {
 		expect((await beacons(page))[1]).toEqual({ endpoint: GOATCOUNTER_ENDPOINT, p: "/txt/", r: null });
 
 		await softNavigate(page, '.site-header a[href="/"]', /tristantimblin\.dev\/$/);
-		await expect.poll(async () => (await beacons(page)).map((b) => b.p)).toEqual(["/privacy/", "/txt/", "/"]);
+		await expect.poll(async () => (await beacons(page)).map((b) => b.p)).toEqual(["/credits/", "/txt/", "/"]);
 
 		expect(scripts, "count.js loaded once").toEqual([GOATCOUNTER_SRC]);
 		expect(leaked).toEqual([]);

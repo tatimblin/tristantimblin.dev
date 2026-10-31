@@ -1,6 +1,6 @@
 ---
 // Global site footer — a basic full-width bar with a copyright line, the
-// privacy line (to /privacy/) and the light/dark theme toggle. Themes automatically via DS tokens (--text-primary /
+// one small link to /credits/ (credits & privacy) and the light/dark theme toggle. Themes automatically via DS tokens (--text-primary /
 // --background / --border). Light is the site default; the toggle persists
 // the user's explicit choice in localStorage and re-tints the whole page,
 // including the <dotted-grid> visuals (they re-resolve their tone when
@@ -22,10 +22,8 @@ const year = new Date().getFullYear();
 	     What stays local is only what the DS has no opinion about — the face. */}
 	<div class="site-footer__notes">
 		<Text as="p" size={1} variant="tertiary" class="site-footer__note">© {year} Tristan Timblin</Text>
-		<Text as="p" size={1} variant="tertiary" class="site-footer__note" data-privacy-note>
-			<Anchor href="/privacy/" underline="always" class="site-footer__privacy">
-				No cookies. Page views are counted anonymously by GoatCounter.
-			</Anchor>
+		<Text as="p" size={1} variant="tertiary" class="site-footer__note" data-credits-note>
+			<Anchor href="/credits/" underline="always" class="site-footer__credits">Credits &amp; privacy</Anchor>
 		</Text>
 	</div>
 	<div class="site-footer__controls">
@@ -63,7 +61,7 @@ const year = new Date().getFullYear();
 	}
 	/* Chrome, not copy: the footer's quiet ink, the way the DS asks for a
 	   quieter link (scoping --link-color, anchor.css). */
-	.site-footer__notes :global(.site-footer__privacy) {
+	.site-footer__notes :global(.site-footer__credits) {
 		--link-color: var(--text-tertiary);
 	}
 	.site-footer__notes {

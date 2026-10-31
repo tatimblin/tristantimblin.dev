@@ -1,0 +1,133 @@
+name: AMC A-List refresh
+
+# The A-List card's watch history, from Cinemoo's CSV export
+# (tools/amc/cinemoo.mjs): AMC's own API refuses every client but its app, and
+# Cinemoo builds the same history from the AMC ticket emails Gmail forwards to
+# it. Cinemoo sits behind Cloudflare, which blocks GitHub's datacenter IPs, so
+# this runs on the homelab MacBook's runner (residential IP; see the homelab
+# repo's roles/github-runner).
+#
+# Its own workflow, not a job in nightly.yml: a job routed to an offline
+# self-hosted runner doesn't fail, it queues for up to 24h. Kept apart, an
+# offline MacBook delays only this; the nightly fetchers never wait on it.
+#
+# Like the nightly, a data commit made with GITHUB_TOKEN starts no other
+# workflow, so this calls build-deploy.yml itself.
+on:
+  schedule:
+    # Daily, an hour before the nightly (14:00 UTC), so the two rarely push at
+    # once; each retries its push on top of the other anyway.
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+
+concurrency:
+  # Not nightly-data: a run queued for an offline runner must not hold the
+  # nightly up.
+  group: amc-data
+  cancel-in-progress: false
+
+env:
+  DATA_AMC: src/data/amc.json
+  DATA_AMC_FILMS: src/data/amc-films.json
+
+jobs:
+  refresh:
+    runs-on: [self-hosted, linux, homelab, residential]
+    permissions:
+      contents: write # commit and push the refreshed data
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: "Fetch watch history from Cinemoo"
+        id: amc
+        continue-on-error: true
+        run: bun tools/amc/cinemoo.mjs
+        env:
+          CINEMOO_SESSION: ${{ secrets.CINEMOO_SESSION }}
+          CINEMOO_ROTATED_COOKIE_FILE: ${{ runner.temp }}/cinemoo-rotated
+
+      # Auth.js slides the session forward on use; persist a reissued token
+      # (whether or not the export then succeeded) so it never lapses.
+      - name: "Persist refreshed Cinemoo session"
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ ! -s "$RUNNER_TEMP/cinemoo-rotated" ]; then
+            echo "Session was not reissued — nothing to persist."
+            exit 0
+          fi
+          gh secret set CINEMOO_SESSION --body "$(cat "$RUNNER_TEMP/cinemoo-rotated")"
+          rm -f "$RUNNER_TEMP/cinemoo-rotated"
+
+      - name: "Enrich film metadata"
+        id: enrich
+        if: steps.amc.outcome == 'success'
+        continue-on-error: true
+        run: bun tools/amc/enrich.mjs
+
+      # Each film's poster path on TMDB (hotlinked by the widget from TMDB's
+      # image CDN), cached in amc-films.json: a film with one is never asked
+      # again, one without is asked again weekly. TMDB_TOKEN is a v4 read
+      # token or a v3 key (the script tells them apart); masked, never printed.
+      - name: "TMDB posters"
+        id: posters
+        continue-on-error: true
+        env:
+          TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
+        run: |
+          if [ -n "$TMDB_TOKEN" ]; then echo "::add-mask::$TMDB_TOKEN"; fi
+          bun tools/amc/posters.mjs
+
+      - name: Commit and push if changed
+        id: commit
+        run: |
+          # cinemoo.mjs rewrites the `updated` stamp on every run: a diff that
+          # touches only it is not new data.
+          if git diff --quiet -I'^[[:space:]]*"updated": ' -- "$DATA_AMC"; then
+            git checkout -- "$DATA_AMC"
+          fi
+          git add -- "$DATA_AMC" "$DATA_AMC_FILMS"
+          if git diff --cached --quiet; then
+            echo "No AMC data changed — nothing to commit or deploy."
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "Update AMC data - $(date +%F)"
+          # Retry once on top of anything pushed meanwhile (the nightly).
+          git push || { git pull --rebase && git push; }
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # The steps are continue-on-error so the session is persisted and any
+      # good data committed regardless; this turns a failure back into red.
+      - name: Fail if a step failed
+        if: contains(steps.*.outcome, 'failure')
+        run: exit 1
+
+  deploy:
+    needs: refresh
+    if: ${{ !cancelled() && needs.refresh.outputs.committed == 'true' && github.ref == 'refs/heads/master' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-deploy.yml
+    with:
+      ref: ${{ needs.refresh.outputs.sha }}
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

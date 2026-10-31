@@ -184,8 +184,37 @@ const json = JSON.stringify(films).replace(/</g, "\\u003c");
 		object-fit: cover;
 		pointer-events: none;
 	}
-	/* A booked film: grey art wherever it stands, even at the centre. */
-	.wx-amc-fan :global(.wx-amc-card--up .wx-amc-art) {
+	/* No poster (none anywhere, or it failed to load): the film's title on a
+	   tint of its genre's colour, the same mix the gauge's resting capsules
+	   use (--genre-mute of the way from the card to the genre), so it reads
+	   in both themes. The title is set in the UI face, sized to the card. */
+	.wx-amc-fan :global(.wx-amc-ph) {
+		position: absolute;
+		inset: 0;
+		display: none;
+		align-items: center;
+		justify-content: center;
+		padding: calc(var(--amc-pw) * 0.1);
+		background: color-mix(in oklab, var(--gc, var(--genre-other)) var(--genre-mute), var(--card-background));
+		color: var(--text-primary);
+		font: var(--font-weight-500) max(8px, calc(var(--amc-pw) * 0.13)) / 1.15 var(--font-ui);
+		text-align: center;
+		text-wrap: balance;
+		overflow-wrap: anywhere;
+		overflow: hidden;
+	}
+	.wx-amc-fan :global(.wx-amc-card[data-ph] .wx-amc-ph) {
+		display: flex;
+	}
+	/* At the centre a booked film's calendar disc takes the title's place (the
+	   caption under the fan names it); off-centre, without the disc, it reads. */
+	.wx-amc-fan :global(.wx-amc-card--up[data-active] .wx-amc-ph) {
+		color: transparent;
+	}
+	/* A booked film: grey art wherever it stands, even at the centre (its
+	   placeholder too). */
+	.wx-amc-fan :global(.wx-amc-card--up .wx-amc-art),
+	.wx-amc-fan :global(.wx-amc-card--up .wx-amc-ph) {
 		filter: grayscale(1) contrast(0.9) brightness(1.04);
 	}
 	/* Its calendar disc, at the centre only: the month in tiny caps over the

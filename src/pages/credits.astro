@@ -1,0 +1,62 @@
+---
+// /credits — "Credits & privacy": what the site counts, and who supplies the
+// data it shows (Cinemoo, TMDB — TMDB's terms ask for its sentence here). On BlogLayout's plain shell (the reading measure under a page
+// header), like the 404. The footer's one small link comes here; the old
+// /privacy/ 301s here (public/_redirects).
+import BlogLayout from "../layouts/BlogLayout.astro";
+import Body from "@whois/design-system/Body";
+import Heading from "@whois/design-system/Heading";
+import Anchor from "@whois/design-system/Anchor";
+---
+
+<BlogLayout
+	title="Credits & privacy — Tristan Timblin"
+	description="Who supplies what this site shows, and what it counts."
+	kicker="Credits /"
+	heading="Credits & privacy"
+>
+	<Fragment slot="lede">
+		This site sets no cookies and has no accounts or ads.
+	</Fragment>
+	<div class="credits">
+		<section class="credits__section" data-credits="privacy" aria-labelledby="credits-privacy">
+			<Heading as="h2" size={2} id="credits-privacy">Privacy</Heading>
+			<Body>
+				It is hosted on Cloudflare, which serves the pages and, like any host, sees the requests
+				made to it.
+			</Body>
+			<Body>
+				Page views are counted by hosted <Anchor href="https://www.goatcounter.com" external>GoatCounter</Anchor>,
+				without cookies and without storing your IP address, and only on this site's own domain:
+				a preview or a local copy counts nothing. It records which page was read, the referring
+				site, and the browser, screen size and country, and nothing that identifies you. The
+				visitor and read counts shown on this site come from it.
+			</Body>
+			<Body>
+				For now, Cloudflare Web Analytics, which is also cookieless, runs alongside it.
+			</Body>
+		</section>
+		<section class="credits__section" data-credits="data" aria-labelledby="credits-data">
+			<Heading as="h2" size={2} id="credits-data">Data</Heading>
+			<Body data-credits="cinemoo">
+				The AMC A-List card's watch history comes from <Anchor href="https://cinemoo.app" external>Cinemoo</Anchor>,
+				which builds it from forwarded AMC ticket emails.
+			</Body>
+			<Body data-credits="tmdb">
+				Its film posters come from <Anchor href="https://www.themoviedb.org" external>TMDB</Anchor> and load
+				from TMDB's image servers. This product uses the TMDB API but is not endorsed or certified by TMDB.
+			</Body>
+		</section>
+	</div>
+</BlogLayout>
+
+<style>
+	.credits,
+	.credits__section {
+		display: grid;
+		gap: var(--space-5);
+	}
+	.credits {
+		gap: var(--space-7);
+	}
+</style>

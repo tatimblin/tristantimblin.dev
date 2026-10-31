@@ -38,6 +38,13 @@ export const MEDIA_PATTERN = `${MEDIA_BASE}/**`;
  *  gets a 404. */
 export const PAGES_PATTERN = "https://tatimblin.github.io/**";
 
+/** TMDB's image CDN, where the A-List card's posters are hotlinked from
+ *  (src/widgets/amc/amc.ts). Every request gets poster-stub.jpg (274 bytes,
+ *  a flat 20×30), so a poster loads and decodes without the suite ever
+ *  reaching TMDB. */
+export const TMDB_PATTERN = "https://image.tmdb.org/**";
+export const POSTER_STUB = join(import.meta.dirname, "poster-stub.jpg");
+
 const routed = new WeakSet<BrowserContext>();
 
 export async function routeMedia(context: BrowserContext): Promise<void> {
@@ -53,6 +60,9 @@ export async function routeMedia(context: BrowserContext): Promise<void> {
 	});
 	await context.route(PAGES_PATTERN, (route) =>
 		route.fulfill({ status: 404, headers: { "access-control-allow-origin": "*", "x-media-stub": "1" } }),
+	);
+	await context.route(TMDB_PATTERN, (route) =>
+		route.fulfill({ path: POSTER_STUB, contentType: "image/jpeg", headers: { "x-media-stub": "1" } }),
 	);
 	// The cursive card's bundle and agent (./cursive-route.ts).
 	await routeCursive(context);

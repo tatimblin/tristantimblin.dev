@@ -17,7 +17,8 @@ export interface Film {
 	g: Genre;
 	/** IMDb: the title page, or a search when the id is unknown. */
 	h: string;
-	/** The poster, cropped to 2:3; null when AMC has none. */
+	/** The poster: TMDB's, else AMC's cropped to 2:3; null when neither has
+	 *  one (the card shows the title on its genre's tint). */
 	p: string | null;
 	/** Booked, not yet seen (as of the fetch; the client re-checks the date). */
 	u?: true;
@@ -38,6 +39,30 @@ export interface CacheEntry {
 	primary_genre?: string;
 	amc_id?: string | null;
 	poster?: string | null;
+	/** TMDB's movie id and poster path ("/abc.jpg"), from tools/amc/posters.mjs. */
+	tmdb_id?: number | null;
+	tmdb_poster?: string | null;
+	/** When TMDB last had no poster for it (YYYY-MM-DD). */
+	tmdb_checked?: string;
+}
+
+/** TMDB's image CDN; a poster is `<base><size><path>`. Hotlinked, as TMDB
+ *  asks: nothing is downloaded or committed. */
+export const TMDB_IMAGES = "https://image.tmdb.org/t/p/";
+/** TMDB's poster widths are w92, w154, w185, w342, w500, w780. The poster's
+ *  CSS width (--amc-pw, measured across 320–2560px viewports) is 51px on
+ *  desktop and peaks at 98px around an 880px window; on a phone it is
+ *  25–35px. w185 covers 2× DPR up to 92px (every desktop, phone and
+ *  portrait tablet; 3× on a phone) at a third to a half the bytes of w342
+ *  (17–19 KB against 38–67 KB, sampled), which
+ *  matters when the prefetch warms every poster on a slow connection. Only
+ *  a 2× screen in an 840–900px window upscales it, by at most 5%. */
+export const TMDB_SIZE = "w185";
+
+/** The poster on TMDB's CDN for a cached path, or null for none (or one that
+ *  isn't a bare path). */
+export function tmdbPosterUrl(path: string | null | undefined, size = TMDB_SIZE): string | null {
+	return path && /^\/[\w.-]+$/.test(path) ? `${TMDB_IMAGES}${size}${path}` : null;
 }
 
 /** The poster's CSS width tops out near 120px (a quarter of the largest
@@ -101,7 +126,8 @@ export function buildFilms(movies: Movie[], films: Record<string, CacheEntry>): 
 			d,
 			g: asGenre(meta.primary_genre),
 			h: imdbHref(meta.imdb_id, m.name),
-			p: posterUrl(meta.poster ?? m.poster),
+			// A poster set by hand on the cache entry, then TMDB's, then AMC's.
+			p: (meta.poster ? posterUrl(meta.poster) : tmdbPosterUrl(meta.tmdb_poster)) ?? posterUrl(m.poster),
 			...(m.upcoming ? { u: true as const } : {}),
 		});
 	}
