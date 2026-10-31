@@ -13,9 +13,13 @@ import { upcomingCache, upcomingMovies } from "./fixtures/amc";
 
 // Posters come from AMC's Cloudinary (and the fixture's from Wikipedia): not
 // fetched in the suite; a card without its art is the wash.
-const routePosters = async (page: Page) => {
+// `requested`, if given, collects the poster URLs asked for.
+const routePosters = async (page: Page, requested?: Set<string>) => {
 	for (const host of ["https://amc-theatres-res.cloudinary.com/**", "https://upload.wikimedia.org/**"]) {
-		await page.route(host, (route) => route.fulfill({ status: 404 }));
+		await page.route(host, (route) => {
+			requested?.add(route.request().url());
+			return route.fulfill({ status: 404 });
+		});
 	}
 };
 
@@ -52,8 +56,8 @@ const withBookings = async (page: Page) => {
 	);
 };
 
-const open = async (page: Page) => {
-	await routePosters(page);
+const open = async (page: Page, requested?: Set<string>) => {
+	await routePosters(page, requested);
 	await page.goto("/");
 	const widget = page.locator(".wx-amc");
 	await widget.waitFor({ state: "attached" });
@@ -139,11 +143,80 @@ test("a booked film: grey poster, a calendar disc at the centre only, the days t
 	const active = widget.locator(".wx-amc-card[data-active]");
 	await expect(active).toHaveClass(/wx-amc-card--up/);
 	await expect(active.locator(".wx-amc-badge")).toHaveCSS("opacity", "1");
-	// Every other booking (Hexed, and any in the real data) shows no disc.
-	const booked = await widget.locator(".wx-amc-tick[data-up]").count();
 	// The fixture's two bookings at least, each with a booked tick.
+	const booked = await widget.locator(".wx-amc-tick[data-up]").count();
 	expect(booked).toBeGreaterThanOrEqual(2);
+	// Every other booking on the fan (Hexed, next to it, and any in the real
+	// data) shows no disc. Only the fan's posters are drawn, so Hexed's is
+	// there and a booking far off it isn't.
 	const others = widget.locator(".wx-amc-card--up:not([data-active]) .wx-amc-badge");
-	await expect(others).toHaveCount(booked - 1);
+	await expect(widget.locator('.wx-amc-card--up:not([data-active]):visible')).not.toHaveCount(0);
+	expect(await others.count()).toBeLessThanOrEqual(booked - 1);
 	for (const badge of await others.all()) await expect(badge).toHaveCSS("opacity", "0");
+});
+
+test("the fan recycles a few cards, and requests only the posters on it", async ({ page }) => {
+	// A long history: the real films padded to 400, each with its own poster.
+	const FILMS = 400;
+	await page.route(
+		(url) => url.pathname === "/" && url.origin === new URL(test.info().project.use.baseURL ?? "http://localhost").origin,
+		async (route) => {
+			const res = await route.fetch();
+			const html = (await res.text()).replace(
+				/(<script type="application\/json" data-amc-films[^>]*>)([\s\S]*?)(<\/script>)/,
+				(_, open: string, json: string, close: string) => {
+					const real = JSON.parse(json) as { d: string; u?: true }[];
+					const seen = real.filter((f) => !f.u);
+					const pad = Array.from({ length: FILMS - real.length }, (_, k) => ({
+						n: `Padding ${k}`,
+						d: "2020-01-01",
+						g: "Other",
+						h: `https://www.imdb.com/find/?q=padding-${k}`,
+						p: `https://upload.wikimedia.org/padding/${k}.jpg`,
+					}));
+					// Before the real films, so the fan still opens on the latest seen.
+					const films = [...pad, ...seen.map((f, k) => ({ ...f, p: `https://upload.wikimedia.org/real/${k}.jpg` })), ...real.filter((f) => f.u)];
+					return open + JSON.stringify(films).replace(/</g, "\\u003c") + close;
+				},
+			);
+			await route.fulfill({ response: res, body: html });
+		},
+	);
+	const requested = new Set<string>();
+	const widget = await open(page, requested);
+	const slider = widget.locator('[role="slider"]');
+	await expect(slider).toHaveAttribute("aria-valuemax", String(FILMS));
+	// Every film still has its tick: the gauge is the whole history.
+	await expect(widget.locator(".wx-amc-tick")).toHaveCount(FILMS);
+
+	// At rest: the centre and three either side (the outermost pair clear),
+	// on a pool of at most 16 cards (fan.ts's POOL).
+	const now = Number(await slider.getAttribute("aria-valuenow")) - 1;
+	const lo = Math.max(0, now - 3);
+	const hi = Math.min(FILMS - 1, now + 3);
+	const cards = widget.locator(".wx-amc-card");
+	await expect(widget.locator(".wx-amc-card:visible")).toHaveCount(hi - lo + 1);
+	expect(await cards.count()).toBeLessThanOrEqual(16);
+
+	// Only those posters were asked for: the films within three of the centre.
+	const films = await widget.locator("[data-amc-films]").evaluate((el) => JSON.parse(el.textContent ?? "[]"));
+	const near = new Set(films.slice(lo, hi + 1).map((f: { p: string | null }) => f.p));
+	await expect.poll(() => requested.size).toBeGreaterThan(0);
+	for (const url of requested) expect(near).toContain(url);
+
+	// Moving and shuffling recycle the same few cards.
+	await slider.focus();
+	for (let k = 0; k < 12; k++) await page.keyboard.press("ArrowLeft");
+	await expect(slider).toHaveAttribute("aria-valuenow", String(now + 1 - 12));
+	await page.waitForTimeout(600); // the glide lands
+	const mode = widget.locator("[data-amc-mode]");
+	await mode.click();
+	await page.waitForTimeout(150);
+	expect(await cards.count()).toBeLessThanOrEqual(16);
+	await mode.click();
+	await expect(slider).toHaveAttribute("aria-valuenow", String(now + 1 - 12));
+	await expect.poll(() => widget.locator(".wx-amc-card:visible").count()).toBe(7);
+	expect(await cards.count()).toBeLessThanOrEqual(16);
+	// Still nowhere near one request per film.
+	expect(requested.size).toBeLessThan(60);
 });

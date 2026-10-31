@@ -2,7 +2,8 @@
 // readout, laid out against the card as drawn (sizes from ./arc.ts, in the
 // mock's units, scaled by the card's own size) and driven by drag, tap,
 // wheel and the keyboard. Amc.astro renders the shell and the films as JSON;
-// this builds the posters and the gauge from them.
+// this builds the gauge from them, and draws the posters on a few recycled
+// cards (only those on the fan, however many films there are).
 //
 // DATE: the fan in watch order over a scale of evenly spaced ticks (taller at
 // a year's start) that slides under a fixed needle. GENRE: the films grouped
@@ -36,6 +37,23 @@ import {
 import type { Film } from "./amc";
 
 type Mode = "date" | "genre";
+
+/** One of the fan's recycled cards and the film it is showing. */
+interface Slot {
+	el: HTMLDivElement;
+	img: HTMLImageElement;
+	badge: HTMLSpanElement | null;
+	/** The film it was last handed, -1 before any. */
+	film: number;
+	/** Drawn this frame. */
+	on: boolean;
+}
+
+/** The most cards the fan ever holds. At rest it draws seven (the centre
+ *  ±3); a shuffle draws the posters leaving the fan and those arriving (at
+ *  most seven each) plus one per stack of posters riding an identical path
+ *  across it. Past this the posters nearest the edges are left out. */
+export const POOL = 16;
 
 const NS = "http://www.w3.org/2000/svg";
 const DEG = Math.PI / 180;
@@ -85,31 +103,70 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 	genreOrder.forEach((fi, at) => (placeOf.genre[fi] = at));
 	const orderOf: Record<Mode, number[]> = { date: dateOrder, genre: genreOrder };
 
-	/* ── the posters ── */
-	const cards = films.map((f, i) => {
-		const c = document.createElement("div");
-		c.className = up[i] ? "wx-amc-card wx-amc-card--up" : "wx-amc-card";
+	/* ── the posters: a small pool of cards, recycled ──
+	   Only the posters on the fan are in the DOM, never one per film: at rest
+	   the centre ±3 (the outermost pair transparent, so their art is already
+	   loaded when they slide in), mid-shuffle whatever is crossing the fan.
+	   Each frame a film keeps the card it had; a film coming in takes a card
+	   no longer needed and the card's art, class, disc and index are swapped
+	   to it. Posters off the fan are never requested. */
+	const slots: Slot[] = [];
+	/** The card each film was last drawn on (it may since have been parked). */
+	const slotOf = new Map<number, Slot>();
+	fan.replaceChildren();
+
+	const newSlot = (): Slot => {
+		const el = document.createElement("div");
+		el.className = "wx-amc-card";
+		el.style.display = "none";
+		const img = document.createElement("img");
+		img.className = "wx-amc-art";
+		img.alt = "";
+		img.loading = "lazy";
+		img.decoding = "async";
+		img.draggable = false;
+		// Shown once the art it was handed has loaded, so a recycled card
+		// never flashes the film it held before: the wash until then, as a
+		// fresh card's lazy art would.
+		const reveal = () => (img.style.visibility = "");
+		img.addEventListener("load", reveal, { signal: ac.signal });
+		const s: Slot = { el, img, badge: null, film: -1, on: false };
+		fan.append(el);
+		slots.push(s);
+		return s;
+	};
+
+	/** Hands a card to film `i`: its art, booked state and disc. */
+	const bind = (s: Slot, i: number) => {
+		if (s.film >= 0 && slotOf.get(s.film) === s) slotOf.delete(s.film);
+		s.film = i;
+		slotOf.set(i, s);
+		const f = films[i];
+		s.el.className = up[i] ? "wx-amc-card wx-amc-card--up" : "wx-amc-card";
+		s.el.dataset.film = String(i);
 		if (f.p) {
-			const img = document.createElement("img");
-			img.className = "wx-amc-art";
-			img.alt = "";
-			img.loading = "lazy";
-			img.decoding = "async";
-			img.draggable = false;
-			img.src = f.p;
-			c.append(img);
+			if (s.img.getAttribute("src") !== f.p) {
+				s.img.src = f.p;
+				s.img.style.visibility = s.img.complete && s.img.naturalWidth ? "" : "hidden";
+			}
+			if (!s.img.isConnected) s.el.prepend(s.img);
+		} else {
+			// No poster: the card's wash alone.
+			s.img.remove();
 		}
 		if (up[i]) {
 			// The booked showing's calendar disc: month over day.
 			const d = f.d.split("-").map(Number);
-			const badge = document.createElement("span");
-			badge.className = "wx-amc-badge";
-			badge.innerHTML = `<span class="ds-mono ds-caps">${MONTHS[d[1] - 1]}</span><b>${d[2]}</b>`;
-			c.append(badge);
+			if (!s.badge) {
+				s.badge = document.createElement("span");
+				s.badge.className = "wx-amc-badge";
+			}
+			s.badge.innerHTML = `<span class="ds-mono ds-caps">${MONTHS[d[1] - 1]}</span><b>${d[2]}</b>`;
+			if (!s.badge.isConnected) s.el.append(s.badge);
+		} else {
+			s.badge?.remove();
 		}
-		fan.append(c);
-		return c;
-	});
+	};
 
 	/* ── the gauge ── */
 	const mk = <K extends keyof SVGElementTagNameMap>(tag: K, cls: string, parent: Element) => {
@@ -132,6 +189,9 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		p.style.setProperty("--gc", genreVar(G.g));
 		return p;
 	});
+	/** Whether each tick was last drawn showing (all, before the first draw). */
+	const tickLit = films.map(() => true);
+	let capsDrawn: Geo | null = null;
 	const nowDot = mk("circle", "wx-amc-now", svg);
 	const halo = mk("line", "wx-amc-halo", svg);
 	const needle = mk("line", "wx-amc-needle", svg);
@@ -216,30 +276,88 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 	};
 
 	/* ── drawing ── */
+	/** A poster to draw this frame: the film on top of its stack, how many
+	 *  films share its exact pose, and where it is. */
+	interface Draw {
+		i: number;
+		n: number;
+		d: number;
+		l: number;
+	}
+	const stacks = new Map<string, Draw>();
 	const place = (offset: (i: number) => number, lift?: (i: number) => number) => {
 		if (!geo) return;
 		const g = geo;
 		const top = g.py - g.rad - g.ph / 2;
-		cards.forEach((c, i) => {
+		const edge = FAN.visible + 0.3;
+		// Every film's offset (kept, so a toggle can start from it), but only
+		// the posters on the fan are drawn. Mid-shuffle, films clamped to the
+		// same path off the fan pile up in one pose (the later film on top, as
+		// the order of the cards had it): one card draws the pile, its opacity
+		// that of the pile's layers composited.
+		stacks.clear();
+		for (let i = 0; i < N; i++) {
 			const d = offset(i);
 			shown[i] = d;
-			const p = fanPose(d, g.rad);
-			if (p.hidden) {
-				c.style.display = "none";
-				return;
+			if (Math.abs(d) > edge) continue;
+			const l = lift ? lift(i) : 0;
+			// At rest the transparent outermost pair is drawn too: their art loads
+			// before they slide in. Mid-shuffle a transparent poster is left out.
+			if (shuffling && Math.abs(d) >= FAN.visible) continue;
+			const key = `${d.toFixed(4)} ${l.toFixed(2)}`;
+			const s = stacks.get(key);
+			if (s) {
+				s.i = i;
+				s.n++;
+			} else stacks.set(key, { i, n: 1, d, l });
+		}
+		let draw = [...stacks.values()];
+		if (draw.length > POOL) draw = draw.sort((a, b) => Math.abs(a.d) - Math.abs(b.d)).slice(0, POOL);
+
+		// Films already on a card keep it; the rest take cards no longer needed.
+		for (const s of slots) s.on = false;
+		const need: Draw[] = [];
+		for (const w of draw) {
+			const s = slotOf.get(w.i);
+			if (s && !s.on) s.on = true;
+			else need.push(w);
+		}
+		let free = 0;
+		const cardFor = (w: Draw) => {
+			while (free < slots.length && slots[free].on) free++;
+			const s = free < slots.length ? slots[free] : newSlot();
+			s.on = true;
+			bind(s, w.i);
+			return s;
+		};
+		for (const w of need) cardFor(w);
+		const byFilm = new Map(draw.map((w) => [w.i, w]));
+
+		for (const s of slots) {
+			const c = s.el;
+			if (!s.on) {
+				if (c.style.display !== "none") {
+					c.style.display = "none";
+					c.removeAttribute("data-active");
+				}
+				continue;
 			}
+			const w = byFilm.get(s.film)!;
+			const p = fanPose(w.d, g.rad);
 			c.style.display = "";
 			c.style.left = `${g.cx - g.pw / 2}px`;
 			c.style.top = `${top}px`;
-			const y = p.y - (lift ? lift(i) : 0);
+			const y = p.y - w.l;
 			c.style.transform = `translate(${p.x.toFixed(2)}px,${y.toFixed(2)}px) rotate(${p.rotate.toFixed(2)}deg) scale(${p.scale.toFixed(3)})`;
 			// A booked film's art is grey whatever its place (CSS); a seen film
 			// colours up in the centre.
 			c.style.setProperty("--gray", p.gray.toFixed(2));
-			c.style.opacity = p.opacity.toFixed(3);
-			c.style.zIndex = String(p.z);
-			c.toggleAttribute("data-active", Math.abs(d) < 0.5);
-		});
+			c.style.opacity = (1 - (1 - p.opacity) ** w.n).toFixed(3);
+			// Nearer the centre on top; level, the later film (the order one
+			// card per film had in the DOM).
+			c.style.zIndex = String(p.z * N + s.film);
+			c.toggleAttribute("data-active", Math.abs(w.d) < 0.5);
+		}
 	};
 
 	const drawGauge = () => {
@@ -259,19 +377,35 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		const tickOp = 1 - smoothstep(blend, 0.35, 0.9);
 		const capOp = smoothstep(blend, 0.45, 1);
 
-		films.forEach((_, i) => {
+		// Only the ticks in sight are moved: one faded out is set to 0 once and
+		// then left alone until it comes back (about 30 of them show at a time).
+		for (let i = 0; i < N; i++) {
 			const thD = (placeOf.date[i] - pd) * pitch;
-			const th = lerp(thD, genreAngle(groups, g.arcs, placeOf.genre[i]), eb);
-			const fade = 1 - smoothstep(Math.abs(th), span * 0.7, span * 1.15);
+			const th = eb === 0 ? thD : lerp(thD, genreAngle(groups, g.arcs, placeOf.genre[i]), eb);
+			const op = (1 - smoothstep(Math.abs(th), span * 0.7, span * 1.15)) * tickOp;
+			if (op === 0) {
+				if (tickLit[i]) {
+					ticks[i].style.opacity = "0";
+					tickLit[i] = false;
+				}
+				continue;
+			}
+			tickLit[i] = true;
 			const inner = majors.has(i) || up[i] ? g.rMaj : g.rIn;
 			line(ticks[i], pt(g, th, g.R), pt(g, th, inner));
-			ticks[i].style.opacity = (fade * tickOp).toFixed(3);
-		});
+			ticks[i].style.opacity = op.toFixed(3);
+		}
 
+		// The capsules' arcs change only with the card's size.
+		if (capsDrawn !== g) {
+			capsDrawn = g;
+			groups.forEach((_, k) => {
+				const c = g.arcs[k];
+				caps[k].setAttribute("d", arcPath(g, c.a0, c.a1, g.capR));
+				caps[k].setAttribute("stroke-width", String(GAUGE.capW * g.u));
+			});
+		}
 		groups.forEach((H, k) => {
-			const c = g.arcs[k];
-			caps[k].setAttribute("d", arcPath(g, c.a0, c.a1, g.capR));
-			caps[k].setAttribute("stroke-width", String(GAUGE.capW * g.u));
 			caps[k].style.opacity = capOp.toFixed(3);
 			caps[k].toggleAttribute("data-on", H === G);
 		});
@@ -474,7 +608,10 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 
 	/* ── the gauge as a slider. DATE: drag the scale under the needle (a tap
 	   jumps to the tick under it). GENRE: absolute, along the capsules. ── */
-	const trackX = (e: PointerEvent) => e.clientX - scrub.getBoundingClientRect().left;
+	/** The band's left edge, read once a drag (it doesn't move during one), so
+	 *  a pointermove never forces the layout the last frame's writes dirtied. */
+	let scrubLeft = 0;
+	const trackX = (e: PointerEvent) => e.clientX - scrubLeft;
 	const fromX = (x: number, p0: number, x0: number) => {
 		if (!geo) return p0;
 		if (mode === "date") return p0 - (x - x0) / (geo.R * GAUGE.pitch * DEG);
@@ -485,6 +622,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		if (e.button !== 0) return;
 		stop();
 		scrub.setPointerCapture(e.pointerId);
+		scrubLeft = scrub.getBoundingClientRect().left;
 		const x0 = trackX(e);
 		const p0 = pos;
 		let moved = false;
@@ -561,7 +699,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 				.elementsFromPoint(ev.clientX, ev.clientY)
 				.find((n) => n instanceof HTMLElement && n.classList.contains("wx-amc-card"));
 			if (!hit) return;
-			const at = placeOf[mode][cards.indexOf(hit as HTMLDivElement)];
+			const at = placeOf[mode][Number((hit as HTMLElement).dataset.film)];
 			if (at === Math.round(pos)) window.open(films[orderOf[mode][at]].h, "_blank", "noopener");
 			else animateTo(at);
 		};
