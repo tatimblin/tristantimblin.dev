@@ -34,8 +34,7 @@ env:
   DATA_GITHUB: src/data/github.json
   DATA_PAGEVIEWS: src/data/pageviews.json
   DATA_VOLO: src/data/volo.json
-  DATA_AMC: src/data/amc.json
-  DATA_AMC_FILMS: src/data/amc-films.json
+  # The AMC A-List data is refreshed by amc.yml, on the homelab runner.
 
 jobs:
   # ── Collect ──────────────────────────────────────────────────────────────
@@ -59,52 +58,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      # ── AMC A-List ─────────────────────────────────────────────────────────
-      # The watch history comes from Cinemoo's CSV export (tools/amc/cinemoo.mjs):
-      # AMC's own API refuses every client but its app. Cinemoo builds it from
-      # the AMC ticket emails Gmail forwards to it.
-      - name: "AMC: fetch watch history from Cinemoo"
-        id: amc
-        continue-on-error: true
-        run: bun tools/amc/cinemoo.mjs
-        env:
-          CINEMOO_SESSION: ${{ secrets.CINEMOO_SESSION }}
-          CINEMOO_ROTATED_COOKIE_FILE: ${{ runner.temp }}/cinemoo-rotated
-
-      # Auth.js slides the session forward on use; persist a reissued token
-      # (whether or not the export then succeeded) so it never lapses.
-      - name: "AMC: persist refreshed Cinemoo session"
-        if: always()
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          if [ ! -s "$RUNNER_TEMP/cinemoo-rotated" ]; then
-            echo "Session was not reissued — nothing to persist."
-            exit 0
-          fi
-          gh secret set CINEMOO_SESSION --body "$(cat "$RUNNER_TEMP/cinemoo-rotated")"
-          rm -f "$RUNNER_TEMP/cinemoo-rotated"
-
-      - name: "AMC: enrich film metadata"
-        id: enrich
-        if: steps.amc.outcome == 'success'
-        continue-on-error: true
-        run: bun tools/amc/enrich.mjs
-
-      # Each film's poster path on TMDB (hotlinked by the widget from TMDB's
-      # image CDN), cached in amc-films.json: a film with one is never asked
-      # again, one without is asked again weekly. TMDB_TOKEN is a v4 read
-      # token or a v3 key (the script tells them apart); masked, never printed.
-      - name: "AMC: TMDB posters"
-        id: posters
-        continue-on-error: true
-        env:
-          TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
-        run: |
-          if [ -n "$TMDB_TOKEN" ]; then echo "::add-mask::$TMDB_TOKEN"; fi
-          bun tools/amc/posters.mjs
 
       # ── BayWheels ──────────────────────────────────────────────────────────
       # The query action lives in the private tatimblin/baywheels-stats repo and
@@ -257,11 +210,8 @@ jobs:
           if git diff --quiet -I'^[[:space:]]*"updated": ' -- "$DATA_VOLO"; then
             git checkout -- "$DATA_VOLO"
           fi
-          if git diff --quiet -I'^[[:space:]]*"updated": ' -- "$DATA_AMC"; then
-            git checkout -- "$DATA_AMC"
-          fi
 
-          git add -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_PAGEVIEWS" "$DATA_VOLO" "$DATA_AMC" "$DATA_AMC_FILMS"
+          git add -- "$DATA_BIKE" "$DATA_GITHUB" "$DATA_PAGEVIEWS" "$DATA_VOLO"
           if git diff --cached --quiet; then
             echo "No data changed — nothing to commit or deploy."
             echo "committed=false" >> "$GITHUB_OUTPUT"

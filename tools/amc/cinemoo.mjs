@@ -223,7 +223,16 @@ async function main() {
 	}
 
 	const text = await res.text();
-	if (res.status === 401 || res.status === 403 || (res.status >= 300 && res.status < 400)) {
+	// A 403 is Cloudflare refusing the client (it blocks GitHub-hosted
+	// runners' datacenter IPs), not Cinemoo refusing the session: that's a 401.
+	if (res.status === 403) {
+		console.error(
+			`::error::Cinemoo's Cloudflare blocked the request (403, server=${res.headers.get("server")}). ` +
+				"This must run from the homelab runner's residential IP (amc.yml), not a GitHub-hosted runner.",
+		);
+		process.exit(1);
+	}
+	if (res.status === 401 || (res.status >= 300 && res.status < 400)) {
 		console.error(
 			`::error::Cinemoo refused the session (${res.status}). Sign in at cinemoo.app and re-set CINEMOO_SESSION ` +
 				"from the __Secure-authjs.session-token cookie.",
