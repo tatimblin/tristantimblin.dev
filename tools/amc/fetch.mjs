@@ -338,7 +338,8 @@ async function main() {
 }
 
 // Only as a script, so the tests can import the pure parts without a request.
-if (import.meta.main) {
+// The argv check covers Node releases without import.meta.main.
+if (import.meta.main ?? process.argv[1] === fileURLToPath(import.meta.url)) {
 	main().catch((err) => {
 		console.error(`::error::${err?.stack ?? err}`);
 		process.exit(1);
