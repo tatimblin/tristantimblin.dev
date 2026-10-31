@@ -454,6 +454,7 @@ async function main() {
 	});
 
 	let page;
+	let checkRotation;
 	try {
 		page = await browser.newPage();
 		await page.setViewport({ width: 1280, height: 800 });
@@ -483,8 +484,20 @@ async function main() {
 		const landedUrl = page.url();
 		console.log(`Landed on: ${landedUrl}`);
 
+		// ── Move to the API's own origin ────────────────────────────────
+		// The API is on graph.amctheatres.com, a DIFFERENT origin from www.
+		// A fetch from www with the x-amc-* headers is a CORS preflight that
+		// the API refuses ("TypeError: Failed to fetch"). Loading any page on
+		// the API origin makes the fetch below same-origin, and clears a
+		// Cloudflare challenge on that host too. The status of this GET is
+		// irrelevant — only the page's origin matters.
+		console.log("Navigating to the API origin…");
+		await page.goto(`${ENDPOINT}/`, { waitUntil: "networkidle0", timeout: 60_000 });
+		await new Promise((resolve) => setTimeout(resolve, 2_000));
+		console.log(`On API origin: ${new URL(page.url()).origin}`);
+
 		// ── Helper: check cookie rotation after each request ────────────
-		const checkRotation = async (operationName) => {
+		checkRotation = async (operationName) => {
 			const allCookies = await getAllCookies(page);
 			const amcCookies = allCookies.filter(
 				(c) => c.domain === ".amctheatres.com" || c.domain === "amctheatres.com" || c.domain === "graph.amctheatres.com",
@@ -548,6 +561,15 @@ async function main() {
 		console.log(`Wrote ${past.length} seen and ${upcoming.length} booked movies to ${OUT_PATH}`);
 		if (!rotated) console.log("Cookie did not rotate.");
 	} finally {
+		// A request that failed after reaching AMC may still have rotated the
+		// session. Persist it anyway, or the only copy dies with this profile.
+		if (checkRotation) {
+			try {
+				await checkRotation("final");
+			} catch (err) {
+				console.log(`::warning::AMC: final rotation check failed — ${err?.message ?? err}`);
+			}
+		}
 		await browser.close();
 	}
 }

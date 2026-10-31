@@ -70,6 +70,10 @@ jobs:
     runs-on: [self-hosted, linux, homelab, residential]
     permissions:
       contents: read
+    # The fetch is continue-on-error, so the JOB succeeds either way; collect
+    # reads this to turn an AMC failure back into a red run.
+    outputs:
+      fetch: ${{ steps.amc.outcome }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -324,7 +328,7 @@ jobs:
       # The fetchers are continue-on-error so one broken credential doesn't block
       # the others' data; this turns any such failure back into a red run.
       - name: Fail if any fetcher failed
-        if: contains(steps.*.outcome, 'failure')
+        if: contains(steps.*.outcome, 'failure') || needs.amc-fetch.outputs.fetch == 'failure'
         run: exit 1
 
   deploy:
