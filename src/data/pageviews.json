@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-29",
+	"updated": "2026-10-30",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
@@ -371,6 +371,10 @@
 		{
 			"date": "2026-10-29",
 			"visitors": 4
+		},
+		{
+			"date": "2026-10-30",
+			"visitors": 7
 		}
 	],
 	"pathDays": [

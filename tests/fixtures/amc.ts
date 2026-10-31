@@ -1,7 +1,7 @@
 /**
  * Booked AMC tickets for tests and local dev: the real data has none yet, and
  * none is ever faked into src/data. Dated from `today`, so a booking is
- * always 22 and 28 days out. Shaped as tools/amc/fetch.mjs writes amc.json,
+ * always 22 and 28 days out. Shaped as tools/amc/cinemoo.mjs writes amc.json,
  * with the cache entries tools/amc/enrich.mjs would add.
  *
  * Used by src/widgets/amc/amc.test.ts, tests/amc.spec.ts (which swaps it into

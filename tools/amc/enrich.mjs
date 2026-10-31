@@ -3,7 +3,7 @@
  * AMC A-List film metadata — each film's IMDb id and genre bucket, cached in
  * src/data/amc-films.json (committed), keyed by filmKey(name).
  *
- * Runs in the nightly Action after tools/amc/fetch.mjs. For every film in
+ * Runs in the nightly Action after tools/amc/cinemoo.mjs. For every film in
  * src/data/amc.json that the cache doesn't know yet, it asks Wikidata (keyless
  * SPARQL: a title search, narrowed to films with an IMDb id released within a
  * year either side of the screening) for the IMDb id and genre labels, and

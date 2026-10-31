@@ -6,8 +6,9 @@ import { upcomingCache, upcomingMovies } from "./fixtures/amc";
  * THE A-LIST CARD. The fan, the gauge and the readout are built by the
  * widget's script from the films the page carries as JSON; the gauge is a
  * slider (one film a step), the header's glyph toggles DATE and GENRE, and a
- * booked film (none in the real data yet) reads as a countdown with a
- * calendar disc on its centre poster.
+ * booked film reads as a countdown with a calendar disc on its centre poster.
+ * The real data may hold bookings of its own, so counts are taken from the
+ * page rather than assumed.
  */
 
 // Posters come from AMC's Cloudinary (and the fixture's from Wikipedia): not
@@ -61,13 +62,15 @@ const open = async (page: Page) => {
 	return widget;
 };
 
-test("the fan opens on the latest film; the gauge steps through them", async ({ page }) => {
+test("the fan opens on the latest film seen; the gauge steps through them", async ({ page }) => {
 	const widget = await open(page);
 	const slider = widget.locator('[role="slider"]');
 	const title = widget.locator(".wx-amc-title");
 	const max = Number(await slider.getAttribute("aria-valuemax"));
 	expect(max).toBeGreaterThan(1);
-	await expect(slider).toHaveAttribute("aria-valuenow", String(max));
+	// Bookings sit after the films seen; the fan opens on the last one seen.
+	const seen = max - (await widget.locator(".wx-amc-tick[data-up]").count());
+	await expect(slider).toHaveAttribute("aria-valuenow", String(seen));
 	await expect(widget.locator(".wx-amc-card[data-active]")).toHaveCount(1);
 	await expect(widget.locator(".wx-amc-tick")).toHaveCount(max);
 	await expect(title).toHaveAttribute("href", /^https:\/\/www\.imdb\.com\/(title\/tt\d+\/|find\/\?q=)/);
@@ -76,7 +79,7 @@ test("the fan opens on the latest film; the gauge steps through them", async ({ 
 	const latest = await title.textContent();
 	await slider.focus();
 	await page.keyboard.press("ArrowLeft");
-	await expect(slider).toHaveAttribute("aria-valuenow", String(max - 1));
+	await expect(slider).toHaveAttribute("aria-valuenow", String(seen - 1));
 	await expect(title).not.toHaveText(latest ?? "");
 	await page.keyboard.press("Home");
 	await expect(slider).toHaveAttribute("aria-valuenow", "1");
@@ -136,10 +139,11 @@ test("a booked film: grey poster, a calendar disc at the centre only, the days t
 	const active = widget.locator(".wx-amc-card[data-active]");
 	await expect(active).toHaveClass(/wx-amc-card--up/);
 	await expect(active.locator(".wx-amc-badge")).toHaveCSS("opacity", "1");
-	// The neighbouring booking (Hexed) shows no disc.
+	// Every other booking (Hexed, and any in the real data) shows no disc.
+	const booked = await widget.locator(".wx-amc-tick[data-up]").count();
+	// The fixture's two bookings at least, each with a booked tick.
+	expect(booked).toBeGreaterThanOrEqual(2);
 	const others = widget.locator(".wx-amc-card--up:not([data-active]) .wx-amc-badge");
-	await expect(others).toHaveCount(1);
-	await expect(others).toHaveCSS("opacity", "0");
-	// Two booked ticks on the gauge.
-	await expect(widget.locator(".wx-amc-tick[data-up]")).toHaveCount(2);
+	await expect(others).toHaveCount(booked - 1);
+	for (const badge of await others.all()) await expect(badge).toHaveCSS("opacity", "0");
 });

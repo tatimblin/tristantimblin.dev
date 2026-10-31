@@ -38,7 +38,104 @@ env:
   DATA_AMC_FILMS: src/data/amc-films.json
 
 jobs:
+  # ── AMC gate ─────────────────────────────────────────────────────────────
+  # The AMC fetch runs daily, but only on the homelab runner. A job routed to
+  # an offline self-hosted runner doesn't fail, it queues for up to 24h — and
+  # collect waits on it, holding up every other fetcher. So this checks, on
+  # ubuntu-latest, that a runner carrying the `residential` label is online,
+  # and skips AMC (with a warning) for the day if not.
+  amc-gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - name: "AMC: is the homelab runner online?"
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          online="$(gh api "repos/${{ github.repository }}/actions/runners" \
+            --jq '[.runners[] | select(.status == "online" and any(.labels[]; .name == "residential"))] | length' \
+            || echo 0)"
+          if [ "${online:-0}" -gt 0 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No online runner with the 'residential' label; skipping AMC today."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── AMC fetch (self-hosted runner) ───────────────────────────────────────
+  # The watch history comes from Cinemoo's CSV export (tools/amc/cinemoo.mjs):
+  # AMC's own API refuses every client but its app. Cinemoo builds it from the
+  # AMC ticket emails Gmail forwards to it. Runs on the homelab runner's
+  # residential IP, since Cinemoo is behind Cloudflare too. Uploads amc.json +
+  # amc-films.json as an artifact for the collect job to download and commit.
+  amc-fetch:
+    needs: [amc-gate]
+    if: needs.amc-gate.outputs.run == 'true'
+    runs-on: [self-hosted, linux, homelab, residential]
+    permissions:
+      contents: read
+    # The fetch is continue-on-error, so the JOB succeeds either way; collect
+    # reads this to turn an AMC failure back into a red run.
+    outputs:
+      fetch: ${{ steps.amc.outcome }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: "AMC: fetch watch history from Cinemoo"
+        id: amc
+        continue-on-error: true
+        run: bun tools/amc/cinemoo.mjs
+        env:
+          CINEMOO_SESSION: ${{ secrets.CINEMOO_SESSION }}
+          CINEMOO_ROTATED_COOKIE_FILE: ${{ runner.temp }}/cinemoo-rotated
+
+      # Auth.js slides the session forward on use; persist a reissued token
+      # (whether or not the export then succeeded) so it never lapses.
+      - name: "AMC: persist refreshed Cinemoo session"
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ ! -s "$RUNNER_TEMP/cinemoo-rotated" ]; then
+            echo "Session was not reissued — nothing to persist."
+            exit 0
+          fi
+          gh secret set CINEMOO_SESSION --body "$(cat "$RUNNER_TEMP/cinemoo-rotated")"
+          rm -f "$RUNNER_TEMP/cinemoo-rotated"
+
+      - name: "AMC: enrich film metadata"
+        if: always() && steps.amc.outcome == 'success'
+        continue-on-error: true
+        run: bun tools/amc/enrich.mjs
+
+      - name: Upload AMC data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: amc-data
+          path: |
+            src/data/amc.json
+            src/data/amc-films.json
+          retention-days: 1
+          if-no-files-found: ignore
+
+  # ── Collect (ubuntu-latest) ──────────────────────────────────────────────
   collect:
+    needs: [amc-gate, amc-fetch]
+    # Run even when amc-fetch is skipped (runner offline) or fails.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
       contents: write # commit and push the refreshed data
@@ -58,6 +155,16 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Download the AMC data that the self-hosted runner produced. The
+      # artifact stores the files without their common src/data/ prefix, so
+      # they must land back in src/data, not the repo root.
+      - name: "AMC: download data from self-hosted runner"
+        if: needs.amc-fetch.outputs.fetch == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: amc-data
+          path: src/data
 
       # ── BayWheels ──────────────────────────────────────────────────────────
       # The query action lives in the private tatimblin/baywheels-stats repo and
@@ -148,60 +255,6 @@ jobs:
           GOATCOUNTER_CODE: ${{ secrets.GOATCOUNTER_CODE }}
           PAGEVIEWS_SINCE: ${{ inputs.pageviews_since }}
 
-      # ── AMC ──────────────────────────────────────────────────────────────
-      # Scheduled runs fetch AMC on Monday (UTC) only — catches weekend movies.
-      # Manual runs always fetch.
-      - name: "AMC: is today a fetch day?"
-        id: amc_day
-        env:
-          FORCE: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          DOW="$(date -u +%u)"
-          if [ "$FORCE" = "true" ] || [ "$DOW" = 1 ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Day $DOW is not Monday; skipping AMC."
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # Pulls A-List watch history from the AMC GraphQL API. The session cookie
-      # was captured via mitmproxy and stored as AMC_SESSION (see tatimblin/amc-stats).
-      - name: "AMC: fetch watch history"
-        id: amc
-        if: steps.amc_day.outputs.run == 'true'
-        continue-on-error: true
-        run: bun tools/amc/fetch.mjs
-        env:
-          AMC_SESSION: ${{ secrets.AMC_SESSION }}
-          AMC_ROTATED_COOKIE_FILE: ${{ runner.temp }}/amc-rotated
-
-      # AMC rotates the authToken cookie on first use, so the secret must be
-      # replaced or tomorrow's run authenticates with a dead credential.
-      - name: "AMC: persist rotated cookie"
-        id: amc_token
-        if: always() && steps.amc_day.outputs.run == 'true'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          if [ ! -s "$RUNNER_TEMP/amc-rotated" ]; then
-            echo "Cookie did not rotate — nothing to persist."
-            exit 0
-          fi
-          gh secret set AMC_SESSION --body "$(cat "$RUNNER_TEMP/amc-rotated")"
-          rm -f "$RUNNER_TEMP/amc-rotated"
-
-      # Each film's genre bucket and IMDb id, for films the committed cache
-      # doesn't know yet: keyless Wikidata SPARQL, on AMC's fetch day only.
-      # Adds entries, never rewrites one (hand edits stay); a lookup that fails,
-      # or a booked film Wikidata can't place yet, is retried next time. Exits 0
-      # regardless (an uncached film renders as Other).
-      - name: "AMC: enrich film metadata"
-        id: amc_enrich
-        if: always() && steps.amc_day.outputs.run == 'true'
-        continue-on-error: true
-        run: bun tools/amc/enrich.mjs
-
       # ── Volo ───────────────────────────────────────────────────────────────
       # Scheduled runs fetch Volo on Wednesday and Thursday (UTC) only, as the old
       # '0 14 * * 3,4' cron did. Every game so far has been on a Tuesday evening
@@ -283,7 +336,7 @@ jobs:
       # The fetchers are continue-on-error so one broken credential doesn't block
       # the others' data; this turns any such failure back into a red run.
       - name: Fail if any fetcher failed
-        if: contains(steps.*.outcome, 'failure')
+        if: contains(steps.*.outcome, 'failure') || needs.amc-fetch.outputs.fetch == 'failure'
         run: exit 1
 
   deploy:

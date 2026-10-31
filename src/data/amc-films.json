@@ -4,10 +4,35 @@
 		"imdb_id": "tt11563598",
 		"primary_genre": "Biopic"
 	},
+	"a-haunting-in-venice": {
+		"title": "A Haunting in Venice",
+		"imdb_id": "tt22687790",
+		"primary_genre": "Thriller"
+	},
+	"air": {
+		"title": "Air",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
 	"american-fiction": {
 		"title": "American Fiction",
 		"imdb_id": "tt23561236",
 		"primary_genre": "Comedy"
+	},
+	"aquaman-and-the-lost-kingdom": {
+		"title": "Aquaman and the Lost Kingdom",
+		"imdb_id": "tt9663764",
+		"primary_genre": "Sci-Fi"
+	},
+	"asteroid-city": {
+		"title": "Asteroid City",
+		"imdb_id": "tt14230388",
+		"primary_genre": "Sci-Fi"
+	},
+	"avatar-the-way-of-water": {
+		"title": "Avatar: The Way of Water",
+		"imdb_id": "tt1630029",
+		"primary_genre": "Sci-Fi"
 	},
 	"beetlejuice-beetlejuice": {
 		"title": "Beetlejuice Beetlejuice",
@@ -19,6 +44,11 @@
 		"imdb_id": "tt30988739",
 		"primary_genre": "Thriller"
 	},
+	"blue-beetle": {
+		"title": "Blue Beetle",
+		"imdb_id": "tt9362930",
+		"primary_genre": "Action"
+	},
 	"bob-marley-one-love": {
 		"title": "Bob Marley: One Love",
 		"imdb_id": "tt8521778",
@@ -28,6 +58,16 @@
 		"title": "Borderlands",
 		"imdb_id": "tt4978420",
 		"primary_genre": "Action"
+	},
+	"bottoms": {
+		"title": "Bottoms",
+		"imdb_id": "tt17527468",
+		"primary_genre": "Comedy"
+	},
+	"castle-in-the-sky": {
+		"title": "Castle in the Sky",
+		"imdb_id": null,
+		"primary_genre": "Other"
 	},
 	"civil-war": {
 		"title": "Civil War",
@@ -44,19 +84,59 @@
 		"imdb_id": "tt10954718",
 		"primary_genre": "Animation"
 	},
+	"dr-seuss-the-grinch": {
+		"title": "Dr. Seuss' The Grinch",
+		"imdb_id": "tt2709692",
+		"primary_genre": "Animation"
+	},
+	"dumb-money": {
+		"title": "Dumb Money",
+		"imdb_id": "tt13957560",
+		"primary_genre": "Biopic"
+	},
 	"dune-part-two": {
 		"title": "Dune: Part Two",
 		"imdb_id": "tt15239678",
 		"primary_genre": "Sci-Fi"
+	},
+	"dungeons-and-dragons-honor-among-thieves": {
+		"title": "Dungeons & Dragons: Honor Among Thieves",
+		"imdb_id": "tt2906216",
+		"primary_genre": "Comedy"
+	},
+	"elemental": {
+		"title": "Elemental",
+		"imdb_id": "tt15789038",
+		"primary_genre": "Animation"
+	},
+	"expend4bles": {
+		"title": "Expend4bles",
+		"imdb_id": "tt3291150",
+		"primary_genre": "Action"
+	},
+	"fast-x": {
+		"title": "Fast X",
+		"imdb_id": "tt5433140",
+		"primary_genre": "Action"
 	},
 	"ferrari": {
 		"title": "Ferrari",
 		"imdb_id": "tt3758542",
 		"primary_genre": "Biopic"
 	},
+	"five-nights-at-freddys": {
+		"title": "Five Nights at Freddy's",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
 	"fly-me-to-the-moon": {
 		"title": "Fly Me to the Moon",
 		"imdb_id": "tt1896747",
+		"primary_genre": "Comedy"
+	},
+	"fools-paradise": {
+		"title": "Fool's Paradise",
+		"imdb_id": "tt9013340",
 		"primary_genre": "Comedy"
 	},
 	"furiosa-a-mad-max-saga": {
@@ -64,25 +144,70 @@
 		"imdb_id": "tt12037194",
 		"primary_genre": "Action"
 	},
+	"get-ready-for-some-movie-magic": {
+		"title": "Get ready for some movie magic.",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
 	"gladiator-ii": {
 		"title": "Gladiator II",
 		"imdb_id": "tt9218128",
 		"primary_genre": "Action"
+	},
+	"gran-turismo-based-on-a-true-story": {
+		"title": "Gran Turismo: Based on a True Story",
+		"imdb_id": "tt4495098",
+		"primary_genre": "Biopic"
+	},
+	"guardians-of-the-galaxy-vol-3": {
+		"title": "Guardians of the Galaxy Vol. 3",
+		"imdb_id": "tt6791350",
+		"primary_genre": "Sci-Fi"
+	},
+	"guy-ritchies-the-covenant": {
+		"title": "Guy Ritchie's The Covenant",
+		"imdb_id": "tt4873118",
+		"primary_genre": "Action"
+	},
+	"haunted-mansion": {
+		"title": "Haunted Mansion",
+		"imdb_id": "tt1695843",
+		"primary_genre": "Thriller"
 	},
 	"horizon-an-american-saga-chapter-1": {
 		"title": "Horizon: An American Saga Chapter 1",
 		"imdb_id": "tt17505010",
 		"primary_genre": "Drama"
 	},
+	"hypnotic": {
+		"title": "Hypnotic",
+		"imdb_id": "tt8080204",
+		"primary_genre": "Sci-Fi"
+	},
+	"if": {
+		"title": "IF",
+		"imdb_id": "tt11152168",
+		"primary_genre": "Comedy"
+	},
 	"if-2024": {
 		"title": "IF (2024)",
 		"imdb_id": "tt11152168",
 		"primary_genre": "Other"
 	},
+	"indiana-jones-and-the-dial-of-destiny": {
+		"title": "Indiana Jones and the Dial of Destiny",
+		"imdb_id": "tt1462764",
+		"primary_genre": "Action"
+	},
 	"inside-out-2": {
 		"title": "Inside Out 2",
 		"imdb_id": "tt22022452",
 		"primary_genre": "Animation"
+	},
+	"john-wick-chapter-4": {
+		"title": "John Wick: Chapter 4",
+		"imdb_id": "tt10366206",
+		"primary_genre": "Action"
 	},
 	"kingdom-of-the-planet-of-the-apes": {
 		"title": "Kingdom of the Planet of the Apes",
@@ -94,6 +219,11 @@
 		"imdb_id": "tt21692408",
 		"primary_genre": "Animation"
 	},
+	"landscape-with-invisible-hand": {
+		"title": "Landscape with Invisible Hand",
+		"imdb_id": "tt7645334",
+		"primary_genre": "Sci-Fi"
+	},
 	"lets-start-a-cult": {
 		"title": "Let's Start A Cult",
 		"imdb_id": "tt24805876",
@@ -103,6 +233,11 @@
 		"title": "Lord of the Rings: The War of the Rohirrim",
 		"imdb_id": "tt14824600",
 		"primary_genre": "Animation"
+	},
+	"madame-web": {
+		"title": "Madame Web",
+		"imdb_id": "tt11057302",
+		"primary_genre": "Action"
 	},
 	"mean-girls": {
 		"title": "Mean Girls",
@@ -124,6 +259,11 @@
 		"imdb_id": "tt6495056",
 		"primary_genre": "Animation"
 	},
+	"mission-impossible-dead-reckoning-part-one": {
+		"title": "Mission: Impossible - Dead Reckoning Part One",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
 	"moana-2": {
 		"title": "Moana 2",
 		"imdb_id": "tt13622970",
@@ -133,6 +273,26 @@
 		"title": "Monkey Man",
 		"imdb_id": "tt9214772",
 		"primary_genre": "Action"
+	},
+	"napoleon": {
+		"title": "Napoleon",
+		"imdb_id": "tt13287846",
+		"primary_genre": "Biopic"
+	},
+	"next-goal-wins": {
+		"title": "Next Goal Wins",
+		"imdb_id": "tt10767052",
+		"primary_genre": "Biopic"
+	},
+	"no-hard-feelings": {
+		"title": "No Hard Feelings",
+		"imdb_id": "tt15671028",
+		"primary_genre": "Comedy"
+	},
+	"oppenheimer": {
+		"title": "Oppenheimer",
+		"imdb_id": "tt15398776",
+		"primary_genre": "Biopic"
 	},
 	"paddington-in-peru": {
 		"title": "Paddington in Peru",
@@ -144,6 +304,16 @@
 		"imdb_id": "tt31064841",
 		"primary_genre": "Animation"
 	},
+	"polite-society": {
+		"title": "Polite Society",
+		"imdb_id": "tt18257464",
+		"primary_genre": "Action"
+	},
+	"poor-things": {
+		"title": "Poor Things",
+		"imdb_id": "tt14230458",
+		"primary_genre": "Sci-Fi"
+	},
 	"project-hail-mary": {
 		"title": "Project Hail Mary",
 		"imdb_id": "tt12042730",
@@ -154,40 +324,170 @@
 		"imdb_id": "tt14948432",
 		"primary_genre": "Action"
 	},
+	"relax-im-from-the-future": {
+		"title": "Relax, I'm from the Future",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
+	"renfield": {
+		"title": "Renfield",
+		"imdb_id": "tt11358390",
+		"primary_genre": "Thriller"
+	},
+	"retribution": {
+		"title": "Retribution",
+		"imdb_id": "tt6906292",
+		"primary_genre": "Action"
+	},
+	"ruby-gillman-teenage-kraken": {
+		"title": "Ruby Gillman, Teenage Kraken",
+		"imdb_id": "tt27155038",
+		"primary_genre": "Animation"
+	},
 	"sasquatch-sunset": {
 		"title": "Sasquatch Sunset",
 		"imdb_id": "tt30180830",
 		"primary_genre": "Comedy"
+	},
+	"saturday-night": {
+		"title": "Saturday Night",
+		"imdb_id": "tt27657135",
+		"primary_genre": "Biopic"
+	},
+	"she-came-to-me": {
+		"title": "She Came to Me",
+		"imdb_id": "tt6689014",
+		"primary_genre": "Comedy"
+	},
+	"silent-night": {
+		"title": "Silent Night",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
+	"sing-along": {
+		"title": "Sing Along",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
+	"sisu": {
+		"title": "Sisu",
+		"imdb_id": "tt14846026",
+		"primary_genre": "Action"
+	},
+	"spider-man-across-the-spider-verse": {
+		"title": "Spider-Man: Across the Spider-Verse",
+		"imdb_id": "tt9362722",
+		"primary_genre": "Animation"
+	},
+	"spider-man-no-way-home": {
+		"title": "Spider-Man: No Way Home",
+		"imdb_id": "tt10872600",
+		"primary_genre": "Sci-Fi"
 	},
 	"star-wars-the-mandalorian-and-grogu": {
 		"title": "Star Wars: The Mandalorian and Grogu",
 		"imdb_id": "tt30825738",
 		"primary_genre": "Sci-Fi"
 	},
+	"strays": {
+		"title": "Strays",
+		"imdb_id": "tt15153532",
+		"primary_genre": "Comedy"
+	},
+	"suzume": {
+		"title": "Suzume",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
+	"teenage-mutant-ninja-turtles-mutant-mayhem": {
+		"title": "Teenage Mutant Ninja Turtles: Mutant Mayhem",
+		"imdb_id": "tt8589698",
+		"primary_genre": "Animation"
+	},
 	"the-american-society-of-magical-negroes": {
 		"title": "The American Society of Magical Negroes",
 		"imdb_id": "tt30007864",
 		"primary_genre": "Comedy"
+	},
+	"the-batman": {
+		"title": "The Batman",
+		"imdb_id": "tt1877830",
+		"primary_genre": "Action"
+	},
+	"the-beekeeper": {
+		"title": "The Beekeeper",
+		"imdb_id": "tt15314262",
+		"primary_genre": "Action"
 	},
 	"the-bikeriders": {
 		"title": "The Bikeriders",
 		"imdb_id": "tt21454134",
 		"primary_genre": "Drama"
 	},
+	"the-blackening": {
+		"title": "The Blackening",
+		"imdb_id": "tt11703244",
+		"primary_genre": "Thriller"
+	},
 	"the-book-of-clarence": {
 		"title": "The Book of Clarence",
 		"imdb_id": "tt22866358",
 		"primary_genre": "Comedy"
+	},
+	"the-boy-and-the-heron": {
+		"title": "The Boy and the Heron",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
+	"the-boys-in-the-boat": {
+		"title": "The Boys in the Boat",
+		"imdb_id": "tt1856080",
+		"primary_genre": "Biopic"
+	},
+	"the-creator": {
+		"title": "The Creator",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
+	"the-equalizer-3": {
+		"title": "The Equalizer 3",
+		"imdb_id": "tt17024450",
+		"primary_genre": "Action"
 	},
 	"the-fall-guy": {
 		"title": "The Fall Guy",
 		"imdb_id": "tt1684562",
 		"primary_genre": "Action"
 	},
+	"the-hunger-games-the-ballad-of-songbirds-and-snakes": {
+		"title": "The Hunger Games: The Ballad of Songbirds & Snakes",
+		"imdb_id": "tt10545296",
+		"primary_genre": "Action"
+	},
+	"the-machine": {
+		"title": "The Machine",
+		"imdb_id": "tt11040844",
+		"primary_genre": "Action"
+	},
+	"the-marvels": {
+		"title": "The Marvels",
+		"imdb_id": "tt10676048",
+		"primary_genre": "Sci-Fi"
+	},
+	"the-matrix-25th-anniversary-dolby-exclusive": {
+		"title": "The Matrix - 25th Anniversary - DOLBY Exclusive",
+		"imdb_id": null,
+		"primary_genre": "Other"
+	},
 	"the-ministry-of-ungentlemanly-warfare": {
 		"title": "The Ministry of Ungentlemanly Warfare",
 		"imdb_id": "tt5177120",
 		"primary_genre": "Action"
+	},
+	"the-super-mario-bros-movie": {
+		"title": "The Super Mario Bros. Movie",
+		"imdb_id": "tt6718170",
+		"primary_genre": "Animation"
 	},
 	"the-wild-robot": {
 		"title": "The Wild Robot",
@@ -199,6 +499,11 @@
 		"imdb_id": "tt8864596",
 		"primary_genre": "Animation"
 	},
+	"transformers-rise-of-the-beasts": {
+		"title": "Transformers: Rise of the Beasts",
+		"imdb_id": "tt5090568",
+		"primary_genre": "Sci-Fi"
+	},
 	"trap": {
 		"title": "Trap",
 		"imdb_id": "tt26753003",
@@ -208,5 +513,15 @@
 		"title": "Wicked",
 		"imdb_id": "tt1262426",
 		"primary_genre": "Other"
+	},
+	"wildwood": {
+		"title": "Wildwood",
+		"imdb_id": "tt2056785",
+		"primary_genre": "Animation"
+	},
+	"wish": {
+		"title": "Wish",
+		"imdb_id": "tt11304740",
+		"primary_genre": "Animation"
 	}
 }

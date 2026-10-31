@@ -1,5 +1,5 @@
 // AMC A-List films — read at build time from amc.json (the tickets, written by
-// tools/amc/fetch.mjs) joined with amc-films.json (each film's IMDb id and
+// tools/amc/cinemoo.mjs) joined with amc-films.json (each film's IMDb id and
 // genre bucket, written by tools/amc/enrich.mjs and hand-editable). Amc.astro
 // hands the result to the client as JSON; ./arc.ts lays it out.
 import amc from "../../data/amc.json";
