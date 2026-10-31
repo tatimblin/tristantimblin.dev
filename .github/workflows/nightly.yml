@@ -54,10 +54,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          online="$(gh api "repos/${{ github.repository }}/actions/runners" \
-            --jq '[.runners[] | select(.status == "online" and any(.labels[]; .name == "residential"))] | length' \
-            || echo 0)"
-          if [ "${online:-0}" -gt 0 ]; then
+          # Listing runners needs the token's "Administration: read" on this
+          # repo. If the check itself fails, run AMC anyway: skipping on an
+          # unreadable answer would skip it every night without anyone noticing.
+          if ! online="$(gh api "repos/${{ github.repository }}/actions/runners" \
+            --jq '[.runners[] | select(.status == "online" and any(.labels[]; .name == "residential"))] | length' 2>/dev/null)" \
+            || ! [[ "$online" =~ ^[0-9]+$ ]]; then
+            echo "::warning::Couldn't list runners (GH_PAT needs Administration: read on this repo); running AMC anyway."
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$online" -gt 0 ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "::warning::No online runner with the 'residential' label; skipping AMC today."
