@@ -189,6 +189,9 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		p.style.setProperty("--gc", genreVar(G.g));
 		return p;
 	});
+	/** Whether each tick was last drawn showing (all, before the first draw). */
+	const tickLit = films.map(() => true);
+	let capsDrawn: Geo | null = null;
 	const nowDot = mk("circle", "wx-amc-now", svg);
 	const halo = mk("line", "wx-amc-halo", svg);
 	const needle = mk("line", "wx-amc-needle", svg);
@@ -374,19 +377,35 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		const tickOp = 1 - smoothstep(blend, 0.35, 0.9);
 		const capOp = smoothstep(blend, 0.45, 1);
 
-		films.forEach((_, i) => {
+		// Only the ticks in sight are moved: one faded out is set to 0 once and
+		// then left alone until it comes back (about 30 of them show at a time).
+		for (let i = 0; i < N; i++) {
 			const thD = (placeOf.date[i] - pd) * pitch;
-			const th = lerp(thD, genreAngle(groups, g.arcs, placeOf.genre[i]), eb);
-			const fade = 1 - smoothstep(Math.abs(th), span * 0.7, span * 1.15);
+			const th = eb === 0 ? thD : lerp(thD, genreAngle(groups, g.arcs, placeOf.genre[i]), eb);
+			const op = (1 - smoothstep(Math.abs(th), span * 0.7, span * 1.15)) * tickOp;
+			if (op === 0) {
+				if (tickLit[i]) {
+					ticks[i].style.opacity = "0";
+					tickLit[i] = false;
+				}
+				continue;
+			}
+			tickLit[i] = true;
 			const inner = majors.has(i) || up[i] ? g.rMaj : g.rIn;
 			line(ticks[i], pt(g, th, g.R), pt(g, th, inner));
-			ticks[i].style.opacity = (fade * tickOp).toFixed(3);
-		});
+			ticks[i].style.opacity = op.toFixed(3);
+		}
 
+		// The capsules' arcs change only with the card's size.
+		if (capsDrawn !== g) {
+			capsDrawn = g;
+			groups.forEach((_, k) => {
+				const c = g.arcs[k];
+				caps[k].setAttribute("d", arcPath(g, c.a0, c.a1, g.capR));
+				caps[k].setAttribute("stroke-width", String(GAUGE.capW * g.u));
+			});
+		}
 		groups.forEach((H, k) => {
-			const c = g.arcs[k];
-			caps[k].setAttribute("d", arcPath(g, c.a0, c.a1, g.capR));
-			caps[k].setAttribute("stroke-width", String(GAUGE.capW * g.u));
 			caps[k].style.opacity = capOp.toFixed(3);
 			caps[k].toggleAttribute("data-on", H === G);
 		});
@@ -589,7 +608,10 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 
 	/* ── the gauge as a slider. DATE: drag the scale under the needle (a tap
 	   jumps to the tick under it). GENRE: absolute, along the capsules. ── */
-	const trackX = (e: PointerEvent) => e.clientX - scrub.getBoundingClientRect().left;
+	/** The band's left edge, read once a drag (it doesn't move during one), so
+	 *  a pointermove never forces the layout the last frame's writes dirtied. */
+	let scrubLeft = 0;
+	const trackX = (e: PointerEvent) => e.clientX - scrubLeft;
 	const fromX = (x: number, p0: number, x0: number) => {
 		if (!geo) return p0;
 		if (mode === "date") return p0 - (x - x0) / (geo.R * GAUGE.pitch * DEG);
@@ -600,6 +622,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		if (e.button !== 0) return;
 		stop();
 		scrub.setPointerCapture(e.pointerId);
+		scrubLeft = scrub.getBoundingClientRect().left;
 		const x0 = trackX(e);
 		const p0 = pos;
 		let moved = false;
