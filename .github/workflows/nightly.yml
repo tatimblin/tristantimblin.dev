@@ -38,53 +38,14 @@ env:
   DATA_AMC_FILMS: src/data/amc-films.json
 
 jobs:
-  # ── AMC gate ─────────────────────────────────────────────────────────────
-  # The AMC fetch runs daily, but only on the homelab runner. A job routed to
-  # an offline self-hosted runner doesn't fail, it queues for up to 24h — and
-  # collect waits on it, holding up every other fetcher. So this checks, on
-  # ubuntu-latest, that a runner carrying the `residential` label is online,
-  # and skips AMC (with a warning) for the day if not.
-  amc-gate:
+  # ── Collect ──────────────────────────────────────────────────────────────
+  collect:
     runs-on: ubuntu-latest
-    outputs:
-      run: ${{ steps.check.outputs.run }}
-    steps:
-      - name: "AMC: is the homelab runner online?"
-        id: check
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          # Listing runners needs the token's "Administration: read" on this
-          # repo. If the check itself fails, run AMC anyway: skipping on an
-          # unreadable answer would skip it every night without anyone noticing.
-          if ! online="$(gh api "repos/${{ github.repository }}/actions/runners" \
-            --jq '[.runners[] | select(.status == "online" and any(.labels[]; .name == "residential"))] | length' 2>/dev/null)" \
-            || ! [[ "$online" =~ ^[0-9]+$ ]]; then
-            echo "::warning::Couldn't list runners (GH_PAT needs Administration: read on this repo); running AMC anyway."
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          elif [ "$online" -gt 0 ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::No online runner with the 'residential' label; skipping AMC today."
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
-
-  # ── AMC fetch (self-hosted runner) ───────────────────────────────────────
-  # The watch history comes from Cinemoo's CSV export (tools/amc/cinemoo.mjs):
-  # AMC's own API refuses every client but its app. Cinemoo builds it from the
-  # AMC ticket emails Gmail forwards to it. Runs on the homelab runner's
-  # residential IP, since Cinemoo is behind Cloudflare too. Uploads amc.json +
-  # amc-films.json as an artifact for the collect job to download and commit.
-  amc-fetch:
-    needs: [amc-gate]
-    if: needs.amc-gate.outputs.run == 'true'
-    runs-on: [self-hosted, linux, homelab, residential]
     permissions:
-      contents: read
-    # The fetch is continue-on-error, so the JOB succeeds either way; collect
-    # reads this to turn an AMC failure back into a red run.
+      contents: write # commit and push the refreshed data
     outputs:
-      fetch: ${{ steps.amc.outcome }}
+      committed: ${{ steps.commit.outputs.committed }}
+      sha: ${{ steps.commit.outputs.sha }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -94,9 +55,15 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      # ── AMC A-List ─────────────────────────────────────────────────────────
+      # The watch history comes from Cinemoo's CSV export (tools/amc/cinemoo.mjs):
+      # AMC's own API refuses every client but its app. Cinemoo builds it from
+      # the AMC ticket emails Gmail forwards to it.
       - name: "AMC: fetch watch history from Cinemoo"
         id: amc
         continue-on-error: true
@@ -121,63 +88,15 @@ jobs:
           rm -f "$RUNNER_TEMP/cinemoo-rotated"
 
       - name: "AMC: enrich film metadata"
-        if: always() && steps.amc.outcome == 'success'
+        id: enrich
+        if: steps.amc.outcome == 'success'
         continue-on-error: true
         run: bun tools/amc/enrich.mjs
 
-      - name: Upload AMC data
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: amc-data
-          path: |
-            src/data/amc.json
-            src/data/amc-films.json
-          retention-days: 1
-          if-no-files-found: ignore
-
-  # ── Collect (ubuntu-latest) ──────────────────────────────────────────────
-  collect:
-    needs: [amc-gate, amc-fetch]
-    # Run even when amc-fetch is skipped (runner offline) or fails.
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # commit and push the refreshed data
-    outputs:
-      committed: ${{ steps.commit.outputs.committed }}
-      sha: ${{ steps.commit.outputs.sha }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      # Download the AMC data that the self-hosted runner produced. The
-      # artifact stores the files without their common src/data/ prefix, so
-      # they must land back in src/data, not the repo root.
-      - name: "AMC: download data from self-hosted runner"
-        if: needs.amc-fetch.outputs.fetch == 'success'
-        uses: actions/download-artifact@v4
-        with:
-          name: amc-data
-          path: src/data
-
       # Each film's poster path on TMDB (hotlinked by the widget from TMDB's
       # image CDN), cached in amc-films.json: a film with one is never asked
-      # again, one without is asked again weekly. Here, not on the homelab
-      # runner: TMDB needs no residential IP, so posters keep filling in
-      # (for the films already cached, and any the AMC job just added) on
-      # days AMC is skipped. TMDB_TOKEN is a v4 read token or a v3 key (the
-      # script tells them apart); masked, never printed.
+      # again, one without is asked again weekly. TMDB_TOKEN is a v4 read
+      # token or a v3 key (the script tells them apart); masked, never printed.
       - name: "AMC: TMDB posters"
         id: posters
         continue-on-error: true
@@ -357,7 +276,7 @@ jobs:
       # The fetchers are continue-on-error so one broken credential doesn't block
       # the others' data; this turns any such failure back into a red run.
       - name: Fail if any fetcher failed
-        if: contains(steps.*.outcome, 'failure') || needs.amc-fetch.outputs.fetch == 'failure'
+        if: contains(steps.*.outcome, 'failure')
         run: exit 1
 
   deploy:
