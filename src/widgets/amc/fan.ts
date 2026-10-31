@@ -30,7 +30,9 @@ import {
 	MONTHS,
 	orders,
 	placeAtAngle,
+	poolSize,
 	smoothstep,
+	wideArc,
 	yearStarts,
 	type CapArc,
 } from "./arc";
@@ -49,11 +51,6 @@ interface Slot {
 	on: boolean;
 }
 
-/** The most cards the fan ever holds. At rest it draws seven (the centre
- *  ±3); a shuffle draws the posters leaving the fan and those arriving (at
- *  most seven each) plus one per stack of posters riding an identical path
- *  across it. Past this the posters nearest the edges are left out. */
-export const POOL = 16;
 
 const NS = "http://www.w3.org/2000/svg";
 const DEG = Math.PI / 180;
@@ -225,6 +222,14 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		rMaj: number;
 		capR: number;
 		arcs: CapArc[];
+		/** Degrees between posters, and posters drawn either side (wideArc). */
+		step: number;
+		visible: number;
+		/** Radians between DATE ticks; the ticks fade out towards ± span. */
+		pitch: number;
+		span: number;
+		/** The most cards the fan holds at this width (poolSize). */
+		pool: number;
 	}
 	let geo: Geo | null = null;
 	const measure = (): Geo | null => {
@@ -233,14 +238,16 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		const capTop = cap.offsetTop;
 		if (!w || !h || capTop <= 0) return null;
 		// The mock's 210 units across, unless the body is too short for the
-		// fan over the caption; then the height decides.
+		// fan over the caption; then the height decides, and the width left
+		// over (a 2×1) widens the arc: more posters along a flatter fan.
 		const u = Math.max(0.3, Math.min(w / 210, capTop / 112));
+		const arc = wideArc(w / (2 * u) - 105);
 		const pw = FAN.posterW * u;
 		const ph = pw * 1.5;
-		const R = GAUGE.R * u;
+		const R = arc.R * u;
 		// The caption sits 20 units under the gauge's top at the centre.
 		const py = capTop + R - 20 * u;
-		const capR = GAUGE.capR * u;
+		const capR = arc.capR * u;
 		widget.style.setProperty("--amc-pw", `${pw}px`);
 		widget.style.setProperty("--amc-u", `${u}px`);
 		scrub.style.top = `${py - R - 6 * u}px`;
@@ -252,14 +259,19 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 			h,
 			cx: w / 2,
 			py,
-			rad: FAN.R * u + ph / 2,
+			rad: arc.rad * u,
 			pw,
 			ph,
 			R,
 			rIn: R - GAUGE.minor * u,
 			rMaj: R - GAUGE.major * u,
 			capR,
-			arcs: capArcs(groups, capR, u),
+			arcs: capArcs(groups, capR, u, arc.capSpan),
+			step: arc.step,
+			visible: arc.visible,
+			pitch: arc.pitch * DEG,
+			span: arc.span * DEG,
+			pool: poolSize(arc.visible),
 		};
 	};
 	const pt = (g: Geo, th: number, r: number): [number, number] => [g.cx + r * Math.sin(th), g.py - r * Math.cos(th)];
@@ -289,7 +301,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		if (!geo) return;
 		const g = geo;
 		const top = g.py - g.rad - g.ph / 2;
-		const edge = FAN.visible + 0.3;
+		const edge = g.visible + 0.3;
 		// Every film's offset (kept, so a toggle can start from it), but only
 		// the posters on the fan are drawn. Mid-shuffle, films clamped to the
 		// same path off the fan pile up in one pose (the later film on top, as
@@ -303,7 +315,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 			const l = lift ? lift(i) : 0;
 			// At rest the transparent outermost pair is drawn too: their art loads
 			// before they slide in. Mid-shuffle a transparent poster is left out.
-			if (shuffling && Math.abs(d) >= FAN.visible) continue;
+			if (shuffling && Math.abs(d) >= g.visible) continue;
 			const key = `${d.toFixed(4)} ${l.toFixed(2)}`;
 			const s = stacks.get(key);
 			if (s) {
@@ -312,7 +324,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 			} else stacks.set(key, { i, n: 1, d, l });
 		}
 		let draw = [...stacks.values()];
-		if (draw.length > POOL) draw = draw.sort((a, b) => Math.abs(a.d) - Math.abs(b.d)).slice(0, POOL);
+		if (draw.length > g.pool) draw = draw.sort((a, b) => Math.abs(a.d) - Math.abs(b.d)).slice(0, g.pool);
 
 		// Films already on a card keep it; the rest take cards no longer needed.
 		for (const s of slots) s.on = false;
@@ -343,7 +355,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 				continue;
 			}
 			const w = byFilm.get(s.film)!;
-			const p = fanPose(w.d, g.rad);
+			const p = fanPose(w.d, g.rad, g.step, g.visible);
 			c.style.display = "";
 			c.style.left = `${g.cx - g.pw / 2}px`;
 			c.style.top = `${top}px`;
@@ -363,8 +375,8 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 	const drawGauge = () => {
 		if (!geo) return;
 		const g = geo;
-		const span = GAUGE.span * DEG;
-		const pitch = GAUGE.pitch * DEG;
+		const span = g.span;
+		const pitch = g.pitch;
 		const film = orderOf[mode][Math.round(pos)];
 		const G = groupAt(groups, placeOf.genre[film]);
 		// Fractional places in both orders, for a needle that glides.
@@ -580,7 +592,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		// FLIP along the arc: every poster slides from its old place to its new
 		// one (clamped to just off the fan, so far films don't sweep through),
 		// those that move hopping a little; the gauge morphs alongside.
-		const lim = FAN.visible + 0.3;
+		const lim = geo.visible + 0.3;
 		const C = (x: number) => Math.max(-lim, Math.min(lim, x));
 		const t0 = performance.now();
 		const hop = 10 * geo.u;
@@ -614,7 +626,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 	const trackX = (e: PointerEvent) => e.clientX - scrubLeft;
 	const fromX = (x: number, p0: number, x0: number) => {
 		if (!geo) return p0;
-		if (mode === "date") return p0 - (x - x0) / (geo.R * GAUGE.pitch * DEG);
+		if (mode === "date") return p0 - (x - x0) / (geo.R * geo.pitch);
 		const th = Math.asin(Math.max(-1, Math.min(1, (x - geo.cx) / geo.capR)));
 		return placeAtAngle(groups, geo.arcs, th, N);
 	};
@@ -637,7 +649,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 			scrub.removeEventListener("pointerup", end);
 			scrub.removeEventListener("pointercancel", end);
 			if (mode === "date" && !moved && geo) {
-				return animateTo(Math.round(p0 + (trackX(ev) - geo.cx) / (geo.R * GAUGE.pitch * DEG)));
+				return animateTo(Math.round(p0 + (trackX(ev) - geo.cx) / (geo.R * geo.pitch)));
 			}
 			animateTo(Math.round(pos));
 		};
@@ -672,7 +684,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		let vx = 0;
 		let lx = e.clientX;
 		let lt = performance.now();
-		const pitch = (FAN.R * geo.u + geo.pw * 0.75) * Math.sin(FAN.step * DEG);
+		const pitch = geo.rad * Math.sin(geo.step * DEG);
 		fan.setPointerCapture(e.pointerId);
 		const move = (ev: PointerEvent) => {
 			const dx = ev.clientX - x0;

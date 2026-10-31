@@ -124,8 +124,11 @@ import "@whois/wobble-text/styles.css";
 	     The DOM order is what packs on desktop: the videos pin the right column
 	     of rows 1–2, so now playing and bay wheels stack beside Volo there, and
 	     the cursive 2×2 opens rows 3–4 with github and visitors beside it, and
-	     the AMC 1×1 under github. The only gap is the short end of the last row
-	     (15 cells over 4 columns).
+	     the AMC 2×1 under those two: 16 cells over 4 columns, no gap. At two
+	     columns (≤900px, the videos card hidden) the same order packs whole
+	     rows too: now playing and bay wheels, Volo, cursive, github and
+	     visitors, then the AMC across the last row. The reveal order is that
+	     reading order at both widths.
 	     The videos card is its own reveal group: a group waits for every member to
 	     be in view, and this card paints ~90vh above its slot (the dock lift), so
 	     grouped with the row it stayed invisible until the row arrived and the

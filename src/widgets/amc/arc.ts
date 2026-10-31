@@ -43,19 +43,83 @@ export interface Pose {
 
 /** A poster `d` steps off the centre (fractional while it moves): swung
  *  round the pivot, shrunk, greyed and faded with distance. `rad` is the
- *  pivot-to-centre radius in px. */
-export function fanPose(d: number, rad: number): Pose {
+ *  pivot-to-centre radius in px; `step` (degrees between neighbours) and
+ *  `visible` (steps drawn either side, the last fading) are the 1×1's unless
+ *  a wider card's arc (`wideArc`) says otherwise. */
+export function fanPose(d: number, rad: number, step: number = FAN.step, visible: number = FAN.visible): Pose {
 	const a = Math.abs(d);
-	const th = (d * FAN.step * Math.PI) / 180;
+	const th = (d * step * Math.PI) / 180;
+	// The fade: over the last 0.7 of a step before the edge, as on the 1×1.
+	const fade = visible - (FAN.visible - 2);
 	return {
 		x: rad * Math.sin(th),
 		y: rad * (1 - Math.cos(th)),
-		rotate: d * FAN.step,
+		rotate: d * step,
 		scale: Math.max(FAN.minScale, 1 - 0.14 * Math.min(a, 1) - 0.06 * Math.max(0, a - 1)),
 		gray: Math.min(1, a * FAN.gray),
-		opacity: a <= 2 ? 1 : Math.max(0, 1 - (a - 2) / (FAN.visible - 2)),
+		opacity: a <= fade ? 1 : Math.max(0, 1 - (a - fade) / (visible - fade)),
 		z: 100 - Math.round(a * 10),
-		hidden: a > FAN.visible + 0.3,
+		hidden: a > visible + 0.3,
+	};
+}
+
+/** The most cards the fan holds, with `visible` posters either side of the
+ *  centre. At rest it draws the window, the centre ±⌊visible + 0.3⌋ (±3 on a
+ *  1×1: seven); a shuffle draws the posters leaving the fan and those
+ *  arriving (at most a window each) plus one per stack of posters riding an
+ *  identical path across it. Past this the posters nearest the edges are
+ *  left out. 16 on a 1×1. */
+export const poolSize = (visible: number) => 2 * (2 * Math.floor(visible + 0.3) + 1) + 2;
+
+/** The fan and the gauge on a card wider than the mock, in mock units and
+ *  degrees. `extra` is how far each half of the card reaches past the mock's
+ *  105 units. */
+export interface Arc {
+	/** Pivot to a poster's centre. */
+	rad: number;
+	/** Degrees between neighbouring posters. */
+	step: number;
+	/** Posters drawn either side of the centre (the last one fading). */
+	visible: number;
+	/** The ticks' outer radius and the capsules' centre line. */
+	R: number;
+	capR: number;
+	/** Degrees between DATE ticks, the ticks' fade-out and the capsules' spread. */
+	pitch: number;
+	span: number;
+	capSpan: number;
+}
+
+/**
+ * The 1×1's arc, widened by `extra` units a side: the fan reaches `extra`
+ * further out at each end but its outermost posters drop no lower than the
+ * 1×1's do, so the arc flattens (a longer radius, a pivot further down) and
+ * more posters fit along it, spaced as on the 1×1. The gauge shares the new
+ * pivot, keeps its ticks' spacing and reaches as far out as the fan. At
+ * `extra` 0 it is the 1×1's arc exactly.
+ */
+export function wideArc(extra: number): Arc {
+	const r = Math.PI / 180;
+	const rad0 = FAN.R + FAN.posterW * 0.75;
+	const th0 = FAN.visible * FAN.step * r;
+	const x = rad0 * Math.sin(th0) + Math.max(0, extra);
+	const drop = rad0 * (1 - Math.cos(th0));
+	const th = 2 * Math.atan(drop / x);
+	const rad = extra > 0 ? x / Math.sin(th) : rad0;
+	const step = (FAN.step * rad0) / rad;
+	const dR = rad - rad0;
+	const R = GAUGE.R + dR;
+	const capR = GAUGE.capR + dR;
+	const e = Math.max(0, extra);
+	return {
+		rad,
+		step,
+		visible: extra > 0 ? th / r / step : FAN.visible,
+		R,
+		capR,
+		pitch: (GAUGE.pitch * GAUGE.R) / R,
+		span: (GAUGE.span * r * GAUGE.R + e) / R / r,
+		capSpan: (GAUGE.capSpan * r * GAUGE.capR + e) / capR / r,
 	};
 }
 
@@ -193,8 +257,8 @@ export interface CapArc {
 
 /** Each group's capsule on an arc of radius `r` px, centred on the top. `u`
  *  is the px per mock unit. */
-export function capArcs(groups: readonly Group[], r: number, u: number): CapArc[] {
-	const span = (GAUGE.capSpan * Math.PI) / 180;
+export function capArcs(groups: readonly Group[], r: number, u: number, capSpan: number = GAUGE.capSpan): CapArc[] {
+	const span = (capSpan * Math.PI) / 180;
 	const half = (GAUGE.capW * u) / 2;
 	return capsules(2 * span * r, GAUGE.capGap * u, groups.map((G) => G.n), GAUGE.capMin * u).map((b) => {
 		const a0 = (b.x + half) / r - span;

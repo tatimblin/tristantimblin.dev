@@ -15,6 +15,8 @@ import {
 	isUpcoming,
 	orders,
 	placeAtAngle,
+	poolSize,
+	wideArc,
 	yearStarts,
 	type FilmLike,
 } from "./arc";
@@ -56,6 +58,56 @@ describe("fanPose", () => {
 		expect(fanPose(2.35, 239).opacity).toBeCloseTo(0.5);
 		expect(fanPose(2.9, 239).hidden).toBe(false);
 		expect(fanPose(3.1, 239).hidden).toBe(true);
+	});
+});
+
+describe("wideArc", () => {
+	const deg = Math.PI / 180;
+	const edgeDrop = (a: { rad: number; step: number; visible: number }) =>
+		a.rad * (1 - Math.cos(a.visible * a.step * deg));
+
+	test("no extra width is the 1×1's arc", () => {
+		const a = wideArc(0);
+		expect(a.rad).toBe(FAN.R + FAN.posterW * 0.75);
+		expect(a.step).toBeCloseTo(FAN.step);
+		expect(a.visible).toBe(FAN.visible);
+		expect(a.R).toBeCloseTo(GAUGE.R);
+		expect(a.capR).toBeCloseTo(GAUGE.capR);
+		expect(a.pitch).toBeCloseTo(GAUGE.pitch);
+		expect(a.span).toBeCloseTo(GAUGE.span);
+		expect(a.capSpan).toBeCloseTo(GAUGE.capSpan);
+		expect(wideArc(-20)).toEqual(a);
+	});
+
+	test("a wider card: more posters on a flatter arc, spaced and dropping as on the 1×1", () => {
+		const one = wideArc(0);
+		const two = wideArc(117); // a 2×1 on the homepage's desktop grid
+		expect(two.visible).toBeGreaterThan(5);
+		expect(two.rad).toBeGreaterThan(one.rad);
+		expect(two.step).toBeLessThan(one.step);
+		// Neighbours as far apart along the arc, the outermost no lower.
+		expect(two.rad * two.step).toBeCloseTo(one.rad * one.step);
+		expect(edgeDrop(two)).toBeCloseTo(edgeDrop(one));
+		// The gauge on the same pivot, its ticks as far apart, reaching further.
+		expect(two.rad - two.R).toBeCloseTo(one.rad - one.R);
+		expect(two.R * two.pitch).toBeCloseTo(one.R * one.pitch);
+		expect(two.R * two.span).toBeGreaterThan(one.R * one.span);
+		// Wider still, more again.
+		expect(wideArc(200).visible).toBeGreaterThan(two.visible);
+	});
+
+	test("the pool covers the window at rest and both windows mid-shuffle", () => {
+		expect(poolSize(FAN.visible)).toBe(16);
+		const v = wideArc(117).visible;
+		const atRest = 2 * Math.floor(v + 0.3) + 1;
+		expect(poolSize(v)).toBe(2 * atRest + 2);
+	});
+
+	test("fanPose on a wide arc fades over the last 0.7 of a step", () => {
+		const { rad, step, visible } = wideArc(117);
+		expect(fanPose(visible - 0.7, rad, step, visible).opacity).toBe(1);
+		expect(fanPose(visible - 0.35, rad, step, visible).opacity).toBeCloseTo(0.5);
+		expect(fanPose(visible + 0.4, rad, step, visible).hidden).toBe(true);
 	});
 });
 
