@@ -53,7 +53,9 @@ describe("filmKey", () => {
 describe("the cache", () => {
 	test("covers every film in amc.json, each in a known bucket", () => {
 		const c = cache as Record<string, CacheEntry>;
-		for (const m of amc.movies) expect(c[filmKey(m.name)]).toBeDefined();
+		// A booked film Wikidata can't place yet is retried, not cached
+		// (tools/amc/enrich.mjs), so only films already seen must be covered.
+		for (const m of amc.movies) if (!("upcoming" in m && m.upcoming)) expect(c[filmKey(m.name)]).toBeDefined();
 		for (const e of Object.values(c)) expect(GENRES).toContain(e.primary_genre as (typeof GENRES)[number]);
 	});
 });
@@ -97,10 +99,14 @@ describe("buildFilms", () => {
 		const films = getFilms();
 		expect(films.length).toBe(amc.movies.length);
 		for (let i = 1; i < films.length; i++) expect(films[i].d >= films[i - 1].d).toBe(true);
-		const dune = films.find((f) => f.n === "Dune: Part Two")!;
-		expect(dune).toMatchObject({ d: "2024-03-13", g: "Sci-Fi", h: "https://www.imdb.com/title/tt15239678/" });
-		expect(dune.p).toContain("/image/upload/c_fill,ar_2:3,w_240/");
-		expect(films.some((f) => f.u)).toBe(false);
+		// Seen twice; each showing is its own entry.
+		const dunes = films.filter((f) => f.n === "Dune: Part Two");
+		expect(dunes.map((f) => f.d)).toEqual(["2024-03-08", "2024-03-13"]);
+		expect(dunes[1]).toMatchObject({ g: "Sci-Fi", h: "https://www.imdb.com/title/tt15239678/" });
+		expect(dunes[1].p).toContain("/image/upload/c_fill,ar_2:3,w_240/");
+		// Booked films, if any, are the ones after the data was written.
+		const written = amc.updated.slice(0, 10);
+		for (const f of films) expect(Boolean(f.u)).toBe(f.d > written);
 	});
 
 	test("booked films (the fixture) land after the seen ones, flagged, joined by AMC id", () => {
@@ -109,7 +115,8 @@ describe("buildFilms", () => {
 			...(cache as Record<string, CacheEntry>),
 			...upcomingCache,
 		});
-		const booked = films.filter((f) => f.u);
+		const fixture = new Set(upcomingMovies(today).map((m) => m.name));
+		const booked = films.filter((f) => f.u && fixture.has(f.n));
 		expect(booked.map((f) => [f.n, f.d, f.g])).toEqual([
 			["The Hunger Games: Sunrise on the Reaping", "2026-11-21", "Action"],
 			["Hexed", "2026-11-27", "Animation"],
