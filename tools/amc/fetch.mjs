@@ -375,7 +375,16 @@ async function browserGraphQL(page, operationName, query, variables) {
 				body: JSON.stringify({ operationName: opName, query: q, variables: vars }),
 			});
 			const text = await res.text();
-			return { status: res.status, statusText: res.statusText, body: text };
+			return {
+				status: res.status,
+				statusText: res.statusText,
+				body: text,
+				// Tells a Cloudflare block (server: cloudflare, cf-mitigated) from
+				// an AMC auth refusal (a GraphQL/JSON body).
+				server: res.headers.get("server"),
+				mitigated: res.headers.get("cf-mitigated"),
+				contentType: res.headers.get("content-type"),
+			};
 		},
 		ENDPOINT,
 		operationName,
@@ -384,7 +393,11 @@ async function browserGraphQL(page, operationName, query, variables) {
 	);
 
 	if (!result || result.status >= 400) {
-		throw new Error(`${result?.status ?? "?"} ${result?.statusText ?? ""} from AMC API (${operationName})`);
+		const snippet = (result?.body ?? "").replace(/\s+/g, " ").slice(0, 300);
+		throw new Error(
+			`${result?.status ?? "?"} ${result?.statusText ?? ""} from AMC API (${operationName}); ` +
+				`server=${result?.server} cf-mitigated=${result?.mitigated} type=${result?.contentType}; body: ${snippet}`,
+		);
 	}
 
 	let body;
