@@ -20,7 +20,7 @@
     "@astrojs/sitemap": "^3.7.3",
     "@tristimb/dotted-grid": "https://github.com/tatimblin/dotgrid/releases/download/v0.1.2/tristimb-dotted-grid-0.1.2.tgz",
     "@tristimb/fleet-demo": "https://github.com/tatimblin/vscode-fleet/releases/download/v0.1.0/tristimb-fleet-demo-0.1.0.tgz",
-    "@tristimb/spotify-stream-player": "^0.5.2",
+    "@tristimb/spotify-stream-player": "https://github.com/tatimblin/spotify-stream-player/releases/download/0.6.0/tristimb-spotify-stream-player-0.6.0.tgz",
     "@tristimb/video-carousel": "https://github.com/tatimblin/dotgrid/releases/download/v0.1.2/tristimb-video-carousel-0.1.2.tgz",
     "@whois/design-system": "workspace:*",
     "@whois/stories-heading": "workspace:*",
@@ -39,8 +39,5 @@
     "sharp": "^0.34.5",
     "typescript": "5.9.3",
     "vfile": "^6.0.3"
-  },
-  "patchedDependencies": {
-    "@tristimb/spotify-stream-player@0.5.2": "patches/@tristimb%2Fspotify-stream-player@0.5.2.patch"
   }
 }
