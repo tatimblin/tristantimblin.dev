@@ -11,6 +11,11 @@ import { defineConfig, devices } from "@playwright/test";
  * catches minification hazards — e.g. the scroll-timeline longhands in
  * stories-heading, which a minifier silently folds into an invalid shorthand.
  */
+
+/** The preview server's port: PW_PORT, else 4460 — never 4321, the dev server's
+    (with reuseExistingServer, a suite on 4321 would quietly test the dev server). */
+const PORT = Number(process.env.PW_PORT ?? 4460);
+
 export default defineConfig({
 	testDir: "./tests",
 	fullyParallel: true,
@@ -19,7 +24,7 @@ export default defineConfig({
 	reporter: process.env.CI ? "github" : "list",
 
 	use: {
-		baseURL: "http://localhost:4321",
+		baseURL: `http://localhost:${PORT}`,
 		trace: "on-first-retry",
 	},
 
@@ -46,8 +51,8 @@ export default defineConfig({
 
 	webServer: {
 		// The root build: it copies the prebuilt fleet demo into public/ first.
-		command: "bun run build && bunx --bun astro preview --port 4321",
-		url: "http://localhost:4321",
+		command: `bun run build && bunx --bun astro preview --port ${PORT}`,
+		url: `http://localhost:${PORT}`,
 		reuseExistingServer: !process.env.CI,
 		timeout: 180_000,
 	},

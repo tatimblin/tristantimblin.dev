@@ -39,5 +39,8 @@
     "sharp": "^0.34.5",
     "typescript": "5.9.3",
     "vfile": "^6.0.3"
+  },
+  "patchedDependencies": {
+    "@tristimb/spotify-stream-player@0.5.2": "patches/@tristimb%2Fspotify-stream-player@0.5.2.patch"
   }
 }

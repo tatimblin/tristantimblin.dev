@@ -50,31 +50,6 @@ stories-heading {
 	   rising copy (which adds no spacing of its own) pushes the heading away; on
 	   mobile it also carries the heading clear of the date scrubber. */
 	--sh-hold: calc(var(--sh-wipe-at) + var(--space-6));
-	/* "&" size: far larger than "other stories" so it reads as a display glyph
-	   standing behind it. These FIXED steps are the pre-measure frame only —
-	   fitAmp() in index.ts sizes it off the wordmark's measured ink height.
-	   "other stories" tracks --sh-heading-size. */
-	--sh-amp-size: 8rem;
-	--sh-heading-size: 2rem;
-	/* "other stories"'s width as a share of the wordmark's; fitHeading() in
-	   index.ts reads it. Larger on phones (below), where the wordmark is narrow. */
-	--sh-heading-ratio: 0.5;
-	/* Vertical offset from "tristan" to "other stories": the wordmark's baseline down
-	   to the heading's box top. Drives both the track's flow margin and the --sh-top
-	   sticky line together, so they stay coincident (zero slack at rest). NEGATIVE in
-	   practice: the heading's ascenders tuck up across the wordmark's baseline.
-
-	   A PRE-JS FALLBACK ONLY. fitHeadingTuck() in index.ts MEASURES this and overwrites
-	   it on the host, because the right value is a typographic relationship rather than a
-	   spacing step: the heading's tallest ink TUCK_CLEARANCE em (negative: across) from
-	   the wordmark's baseline. Keep this token close to the measured answer (it governs the
-	   first frame) but do not tune the LOOK here; tune it in fitHeadingTuck or not at all. */
-	--sh-heading-gap: 0px;
-	/* Separation from "other stories" down to the intro/CTAs — the intro is page copy
-	   that follows the heading, not a subhead of it. Halved on mobile (see the ≤900px
-	   block) where the tighter column wants less air. */
-	--sh-sub-gap: var(--space-5);
-
 	display: block;
 	position: relative;
 	z-index: 1; /* the lockup rides over the content riser where they overlap */
@@ -86,26 +61,85 @@ stories-heading {
 	pointer-events: none;
 }
 
-/* Fixed lockup type steps at the DS breakpoints (sm 640 / lg 1024 / xl 1280).
-   "other stories" tracks the copy heading (JS fits it above 900px). (Mobile-stacked
-   overrides are further down.) */
-@media (min-width: 640px) {
-	stories-heading {
-		--sh-amp-size: 12rem;
-		--sh-heading-size: 2.5rem;
-	}
+/* --- The first frame: what index.ts will measure, before it has ----------
+
+   Every size the script measures is a FIXED FRACTION OF THE WORDMARK'S WIDTH (the
+   faces never change, so neither do their proportions), and the wordmark is as wide
+   as the gutters allow. So the stylesheet can state the answer up front and the
+   lockup paints in its final place on the first frame — the script then confirms it
+   to the pixel. These used to be rough guesses (rem steps, a 42svh allowance) that
+   the script corrected at the end of the page's first long task: the lockup jumped
+   ~240px and the hero grew by 270px, a 0.2 layout shift on every desktop load.
+
+   THE CONSTANTS ARE MEASUREMENTS OF THE FACES, not tuning. Change the wordmark's or
+   the heading's face, weight or tracking and they go stale; re-measure them from the
+   values index.ts publishes (style="" on the host and on .fh) at any viewport.
+   tests/hero-first-frame.spec.ts fails when they
+   drift by more than a pixel.
+
+   Declared on the host AND on the hero around it (.fh, where fitFold() publishes the
+   fold's sizes), so the fold below can be estimated from the same numbers. */
+stories-heading,
+.fh:has(stories-heading) {
+	/* The wordmark spans the hero's gutters (.fh__heading's inline padding). */
+	--sh-wordmark-w: calc(100vw - 2 * var(--hero-inset, 0px));
+	/* "other stories"'s width as a share of the wordmark's; fitHeading() in
+	   index.ts reads it. Larger on phones (below), where the wordmark is narrow. */
+	--sh-heading-ratio: 0.5;
+	/* fitHeading(): the phrase's advance is 5.632em in the hero face. */
+	--sh-heading-fitsize: calc(
+		var(--sh-heading-ratio) * var(--sh-wordmark-w) / 5.632
+	);
+	/* Vertical offset from "tristan" to "other stories": the wordmark's baseline down
+	   to the heading's box top. Drives both the track's flow margin and the --sh-top
+	   sticky line together, so they stay coincident (zero slack at rest). NEGATIVE in
+	   practice: the heading's ascenders tuck up across the wordmark's baseline.
+	   fitHeadingTuck() measures it (the heading's tallest ink TUCK_CLEARANCE em across
+	   the baseline); tune the LOOK there, not here. */
+	--sh-heading-gap: calc(-0.203 * var(--sh-heading-fitsize));
+	/* The pin's height: the heading's line box, ~0.8975em at line-height 0.85 (the
+	   heading face's ink sits in the body face's taller strut). The engine rounds
+	   each face's metrics to whole px and the script publishes offsetHeight, also
+	   whole px; the 0.45px centres the estimate on those roundings. */
+	--sh-pin-height: calc(0.8975 * var(--sh-heading-fitsize) + 0.45px);
+	/* Separation from "other stories" down to the intro/CTAs — the intro is page copy
+	   that follows the heading, not a subhead of it. Halved on mobile (see the ≤900px
+	   block) where the tighter column wants less air. */
+	--sh-sub-gap: var(--space-5);
 }
-@media (min-width: 1024px) {
-	stories-heading {
-		--sh-amp-size: 18rem;
-		--sh-heading-size: 3rem;
-	}
+
+stories-heading {
+	/* The wordmark's height: its viewBox's aspect (StoriesHeading.astro authors the
+	   measured box). On a hero, inherited from the .fh estimate below. */
+	--sh-wm-h: var(--sh-wordmark-h, calc(var(--sh-wordmark-w) * 221.1 / 860.11));
+	/* fitAmp(): the "&"'s ink is AMP_SIZE_RATIO (0.6) of the wordmark's, and its ink
+	   rises 0.712em; its ink centre sits AMP_CENTER (0.21) of the way across the
+	   wordmark, the ink being 0.765em wide; its baseline (0.8505em into its box) on
+	   the heading's (0.8278em into the pin). */
+	--sh-amp-size: calc(0.6 * var(--sh-wm-h) / 0.712);
+	--sh-amp-left: calc(0.21 * var(--sh-wordmark-w) - 0.3825 * var(--sh-amp-size));
+	--sh-amp-top: calc(
+		var(--sh-wm-h) + var(--sh-heading-gap) + 0.8278 * var(--sh-heading-fitsize) -
+			0.8505 * var(--sh-amp-size)
+	);
+	/* alignHeadingLayers(): the solid layer's registration. Both layers are one face,
+	   so these are only the cover lift (the ink above the box plus COVER_SLACK) and the
+	   baseline drop it causes. */
+	--sh-solid-cover: calc(9.65px - 0.0512em);
+	--sh-solid-shift: 9.4px;
 }
-@media (min-width: 1280px) {
-	stories-heading {
-		--sh-amp-size: 22rem;
-		--sh-heading-size: 3.25rem;
-	}
+
+/* THE FOLD'S SIZES, which fitFold() measures onto .fh: the wordmark, the lockup (down
+   to "other stories"'s foot) and the group (down to the intro's). The intro is the
+   page's own copy, so the page states its height as --sh-intro-h (the --sh-sub-gap
+   above it included); without one the group is the lockup. The header's band
+   (--sh-header-h) is the page's to estimate too. */
+.fh:has(stories-heading) {
+	--sh-wordmark-h: calc(var(--sh-wordmark-w) * 221.1 / 860.11);
+	--sh-lockup-h: calc(
+		var(--sh-wordmark-h) + var(--sh-heading-gap) + var(--sh-pin-height)
+	);
+	--sh-group-h: calc(var(--sh-lockup-h) + var(--sh-intro-h, 0px));
 }
 
 /* --- "tristan" wordmark ------------------------------------------------- */
@@ -204,7 +238,7 @@ stories-heading {
 	/* Follow "tristan" (the "&" is absolutely positioned and takes no flow space) by
 	   the measured --sh-heading-gap (see fitHeadingTuck). */
 	margin-block-start: var(--sh-heading-gap);
-	height: calc(var(--sh-reveal) + var(--sh-hold) + var(--sh-pin-height, 0px));
+	height: calc(var(--sh-reveal) + var(--sh-hold) + var(--sh-pin-height));
 }
 
 /* "other stories" pins mid-viewport with plain CSS sticky at --sh-top. */
@@ -234,10 +268,9 @@ stories-heading {
 	   empty pinned area doesn't block content below); fit-content keeps this to the
 	   glyphs, so only the text itself is a pointer target. */
 	pointer-events: auto;
-	/* JS fits the single-line text width to a 6-col grid span and publishes the
-	   result as --sh-heading-fitsize; fall back to the fixed rem step until then
-	   (and on the ≤900px stacked layout, where JS clears the fit prop). */
-	font-size: var(--sh-heading-fitsize, var(--sh-heading-size));
+	/* --sh-heading-ratio of the wordmark's width: estimated above for the first
+	   frame, then measured by fitHeading() in JS. */
+	font-size: var(--sh-heading-fitsize);
 	/* The OUTLINE layer's weight (the solid layer overrides it with its own). Stated
 	   here rather than left to inherit so the layer never picks up a UA heading bold.
 	   The two layers no longer share a face — see .sh__solid — so they no longer
@@ -434,12 +467,14 @@ stories-heading {
    parallax), and the wordmark filling the full gutter width. "other stories"
    still pins and is pushed away by the rising copy — same mechanism as desktop. */
 @media (max-width: 900px) {
-	stories-heading {
-		--sh-heading-size: 2rem;
+	stories-heading,
+	.fh:has(stories-heading) {
 		--sh-heading-ratio: 0.7;
-		/* Half the desktop intro separation (64px → 32px): the tighter single column
+		/* Half the desktop intro separation (24px → 12px): the tighter single column
 		   wants less air between "other stories" and the intro. */
 		--sh-sub-gap: var(--space-3);
+	}
+	stories-heading {
 		/* Reveal wipe plays over 100px of scroll (vs 300px on desktop). The hold is
 		   the base rule's: pinned while the scene, scrubber and all, scrolls past. */
 		--sh-reveal: 100px;

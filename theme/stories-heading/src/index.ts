@@ -105,8 +105,8 @@ export class StoriesHeadingElement extends HTMLElement {
 	    A display glyph, not a letter of the line: its baseline on the heading's, it
 	    rises from behind "other stories" to about the wordmark's x-height midline,
 	    knocking a hole out of "tr". Tied to the wordmark rather than to a breakpoint
-	    so it holds the same proportion at every viewport; the CSS --sh-amp-size
-	    steps exist only for the pre-measure frame. */
+	    so it holds the same proportion at every viewport; styles.css states the
+	    same proportion as the first frame's estimate (--sh-amp-size). */
 	private static readonly AMP_SIZE_RATIO = 0.6;
 	/** Where the "&"'s ink centre sits across the wordmark's ink, 0 (its left edge)
 	    to 1 (its right): over the "r", between "t" and "is", as on the live site. */
@@ -580,7 +580,7 @@ export class StoriesHeadingElement extends HTMLElement {
 		const wmWidth =
 			this.wordmarkSvg?.getBoundingClientRect().width || this.getBoundingClientRect().width;
 		if (!(wmWidth > 0)) {
-			// Not rendered: drop the fit, fall back to the rem step.
+			// Not rendered: drop the fit, fall back to the stylesheet's estimate.
 			this.style.removeProperty("--sh-heading-fitsize");
 			return;
 		}
@@ -700,11 +700,13 @@ export class StoriesHeadingElement extends HTMLElement {
 		if (!ctx) return;
 
 		// Zero every correction so the next read sees the raw faces, not the last
-		// answer. All three go before ANY read, so one reflow covers them.
-		this.style.removeProperty("--sh-solid-scale");
-		this.style.removeProperty("--sh-solid-cover");
-		this.style.removeProperty("--sh-solid-shift");
-		this.style.removeProperty("--sh-solid-track");
+		// answer. All four go before ANY read, so one reflow covers them. Zeroed
+		// explicitly rather than removed: styles.css states the first frame's estimates
+		// of these, and a removed property would fall back to them.
+		this.style.setProperty("--sh-solid-scale", "1");
+		this.style.setProperty("--sh-solid-cover", "0em");
+		this.style.setProperty("--sh-solid-shift", "0em");
+		this.style.setProperty("--sh-solid-track", "0em");
 
 		// SIZE — match the painted INK HEIGHT, not the font-size.
 		//

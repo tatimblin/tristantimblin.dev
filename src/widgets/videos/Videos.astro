@@ -13,6 +13,8 @@
 // — two independent properties, so they compose instead of overwriting each
 // other.
 import Widget from "@whois/design-system/Widget";
+import { WIDGET_WIDE_MQ } from "@whois/design-system/lib/breakpoints";
+import Deferred from "../../components/Deferred.astro";
 import VideoCarousel from "../../components/VideoCarousel.astro";
 import "./videos.css";
 
@@ -31,15 +33,21 @@ const { class: className, ...rest } = Astro.props;
 	{/* The tone is tuned once per theme, in src/styles/halftone.css (.wx-videos). */}
 	{/* No card chrome: the halftone sits straight on the page, filling the cell,
 	    with its caption laid over the clip's corner as a TV caption. */}
+	{/* Deferred to the widths that show the card (videos.css hides it at the
+	    grid's compact step, where the carousel is the hero scene instead): at
+	    the others it is never created, so it costs no WebGL context and no
+	    video download. */}
+	<Deferred media={WIDGET_WIDE_MQ}>
 		<VideoCarousel
-		fill
-		rulerSide="right"
-		captionOverlay
-		xfade={1600}
-		xfadeMode="threshold"
-		xfadeLive
-		cellSize={6}
-	/>
+			fill
+			rulerSide="right"
+			captionOverlay
+			xfade={1600}
+			xfadeMode="threshold"
+			xfadeLive
+			cellSize={6}
+		/>
+	</Deferred>
 </Widget>
 
 <script>
