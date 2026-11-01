@@ -12,6 +12,7 @@
 // current capsule marks the film. The mode glyph in the header toggles; the
 // posters shuffle to their new places and the ticks morph, the current film
 // staying current. Under prefers-reduced-motion every change is a cut.
+import { prefs } from "@whois/design-system/lib/activity";
 import { onFrame, type FrameCallback } from "@whois/design-system/lib/frame";
 import { stepFromKey } from "@whois/design-system/lib/keys";
 import {
@@ -782,7 +783,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date(),
 	const warm = new Map<number, HTMLImageElement>();
 	const prefetch = () => {
 		if (widget.dataset.prefetch) return;
-		const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+		const { saveData } = prefs();
 		widget.dataset.prefetch = saveData ? "off" : "on";
 		if (saveData) return;
 		const at = placeOf[mode];

@@ -149,9 +149,16 @@ export function mount(el: HTMLElement, ctx: WidgetContext) {
 	// The slot moves when the page above it reflows (fonts landing, the hero
 	// settling its fold, a card mounting) with no scroll or resize to say so,
 	// and the card's rest position is derived from the slot — so watch the
-	// page too.
+	// page too, but only while the card is active: on screen (where it is
+	// from the first frame on desktop, parked at the fold) in a visible tab.
+	// Hidden on a phone, or in a background tab, nothing is watched; coming
+	// back, the observer's first report measures again, so a reflow missed
+	// meanwhile is caught before the card is seen.
 	const ro = new ResizeObserver(remeasure);
-	ro.observe(document.body);
+	ctx.whileActive(() => {
+		ro.observe(document.body);
+		return () => ro.disconnect();
+	});
 	window.addEventListener("resize", remeasure, { passive: true, signal });
 	compact.addEventListener("change", remeasure, { signal });
 	reduced.addEventListener("change", remeasure, { signal });
@@ -179,7 +186,6 @@ export function mount(el: HTMLElement, ctx: WidgetContext) {
 	}
 
 	return () => {
-		ro.disconnect();
 		el.style.removeProperty("--vc-dock-lift");
 		el.style.removeProperty("--vc-dock-span");
 		el.style.removeProperty("--vc-dock-travel");

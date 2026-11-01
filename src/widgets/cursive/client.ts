@@ -28,7 +28,7 @@ function stylesheet(widget: HTMLElement): Promise<void> {
 	});
 }
 
-export function mount(widget: HTMLElement, { signal }: WidgetContext) {
+export function mount(widget: HTMLElement, { signal, activity }: WidgetContext) {
 	const usage = widget.querySelector<HTMLElement>("[data-cursive-usage]");
 	if (!usage) return;
 	const value = usage.querySelector<HTMLElement>("[data-cursive-value]");
@@ -49,18 +49,24 @@ export function mount(widget: HTMLElement, { signal }: WidgetContext) {
 
 	// The agent: the element boots and asks for /session once it is within
 	// 200px of the viewport (its own observer's margin), and every
-	// successful /session fires `cursive-usage`. None within the timeout
-	// from there means the agent is down (the element has no error event).
-	const answering = new IntersectionObserver(
-		(entries) => {
-			if (!entries.some((e) => e.isIntersecting)) return;
-			answering.disconnect();
+	// successful /session fires `cursive-usage`. None within the timeout of
+	// the card coming into view (the card's activity: within a quarter
+	// screen, about the element's 200px) means the agent is down (the
+	// element has no error event).
+	const awaitAnswer = () => {
+		let armed = false;
+		const arm = ({ visible }: { visible: boolean }) => {
+			if (!visible || armed) return;
+			armed = true;
+			stop();
 			after(LOAD_TIMEOUT_MS, () => {
 				if (!widget.dataset.usage) fail(`no reading from the agent in ${LOAD_TIMEOUT_MS}ms`);
 			});
-		},
-		{ rootMargin: "200px" },
-	);
+		};
+		const stop = activity.subscribe(arm);
+		// Already in view: subscribe() only reports changes from here.
+		arm(activity);
+	};
 
 	const load = async () => {
 		widget.dataset.state = "loading";
@@ -73,7 +79,7 @@ export function mount(widget: HTMLElement, { signal }: WidgetContext) {
 			await Promise.race([Promise.all([bundle, stylesheet(widget)]), timeout]);
 			if (signal.aborted || widget.dataset.state === "failed") return;
 			widget.dataset.state = "ready";
-			answering.observe(widget);
+			awaitAnswer();
 		} catch (err) {
 			fail(err);
 		} finally {
@@ -117,6 +123,5 @@ export function mount(widget: HTMLElement, { signal }: WidgetContext) {
 	return () => {
 		for (const t of timers) clearTimeout(t);
 		timers.clear();
-		answering.disconnect();
 	};
 }

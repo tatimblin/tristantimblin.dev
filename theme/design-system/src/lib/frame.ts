@@ -14,7 +14,9 @@
  *    paints in `write` never forces a layout another widget's writes dirtied,
  *    however many widgets share the frame;
  *  - a callback can be capped to `fps` (wobble-text's turbulence at 30), and is
- *    then simply not called on the frames in between;
+ *    then simply not called on the frames in between; while EVERY callback is
+ *    capped, the loop sleeps on a timer between them instead of asking for
+ *    the frames it would skip;
  *  - a callback that throws is removed and reported, and the rest of the frame
  *    runs: one broken widget cannot stop another's animation.
  *
@@ -70,6 +72,12 @@ export interface FrameHost {
 	request(run: (time: number) => void): number;
 	cancel(id: number): void;
 	report(error: unknown): void;
+	/** A timer, and the clock it runs on (rAF's), for a loop that has nothing
+	 *  due for a while (see `plan` below). Optional: without them the loop
+	 *  asks for every frame. */
+	wait?(run: () => void, ms: number): number;
+	unwait?(id: number): void;
+	now?(): number;
 }
 
 const PHASES: readonly FramePhase[] = ["scroll", "read", "write"];
@@ -78,6 +86,14 @@ const PHASES: readonly FramePhase[] = ["scroll", "read", "write"];
  *  interval: rAF timestamps jitter, and 30fps on a 60Hz display must take every
  *  other frame, not two in three when one lands a hair early. */
 const FPS_SLACK = 0.1;
+
+/** How long before a capped callback is due the timer asks for its frame:
+ *  none. A frame asked for mid-interval is often run at once with the LAST
+ *  vsync's timestamp (Chromium's "missed" BeginFrame), so a timer that wakes
+ *  early lands on the frame before the due one, which skips the callback and
+ *  asks again. Measured in headless Chromium at 30fps: a 10ms lead took 2 rAFs
+ *  per call, none ~1.6 (the always-on loop: 3). */
+const WAKE_LEAD = 0;
 
 interface Entry {
 	callback: FrameCallback;
@@ -97,19 +113,55 @@ function defaultHost(): FrameHost {
 			if (typeof reportError === "function") reportError(error);
 			else console.error(error);
 		},
+		wait: (run, ms) => setTimeout(run, ms) as unknown as number,
+		unwait: (id) => clearTimeout(id),
+		now: () => performance.now(),
 	};
 }
 
 export function createScheduler(host: FrameHost = defaultHost()): Scheduler {
 	const entries: Entry[] = [];
 	let id: number | null = null;
+	/** A pending timer that will ask for the next frame (see plan). */
+	let timer: number | null = null;
 	let frames = 0;
 	let calls = 0;
 	let errors = 0;
 	const byLabel: Record<string, number> = {};
 
 	const ensure = () => {
+		if (timer !== null) {
+			host.unwait?.(timer);
+			timer = null;
+		}
 		if (id === null && entries.length > 0) id = host.request(run);
+	};
+
+	// After a frame: the next one at once, unless every callback is capped
+	// and none is due for a while — then a timer asks for the frame the first
+	// is due in, rather than a rAF every frame in between that runs nothing
+	// (30fps on a 60Hz display would wake the page twice per call).
+	const plan = () => {
+		if (entries.length === 0) return;
+		if (host.wait && host.now) {
+			let due = Infinity;
+			for (const e of entries) {
+				if (e.interval === 0 || e.last === null) {
+					due = -Infinity;
+					break;
+				}
+				due = Math.min(due, e.last + e.interval * (1 - FPS_SLACK));
+			}
+			const ms = due - host.now() - WAKE_LEAD;
+			if (ms > 0) {
+				timer = host.wait(() => {
+					timer = null;
+					ensure();
+				}, ms);
+				return;
+			}
+		}
+		ensure();
 	};
 
 	function run(time: number) {
@@ -140,7 +192,7 @@ export function createScheduler(host: FrameHost = defaultHost()): Scheduler {
 				if (keep === false) entry.off();
 			}
 		}
-		ensure();
+		plan();
 	}
 
 	function onFrame(callback: FrameCallback, options: FrameOptions = {}): () => void {
@@ -159,9 +211,10 @@ export function createScheduler(host: FrameHost = defaultHost()): Scheduler {
 				const at = entries.indexOf(entry);
 				if (at >= 0) entries.splice(at, 1);
 				signal?.removeEventListener("abort", entry.off);
-				if (entries.length === 0 && id !== null) {
-					host.cancel(id);
-					id = null;
+				if (entries.length === 0) {
+					if (id !== null) host.cancel(id);
+					if (timer !== null) host.unwait?.(timer);
+					id = timer = null;
 				}
 			},
 		};
@@ -174,7 +227,7 @@ export function createScheduler(host: FrameHost = defaultHost()): Scheduler {
 	return {
 		onFrame,
 		stats: () => ({
-			running: id !== null,
+			running: id !== null || timer !== null,
 			callbacks: entries.length,
 			frames,
 			calls,
@@ -198,3 +251,9 @@ export function onFrame(callback: FrameCallback, options?: FrameOptions): () => 
 export function frameStats(): FrameStats {
 	return page().stats();
 }
+
+// The perf budgets' hook (tests/perf/probe.ts): the probe defines
+// `__whoisPerf` before any script runs, and this hands it the counters. A page
+// without the probe never has the object, so in production this is one read.
+const probe = (globalThis as { __whoisPerf?: { frameStats?: () => FrameStats } }).__whoisPerf;
+if (probe) probe.frameStats = frameStats;

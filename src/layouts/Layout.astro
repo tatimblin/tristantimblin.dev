@@ -147,8 +147,11 @@ if (!hit) throw new Error(`Layout: "${hitPath ?? Astro.url.pathname}" is not a c
 			import { driveLenis } from "../lib/smooth-scroll";
 			// Page-view counting: GoatCounter, on the production host only.
 			import { startCounting } from "../lib/analytics/count";
+			// No halftone decodes video in a background tab.
+			import { pauseHalftonesWhileHidden } from "../lib/pause-hidden";
 
 			startCounting();
+			pauseHalftonesWhileHidden();
 
 			declare global {
 				interface Window {

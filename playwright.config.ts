@@ -32,6 +32,19 @@ export default defineConfig({
 		{
 			name: "chromium",
 			use: { ...devices["Desktop Chrome"] },
+			testIgnore: /\/perf\//,
+		},
+		{
+			// THE PERFORMANCE BUDGETS (tests/perf, numbers in tests/perf/budgets.ts;
+			// theme/design-system/src/lib/WIDGETS.md explains each). Counts and
+			// structure, not milliseconds, measured one page at a time: ONE worker,
+			// so no other test's page competes for the CPU or the GPU process while
+			// a budget is read. CI runs it as its own step after the layout suite.
+			name: "perf",
+			testDir: "./tests/perf",
+			workers: 1,
+			fullyParallel: false,
+			use: { ...devices["Desktop Chrome"] },
 		},
 		{
 			// FIREFOX RUNS ONE SPEC, deliberately. The lockup's scroll effects are CSS

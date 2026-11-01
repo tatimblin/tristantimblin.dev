@@ -1,17 +1,15 @@
 import { markBar } from "@whois/design-system/lib/bar-graph";
 import { showFace } from "@whois/design-system/lib/faces";
 import { stepFromKey } from "@whois/design-system/lib/keys";
+import type { WidgetContext } from "@whois/design-system/lib/widgets";
 
 // Each face's bar graph becomes a slider over its readings (pointer, touch
 // and keys), and the range pill cycles the faces (./Readers.astro renders
-// both; this only wires them). Nothing here runs unprompted, so it needs
-// nothing from the widget context.
-export function mount(widget: HTMLElement) {
-	const teardowns = [
-		bindRange(widget),
-		...[...widget.querySelectorAll<HTMLElement>(".wx-rd-face")].map(bindGraph),
-	];
-	return () => teardowns.forEach((fn) => fn());
+// both; this only wires them). Nothing here runs unprompted; every listener
+// (and a touch's pending settle) goes with the card's signal.
+export function mount(widget: HTMLElement, { signal }: WidgetContext) {
+	bindRange(widget, signal);
+	for (const face of widget.querySelectorAll<HTMLElement>(".wx-rd-face")) bindGraph(face, signal);
 }
 
 interface Reading {
@@ -19,7 +17,7 @@ interface Reading {
 	s: string;
 }
 
-function bindGraph(face: HTMLElement): () => void {
+function bindGraph(face: HTMLElement, signal: AbortSignal): void {
 	const graph = face.querySelector<HTMLElement>(".wx-rd-bars");
 	const tag = face.querySelector<HTMLElement>(".wx-rd-read-tag");
 	const value = face.querySelector<HTMLElement>(".wx-rd-read-value");
@@ -28,7 +26,7 @@ function bindGraph(face: HTMLElement): () => void {
 	try {
 		readings = JSON.parse(face.dataset.readings ?? "[]");
 	} catch {}
-	if (!graph || readings.length === 0) return () => {};
+	if (!graph || readings.length === 0) return;
 
 	const peak = Number(face.dataset.peak);
 	const last = readings.length - 1;
@@ -87,25 +85,18 @@ function bindGraph(face: HTMLElement): () => void {
 	};
 	const onBlur = () => show(peak);
 
-	graph.addEventListener("pointermove", fromPointer);
-	graph.addEventListener("pointerdown", fromPointer);
-	graph.addEventListener("pointerleave", onLeave);
-	graph.addEventListener("keydown", onKey);
-	graph.addEventListener("blur", onBlur);
-	return () => {
-		window.clearTimeout(settle);
-		graph.removeEventListener("pointermove", fromPointer);
-		graph.removeEventListener("pointerdown", fromPointer);
-		graph.removeEventListener("pointerleave", onLeave);
-		graph.removeEventListener("keydown", onKey);
-		graph.removeEventListener("blur", onBlur);
-	};
+	graph.addEventListener("pointermove", fromPointer, { signal });
+	graph.addEventListener("pointerdown", fromPointer, { signal });
+	graph.addEventListener("pointerleave", onLeave, { signal });
+	graph.addEventListener("keydown", onKey, { signal });
+	graph.addEventListener("blur", onBlur, { signal });
+	signal.addEventListener("abort", () => window.clearTimeout(settle), { once: true });
 }
 
-function bindRange(widget: HTMLElement): () => void {
+function bindRange(widget: HTMLElement, signal: AbortSignal): void {
 	const button = widget.querySelector<HTMLButtonElement>(".wx-rd-cycle");
 	const staticPill = widget.querySelector<HTMLElement>(".wx-rd-range--static");
-	if (!button) return () => {};
+	if (!button) return;
 
 	// Hand over from the inert pill only now, so a live-looking control never
 	// does nothing.
@@ -115,7 +106,7 @@ function bindRange(widget: HTMLElement): () => void {
 	const stack = widget.querySelector<HTMLElement>("[data-rd-faces]");
 	const labels = [...button.querySelectorAll<HTMLElement>("[data-face]")];
 	const keys = labels.map((el) => el.dataset.face ?? "");
-	if (!stack || keys.length === 0) return () => {};
+	if (!stack || keys.length === 0) return;
 	let at = 0;
 
 	const apply = (index: number) => {
@@ -131,9 +122,6 @@ function bindRange(widget: HTMLElement): () => void {
 		);
 	};
 
-	const onClick = () => apply((at + 1) % keys.length);
-
 	apply(at);
-	button.addEventListener("click", onClick);
-	return () => button.removeEventListener("click", onClick);
+	button.addEventListener("click", () => apply((at + 1) % keys.length), { signal });
 }

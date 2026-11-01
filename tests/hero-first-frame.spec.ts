@@ -62,14 +62,12 @@ async function readHero(page: Page) {
 
 test.describe("hero first frame", () => {
 	for (const vp of VIEWPORTS) {
-		test(`JS off lays out as JS on at ${vp.width}x${vp.height}`, async ({ page, browser, browserName }) => {
-			// WebKit measures the wordmark's SVG text ~1.7% wider than Chromium (its
-			// viewBox comes out 875 user units, not 860), so the authored viewBox — the
-			// Chromium measurement — leaves its wordmark ~1.7% too tall until the script
-			// runs: 4px on desktop, 3px on a tablet, ~1.5px on phones. Held to the
-			// phones there, at 2px.
-			test.skip(browserName === "webkit" && vp.width > 430, "WebKit's SVG text bbox differs (see above)");
-			const tolerance = browserName === "webkit" ? 2 : 1;
+		// Chromium only: the one project this spec runs in (CI installs no WebKit).
+		// The authored viewBox is Chromium's measurement of the wordmark; WebKit
+		// measures its SVG text ~1.7% wider (875 user units, not 860), so there the
+		// wordmark starts up to 4px too tall until the script runs.
+		test(`JS off lays out as JS on at ${vp.width}x${vp.height}`, async ({ page, browser }) => {
+			const tolerance = 1;
 
 			await page.setViewportSize(vp);
 			await page.goto("/");
