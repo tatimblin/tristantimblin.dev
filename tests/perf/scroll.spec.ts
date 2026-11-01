@@ -27,14 +27,19 @@ async function wheelPass(page: Page, cdp: CDPSession, device: "desktop" | "mobil
 			await page.waitForTimeout(40);
 		}
 	} else {
+		// Four upward swipes of raw touch events, ~1900px/s, each released into a
+		// fling. Not Input.synthesizeScrollGesture with a touch source: on Linux
+		// headless Chromium (CI) that scrolls nothing at all, even on a bare page,
+		// while dispatched touches scroll there as they do on macOS. They also run
+		// the page's touchstart/touchmove listeners, which a scroll pass should.
 		for (let i = 0; i < 4; i++) {
-			await cdp.send("Input.synthesizeScrollGesture", {
-				x: 200,
-				y: 600,
-				yDistance: -700,
-				gestureSourceType: "touch",
-				speed: 1500,
-			});
+			await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 200, y: 700 }] });
+			for (let s = 1; s <= 20; s++) {
+				await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 200, y: 700 - 30 * s }] });
+				await page.waitForTimeout(16);
+			}
+			await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+			await page.waitForTimeout(150);
 		}
 	}
 	// Let the last of it (Lenis's glide, a fling) finish.
