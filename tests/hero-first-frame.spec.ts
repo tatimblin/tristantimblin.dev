@@ -18,6 +18,24 @@ import { test, expect, type Page } from "./fixtures/test";
 
 /** Desktop, tablet and phone sizes. 901px (the narrowest desktop) and ~360px phones
  *  land within ~1.5px: the line box's height rounds per face there. */
+/** How far JS off may stray from JS on, per box edge, by viewport width.
+ *
+ *  Desktop: half a pixel. Every length there is the stylesheet's own arithmetic on
+ *  face constants, so the two frames agree to rounding (measured: under 0.5px at
+ *  1024–1920 on macOS and on Linux). It used to be 1px, and Linux sat 5.9px out
+ *  until the wordmark's ink box stopped being re-measured at runtime (see
+ *  fitWordmark in theme/stories-heading/src/index.ts).
+ *
+ *  Phones: a pixel and a half. What is left there is the engine rounding each face's
+ *  ascent and descent to whole pixels inside the "&"'s and the heading's line boxes,
+ *  which the script reads back off layout and the stylesheet cannot predict: its
+ *  rounding is the platform's, not the face's. Measured at the listed phone and
+ *  tablet sizes: at most 0.91px on macOS and 1.13px on Linux (the "&" at 430px:
+ *  a 1px tolerance failed there on Linux only). Elsewhere in 360–900px it peaks at
+ *  1.5px (880px) and, at 901px, 1.75px on both platforms, so those sizes stay out
+ *  of the list. A first-frame regression of the kind this guards against (the
+ *  hero moving by its rough guesses) is tens of pixels. */
+const toleranceAt = (width: number) => (width >= 1024 ? 0.5 : 1.5);
 const VIEWPORTS = [
 	{ width: 1920, height: 1080 },
 	{ width: 1440, height: 900 },
@@ -67,7 +85,7 @@ test.describe("hero first frame", () => {
 		// measures its SVG text ~1.7% wider (875 user units, not 860), so there the
 		// wordmark starts up to 4px too tall until the script runs.
 		test(`JS off lays out as JS on at ${vp.width}x${vp.height}`, async ({ page, browser }) => {
-			const tolerance = 1;
+			const tolerance = toleranceAt(vp.width);
 
 			await page.setViewportSize(vp);
 			await page.goto("/");
@@ -94,6 +112,63 @@ test.describe("hero first frame", () => {
 			}
 		});
 	}
+
+	// THE AUTHORED INK CONSTANTS ARE STILL THE FACES'. The script no longer measures
+	// the wordmark's ink box or the "&"'s ink (Canvas reports them differently per
+	// platform; see fitWordmark in theme/stories-heading/src/index.ts), so nothing at
+	// runtime would notice them go stale when a face changes. This does: it paints
+	// each glyph run at 300px and reads its ink off the pixels, where the outlines
+	// are the same on every platform (measured identical on macOS and Linux).
+	// Half coverage marks the outline's edge, so the pixel answer is within a pixel.
+	test("the authored ink constants match the faces", async ({ page }) => {
+		await page.goto("/");
+		const got = await page.evaluate(async () => {
+			await document.fonts.ready;
+			const PX = 300;
+			const ink = (el: Element, text: string) => {
+				const cs = getComputedStyle(el);
+				const c = document.createElement("canvas");
+				c.width = 4 * PX;
+				c.height = 2 * PX;
+				const ctx = c.getContext("2d")!;
+				ctx.font = `${cs.fontWeight} ${PX}px ${cs.fontFamily}`;
+				const ox = PX / 2;
+				const oy = 1.5 * PX;
+				ctx.fillText(text, ox, oy);
+				const { data } = ctx.getImageData(0, 0, c.width, c.height);
+				let top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity;
+				for (let y = 0; y < c.height; y++)
+					for (let x = 0; x < c.width; x++)
+						if (data[(y * c.width + x) * 4 + 3] >= 128) {
+							top = Math.min(top, y);
+							bottom = Math.max(bottom, y + 1);
+							left = Math.min(left, x);
+							right = Math.max(right, x + 1);
+						}
+				return { ascent: oy - top, descent: bottom - oy, left: left - ox, right: right - ox };
+			};
+			const svg = document.querySelector<SVGSVGElement>(".sh__wordmark-svg")!;
+			const text = document.querySelector(".sh__wordmark-text")!;
+			return {
+				PX,
+				// Authored in StoriesHeading.astro at the <text>'s own 300px.
+				authored: { ascent: Number(text.getAttribute("y")), height: svg.viewBox.baseVal.height },
+				wordmark: ink(text, "tristan"),
+				amp: ink(document.querySelector("[data-sh-amp]")!, "&"),
+			};
+		});
+		const px = 1.5;
+		expect(Math.abs(got.wordmark.ascent - got.authored.ascent), "wordmark ink ascent").toBeLessThanOrEqual(px);
+		expect(
+			Math.abs(got.wordmark.ascent + got.wordmark.descent - got.authored.height),
+			"wordmark ink height"
+		).toBeLessThanOrEqual(px);
+		// AMP_INK_ASCENT and AMP_INK_SPAN in index.ts, and the same two numbers in
+		// --sh-amp-size / --sh-amp-left in styles.css. The span is the ink's right edge
+		// plus its left inset (Canvas's actualBoundingBoxRight − actualBoundingBoxLeft).
+		expect(Math.abs(got.amp.ascent - 0.712 * got.PX), "& ink ascent").toBeLessThanOrEqual(px);
+		expect(Math.abs(got.amp.right + got.amp.left - 0.765 * got.PX), "& ink span").toBeLessThanOrEqual(px);
+	});
 
 	for (const vp of [VIEWPORTS[1], VIEWPORTS[6]]) {
 		test(`a load shifts nothing at ${vp.width}x${vp.height}`, async ({ page, browserName }) => {

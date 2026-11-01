@@ -63,6 +63,9 @@ export class StoriesHeadingElement extends HTMLElement {
 	/** A hidden, viewBox-less twin of the wordmark's <text>, measured in place of the
 	    real one. See bboxAtUnitScale(). */
 	private bboxProbe: SVGSVGElement | null = null;
+	/** The wordmark's authored viewBox width (StoriesHeading.astro), before
+	    fitWordmark() may have widened it. */
+	private authoredWordmarkW: number | null = null;
 	/** True when the browser drives the scroll effects itself, so this class must not.
 	    Read ONCE at connect: it cannot change for the lifetime of a document, and
 	    CSS.supports() is a parse, not something to repeat per frame. */
@@ -113,6 +116,16 @@ export class StoriesHeadingElement extends HTMLElement {
 	private static readonly AMP_CENTER = 0.21;
 	/** How far the "&"'s baseline drops BELOW the heading's, in em of the "&". */
 	private static readonly AMP_DROP = 0;
+	/** The "&"'s INK in its own face, in em: its rise above the baseline, and the
+	    span fitAmp centres (Canvas's actualBoundingBoxRight − actualBoundingBoxLeft).
+	    THE FACE'S OUTLINE GEOMETRY, measured once (macOS Chromium, whose Canvas
+	    reports the outlines' true bounds) and authored, not re-asked at runtime: on
+	    Linux Canvas reports whole-pixel bounds that take in the curves' control
+	    points (0.72 / 0.77 at 100px), which sized the "&" ~1% off the stylesheet's
+	    first frame (--sh-amp-size in styles.css states the same two numbers).
+	    tests/hero-first-frame.spec.ts rasterises the face to check them. */
+	private static readonly AMP_INK_ASCENT = 0.712;
+	private static readonly AMP_INK_SPAN = 0.765;
 
 	/** The "&"'s parallax distance (px) at full progress. */
 	private static readonly AMP_PARALLAX = 100;
@@ -425,10 +438,11 @@ export class StoriesHeadingElement extends HTMLElement {
 		const wmHeight = wmRect.height;
 		if (!(wmHeight > 0)) return;
 
-		// SIZE: by INK height, asked of the face — font-size is not ink.
-		const ink = this.measureAmpInk(100);
-		const ampPerPx = (ink?.ascent ?? 72) / 100;
-		const ampSize = (wmHeight * StoriesHeadingElement.AMP_SIZE_RATIO) / ampPerPx;
+		// SIZE: by INK height — font-size is not ink. The ink's rise is the face's
+		// (AMP_INK_ASCENT), authored rather than asked of Canvas, for the reason in
+		// fitWordmark.
+		const ampSize =
+			(wmHeight * StoriesHeadingElement.AMP_SIZE_RATIO) / StoriesHeadingElement.AMP_INK_ASCENT;
 		this.style.setProperty("--sh-amp-size", `${ampSize.toFixed(2)}px`);
 
 		const outline = this.heading?.querySelector(".sh__outline");
@@ -446,10 +460,9 @@ export class StoriesHeadingElement extends HTMLElement {
 
 		// HORIZONTAL: across the wordmark's INK — fitWordmark sized its viewBox to the
 		// glyphs, so the svg's box is the text, not a padded container.
-		// The "&"'s ink spans [origin − left, origin + right] of its box's left edge.
+		// Half the "&"'s ink span (AMP_INK_SPAN em) back from the centre.
 		const centre = wmRect.left - hostRect.left + StoriesHeadingElement.AMP_CENTER * wmRect.width;
-		const k = ampSize / 100;
-		const inkMid = ((ink ? ink.right - ink.left : 70) * k) / 2;
+		const inkMid = (StoriesHeadingElement.AMP_INK_SPAN * ampSize) / 2;
 		this.style.setProperty("--sh-amp-left", `${(centre - inkMid).toFixed(2)}px`);
 	}
 
@@ -462,33 +475,33 @@ export class StoriesHeadingElement extends HTMLElement {
 		return base - this.amp.getBoundingClientRect().top;
 	}
 
-	/** Ink box of "&" at `sizePx` via Canvas measureText: its ascent above the
-	    baseline and its left/right extents from the glyph origin. */
-	private measureAmpInk(sizePx: number): { ascent: number; left: number; right: number } | null {
-		if (!this.amp) return null;
-		if (!this.inkCanvas) this.inkCanvas = document.createElement("canvas");
-		const ctx = this.inkCanvas.getContext("2d");
-		if (!ctx) return null;
-		const cs = getComputedStyle(this.amp);
-		ctx.font = `${cs.fontWeight} ${sizePx}px ${cs.fontFamily}`;
-		const m = ctx.measureText("&");
-		if (!Number.isFinite(m.actualBoundingBoxAscent) || m.actualBoundingBoxAscent <= 0) return null;
-		return {
-			ascent: m.actualBoundingBoxAscent,
-			left: m.actualBoundingBoxLeft,
-			right: m.actualBoundingBoxRight,
-		};
-	}
-
 	/**
 	 * Size the SVG viewBox to the wordmark's true INK bounds so width:100% fills
 	 * the gutters with no vertical padding. getBBox() gives an ink-tight WIDTH but
 	 * its HEIGHT is the font's full ascent+descent metrics box (~1.33em) — for a
 	 * word like "tristan" (no descenders, modest ascenders) that bakes in a large
 	 * empty band above/below the glyphs, which scales up to read as too much line
-	 * height. So take the width from getBBox() and the height from the real glyph
-	 * ink measured with Canvas measureText (actualBoundingBox*), then set the
-	 * <text> baseline (y) to that ink top so the glyphs sit flush in the box.
+	 * height. So take the width from getBBox() and keep the AUTHORED ink height and
+	 * baseline (StoriesHeading.astro's viewBox height and <text> y): the glyphs sit
+	 * flush in the box.
+	 *
+	 * THE HEIGHT IS AUTHORED, NOT MEASURED. The ink's ascent and descent are the
+	 * face's outline geometry — one font file, so one answer on every platform — and
+	 * the only runtime way to ask for them, Canvas measureText's actualBoundingBox*,
+	 * answers differently per platform: on Linux (FreeType, what CI runs) it reports
+	 * whole-pixel bounds that include the curves' off-curve control points, 221 + 5 at
+	 * 300px against the true 217.5 + 3.6 (macOS). Measured, the wordmark stood 2.3%
+	 * taller on Linux than the stylesheet's first frame had it, and the whole lockup
+	 * moved ~6px when the script ran. tests/hero-first-frame.spec.ts rasterises the
+	 * face to check the authored values still bound its ink.
+	 *
+	 * THE WIDTH IS THE AUTHORED ONE TOO, UNLESS THE ENGINE SETS THE TEXT WIDER. The
+	 * authored width is the face's own advance (macOS lays it out unhinted). Linux
+	 * hints advances, so its getBBox() answers 859 at 300px, a different number again
+	 * at the scale it actually paints (see bboxAtUnitScale): not the face's width, and
+	 * narrower anyway, so nothing clips at the authored one. WebKit lays the same text
+	 * out ~1.7% wider (875), which the authored box WOULD clip: there the measured
+	 * width wins. So the box is the wider of the two.
 	 *
 	 * The bbox is read at UNIT SCALE (bboxAtUnitScale), never off the live <text>:
 	 * the live one's bbox depends on the very viewBox this writes, so measuring it
@@ -499,23 +512,17 @@ export class StoriesHeadingElement extends HTMLElement {
 		const box = this.bboxAtUnitScale();
 		if (!box || box.width <= 0 || box.height <= 0) return; // not rendered yet
 
-		const ink = this.measureInk();
-		if (ink) {
-			// Baseline sits `ascent` below the box top; height is the ink extent.
-			this.setAttr(this.wordmarkText, "y", ink.ascent.toFixed(2));
-			this.setAttr(
-				this.wordmarkSvg,
-				"viewBox",
-				`${box.x.toFixed(2)} 0 ${box.width.toFixed(2)} ${(ink.ascent + ink.descent).toFixed(2)}`
-			);
-			return;
-		}
-
-		// Fallback: metrics box (no ink measurement available).
+		// The authored ink box: height from the viewBox, baseline (the ink's ascent)
+		// from the <text>'s y; neither is ever rewritten. The width is read once,
+		// before anything here can have widened it.
+		const authored = this.wordmarkSvg.viewBox.baseVal;
+		if (!authored || !(authored.height > 0)) return;
+		this.authoredWordmarkW ??= authored.width;
+		const width = Math.max(this.authoredWordmarkW, box.width);
 		this.setAttr(
 			this.wordmarkSvg,
 			"viewBox",
-			`${box.x.toFixed(2)} ${box.y.toFixed(2)} ${box.width.toFixed(2)} ${box.height.toFixed(2)}`
+			`${box.x.toFixed(2)} 0 ${width.toFixed(2)} ${authored.height.toFixed(2)}`
 		);
 	}
 
@@ -934,7 +941,7 @@ export class StoriesHeadingElement extends HTMLElement {
 
 	/**
 	 * One layer's advance width at `sizePx`, via Canvas measureText using THAT
-	 * element's computed face/weight/letter-spacing — same approach as measureInk().
+	 * element's computed face/weight/letter-spacing.
 	 * Letter-spacing adds (n-1)*spacing since measureText omits it.
 	 */
 	private measureLayerWidth(
@@ -958,27 +965,6 @@ export class StoriesHeadingElement extends HTMLElement {
 				: 0;
 		const width = advance + extra;
 		return Number.isFinite(width) ? width : null;
-	}
-
-	/**
-	 * The wordmark's true ink ascent/descent (px above/below the baseline) at the
-	 * SVG font-size, via Canvas measureText — the same face/weight/letter-spacing
-	 * the <text> uses. Returns null if the 2D context or the metrics are missing.
-	 */
-	private measureInk(): { ascent: number; descent: number } | null {
-		if (!this.wordmarkText) return null;
-		if (!this.inkCanvas) this.inkCanvas = document.createElement("canvas");
-		const ctx = this.inkCanvas.getContext("2d");
-		if (!ctx) return null;
-		const cs = getComputedStyle(this.wordmarkText);
-		const size = parseFloat(cs.fontSize) || 300;
-		ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
-		const m = ctx.measureText(this.wordmarkText.textContent || "");
-		const ascent = m.actualBoundingBoxAscent;
-		const descent = m.actualBoundingBoxDescent;
-		if (!Number.isFinite(ascent) || !Number.isFinite(descent)) return null;
-		if (ascent + descent <= 0) return null;
-		return { ascent, descent };
 	}
 
 	disconnectedCallback() {
