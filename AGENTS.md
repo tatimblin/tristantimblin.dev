@@ -7,7 +7,9 @@ Guidance for AI agents working in this repo.
 - **`src/`** — the Astro site (static output). Pages in `src/pages/`, shared
   shell in `src/layouts/Layout.astro` (the blog's in `BlogLayout` /
   `PostLayout`), global CSS in `src/styles/global.css`, the homepage's tiles in
-  `src/widgets/`, posts as `src/content/txt/<slug>.mdx` with their images
+  `src/widgets/` (each a `<Name>.astro` and a `client.ts` that the design
+  system's widget runtime mounts — how to add one:
+  `theme/design-system/src/lib/WIDGETS.md`), posts as `src/content/txt/<slug>.mdx` with their images
   (`images/`) beside them. Data lives in `src/data/`: the widgets' JSON/CSV
   (written by the nightly fetchers in `tools/`, see `.github/workflows/nightly.yml`)
   and the media manifests. A change to only content, data or docs skips the

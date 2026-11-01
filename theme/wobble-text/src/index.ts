@@ -1,3 +1,6 @@
+import { activity, prefs, type Activity } from "@whois/design-system/lib/activity";
+import { onFrame } from "@whois/design-system/lib/frame";
+
 const SVG_NS = "http://www.w3.org/2000/svg";
 const CONTAINER_ID = "wobble-text-filters";
 
@@ -18,45 +21,43 @@ function smoothstep(t: number): number {
 /** The turbulence filter is the single most expensive thing here: every frame it
  *  animates, the browser regenerates fractal noise and re-displaces the text raster
  *  — costly on mobile GPUs. The churn (seed / baseFrequency drift) is imperceptible
- *  above ~30fps, so we cap it there and spare half the filter recomputes. The
+ *  above ~30fps, so it is capped there and spares half the filter recomputes. The
  *  displacement ramp is driven off the same cadence and 30fps is still smooth over
  *  its 420ms entrance. */
-const CHURN_INTERVAL_MS = 1000 / 30;
+const CHURN_FPS = 30;
+
+/** An instance starts a little before it scrolls in, so its entrance ramp is
+ *  already underway. */
+const ACTIVE_MARGIN = "200px 0px";
 
 let filterContainer: SVGSVGElement | null = null;
 let instanceCount = 0;
-let rafId: number | null = null;
 const instances = new Set<WobbleTextElement>();
 
-/** ONE shared observer for every instance: an animated turbulence filter that is
- *  scrolled off screen is pure wasted cost, so off-screen instances are skipped in
- *  the loop and the loop itself stops when nothing is visible. rootMargin starts an
- *  instance a little before it scrolls in so its entrance ramp is already underway. */
-let visibilityObserver: IntersectionObserver | null = null;
+/** ONE frame callback for every instance, on the page's shared scheduler
+ *  (@whois/design-system/lib/frame) at CHURN_FPS. Each instance's activity
+ *  (the design system's shared observer, lib/activity) says whether it animates:
+ *  on or near the screen, the tab visible, motion allowed. Inactive instances are
+ *  skipped, and the callback is unregistered whenever none is active, so an
+ *  idle page asks for no frames on its behalf. */
+let stopLoop: (() => void) | null = null;
 
-function ensureObserver(): IntersectionObserver {
-	if (visibilityObserver) return visibilityObserver;
-	visibilityObserver = new IntersectionObserver(
-		(entries) => {
-			for (const entry of entries) {
-				(entry.target as WobbleTextElement)._visible = entry.isIntersecting;
-			}
-			syncLoop();
-		},
-		{ rootMargin: "200px 0px" }
-	);
-	return visibilityObserver;
+function tick(ts: number) {
+	for (const instance of instances) {
+		if (instance._animate) instance._update(ts);
+	}
 }
 
-/** Run the loop only while at least one instance is on screen; otherwise idle. */
+/** Run the loop only while at least one instance animates; otherwise idle. */
 function syncLoop() {
-	for (const instance of instances) {
-		if (instance._visible) {
-			startLoop();
-			return;
-		}
+	let any = false;
+	for (const instance of instances) any ||= instance._animate;
+	if (any && !stopLoop) {
+		stopLoop = onFrame(tick, { fps: CHURN_FPS, phase: "write", label: "wobble-text" });
+	} else if (!any && stopLoop) {
+		stopLoop();
+		stopLoop = null;
 	}
-	stopLoop();
 }
 
 function ensureContainer(): SVGSVGElement {
@@ -72,37 +73,6 @@ function ensureContainer(): SVGSVGElement {
 	return filterContainer;
 }
 
-function startLoop() {
-	if (rafId !== null) return;
-
-	const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-	if (prefersReduced) return;
-
-	const tick = (ts: number) => {
-		let anyVisible = false;
-		for (const instance of instances) {
-			if (!instance._visible) continue;
-			instance._update(ts);
-			anyVisible = true;
-		}
-		// Nothing on screen — let the loop die rather than burn frames on hidden
-		// filters. It restarts from the observer the moment one scrolls back in.
-		if (!anyVisible) {
-			rafId = null;
-			return;
-		}
-		rafId = requestAnimationFrame(tick);
-	};
-	rafId = requestAnimationFrame(tick);
-}
-
-function stopLoop() {
-	if (rafId !== null) {
-		cancelAnimationFrame(rafId);
-		rafId = null;
-	}
-}
-
 export class WobbleTextElement extends HTMLElement {
 	private _filterId = "";
 	private _filterEl: SVGFilterElement | null = null;
@@ -112,13 +82,13 @@ export class WobbleTextElement extends HTMLElement {
 	 *  first _update rather than at connect: the rAF clock and connect time can be a
 	 *  frame or more apart, and starting the ramp mid-flight would clip its head. */
 	private _rampStart: number | null = null;
-	/** On screen? Maintained by the shared IntersectionObserver. The loop skips
-	 *  instances that are false and stops entirely when none are true. Starts false
-	 *  so an element connected off screen costs nothing until it scrolls in — at
-	 *  which point its entrance ramp plays, matching the develop-in-on-arrival feel. */
-	_visible = false;
-	/** Timestamp of the last turbulence churn, for the ~30fps throttle. */
-	private _lastChurn = 0;
+	/** Animating? Its activity's `animate`: within ACTIVE_MARGIN of the screen, the
+	 *  tab visible, motion allowed. The loop skips instances that are false and
+	 *  stops entirely when none are true. Starts false so an element connected off
+	 *  screen costs nothing until it scrolls in — at which point its entrance ramp
+	 *  plays, matching the develop-in-on-arrival feel. */
+	_animate = false;
+	private _activity: Activity | null = null;
 
 	static get observedAttributes() {
 		return ["scale", "speed", "frequency"];
@@ -136,10 +106,10 @@ export class WobbleTextElement extends HTMLElement {
 		return parseFloat(this.getAttribute("frequency") || "0.025");
 	}
 
-	/** Mirrors the guard in startLoop(): with no loop running there is nothing to
-	 *  drive the ramp, so the effect must be applied at full strength up front. */
+	/** Under reduced motion the loop never runs, so nothing would drive the ramp:
+	 *  the effect must be applied at full strength up front. */
 	private get prefersReducedMotion(): boolean {
-		return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		return prefs().reducedMotion;
 	}
 
 	connectedCallback() {
@@ -185,11 +155,15 @@ export class WobbleTextElement extends HTMLElement {
 		this.style.filter = `url(#${this._filterId})`;
 
 		instances.add(this);
-		// Observe rather than start the loop unconditionally: the observer flips
-		// _visible and calls syncLoop(), so the loop runs only while this (or another
-		// instance) is actually on screen. Under reduced motion startLoop() no-ops, so
-		// observing is harmless there too.
-		ensureObserver().observe(this);
+		// Watch rather than start the loop unconditionally: the activity flips
+		// _animate and calls syncLoop(), so the loop runs only while this (or another
+		// instance) is actually on screen. Under reduced motion `animate` stays false,
+		// so watching is harmless there too.
+		this._activity = activity(this, { margin: ACTIVE_MARGIN });
+		this._activity.subscribe(({ animate }) => {
+			this._animate = animate;
+			syncLoop();
+		});
 
 		// Announce for symmetry with the sibling elements' *:ready events. Nothing
 		// consumes this yet — the text is never hidden waiting for it, since the ramp
@@ -200,23 +174,20 @@ export class WobbleTextElement extends HTMLElement {
 
 	disconnectedCallback() {
 		instances.delete(this);
-		visibilityObserver?.unobserve(this);
+		this._activity?.destroy();
+		this._activity = null;
 		this._filterEl?.remove();
 		this._filterEl = null;
 		this._turbulence = null;
 		this._displace = null;
 		this._rampStart = null;
-		this._visible = false;
+		this._animate = false;
 		this.style.filter = "";
 		delete this.dataset.ready;
 
-		if (instances.size === 0) {
-			stopLoop();
-		} else {
-			// A remaining instance might be the only visible one — or none may be left
-			// on screen, in which case the loop should idle.
-			syncLoop();
-		}
+		// A remaining instance might be the only animating one — or none may be
+		// left, in which case the loop idles.
+		syncLoop();
 	}
 
 	attributeChangedCallback() {
@@ -231,15 +202,9 @@ export class WobbleTextElement extends HTMLElement {
 	_update(ts: number) {
 		if (!this._turbulence || !this._displace) return;
 
-		// Throttle the filter churn to ~30fps. The shared loop still ticks at rAF
-		// (60fps) for other instances, but each turbulence regeneration is the
-		// expensive part, so skipping every other one here roughly halves this
-		// instance's cost with no visible change. The ramp is anchored to real time
-		// (ts - _rampStart), so throttling changes only how often it's SAMPLED, not
-		// how long it takes — its entrance stays smooth.
-		if (ts - this._lastChurn < CHURN_INTERVAL_MS) return;
-		this._lastChurn = ts;
-
+		// Called at CHURN_FPS (the loop's cap). The ramp is anchored to real time
+		// (ts - _rampStart), so the cap changes only how often it's SAMPLED, not how
+		// long it takes — its entrance stays smooth.
 		const drift = Math.sin(ts * 0.0003 * this.speed) * 0.004;
 		const seed = Math.floor(ts * 0.02 * this.speed) % 100;
 		const freq = this.frequency;

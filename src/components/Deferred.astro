@@ -1,0 +1,38 @@
+---
+// Deferred — markup that exists only at the breakpoint that shows it.
+//
+//   <Deferred media="(min-width: 901px)">
+//     <dotted-grid …/>
+//   </Deferred>
+//
+// The children render into a <template>; the inline script behind it inserts
+// them, during parse, when `media` matches, so the variant that shows is in the
+// DOM before first paint, in place, and the one a breakpoint would hide with
+// `display: none` is never created (a hidden <dotted-grid> still makes a WebGL
+// context and downloads its video). src/lib/deferred.ts creates a variant whose
+// query starts to match later, and handles view-transition navigations.
+// `media` must be the same query as the CSS that shows the content. Without
+// JavaScript nothing is inserted, which is only right for content that needs
+// JavaScript to show anything (custom elements like <dotted-grid>).
+interface Props {
+	/** A media query: the content is created while it matches. */
+	media: string;
+}
+
+const { media } = Astro.props;
+---
+
+<template data-deferred={media}><slot /></template>
+<script is:inline>
+	(function (t) {
+		if (matchMedia(t.dataset.deferred).matches) {
+			t.before(t.content.cloneNode(true));
+			t.setAttribute("data-materialized", "");
+		}
+	})(document.currentScript.previousElementSibling);
+</script>
+
+<script>
+	import { bindDeferred } from "../lib/deferred";
+	bindDeferred();
+</script>

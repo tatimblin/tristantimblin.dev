@@ -125,3 +125,53 @@ test("the intro is visible at rest on any engine", async ({ page }) => {
 	expect(sub.opacity).toBe(1);
 	expect(sub.visibility).toBe("visible");
 });
+
+/**
+ * THE VIDEOS CARD'S DOCK LIFT is the same arrangement: a CSS scroll-progress
+ * animation where the engine has scroll timelines (src/widgets/videos/videos.css),
+ * and src/widgets/videos/client.ts writing --vc-dock-lift on scroll where it
+ * doesn't. Both halves pinned the same way as the wipe's.
+ */
+test("the dock lift is driven by exactly one mechanism, and docks either way", async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await page.goto("/");
+	const card = page.locator(".wx-videos[data-widget-state=mounted]");
+	await card.waitFor({ state: "attached", timeout: 15_000 });
+
+	const at = async (y: number) => {
+		await page.evaluate((v) => window.scrollTo(0, v), y);
+		await page.waitForTimeout(250);
+		return page.evaluate(() => {
+			const el = document.querySelector<HTMLElement>(".wx-videos")!;
+			return {
+				supports:
+					typeof CSS !== "undefined" &&
+					typeof CSS.supports === "function" &&
+					CSS.supports("animation-timeline", "scroll()"),
+				scrollAnimations: el
+					.getAnimations()
+					.filter((a) => /ScrollTimeline/.test(a.timeline?.constructor?.name ?? "")).length,
+				inlineLift: el.style.getPropertyValue("--vc-dock-lift"),
+				lift: new DOMMatrix(getComputedStyle(el).transform).m42,
+			};
+		});
+	};
+
+	const rest = await at(0);
+	if (rest.supports) {
+		expect(rest.scrollAnimations, "CSS should drive the dock here").toBe(1);
+		expect(rest.inlineLift, "the JS fallback is ALSO running").toBe("");
+	} else {
+		expect(rest.scrollAnimations).toBe(0);
+		expect(rest.inlineLift, "no scroll timelines and no JS fallback either").not.toBe("");
+	}
+	expect(rest.lift, "parked below its slot at scroll 0").toBeLessThan(-100);
+
+	const mid = await at(600);
+	expect(mid.lift).toBeGreaterThan(rest.lift);
+	expect(mid.lift).toBeLessThan(0);
+	expect((await at(3000)).lift, "docked: no lift left").toBe(0);
+	expect((await at(0)).lift, "and lifted again on the way back up").toBeCloseTo(rest.lift, 0);
+});

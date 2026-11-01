@@ -7,7 +7,8 @@
 // <button> laid over the body — not a <button> AROUND it, which would flatten
 // the grid, the ruler and the legend into one control's name — with a fixed
 // accessible name and aria-pressed carrying the state. Data is read at build
-// time from github.json (see ./github.ts); only the flip is client-side.
+// time from github.json (see ./github.ts); only the flip is client-side
+// (./client.ts, mounted by the widget runtime).
 //
 // Props pass through to the <Widget> (a class, the page's data-reveal
 // choreography): the page owns where the card sits and when it fades in.
@@ -63,7 +64,7 @@ const langs = [
 ];
 ---
 
-<Widget size="1x1" title="github" class:list={["wx-github", className]} {...rest}>
+<Widget size="1x1" title="github" name="github" class:list={["wx-github", className]} {...rest}>
 	{/* The handle, in the header's meta slot: outside the body the toggle
 	     covers, so tapping it never flips. */}
 	<Mono
@@ -122,32 +123,6 @@ const langs = [
 		<HitArea data-gh-flip aria-pressed="false" aria-label="Show language breakdown" />
 	</CardBody>
 </Widget>
-
-<script>
-	// Flip the card between the contribution grid and the language breakdown:
-	// showFace moves aria-hidden from one face to the other (which is what
-	// Faces fades on) — no network, no persisted state. onPage binds per
-	// page-load and tears down before a view-transition swap.
-	import { showFace } from "@whois/design-system/lib/faces";
-	import { onPage } from "@whois/design-system/lib/lifecycle";
-
-	onPage(() => {
-		const widget = document.querySelector<HTMLElement>(".wx-github");
-		const button = widget?.querySelector<HTMLButtonElement>("[data-gh-flip]");
-		const stack = widget?.querySelector<HTMLElement>("[data-gh-faces]");
-		if (!widget || !button || !stack) return;
-
-		let flipped = false;
-		const onClick = () => {
-			flipped = !flipped;
-			button.setAttribute("aria-pressed", String(flipped));
-			showFace(stack, flipped ? "langs" : "grid");
-		};
-
-		button.addEventListener("click", onClick);
-		return () => button.removeEventListener("click", onClick);
-	});
-</script>
 
 <style>
 	/* The card chrome, the header, the two faces and their cross-fade, the

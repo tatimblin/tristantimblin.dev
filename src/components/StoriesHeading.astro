@@ -4,7 +4,10 @@
 // Structure (see theme/stories-heading for the mechanics):
 //   .sh__wordmark — the full-width "tristan" SVG; fills gutter-to-gutter. JS
 //                   measures the glyph bbox and sets the viewBox so width:100%
-//                   fills exactly at any viewport (no hardcoded aspect ratio).
+//                   fills exactly at any viewport. The viewBox and baseline
+//                   authored below ARE that measurement (DM Sans Medium at
+//                   300px), so the first frame already has the final box; JS
+//                   only confirms it. Re-measure them if the face changes.
 //   .sh__amp      — the big "&", overlapping the wordmark (indented). It
 //                   parallaxes + fades on its OWN viewport position.
 //   .sh__track    — reserves the pin duration in normal flow for "other stories".
@@ -30,10 +33,10 @@
 		<svg
 			class="sh__wordmark-svg"
 			aria-hidden="true"
-			viewBox="0 0 1000 300"
+			viewBox="0 0 860.11 221.10"
 			preserveAspectRatio="xMinYMid meet"
 		>
-			<text x="0" y="240" class="sh__wordmark-text">tristan</text>
+			<text x="0" y="217.50" class="sh__wordmark-text">tristan</text>
 		</svg>
 	</h1>
 

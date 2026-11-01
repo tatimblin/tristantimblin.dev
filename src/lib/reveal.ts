@@ -32,6 +32,8 @@
  * 404s → the inline backstop disarms; an asset hangs → the group deadline fires.
  */
 
+import { whenMounted } from "@whois/design-system/lib/widgets";
+
 /** Cap on how long a group waits for its assets before revealing anyway. */
 const DEADLINE_MS = 600;
 
@@ -172,8 +174,11 @@ class RevealCoordinator {
 		await Promise.all(members.map((el) => this.whenInView(el)));
 		if (this.destroyed) return;
 
+		// A widget card also waits for its script's mount (the widget runtime
+		// loads it as the card nears), so it never fades in half-built: a fan of
+		// posters with no posters, a ring with no ticks. Under the same deadline.
 		await withDeadline(
-			Promise.all(members.flatMap((el) => assetsOf(el))),
+			Promise.all(members.flatMap((el) => [...assetsOf(el), whenMounted(el)])),
 			DEADLINE_MS
 		);
 		if (this.destroyed) return;

@@ -25,89 +25,12 @@ interface Props {
 const { class: className, ...rest } = Astro.props;
 ---
 
-<script>
-	import "@tristimb/spotify-stream-player";
-</script>
-
-<Widget size="1x1" title="now playing" class:list={["wx-nowplaying", className]} {...rest}>
-	{/* Hidden until the player has told us which state it is in (the script
-	     below); the placeholder text only reserves the pill's width. */}
+<Widget size="1x1" title="now playing" name="now-playing" load="idle" class:list={["wx-nowplaying", className]} {...rest}>
+	{/* Hidden until the player has told us which state it is in (./client.ts,
+	     which the runtime mounts once the page has loaded: the player and its
+	     stream come with it); the placeholder text only reserves the pill's width. */}
 	<Pill slot="meta" class="wx-np-state">paused</Pill>
 	<CardBody>
 		<spotify-player src={SPOTIFY_SSE_URL} layout="cover"></spotify-player>
 	</CardBody>
 </Widget>
-
-<script>
-	// The state pill. The player doesn't publish whether it is playing, but it
-	// only advances its elapsed timestamp (part="elapsed") while a track runs,
-	// so a timestamp that changed within the last couple of seconds means LIVE
-	// and one that sat still that long means PAUSED.
-	// Its shadow root is open, so a MutationObserver can watch that text without
-	// forking the package. onPage binds per page-load and tears down before a
-	// view-transition swap, like the other widgets' scripts.
-	import { onPage } from "@whois/design-system/lib/lifecycle";
-
-	const STALE_MS = 2500;
-
-	function bind() {
-		const widget = document.querySelector<HTMLElement>(".wx-nowplaying");
-		const player = widget?.querySelector("spotify-player");
-		const pill = widget?.querySelector<HTMLElement>(".wx-np-state");
-		const root = player?.shadowRoot;
-		if (!widget || !pill || !root) return () => {};
-
-		let last = "";
-		let timer: number | undefined;
-
-		const set = (live: boolean) => {
-			widget.classList.toggle("is-live", live);
-			widget.classList.add("is-known");
-			const text = live ? "live" : "paused";
-			if (pill.textContent !== text) pill.textContent = text;
-		};
-
-		const check = () => {
-			const elapsed = root.querySelector('[part~="elapsed"]');
-			const now = elapsed?.textContent?.trim() ?? "";
-			// No timestamp yet = the skeleton; say nothing until there's data.
-			if (!now || now === last) return;
-			// A tick after the first one we saw is playback; either way, if
-			// nothing moves for STALE_MS the track is paused (or ended).
-			if (last) set(true);
-			last = now;
-			window.clearTimeout(timer);
-			timer = window.setTimeout(() => set(false), STALE_MS);
-		};
-
-		const observer = new MutationObserver(check);
-		observer.observe(root, {
-			subtree: true,
-			childList: true,
-			characterData: true,
-		});
-		check();
-
-		return () => {
-			observer.disconnect();
-			window.clearTimeout(timer);
-		};
-	}
-
-	// The shadow root exists once the element is upgraded, so the bind waits on
-	// whenDefined() — which can resolve AFTER the page has been swapped away.
-	// `alive` is this page-load; a bind for a stale one is dropped rather than
-	// left observing a detached tree.
-	onPage(() => {
-		let alive = true;
-		let teardown: (() => void) | null = null;
-		void customElements.whenDefined("spotify-player").then(() => {
-			if (!alive) return;
-			teardown = bind();
-		});
-		return () => {
-			alive = false;
-			teardown?.();
-		};
-	});
-</script>

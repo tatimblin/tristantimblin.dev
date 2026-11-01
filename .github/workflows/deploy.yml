@@ -1,10 +1,12 @@
 name: Deploy site to Cloudflare Pages
 
 # What runs when:
-#   pull_request        → full Playwright suite (Chromium + the Firefox spec). Never deploys.
-#   push to master      → code changed: Chromium suite, then build + smoke + deploy.
+#   pull_request        → unit tests, full Playwright suite (Chromium + the Firefox
+#                         spec), then the perf budgets. Never deploys.
+#   push to master      → code changed: unit tests, Chromium suite, perf budgets,
+#                         then build + smoke + deploy.
 #                         only content/data changed: build + smoke + deploy, no suite.
-#   workflow_dispatch   → Chromium suite, then build + smoke + deploy.
+#   workflow_dispatch   → as a master push with code changes.
 # The nightly data refresh (nightly.yml) pushes with GITHUB_TOKEN, which does NOT
 # trigger this workflow; it calls build-deploy.yml itself.
 on:
@@ -78,12 +80,22 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # Includes the CSS lint: no widget or theme CSS animates a geometry property
+      # (tools/lint/composited.test.ts).
+      - name: Run unit tests
+        run: bun run test:unit
+
       - name: Install Playwright browsers
         run: bunx playwright install --with-deps ${{ github.event_name == 'pull_request' && 'chromium firefox' || 'chromium' }}
 
       # The Playwright config builds the site and serves it with `astro preview`.
       - name: Run layout tests
-        run: bun run test ${{ github.event_name != 'pull_request' && '--project=chromium' || '' }}
+        run: bun run test --project=chromium ${{ github.event_name == 'pull_request' && '--project=firefox' || '' }}
+
+      # The performance budgets (tests/perf, numbers in tests/perf/budgets.ts):
+      # their own step, so their one worker has the runner to itself. Chromium.
+      - name: Run performance budgets
+        run: bun run test --project=perf
 
       - name: Upload report on failure
         if: failure()

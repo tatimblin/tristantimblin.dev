@@ -24,11 +24,17 @@ import { test, expect } from "./fixtures/test";
  * so it holds at any viewport, and it needs a 2x context — at deviceScaleFactor 1 a
  * capped and an uncapped grid are identical and the test would pass vacuously.
  *
- * RUN AT BOTH BREAKPOINTS, because each hides one of the three grids and a single
- * viewport would leave a hole exactly where a regression could sit: above 900px the
- * hero carousel is display:none, and at or below it the footer widget is. Checking only
- * what is actually laid out, at both sizes, covers all three.
+ * RUN AT BOTH BREAKPOINTS, because each creates only some of the three grids and a
+ * single viewport would leave a hole exactly where a regression could sit: above 900px
+ * the hero carousel is never created (src/components/Deferred.astro), and at or below
+ * it the footer widget's carousel isn't. Both sizes together cover all three — and the
+ * grids each size does create must be exactly the ones it shows, since a hidden grid
+ * still costs a WebGL context and a video download.
  */
+const EXPECTED: Record<string, string[]> = {
+	"mobile 390": ["hero carousel"],
+	"desktop 1440": ["desktop fabric", "footer widget"],
+};
 
 test.use({ deviceScaleFactor: 2 });
 
@@ -77,8 +83,10 @@ for (const vp of VIEWPORTS) {
 	const dpr = await page.evaluate(() => window.devicePixelRatio);
 	expect(dpr, "this test is meaningless at DPR 1").toBeGreaterThan(1);
 
+	// Exactly the grids this breakpoint shows exist, and all of them are laid out.
+	expect(grids.map((g) => g.which).sort()).toEqual([...EXPECTED[vp.name]].sort());
 	const seen = grids.filter((g) => g.laidOut);
-	expect(seen.length, "no dotted-grid was laid out").toBeGreaterThan(0);
+	expect(seen.length, "a dotted-grid exists that is not laid out").toBe(grids.length);
 
 	// Whichever grids this breakpoint shows, at least one must be checked.
 	expect(

@@ -9,6 +9,30 @@ import { contentDates } from './src/lib/content-dates.ts';
 // Each post's and demo's last change, for its sitemap entry's lastmod.
 const lastmod = contentDates();
 
+// Each homepage widget's script (src/widgets/<name>/client.ts, a lazy entry
+// of src/widgets/index.ts) is a chunk named after its widget,
+// _astro/widget-<name>.<hash>.js, rather than one of eight "client" chunks:
+// so a network panel, a budget or a test can tell which card loaded what.
+// It renames the chunk and leaves the file name to Astro's own function.
+const WIDGET_CLIENT = /\/src\/widgets\/([^/]+)\/client\.ts$/;
+/** @type {import('vite').Plugin} */
+const widgetChunkNames = {
+	name: 'widget-chunk-names',
+	apply: 'build',
+	applyToEnvironment: (environment) => environment.name === 'client',
+	outputOptions(options) {
+		const base = options.chunkFileNames;
+		if (typeof base !== 'function') return options;
+		return {
+			...options,
+			chunkFileNames(chunk) {
+				const widget = chunk.facadeModuleId?.match(WIDGET_CLIENT)?.[1];
+				return base(widget ? { ...chunk, name: `widget-${widget}` } : chunk);
+			},
+		};
+	},
+};
+
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://tristantimblin.dev',
@@ -17,6 +41,7 @@ export default defineConfig({
 	// canonicalises and serves one form: with the slash. The hrefs come from
 	// src/lib/blog.ts (postHref, tagHref, TXT_HREF).
 	trailingSlash: 'always',
+	vite: { plugins: [widgetChunkNames] },
 	markdown: {
 		// Emit CSS-variable-driven token colors instead of a hardcoded theme, so
 		// code blocks track the light/dark toggle and the design-system tokens.

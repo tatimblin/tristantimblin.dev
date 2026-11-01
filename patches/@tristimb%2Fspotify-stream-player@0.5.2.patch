@@ -1,0 +1,644 @@
+diff --git a/dist/index.cjs.js b/dist/index.cjs.js
+index 600ff4863c87640f25cbd4c1fa47595d88348d34..611034c4d41f3a7bc4c258788022179618b45c5d 100644
+--- a/dist/index.cjs.js
++++ b/dist/index.cjs.js
+@@ -1,7 +1,7 @@
+-"use strict";var $t=Object.defineProperty;var qt=(s,r,t)=>r in s?$t(s,r,{enumerable:!0,configurable:!0,writable:!0,value:t}):s[r]=t;var mt=(s,r,t)=>(qt(s,typeof r!="symbol"?r+"":r,t),t),at=(s,r,t)=>{if(!r.has(s))throw TypeError("Cannot "+t)};var i=(s,r,t)=>(at(s,r,"read from private field"),t?t.call(s):r.get(s)),o=(s,r,t)=>{if(r.has(s))throw TypeError("Cannot add the same private member more than once");r instanceof WeakSet?r.add(s):r.set(s,t)},c=(s,r,t,e)=>(at(s,r,"write to private field"),e?e.call(s,t):r.set(s,t),t);var a=(s,r,t)=>(at(s,r,"access private method"),t);var d,x,D,W,S,Y,vt;class gt{constructor(r,t,e,n){o(this,Y);o(this,d,void 0);o(this,x,void 0);o(this,D,void 0);o(this,W,void 0);o(this,S,!1);c(this,x,r),c(this,D,n),t===null?c(this,d,{}):c(this,d,t),c(this,W,e)}get(){return i(this,d)}set(r){return r?(typeof r=="object"?c(this,d,{...i(this,d),...r}):c(this,d,r),i(this,S)||(c(this,S,!0),this.render(),c(this,S,!1)),!0):!1}render(){if(i(this,d))try{a(this,Y,vt).call(this).innerHTML=i(this,W).call(this,i(this,d),this.set.bind(this))}catch(r){console.warn(`Failed to render ${i(this,x)}:`,r)}}create(){return`<div class="${i(this,x)}"></div>`}}d=new WeakMap,x=new WeakMap,D=new WeakMap,W=new WeakMap,S=new WeakMap,Y=new WeakSet,vt=function(){const r=i(this,D).querySelector(`.${i(this,x)}`);if(!r)throw Error("element not found");return r};function St(s){return!s||s.length===0?"":s.filter(r=>r.url&&r.width>0).map(r=>`${r.url} ${r.width}w`).join(", ")}function Ct(s){const r=St(s.covers);return`
++"use strict";var Pt=Object.defineProperty;var Nt=(s,i,t)=>i in s?Pt(s,i,{enumerable:!0,configurable:!0,writable:!0,value:t}):s[i]=t;var ft=(s,i,t)=>(Nt(s,typeof i!="symbol"?i+"":i,t),t),vt=(s,i,t)=>{if(!i.has(s))throw TypeError("Cannot "+t)};var r=(s,i,t)=>(vt(s,i,"read from private field"),t?t.call(s):i.get(s)),o=(s,i,t)=>{if(i.has(s))throw TypeError("Cannot add the same private member more than once");i instanceof WeakSet?i.add(s):i.set(s,t)},n=(s,i,t,e)=>(vt(s,i,"write to private field"),e?e.call(s,t):i.set(s,t),t);var a=(s,i,t)=>(vt(s,i,"access private method"),t);var u,C,_,V,T,ct,zt;class qt{constructor(i,t,e,l){o(this,ct);o(this,u,void 0);o(this,C,void 0);o(this,_,void 0);o(this,V,void 0);o(this,T,!1);n(this,C,i),n(this,_,l),t===null?n(this,u,{}):n(this,u,t),n(this,V,e)}get(){return r(this,u)}set(i){return i?(typeof i=="object"?n(this,u,{...r(this,u),...i}):n(this,u,i),r(this,T)||(n(this,T,!0),this.render(),n(this,T,!1)),!0):!1}render(){if(r(this,u))try{a(this,ct,zt).call(this).innerHTML=r(this,V).call(this,r(this,u),this.set.bind(this))}catch(i){console.warn(`Failed to render ${r(this,C)}:`,i)}}create(){return`<div class="${r(this,C)}"></div>`}}u=new WeakMap,C=new WeakMap,_=new WeakMap,V=new WeakMap,T=new WeakMap,ct=new WeakSet,zt=function(){const i=r(this,_).querySelector(`.${r(this,C)}`);if(!i)throw Error("element not found");return i};function Ht(s){return!s||s.length===0?"":s.filter(i=>i.url&&i.width>0).map(i=>`${i.url} ${i.width}w`).join(", ")}function Dt(s){const i=Ht(s.covers);return`
+     <div class="details" part="details">
+       ${s.cover?`<a class="album" part="album" href="${s.albumUrl??"#"}">
+-        <img class="art" part="art" crossorigin="anonymous" src="${s.cover}"${r?` srcset="${r}"`:""} alt="${s.album??""}"/>
++        <img class="art" part="art" crossorigin="anonymous" src="${s.cover}"${i?` srcset="${i}"`:""} alt="${s.album??""}"/>
+       </a>`:""}
+       <div class="text">
+         <a class="title" part="title" href="${s.url??"#"}">${s.track??""}</a>
+@@ -9,9 +9,9 @@
+         <p class="album-text" part="album-text">${s.album?`<a href="${s.albumUrl??"#"}">${s.album}</a>`:""}</p>
+       </div>
+     </div>
+-  `}function ft(s){if(!s.milliseconds)return"";const r=s.active?'id="ssp-time"':"",t=s.active?"elapsed":"remaining";return`<span ${r} class="timestamp" part="${t}">${zt(s.milliseconds)}</span>`}function zt(s){const r=Math.floor(s/1e3/60),t=Math.floor(s/1e3%60);let e="";return t<10&&(e="0"),`${r}:${e}${t}`}function Mt(s){return!s.duration||!s.progress?"":`
++  `}function Mt(s){if(!s.milliseconds)return"";const i=s.active?'id="ssp-time"':"",t=s.active?"elapsed":"remaining";return`<span ${i} class="timestamp" part="${t}">${It(s.milliseconds)}</span>`}function It(s){const i=Math.floor(s/1e3/60),t=Math.floor(s/1e3%60);let e="";return t<10&&(e="0"),`${i}:${e}${t}`}function Wt(s){return!s.duration||!s.progress?"":`
+     <div class="progress" part="progress">
+-      ${ft({milliseconds:s.progress,active:!0})}
++      ${Mt({milliseconds:s.progress,active:!0})}
+       <progress
+         id="ssp-progress"
+         class="progress-bar"
+@@ -19,11 +19,11 @@
+         value="${s.progress/s.duration*100}"
+         max="100"
+       >
+-          ${Et(s.progress,s.duration)}%
++          ${Ut(s.progress,s.duration)}%
+       </progress>
+-      ${ft({milliseconds:s.duration})}
++      ${Mt({milliseconds:s.duration})}
+     </div>
+-  `}function Et(s,r){return Math.floor(s/r*100)}function Tt(){return`
++  `}function Ut(s,i){return Math.floor(s/i*100)}function jt(){return`
+     <div class="details skeleton" part="details">
+       <div class="album" part="album">
+         <svg class="art" part="art" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 361 361">
+@@ -45,7 +45,7 @@
+         <div class="artist" part="artist">&nbsp;</div>
+       </div>
+     </div>
+-  `}function Pt(){return`
++  `}function Bt(){return`
+     <div class="progress skeleton" part="progress">
+       <span class="timestamp" part="elapsed"></span>
+       <progress
+@@ -56,4 +56,4 @@
+       ></progress>
+       <span class="timestamp" part="remaining"></span>
+     </div>
+-  `}const Rt=":host{display:block;color:inherit;box-sizing:border-box;--ssp-accent: currentColor;--ssp-album-size: 4em;--ssp-gap: 8px;--ssp-radius: 3px;--ssp-progress-height: 4px;--ssp-title-size: 1em;--ssp-subtitle-size: .9em;--ssp-timestamp-size: .7em;--ssp-track: color-mix(in oklab, currentColor 15%, transparent);--ssp-skeleton: color-mix(in oklab, currentColor 12%, transparent);--ssp-skeleton-shimmer: color-mix(in oklab, currentColor 22%, transparent);--ssp-marquee-gap: 2em}:host,:host *{box-sizing:border-box}.player{transition:opacity .3s ease-in-out}.details{display:flex;gap:var(--ssp-gap);align-items:center;margin-bottom:var(--ssp-gap)}.album{display:block;width:var(--ssp-album-size);height:var(--ssp-album-size);aspect-ratio:1 / 1;flex:none;overflow:hidden;border-radius:var(--ssp-radius);color:inherit}.art{display:block;width:100%;height:100%;object-fit:cover}.text{min-width:0;width:100%}.title,.artist,.album-text{margin:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.title{display:block;font-weight:600;font-size:var(--ssp-title-size);color:inherit;text-decoration:none}.artist,.album-text{font-size:var(--ssp-subtitle-size);opacity:.75}.artist a,.album-text a,.title{color:inherit;text-decoration:none}.is-marquee{text-overflow:clip;white-space:nowrap}.marquee-track{display:inline-flex;flex-wrap:nowrap;gap:var(--ssp-marquee-gap, 2em);white-space:nowrap;will-change:transform;animation:ssp-marquee var(--ssp-marquee-duration, 8s) linear infinite}.marquee-copy{flex:none;white-space:nowrap}@keyframes ssp-marquee{0%,8%{transform:translate(0)}to{transform:translate(calc(-1 * var(--ssp-marquee-shift, 0px)))}}.progress{display:flex;gap:var(--ssp-gap);align-items:center;justify-content:space-between}.progress-bar{-moz-appearance:none;appearance:none;-webkit-appearance:none;flex:1;min-width:0;width:auto;border:none;height:var(--ssp-progress-height);border-radius:100px;background:var(--ssp-track);color:var(--ssp-accent)}.progress-bar::-webkit-progress-bar{background:var(--ssp-track);border-radius:100px}.progress-bar::-webkit-progress-value{background:var(--ssp-accent);border-radius:100px 0 0 100px}.progress-bar::-moz-progress-bar{background:var(--ssp-accent);border-radius:100px}.timestamp{padding-top:.2em;font-size:var(--ssp-timestamp-size);font-variant-numeric:tabular-nums;opacity:.75;white-space:nowrap}.player--cover{display:flex;flex-direction:column;height:100%;min-height:0}.player--cover .details{flex:1 1 auto;min-height:0;flex-direction:column;align-items:stretch;margin-bottom:0}.player--cover>.details{margin-bottom:var(--ssp-gap)}.player--cover .album{flex:1 1 auto;min-height:0;width:100%;height:auto;aspect-ratio:auto;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:var(--ssp-gap)}.player--cover .art{height:100%;width:auto;max-width:100%;aspect-ratio:1 / 1;object-fit:cover}.player--cover .text{flex:none}.player--cover .progress{width:100%;align-self:stretch}.player--cover .title,.player--cover .artist,.player--cover .album-text{white-space:normal}:host([tint]) [part~=root]{--_c: var(--ssp-cover-color, oklch(.45 .03 265));background:linear-gradient(to bottom,oklch(from var(--_c) clamp(.3,l,.42) calc(c*.7) h),oklch(from var(--_c) .16 calc(c*.55) h));color:#f5f5f5}.skeleton .art,.skeleton .title,.skeleton .artist,.skeleton .album-text,.skeleton .progress-bar,.skeleton .timestamp{background:linear-gradient(90deg,var(--ssp-skeleton) 25%,var(--ssp-skeleton-shimmer) 50%,var(--ssp-skeleton) 75%);background-size:200% 100%;animation:ssp-skeleton 1.5s infinite;border-radius:4px}.skeleton .title{height:1.2em;width:70%;margin-bottom:4px}.skeleton .artist{height:1em;width:50%}.skeleton .timestamp{height:var(--ssp-timestamp-size);width:2.5em}.skeleton .art{opacity:.4}@keyframes ssp-skeleton{0%{background-position:200% 0}to{background-position:-200% 0}}@media (prefers-reduced-motion: reduce){.skeleton .album,.skeleton .title,.skeleton .artist,.skeleton .album-text,.skeleton .progress-bar,.skeleton .timestamp,.marquee-track{animation:none}}";let J;function At(){return J||(J=new CSSStyleSheet,J.replaceSync(Rt)),J}var C,z,p,M,I,E,v,u,m,Z,b,T,U,ot,_,nt,tt,bt,g,y,j,lt,O,ct,P,X,R,G,et,wt,A,K,B,ht,st,yt,V,dt,rt,xt,k,F,L,Q,it,kt;class pt extends HTMLElement{constructor(){super();o(this,U);o(this,_);o(this,tt);o(this,g);o(this,j);o(this,O);o(this,P);o(this,R);o(this,et);o(this,A);o(this,B);o(this,st);o(this,V);o(this,rt);o(this,k);o(this,L);o(this,it);o(this,C,void 0);o(this,z,void 0);o(this,p,!1);o(this,M,!1);o(this,I,0);o(this,E,0);o(this,v,void 0);o(this,u,void 0);o(this,m,void 0);o(this,Z,30*60*1e3);o(this,b,void 0);o(this,T,new WeakMap);const t=this.attachShadow({mode:"open"});t.adoptedStyleSheets=[At()],c(this,C,new gt("details",null,Ct,t)),c(this,z,new gt("progress",null,Mt,t)),a(this,g,y).call(this)}connectedCallback(){a(this,g,y).call(this),a(this,A,K).call(this),a(this,st,yt).call(this),a(this,V,dt).call(this),typeof ResizeObserver<"u"&&!i(this,b)&&(c(this,b,new ResizeObserver(()=>{a(this,P,X).call(this),a(this,R,G).call(this)})),i(this,b).observe(this))}disconnectedCallback(){var t;(t=i(this,b))==null||t.disconnect(),c(this,b,void 0),a(this,k,F).call(this)}attributeChangedCallback(t,e,n){e!==n&&(t==="src"&&this.isConnected&&(c(this,p,!1),a(this,g,y).call(this),a(this,A,K).call(this)),t==="layout"&&a(this,_,nt).call(this))}render(...t){i(this,p)?(a(this,tt,bt).call(this,...t),requestAnimationFrame(()=>{t.forEach(e=>{try{e.render()}catch(n){console.warn("Component render failed:",n)}}),a(this,j,lt).call(this),a(this,P,X).call(this),a(this,R,G).call(this)})):a(this,g,y).call(this)}get src(){return this.getAttribute("src")}set src(t){t?this.setAttribute("src",t):this.removeAttribute("src")}}C=new WeakMap,z=new WeakMap,p=new WeakMap,M=new WeakMap,I=new WeakMap,E=new WeakMap,v=new WeakMap,u=new WeakMap,m=new WeakMap,Z=new WeakMap,b=new WeakMap,T=new WeakMap,U=new WeakSet,ot=function(){let t=this.shadowRoot.querySelector('[part~="root"]');return t||(t=document.createElement("div"),t.setAttribute("part","root"),t.className="player",this.shadowRoot.appendChild(t),a(this,_,nt).call(this)),t},_=new WeakSet,nt=function(){var n;const t=(n=this.shadowRoot)==null?void 0:n.querySelector('[part~="root"]');if(!t)return;const e=this.getAttribute("layout")==="cover";t.classList.toggle("player--cover",e),t.classList.toggle("player--row",!e)},tt=new WeakSet,bt=function(...t){const[e,n]=t;a(this,U,ot).call(this).innerHTML=`${e.create()}${n.create()}`},g=new WeakSet,y=function(){a(this,U,ot).call(this).innerHTML=`${Tt()}${Pt()}`},j=new WeakSet,lt=function(){var e;const t=(e=this.shadowRoot)==null?void 0:e.querySelector("img.art");if(t){if(t.complete&&t.naturalWidth>0){a(this,O,ct).call(this,t);return}t.dataset.sspHooked!=="1"&&(t.dataset.sspHooked="1",t.addEventListener("load",()=>a(this,O,ct).call(this,t),{once:!0}))}},O=new WeakSet,ct=function(t){try{if(!t.naturalWidth||!t.naturalHeight)return;const e=16,n=document.createElement("canvas");n.width=e,n.height=e;const l=n.getContext("2d");if(!l)return;l.drawImage(t,0,0,e,e);const{data:h}=l.getImageData(0,0,e,e);let H=0,f=0,$=0,q=0;for(let w=0;w<h.length;w+=4)h[w+3]<128||(H+=h[w],f+=h[w+1],$+=h[w+2],q++);if(q===0)return;H=Math.round(H/q),f=Math.round(f/q),$=Math.round($/q);const N=`rgb(${H} ${f} ${$})`;this.style.setProperty("--ssp-cover-color",N),this.dispatchEvent(new CustomEvent("coverchange",{detail:{color:N}}))}catch{return}},P=new WeakSet,X=function(){var n;const t=(n=this.shadowRoot)==null?void 0:n.querySelector("img.art");if(!t||!t.hasAttribute("srcset"))return;const e=Math.round(t.getBoundingClientRect().width);e>0&&t.setAttribute("sizes",`${e}px`)},R=new WeakSet,G=function(){const t=this.shadowRoot;if(!t)return;const e=typeof matchMedia<"u"&&matchMedia("(prefers-reduced-motion: reduce)").matches;t.querySelectorAll(".title, .artist").forEach(l=>{const h=i(this,T).get(l);if(h!==void 0&&(l.innerHTML=h,l.classList.remove("is-marquee"),l.style.removeProperty("--ssp-marquee-shift"),l.style.removeProperty("--ssp-marquee-duration"),i(this,T).delete(l)),e||l.scrollWidth-l.clientWidth<=1)return;const f=l.innerHTML;i(this,T).set(l,f);const $=a(this,et,wt).call(this,l),N=l.scrollWidth+$;l.classList.add("is-marquee"),l.innerHTML=`<span class="marquee-track"><span class="marquee-copy">${f}</span><span class="marquee-copy" aria-hidden="true">${f}</span></span>`;const ut=Math.min(30,Math.max(4,N/40));l.style.setProperty("--ssp-marquee-shift",`${N}px`),l.style.setProperty("--ssp-marquee-duration",`${ut}s`)})},et=new WeakSet,wt=function(t){const e=getComputedStyle(t).getPropertyValue("--ssp-marquee-gap").trim(),n=parseFloat(e);return e.endsWith("px")&&!Number.isNaN(n)?n:(parseFloat(getComputedStyle(t).fontSize)||16)*2},A=new WeakSet,K=function(){this.src&&(a(this,k,F).call(this),c(this,u,new EventSource(this.src)),i(this,u).onerror=t=>{console.error("EventSource error:",t)},i(this,u).onmessage=t=>{if(a(this,rt,xt).call(this),!t.data||t.data.trim()===""){console.warn("Received empty data from server");return}let e;try{e=JSON.parse(t.data)}catch(h){console.error("Failed to parse JSON:",h),console.error("Raw data:",t.data);return}i(this,p)||(c(this,p,!0),this.render(i(this,C),i(this,z))),i(this,C).set({track:e.track,url:e.url,album:e.album,albumUrl:e.albumUrl,artists:e.artists,artistUrl:e.artistUrl,cover:e.cover,covers:e.covers}),requestAnimationFrame(()=>{a(this,j,lt).call(this),a(this,P,X).call(this),a(this,R,G).call(this)}),i(this,z).set({progress:e.progress,duration:e.duration,isPlaying:e.playing});const n=new Date().getTime(),l=e.time?new Date(e.time).getTime():NaN;c(this,I,Number.isNaN(l)?n-e.progress:l-e.progress),c(this,M,e.playing),c(this,E,e.duration),a(this,L,Q).call(this),i(this,M)&&!e.destroy&&c(this,v,window.requestAnimationFrame(i(this,B,ht)))})},B=new WeakSet,ht=function(){return()=>{const t=new Date().getTime(),e=Math.max(0,t-i(this,I));if(e>i(this,E)){a(this,L,Q).call(this);return}const n=Math.min(100,e/i(this,E)*100),l=this.shadowRoot.getElementById("ssp-progress");l&&(l.value=n,l.textContent=`${n.toFixed(1)}%`);const h=this.shadowRoot.getElementById("ssp-time");h&&(h.textContent=a(this,it,kt).call(this,e)),i(this,M)&&n<100&&c(this,v,window.requestAnimationFrame(i(this,B,ht)))}},st=new WeakSet,yt=function(){const t=()=>{document.hidden?a(this,k,F).call(this):(c(this,p,!1),a(this,g,y).call(this),a(this,A,K).call(this))};document.addEventListener("visibilitychange",t)},V=new WeakSet,dt=function(){c(this,m,window.setTimeout(()=>{a(this,k,F).call(this)},i(this,Z)))},rt=new WeakSet,xt=function(){i(this,m)&&window.clearTimeout(i(this,m)),a(this,V,dt).call(this)},k=new WeakSet,F=function(){i(this,u)&&(i(this,u).close(),c(this,u,void 0)),i(this,m)&&(window.clearTimeout(i(this,m)),c(this,m,void 0)),c(this,p,!1),a(this,L,Q).call(this),a(this,g,y).call(this)},L=new WeakSet,Q=function(){i(this,v)&&(window.cancelAnimationFrame(i(this,v)),c(this,v,void 0))},it=new WeakSet,kt=function(t){if(!t)return"0:00";const e=Math.floor(t/(1e3*60)),n=Math.floor(t%(1e3*60)/1e3);return`${e}:${n<10?`0${n}`:n}`},mt(pt,"observedAttributes",["src","layout"]);typeof customElements<"u"&&!customElements.get("spotify-player")&&customElements.define("spotify-player",pt);module.exports=pt;
++  `}const Ft=":host{display:block;color:inherit;box-sizing:border-box;--ssp-accent: currentColor;--ssp-album-size: 4em;--ssp-gap: 8px;--ssp-radius: 3px;--ssp-progress-height: 4px;--ssp-title-size: 1em;--ssp-subtitle-size: .9em;--ssp-timestamp-size: .7em;--ssp-track: color-mix(in oklab, currentColor 15%, transparent);--ssp-skeleton: color-mix(in oklab, currentColor 12%, transparent);--ssp-skeleton-shimmer: color-mix(in oklab, currentColor 22%, transparent);--ssp-marquee-gap: 2em}:host,:host *{box-sizing:border-box}.player{transition:opacity .3s ease-in-out}.details{display:flex;gap:var(--ssp-gap);align-items:center;margin-bottom:var(--ssp-gap)}.album{display:block;width:var(--ssp-album-size);height:var(--ssp-album-size);aspect-ratio:1 / 1;flex:none;overflow:hidden;border-radius:var(--ssp-radius);color:inherit}.art{display:block;width:100%;height:100%;object-fit:cover}.text{min-width:0;width:100%}.title,.artist,.album-text{margin:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.title{display:block;font-weight:600;font-size:var(--ssp-title-size);color:inherit;text-decoration:none}.artist,.album-text{font-size:var(--ssp-subtitle-size);opacity:.75}.artist a,.album-text a,.title{color:inherit;text-decoration:none}.is-marquee{text-overflow:clip;white-space:nowrap}.marquee-track{display:inline-flex;flex-wrap:nowrap;gap:var(--ssp-marquee-gap, 2em);white-space:nowrap;will-change:transform;animation:ssp-marquee var(--ssp-marquee-duration, 8s) linear infinite}.marquee-copy{flex:none;white-space:nowrap}@keyframes ssp-marquee{0%,8%{transform:translate(0)}to{transform:translate(calc(-1 * var(--ssp-marquee-shift, 0px)))}}.progress{display:flex;gap:var(--ssp-gap);align-items:center;justify-content:space-between}.progress-bar{-moz-appearance:none;appearance:none;-webkit-appearance:none;flex:1;min-width:0;width:auto;border:none;height:var(--ssp-progress-height);border-radius:100px;background:var(--ssp-track);color:var(--ssp-accent)}.progress-bar::-webkit-progress-bar{background:var(--ssp-track);border-radius:100px}.progress-bar::-webkit-progress-value{background:var(--ssp-accent);border-radius:100px 0 0 100px}.progress-bar::-moz-progress-bar{background:var(--ssp-accent);border-radius:100px}.timestamp{padding-top:.2em;font-size:var(--ssp-timestamp-size);font-variant-numeric:tabular-nums;opacity:.75;white-space:nowrap}.player--cover{display:flex;flex-direction:column;height:100%;min-height:0}.player--cover .details{flex:1 1 auto;min-height:0;flex-direction:column;align-items:stretch;margin-bottom:0}.player--cover>.details{margin-bottom:var(--ssp-gap)}.player--cover .album{flex:1 1 auto;min-height:0;width:100%;height:auto;aspect-ratio:auto;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:var(--ssp-gap)}.player--cover .art{height:100%;width:auto;max-width:100%;aspect-ratio:1 / 1;object-fit:cover}.player--cover .text{flex:none}.player--cover .progress{width:100%;align-self:stretch}.player--cover .title,.player--cover .artist,.player--cover .album-text{white-space:normal}:host([tint]) [part~=root]{--_c: var(--ssp-cover-color, oklch(.45 .03 265));background:linear-gradient(to bottom,oklch(from var(--_c) clamp(.3,l,.42) calc(c*.7) h),oklch(from var(--_c) .16 calc(c*.55) h));color:#f5f5f5}.skeleton .art,.skeleton .title,.skeleton .artist,.skeleton .album-text,.skeleton .progress-bar,.skeleton .timestamp{background:linear-gradient(90deg,var(--ssp-skeleton) 25%,var(--ssp-skeleton-shimmer) 50%,var(--ssp-skeleton) 75%);background-size:200% 100%;animation:ssp-skeleton 1.5s infinite;border-radius:4px}.skeleton .title{height:1.2em;width:70%;margin-bottom:4px}.skeleton .artist{height:1em;width:50%}.skeleton .timestamp{height:var(--ssp-timestamp-size);width:2.5em}.skeleton .art{opacity:.4}@keyframes ssp-skeleton{0%{background-position:200% 0}to{background-position:-200% 0}}@media (prefers-reduced-motion: reduce){.skeleton .album,.skeleton .title,.skeleton .artist,.skeleton .album-text,.skeleton .progress-bar,.skeleton .timestamp,.marquee-track{animation:none}}";let st;function Ot(){return st||(st=new CSSStyleSheet,st.replaceSync(Ft)),st}var R,A,p,y,S,J,q,m,L,P,N,g,f,v,ht,k,H,K,bt,X,wt,ut,Et,b,$,G,yt,Q,kt,D,rt,I,it,dt,Tt,W,at,Y,xt,Z,$t,tt,U,ot,pt,Rt,et,Ct,mt,At,M,F,j,nt,gt,Lt;const O=class O extends HTMLElement{constructor(){super();o(this,K);o(this,X);o(this,ut);o(this,b);o(this,G);o(this,Q);o(this,D);o(this,I);o(this,dt);o(this,W);o(this,Y);o(this,Z);o(this,U);o(this,pt);o(this,et);o(this,mt);o(this,M);o(this,j);o(this,gt);o(this,R,void 0);o(this,A,void 0);o(this,p,!1);o(this,y,!1);o(this,S,null);o(this,J,0);o(this,q,0);o(this,m,void 0);o(this,L,"");o(this,P,-1);o(this,N,"");o(this,g,void 0);o(this,f,void 0);o(this,v,void 0);o(this,ht,30*60*1e3);o(this,k,void 0);o(this,H,new WeakMap);o(this,tt,()=>{n(this,m,void 0);const t=a(this,Y,xt).call(this);if(t>r(this,q)){a(this,U,ot).call(this,!1);return}const e=Math.min(100,t/r(this,q)*100),l=this.shadowRoot.getElementById("ssp-progress");if(l){const h=Math.round(e*100)/100;h!==r(this,P)&&(l.value=h,n(this,P,h));const d=`${Math.floor(e)}%`;d!==r(this,N)&&(l.textContent=d,n(this,N,d))}const c=this.shadowRoot.getElementById("ssp-time");if(c){const h=a(this,gt,Lt).call(this,t);h!==r(this,L)&&(c.textContent=h,n(this,L,h))}if(r(this,y)&&!this.paused&&e<100){const h=1e3-t%1e3+1;n(this,m,window.setTimeout(r(this,tt),Math.min(O.TICK_MS,h)))}});const t=this.attachShadow({mode:"open"});t.adoptedStyleSheets=[Ot()],n(this,R,new qt("details",null,Dt,t)),n(this,A,new qt("progress",null,Wt,t)),a(this,b,$).call(this)}connectedCallback(){a(this,b,$).call(this),a(this,W,at).call(this),a(this,pt,Rt).call(this),a(this,et,Ct).call(this),typeof ResizeObserver<"u"&&!r(this,k)&&(n(this,k,new ResizeObserver(()=>{a(this,D,rt).call(this),a(this,I,it).call(this)})),r(this,k).observe(this))}disconnectedCallback(){var t;(t=r(this,k))==null||t.disconnect(),n(this,k,void 0),r(this,f)&&(document.removeEventListener("visibilitychange",r(this,f)),n(this,f,void 0)),a(this,M,F).call(this)}attributeChangedCallback(t,e,l){e!==l&&(t==="src"&&this.isConnected&&(n(this,p,!1),a(this,b,$).call(this),a(this,W,at).call(this)),t==="layout"&&a(this,X,wt).call(this),t==="paused"&&(a(this,j,nt).call(this),this.paused||a(this,Z,$t).call(this)))}get paused(){return this.hasAttribute("paused")}set paused(t){this.toggleAttribute("paused",!!t)}get playing(){return r(this,S)}render(...t){r(this,p)?(a(this,ut,Et).call(this,...t),requestAnimationFrame(()=>{t.forEach(e=>{try{e.render()}catch(l){console.warn("Component render failed:",l)}}),a(this,G,yt).call(this),a(this,D,rt).call(this),a(this,I,it).call(this)})):a(this,b,$).call(this)}get src(){return this.getAttribute("src")}set src(t){t?this.setAttribute("src",t):this.removeAttribute("src")}};R=new WeakMap,A=new WeakMap,p=new WeakMap,y=new WeakMap,S=new WeakMap,J=new WeakMap,q=new WeakMap,m=new WeakMap,L=new WeakMap,P=new WeakMap,N=new WeakMap,g=new WeakMap,f=new WeakMap,v=new WeakMap,ht=new WeakMap,k=new WeakMap,H=new WeakMap,K=new WeakSet,bt=function(){let t=this.shadowRoot.querySelector('[part~="root"]');return t||(t=document.createElement("div"),t.setAttribute("part","root"),t.className="player",this.shadowRoot.appendChild(t),a(this,X,wt).call(this)),t},X=new WeakSet,wt=function(){var l;const t=(l=this.shadowRoot)==null?void 0:l.querySelector('[part~="root"]');if(!t)return;const e=this.getAttribute("layout")==="cover";t.classList.toggle("player--cover",e),t.classList.toggle("player--row",!e)},ut=new WeakSet,Et=function(...t){const[e,l]=t;a(this,K,bt).call(this).innerHTML=`${e.create()}${l.create()}`},b=new WeakSet,$=function(){a(this,K,bt).call(this).innerHTML=`${jt()}${Bt()}`},G=new WeakSet,yt=function(){var e;const t=(e=this.shadowRoot)==null?void 0:e.querySelector("img.art");if(t){if(t.complete&&t.naturalWidth>0){a(this,Q,kt).call(this,t);return}t.dataset.sspHooked!=="1"&&(t.dataset.sspHooked="1",t.addEventListener("load",()=>a(this,Q,kt).call(this,t),{once:!0}))}},Q=new WeakSet,kt=function(t){try{if(!t.naturalWidth||!t.naturalHeight)return;const e=16,l=document.createElement("canvas");l.width=e,l.height=e;const c=l.getContext("2d");if(!c)return;c.drawImage(t,0,0,e,e);const{data:h}=c.getImageData(0,0,e,e);let d=0,w=0,z=0,E=0;for(let x=0;x<h.length;x+=4)h[x+3]<128||(d+=h[x],w+=h[x+1],z+=h[x+2],E++);if(E===0)return;d=Math.round(d/E),w=Math.round(w/E),z=Math.round(z/E);const B=`rgb(${d} ${w} ${z})`;this.style.setProperty("--ssp-cover-color",B),this.dispatchEvent(new CustomEvent("coverchange",{detail:{color:B}}))}catch{return}},D=new WeakSet,rt=function(){var l;const t=(l=this.shadowRoot)==null?void 0:l.querySelector("img.art");if(!t||!t.hasAttribute("srcset"))return;const e=Math.round(t.getBoundingClientRect().width);e>0&&t.setAttribute("sizes",`${e}px`)},I=new WeakSet,it=function(){const t=this.shadowRoot;if(!t)return;const e=typeof matchMedia<"u"&&matchMedia("(prefers-reduced-motion: reduce)").matches;t.querySelectorAll(".title, .artist").forEach(c=>{const h=r(this,H).get(c);if(h!==void 0&&(c.innerHTML=h,c.classList.remove("is-marquee"),c.style.removeProperty("--ssp-marquee-shift"),c.style.removeProperty("--ssp-marquee-duration"),r(this,H).delete(c)),e||c.scrollWidth-c.clientWidth<=1)return;const w=c.innerHTML;r(this,H).set(c,w);const z=a(this,dt,Tt).call(this,c),B=c.scrollWidth+z;c.classList.add("is-marquee"),c.innerHTML=`<span class="marquee-track"><span class="marquee-copy">${w}</span><span class="marquee-copy" aria-hidden="true">${w}</span></span>`;const St=Math.min(30,Math.max(4,B/40));c.style.setProperty("--ssp-marquee-shift",`${B}px`),c.style.setProperty("--ssp-marquee-duration",`${St}s`)})},dt=new WeakSet,Tt=function(t){const e=getComputedStyle(t).getPropertyValue("--ssp-marquee-gap").trim(),l=parseFloat(e);return e.endsWith("px")&&!Number.isNaN(l)?l:(parseFloat(getComputedStyle(t).fontSize)||16)*2},W=new WeakSet,at=function(){this.src&&(a(this,M,F).call(this),n(this,g,new EventSource(this.src)),r(this,g).onerror=t=>{console.error("EventSource error:",t)},r(this,g).onmessage=t=>{if(a(this,mt,At).call(this),!t.data||t.data.trim()===""){console.warn("Received empty data from server");return}let e;try{e=JSON.parse(t.data)}catch(h){console.error("Failed to parse JSON:",h),console.error("Raw data:",t.data);return}r(this,p)||(n(this,p,!0),this.render(r(this,R),r(this,A))),r(this,R).set({track:e.track,url:e.url,album:e.album,albumUrl:e.albumUrl,artists:e.artists,artistUrl:e.artistUrl,cover:e.cover,covers:e.covers}),requestAnimationFrame(()=>{a(this,G,yt).call(this),a(this,D,rt).call(this),a(this,I,it).call(this)}),r(this,A).set({progress:e.progress,duration:e.duration,isPlaying:e.playing});const l=new Date().getTime(),c=e.time?new Date(e.time).getTime():NaN;n(this,J,Number.isNaN(c)?l-e.progress:c-e.progress),n(this,y,!!(e.playing&&!e.destroy)),n(this,q,e.duration),n(this,L,""),n(this,P,-1),n(this,N,""),a(this,j,nt).call(this),a(this,U,ot).call(this,r(this,y)&&a(this,Y,xt).call(this)<=r(this,q)),a(this,Z,$t).call(this)})},Y=new WeakSet,xt=function(){return Math.max(0,new Date().getTime()-r(this,J))},Z=new WeakSet,$t=function(){r(this,y)&&!this.paused&&r(this,m)===void 0&&r(this,tt).call(this)},tt=new WeakMap,U=new WeakSet,ot=function(t){t!==r(this,S)&&(n(this,S,t),this.toggleAttribute("playing",t===!0),this.dispatchEvent(new CustomEvent("playstatechange",{detail:{playing:t}})))},pt=new WeakSet,Rt=function(){r(this,f)||(n(this,f,()=>{document.hidden?a(this,M,F).call(this):this.isConnected&&(n(this,p,!1),a(this,b,$).call(this),a(this,W,at).call(this))}),document.addEventListener("visibilitychange",r(this,f)))},et=new WeakSet,Ct=function(){n(this,v,window.setTimeout(()=>{a(this,M,F).call(this)},r(this,ht)))},mt=new WeakSet,At=function(){r(this,v)&&window.clearTimeout(r(this,v)),a(this,et,Ct).call(this)},M=new WeakSet,F=function(){r(this,g)&&(r(this,g).close(),n(this,g,void 0)),r(this,v)&&(window.clearTimeout(r(this,v)),n(this,v,void 0)),n(this,p,!1),n(this,y,!1),a(this,j,nt).call(this),a(this,b,$).call(this),r(this,S)&&a(this,U,ot).call(this,!1)},j=new WeakSet,nt=function(){r(this,m)!==void 0&&(window.clearTimeout(r(this,m)),n(this,m,void 0))},gt=new WeakSet,Lt=function(t){if(!t)return"0:00";const e=Math.floor(t/(1e3*60)),l=Math.floor(t%(1e3*60)/1e3);return`${e}:${l<10?`0${l}`:l}`},ft(O,"observedAttributes",["src","layout","paused"]),ft(O,"TICK_MS",250);let lt=O;typeof customElements<"u"&&!customElements.get("spotify-player")&&customElements.define("spotify-player",lt);module.exports=lt;
+diff --git a/dist/index.es.js b/dist/index.es.js
+index 2ee251d111f25501ab7a2247c622f6491c70a1d8..f74a328b8122cadc5d9a9f76272736c1897afd0d 100644
+--- a/dist/index.es.js
++++ b/dist/index.es.js
+@@ -1,59 +1,59 @@
+-var $t = Object.defineProperty;
+-var qt = (s, r, t) => r in s ? $t(s, r, { enumerable: !0, configurable: !0, writable: !0, value: t }) : s[r] = t;
+-var ut = (s, r, t) => (qt(s, typeof r != "symbol" ? r + "" : r, t), t), at = (s, r, t) => {
+-  if (!r.has(s))
++var Pt = Object.defineProperty;
++var Nt = (s, i, t) => i in s ? Pt(s, i, { enumerable: !0, configurable: !0, writable: !0, value: t }) : s[i] = t;
++var gt = (s, i, t) => (Nt(s, typeof i != "symbol" ? i + "" : i, t), t), ft = (s, i, t) => {
++  if (!i.has(s))
+     throw TypeError("Cannot " + t);
+ };
+-var i = (s, r, t) => (at(s, r, "read from private field"), t ? t.call(s) : r.get(s)), o = (s, r, t) => {
+-  if (r.has(s))
++var r = (s, i, t) => (ft(s, i, "read from private field"), t ? t.call(s) : i.get(s)), o = (s, i, t) => {
++  if (i.has(s))
+     throw TypeError("Cannot add the same private member more than once");
+-  r instanceof WeakSet ? r.add(s) : r.set(s, t);
+-}, c = (s, r, t, e) => (at(s, r, "write to private field"), e ? e.call(s, t) : r.set(s, t), t);
+-var a = (s, r, t) => (at(s, r, "access private method"), t);
+-var d, x, D, W, S, Y, ft;
+-class mt {
+-  constructor(r, t, e, n) {
+-    o(this, Y);
+-    o(this, d, void 0);
+-    o(this, x, void 0);
+-    o(this, D, void 0);
+-    o(this, W, void 0);
+-    o(this, S, !1);
+-    c(this, x, r), c(this, D, n), t === null ? c(this, d, {}) : c(this, d, t), c(this, W, e);
++  i instanceof WeakSet ? i.add(s) : i.set(s, t);
++}, n = (s, i, t, e) => (ft(s, i, "write to private field"), e ? e.call(s, t) : i.set(s, t), t);
++var a = (s, i, t) => (ft(s, i, "access private method"), t);
++var u, C, _, V, T, lt, zt;
++class qt {
++  constructor(i, t, e, l) {
++    o(this, lt);
++    o(this, u, void 0);
++    o(this, C, void 0);
++    o(this, _, void 0);
++    o(this, V, void 0);
++    o(this, T, !1);
++    n(this, C, i), n(this, _, l), t === null ? n(this, u, {}) : n(this, u, t), n(this, V, e);
+   }
+   get() {
+-    return i(this, d);
++    return r(this, u);
+   }
+-  set(r) {
+-    return r ? (typeof r == "object" ? c(this, d, { ...i(this, d), ...r }) : c(this, d, r), i(this, S) || (c(this, S, !0), this.render(), c(this, S, !1)), !0) : !1;
++  set(i) {
++    return i ? (typeof i == "object" ? n(this, u, { ...r(this, u), ...i }) : n(this, u, i), r(this, T) || (n(this, T, !0), this.render(), n(this, T, !1)), !0) : !1;
+   }
+   render() {
+-    if (i(this, d))
++    if (r(this, u))
+       try {
+-        a(this, Y, ft).call(this).innerHTML = i(this, W).call(this, i(this, d), this.set.bind(this));
+-      } catch (r) {
+-        console.warn(`Failed to render ${i(this, x)}:`, r);
++        a(this, lt, zt).call(this).innerHTML = r(this, V).call(this, r(this, u), this.set.bind(this));
++      } catch (i) {
++        console.warn(`Failed to render ${r(this, C)}:`, i);
+       }
+   }
+   create() {
+-    return `<div class="${i(this, x)}"></div>`;
++    return `<div class="${r(this, C)}"></div>`;
+   }
+ }
+-d = new WeakMap(), x = new WeakMap(), D = new WeakMap(), W = new WeakMap(), S = new WeakMap(), Y = new WeakSet(), ft = function() {
+-  const r = i(this, D).querySelector(`.${i(this, x)}`);
+-  if (!r)
++u = new WeakMap(), C = new WeakMap(), _ = new WeakMap(), V = new WeakMap(), T = new WeakMap(), lt = new WeakSet(), zt = function() {
++  const i = r(this, _).querySelector(`.${r(this, C)}`);
++  if (!i)
+     throw Error("element not found");
+-  return r;
++  return i;
+ };
+-function St(s) {
+-  return !s || s.length === 0 ? "" : s.filter((r) => r.url && r.width > 0).map((r) => `${r.url} ${r.width}w`).join(", ");
++function Ht(s) {
++  return !s || s.length === 0 ? "" : s.filter((i) => i.url && i.width > 0).map((i) => `${i.url} ${i.width}w`).join(", ");
+ }
+-function Ct(s) {
+-  const r = St(s.covers);
++function Dt(s) {
++  const i = Ht(s.covers);
+   return `
+     <div class="details" part="details">
+       ${s.cover ? `<a class="album" part="album" href="${s.albumUrl ?? "#"}">
+-        <img class="art" part="art" crossorigin="anonymous" src="${s.cover}"${r ? ` srcset="${r}"` : ""} alt="${s.album ?? ""}"/>
++        <img class="art" part="art" crossorigin="anonymous" src="${s.cover}"${i ? ` srcset="${i}"` : ""} alt="${s.album ?? ""}"/>
+       </a>` : ""}
+       <div class="text">
+         <a class="title" part="title" href="${s.url ?? "#"}">${s.track ?? ""}</a>
+@@ -63,21 +63,21 @@ function Ct(s) {
+     </div>
+   `;
+ }
+-function gt(s) {
++function Mt(s) {
+   if (!s.milliseconds)
+     return "";
+-  const r = s.active ? 'id="ssp-time"' : "", t = s.active ? "elapsed" : "remaining";
+-  return `<span ${r} class="timestamp" part="${t}">${zt(s.milliseconds)}</span>`;
++  const i = s.active ? 'id="ssp-time"' : "", t = s.active ? "elapsed" : "remaining";
++  return `<span ${i} class="timestamp" part="${t}">${It(s.milliseconds)}</span>`;
+ }
+-function zt(s) {
+-  const r = Math.floor(s / 1e3 / 60), t = Math.floor(s / 1e3 % 60);
++function It(s) {
++  const i = Math.floor(s / 1e3 / 60), t = Math.floor(s / 1e3 % 60);
+   let e = "";
+-  return t < 10 && (e = "0"), `${r}:${e}${t}`;
++  return t < 10 && (e = "0"), `${i}:${e}${t}`;
+ }
+-function Mt(s) {
++function Wt(s) {
+   return !s.duration || !s.progress ? "" : `
+     <div class="progress" part="progress">
+-      ${gt({
++      ${Mt({
+     milliseconds: s.progress,
+     active: !0
+   })}
+@@ -88,18 +88,18 @@ function Mt(s) {
+         value="${s.progress / s.duration * 100}"
+         max="100"
+       >
+-          ${Et(s.progress, s.duration)}%
++          ${Ut(s.progress, s.duration)}%
+       </progress>
+-      ${gt({
++      ${Mt({
+     milliseconds: s.duration
+   })}
+     </div>
+   `;
+ }
+-function Et(s, r) {
+-  return Math.floor(s / r * 100);
++function Ut(s, i) {
++  return Math.floor(s / i * 100);
+ }
+-function Tt() {
++function jt() {
+   return `
+     <div class="details skeleton" part="details">
+       <div class="album" part="album">
+@@ -124,7 +124,7 @@ function Tt() {
+     </div>
+   `;
+ }
+-function Pt() {
++function Bt() {
+   return `
+     <div class="progress skeleton" part="progress">
+       <span class="timestamp" part="elapsed"></span>
+@@ -138,89 +138,147 @@ function Pt() {
+     </div>
+   `;
+ }
+-const Rt = ":host{display:block;color:inherit;box-sizing:border-box;--ssp-accent: currentColor;--ssp-album-size: 4em;--ssp-gap: 8px;--ssp-radius: 3px;--ssp-progress-height: 4px;--ssp-title-size: 1em;--ssp-subtitle-size: .9em;--ssp-timestamp-size: .7em;--ssp-track: color-mix(in oklab, currentColor 15%, transparent);--ssp-skeleton: color-mix(in oklab, currentColor 12%, transparent);--ssp-skeleton-shimmer: color-mix(in oklab, currentColor 22%, transparent);--ssp-marquee-gap: 2em}:host,:host *{box-sizing:border-box}.player{transition:opacity .3s ease-in-out}.details{display:flex;gap:var(--ssp-gap);align-items:center;margin-bottom:var(--ssp-gap)}.album{display:block;width:var(--ssp-album-size);height:var(--ssp-album-size);aspect-ratio:1 / 1;flex:none;overflow:hidden;border-radius:var(--ssp-radius);color:inherit}.art{display:block;width:100%;height:100%;object-fit:cover}.text{min-width:0;width:100%}.title,.artist,.album-text{margin:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.title{display:block;font-weight:600;font-size:var(--ssp-title-size);color:inherit;text-decoration:none}.artist,.album-text{font-size:var(--ssp-subtitle-size);opacity:.75}.artist a,.album-text a,.title{color:inherit;text-decoration:none}.is-marquee{text-overflow:clip;white-space:nowrap}.marquee-track{display:inline-flex;flex-wrap:nowrap;gap:var(--ssp-marquee-gap, 2em);white-space:nowrap;will-change:transform;animation:ssp-marquee var(--ssp-marquee-duration, 8s) linear infinite}.marquee-copy{flex:none;white-space:nowrap}@keyframes ssp-marquee{0%,8%{transform:translate(0)}to{transform:translate(calc(-1 * var(--ssp-marquee-shift, 0px)))}}.progress{display:flex;gap:var(--ssp-gap);align-items:center;justify-content:space-between}.progress-bar{-moz-appearance:none;appearance:none;-webkit-appearance:none;flex:1;min-width:0;width:auto;border:none;height:var(--ssp-progress-height);border-radius:100px;background:var(--ssp-track);color:var(--ssp-accent)}.progress-bar::-webkit-progress-bar{background:var(--ssp-track);border-radius:100px}.progress-bar::-webkit-progress-value{background:var(--ssp-accent);border-radius:100px 0 0 100px}.progress-bar::-moz-progress-bar{background:var(--ssp-accent);border-radius:100px}.timestamp{padding-top:.2em;font-size:var(--ssp-timestamp-size);font-variant-numeric:tabular-nums;opacity:.75;white-space:nowrap}.player--cover{display:flex;flex-direction:column;height:100%;min-height:0}.player--cover .details{flex:1 1 auto;min-height:0;flex-direction:column;align-items:stretch;margin-bottom:0}.player--cover>.details{margin-bottom:var(--ssp-gap)}.player--cover .album{flex:1 1 auto;min-height:0;width:100%;height:auto;aspect-ratio:auto;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:var(--ssp-gap)}.player--cover .art{height:100%;width:auto;max-width:100%;aspect-ratio:1 / 1;object-fit:cover}.player--cover .text{flex:none}.player--cover .progress{width:100%;align-self:stretch}.player--cover .title,.player--cover .artist,.player--cover .album-text{white-space:normal}:host([tint]) [part~=root]{--_c: var(--ssp-cover-color, oklch(.45 .03 265));background:linear-gradient(to bottom,oklch(from var(--_c) clamp(.3,l,.42) calc(c*.7) h),oklch(from var(--_c) .16 calc(c*.55) h));color:#f5f5f5}.skeleton .art,.skeleton .title,.skeleton .artist,.skeleton .album-text,.skeleton .progress-bar,.skeleton .timestamp{background:linear-gradient(90deg,var(--ssp-skeleton) 25%,var(--ssp-skeleton-shimmer) 50%,var(--ssp-skeleton) 75%);background-size:200% 100%;animation:ssp-skeleton 1.5s infinite;border-radius:4px}.skeleton .title{height:1.2em;width:70%;margin-bottom:4px}.skeleton .artist{height:1em;width:50%}.skeleton .timestamp{height:var(--ssp-timestamp-size);width:2.5em}.skeleton .art{opacity:.4}@keyframes ssp-skeleton{0%{background-position:200% 0}to{background-position:-200% 0}}@media (prefers-reduced-motion: reduce){.skeleton .album,.skeleton .title,.skeleton .artist,.skeleton .album-text,.skeleton .progress-bar,.skeleton .timestamp,.marquee-track{animation:none}}";
+-let J;
+-function At() {
+-  return J || (J = new CSSStyleSheet(), J.replaceSync(Rt)), J;
++const Ft = ":host{display:block;color:inherit;box-sizing:border-box;--ssp-accent: currentColor;--ssp-album-size: 4em;--ssp-gap: 8px;--ssp-radius: 3px;--ssp-progress-height: 4px;--ssp-title-size: 1em;--ssp-subtitle-size: .9em;--ssp-timestamp-size: .7em;--ssp-track: color-mix(in oklab, currentColor 15%, transparent);--ssp-skeleton: color-mix(in oklab, currentColor 12%, transparent);--ssp-skeleton-shimmer: color-mix(in oklab, currentColor 22%, transparent);--ssp-marquee-gap: 2em}:host,:host *{box-sizing:border-box}.player{transition:opacity .3s ease-in-out}.details{display:flex;gap:var(--ssp-gap);align-items:center;margin-bottom:var(--ssp-gap)}.album{display:block;width:var(--ssp-album-size);height:var(--ssp-album-size);aspect-ratio:1 / 1;flex:none;overflow:hidden;border-radius:var(--ssp-radius);color:inherit}.art{display:block;width:100%;height:100%;object-fit:cover}.text{min-width:0;width:100%}.title,.artist,.album-text{margin:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.title{display:block;font-weight:600;font-size:var(--ssp-title-size);color:inherit;text-decoration:none}.artist,.album-text{font-size:var(--ssp-subtitle-size);opacity:.75}.artist a,.album-text a,.title{color:inherit;text-decoration:none}.is-marquee{text-overflow:clip;white-space:nowrap}.marquee-track{display:inline-flex;flex-wrap:nowrap;gap:var(--ssp-marquee-gap, 2em);white-space:nowrap;will-change:transform;animation:ssp-marquee var(--ssp-marquee-duration, 8s) linear infinite}.marquee-copy{flex:none;white-space:nowrap}@keyframes ssp-marquee{0%,8%{transform:translate(0)}to{transform:translate(calc(-1 * var(--ssp-marquee-shift, 0px)))}}.progress{display:flex;gap:var(--ssp-gap);align-items:center;justify-content:space-between}.progress-bar{-moz-appearance:none;appearance:none;-webkit-appearance:none;flex:1;min-width:0;width:auto;border:none;height:var(--ssp-progress-height);border-radius:100px;background:var(--ssp-track);color:var(--ssp-accent)}.progress-bar::-webkit-progress-bar{background:var(--ssp-track);border-radius:100px}.progress-bar::-webkit-progress-value{background:var(--ssp-accent);border-radius:100px 0 0 100px}.progress-bar::-moz-progress-bar{background:var(--ssp-accent);border-radius:100px}.timestamp{padding-top:.2em;font-size:var(--ssp-timestamp-size);font-variant-numeric:tabular-nums;opacity:.75;white-space:nowrap}.player--cover{display:flex;flex-direction:column;height:100%;min-height:0}.player--cover .details{flex:1 1 auto;min-height:0;flex-direction:column;align-items:stretch;margin-bottom:0}.player--cover>.details{margin-bottom:var(--ssp-gap)}.player--cover .album{flex:1 1 auto;min-height:0;width:100%;height:auto;aspect-ratio:auto;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:var(--ssp-gap)}.player--cover .art{height:100%;width:auto;max-width:100%;aspect-ratio:1 / 1;object-fit:cover}.player--cover .text{flex:none}.player--cover .progress{width:100%;align-self:stretch}.player--cover .title,.player--cover .artist,.player--cover .album-text{white-space:normal}:host([tint]) [part~=root]{--_c: var(--ssp-cover-color, oklch(.45 .03 265));background:linear-gradient(to bottom,oklch(from var(--_c) clamp(.3,l,.42) calc(c*.7) h),oklch(from var(--_c) .16 calc(c*.55) h));color:#f5f5f5}.skeleton .art,.skeleton .title,.skeleton .artist,.skeleton .album-text,.skeleton .progress-bar,.skeleton .timestamp{background:linear-gradient(90deg,var(--ssp-skeleton) 25%,var(--ssp-skeleton-shimmer) 50%,var(--ssp-skeleton) 75%);background-size:200% 100%;animation:ssp-skeleton 1.5s infinite;border-radius:4px}.skeleton .title{height:1.2em;width:70%;margin-bottom:4px}.skeleton .artist{height:1em;width:50%}.skeleton .timestamp{height:var(--ssp-timestamp-size);width:2.5em}.skeleton .art{opacity:.4}@keyframes ssp-skeleton{0%{background-position:200% 0}to{background-position:-200% 0}}@media (prefers-reduced-motion: reduce){.skeleton .album,.skeleton .title,.skeleton .artist,.skeleton .album-text,.skeleton .progress-bar,.skeleton .timestamp,.marquee-track{animation:none}}";
++let st;
++function Ot() {
++  return st || (st = new CSSStyleSheet(), st.replaceSync(Ft)), st;
+ }
+-var C, z, p, M, I, E, v, u, m, Z, b, T, U, ot, _, nt, tt, bt, g, y, j, lt, O, ct, P, X, R, G, et, wt, A, K, B, ht, st, yt, V, dt, rt, xt, k, F, L, Q, it, kt;
+-class vt extends HTMLElement {
++var R, A, p, y, S, J, q, m, L, P, N, g, f, v, ct, k, H, K, bt, X, wt, ht, Et, b, $, G, yt, Q, kt, D, rt, I, it, ut, Tt, W, at, Y, xt, Z, $t, tt, U, ot, dt, Rt, et, Ct, pt, At, M, F, j, nt, mt, Lt;
++const O = class O extends HTMLElement {
+   constructor() {
+     super();
+     // The persistent shadow wrapper. Created once and reused so adoptedStyleSheets
+     // and the layout class survive innerHTML rewrites of its contents.
+-    o(this, U);
+-    o(this, _);
+-    o(this, tt);
+-    o(this, g);
++    o(this, K);
++    o(this, X);
++    o(this, ht);
++    o(this, b);
+     // Sample the current cover art and expose its average color as the
+     // --ssp-cover-color custom property + a `coverchange` event. Fully defensive:
+     // a cross-origin-tainted canvas throws on read, in which case we leave the
+     // property unset so CSS `var(--ssp-cover-color, <fallback>)` keeps working.
+-    o(this, j);
+-    o(this, O);
++    o(this, G);
++    o(this, Q);
+     // Set the art <img>'s `sizes` to its actual rendered CSS width so the browser
+     // resolves the srcset to the smallest candidate that still covers the display
+     // size at the current device-pixel-ratio. No-op when there's no srcset.
+-    o(this, P);
++    o(this, D);
+     // Car-radio marquee: for each single-line text row that overflows its box,
+     // duplicate its content into a scrolling track that loops continuously; leave
+     // rows that fit (or that the host lets wrap) untouched. Purely overflow-driven
+     // — the component never forces single-line. Fully idempotent: every call first
+     // restores each row to its pristine markup, then re-measures, so it's safe to
+     // run on every render, track change, and resize.
+-    o(this, R);
++    o(this, I);
+     // Resolve the computed --ssp-marquee-gap for a row to pixels (falls back to a
+     // 2em-equivalent when unset or non-px). Used to size the loop's wrap distance.
++    o(this, ut);
++    o(this, W);
++    o(this, Y);
++    // Start the clock if there is something for it to do: a playing track, on a
++    // player nobody has paused.
++    o(this, Z);
++    // Reflect the play state as the `playing` attribute and fire
++    // `playstatechange` when it changes, so a host need not watch the clock.
++    o(this, U);
++    o(this, dt);
+     o(this, et);
+-    o(this, A);
+-    o(this, B);
+-    o(this, st);
+-    o(this, V);
+-    o(this, rt);
+-    o(this, k);
+-    o(this, L);
+-    o(this, it);
+-    o(this, C, void 0);
+-    o(this, z, void 0);
++    o(this, pt);
++    o(this, M);
++    o(this, j);
++    o(this, mt);
++    o(this, R, void 0);
++    o(this, A, void 0);
+     o(this, p, !1);
+-    o(this, M, !1);
+-    o(this, I, 0);
+-    o(this, E, 0);
+-    o(this, v, void 0);
+-    o(this, u, void 0);
++    o(this, y, !1);
++    // What the `playing` attribute and `playstatechange` last announced: null until
++    // the first message says which state the track is in.
++    o(this, S, null);
++    o(this, J, 0);
++    o(this, q, 0);
+     o(this, m, void 0);
+-    o(this, Z, 30 * 60 * 1e3);
++    // Last values written by the clock, so a tick that changes nothing writes nothing.
++    o(this, L, "");
++    o(this, P, -1);
++    o(this, N, "");
++    o(this, g, void 0);
++    o(this, f, void 0);
++    o(this, v, void 0);
++    o(this, ct, 30 * 60 * 1e3);
+     // 30 minutes
+-    o(this, b, void 0);
++    o(this, k, void 0);
+     // Pristine innerHTML of each marquee-eligible line, captured before we wrap it
+     // in a scrolling track so #setupMarquee() can restore it and stay idempotent.
+-    o(this, T, /* @__PURE__ */ new WeakMap());
++    o(this, H, /* @__PURE__ */ new WeakMap());
++    // One clock step: write the bar and the elapsed time if they changed, then
++    // schedule the next step for the sooner of TICK_MS or the next whole second,
++    // so the seconds still turn over on time.
++    o(this, tt, () => {
++      n(this, m, void 0);
++      const t = a(this, Y, xt).call(this);
++      if (t > r(this, q)) {
++        a(this, U, ot).call(this, !1);
++        return;
++      }
++      const e = Math.min(100, t / r(this, q) * 100), l = this.shadowRoot.getElementById("ssp-progress");
++      if (l) {
++        const h = Math.round(e * 100) / 100;
++        h !== r(this, P) && (l.value = h, n(this, P, h));
++        const d = `${Math.floor(e)}%`;
++        d !== r(this, N) && (l.textContent = d, n(this, N, d));
++      }
++      const c = this.shadowRoot.getElementById("ssp-time");
++      if (c) {
++        const h = a(this, mt, Lt).call(this, t);
++        h !== r(this, L) && (c.textContent = h, n(this, L, h));
++      }
++      if (r(this, y) && !this.paused && e < 100) {
++        const h = 1e3 - t % 1e3 + 1;
++        n(this, m, window.setTimeout(r(this, tt), Math.min(O.TICK_MS, h)));
++      }
++    });
+     const t = this.attachShadow({ mode: "open" });
+-    t.adoptedStyleSheets = [At()], c(this, C, new mt("details", null, Ct, t)), c(this, z, new mt("progress", null, Mt, t)), a(this, g, y).call(this);
++    t.adoptedStyleSheets = [Ot()], n(this, R, new qt("details", null, Dt, t)), n(this, A, new qt("progress", null, Wt, t)), a(this, b, $).call(this);
+   }
+   connectedCallback() {
+-    a(this, g, y).call(this), a(this, A, K).call(this), a(this, st, yt).call(this), a(this, V, dt).call(this), typeof ResizeObserver < "u" && !i(this, b) && (c(this, b, new ResizeObserver(() => {
+-      a(this, P, X).call(this), a(this, R, G).call(this);
+-    })), i(this, b).observe(this));
++    a(this, b, $).call(this), a(this, W, at).call(this), a(this, dt, Rt).call(this), a(this, et, Ct).call(this), typeof ResizeObserver < "u" && !r(this, k) && (n(this, k, new ResizeObserver(() => {
++      a(this, D, rt).call(this), a(this, I, it).call(this);
++    })), r(this, k).observe(this));
+   }
+   disconnectedCallback() {
+     var t;
+-    (t = i(this, b)) == null || t.disconnect(), c(this, b, void 0), a(this, k, F).call(this);
++    (t = r(this, k)) == null || t.disconnect(), n(this, k, void 0), r(this, f) && (document.removeEventListener("visibilitychange", r(this, f)), n(this, f, void 0)), a(this, M, F).call(this);
++  }
++  attributeChangedCallback(t, e, l) {
++    e !== l && (t === "src" && this.isConnected && (n(this, p, !1), a(this, b, $).call(this), a(this, W, at).call(this)), t === "layout" && a(this, X, wt).call(this), t === "paused" && (a(this, j, nt).call(this), this.paused || a(this, Z, $t).call(this)));
+   }
+-  attributeChangedCallback(t, e, n) {
+-    e !== n && (t === "src" && this.isConnected && (c(this, p, !1), a(this, g, y).call(this), a(this, A, K).call(this)), t === "layout" && a(this, _, nt).call(this));
++  /**
++   * `paused` stops the progress clock without closing the stream — for a host
++   * that knows the player is off screen. Reflects the `paused` attribute.
++   */
++  get paused() {
++    return this.hasAttribute("paused");
++  }
++  set paused(t) {
++    this.toggleAttribute("paused", !!t);
++  }
++  /**
++   * Whether a track is playing: null until the first message arrives. Reflected
++   * as the `playing` attribute; each change fires `playstatechange`.
++   */
++  get playing() {
++    return r(this, S);
+   }
+   render(...t) {
+-    i(this, p) ? (a(this, tt, bt).call(this, ...t), requestAnimationFrame(() => {
++    r(this, p) ? (a(this, ht, Et).call(this, ...t), requestAnimationFrame(() => {
+       t.forEach((e) => {
+         try {
+           e.render();
+-        } catch (n) {
+-          console.warn("Component render failed:", n);
++        } catch (l) {
++          console.warn("Component render failed:", l);
+         }
+-      }), a(this, j, lt).call(this), a(this, P, X).call(this), a(this, R, G).call(this);
+-    })) : a(this, g, y).call(this);
++      }), a(this, G, yt).call(this), a(this, D, rt).call(this), a(this, I, it).call(this);
++    })) : a(this, b, $).call(this);
+   }
+   get src() {
+     return this.getAttribute("src");
+@@ -228,91 +286,91 @@ class vt extends HTMLElement {
+   set src(t) {
+     t ? this.setAttribute("src", t) : this.removeAttribute("src");
+   }
+-}
+-C = new WeakMap(), z = new WeakMap(), p = new WeakMap(), M = new WeakMap(), I = new WeakMap(), E = new WeakMap(), v = new WeakMap(), u = new WeakMap(), m = new WeakMap(), Z = new WeakMap(), b = new WeakMap(), T = new WeakMap(), U = new WeakSet(), ot = function() {
++};
++R = new WeakMap(), A = new WeakMap(), p = new WeakMap(), y = new WeakMap(), S = new WeakMap(), J = new WeakMap(), q = new WeakMap(), m = new WeakMap(), L = new WeakMap(), P = new WeakMap(), N = new WeakMap(), g = new WeakMap(), f = new WeakMap(), v = new WeakMap(), ct = new WeakMap(), k = new WeakMap(), H = new WeakMap(), K = new WeakSet(), bt = function() {
+   let t = this.shadowRoot.querySelector('[part~="root"]');
+-  return t || (t = document.createElement("div"), t.setAttribute("part", "root"), t.className = "player", this.shadowRoot.appendChild(t), a(this, _, nt).call(this)), t;
+-}, _ = new WeakSet(), nt = function() {
+-  var n;
+-  const t = (n = this.shadowRoot) == null ? void 0 : n.querySelector('[part~="root"]');
++  return t || (t = document.createElement("div"), t.setAttribute("part", "root"), t.className = "player", this.shadowRoot.appendChild(t), a(this, X, wt).call(this)), t;
++}, X = new WeakSet(), wt = function() {
++  var l;
++  const t = (l = this.shadowRoot) == null ? void 0 : l.querySelector('[part~="root"]');
+   if (!t)
+     return;
+   const e = this.getAttribute("layout") === "cover";
+   t.classList.toggle("player--cover", e), t.classList.toggle("player--row", !e);
+-}, tt = new WeakSet(), bt = function(...t) {
+-  const [e, n] = t;
+-  a(this, U, ot).call(this).innerHTML = `${e.create()}${n.create()}`;
+-}, g = new WeakSet(), y = function() {
+-  a(this, U, ot).call(this).innerHTML = `${Tt()}${Pt()}`;
+-}, j = new WeakSet(), lt = function() {
++}, ht = new WeakSet(), Et = function(...t) {
++  const [e, l] = t;
++  a(this, K, bt).call(this).innerHTML = `${e.create()}${l.create()}`;
++}, b = new WeakSet(), $ = function() {
++  a(this, K, bt).call(this).innerHTML = `${jt()}${Bt()}`;
++}, G = new WeakSet(), yt = function() {
+   var e;
+   const t = (e = this.shadowRoot) == null ? void 0 : e.querySelector("img.art");
+   if (t) {
+     if (t.complete && t.naturalWidth > 0) {
+-      a(this, O, ct).call(this, t);
++      a(this, Q, kt).call(this, t);
+       return;
+     }
+     t.dataset.sspHooked !== "1" && (t.dataset.sspHooked = "1", t.addEventListener(
+       "load",
+-      () => a(this, O, ct).call(this, t),
++      () => a(this, Q, kt).call(this, t),
+       { once: !0 }
+     ));
+   }
+-}, O = new WeakSet(), ct = function(t) {
++}, Q = new WeakSet(), kt = function(t) {
+   try {
+     if (!t.naturalWidth || !t.naturalHeight)
+       return;
+-    const e = 16, n = document.createElement("canvas");
+-    n.width = e, n.height = e;
+-    const l = n.getContext("2d");
+-    if (!l)
++    const e = 16, l = document.createElement("canvas");
++    l.width = e, l.height = e;
++    const c = l.getContext("2d");
++    if (!c)
+       return;
+-    l.drawImage(t, 0, 0, e, e);
+-    const { data: h } = l.getImageData(0, 0, e, e);
+-    let H = 0, f = 0, $ = 0, q = 0;
+-    for (let w = 0; w < h.length; w += 4)
+-      h[w + 3] < 128 || (H += h[w], f += h[w + 1], $ += h[w + 2], q++);
+-    if (q === 0)
++    c.drawImage(t, 0, 0, e, e);
++    const { data: h } = c.getImageData(0, 0, e, e);
++    let d = 0, w = 0, z = 0, E = 0;
++    for (let x = 0; x < h.length; x += 4)
++      h[x + 3] < 128 || (d += h[x], w += h[x + 1], z += h[x + 2], E++);
++    if (E === 0)
+       return;
+-    H = Math.round(H / q), f = Math.round(f / q), $ = Math.round($ / q);
+-    const N = `rgb(${H} ${f} ${$})`;
+-    this.style.setProperty("--ssp-cover-color", N), this.dispatchEvent(
+-      new CustomEvent("coverchange", { detail: { color: N } })
++    d = Math.round(d / E), w = Math.round(w / E), z = Math.round(z / E);
++    const B = `rgb(${d} ${w} ${z})`;
++    this.style.setProperty("--ssp-cover-color", B), this.dispatchEvent(
++      new CustomEvent("coverchange", { detail: { color: B } })
+     );
+   } catch {
+     return;
+   }
+-}, P = new WeakSet(), X = function() {
+-  var n;
+-  const t = (n = this.shadowRoot) == null ? void 0 : n.querySelector("img.art");
++}, D = new WeakSet(), rt = function() {
++  var l;
++  const t = (l = this.shadowRoot) == null ? void 0 : l.querySelector("img.art");
+   if (!t || !t.hasAttribute("srcset"))
+     return;
+   const e = Math.round(t.getBoundingClientRect().width);
+   e > 0 && t.setAttribute("sizes", `${e}px`);
+-}, R = new WeakSet(), G = function() {
++}, I = new WeakSet(), it = function() {
+   const t = this.shadowRoot;
+   if (!t)
+     return;
+   const e = typeof matchMedia < "u" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+-  t.querySelectorAll(".title, .artist").forEach((l) => {
+-    const h = i(this, T).get(l);
+-    if (h !== void 0 && (l.innerHTML = h, l.classList.remove("is-marquee"), l.style.removeProperty("--ssp-marquee-shift"), l.style.removeProperty("--ssp-marquee-duration"), i(this, T).delete(l)), e || l.scrollWidth - l.clientWidth <= 1)
++  t.querySelectorAll(".title, .artist").forEach((c) => {
++    const h = r(this, H).get(c);
++    if (h !== void 0 && (c.innerHTML = h, c.classList.remove("is-marquee"), c.style.removeProperty("--ssp-marquee-shift"), c.style.removeProperty("--ssp-marquee-duration"), r(this, H).delete(c)), e || c.scrollWidth - c.clientWidth <= 1)
+       return;
+-    const f = l.innerHTML;
+-    i(this, T).set(l, f);
+-    const $ = a(this, et, wt).call(this, l), N = l.scrollWidth + $;
+-    l.classList.add("is-marquee"), l.innerHTML = `<span class="marquee-track"><span class="marquee-copy">${f}</span><span class="marquee-copy" aria-hidden="true">${f}</span></span>`;
+-    const pt = Math.min(30, Math.max(4, N / 40));
+-    l.style.setProperty("--ssp-marquee-shift", `${N}px`), l.style.setProperty("--ssp-marquee-duration", `${pt}s`);
++    const w = c.innerHTML;
++    r(this, H).set(c, w);
++    const z = a(this, ut, Tt).call(this, c), B = c.scrollWidth + z;
++    c.classList.add("is-marquee"), c.innerHTML = `<span class="marquee-track"><span class="marquee-copy">${w}</span><span class="marquee-copy" aria-hidden="true">${w}</span></span>`;
++    const St = Math.min(30, Math.max(4, B / 40));
++    c.style.setProperty("--ssp-marquee-shift", `${B}px`), c.style.setProperty("--ssp-marquee-duration", `${St}s`);
+   });
+-}, et = new WeakSet(), wt = function(t) {
+-  const e = getComputedStyle(t).getPropertyValue("--ssp-marquee-gap").trim(), n = parseFloat(e);
+-  return e.endsWith("px") && !Number.isNaN(n) ? n : (parseFloat(getComputedStyle(t).fontSize) || 16) * 2;
+-}, A = new WeakSet(), K = function() {
+-  this.src && (a(this, k, F).call(this), c(this, u, new EventSource(this.src)), i(this, u).onerror = (t) => {
++}, ut = new WeakSet(), Tt = function(t) {
++  const e = getComputedStyle(t).getPropertyValue("--ssp-marquee-gap").trim(), l = parseFloat(e);
++  return e.endsWith("px") && !Number.isNaN(l) ? l : (parseFloat(getComputedStyle(t).fontSize) || 16) * 2;
++}, W = new WeakSet(), at = function() {
++  this.src && (a(this, M, F).call(this), n(this, g, new EventSource(this.src)), r(this, g).onerror = (t) => {
+     console.error("EventSource error:", t);
+-  }, i(this, u).onmessage = (t) => {
+-    if (a(this, rt, xt).call(this), !t.data || t.data.trim() === "") {
++  }, r(this, g).onmessage = (t) => {
++    if (a(this, pt, At).call(this), !t.data || t.data.trim() === "") {
+       console.warn("Received empty data from server");
+       return;
+     }
+@@ -323,7 +381,7 @@ C = new WeakMap(), z = new WeakMap(), p = new WeakMap(), M = new WeakMap(), I =
+       console.error("Failed to parse JSON:", h), console.error("Raw data:", t.data);
+       return;
+     }
+-    i(this, p) || (c(this, p, !0), this.render(i(this, C), i(this, z))), i(this, C).set({
++    r(this, p) || (n(this, p, !0), this.render(r(this, R), r(this, A))), r(this, R).set({
+       track: e.track,
+       url: e.url,
+       album: e.album,
+@@ -333,48 +391,47 @@ C = new WeakMap(), z = new WeakMap(), p = new WeakMap(), M = new WeakMap(), I =
+       cover: e.cover,
+       covers: e.covers
+     }), requestAnimationFrame(() => {
+-      a(this, j, lt).call(this), a(this, P, X).call(this), a(this, R, G).call(this);
+-    }), i(this, z).set({
++      a(this, G, yt).call(this), a(this, D, rt).call(this), a(this, I, it).call(this);
++    }), r(this, A).set({
+       progress: e.progress,
+       duration: e.duration,
+       isPlaying: e.playing
+     });
+-    const n = (/* @__PURE__ */ new Date()).getTime(), l = e.time ? new Date(e.time).getTime() : NaN;
+-    c(this, I, Number.isNaN(l) ? n - e.progress : l - e.progress), c(this, M, e.playing), c(this, E, e.duration), a(this, L, Q).call(this), i(this, M) && !e.destroy && c(this, v, window.requestAnimationFrame(i(this, B, ht)));
++    const l = (/* @__PURE__ */ new Date()).getTime(), c = e.time ? new Date(e.time).getTime() : NaN;
++    n(this, J, Number.isNaN(c) ? l - e.progress : c - e.progress), n(this, y, !!(e.playing && !e.destroy)), n(this, q, e.duration), n(this, L, ""), n(this, P, -1), n(this, N, ""), a(this, j, nt).call(this), a(this, U, ot).call(this, r(this, y) && a(this, Y, xt).call(this) <= r(this, q)), a(this, Z, $t).call(this);
+   });
+-}, B = new WeakSet(), ht = function() {
+-  return () => {
+-    const t = (/* @__PURE__ */ new Date()).getTime(), e = Math.max(0, t - i(this, I));
+-    if (e > i(this, E)) {
+-      a(this, L, Q).call(this);
+-      return;
+-    }
+-    const n = Math.min(100, e / i(this, E) * 100), l = this.shadowRoot.getElementById("ssp-progress");
+-    l && (l.value = n, l.textContent = `${n.toFixed(1)}%`);
+-    const h = this.shadowRoot.getElementById("ssp-time");
+-    h && (h.textContent = a(this, it, kt).call(this, e)), i(this, M) && n < 100 && c(this, v, window.requestAnimationFrame(i(this, B, ht)));
+-  };
+-}, st = new WeakSet(), yt = function() {
+-  const t = () => {
+-    document.hidden ? a(this, k, F).call(this) : (c(this, p, !1), a(this, g, y).call(this), a(this, A, K).call(this));
+-  };
+-  document.addEventListener("visibilitychange", t);
+-}, V = new WeakSet(), dt = function() {
+-  c(this, m, window.setTimeout(() => {
+-    a(this, k, F).call(this);
+-  }, i(this, Z)));
+-}, rt = new WeakSet(), xt = function() {
+-  i(this, m) && window.clearTimeout(i(this, m)), a(this, V, dt).call(this);
+-}, k = new WeakSet(), F = function() {
+-  i(this, u) && (i(this, u).close(), c(this, u, void 0)), i(this, m) && (window.clearTimeout(i(this, m)), c(this, m, void 0)), c(this, p, !1), a(this, L, Q).call(this), a(this, g, y).call(this);
+-}, L = new WeakSet(), Q = function() {
+-  i(this, v) && (window.cancelAnimationFrame(i(this, v)), c(this, v, void 0));
+-}, it = new WeakSet(), kt = function(t) {
++}, Y = new WeakSet(), xt = function() {
++  return Math.max(0, (/* @__PURE__ */ new Date()).getTime() - r(this, J));
++}, Z = new WeakSet(), $t = function() {
++  r(this, y) && !this.paused && r(this, m) === void 0 && r(this, tt).call(this);
++}, tt = new WeakMap(), U = new WeakSet(), ot = function(t) {
++  t !== r(this, S) && (n(this, S, t), this.toggleAttribute("playing", t === !0), this.dispatchEvent(
++    new CustomEvent("playstatechange", { detail: { playing: t } })
++  ));
++}, dt = new WeakSet(), Rt = function() {
++  r(this, f) || (n(this, f, () => {
++    document.hidden ? a(this, M, F).call(this) : this.isConnected && (n(this, p, !1), a(this, b, $).call(this), a(this, W, at).call(this));
++  }), document.addEventListener("visibilitychange", r(this, f)));
++}, et = new WeakSet(), Ct = function() {
++  n(this, v, window.setTimeout(() => {
++    a(this, M, F).call(this);
++  }, r(this, ct)));
++}, pt = new WeakSet(), At = function() {
++  r(this, v) && window.clearTimeout(r(this, v)), a(this, et, Ct).call(this);
++}, M = new WeakSet(), F = function() {
++  r(this, g) && (r(this, g).close(), n(this, g, void 0)), r(this, v) && (window.clearTimeout(r(this, v)), n(this, v, void 0)), n(this, p, !1), n(this, y, !1), a(this, j, nt).call(this), a(this, b, $).call(this), r(this, S) && a(this, U, ot).call(this, !1);
++}, j = new WeakSet(), nt = function() {
++  r(this, m) !== void 0 && (window.clearTimeout(r(this, m)), n(this, m, void 0));
++}, mt = new WeakSet(), Lt = function(t) {
+   if (!t)
+     return "0:00";
+-  const e = Math.floor(t / (1e3 * 60)), n = Math.floor(t % (1e3 * 60) / 1e3);
+-  return `${e}:${n < 10 ? `0${n}` : n}`;
+-}, ut(vt, "observedAttributes", ["src", "layout"]);
++  const e = Math.floor(t / (1e3 * 60)), l = Math.floor(t % (1e3 * 60) / 1e3);
++  return `${e}:${l < 10 ? `0${l}` : l}`;
++}, gt(O, "observedAttributes", ["src", "layout", "paused"]), // The clock's rate. The elapsed text only changes once a second and the bar
++// moves a fraction of a pixel per second, so 4Hz is visually continuous while
++// costing a fifteenth of a per-frame loop.
++gt(O, "TICK_MS", 250);
++let vt = O;
+ typeof customElements < "u" && !customElements.get("spotify-player") && customElements.define("spotify-player", vt);
+ export {
+   vt as default

@@ -153,6 +153,58 @@
 	block-size: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
 }
 
+/* CONTAINMENT (Widget's `contain`). A card is a closed box: nothing inside it
+   can move a neighbour (its size comes from the grid and the size class
+   above, never from its content), so the engine is told as much.
+
+   `auto`: style containment always, and content-visibility: auto while the
+   card is FAR — more than a screen from the viewport — so a far card's whole
+   subtree (style, layout, paint) is skipped. The widget runtime
+   (lib/widgets.ts) marks a card `data-widget-far` while it is beyond a
+   screen, and the mark comes off before the card can be seen. It is set
+   from the runtime's first observation, after the first paint: a card
+   skippable in the FIRST frame makes Chromium hold that frame for an extra
+   pass (measured: ~30ms of FCP).
+   WHY NOT content-visibility ALL THE TIME: its layout/paint containment
+   makes the card an isolation boundary, and the engine pixel-snaps the
+   card's contents to it. The cards sit on fractional pixels (the hero above
+   is sized in calc()), so a contained card drew every hairline and glyph
+   inside it up to half a pixel off where it draws uncontained — measured:
+   ~11k pixels changed across the grid at 1440×900. Contained only while far,
+   the picture is the uncontained one wherever it can be seen.
+   While skipped it is size-contained, so contain-intrinsic-size stands in
+   for its content: the cell box of its size class, the same box the spans
+   above give it (`auto`: once rendered, its last real size). Its rect is the
+   same either way, so the swap moves nothing.
+   A static card (no `name`) is never skipped: nothing marks it far.
+
+   `layout`: for a card whose content overhangs it (the videos card's ruler,
+   into the gutter), which paint containment would clip — layout and style
+   only, always rendered. Layout containment snaps the same way, so it is for
+   a card that is on its own compositing layer already (the videos card's
+   will-change: transform), which snaps its contents anyway. */
+.ds-widget--contain-auto {
+	contain: style;
+	--widget-span-1: var(--widget-cell);
+	--widget-span-2: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
+	contain-intrinsic-size: auto var(--widget-span-1) auto var(--widget-span-1);
+}
+.ds-widget--contain-auto[data-widget-far] {
+	content-visibility: auto;
+}
+.ds-widget--contain-auto.ds-widget--size-2x1 {
+	contain-intrinsic-size: auto var(--widget-span-2) auto var(--widget-span-1);
+}
+.ds-widget--contain-auto.ds-widget--size-1x2 {
+	contain-intrinsic-size: auto var(--widget-span-1) auto var(--widget-span-2);
+}
+.ds-widget--contain-auto.ds-widget--size-2x2 {
+	contain-intrinsic-size: auto var(--widget-span-2) auto var(--widget-span-2);
+}
+.ds-widget--contain-layout {
+	contain: layout style;
+}
+
 /* THE COMPACT STEP: 4 → 2 columns at and below 900px, held at 2 on a phone.
    The one breakpoint of the site's own (the rest are the DS's: 640 / 768 /
    1024 / 1280), written here and exported for scripts as WIDGET_COMPACT_MQ

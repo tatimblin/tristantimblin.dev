@@ -3,6 +3,7 @@ import FullHeroLayout from "../layouts/FullHeroLayout.astro";
 import StoriesHeading from "../components/StoriesHeading.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import VideoCarousel from "../components/VideoCarousel.astro";
+import Deferred from "../components/Deferred.astro";
 import Grid from "@whois/design-system/Grid";
 import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
@@ -33,18 +34,22 @@ import "@whois/wobble-text/styles.css";
 	{/* SCENE (>900px): the fabric clip as a halftone. Its tone (ink, gamma,
 	     bloom, ...) is per theme and lives in src/styles/halftone.css, NOT here:
 	     a tuning attribute would beat the stylesheet and pin that value in both
-	     themes. `intro` develops it in on the first frame, fullest dots first. */}
-	<dotted-grid
-		slot="scene"
-		class="hero__video"
-		src={media("videos/fabric.mp4")}
-		src-webm={media("videos/fabric.webm")}
-		rate="0.93"
-		max-dpr="1"
-		cell-size="6"
-		intro-delay="0"
-		intro="3200"
-	/>
+	     themes. `intro` develops it in on the first frame, fullest dots first.
+	     Each scene is Deferred to the breakpoint that shows it (the queries are
+	     the CSS's below): the other is never created, so it costs no WebGL
+	     context and no video download. */}
+	<Deferred slot="scene" media="(min-width: 901px)">
+		<dotted-grid
+			class="hero__video"
+			src={media("videos/fabric.mp4")}
+			src-webm={media("videos/fabric.webm")}
+			rate="0.93"
+			max-dpr="1"
+			cell-size="6"
+			intro-delay="0"
+			intro="3200"
+		/>
+	</Deferred>
 
 	{/* SCENE (≤900px): the video carousel, full-bleed, with its date scrubber along
 	     the bottom edge; videos.css hides the footer copy at the same breakpoint.
@@ -52,20 +57,21 @@ import "@whois/wobble-text/styles.css";
 	     because the halftone's cost is per pixel and this canvas is the whole
 	     viewport. The finer grid than the footer card's: the clip sits under the
 	     wordmark. Its per-theme tone is in src/styles/halftone.css. */}
-	<VideoCarousel
-		slot="scene"
-		class="hero-carousel"
-		scene
-		orientation="horizontal"
-		rulerBaseline="bottom"
-		maxDpr={1}
-		cellSize={4}
-		introDelay={0}
-		intro={3200}
-		xfade={1600}
-		xfadeMode="threshold"
-		xfadeLive
-	/>
+	<Deferred slot="scene" media="(max-width: 900px)">
+		<VideoCarousel
+			class="hero-carousel"
+			scene
+			orientation="horizontal"
+			rulerBaseline="bottom"
+			maxDpr={1}
+			cellSize={4}
+			introDelay={0}
+			intro={3200}
+			xfade={1600}
+			xfadeMode="threshold"
+			xfadeLive
+		/>
+	</Deferred>
 
 	<SiteHeader slot="heading" />
 
@@ -156,6 +162,9 @@ import "@whois/wobble-text/styles.css";
 		import "@tristimb/dotted-grid";
 		import "@tristimb/video-carousel";
 		import "@whois/wobble-text";
+		// The cards' scripts: each <Widget name> above is mounted from its own
+		// chunk when it comes due (src/widgets/index.ts).
+		import "../widgets";
 	</script>
 </FullHeroLayout>
 
@@ -179,16 +188,34 @@ import "@whois/wobble-text/styles.css";
 	:global(.hero-carousel) {
 		display: none;
 	}
+	/* THE FIRST FRAME'S FOLD. The heading measures the hero's parts once its script
+	   runs; the parts it cannot know from its own type are this page's, so the page
+	   states them up front (see "The first frame" in
+	   theme/stories-heading/src/styles.css): the site header's band (padding-block
+	   --space-4 round one line of --font-size-1, rounded up as the heading rounds
+	   it) and the intro under the lockup (--sh-sub-gap, then the lede: two lines of
+	   --font-size-1 at the body leading at every width it reaches on desktop and on
+	   most phones). */
+	:global(.fh) {
+		--sh-header-h: round(
+			up,
+			2 * var(--space-4) + var(--font-size-1) * var(--line-height-body),
+			1px
+		);
+		--sh-intro-h: calc(
+			var(--sh-sub-gap) + 2 * var(--font-size-1) * var(--line-height-body)
+		);
+	}
 	/* THE DESKTOP HERO: framed, the group on the floor. An empty margin the
 	   height of the site header's band (--sh-header-h, which the heading
-	   measures; ~64px before it does) runs round the top, sides and foot; the
+	   measures, estimated above until it does) runs round the top, sides and foot; the
 	   halftone fills the frame down to the wordmark's midline, and the lockup and
 	   intro rest on the frame's bottom edge. The halftone stops above "other
 	   stories", so the heading's wipe needn't wait for the hero to scroll past:
 	   tell it where the picture really ends. */
 	@media (min-width: 901px) {
 		:global(.fh) {
-			--hero-frame: var(--sh-header-h, var(--space-10));
+			--hero-frame: var(--sh-header-h);
 			--hero-lead-ideal: 100svh;
 			--sh-scene-bottom: var(--hero-scene-cut);
 		}
@@ -205,6 +232,11 @@ import "@whois/wobble-text/styles.css";
 		}
 		:global(.hero-carousel) {
 			display: block;
+		}
+		/* The carousel's scrubber + caption, which it measures as --hero-floor once
+		   it runs (FullHeroLayout): ~99px at every phone width. */
+		:global(.fh) {
+			--hero-floor-estimate: 99px;
 		}
 
 		/* The scene's edge fade would mask the carousel's bottom-pinned ruler and

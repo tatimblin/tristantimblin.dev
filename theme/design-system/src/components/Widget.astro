@@ -6,10 +6,21 @@
 // goes in a <CardBody>, which fills the rest of the cell
 // (styles/widget-grid.css):
 //
-//   <Widget size="1x1" title="github">
+//   <Widget size="1x1" title="github" name="github">
 //     <Mono slot="meta" as="a" variant="text" href="…">@handle</Mono>
 //     <CardBody>…</CardBody>
 //   </Widget>
+//
+// `name` hands the card to the widget runtime (lib/widgets.ts, WIDGETS.md):
+// the site's src/widgets/<name>/client.ts is loaded and mounted on it, `load`
+// says when (`near`, the default: a screen ahead of the viewport; `idle`:
+// once the page has loaded; `eager`: at once, for a card whose script places
+// it on the page before anything can scroll — the videos card's dock lift).
+// Without a name the card is static.
+// `contain` isolates the card from its neighbours (widget-grid.css):
+// `auto` (the default) is content-visibility: auto, so an off-screen card
+// costs no layout or paint; `layout` is for a card whose content overhangs it
+// (the videos card's ruler), which paint containment would clip.
 import { cx } from "../lib/cx";
 import Card from "./Card.astro";
 
@@ -18,20 +29,45 @@ type Size = "1x1" | "2x1" | "1x2" | "2x2";
 interface Props {
 	size?: Size;
 	title?: string;
+	/** The widget runtime's name for the card: src/widgets/<name>/client.ts. */
+	name?: string;
+	/** When the runtime mounts it. */
+	load?: "near" | "idle" | "eager";
+	/** How it is isolated from the cards round it. */
+	contain?: "auto" | "layout";
 	class?: string;
 	[key: string]: unknown;
 }
 
-const { size = "1x1", title, class: className, ...rest } = Astro.props;
+const {
+	size = "1x1",
+	title,
+	name,
+	load = "near",
+	contain = "auto",
+	class: className,
+	...rest
+} = Astro.props;
 
-const cls = cx("ds-widget", `ds-widget--size-${size}`, className);
+const cls = cx(
+	"ds-widget",
+	`ds-widget--size-${size}`,
+	`ds-widget--contain-${contain}`,
+	className,
+);
 
 // See Card.astro: forwarded only when filled.
 const hasTitle = Astro.slots.has("title");
 const hasMeta = Astro.slots.has("meta");
 ---
 
-<Card class={cls} title={title} {...rest}>
+<Card
+	class={cls}
+	title={title}
+	data-widget={name}
+	data-widget-load={name ? load : undefined}
+	{...rest}
+>
 	{
 		hasTitle ? (
 			<Fragment slot="title">

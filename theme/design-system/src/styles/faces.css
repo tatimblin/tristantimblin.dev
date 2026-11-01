@@ -33,3 +33,21 @@
 	opacity: 0;
 	visibility: hidden;
 }
+
+/* A hidden face in a `fill` stack is not rendered at all: `visibility` alone
+   still lays out and styles every node of it (Volo's fifteen seasons were half
+   the page's DOM, all laid out). Fill stacks only, because content-visibility
+   also contains the face's SIZE — safe where the row is sized by the space the
+   stack is given, wrong where the stack measures its tallest face.
+   The flip rides the cross-fade as a discrete transition: going out, the face
+   keeps rendering until its fade ends; coming in, it renders from the fade's
+   first frame. */
+.ds-faces--fill-true > .ds-face {
+	transition:
+		opacity var(--duration-swap) var(--ease-reveal),
+		visibility var(--duration-swap) var(--ease-reveal),
+		content-visibility var(--duration-swap) var(--ease-reveal) allow-discrete;
+}
+.ds-faces--fill-true > .ds-face[aria-hidden="true"] {
+	content-visibility: hidden;
+}

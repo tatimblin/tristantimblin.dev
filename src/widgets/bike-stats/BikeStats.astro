@@ -9,7 +9,7 @@
 // miles bottom-left as the Figure (where every widget's headline figure sits),
 // and the Lyft e-bike is drawn in ink, facing right, its tail fading out under
 // the readings. The ring and the bike's box are laid out client-side against
-// the card as drawn (./ring.ts); everything else is read at build time from
+// the card as drawn (./ring.ts, mounted by ./client.ts); everything else is read at build time from
 // bike-stats.csv (./bike-stats.ts).
 //
 // The flip follows the GitHub card: a DS HitArea over the body, with
@@ -51,47 +51,11 @@ const INK = "/images/lyft-ebike-ink.png";
 const inkAspect = pngAspect(readFileSync(`public${INK}`));
 ---
 
-<script>
-	// Flip the gauge between the US crossing and the lap of the Earth. onPage
-	// runs on every page load (ClientRouter replaces the DOM each navigation)
-	// and tears the ring's resize observer down before the next swap
-	// (tests/reveal.spec.ts test 7 guards the bike across that round trip).
-	import { onPage } from "@whois/design-system/lib/lifecycle";
-	import { mountRing } from "./ring";
-
-	onPage(() => {
-		const widget = document.querySelector<HTMLElement>(".wx-baywheels");
-		const flip = widget?.querySelector<HTMLButtonElement>("[data-bw-flip]");
-		const glyph = widget?.querySelector<HTMLButtonElement>(".wx-bw-glyph");
-		if (!widget || !flip || !glyph) return;
-
-		const shares = { us: Number(widget.dataset.shareUs), earth: Number(widget.dataset.shareEarth) };
-		const ring = mountRing(widget, shares.us);
-		if (!ring) return;
-
-		const onClick = () => {
-			const earth = widget.dataset.mode !== "earth";
-			widget.dataset.mode = earth ? "earth" : "us";
-			flip.setAttribute("aria-pressed", String(earth));
-			ring.setShare(earth ? shares.earth : shares.us);
-		};
-
-		const onGlyph = () => flip.click();
-
-		flip.addEventListener("click", onClick);
-		glyph.addEventListener("click", onGlyph);
-		return () => {
-			flip.removeEventListener("click", onClick);
-			glyph.removeEventListener("click", onGlyph);
-			ring.destroy();
-		};
-	});
-</script>
-
 {bike && share && (
 	<Widget
 		size="1x1"
 		title="bay wheels"
+		name="bike-stats"
 		class:list={["wx-baywheels", className]}
 		data-mode="us"
 		data-share-us={share.us}

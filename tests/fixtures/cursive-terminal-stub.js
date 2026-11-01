@@ -3,7 +3,9 @@
 // else. On connect it renders an aria-hidden screen and the one real control
 // (a labelled input, as the element does), then asks the agent for
 // /session and, as the element does, fires `cursive-usage` only if that
-// answers with a usage reading. It records the endpoint on window.__cursiveStub.
+// answers with a usage reading — keeping the answer as `session` and firing
+// through `reportUsage()`, the two the card uses to catch up on a reading
+// made before it mounted. It records the endpoint on window.__cursiveStub.
 class CursiveTerminalStub extends HTMLElement {
 	connectedCallback() {
 		const log = (window.__cursiveStub ??= { connects: 0, endpoint: null });
@@ -22,21 +24,31 @@ class CursiveTerminalStub extends HTMLElement {
 			form.append(input);
 			this.append(screen, form);
 		}
-		void this.session();
+		void this.boot();
 	}
 
-	async session() {
+	async boot() {
 		try {
 			const res = await fetch(`${this.getAttribute("endpoint")}/session?profile=${this.getAttribute("profile")}`);
 			if (!res.ok) return;
-			const { usage } = await res.json();
-			if (!usage) return;
-			const fraction = usage.budget > 0 ? Math.min(1, usage.used / usage.budget) : 1;
-			const detail = { ...usage, fraction, paused: usage.paused === true };
-			this.dispatchEvent(new CustomEvent("cursive-usage", { bubbles: true, detail }));
+			// Kept on the element, as the element keeps its /session answer.
+			this.sessionData = await res.json();
+			if (this.sessionData.usage) this.reportUsage(this.sessionData.usage);
 		} catch {
 			/* the agent is down: no reading, as the element */
 		}
+	}
+
+	// The element's `session` field: the last /session answer, or null.
+	get session() {
+		return this.sessionData ?? null;
+	}
+
+	// The element's reportUsage(): fires `cursive-usage` for a reading.
+	reportUsage(usage) {
+		const fraction = usage.budget > 0 ? Math.min(1, usage.used / usage.budget) : 1;
+		const detail = { ...usage, fraction, paused: usage.paused === true };
+		this.dispatchEvent(new CustomEvent("cursive-usage", { bubbles: true, detail }));
 	}
 }
 if (!customElements.get("cursive-terminal")) customElements.define("cursive-terminal", CursiveTerminalStub);

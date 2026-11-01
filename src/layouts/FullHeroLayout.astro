@@ -66,8 +66,9 @@ const { title, description, image } = Astro.props;
 		--hero-inset: var(--container-inset);
 		/* How much of the scene's bottom edge its own UI occupies (the carousel's
 		   scrubber + caption; see the relay above). The scene MEASURES this; a
-		   pure background reserves nothing. */
-		--hero-floor: 0px;
+		   pure background reserves nothing. Until it has, a consumer may estimate it
+		   (--hero-floor-estimate) so the first frame's fold already allows for it. */
+		--hero-floor: var(--hero-floor-estimate, 0px);
 		/* THE FRAME: an optional empty margin a consumer may set (--hero-frame) to
 		   hold its scene in from the viewport — the band the site header sits in,
 		   matched on the sides and at the foot. Unset, nothing is framed. The fold gap
@@ -80,6 +81,10 @@ const { title, description, image } = Astro.props;
 		   the intro below it, --sh-group-h), and the site header's band
 		   (--sh-header-h): the lead runs to the wordmark's top, so that is the
 		   least lead that clears the header.
+		   The heading's stylesheet states the first frame's values of these (see
+		   "The first frame" in theme/stories-heading/src/styles.css) and its script
+		   then measures them, so the fold is final before anything paints: a guess
+		   here that the script corrected used to move the whole hero on load.
 		   ① LEAD aims for --hero-lead-ideal: by default it centres the lockup in the
 		   first screen, so the intro falls into the lower half — the same half "other
 		   stories" pins across. If the intro would reach past the floor from there,
@@ -110,30 +115,14 @@ const { title, description, image } = Astro.props;
 					var(--hero-reserve)
 			)
 		);
-		/* Pre-JS estimates of the group and lockup heights: the full-width wordmark
-		   SVG has a ~3.68:1 glyph aspect (half-height ≈ 0.109 · inner width), plus an
-		   allowance for "other stories" (the lockup) and the intro (the group). The
-		   heading overwrites both with measured values in its connectedCallback. Deliberately GENEROUS: it cannot
-		   see --hero-floor, and over-estimating fails toward empty space at the
-		   bottom rather than toward printing the intro over the scene's UI. */
-		--hero-split-frac: 0.109;
-		--hero-split: calc(
-			var(--hero-split-frac) * (100vw - 2 * var(--hero-inset))
-		);
-		--sh-group-h: calc(2 * var(--hero-split) + 42svh);
-		--sh-lockup-h: calc(2 * var(--hero-split) + var(--space-10));
 		/* THE SCENE BOX: an optional frame for a scene's PICTURE inside the scene
 		   region below. Cut at the wordmark's midline, so "tristan" straddles the
 		   edge — its top half over the picture, its bottom half (and everything under
 		   it) on the page — and inset one step wider than the text column on each
 		   side, an outer frame around the content grid that never reaches the
 		   viewport edge — or, with a --hero-frame, inset by the frame. The region
-		   itself stays the full hero, so a full-bleed scene simply ignores these.
-		   Pre-JS, the wordmark's half-height is the --hero-split estimate above. */
-		--hero-scene-cut: calc(
-			var(--hero-lead) +
-				var(--sh-wordmark-h, calc(2 * var(--hero-split))) / 2
-		);
+		   itself stays the full hero, so a full-bleed scene simply ignores these. */
+		--hero-scene-cut: calc(var(--hero-lead) + var(--sh-wordmark-h, 0px) / 2);
 		--hero-scene-inset: var(
 			--hero-frame,
 			max(var(--space-2), calc(var(--hero-inset) - var(--space-8)))

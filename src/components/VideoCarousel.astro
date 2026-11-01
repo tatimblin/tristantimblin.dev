@@ -176,3 +176,15 @@ const webm = (src: string) => media(src.replace(/\.mp4$/, ".webm"));
 		</figure>
 	</div>
 </video-carousel>
+
+<style>
+	/* Until the element upgrades, the ruler is only its authored tick buttons,
+	   laid out in a column; the upgrade rebuilds it (ticks, years, orientation) in
+	   the same task. Shown in that pre-upgrade state it painted a ~380px column
+	   down the phone hero for the first frames and then jumped into the scrubber,
+	   a layout shift of ~0.07. Hidden, it simply appears where it belongs. It does
+	   nothing without the script either. */
+	video-carousel:not(:defined) .vc__ruler {
+		visibility: hidden;
+	}
+</style>

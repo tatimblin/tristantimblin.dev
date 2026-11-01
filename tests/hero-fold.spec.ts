@@ -81,8 +81,8 @@ async function readFold(page: Page, opts: { requireBottomUi?: boolean } = {}): P
 		// zero-height ruler/caption (a renamed .vc__* class, a carousel that failed to
 		// hydrate) is exactly the regression this suite exists to catch, and quietly
 		// falling back to scene.bottom would make every clearance assertion pass
-		// vacuously. Above 900px the carousel is display:none by design (fabric is the
-		// scene), so there is legitimately nothing to clear.
+		// vacuously. Above 900px the carousel is not even created (fabric is the scene;
+		// src/components/Deferred.astro), so there is legitimately nothing to clear.
 		const ruler = rect(".hero-carousel .vc__ruler");
 		const caption = rect(".hero-carousel .vc__caption");
 		const bottomUi = [ruler, caption]

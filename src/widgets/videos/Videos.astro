@@ -1,18 +1,27 @@
 ---
 // Videos — the video carousel adopted into the widget grid as a 1×2 cell on the
 // grid's right edge, with the date ruler protruding into the page gutter. The
-// carousel's true layout home is this cell; a scroll-driven lift (see the
-// <script> below) makes it visually START high on the page and PARALLAX down to
-// dock here as the grid scrolls into view. On mobile it goes full width and the
-// lift is disabled. The generic carousel lives in ../../components; this module
-// owns only its grid placement + docking behaviour.
+// carousel's true layout home is this cell; a scroll-driven lift (a CSS
+// scroll-progress animation in ./videos.css, measured and — where scroll
+// timelines are missing — driven by ./client.ts) makes it visually START high
+// on the page and PARALLAX down to dock here as the grid scrolls into view. On
+// mobile it goes full width and the lift is disabled. The generic carousel
+// lives in ../../components; this module owns only its grid placement +
+// docking behaviour.
+//
+// The runtime mounts it `eager`, at page load and before every other card:
+// the lift parks the card on the fold at scroll 0, and that has to be in place
+// before the page can be scrolled. `contain="layout"`: the ruler overhangs the
+// cell, which paint containment (content-visibility) would clip.
 //
 // Props pass through to the <Widget> (a class, the page's data-reveal
 // choreography — see index.astro for why this card reveals on its own). NB
-// the reveal writes `translate` while the dock lift below writes `transform`
+// the reveal writes `translate` while the dock lift writes `transform`
 // — two independent properties, so they compose instead of overwriting each
 // other.
 import Widget from "@whois/design-system/Widget";
+import { WIDGET_WIDE_MQ } from "@whois/design-system/lib/breakpoints";
+import Deferred from "../../components/Deferred.astro";
 import VideoCarousel from "../../components/VideoCarousel.astro";
 import "./videos.css";
 
@@ -24,155 +33,34 @@ interface Props {
 const { class: className, ...rest } = Astro.props;
 ---
 
-<Widget size="1x2" class:list={["wx-videos", className]} chrome={false} {...rest}>
+<Widget
+	size="1x2"
+	name="videos"
+	load="eager"
+	contain="layout"
+	class:list={["wx-videos", className]}
+	chrome={false}
+	{...rest}
+>
 	{/* Clip changes get the threshold transition here too, so the carousel behaves the
 	    same wherever it appears. No `intro` though: this cell is mid-page behind a
 	    scroll-driven dock, so a develop-in entrance would play unseen. */}
 	{/* The tone is tuned once per theme, in src/styles/halftone.css (.wx-videos). */}
 	{/* No card chrome: the halftone sits straight on the page, filling the cell,
 	    with its caption laid over the clip's corner as a TV caption. */}
+	{/* Deferred to the widths that show the card (videos.css hides it at the
+	    grid's compact step, where the carousel is the hero scene instead): at
+	    the others it is never created, so it costs no WebGL context and no
+	    video download. */}
+	<Deferred media={WIDGET_WIDE_MQ}>
 		<VideoCarousel
-		fill
-		rulerSide="right"
-		captionOverlay
-		xfade={1600}
-		xfadeMode="threshold"
-		xfadeLive
-		cellSize={6}
-	/>
+			fill
+			rulerSide="right"
+			captionOverlay
+			xfade={1600}
+			xfadeMode="threshold"
+			xfadeLive
+			cellSize={6}
+		/>
+	</Deferred>
 </Widget>
-
-<script>
-	// Scroll dock via a transform (--vc-dock-lift) on the widget. Its true layout
-	// home is the 1×2 grid cell at the foot of the page — the transform only shifts
-	// where it PAINTS, so the grid keeps the cell reserved and the other widgets
-	// flow around it throughout.
-	//
-	// The parallax runs from PAGE LOAD to the dock. On load the card waits just
-	// under the fold — out of sight, so the hero's frame is the whole first screen
-	// — and as the page scrolls it rises through the empty column beside the copy,
-	// easing to 0 lift as its slot reaches the dock line, where it pins to the grid.
-	//
-	// Each frame:
-	//   slotY      = the slot's document top        // from layout offsets, transform-free
-	//   travel     = slotY − vh                      // lift that parks the card ON the fold at scroll 0
-	//   q          = clamp01(scrollY / (slotY − dockLine))
-	//   lift       = −travel · (1 − ease(q))         // −travel at load → 0 at the dock
-	// slotY ignores transforms (see docTop) so the lift never feeds back; the whole
-	// thing self-calibrates across resize/layout shifts.
-	// ease = smoothstep, whose slope is 0 at both ends and peaks at 1.5 in the
-	// middle: the card starts moving with the page, PINS hardest mid-way, and eases
-	// back to 1:1 as it settles — no velocity jump at either end. The pin depth is
-	// 1 − 1.5·travel/span, positive while travel/span < 2/3 — the card always moves
-	// up the screen, never stalls or reverses. That ratio grows with the slot's
-	// depth (2/3 at ~2.4 viewports down), so travel is capped at MAX_TRAVEL_RATIO of
-	// the span: a deeper slot then starts the card further below the fold — still
-	// out of sight — rather than letting the drift outrun the scroll.
-	// DOCK_VH is how far down the viewport the cell is when it finishes settling.
-	import { WIDGET_COMPACT_MQ } from "@whois/design-system/lib/breakpoints";
-	import { onPage } from "@whois/design-system/lib/lifecycle";
-
-	const DOCK_VH = 0.3; // cell's viewport-top (vh) when fully docked
-	// Cap on travel/span, so the eased drift can never outrun the scroll (pin
-	// depth 1 − 1.5·ratio stays ≥ 0.1).
-	const MAX_TRAVEL_RATIO = 0.6;
-	const SELECTOR = ".wx-videos";
-
-	const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-	const smoothstep = (t: number) => t * t * (3 - 2 * t);
-
-	/**
-	 * The slot's top in document space, from LAYOUT offsets: they ignore every
-	 * transform, so neither the lift this writes nor the reveal's entrance
-	 * `translate` (a 16px rise that is mid-flight while the page settles) can skew
-	 * where the card is parked.
-	 */
-	function docTop(el: HTMLElement): number {
-		let y = 0;
-		for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null)
-			y += n.offsetTop;
-		return y;
-	}
-
-	class DockLift {
-		private el: HTMLElement;
-		private lift = 0;
-		private rafId: number | null = null;
-		// The grid's compact step (two columns), where the card is hidden and the
-		// carousel is the hero scene instead — no lift there.
-		private mobileMQ = window.matchMedia(WIDGET_COMPACT_MQ);
-		private reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-		private offs: Array<() => void> = [];
-
-		constructor(el: HTMLElement) {
-			this.el = el;
-			const onScroll = () => this.schedule();
-			const onResize = () => this.schedule();
-			const onMQ = () => this.schedule();
-			window.addEventListener("scroll", onScroll, { passive: true });
-			window.addEventListener("resize", onResize, { passive: true });
-			this.mobileMQ.addEventListener("change", onMQ);
-			this.reduced.addEventListener("change", onMQ);
-			// The slot moves when the page above it reflows (fonts landing, the hero
-			// settling its fold) with no scroll or resize to say so, and the card's
-			// rest position at load is derived from the slot — so watch the page too.
-			const ro = new ResizeObserver(onResize);
-			ro.observe(document.body);
-			this.offs.push(
-				() => ro.disconnect(),
-				() => window.removeEventListener("scroll", onScroll),
-				() => window.removeEventListener("resize", onResize),
-				() => this.mobileMQ.removeEventListener("change", onMQ),
-				() => this.reduced.removeEventListener("change", onMQ)
-			);
-			this.update();
-		}
-
-		private schedule() {
-			if (this.rafId !== null) return;
-			this.rafId = requestAnimationFrame(() => {
-				this.rafId = null;
-				this.update();
-			});
-		}
-
-		private setLift(px: number) {
-			this.lift = px;
-			this.el.style.setProperty("--vc-dock-lift", `${px.toFixed(2)}px`);
-		}
-
-		private update() {
-			// Mobile / reduced-motion: render docked, no lift.
-			if (this.mobileMQ.matches || this.reduced.matches) {
-				if (this.lift !== 0) this.setLift(0);
-				return;
-			}
-			const vh = window.innerHeight;
-			const slotY = docTop(this.el);
-			// End: the lift reaches 0 at the fixed dock line, so it always fully
-			// settles as the grid frames.
-			const span = Math.max(1, slotY - DOCK_VH * vh);
-			// Start: at scroll 0 the card's top sits exactly on the fold.
-			const travel = Math.min(Math.max(0, slotY - vh), MAX_TRAVEL_RATIO * span);
-			const q = clamp01(window.scrollY / span);
-			this.setLift(-travel * (1 - smoothstep(q)));
-		}
-
-		destroy() {
-			if (this.rafId !== null) cancelAnimationFrame(this.rafId);
-			this.rafId = null;
-			this.offs.forEach((off) => off());
-			this.offs = [];
-			this.el.style.removeProperty("--vc-dock-lift");
-		}
-	}
-
-	// Bound on every page load (initial + after each ClientRouter view
-	// transition), torn down before a swap so listeners don't accumulate.
-	onPage(() => {
-		const el = document.querySelector<HTMLElement>(SELECTOR);
-		if (!el) return;
-		const lift = new DockLift(el);
-		return () => lift.destroy();
-	});
-</script>
