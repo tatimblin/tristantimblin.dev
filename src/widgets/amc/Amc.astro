@@ -11,7 +11,8 @@
 // The centre poster and the title open the film on IMDb.
 //
 // The films are read at build time (./amc.ts: amc.json joined with the
-// amc-films.json genre/IMDb cache) and handed to the client as JSON; ./fan.ts
+// amc-films.json genre/IMDb cache) and handed to the client as JSON (read by
+// ./client.ts, which the widget runtime mounts); ./fan.ts
 // builds the posters and the gauge from them and lays both out against the
 // card as drawn (the geometry in ./arc.ts). The caption is rendered here for
 // the latest film, so the card reads before the script runs.
@@ -43,31 +44,8 @@ const [dow, md, yr] = latest ? dateWords(latest.d) : ["", "", ""];
 const json = JSON.stringify(films).replace(/</g, "\\u003c");
 ---
 
-<script>
-	// The fan, the gauge and the readout (./fan.ts). onPage runs on every
-	// page load (ClientRouter replaces the DOM each navigation) and tears the
-	// fan's observers, timers and listeners down before the next swap.
-	import { onPage } from "@whois/design-system/lib/lifecycle";
-	import { mountFan } from "./fan";
-	import type { Film } from "./amc";
-
-	onPage(() => {
-		const widget = document.querySelector<HTMLElement>(".wx-amc");
-		const data = widget?.querySelector<HTMLScriptElement>("[data-amc-films]");
-		if (!widget || !data) return;
-		let films: Film[];
-		try {
-			films = JSON.parse(data.textContent ?? "[]");
-		} catch {
-			return;
-		}
-		const fan = mountFan(widget, films);
-		return () => fan?.destroy();
-	});
-</script>
-
 {latest && (
-	<Widget size="1x1" title="AMC A-List" class:list={["wx-amc", className]} data-mode="date" {...rest}>
+	<Widget size="1x1" title="AMC A-List" name="amc" class:list={["wx-amc", className]} data-mode="date" {...rest}>
 		{/* The sort, a toggle (aria-pressed, as the card flips are): the mode
 		     the card is in as a glyph (a calendar, the theatre's masks); the
 		     two cross-fade on data-mode. A bare glyph in the accent, as the bay

@@ -57,11 +57,14 @@ test("the videos card waits under the fold, rises, and docks", async ({ page }) 
 	const at = async (y: number) => {
 		await page.evaluate((v) => window.scrollTo(0, v), y);
 		await page.waitForTimeout(150);
+		// The lift as painted: the computed transform's y, whichever mechanism
+		// drives it (a scroll-timeline animation, or the fallback's
+		// --vc-dock-lift — tests/scroll-fallback.spec.ts pins which).
 		return page.evaluate(() => {
 			const el = document.querySelector<HTMLElement>(".wx-videos")!;
 			return {
 				top: el.getBoundingClientRect().top,
-				lift: parseFloat(el.style.getPropertyValue("--vc-dock-lift")) || 0,
+				lift: new DOMMatrix(getComputedStyle(el).transform).m42,
 			};
 		});
 	};

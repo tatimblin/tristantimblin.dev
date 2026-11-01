@@ -12,6 +12,7 @@
 // current capsule marks the film. The mode glyph in the header toggles; the
 // posters shuffle to their new places and the ticks morph, the current film
 // staying current. Under prefers-reduced-motion every change is a cut.
+import { onFrame, type FrameCallback } from "@whois/design-system/lib/frame";
 import { stepFromKey } from "@whois/design-system/lib/keys";
 import {
 	FAN,
@@ -80,7 +81,12 @@ const words = ([pre, num, post]: [string, string, string], preClass = "") =>
 	`<b class="wx-amc-num">${esc(num)}</b>` +
 	(post ? `<span class="ds-mono ds-caps wx-amc-small">${esc(post)}</span>` : "");
 
-export function mountFan(widget: HTMLElement, films: Film[], today = new Date()) {
+/** Registers a per-frame callback (true = again next frame) and returns its
+ *  cancel: the page's scheduler (lib/frame.ts) by default, the widget
+ *  runtime's ctx.frame from ./client.ts, which goes with the card. */
+export type Frame = (callback: FrameCallback) => () => void;
+
+export function mountFan(widget: HTMLElement, films: Film[], today = new Date(), frame: Frame = onFrame) {
 	const body = widget.querySelector<HTMLElement>(".wx-amc-body");
 	const fan = widget.querySelector<HTMLElement>(".wx-amc-fan");
 	const svg = widget.querySelector<SVGSVGElement>(".wx-amc-gauge");
@@ -250,7 +256,8 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 	/** Each poster's offset from the centre as last drawn, so a toggle starts
 	 *  its shuffle from where the posters are, mid-glide or mid-shuffle. */
 	const shown = films.map(() => 0);
-	let raf = 0;
+	/** Cancels the running glide or shuffle, if any. */
+	let cancelFrame = () => {};
 	let idleTimer = 0;
 	let roIdle = false;
 
@@ -557,7 +564,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 	/** Stops whatever is animating. A shuffle cut short lands where it was
 	 *  going, unless `keepBlend` (a re-toggle, which morphs on from here). */
 	const stop = (keepBlend = false) => {
-		cancelAnimationFrame(raf);
+		cancelFrame();
 		goal = null;
 		if (shuffling) {
 			shuffling = false;
@@ -580,10 +587,11 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		const step = (now: number) => {
 			const t = Math.min(1, (now - t0) / MOVE_MS);
 			setPos(from + (target - from) * easeOut(t));
-			if (t < 1) raf = requestAnimationFrame(step);
-			else goal = null;
+			if (t < 1) return true;
+			goal = null;
+			return false;
 		};
-		raf = requestAnimationFrame(step);
+		cancelFrame = frame(step);
 	};
 	/** To the start of this genre (going back, from inside it) or the next
 	 *  one, counting from `at`. */
@@ -638,15 +646,14 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 			);
 			blend = lerp(b0, b1, t);
 			drawGauge();
-			if (t < 1) raf = requestAnimationFrame(step);
-			else {
-				shuffling = false;
-				blend = b1;
-				if (relayoutPending) relayout();
-				else render();
-			}
+			if (t < 1) return true;
+			shuffling = false;
+			blend = b1;
+			if (relayoutPending) relayout();
+			else render();
+			return false;
 		};
-		raf = requestAnimationFrame(step);
+		cancelFrame = frame(step);
 	};
 	on(modeBtn, "click", () => setMode(mode === "date" ? "genre" : "date"));
 
@@ -841,7 +848,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date())
 		destroy() {
 			ac.abort();
 			ro.disconnect();
-			cancelAnimationFrame(raf);
+			cancelFrame();
 			clearTimeout(idleTimer);
 			clearTimeout(wheelTimer);
 			readout.getAnimations?.().forEach((a) => a.cancel());

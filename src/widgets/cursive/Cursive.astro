@@ -8,7 +8,7 @@
 // The element is agent-web's (packages/cursive-terminal), loaded at runtime
 // from the agent's host rather than bundled, so the card tracks the backend
 // without a dependency bump; ./config.ts holds the bundle URL and decides, at
-// build time, which agent this build talks to. The script below imports the
+// build time, which agent this build talks to. ./client.ts imports the
 // bundle the first time the card nears the viewport, and swaps in the DS
 // empty state if the bundle fails or is slow, or the agent never answers.
 // The header's meta reads today's shared model budget off the element's
@@ -41,7 +41,7 @@ const endpoint = agentEndpoint({
 const bundleOrigin = new URL(CURSIVE_TERMINAL).origin;
 ---
 
-<Widget size="2x2" class:list={["wx-cursive", className]} data-state="idle" {...rest}>
+<Widget size="2x2" name="cursive" class:list={["wx-cursive", className]} data-state="idle" {...rest}>
 	{/* The product's name, linked: the card is a window onto cursive.info. */}
 	<a slot="title" href="https://cursive.info" target="_blank" rel="noopener">cursive.info</a>
 
@@ -78,119 +78,3 @@ const bundleOrigin = new URL(CURSIVE_TERMINAL).origin;
 	<link rel="preconnect" href={bundleOrigin} crossorigin />
 	<link rel="preconnect" href={endpoint} />
 </Widget>
-
-<script>
-	import { onPage } from "@whois/design-system/lib/lifecycle";
-	import { CURSIVE_TERMINAL, LOAD_TIMEOUT_MS } from "./config";
-	import { usageReading, type UsageDetail } from "./cursive";
-
-	// The element's module, once per document: it defines <cursive-terminal>,
-	// which upgrades every copy on every later page by itself. (A failed import
-	// stays failed in the module map, so there is nothing to retry.)
-	let bundle: Promise<unknown> | null = null;
-
-	// The element's stylesheet, linked inside the card rather than the head:
-	// the client router drops head nodes the next page doesn't declare, while
-	// the card's own nodes go and come back with the card.
-	function stylesheet(widget: HTMLElement): Promise<void> {
-		return new Promise((resolve, reject) => {
-			const link = Object.assign(document.createElement("link"), {
-				rel: "stylesheet",
-				href: `${CURSIVE_TERMINAL}.css`,
-			});
-			link.addEventListener("load", () => resolve(), { once: true });
-			link.addEventListener("error", () => reject(new Error(`${link.href} failed`)), { once: true });
-			widget.append(link);
-		});
-	}
-
-	onPage(() => {
-		const widget = document.querySelector<HTMLElement>(".wx-cursive");
-		const usage = widget?.querySelector<HTMLElement>("[data-cursive-usage]");
-		if (!widget || !usage) return;
-		const value = usage.querySelector<HTMLElement>("[data-cursive-value]");
-		const label = usage.querySelector<HTMLElement>("[data-cursive-label]");
-		const [used, left] = usage.querySelectorAll<HTMLElement>(".ds-tick-ruler__seg");
-
-		let live = true;
-		const timers = new Set<ReturnType<typeof setTimeout>>();
-		const after = (ms: number, fn: () => void) => {
-			const t = setTimeout(() => (timers.delete(t), fn()), ms);
-			timers.add(t);
-			return t;
-		};
-		const fail = (why: unknown) => {
-			if (!live || widget.dataset.state === "failed") return;
-			console.warn("[cursive] showing the empty state:", why);
-			widget.dataset.state = "failed";
-		};
-
-		// The agent: the element boots and asks for /session once it is within
-		// 200px of the viewport (its own observer's margin), and every
-		// successful /session fires `cursive-usage`. None within the timeout
-		// from there means the agent is down (the element has no error event).
-		const answering = new IntersectionObserver(
-			(entries) => {
-				if (!entries.some((e) => e.isIntersecting)) return;
-				answering.disconnect();
-				after(LOAD_TIMEOUT_MS, () => {
-					if (!widget.dataset.usage) fail(`no reading from the agent in ${LOAD_TIMEOUT_MS}ms`);
-				});
-			},
-			{ rootMargin: "200px" },
-		);
-
-		const load = async () => {
-			widget.dataset.state = "loading";
-			let timer: ReturnType<typeof setTimeout> | undefined;
-			const timeout = new Promise<never>((_, reject) => {
-				timer = after(LOAD_TIMEOUT_MS, () => reject(new Error(`timed out after ${LOAD_TIMEOUT_MS}ms`)));
-			});
-			bundle ??= import(/* @vite-ignore */ `${CURSIVE_TERMINAL}.js`);
-			try {
-				await Promise.race([Promise.all([bundle, stylesheet(widget)]), timeout]);
-				if (!live || widget.dataset.state === "failed") return;
-				widget.dataset.state = "ready";
-				answering.observe(widget);
-			} catch (err) {
-				fail(err);
-			} finally {
-				clearTimeout(timer);
-				if (timer) timers.delete(timer);
-			}
-		};
-
-		// The first time the card is within a screen of the viewport.
-		const near = new IntersectionObserver(
-			(entries) => {
-				if (!entries.some((e) => e.isIntersecting)) return;
-				near.disconnect();
-				void load();
-			},
-			{ rootMargin: "100% 0px" },
-		);
-		near.observe(widget);
-
-		// The meter, from the event the terminal fires (bubbling) after
-		// /session and after every answer.
-		const onUsage = (event: Event) => {
-			if (widget.dataset.state === "failed") return;
-			const reading = usageReading((event as CustomEvent<UsageDetail>).detail);
-			if (value) value.textContent = reading.value;
-			if (label) label.textContent = reading.label;
-			used?.style.setProperty("--tick-share", String(reading.share));
-			left?.style.setProperty("--tick-share", String(100 - reading.share));
-			widget.dataset.usage = reading.state;
-		};
-		widget.addEventListener("cursive-usage", onUsage);
-
-		return () => {
-			live = false;
-			for (const t of timers) clearTimeout(t);
-			timers.clear();
-			near.disconnect();
-			answering.disconnect();
-			widget.removeEventListener("cursive-usage", onUsage);
-		};
-	});
-</script>

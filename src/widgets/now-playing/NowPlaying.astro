@@ -25,84 +25,12 @@ interface Props {
 const { class: className, ...rest } = Astro.props;
 ---
 
-<script>
-	import "@tristimb/spotify-stream-player";
-</script>
-
-<Widget size="1x1" title="now playing" class:list={["wx-nowplaying", className]} {...rest}>
-	{/* Hidden until the player has told us which state it is in (the script
-	     below); the placeholder text only reserves the pill's width. */}
+<Widget size="1x1" title="now playing" name="now-playing" load="idle" class:list={["wx-nowplaying", className]} {...rest}>
+	{/* Hidden until the player has told us which state it is in (./client.ts,
+	     which the runtime mounts once the page has loaded: the player and its
+	     stream come with it); the placeholder text only reserves the pill's width. */}
 	<Pill slot="meta" class="wx-np-state">paused</Pill>
 	<CardBody>
 		<spotify-player src={SPOTIFY_SSE_URL} layout="cover"></spotify-player>
 	</CardBody>
 </Widget>
-
-<script>
-	// The state pill, and the clock's off-screen pause.
-	// The player reflects whether a track is playing (its `playing` property,
-	// null until the first message) and fires `playstatechange` on each change:
-	// LIVE while one plays, PAUSED once it stops, ends or the stream closes.
-	// Its 4Hz progress clock is the card's only continuous work, so it is
-	// `paused` while the card is off screen (the stream stays open, and the
-	// clock catches up the moment the card returns). The player stops its clock
-	// on its own while the tab is hidden.
-	// onPage binds per page-load and tears down before a view-transition swap,
-	// like the other widgets' scripts.
-	import { onPage } from "@whois/design-system/lib/lifecycle";
-
-	type Player = HTMLElement & { playing: boolean | null; paused: boolean };
-
-	function bind() {
-		const widget = document.querySelector<HTMLElement>(".wx-nowplaying");
-		const player = widget?.querySelector<Player>("spotify-player");
-		const pill = widget?.querySelector<HTMLElement>(".wx-np-state");
-		if (!widget || !player || !pill) return () => {};
-
-		const set = (live: boolean) => {
-			widget.classList.toggle("is-live", live);
-			widget.classList.add("is-known");
-			const text = live ? "live" : "paused";
-			if (pill.textContent !== text) pill.textContent = text;
-		};
-
-		const onState = () => {
-			// Null = the skeleton; say nothing until there's data.
-			if (player.playing !== null) set(player.playing);
-		};
-		player.addEventListener("playstatechange", onState);
-		onState();
-
-		// A quarter-screen margin, so the clock is already current when the card
-		// scrolls in (resuming also catches it up at once).
-		const io = new IntersectionObserver(
-			([entry]) => {
-				player.paused = !entry.isIntersecting;
-			},
-			{ rootMargin: "25% 0px" }
-		);
-		io.observe(widget);
-
-		return () => {
-			player.removeEventListener("playstatechange", onState);
-			io.disconnect();
-		};
-	}
-
-	// The player's properties exist once the element is upgraded, so the bind
-	// waits on whenDefined() — which can resolve AFTER the page has been swapped
-	// away. `alive` is this page-load; a bind for a stale one is dropped rather
-	// than left listening to a detached element.
-	onPage(() => {
-		let alive = true;
-		let teardown: (() => void) | null = null;
-		void customElements.whenDefined("spotify-player").then(() => {
-			if (!alive) return;
-			teardown = bind();
-		});
-		return () => {
-			alive = false;
-			teardown?.();
-		};
-	});
-</script>

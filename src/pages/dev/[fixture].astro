@@ -27,6 +27,9 @@ const films = buildFilms([...(amc.movies as Movie[]), ...upcomingMovies()], {
 			<Amc films={films} />
 		</WidgetGrid>
 	</div>
+	<script>
+		import "../../widgets";
+	</script>
 </Layout>
 
 <style>

@@ -144,6 +144,7 @@ if (!hit) throw new Error(`Layout: "${hitPath ?? Astro.url.pathname}" is not a c
 			import "../lib/reveal";
 			import Lenis from "lenis";
 			import "lenis/dist/lenis.css";
+			import { driveLenis } from "../lib/smooth-scroll";
 			// Page-view counting: GoatCounter, on the production host only.
 			import { startCounting } from "../lib/analytics/count";
 
@@ -167,21 +168,18 @@ if (!hit) throw new Error(`Layout: "${hitPath ?? Astro.url.pathname}" is not a c
 				if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
 
 				// Wheel/trackpad only. Lenis 1.x keeps touch native (syncTouch off), so on a
-				// touch device it smooths NOTHING — yet the raf() loop below would still run
-				// every frame forever, a pure main-thread/battery cost with no visual payoff.
-				// Gate on a fine pointer so phones and tablets never start that loop; desktop
-				// wheel/trackpad smoothing is unchanged.
+				// touch device it smooths NOTHING, so phones and tablets never create it;
+				// desktop wheel/trackpad smoothing is unchanged.
 				if (!window.matchMedia("(pointer: fine)").matches) return null;
 
 				// Subtle smoothing, close to native.
 				const lenis = new Lenis({ lerp: 0.18, smoothWheel: true });
 				window.__lenis = lenis;
 
-				function raf(time: number) {
-					lenis.raf(time);
-					requestAnimationFrame(raf);
-				}
-				requestAnimationFrame(raf);
+				// Its frames come from the page's scheduler, and only while it is
+				// smoothing a scroll: an idle page runs no loop for it
+				// (src/lib/smooth-scroll.ts).
+				driveLenis(lenis);
 				return lenis;
 			}
 

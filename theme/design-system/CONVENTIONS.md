@@ -94,7 +94,10 @@ catalogue's tooling: `Knobs`, `KnobGroup`, `Knob`, `ThemePage`.
 **Client helpers** (`@whois/design-system/lib/*`, plain TS, no DOM at import):
 `breakpoints` (`WIDGET_COMPACT_MQ`, `WIDGET_WIDE_MQ`), `faces` (`showFace`,
 `shownFace`), `keys` (`stepFromKey`), `lifecycle` (`onPage`), `bar-graph`
-(`markBar`, `barsOf`). See *Widget grid* below.
+(`markBar`, `barsOf`), and the widget runtime: `widgets` (`startWidgets`,
+`whenMounted`), `activity` (`activity`, `prefs`), `frame` (`onFrame`,
+`frameStats`). See *Widget grid* below, and
+[`src/lib/WIDGETS.md`](src/lib/WIDGETS.md) for how to add a widget.
 
 ## The decision gate
 
@@ -294,8 +297,10 @@ exposes `--widget-grid-gap` and the fluid scale (`--widget-cell`,
 that must follow it). Rules about the CELL (the header closing up, the caps
 tightening, the legend's gap) are `@container widget (max-width: 624px)`
 queries — cells below the reference — not viewport ones. A widget's script
-binds with `onPage(bind)` from `lib/lifecycle` (bind on `astro:page-load`,
-tear down on `astro:before-swap`) and reads the arrow keys with
+is its `client.ts`, whose `mount(el, ctx)` the widget runtime calls when
+`<Widget name load>` says (`lib/widgets`; the contract, the load modes,
+`ctx.frame` / `ctx.whileActive`, containment and the rules are in
+[`src/lib/WIDGETS.md`](src/lib/WIDGETS.md)); it reads the arrow keys with
 `stepFromKey(event, at, last)` from `lib/keys`.
 
 **A widget's shape** (`src/widgets/*`): a typed `Props` of `class` and a

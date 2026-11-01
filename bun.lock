@@ -41,6 +41,9 @@
     "theme/wobble-text": {
       "name": "@whois/wobble-text",
       "version": "0.0.1",
+      "dependencies": {
+        "@whois/design-system": "workspace:*",
+      },
     },
   },
   "patchedDependencies": {
