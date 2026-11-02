@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-31T16:41:58.790Z",
+	"updated": "2026-11-02T21:59:23.783Z",
 	"movies": [
 		{
 			"id": null,
@@ -1323,6 +1323,18 @@
 		},
 		{
 			"id": null,
+			"name": "You Can See Everything",
+			"poster": null,
+			"theatre": "AMC Kabuki 8",
+			"date": "November 7, 2026",
+			"time": "4:15pm",
+			"day": "Saturday",
+			"iso": "2026-11-07",
+			"start": "2026-11-07T16:15",
+			"upcoming": true
+		},
+		{
+			"id": null,
 			"name": "How to Rob a Bank",
 			"poster": null,
 			"theatre": "AMC Metreon 16",
@@ -1331,6 +1343,18 @@
 			"day": "Thursday",
 			"iso": "2026-11-12",
 			"start": "2026-11-12T16:00",
+			"upcoming": true
+		},
+		{
+			"id": null,
+			"name": "Hunger Games: Sunrise on the Reaping",
+			"poster": null,
+			"theatre": "AMC Metreon 16",
+			"date": "November 20, 2026",
+			"time": "4:00pm",
+			"day": "Friday",
+			"iso": "2026-11-20",
+			"start": "2026-11-20T16:00",
 			"upcoming": true
 		}
 	]
