@@ -1,5 +1,5 @@
 {
-	"updated": "2026-11-02",
+	"updated": "2026-11-05",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
@@ -387,6 +387,18 @@
 		{
 			"date": "2026-11-02",
 			"visitors": 2
+		},
+		{
+			"date": "2026-11-03",
+			"visitors": 2
+		},
+		{
+			"date": "2026-11-04",
+			"visitors": 2
+		},
+		{
+			"date": "2026-11-05",
+			"visitors": 6
 		}
 	],
 	"pathDays": [
@@ -489,6 +501,11 @@
 			"date": "2026-11-01",
 			"path": "/txt/subhumans/",
 			"visitors": 1
+		},
+		{
+			"date": "2026-11-05",
+			"path": "/txt/subhumans/",
+			"visitors": 1
 		}
 	],
 	"paths": {
@@ -513,8 +530,8 @@
 			"recent": 2
 		},
 		"/txt/subhumans/": {
-			"reads": 5,
-			"recent": 5
+			"reads": 6,
+			"recent": 6
 		},
 		"/txt/why-i-joined-fisker/": {
 			"reads": 16,
