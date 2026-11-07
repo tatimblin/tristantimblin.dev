@@ -12,17 +12,24 @@
 //            (BlogLayout, which PostLayout wraps).
 //
 // Nav is data-driven; pass `links` to change it per page, and `trail` to put
-// the page's path after the brand (a post: `/ txt / 006`). The brand, the
+// the page's path after the brand (a post: `/ txt / <slug>`). The brand, the
 // trail and the links are DS Anchors with the bar's own colours: the primary
 // ink at rest, the accent under the pointer, no underline (see below).
+//
+// A step marked `slug` shortens to fit the bar (src/lib/slug.ts): the script
+// shows the longest of its forms that keeps the path inside its share of the
+// row, losing vowels first, then a middle ellipsis. The full slug stays in the
+// markup for a screen reader, and is what shows with no script.
 import Anchor from "@whois/design-system/Anchor";
+import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 
 interface Props {
 	links?: Array<{ label: string; href: string }>;
 	variant?: "overlay" | "flow";
-	/** Where the page sits, after the brand: `tristantimblin.dev / txt / 006`.
-	 *  A step with an href links up; the last one is the page itself. */
-	trail?: Array<{ label: string; href?: string }>;
+	/** Where the page sits, after the brand: `tristantimblin.dev / txt / mega-desk`.
+	 *  A step with an href links up; the last one is the page itself. `slug`
+	 *  lets it shorten on a narrow bar. */
+	trail?: Array<{ label: string; href?: string; slug?: boolean }>;
 }
 
 const {
@@ -52,7 +59,16 @@ const isCurrent = (href: string) => href !== "/" && path.startsWith(href);
 						{step.href ? (
 							<Anchor variant="ink" class="site-header__step" href={step.href}>{step.label}</Anchor>
 						) : (
-							<span class="site-header__step site-header__step--here" aria-current={i === trail.length - 1 ? "page" : undefined}>{step.label}</span>
+							<span class="site-header__step site-header__step--here" aria-current={i === trail.length - 1 ? "page" : undefined}>
+								{step.slug ? (
+									<Fragment>
+										<span aria-hidden="true" data-slug-fit={step.label}>{step.label}</span>
+										<VisuallyHidden as="span">{step.label}</VisuallyHidden>
+									</Fragment>
+								) : (
+									step.label
+								)}
+							</span>
 						)}
 					</Fragment>
 				))}
@@ -73,6 +89,34 @@ const isCurrent = (href: string) => href !== "/" && path.startsWith(href);
 		}
 	</nav>
 </header>
+
+<script>
+	// THE SLUG, FITTED: the first of its forms (longest first) under which the
+	// path no longer overflows its share of the row. Re-fitted when the bar
+	// changes width and once the fonts have arrived (they change the widths).
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+	import { slugForms } from "../lib/slug";
+
+	onPage(() => {
+		const label = document.querySelector<HTMLElement>("[data-slug-fit]");
+		const path = label?.closest<HTMLElement>(".site-header__path");
+		const bar = path?.parentElement;
+		if (!label || !path || !bar) return;
+		const forms = slugForms(label.dataset.slugFit ?? "");
+
+		const fit = () => {
+			for (const form of forms) {
+				label.textContent = form;
+				if (path.scrollWidth <= path.clientWidth) return;
+			}
+		};
+		fit();
+		void document.fonts?.ready.then(fit);
+		const observer = new ResizeObserver(fit);
+		observer.observe(bar);
+		return () => observer.disconnect();
+	});
+</script>
 
 <style>
 	/* Overlay the top of the hero scene. Absolute (not fixed) so it scrolls away

@@ -182,7 +182,7 @@ test.describe("/txt/", () => {
 	}
 
 	for (const width of [1440, 375]) {
-		test(`the meta and READ's label start on the title's and the excerpt's x at ${width}${width < 640 ? ", READ bleeding to the viewport edge" : ""}`, async ({
+		test(`the meta and READ start on the title's and the excerpt's x at ${width}, READ inset from the hairline as the title is`, async ({
 			page,
 		}) => {
 			await page.setViewportSize({ width, height: width < 640 ? 812 : 900 });
@@ -221,11 +221,11 @@ test.describe("/txt/", () => {
 				};
 			});
 			expect(Math.abs(m.excerpt - m.title)).toBeLessThanOrEqual(1);
-			expect(Math.abs(m.label - m.title)).toBeLessThanOrEqual(1);
-			// READ sits on the column rule (desktop) or the viewport's edge
-			// (phone), its foot on the next post's top.
-			expect(Math.abs(m.readLeft - (width < 640 ? 0 : m.rule))).toBeLessThanOrEqual(1);
-			expect(Math.abs(m.readBottom - m.nextTop)).toBeLessThanOrEqual(1);
+			// READ's edge on the title's x, the label inside it; its foot the
+			// title's padding (--space-4) above the next post's hairline.
+			expect(Math.abs(m.readLeft - m.title)).toBeLessThanOrEqual(1);
+			expect(m.label).toBeGreaterThan(m.readLeft);
+			expect(Math.abs(m.nextTop - m.readBottom - 16)).toBeLessThanOrEqual(1.5);
 			// The meta sits on its own line between the title and the excerpt,
 			// on their x.
 			if (m.hasMeta) {
@@ -615,12 +615,13 @@ const TRANSPARENT = "rgba(0, 0, 0, 0)";
 test.describe("/txt/<slug> — the post page", () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
 
-	test("the number in the path, the details card beside the lead", async ({
+	test("the number in the path, the details card beside the hero (or the lead without one)", async ({
 		page,
 	}) => {
 		await page.goto(NEWEST);
 		const strip = page.locator("[data-post-strip]");
-		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 005/i);
+		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ asserting-on-agent-behavior/i);
+		await expect(page.locator(".post-more__count")).toHaveText(/txt \/ 005 of/i);
 		await expect(strip).toHaveClass(/ds-card/);
 		await expect(strip.locator(".ds-stat__label")).toHaveText(["Date", "Topic", "Length"]);
 		await expect(strip.locator(".post__category")).toHaveText(/Programming/);
@@ -630,13 +631,23 @@ test.describe("/txt/<slug> — the post page", () => {
 		);
 		await expect(strip.locator("time.post__date")).toHaveText("Feb 2, 2026");
 		await expect(strip.locator("time.post__date")).toHaveAttribute("datetime", "2026-02-02");
-		// The card takes the first column, level with the lead in the next.
+		// The card takes the first column, at the top of the hero's row, under
+		// the lead.
 		const { article, col } = await columns(page);
 		const card = await box(page, "[data-post-strip]");
 		const lead = await box(page, ".post__lead");
+		const hero = await box(page, "[data-post-hero]");
 		expect(Math.abs(card.x - article.x)).toBeLessThanOrEqual(1);
 		expect(Math.abs(card.width - col)).toBeLessThanOrEqual(1);
-		expect(Math.abs(card.y - lead.y)).toBeLessThanOrEqual(24);
+		expect(card.y).toBeGreaterThan(lead.y + lead.height);
+		expect(Math.abs(card.y - hero.y)).toBeLessThanOrEqual(1);
+
+		// Without a hero it stays level with the lead in the next column.
+		await page.goto(NO_HERO);
+		const bare = await box(page, "[data-post-strip]");
+		const bareLead = await box(page, ".post__lead");
+		expect(Math.abs(bare.x - article.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(bare.y - bareLead.y)).toBeLessThanOrEqual(24);
 	});
 
 	test("no reading ruler, no contents rail, no neighbour cards", async ({ page }) => {
@@ -649,23 +660,32 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator(".post__meta, .ds-pill")).toHaveCount(0);
 	});
 
-	test("the title across three columns, the lead in two", async ({
+	test("the title across three columns, the lead under it (in two beside the card without a hero)", async ({
 		page,
 	}) => {
 		await page.goto(NEWEST);
 		const { article, col, gap } = await columns(page);
 		const h1 = page.getByRole("main").getByRole("heading", { level: 1 });
 		await expect(h1).toHaveText("Asserting on Agent Behavior");
-		await expect(h1).toHaveCSS("font-size", "72px");
+		await expect(h1).toHaveCSS("font-size", "44px");
+		await expect(h1).toHaveCSS("letter-spacing", "-0.88px");
 		await expect(page.locator(".post__lead")).toHaveText(/I built Aptitude — a test harness/);
 
 		const title = await box(page, ".post__title");
 		const lead = await box(page, ".post__lead");
-		// The title from the first line; the lead from the second column's line.
+		// The title from the first line, the lead under it on the same line and
+		// as wide.
 		expect(Math.abs(title.x - article.x)).toBeLessThanOrEqual(1);
 		expect(title.width).toBeLessThanOrEqual(3 * col + 2 * gap + 1);
-		expect(Math.abs(lead.x - (article.x + col + gap))).toBeLessThanOrEqual(1);
-		expect(Math.abs(lead.width - (2 * col + gap))).toBeLessThanOrEqual(1);
+		expect(Math.abs(lead.x - article.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(lead.width - (3 * col + 2 * gap))).toBeLessThanOrEqual(1);
+		expect(lead.y).toBeGreaterThan(title.y + title.height);
+
+		// Without a hero: from the second column's line, two columns wide.
+		await page.goto(NO_HERO);
+		const bare = await box(page, ".post__lead");
+		expect(Math.abs(bare.x - (article.x + col + gap))).toBeLessThanOrEqual(1);
+		expect(Math.abs(bare.width - (2 * col + gap))).toBeLessThanOrEqual(1);
 	});
 
 	test("the hero: Fig. 01 across three columns with its caption; a post without one shows no figure", async ({
@@ -768,7 +788,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		const withH2s = await box(page, ".ds-prose-section__body > .ds-body");
 
 		await page.goto(NO_H2S);
-		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 003/i);
+		await expect(page.locator(".post-more__count")).toHaveText(/txt \/ 003 of/i);
 		await expect(page.locator("time.post__date")).toHaveText("Apr 6, 2025");
 		const sections = page.locator(".ds-prose--variant-ruled > .ds-prose-section");
 		await expect(sections).toHaveCount(1);
@@ -834,23 +854,27 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(code).toHaveCSS("border-top-left-radius", "2.5px");
 		await expect(code).toHaveCSS("background-color", "rgb(241, 244, 247)");
 
-		// The fence: a figure with its header row, the code highlighted, no box.
-		const fig = body.locator("figure.ds-prose-code");
+		// The fence: a Card — its header row, then the code as its body.
+		const fig = body.locator("figure.ds-prose-code.ds-card");
 		await expect(fig).toHaveCount(1);
-		await expect(fig.locator(".ds-prose-code__head > .ds-mono")).toHaveText([
-			/01\.1 \/ env-protection\.yml/i,
-			/^yaml$/i,
-		]);
+		await expect(fig.locator(".ds-card-header__title")).toHaveText(/^env-protection\.yml$/i);
+		await expect(fig.locator(".ds-prose-code__meta > span.ds-mono")).toHaveText(/^yaml$/i);
 		await expect(fig).toHaveCSS("border-top-width", "1px");
 		await expect(fig).toHaveCSS("border-bottom-width", "1px");
 		await expect(fig).toHaveCSS("border-top-style", "dashed");
-		// The code on its slab: --code-bg / --code-fg (the near-black block on
-		// cream), the box's corner, no edge on the light page.
+		await expect(fig).toHaveCSS("border-left-width", "1px");
+		await expect(fig.locator(".ds-card-header")).toHaveCount(1);
+		// The code on its slab: --code-bg / --code-fg (the first wash and black
+		// ink on cream), filling the card square, the card's edge its only edge.
 		const pre = fig.locator("pre.astro-code");
-		await expect(pre).toHaveCSS("background-color", "rgb(25, 25, 24)");
-		await expect(pre).toHaveCSS("color", "rgb(245, 245, 243)");
+		await expect(pre).toHaveCSS("background-color", "rgb(241, 244, 247)");
+		await expect(pre).toHaveCSS("color", "rgb(0, 0, 0)");
 		await expect(pre).toHaveCSS("border-top-width", "0px");
-		await expect(pre).toHaveCSS("border-top-left-radius", "2.5px");
+		await expect(pre).toHaveCSS("border-top-left-radius", "0px");
+		// It bleeds like a figure: wider than a paragraph.
+		const codeBox = await box(page, ".ds-prose-section__body > figure.ds-prose-code");
+		const paraBox = await box(page, ".ds-prose-section__body > p");
+		expect(codeBox.width).toBeGreaterThan(paraBox.width + 1);
 		// Shiki still colours the tokens: a key and a string are different inks.
 		const inks = await pre.locator("span[style]").evaluateAll((spans) =>
 			[...new Set(spans.map((s) => getComputedStyle(s).color))]
@@ -947,13 +971,13 @@ test.describe("/txt/<slug> — the post page", () => {
 
 		// The latest post has no newer: the half says so and links nowhere.
 		await page.goto(LATEST);
-		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 006/i);
+		await expect(page.locator(".post-more__count")).toHaveText(/txt \/ 006 of/i);
 		await expect(page.locator('[data-half="next"]')).toHaveText(/newer →\s*This is the latest post/i);
 		await expect(page.locator('[data-half="next"] a')).toHaveCount(0);
 		await expect(page.locator("a.post-more__half--next")).toHaveCount(0);
 
 		await page.goto(OLDEST);
-		await expect(page.locator(".site-header [data-trail]")).toHaveText(/txt \/ 001/i);
+		await expect(page.locator(".post-more__count")).toHaveText(/txt \/ 001 of/i);
 		await expect(page.locator('[data-half="prev"]')).toHaveText(/This is the first post/);
 		await expect(page.locator("a.post-more__half--prev")).toHaveCount(0);
 		await expect(page.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/why-i-joined-fisker/");
@@ -977,12 +1001,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator(".post-more")).not.toHaveCSS("background-color", TRANSPARENT);
 		expect(await luminance(page, ".post-more")).toBeLessThan(0.05);
 		expect(await luminance(page, ".post-more .ds-card-header__title", "color")).toBeGreaterThan(0.3);
-		// The slab sinks below the dark page, so the dashed edge is drawn round it
-		// (--code-border) to hold its shape; on cream it has none.
+		// The slab sinks below the dark page; the card's dashed edge round it
+		// holds its shape, so the slab draws none of its own.
 		const preSel = ".ds-prose-section__body figure.ds-prose-code pre.astro-code";
-		const pre = page.locator(preSel);
-		await expect(pre).toHaveCSS("border-top-width", "1px");
-		await expect(pre).toHaveCSS("border-top-style", "dashed");
+		await expect(page.locator(".ds-prose-section__body figure.ds-prose-code")).toHaveCSS("border-top-style", "dashed");
+		await expect(page.locator(preSel)).toHaveCSS("border-top-width", "0px");
 		expect(await luminance(page, preSel)).toBeLessThan(await luminance(page, "body"));
 		// The link lifted for the dark page, still the link token.
 		await expect(page.locator(".ds-prose-section__body a").first()).toHaveCSS("color", "rgb(92, 165, 255)");
@@ -1019,11 +1042,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		expect(article.x).toBeGreaterThanOrEqual(16);
 		expect(article.x + article.width).toBeLessThanOrEqual(375 - 16 + 1);
 
-		// The title steps down twice on a phone (72 → 44 → 32) and the lead
-		// once (20 → 18); the details card sits between the title and the
-		// lead, date and topic side by side; the hero and the index take the
-		// whole column.
-		await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveCSS("font-size", "32px");
+		// The title steps down twice on a phone (44 → 32 → 24) and the lead
+		// to the reading-lead size under it (24 → 18); the details card sits
+		// between the title and the lead, date and topic side by side; the
+		// hero and the index take the whole column.
+		await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveCSS("font-size", "24px");
 		await expect(page.locator(".post__lead")).toHaveCSS("font-size", "18px");
 		const strip = await box(page, "[data-post-strip]");
 		const no = await box(page, ".post__category");
@@ -1065,6 +1088,29 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator('[data-half="next"]')).toHaveCSS("text-align", "start");
 	});
 
+	test("the path ends in the slug, shortened to fit a narrow bar; a reader hears it whole", async ({ page }) => {
+		const slug = "asserting-on-agent-behavior";
+		const shown = page.locator(".site-header [data-slug-fit]");
+		const path = page.locator(".site-header__path");
+		const fits = () => path.evaluate((el) => el.scrollWidth <= el.clientWidth);
+
+		await page.goto(NEWEST);
+		await expect(shown).toHaveText(slug);
+		await expect(page.locator(".site-header__step--here .ds-visually-hidden")).toHaveText(slug);
+
+		// 320px: the slug loses its vowels or more, and the path fits its share.
+		await page.setViewportSize({ width: 320, height: 700 });
+		await expect.poll(fits).toBe(true);
+		const short = (await shown.textContent()) ?? "";
+		expect(short.length).toBeLessThan(slug.length);
+		expect(short.startsWith("assrtng")).toBe(true);
+		await expect(page.locator(".site-header__step--here .ds-visually-hidden")).toHaveText(slug);
+
+		// Back to a wide bar: the whole slug again.
+		await page.setViewportSize({ width: 1210, height: 700 });
+		await expect(shown).toHaveText(slug);
+	});
+
 	test("with scripting off the post reads: the sections, the figures and the foot card are static markup", async ({
 		browser,
 	}) => {
@@ -1078,7 +1124,27 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator(".ds-prose-section__head > h2").first()).toBeVisible();
 		await expect(page.locator("[data-post-hero] img")).toBeVisible();
 		await expect(page.locator("figure.ds-prose-code")).toHaveCount(1);
+		// No script, no clipboard: COPY stays hidden rather than dead.
+		await expect(page.locator("[data-code-copy]")).toBeHidden();
 		await expect(page.locator('a[data-neighbour="prev"]')).toHaveAttribute("href", "/txt/tahoe-mountain-hair/");
+		await context.close();
+	});
+
+	test("a code block's COPY copies its code, reads COPIED, says so, and resets", async ({ browser }) => {
+		const context = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
+		const page = await context.newPage();
+		await page.clock.install();
+		await page.goto(NEWEST);
+		const fig = page.locator(".ds-prose-section__body figure.ds-prose-code");
+		const copy = fig.getByRole("button", { name: "Copy" });
+		await expect(copy).toBeVisible();
+		await copy.click();
+		await expect(fig.locator("[data-code-copy]")).toHaveText("Copied");
+		await expect(page.locator("[data-code-copy-status]")).toHaveText("Copied to clipboard");
+		const code = await fig.locator("pre").textContent();
+		expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(code);
+		await page.clock.runFor(2100);
+		await expect(fig.locator("[data-code-copy]")).toHaveText("Copy");
 		await context.close();
 	});
 });

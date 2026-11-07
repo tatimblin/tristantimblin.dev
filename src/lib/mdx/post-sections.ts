@@ -16,7 +16,7 @@
  * h2 but not one, so it stays out of the document outline. Inside a body, an
  * image-only paragraph becomes a `Fig. 0N / <title, else alt>` figure (numbered on from
  * the hero when the frontmatter has one) that bleeds wider than the text, a fence becomes a figure with a
- * `<section>.<n> / <title>` + language header, and a quote whose last line
+ * `<title>` + language header, and a quote whose last line
  * starts with a dash gets that line as its `figcaption`.
  *
  * THE FENCE'S TITLE. Shiki replaces the fence and keeps none of its meta, so
@@ -91,6 +91,19 @@ export function remarkPostCode() {
  * language (`data-language`). Harmless outside /txt — the rehype half, which
  * is scoped, is the only reader.
  */
+/** Fence languages Shiki has no grammar for, aliased to one it has (the
+ *  `shikiConfig.langAlias` in astro.config): the fence keeps its own name on
+ *  `data-language`, so the header can label it. */
+export const LANG_ALIAS: Record<string, string> = {
+	// Slash commands typed into Claude Code: a CLI's input, nothing to colour.
+	"claude-code": "plaintext",
+};
+
+/** A language's header label where its id is not the name (`claude-code`). */
+const LANG_LABEL: Record<string, string> = {
+	"claude-code": "Claude Code",
+};
+
 export const shikiPostCode: ShikiTransformer = {
 	name: "post-code-title",
 	pre(node) {
@@ -129,6 +142,7 @@ const mono = (value: string, tone?: "primary"): Element =>
 	el("span", { className: [...MONO, ...(tone ? [`ds-mono--tone-${tone}`] : [])] }, [
 		{ type: "text", value },
 	]);
+
 
 /** Section 00's label: set as H2.astro renders a heading, but not one. */
 const introLabel = (): Element =>
@@ -301,7 +315,7 @@ export function rehypePostSections() {
 		close();
 
 		// THE DRESS, per block of a section's body.
-		const dress = (node: RootContent, no: string, count: { code: number }): RootContent => {
+		const dress = (node: RootContent): RootContent => {
 			const image = soleImage(node);
 			if (image) {
 				const { caption } = image;
@@ -323,11 +337,33 @@ export function rehypePostSections() {
 						? dataLanguage
 						: "text";
 				const title = typeof dataTitle === "string" && dataTitle ? dataTitle : null;
-				const n = `${no}.${++count.code}`;
-				return el("figure", { className: ["ds-prose-code"] }, [
-					el("div", { className: ["ds-prose-code__head"] }, [
-						mono(title ? `${n} / ${title}` : n, "primary"),
-						mono(lang),
+				// A Card (styles/card.css), bled like a figure: CardHeader's row —
+				// the fence's title as the panel's title (empty without one, so
+				// the language keeps the right), the language as its meta — over
+				// the code, which is the card's body.
+				return el("figure", { className: ["ds-card", "ds-prose-code"], dataProseBleed: "" }, [
+					el("div", { className: ["ds-card-header", "ds-prose-code__head"] }, [
+						el(
+							"span",
+							{ className: ["ds-mono", "ds-mono--variant-title", "ds-caps", "ds-card-header__title"] },
+							title ? [{ type: "text", value: title }] : [],
+						),
+						// The meta: the language, then COPY — hidden until the page's
+						// script can copy (PostLayout), so no script leaves no dead
+						// control.
+						el("span", { className: ["ds-card-header__meta", "ds-prose-code__meta"] }, [
+							mono(LANG_LABEL[lang] ?? lang),
+							el(
+								"button",
+								{
+									type: "button",
+									className: [...MONO, "ds-prose-code__copy"],
+									dataCodeCopy: "",
+									hidden: true,
+								},
+								[{ type: "text", value: "Copy" }],
+							),
+						]),
 					]),
 					node,
 				]);
@@ -347,7 +383,6 @@ export function rehypePostSections() {
 			...esm,
 			...sections.map((section, i) => {
 				const no = pad2(i);
-				const count = { code: 0 };
 				return el("section", { className: ["ds-prose-section"], dataSection: no }, [
 					el("header", { className: ["ds-prose-section__head"] }, [
 						mono(no),
@@ -358,7 +393,7 @@ export function rehypePostSections() {
 						{ className: ["ds-prose-section__body"] },
 						section.nodes
 							.filter((n) => !isBlank(n))
-							.map((n) => dress(n, no, count)) as ElementContent[],
+							.map(dress) as ElementContent[],
 					),
 				]);
 			}),

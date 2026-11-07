@@ -24,11 +24,12 @@
 	--border-color: #6b665d;
 	--input-border: var(--border-color);
 	--panel-outline: #262a30;
-	/* The header fade, quieter than light's: the full slate wash reads as a
-	   lit band on a dark panel, so fade only a third of the way toward it. */
+	/* The header fade, from a quarter of the way down as light's does, but
+	   quieter: the full slate wash reads as a lit band on a dark panel, so
+	   fade only most of the way toward it. */
 	--panel-header-bg: linear-gradient(
-		var(--card-background) 50%,
-		color-mix(in oklab, var(--wash-1) 35%, var(--card-background))
+		var(--card-background) 25%,
+		color-mix(in oklab, var(--wash-1) 65%, var(--card-background))
 	);
 
 	/* INK. A warm off-white, then three warm greys down. */
@@ -82,13 +83,20 @@
 	--poster-badge-shadow: 0 1px 6px -1px rgb(0 0 0 / 0.5);
 
 	/* CODE. Inline code on the first wash. A fenced block sinks BELOW the
-	   page — the light theme's slab is the darkest thing on the page, and so
-	   is this — with the dashed edge drawn round it (prose.css) so it holds
-	   its shape against a page only a step lighter. */
+	   page, the darkest thing on it, with the dashed edge drawn round it
+	   (prose.css) so it holds its shape against a page only a step lighter.
+	   The token colours are tuned for that near-black surface. */
 	--code-snippet-background: var(--wash-1);
 	--code-bg: #0c0b0a;
 	--code-fg: #ece7dd;
 	--code-border: var(--border);
+	--code-token-comment: #8a8a86;
+	--code-token-keyword: #7fb4ff;
+	--code-token-string: #b5d99c;
+	--code-token-constant: #f2c97d;
+	--code-token-parameter: #f5f5f3;
+	--code-token-function: #9ad0ff;
+	--code-token-punctuation: #c8c8c4;
 
 	/* HALFTONE. Light ink on the dark page. The footer clip takes the same
 	   ink: on the dark page a bright clip prints as sparse light dots, so it

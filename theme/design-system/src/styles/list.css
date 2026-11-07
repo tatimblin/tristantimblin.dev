@@ -35,27 +35,29 @@
 .ds-list-item {
 	list-style: none;
 	display: flex;
+	align-items: baseline;
 	margin-bottom: var(--space-3);
 	line-height: 1.9;
 	letter-spacing: 0.3px;
 }
-/* The arrow marker, aligned to the LINE BOX rather than nudged onto the baseline.
-   This used to be `transform: translateY(4px)` — a hand-measured shove that was
-   correct for exactly one font-size and one line-height and silently wrong for
-   every other. Sizing the marker box to one line and centring the glyph in it
-   puts the arrow's vertical centre on the line's centre — which is the middle of
-   the uppercase X, where the eye expects an icon beside text to sit — and keeps
-   it there at any size, because both sides of the comparison are now derived
-   from the same line-height instead of one being a constant.
-   The em value is the fallback for engines without the `lh` unit; it equals the
-   1.9 line-height this rule's own list items carry, so they agree. */
+/* The arrow marker, on the middle of the LOWERCASE letters. The marker is a
+   block in the item's own font, baseline-aligned with the text (the item's
+   align-items), so its one line sits on the text's first baseline even when
+   that line carries something larger (a bold lead-in a step up); the arrow
+   sits in it inline at `vertical-align: middle`, which is the baseline plus
+   half an x-height — the browser's own measure of the face, right at any
+   font, size or leading.
+   (It used to centre a one-line box on the line, which lands on the line's
+   middle: the face's ascender space put that 3px above the lowercase in DM
+   Sans at 14px, so the arrow read high against a sentence.) */
 .ds-list-item div[data-list-item] {
-	padding-right: 8px;
-	display: flex;
-	align-items: center;
+	display: block;
 	flex: none;
-	height: 1.9em;
-	height: 1lh;
+	padding-right: 8px;
+}
+.ds-list-item div[data-list-item] > svg {
+	display: inline-block;
+	vertical-align: middle;
 }
 .ds-list-item > ol {
 	margin-left: 1.45rem;
@@ -66,6 +68,12 @@
 	margin-left: 1.45rem;
 	margin-bottom: var(--space-3);
 	margin-top: var(--space-3);
+}
+/* Emphasis in an item (a run-in lead, "**Group consensus.** …") at the UI
+   face's Medium, the headings' cut: the browser's bold asks for 700, which
+   shouts at the item's size. */
+.ds-list-item strong {
+	font-weight: var(--font-weight-500);
 }
 .ds-list-item > p {
 	margin-bottom: var(--space-3);

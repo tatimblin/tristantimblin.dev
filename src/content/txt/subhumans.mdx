@@ -3,7 +3,10 @@ title: "Introducing sub-human: subagents, for humans"
 date: 2026-10-13
 category: programming
 tags: ["claude-code", "developer-tools", "internal-tools"]
-excerpt: "Pair up with teammates, and each of your Claudes. Available today in beta as a Claude Code plugin."
+excerpt: "Your teammates' Claudes, in the loop with yours."
+cta:
+  label: "In beta as a Claude Code plugin"
+  href: "https://github.com/tatimblin/sub-human"
 hero:
   src: ./images/subhumans-terminal.png
   alt: "A Claude Code welcome screen with two pixel critters, one orange and one blue, in the room orders-api. The activity panel reads: Jess, API now pages by cursor; you, store updated to match; both, tests passed 42 of 42."
@@ -12,26 +15,32 @@ hero:
 
 import Sequence from "@whois/design-system/Sequence";
 
-Pair up with teammates, and each of your Claudes. Available today in beta as a [Claude Code plugin](https://github.com/tatimblin/sub-human).
+More of the workday now happens inside an agent session, and it can get lonely. Being heads-down with an agent while a coworker sits a few feet away isn't how most of us want to work. The work moves fast. An API contract can change mid-flight, making communication the bottleneck.
 
-More of the workday now happens inside an agent session, and it can be lonely. Being heads-down with an agent while your coworker sits just a few feet away is not the collaboration we want. The work also moves fast. An API contract can change drastically mid-flight, making communicating the bottleneck. But agents also give us time back, and some of it is worth spending together.
-sub-human puts others back in the loop, so pivots reach everyone as they happen. As teammates you keep your own workspace, log in, and Claude. Sub-human joins those sessions remotely using the same machinery Claude Code already uses for subagents.
+sub-human puts coworkers and friends back in the loop, so pivots reach everyone as they happen, without interruption. As teammates, you keep your own workspace, login and session. sub-human connects those sessions remotely using the same machinery Claude Code already uses for subagents.
 
-Here's what that looks like.
+Working together might now look like a planning session, followed by divvying up tasks, and freely pivoting.
 
 <Sequence
-  caption="No messages pasted between chats"
+  caption="Jess’ in-flight pivot reaches Tristan’s Claude, not Tristan"
   actors={{ jess: "Jess", jc: "Jess’s Claude", tc: "Tristan’s Claude", tristan: "Tristan" }}
   steps={[
-    { note: "Agree on a plan for paging the orders API", over: ["jess", "tristan"] },
+    { from: "jess", to: "jc", text: "\"Plan paging for the orders API\"" },
+    { from: "jc", to: "tc", text: "Plan v1: page by offset" },
+    { from: "tristan", to: "tc", text: "\"Cap pages at 50 orders\"" },
+    { from: "tc", to: "jc", text: "Plan v2: offset, 50 per page" },
+    [
+      { from: "jess", to: "jc", text: "Signs off on the plan" },
+      { from: "tristan", to: "tc", text: "Signs off on the plan" },
+    ],
     [
       { note: "Builds the API", over: "jc" },
       { note: "Builds the store", over: "tc" },
     ],
-    { from: "jess", to: "jc", text: "Paginate by cursor instead" },
+    { from: "jess", to: "jc", text: "\"Paginate by cursor instead\"" },
     { note: "Changes the API", over: "jc" },
-    { from: "jc", to: "tc", text: "The API pages by cursor now", tone: "accent" },
-    { note: "Updates the store to match", over: "tc" },
+    { from: "jc", to: "tc", text: "API change: pages by cursor", tone: "accent" },
+    { note: "Updates the store", over: "tc" },
     [
       { note: "Tests pass", over: "jc", tone: "success" },
       { note: "Tests pass", over: "tc", tone: "success" },
@@ -39,33 +48,38 @@ Here's what that looks like.
   ]}
 />
 
-## What's in the room
-- Agents that talk to each other. Ask your Claude what someone else is doing and it will ask their session. Or yours proactively reaches out to coworkers when something changes.
-- Group consensus. Draft plans and send them to the room for versioned edits or everyone's approval. 
-- Shared task list. Claim work off the same native task list subagents use.
+In our example, when Jess changes course, Tristan doesn't get a ping. A message goes out to his Claude, and it builds against the new contract. It's then up to his agent to inform him or not.
 
-There isn't a required workflow. Join the room and tell your Claude how you'd like to work.
+## What's in the room
+
+- **Group consensus.** Plans go to the room for versioned edits, then everyone signs off in their own plan view.
+- **Shared task list.** Everyone claims work from Claude Code's native task list.
+- **Agents that talk to each other.** Claudes pass relevant changes to the right person, or ask someone else's session for an update.
+
+There's no required workflow. Join a room and tell your Claude how you'd like to work.
 
 ## How it's built
 
-I made a few choices early that shape the experience.
+sub-human doesn't add a workflow of its own. It extends a few Claude Code features and adds a networking layer between sessions.
 
-- Not a shared session. Nobody types into someone else's Claude. Each person keeps their own files, permissions and account.
-- Native to Claude Code. Built on the features Claude Code already gives subagents: messaging between sessions, native plans, and the task list.
-- No server. A room lives on the machine that opened it. Other machines reach it over ssh or Tailscale.
+- **Native to Claude Code.** Rooms use the messaging, plans and task list Claude Code already gives subagents.
+- **Not a shared session.** Nobody types into someone else's Claude. Each person keeps their own files, permissions and account.
+- **No server.** A room lives on the machine that opened it. Other machines reach it over SSH or Tailscale.
 
 ## Spend the time together
 
-Agents handle more of the typing now, which frees us for the parts that were always better together: pairing on the hard problems, and keeping the design conversation going after the plan is written. The coworker a few feet away is still the fastest way to catch a bad idea. sub-human just makes sure your Claude knows they're there.
+With agents doing more of the typing, we get time back for the parts that were always better together: pairing on the hard problems from design through implementation. The coworker a few feet away is still the fastest way to catch a bad idea. sub-human just makes sure your Claude knows they're there.
 
-Try it with a friend
+## Try it with a friend
 
-Install the [plugin](https://github.com/tatimblin/sub-human), then restart Claude Code:
+Install the [plugin](https://github.com/tatimblin/sub-human) from any Claude Code session:
 
-```
+```claude-code title="Install"
 /plugin marketplace add tatimblin/sub-human
 /plugin install sub-human@sub-human
+/reload-plugins
 ```
-You need Claude Code 2.1.292+, Node 22.18+, and macOS or Linux.
 
-Once installed just ask it to set up a room.
+You need Claude Code 2.1.292+ and Node 22.18+. sub-human is in beta: it runs on macOS and Linux only.
+
+Once it's installed, run `/sub-human` to open a room, then `/sub-human invite` for a join command and a PIN to share.

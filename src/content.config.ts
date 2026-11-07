@@ -22,6 +22,9 @@ const txt = defineCollection({
 				// and printed with its hyphens as spaces.
 				tags: z.array(z.string().regex(/^[a-z0-9-]+$/)).default([]),
 				excerpt: z.string(),
+				// THE CALL TO ACTION: one link under the lede (where to get the thing
+				// the post introduces), so the lede can stay one sentence.
+				cta: z.object({ label: z.string(), href: z.url() }).strict().optional(),
 				// THE HERO: a real image (a screenshot, a photo) under the title, drawn as
 				// `Fig. 01` on the post page; the body's figures count on from it. A post
 				// that opens with an image names it here rather than in the body, so the

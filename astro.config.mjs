@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import mdx from '@astrojs/mdx';
 import { unified } from '@astrojs/markdown-remark';
-import { rehypePostSections, remarkPostCode, shikiPostCode } from './src/lib/mdx/post-sections.ts';
+import { LANG_ALIAS, rehypePostSections, remarkPostCode, shikiPostCode } from './src/lib/mdx/post-sections.ts';
 import { contentDates } from './src/lib/content-dates.ts';
 
 // Each post's and demo's last change, for its sitemap entry's lastmod.
@@ -50,7 +50,7 @@ export default defineConfig({
 		// The transformer stamps each fence's `title="…"` meta on its <pre> as
 		// data-title before Shiki drops the meta, for the sections plugin below
 		// to read back (src/lib/mdx/post-sections.ts).
-		shikiConfig: { theme: 'css-variables', transformers: [shikiPostCode] },
+		shikiConfig: { theme: 'css-variables', langAlias: LANG_ALIAS, transformers: [shikiPostCode] },
 		// The unified processor, which MDX inherits, carrying the two plugins
 		// that cut a /txt post into sections at each h2 for the ruled page
 		// (src/lib/mdx/post-sections.ts). Both do nothing outside

@@ -133,7 +133,7 @@ Work top-down. Stop at the first rule that matches.
 | File | Rule |
 |------|------|
 | `src/tokens/tokens.generated.css` | The base token set: a frozen snapshot of what the former upstream package (`@maximeheckel/design-system`) generated, now hand-owned — there is no generator. Edit in place only to change a base value; a site retune belongs in `tokens.overrides.css`. |
-| `src/tokens/tokens.overrides.css` | Where the site's own theme-independent tokens live (it wins over generated): the type roles and scale steps, the motion vocabulary, the EDGES block (border, radius, link, code-token tokens on `:root`; the composites `--border`, `--shadow-panel`, `--panel-header-bg`, `--link-color` on `[data-theme]`), the INSTRUMENT UI block (on `[data-theme]`). |
+| `src/tokens/tokens.overrides.css` | Where the site's own theme-independent tokens live (it wins over generated): the type roles and scale steps, the motion vocabulary, the EDGES block (border, radius, link tokens on `:root`; the composites `--border`, `--shadow-panel`, `--panel-header-bg`, `--link-color` on `[data-theme]`), the INSTRUMENT UI block (on `[data-theme]`). |
 | `src/tokens/themes/light.css`, `themes/dark.css` | The two palettes, on `[data-theme="light"]` / `[data-theme="dark"]`: every value that differs between the themes (page, panel, edge colour, inks, washes, accent and `--on-accent`, code block, halftone ink). Edit both together — they name the same set. |
 | `src/tokens/bridge.css` | Edit to add a legacy-name alias (e.g. mapping a site/Web-Component `--color-*` name onto a DS token). |
 | `src/components/*.astro`, `src/styles/*.css` | Edit freely: the package is this site's. For a component that is still a port (`Grid`, `Flex`, `List`, `Anchor`, `Icon`, `VisuallyHidden`) keep the prop names. New component ⇒ add its `@import` to `src/styles/index.css` (in a layer) — or, while only the catalogue renders it, import the file from the component wrapped in `@layer ds.components` — **and** a section to the catalogue page. |
@@ -162,7 +162,7 @@ unless noted; the per-theme values in `themes/*.css`):
 | `--radius-box` (2.5px), `--radius-square` (0) — `:root` | the one corner of anything boxed, and a corner square on purpose. `--border-radius-0..3` all resolve to `--radius-box`. |
 | `--shadow-panel`, `--panel-outline` | a panel's 1px tinted ring under its edge, and its colour. |
 | `--panel-header-bg` | a panel header's fill: the card fading into `--wash-1` (also the primary Button's and the outline Pill's). |
-| `--code-bg`, `--code-fg`, `--code-border`, `--code-token-*` | a fenced block: the slab, its ink and edge (per theme), and the shared highlight colours. |
+| `--code-bg`, `--code-fg`, `--code-border`, `--code-token-*` | a fenced block: the slab, its ink and edge, and the highlight colours (all per theme). |
 | `--link-color`, `--link-hover-color`, `--link-decoration(-hover)`, `--link-underline-offset/-thickness` | every link: the colour, underlined at rest, plain under the pointer. |
 | `--duration-standard` (250ms), `--ease-standard` — `:root` | the chrome's own transition (a chip, a pill, a button washing in). |
 | `--halftone-ink`, `--halftone-ink-soft` | the halftones' dot ink per theme, handed to `<dotted-grid>` / `<video-carousel>` as `--color-fg` (bridge.css). |

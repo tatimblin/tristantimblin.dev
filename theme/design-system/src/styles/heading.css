@@ -20,6 +20,13 @@
 	   tracked alike. */
 	letter-spacing: var(--tracking-heading, 0);
 }
+/* The display steps track in: at 44px and up the face's own spacing reads
+   loose. Size-relative (em), so the responsive steps carry it down with
+   them. */
+.ds-heading--size-5,
+.ds-heading--size-6 {
+	letter-spacing: var(--tracking-display);
+}
 
 /* THE RESPONSIVE STEP. Display type is sized to its column: a `responsive`
    heading steps DOWN one Heading size below 1024 — 6 (72px) to 5 (44px),

@@ -47,8 +47,8 @@
 
 /* Fenced code. Shiki runs with theme "css-variables" (astro.config), so the
    token colours come from the --astro-code-* vars — mapped onto the code
-   tokens (--code-bg / --code-fg per theme, --code-token-* shared), so a block
-   is the same dark slab whatever the page. Shiki writes the surface as an
+   tokens (--code-bg / --code-fg / --code-token-* per theme), so a block is a
+   pale wash on the light page and a dark slab on the dark one. Shiki writes the surface as an
    inline background from --astro-code-background, so that var drives the
    panel colour and the edge and corner are drawn around it here. */
 .ds-prose pre.astro-code {
@@ -158,7 +158,7 @@
 	column-gap: var(--ruled-gap, var(--space-4));
 	align-items: start;
 	margin-block-start: var(--space-11);
-	padding-block-start: var(--space-3);
+	padding-block-start: var(--space-5);
 	border-block-start: var(--border);
 }
 .ds-prose-section__head {
@@ -235,26 +235,44 @@
 	padding-inline-start: calc(var(--bar-width) + var(--space-4));
 }
 
-/* A fenced block on the ruled page: the edge above and below, a header row
-   (number and title left, the language right) cut off by the edge, then the
-   code on its slab, a step in from the rules. */
+/* A fenced block on the ruled page: a Card (card.css), bled like a figure —
+   the panel's header row (number and title left, the language right), then
+   the code as the card's body: the slab fills it edge to edge, square, the
+   card's own dashed edge round both, so the slab needs no edge of its own in
+   either theme. */
 .ds-prose-code {
 	margin: 0;
-	border-block: var(--border);
-}
-.ds-prose-code__head {
-	display: flex;
-	justify-content: space-between;
-	gap: var(--space-4);
-	padding-block: var(--space-2);
-	border-block-end: var(--border);
 }
 .ds-prose-code__head > * {
 	white-space: normal;
 	line-height: var(--line-height-ui);
 }
-.ds-prose-code pre {
-	margin-block: var(--space-2);
+/* The meta: the language, then COPY in the link ink — the one thing in the
+   row you can press. A text button in the row's caps voice, its hit area
+   grown past the label without moving it. Hidden until the page's script
+   can copy (author CSS would otherwise beat the UA's [hidden]). */
+.ds-prose-code__meta {
+	gap: var(--space-3);
+	overflow: visible;
+}
+.ds-prose-code__copy {
+	margin: calc(-1 * var(--space-1));
+	padding: var(--space-1);
+	border: 0;
+	background: none;
+	color: var(--link-color);
+	cursor: pointer;
+}
+.ds-prose-code__copy:hover {
+	text-decoration: underline;
+	text-underline-offset: var(--link-underline-offset);
+}
+.ds-prose-code__copy[hidden] {
+	display: none;
+}
+.ds-prose .ds-prose-code pre {
+	border: 0;
+	border-radius: var(--radius-square);
 }
 
 @media (max-width: 1023px) {

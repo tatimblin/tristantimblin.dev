@@ -19,6 +19,8 @@ import Stat from "@whois/design-system/Stat";
 import Chip from "@whois/design-system/Chip";
 import Text from "@whois/design-system/Text";
 import Mono from "@whois/design-system/Mono";
+import Anchor from "@whois/design-system/Anchor";
+import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import Prose from "@whois/design-system/Prose";
 import {
 	categories,
@@ -57,6 +59,8 @@ interface Props {
 	image?: string;
 	imageAlt?: string;
 	canonical?: string;
+	/** The post's slug: the last step of the header's path. */
+	slug: string;
 	/** The post's chronological number, and how many there are. */
 	no: number;
 	total: number;
@@ -64,6 +68,8 @@ interface Props {
 	/** "212 reads" (src/lib/pageviews.ts formatReads), or null to leave it off. */
 	reads?: string | null;
 	hero?: Hero | null;
+	/** One link under the lede: where to get what the post introduces. */
+	cta?: { label: string; href: string } | null;
 	prev?: Neighbour | null;
 	next?: Neighbour | null;
 }
@@ -78,16 +84,21 @@ const {
 	image,
 	imageAlt,
 	canonical,
+	slug,
 	no,
 	total,
 	stats,
 	reads = null,
 	hero = null,
+	cta = null,
 	prev = null,
 	next = null,
 } = Astro.props;
 
 const cat = category ? categories[category] : null;
+/** The title split so every hyphenated word ("sub-human") is an odd run,
+ *  set unbreakable: a name never breaks at its hyphen. */
+const titleRuns = title.split(/(\S+-\S+)/);
 const COLUMNS = "var(--ruled-columns)";
 
 /** The two halves of the foot card: the older post on the left, the newer on
@@ -111,11 +122,13 @@ const neighbours = [
 	modifiedDate={modified}
 	tags={tags}
 	wordCount={stats.words}
-	trail={[{ label: "txt", href: "/txt/" }, { label: padNo(no) }]}
+	trail={[{ label: "txt", href: "/txt/" }, { label: slug, slug: true }]}
 >
 	<article class="post" data-post>
 		<Grid as="header" templateColumns={COLUMNS} gapX={4} class="post__head">
-			<Heading as="h1" size={6} responsive class="post__title">{title}</Heading>
+			<Heading as="h1" size={5} responsive class="post__title">{titleRuns.map((run, i) =>
+				i % 2 ? <span class="post__nobreak">{run}</span> : run
+			)}</Heading>
 		{/* THE DETAILS: a DS Card of Stat pairs (value over its label), in
 		    the first column beside the lead on desktop, between the title and
 		    the lead below 1024. */}
@@ -132,22 +145,36 @@ const neighbours = [
 				</Stat>
 			</CardBody>
 		</Card>
-			{description && (
-				<Text as="p" size={5} responsive variant="primary" family="ui" class="post__lead">
-					{description}
-				</Text>
+			{(description || cta) && (
+				<div class="post__intro">
+					{description && (
+						<Text as="p" size={6} responsive variant="secondary" family="ui" class="post__lead">
+							{description}
+						</Text>
+					)}
+					{cta && (
+						<Anchor href={cta.href} arrow="right" class="post__cta" data-post-cta="">
+							<Mono>{cta.label}</Mono>
+						</Anchor>
+					)}
+				</div>
+			)}
+			{/* THE HERO, in the head's grid: with one, the lead goes under the
+			    title and the details card into the hero's first column, over
+			    its Fig. 01 — the column the figure leaves empty. */}
+			{hero && (
+				<Fig no="01" caption={hero.caption ?? hero.alt} layout="ruled" class="post__fig" data-post-hero="">
+					<Img src={hero.src} alt={hero.alt} priority />
+				</Fig>
 			)}
 		</Grid>
-
-		{hero && (
-			<Fig no="01" caption={hero.caption ?? hero.alt} layout="ruled" class="post__fig" data-post-hero="">
-				<Img src={hero.src} alt={hero.alt} priority />
-			</Fig>
-		)}
 
 		<Prose variant="ruled" class="post__prose">
 			<slot />
 		</Prose>
+		{/* Where a code block's COPY says it worked, for a screen reader: the
+		    button's own label changing is not announced. */}
+		<VisuallyHidden as="p" aria-live="polite" data-code-copy-status="" />
 
 		{/* THE FOOT: a panel, "keep reading". Its body is the two neighbours,
 		     side by side — each half one big link: which way it goes, the title,
@@ -196,6 +223,51 @@ const neighbours = [
 	</article>
 </BlogLayout>
 
+<script>
+	// COPY on a code block (the header the sections plugin builds,
+	// src/lib/mdx/post-sections.ts): shown only where the clipboard is there to
+	// write to, it copies the block's text and reads COPIED for a moment.
+	import { onPage } from "@whois/design-system/lib/lifecycle";
+
+	const RESET_MS = 2000;
+
+	onPage(() => {
+		if (!navigator.clipboard?.writeText) return;
+		const status = document.querySelector<HTMLElement>("[data-code-copy-status]");
+		const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-code-copy]"));
+		const timers = new Map<HTMLButtonElement, number>();
+
+		const onClick = async (event: Event) => {
+			const button = event.currentTarget as HTMLButtonElement;
+			const code = button.closest("figure")?.querySelector("pre")?.textContent ?? "";
+			try {
+				await navigator.clipboard.writeText(code);
+			} catch {
+				return;
+			}
+			button.textContent = "Copied";
+			if (status) status.textContent = "Copied to clipboard";
+			clearTimeout(timers.get(button));
+			timers.set(
+				button,
+				window.setTimeout(() => {
+					button.textContent = "Copy";
+					if (status) status.textContent = "";
+				}, RESET_MS),
+			);
+		};
+
+		for (const button of buttons) {
+			button.hidden = false;
+			button.addEventListener("click", onClick);
+		}
+		return () => {
+			for (const button of buttons) button.removeEventListener("click", onClick);
+			for (const timer of timers.values()) clearTimeout(timer);
+		};
+	});
+</script>
+
 <style>
 	/* THE GRID. Four columns a step apart, the tokens the ruled Prose reads
 	   too, so the page's rows and the sections fall on the same lines. The
@@ -232,9 +304,14 @@ const neighbours = [
 		white-space: nowrap;
 	}
 
-	/* THE TITLE AND THE LEAD. The title at the display step (72px, 44px
-	   below 1024) across three columns, balanced so two lines share the
-	   words; the lead a step down in the second and third. */
+	/* THE TITLE AND THE LEAD. The title at the page-title step every other
+	   page's h1 takes (44px; 32, then 24 on a phone) across three columns,
+	   balanced so two lines share the words; the lead at 24px in the second
+	   and third. Body 14 → lead 24 → title 44 is one ~1.75 ratio, so the
+	   three read as one scale. */
+	.post__nobreak {
+		white-space: nowrap;
+	}
 	.post__title {
 		grid-column: 1 / span 3;
 		grid-row: 1;
@@ -242,10 +319,23 @@ const neighbours = [
 		text-wrap: balance;
 		overflow-wrap: anywhere;
 	}
-	.post__lead {
+	.post__intro {
 		grid-column: 2 / span 2;
 		grid-row: 2;
+		display: flex;
+		flex-direction: column;
+		align-items: start;
+		gap: var(--space-4);
 		margin-block-start: var(--space-8);
+	}
+	/* The lede, set apart by size, the secondary ink and a slant — three
+	   instruments, not four, so no weight (the slant is the browser's oblique:
+	   the site ships no italic cut, and global.css leaves style synthesis on
+	   for exactly this). */
+	.post__lead {
+		align-self: stretch;
+		margin: 0;
+		font-style: italic;
 		/* The UI leading: a step under the heading it follows, above the body's. */
 		line-height: var(--line-height-ui);
 	}
@@ -254,7 +344,23 @@ const neighbours = [
 	   it. The post's main image stands on its own, without the dashed edge
 	   the body's figures keep. */
 	.post__fig {
-		margin: var(--space-11) 0 0;
+		grid-column: 1 / -1;
+		grid-row: 3;
+		margin: var(--space-9) 0 0;
+	}
+	/* With a hero the head reads title, lead, then the picture: the lead
+	   takes the title's three columns under it, and the details card moves
+	   into the hero's row — the first column, at its top, over the Fig. 01
+	   that sits at its foot. */
+	.post__head:has(.post__fig) .post__intro {
+		grid-column: 1 / span 3;
+		margin-block-start: var(--space-5);
+	}
+	.post__head:has(.post__fig) .post__strip {
+		grid-row: 3;
+		position: relative;
+		z-index: 1;
+		margin-block-start: var(--space-9);
 	}
 	.post__fig :global(img) {
 		border: 0;
@@ -347,9 +453,12 @@ const neighbours = [
 		.post {
 			--ruled-columns: minmax(0, 1fr);
 		}
-		.post__strip {
+		/* (The :has twins restate it over the desktop's hero placement.) */
+		.post__strip,
+		.post__head:has(.post__fig) .post__strip {
 			grid-column: 1;
 			grid-row: auto;
+			z-index: auto;
 			margin-block-start: var(--space-5);
 		}
 		.post__facts {
@@ -361,13 +470,23 @@ const neighbours = [
 			grid-row: auto;
 			text-wrap: pretty;
 		}
-		.post__lead {
+		.post__intro,
+		.post__head:has(.post__fig) .post__intro {
 			grid-column: 1;
 			grid-row: auto;
 			margin-block-start: var(--space-5);
 		}
 		.post__fig {
+			grid-column: 1;
+			grid-row: auto;
 			margin-block-start: var(--space-9);
+		}
+	}
+	/* On a phone the title lands on 24px, so the lead steps under it to the
+	   reading-lead size rather than meeting it. */
+	@media (max-width: 639px) {
+		.post__lead {
+			font-size: var(--font-size-4);
 		}
 	}
 </style>

@@ -41,7 +41,7 @@ export const getStaticPaths = (async () => {
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { post, no, total, prev, next } = Astro.props;
-const { title, excerpt, category, tags, date, modified, image, imageAlt, canonical, hero } =
+const { title, excerpt, cta, category, tags, date, modified, image, imageAlt, canonical, hero } =
 	post.data;
 const { Content } = await render(post);
 
@@ -63,11 +63,13 @@ const ogImage = card ? (await getImage({ src: card, format: "jpg" })).src : unde
 	image={ogImage}
 	imageAlt={imageAlt ?? (image ? undefined : hero?.alt)}
 	canonical={canonical ?? undefined}
+	slug={post.id}
 	no={no}
 	total={total}
 	stats={readingStats(post.body)}
 	reads={formatReads(getPathStats(postHref(post.id))?.reads)}
 	hero={hero}
+	cta={cta}
 	prev={prev}
 	next={next}
 >

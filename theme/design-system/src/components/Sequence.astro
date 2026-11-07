@@ -3,8 +3,8 @@
 // No script and no library: a grid of one column per actor, dashed lifelines
 // down the column centres, notes as small dashed boxes and messages as a
 // line between two lane centres with the arrowhead at the receiver. It is a
-// `Fig` (the caption line under it in the caps mono), so it sits in a post
-// like any other figure and follows the theme through the tokens.
+// Card as a <figure> (the caption its panel header, the figcaption), so it
+// sits in a post like a code block and follows the theme through the tokens.
 //
 //   <Sequence
 //     caption="…"
@@ -31,7 +31,7 @@
 // In a post it bleeds past the text column like every other figure
 // (`data-prose-bleed`); pass `data-prose-bleed="full"` for the whole row.
 import { cx } from "../lib/cx";
-import Fig from "./Fig.astro";
+import Card from "./Card.astro";
 import Mono from "./Mono.astro";
 import VisuallyHidden from "./VisuallyHidden.astro";
 
@@ -102,7 +102,7 @@ function resolve(item: Item) {
 const rows = steps.map((step) => (Array.isArray(step) ? step : [step]).map(resolve));
 ---
 
-<Fig caption={caption} class={cx("ds-sequence", className)} data-prose-bleed="" {...rest}>
+<Card as="figure" headerAs="figcaption" title={caption} class={cx("ds-sequence", className)} data-prose-bleed="" {...rest}>
 	<div class="ds-sequence__stage" style={`--sequence-lanes: ${keys.length}`}>
 		<ul class="ds-sequence__actors">
 			{keys.map((key) => <li class="ds-sequence__actor">
@@ -155,4 +155,4 @@ const rows = steps.map((step) => (Array.isArray(step) ? step : [step]).map(resol
 			</ol>
 		</div>
 	</div>
-</Fig>
+</Card>

@@ -1,6 +1,7 @@
 /* Sequence — a sequence diagram on the instrument page's edges
- * (Sequence.astro). The stage is a dashed box at the box corner, as a Fig's
- * image is; inside it, one equal column per actor (--sequence-lanes, set on
+ * (Sequence.astro). It is a Card (card.css): the caption is the panel's
+ * header and the stage is its body, on the card surface;
+ * inside it, one equal column per actor (--sequence-lanes, set on
  * the stage) and NO column gap, so a lane's centre is always half a column
  * in from its edge and a message can find it with a percentage:
  *
@@ -11,7 +12,7 @@
  *               a step's items are placed by grid-column (inline style) and
  *               packed dense, so items in different lanes share the row and
  *               items whose lanes overlap stack.
- *   note        a dashed box on the page colour (the lifeline runs behind
+ *   note        a dashed box on the card surface (the lifeline runs behind
  *               it), centred on its lane, or across its range.
  *   message     the label over a solid line from the sender's lane centre to
  *               the receiver's, the arrowhead (a tiny svg in currentColor)
@@ -25,13 +26,24 @@
  * its OWN width — a phone's column, four lanes of ~80px — the words drop to
  * the label step and the boxes close up, so it fits the column it is given
  * rather than the viewport. */
+/* The caption is the panel's header, and a caption is a sentence: let it
+   wrap (a card header holds one line, which would size a phone's panel to
+   the caption instead of the column). */
+.ds-sequence {
+	margin: 0; /* a <figure>: no UA indent */
+}
+.ds-sequence > .ds-card-header {
+	white-space: normal;
+}
+.ds-sequence > .ds-card-header > .ds-card-header__title {
+	line-height: var(--line-height-ui);
+}
+
 .ds-sequence__stage {
 	--sequence-ink: var(--text-secondary);
 	--sequence-columns: repeat(var(--sequence-lanes, 2), minmax(0, 1fr));
 	container: sequence / inline-size;
 	padding: var(--space-4) var(--space-2) 0;
-	border: var(--border);
-	border-radius: var(--radius-box);
 }
 
 .ds-sequence__actors,
@@ -108,7 +120,7 @@
 	padding: var(--space-1) var(--space-2);
 	border: var(--border);
 	border-radius: var(--radius-box);
-	background: var(--background);
+	background: var(--card-background);
 	font-family: var(--font-ui);
 	font-size: var(--font-size-1);
 	line-height: var(--line-height-ui);
@@ -135,7 +147,7 @@
 	color: var(--sequence-ink);
 }
 /* The label: the Mono text voice, in the message's ink, centred over the
-   line and wrapping across the lanes it spans — on the page colour, so a
+   line and wrapping across the lanes it spans — on the card surface, so a
    lifeline it crosses passes behind the words rather than through them. */
 .ds-sequence .ds-sequence__label {
 	align-self: center;
@@ -143,7 +155,7 @@
 	box-sizing: border-box;
 	margin: 0;
 	padding-inline: var(--space-1);
-	background: var(--background);
+	background: var(--card-background);
 	text-align: center;
 	text-wrap: balance;
 	overflow-wrap: anywhere;

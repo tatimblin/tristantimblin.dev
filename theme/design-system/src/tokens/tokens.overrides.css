@@ -107,6 +107,9 @@
 	 * far larger, pulls in — the lockup's tracking. In em, so a retune tracks
 	 * the size it is set at. */
 	--tracking-heading: 0;
+	/* The display steps (Heading 5 and 6, 44px and up) pull in a little: the
+	 * usual −0.01 to −0.03em for type that size, short of the lockup's. */
+	--tracking-display: -0.02em;
 	--tracking-hero: -0.03em;
 
 	/* TRACKING ---------------------------------------------------------------
@@ -219,12 +222,14 @@
  *                    is a decision and not a reset.
  *   --shadow-panel   the panel's 1px outline drop, a pale tint just under the
  *                    dashed edge (--panel-outline, per theme).
- *   --panel-header-bg  a panel header's fill: the card fading down into the
- *                    first wash.
+ *   --panel-header-bg  a panel header's fill: the card fading down, from a
+ *                    quarter of the way, into the first wash taken a little
+ *                    toward the second (wash-1 alone read as no fade at all
+ *                    on cream). Dark overrides it in themes/dark.css.
  *   --code-bg / --code-fg / --code-border  a fenced block's surface, ink and
- *                    edge (per theme: none on cream, where the slab is the
- *                    darkest thing; the dashed edge on the dark page); the
- *                    token colours are --code-token-* below.
+ *                    edge (per theme: a pale wash on cream, a near-black slab
+ *                    on the dark page, the dashed edge round both); the
+ *                    token colours, --code-token-*, are per theme too.
  *   --link-*         every link: the colour, an underline at rest, plain
  *                    under the pointer.
  * The width, style and corner are theme-independent and sit on :root; the
@@ -248,21 +253,14 @@
 	--link-decoration-hover: none;
 	--link-underline-offset: 2px;
 	--link-underline-thickness: 1px;
-
-	/* Code highlighting. Both themes set code on a DARK block, so the token
-	   colours are one set, tuned for a near-black surface. */
-	--code-token-comment: #8a8a86;
-	--code-token-keyword: #7fb4ff;
-	--code-token-string: #b5d99c;
-	--code-token-constant: #f2c97d;
-	--code-token-parameter: #f5f5f3;
-	--code-token-function: #9ad0ff;
-	--code-token-punctuation: #c8c8c4;
 }
 [data-theme] {
 	--border: var(--border-width) var(--border-style) var(--border-color);
 	--shadow-panel: 0 1px 0 1px var(--panel-outline);
-	--panel-header-bg: linear-gradient(var(--card-background) 50%, var(--wash-1));
+	--panel-header-bg: linear-gradient(
+		var(--card-background) 25%,
+		color-mix(in oklab, var(--wash-2) 40%, var(--wash-1))
+	);
 	--link-color: var(--hyperlink);
 	--link-hover-color: var(--link-color);
 }

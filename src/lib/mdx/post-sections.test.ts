@@ -7,10 +7,10 @@ import { createMarkdownProcessor } from "@astrojs/markdown-remark";
 import type { Element, Root } from "hast";
 import { pathToFileURL } from "node:url";
 import { VFile } from "vfile";
-import { rehypePostSections, remarkPostCode, shikiPostCode } from "./post-sections";
+import { LANG_ALIAS, rehypePostSections, remarkPostCode, shikiPostCode } from "./post-sections";
 
 const processor = await createMarkdownProcessor({
-	shikiConfig: { theme: "css-variables", transformers: [shikiPostCode] },
+	shikiConfig: { theme: "css-variables", langAlias: LANG_ALIAS, transformers: [shikiPostCode] },
 	remarkPlugins: [remarkPostCode],
 	rehypePlugins: [rehypePostSections],
 });
@@ -42,7 +42,7 @@ describe("post sections", () => {
 		expect(headings.map((h) => h.slug)).toEqual(["one", "two"]);
 	});
 
-	test("a fence nested in a list does not shift the next fence's label", async () => {
+	test("a fence nested in a list is left alone; the top-level one is dressed", async () => {
 		const md = [
 			"- a list item",
 			"",
@@ -57,19 +57,26 @@ describe("post sections", () => {
 		].join("\n");
 		const { html } = await render(md);
 		// One top-level fence, one figure, carrying ITS title and language.
-		expect(count(html, 'class="ds-prose-code"')).toBe(1);
-		expect(html).toMatch(/00\.1 \/ top\.yml<\/span><span[^>]*>yaml<\/span>/);
-		expect(html).not.toContain("00.1 / nested.js");
+		expect(count(html, 'class="ds-card ds-prose-code"')).toBe(1);
+		expect(html).toMatch(/>top\.yml<\/span><span[^>]*><span[^>]*>yaml<\/span><button[^>]*data-code-copy[^>]*hidden[^>]*>Copy<\/button>/);
+		expect(html).not.toMatch(/>nested\.js<\/span>/);
 	});
 
 	test("a fence with a title and no language keeps its title", async () => {
 		const { html } = await render('``` title="notes.txt"\nplain words\n```\n');
-		expect(html).toMatch(/00\.1 \/ notes\.txt<\/span><span[^>]*>text<\/span>/);
+		expect(html).toMatch(/>notes\.txt<\/span><span[^>]*><span[^>]*>text<\/span>/);
 	});
 
-	test("a fence without a title is numbered alone", async () => {
+	test("claude-code is a language: plain, labelled Claude Code", async () => {
+		const { html } = await render('```claude-code title="In Claude Code"\n/plugin install x\n```\n');
+		expect(html).toContain('data-language="claude-code"');
+		expect(html).toMatch(/>In Claude Code<\/span><span[^>]*><span[^>]*>Claude Code<\/span>/);
+	});
+
+	test("a fence without a title has an empty title and its language", async () => {
 		const { html } = await render("```ts\nlet a = 1;\n```\n");
-		expect(html).toMatch(/>00\.1<\/span><span[^>]*>ts<\/span>/);
+		expect(html).toMatch(/ds-card-header__title"><\/span><span[^>]*><span[^>]*>ts<\/span>/);
+		expect(html).not.toContain("00.1");
 	});
 
 	test("an image inside a link becomes a figure, the link kept", async () => {

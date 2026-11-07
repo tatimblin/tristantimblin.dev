@@ -6,9 +6,7 @@
 // phone or anywhere a closed post is clicked, focus from the keyboard). The
 // open post's body sits in the right half: its category and word count and
 // its excerpt, then — pinned to the foot of the body — a control rail: READ,
-// a solid accent button flush in the corner the column rule makes with the
-// post's bottom hairline, and a faint line from its top edge across the rest
-// of the half, an empty strip for controls to come.
+// the DS's primary button, set in from the rules on the title's x.
 //
 // THE CLICK RULE: a title is a link only while its post is open (and is
 // underlined then, to say so). A click (mouse, pen, touch, or Enter) on a
@@ -139,7 +137,6 @@ const rows = byDateDesc(posts).map((entry) => {
 										{action}
 										<Icon slot="end-icon" name="external" />
 									</Button>
-									<div class="stack__strip" />
 								</div>
 							</div>
 						</div>
@@ -300,36 +297,20 @@ const rows = byDateDesc(posts).map((entry) => {
 		max-inline-size: var(--measure-note);
 	}
 
-	/* THE RAIL: the right half's foot, edge to edge — READ in the corner
-	   (the column rule on its left, the post's bottom hairline under it),
-	   then the strip: a faint hairline level with READ's top, as tall as
-	   READ, empty. READ is the DS's primary button, the accent fill with
-	   --on-accent; squared off here so it sits in a ruled corner, and its
-	   ring drawn inside, where the body's clip can't cut it. Its leading
-	   padding is the text inset, with no border and no caps indent (the
-	   button's centring of the tracking) on that side, so the label starts
-	   on the title's and the excerpt's x. */
+	/* THE RAIL: the right half's foot. READ is the DS's primary button, whole
+	   — its own edge and padding — set in from the rules as the title is: its
+	   left edge on the title's x (the text inset), and the title's block
+	   padding between it and the post's bottom hairline. Its ring is drawn
+	   inside, where the body's clip can't cut it. */
 	.stack__rail {
 		grid-column: 2;
 		grid-row: 2;
 		display: flex;
+		padding-inline-start: var(--stack-inset);
+		padding-block-end: var(--space-4);
 	}
 	.stack__read {
-		/* A step taller than the DS's fixed --space-6 box (whose ~--space-2 of
-		   slack around the icon is its effective block padding): the height
-		   follows the padding, and the strip follows READ. */
-		block-size: auto;
-		padding-block: var(--space-3);
-		border-radius: var(--radius-box);
-		border-inline-start-width: 0;
-		padding-inline-start: var(--stack-inset);
-		text-indent: 0;
 		--control-ring-offset: var(--focus-ring-inset);
-	}
-	.stack__strip {
-		flex: 1;
-		border-block-start: var(--border-width) var(--border-style)
-			color-mix(in oklab, var(--hairline) 50%, transparent);
 	}
 
 	/* Phone: one column — the date above the title, no rule between them; the
@@ -337,9 +318,8 @@ const rows = byDateDesc(posts).map((entry) => {
 	   the page gutter (BlogLayout's --container-inset) on both sides, so its
 	   hairlines run to the viewport's edges, and each post pads that gutter
 	   back in: the header stays on the page's x. The body bleeds out again
-	   across the post's padding, so READ meets the viewport's left edge and
-	   the strip its right; the text is inset by the gutter, back on the
-	   title's x. */
+	   across the post's padding, and its text and READ are inset by the
+	   gutter, back on the title's x. */
 	@media (max-width: 639px) {
 		.stack {
 			margin-inline: calc(-1 * var(--container-inset));

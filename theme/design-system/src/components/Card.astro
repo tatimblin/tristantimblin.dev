@@ -17,6 +17,8 @@ interface Props {
 	chrome?: boolean;
 	title?: string;
 	squeeze?: "meta" | "title";
+	/** The header's element: `figcaption` when the card is a `<figure>`. */
+	headerAs?: string;
 	class?: string;
 	[key: string]: unknown;
 }
@@ -26,6 +28,7 @@ const {
 	chrome = true,
 	title,
 	squeeze,
+	headerAs,
 	class: className,
 	...rest
 } = Astro.props;
@@ -45,7 +48,7 @@ const hasMeta = await filled("meta");
 <Box as={as} class={cls} {...rest}>
 	{
 		title || hasTitle || hasMeta ? (
-			<CardHeader title={title} squeeze={squeeze}>
+			<CardHeader as={headerAs} title={title} squeeze={squeeze}>
 				{hasTitle ? (
 					<Fragment slot="title">
 						<slot name="title" />

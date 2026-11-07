@@ -80,12 +80,20 @@
 	--poster-dim: 1;
 	--poster-badge-shadow: 0 1px 6px -1px rgb(0 0 0 / 0.35);
 
-	/* CODE. Inline code on the first wash; a fenced block is the old site's
-	   near-black slab, the darkest thing on the page. */
+	/* CODE. Inline code and a fenced block both on the first wash, the
+	   block with the dashed edge round it; the token colours are GitHub-light
+	   inks, dark enough to read on the wash. */
 	--code-snippet-background: var(--wash-1);
-	--code-bg: #191918;
-	--code-fg: #f5f5f3;
-	--code-border: none;
+	--code-bg: var(--wash-1);
+	--code-fg: var(--text-primary);
+	--code-border: var(--border);
+	--code-token-comment: var(--text-subtle);
+	--code-token-keyword: #0550ae;
+	--code-token-string: #116329;
+	--code-token-constant: #953800;
+	--code-token-parameter: var(--code-fg);
+	--code-token-function: #6639ba;
+	--code-token-punctuation: var(--text-secondary);
 
 	/* HALFTONE. Dark ink on cream, newsprint-style — the bridge hands these
 	   to <dotted-grid> / <video-carousel> as --color-fg. The footer-row clip
