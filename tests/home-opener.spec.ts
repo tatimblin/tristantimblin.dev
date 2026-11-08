@@ -312,6 +312,107 @@ test.describe("phone 390×844", () => {
 	}
 });
 
+/** The copy's distance below "tristan" when it simply follows the word: .sh__sub's margin (--space-3). */
+const COPY_MARGIN = 12;
+
+test.describe("the copy on the picture's axis (compact step)", () => {
+	const mid = (a: { y: number }, b: { bottom: number }) => (a.y + b.bottom) / 2;
+
+	for (const [w, h] of [
+		[390, 844],
+		[412, 915],
+		[430, 932],
+		[600, 900],
+		[768, 1024],
+		[900, 1200],
+	] as const) {
+		test(`at ${w}×${h} the copy is centred on the picture, clear of the word and the picture`, async ({ page }) => {
+			await open(page, w, h);
+			const s = await at(page, 0);
+			expect(Math.abs(mid(s.tagline, s.intro) - mid(s.picture, s.picture)), "on the picture's midpoint").toBeLessThan(2);
+			expect(s.tagline.y - s.word.bottom, "below the word").toBeGreaterThanOrEqual(COPY_MARGIN - 0.5);
+			for (const b of [s.tagline, s.intro]) {
+				expect(overlaps(b, s.word), "not on the word").toBe(false);
+				expect(overlaps(b, s.picture), "not on the picture").toBe(false);
+			}
+			// The word still overlaps the picture by half its height.
+			expect(Math.abs(s.word.bottom - s.picture.y - s.word.h / 2)).toBeLessThan(1.5);
+		});
+	}
+
+	for (const [w, h, name] of [
+		[320, 568, "a phone whose copy is taller than the room"],
+		[360, 740, "a phone whose copy is taller than the room"],
+		[844, 390, "a short window, whose picture runs past the fold"],
+	] as const) {
+		test(`at ${w}×${h}, ${name}: the copy sits directly under the word`, async ({ page }) => {
+			await open(page, w, h);
+			const s = await at(page, 0);
+			expect(Math.abs(s.tagline.y - s.word.bottom - COPY_MARGIN), "directly under the word").toBeLessThan(1);
+			for (const b of [s.tagline, s.intro]) {
+				expect(overlaps(b, s.word), "not on the word").toBe(false);
+				expect(overlaps(b, s.picture), "not on the picture").toBe(false);
+			}
+			expect(s.tagline.y, "on the first screen").toBeLessThan(h);
+		});
+	}
+
+	test("a large root font keeps the copy under the word, off the picture", async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.addInitScript(() => {
+			document.addEventListener("DOMContentLoaded", () => {
+				document.documentElement.style.fontSize = "250%";
+			});
+		});
+		await page.goto("/");
+		await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+		const s = await at(page, 0);
+		expect(s.tagline.y, "below the word").toBeGreaterThanOrEqual(s.word.bottom);
+		expect(overlaps(s.intro, s.picture), "off the picture").toBe(false);
+	});
+
+	test("desktop: the copy follows the word, in plain flow", async ({ page }) => {
+		await open(page, 1440, 900);
+		const s = await at(page, 0);
+		expect(Math.abs(s.tagline.y - s.word.bottom - COPY_MARGIN)).toBeLessThan(1);
+		const sub = await page.evaluate(() => {
+			const cs = getComputedStyle(document.querySelector(".sh__sub")!);
+			return { display: cs.display, minBlockSize: cs.minBlockSize };
+		});
+		expect(sub.display).toBe("block");
+		expect(["auto", "0px"]).toContain(sub.minBlockSize);
+	});
+
+	test("reduced motion: the card is docked below, so the copy stays under the word", async ({ browser }) => {
+		const context = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 390, height: 844 } });
+		const page = await context.newPage();
+		await page.goto("/");
+		await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+		const s = await at(page, 0);
+		expect(Math.abs(s.tagline.y - s.word.bottom - COPY_MARGIN), "directly under the word").toBeLessThan(1);
+		await context.close();
+	});
+
+	test("print: the copy stays under the word", async ({ page }) => {
+		await open(page, 390, 844);
+		await page.emulateMedia({ media: "print" });
+		const s = await at(page, 0);
+		expect(Math.abs(s.tagline.y - s.word.bottom - COPY_MARGIN), "directly under the word").toBeLessThan(1);
+	});
+
+	test("it still fades on the same scroll and is not sticky", async ({ page }) => {
+		await open(page, 430, 932);
+		const rest = await at(page, 0);
+		expect(rest.subOpacity).toBe(1);
+		const near = await at(page, 60);
+		expect(near.subOpacity, "the fade is under way").toBeLessThan(1);
+		expect(near.subOpacity).toBeGreaterThan(0);
+		expect(Math.abs(rest.tagline.y - near.tagline.y - 60), "moves with the page").toBeLessThan(0.5);
+		const gone = await at(page, 100);
+		expect(gone.subOpacity).toBe(0);
+	});
+});
+
 /** The page's whole scroll. */
 const maxScroll = (page: Page) =>
 	page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
