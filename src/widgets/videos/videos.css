@@ -27,6 +27,21 @@
 		0px,
 		var(--vc-ruler-w) + var(--vc-main-gap) - var(--vc-outer-margin)
 	);
+
+	/* THE CHROME'S BANDS (VideoChrome.astro), from its parts: the header (its
+	   block pad, the pill-height line every card header reserves, its rule) and
+	   the footer (its rule, its block pad, one line of the label voice). The
+	   clip sits between them (THE CLIP'S BOX, below), the phone's footer is
+	   restated with the scrubber's parts at the compact step, and the opener
+	   reads the same numbers to park the tile (HomeLayout.astro), so they are
+	   declared up here on the grid. tests/video-card.spec.ts holds them to the
+	   real chrome. A band is the element plus the frame's edge outside it. */
+	--vc-head-h: calc(2 * var(--space-6) / 3 + var(--space-5) + var(--border-width));
+	--vc-foot-h: calc(
+		var(--border-width) + 2 * var(--space-3) + var(--voice-mono-size) * var(--line-height-ui)
+	);
+	--vc-head-band: calc(var(--border-width) + var(--vc-head-h));
+	--vc-foot-band: calc(var(--border-width) + var(--vc-foot-h));
 }
 
 /* The video cell: the last column, the first two rows of cards (row 1 is the
@@ -117,28 +132,41 @@
 	}
 }
 
-/* FILL THE CELL. The clip IS the widget, so the carousel is `fill` (its own
-   attribute, video-carousel/styles.css): the stage takes the whole 1×2 cell
-   rather than a 9:16 box at its top, and the grid cover-maps the clip into it.
-   The clips are 9:16 portrait (360×640); the cell is two square rows plus a
-   gap, ~1:2 — a little narrower, so only the sides are trimmed, where there
-   is nothing a portrait phone clip frames. The ruler stretches with the
-   stage, so it spans the cell's full height too. This rule only gives the
-   host the cell's height and rounds the stage to the card corner the tiles
-   beside it wear. */
+/* FILL THE CELL. The carousel is `fill` (its own attribute,
+   video-carousel/styles.css): the stage takes the whole 1×2 cell, and the grid
+   cover-maps the clip into the box it is left (THE CLIP'S BOX, below). This
+   rule only gives the host the cell's height and rounds the stage to the card
+   corner the tiles beside it wear. */
 .wx-videos video-carousel {
 	flex: 1 1 auto;
 	min-height: 0;
 	--vc-stage-radius: var(--border-radius-2);
 }
 
+/* THE CLIP'S BOX: the cell less the header and footer the card puts on at the
+   dock, floating and docked alike. The stage keeps the whole cell, so the
+   chrome (inset: 0) and the ruler still size off it; its block padding holds
+   the bands empty, and the grid, a flex item, takes what is left. So the canvas
+   is one size on the whole scroll, the clip is never under the chrome, and the
+   chrome's opacity is still the only thing that changes (no geometry animation,
+   no WebGL resize at the dock). The clips are 9:16 portrait: a tile's box is
+   wider than that at phone and desktop widths, so the whole width shows and the
+   cover-map trims a little off the top and bottom. On a very wide cell, where
+   the box comes out narrower than 9:16, it is a little off the sides. No
+   background: the bands are empty until the chrome comes on, and the page shows
+   through them. */
+.wx-videos .vc__stage {
+	padding-block: var(--vc-head-band) var(--vc-foot-band);
+	background: none;
+}
+
 /* THE CHROME (VideoChrome.astro): the frame, the header and the footer the card
-   puts on as it docks. One layer laid OVER the clip, so the clip keeps the whole
-   cell, the same canvas in both states, and the only thing that changes is this
-   layer's opacity (an in-flow header would shrink the clip: a geometry animation
-   and a WebGL resize mid-scroll). The Widget stays chrome={false}, so the frame
-   is drawn here and fades with the rest; the panel ring draws outside the box,
-   so the stage must not clip it, and the rounding moves to the grid.
+   puts on as it docks. One layer laid over the stage, its bands on the empty
+   ones above and below the clip, and only this layer's opacity changes (an
+   in-flow header would shrink the clip: a geometry animation and a WebGL resize
+   mid-scroll). The Widget stays chrome={false}, so the frame is drawn here and
+   fades with the rest; the panel ring draws outside the box, so the stage must
+   not clip it, and the rounding moves to the grid.
    Pointer events pass through to whatever is under the layer. */
 .wx-videos .vc__stage {
 	overflow: visible;
@@ -280,9 +308,8 @@
 
 /* THE COMPACT STEP (the grid's own, widget-grid.css; WIDGET_COMPACT_MQ for a
    script): two columns, the card in the second. No gutter ruler, so none of
-   its room either: the grid reserves none and the cell is all clip. The ruler
-   lays over the footer instead, out of the flow so the clip keeps the cell,
-   full width over the whole footer (a target the height of the footer, the
+   its room either: the grid reserves none. The ruler lays over the footer
+   instead, out of the flow so it takes nothing from the clip's box, full width over the whole footer (a target the height of the footer, the
    ticks along its top edge), on the chrome's fade. The tile takes no input
    until it has docked: the fade alone wouldn't stop hit-testing, and the host
    stays pointer-events: none; ./client.ts sets data-vc-docked. A viewport
@@ -291,6 +318,12 @@
 	.ds-widget-grid:has(.wx-videos) {
 		--vc-ruler-w: 0px;
 		--vc-main-gap: 0px;
+		/* The scrubber's footer (VideoChrome), from its parts: the rule, the band,
+		   the gap, the line and the pad. */
+		--vc-foot-h: calc(
+			var(--border-width) + var(--space-5) + var(--space-1) + var(--voice-mono-size) * var(--line-height-ui) +
+				var(--space-2)
+		);
 	}
 	.wx-videos {
 		grid-column: 2 / span 1;
@@ -302,13 +335,6 @@
 		display: flex;
 		position: relative;
 		pointer-events: none;
-		/* The footer's height (VideoChrome), from its parts — the ruler is a
-		   sibling of the stage, so it can't read the box: the rule, the band,
-		   the gap, the line and the pad. */
-		--vc-foot-h: calc(
-			var(--border-width) + var(--space-5) + var(--space-1) + var(--voice-mono-size) * var(--line-height-ui) +
-				var(--space-2)
-		);
 	}
 	.wx-videos__compact .vc__ruler {
 		position: absolute;

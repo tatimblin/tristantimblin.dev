@@ -121,6 +121,82 @@ test("where the page ends before the travel does, the chrome lands with the dock
 	expect(mid).toBeLessThan(0.8);
 });
 
+/** The canvas, and the real chrome around it, at scroll offset `y`. */
+const boxes = (page: Page, y: number) =>
+	page.evaluate(async (v) => {
+		window.scrollTo(0, v);
+		await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+		const rect = (s: string) => {
+			const r = document.querySelector(s)!.getBoundingClientRect();
+			return { x: r.x, y: r.y, width: r.width, height: r.height, bottom: r.bottom, right: r.right };
+		};
+		const grid = document.querySelector<HTMLElement>(".wx-videos dotted-grid")!;
+		const canvas = grid.querySelector("canvas")!;
+		return {
+			card: rect(".wx-videos"),
+			grid: rect(".wx-videos dotted-grid"),
+			canvas: rect(".wx-videos dotted-grid canvas"),
+			buffer: `${canvas.width}x${canvas.height}`,
+			head: rect(".wx-videos__chrome .ds-card-header"),
+			foot: rect(".wx-videos__foot"),
+		};
+	}, y);
+
+for (const viewport of [DESKTOP, { width: 1920, height: 1200 }, { width: 390, height: 844 }, { width: 900, height: 1200 }]) {
+	test(`the canvas is the box between the header and footer, one size across the scroll (${viewport.width}×${viewport.height})`, async ({
+		page,
+	}) => {
+		await open(page, viewport);
+		await page.locator(".wx-videos dotted-grid canvas").first().waitFor({ state: "attached" });
+		const end = Math.ceil(await travel(page));
+		// A few sizes of scroll, floating to well past the dock: the canvas never changes size.
+		const positions = [0, Math.round(end / 2), end - 24, end, end + 400];
+		const states = [];
+		for (const y of positions) states.push(await boxes(page, y));
+		const base = states[0];
+		for (const [i, s] of states.entries()) {
+			expect(Math.abs(s.grid.height - base.grid.height), `height at ${positions[i]}`).toBeLessThan(0.5);
+			expect(Math.abs(s.grid.width - base.grid.width), `width at ${positions[i]}`).toBeLessThan(0.5);
+			expect(s.buffer, `drawing buffer at ${positions[i]}`).toBe(base.buffer);
+			expect(Math.abs(s.canvas.height - s.grid.height), "the canvas fills its box").toBeLessThan(1);
+			expect(Math.abs(s.canvas.width - s.grid.width), "the canvas fills its box").toBeLessThan(1);
+			// The chrome's edges at every offset, opacity aside: exactly between them,
+			// floating and docked, with no gap and no overlap.
+			expect(Math.abs(s.grid.y - s.head.bottom), `under the header at ${positions[i]}`).toBeLessThan(0.75);
+			expect(Math.abs(s.grid.bottom - s.foot.y), `on the footer at ${positions[i]}`).toBeLessThan(0.75);
+			expect(Math.abs(s.grid.width - s.card.width), "the full width of the cell").toBeLessThan(1);
+		}
+		// The card's landing is unchanged, and the bands come from the real chrome.
+		const docked = states[3];
+		expect(Math.abs(docked.head.y - docked.card.y), "the header on the card's top edge").toBeLessThanOrEqual(1.5);
+		const bands = await page.evaluate(() => {
+			const card = document.querySelector<HTMLElement>(".wx-videos")!;
+			const probe = (name: string) => {
+				const p = document.createElement("div");
+				p.style.cssText = `position:absolute;visibility:hidden;height:var(${name})`;
+				card.appendChild(p);
+				const h = p.getBoundingClientRect().height;
+				p.remove();
+				return h;
+			};
+			return { head: probe("--vc-head-band"), foot: probe("--vc-foot-band") };
+		});
+		expect(Math.abs(bands.head - (docked.grid.y - docked.card.y)), "the stated header band").toBeLessThan(0.75);
+		expect(Math.abs(bands.foot - (docked.card.bottom - docked.grid.bottom)), "the stated footer band").toBeLessThan(0.75);
+	});
+}
+
+test("a 9:16 clip shows its full width: the box is at least as wide as the clip", async ({ page }) => {
+	for (const viewport of [DESKTOP, { width: 390, height: 844 }]) {
+		await open(page, viewport);
+		const { grid } = await boxes(page, 0);
+		// Cover-mapped (the clips are 9:16, <dotted-grid>'s coverUv), the frame is
+		// trimmed only on the axis where the box is longer than 9:16 relative to it.
+		expect(grid.width / grid.height, `${viewport.width}: the box is wider than 9:16`).toBeGreaterThanOrEqual(9 / 16);
+		expect((9 / 16) / (grid.width / grid.height), "only a slight top/bottom trim").toBeGreaterThan(0.85);
+	}
+});
+
 test("reduced motion and print show the chrome", async ({ page }) => {
 	await page.emulateMedia({ reducedMotion: "reduce" });
 	await open(page);
@@ -153,7 +229,6 @@ test("the header is the same band as its neighbours, and names the selected clip
 				own: box(own),
 				sibling: box(sibling),
 				card: box(card),
-				stageHeight: document.querySelector(".wx-videos .vc__grid")!.getBoundingClientRect().height,
 				figcaptions: document.querySelectorAll(".wx-videos__wide figcaption").length,
 			};
 		});
@@ -166,7 +241,6 @@ test("the header is the same band as its neighbours, and names the selected clip
 		.toBe(true);
 	const header = await measure();
 	expect(header.figcaptions, "the clip is named once").toBe(1);
-	expect(Math.abs(header.stageHeight - header.card.height), "the clip keeps the cell").toBeLessThan(1);
 
 	// A keyboard step selects the next clip; the header follows.
 	const wide = page.locator(".wx-videos__wide");
@@ -202,6 +276,9 @@ test("the ruler keeps its gutter and scrubs while the card floats", async ({ pag
 	const box = await ruler.boundingBox();
 	const card = await page.locator(".wx-videos").boundingBox();
 	expect(box!.x, "in the gutter, outside the card").toBeGreaterThanOrEqual(card!.x + card!.width);
+	// Its span stays the whole cell (the stage's), not the shorter clip: it lines up
+	// with the docked frame, and its ends fade out so it reads fine beside the bare clip.
+	expect(Math.abs(box!.height - card!.height), "the ruler spans the cell").toBeLessThan(1);
 	const before = await ruler.getAttribute("aria-valuenow");
 	await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
 	await page.mouse.down();

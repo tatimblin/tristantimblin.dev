@@ -20,9 +20,9 @@ async function at(page: Page, y: number) {
 	return page.evaluate(() => {
 		// The cards carry the reveal's entrance (`translate`, a rise that may be held
 		// or mid-flight); the geometry here is the painted box without it.
-		const box = (el: Element | null) => {
+		const box = (el: Element | null, carrier: Element | null = el) => {
 			const r = el!.getBoundingClientRect();
-			const t = getComputedStyle(el!).translate;
+			const t = getComputedStyle(carrier!).translate;
 			const dy = t === "none" ? 0 : parseFloat(t.split(" ")[1] ?? "0") || 0;
 			const y = r.y - dy;
 			return { x: r.x, y, w: r.width, h: r.height, right: r.right, bottom: y + r.height };
@@ -35,6 +35,9 @@ async function at(page: Page, y: number) {
 			tagline: box(document.querySelector(".sh__tagline")),
 			intro: box(document.querySelector(".sh__sub > :last-child")),
 			card: box(document.querySelector(".wx-videos")),
+			/** The picture, between the card's empty header and footer bands. Inside
+			 *  the card, so it is the card that carries its entrance. */
+			picture: box(document.querySelector(".wx-videos dotted-grid"), document.querySelector(".wx-videos")),
 			first: box(document.querySelector('[data-widget="now-playing"]')),
 			subOpacity: Number(getComputedStyle(document.querySelector(".sh__sub")!).opacity),
 			/** 1 = all outline, 0 = all solid. */
@@ -46,6 +49,7 @@ async function at(page: Page, y: number) {
 		tagline: Box;
 		intro: Box;
 		card: Box;
+		picture: Box;
 		first: Box;
 		subOpacity: number;
 		clip: number;
@@ -225,10 +229,12 @@ test.describe("phone 390×844", () => {
 		expect(Math.abs(s.card.right - s.word.right)).toBeLessThan(1);
 		expect(Math.abs(s.card.w - s.first.w)).toBeLessThan(1);
 		expect(s.card.h).toBeGreaterThan(2 * s.first.w);
-		// "tristan" spans the content width and runs over the tile; nothing else does.
-		expect(overlaps(s.word, s.card)).toBe(true);
-		expect(overlaps(s.tagline, s.card)).toBe(false);
-		expect(overlaps(s.intro, s.card)).toBe(false);
+		// "tristan" spans the content width and runs over the picture; nothing else does.
+		expect(overlaps(s.word, s.picture)).toBe(true);
+		expect(overlaps(s.tagline, s.picture)).toBe(false);
+		expect(overlaps(s.intro, s.picture)).toBe(false);
+		expect(overlaps(s.tagline, s.card), "nor the tile's box").toBe(false);
+		expect(overlaps(s.intro, s.card), "nor the tile's box").toBe(false);
 		// The scrubber is faded out and locked until the card docks, and the tile
 		// takes no input.
 		const dormant = await page.evaluate(() => {
@@ -242,7 +248,7 @@ test.describe("phone 390×844", () => {
 		expect(dormant).toEqual({ opacity: "0", inert: true, host: "none" });
 	});
 
-	test("the word moves at once; the wipe waits until it is clear of the tile", async ({ page }) => {
+	test("the word moves at once; the wipe waits until it is clear of the picture", async ({ page }) => {
 		await open(page, 390, 844);
 		const rest = await at(page, 0);
 		const early = await at(page, 20);
@@ -252,18 +258,18 @@ test.describe("phone 390×844", () => {
 			const s = await at(page, y);
 			if (s.clip < 1) {
 				// The solid layer's opaque box must already be off the picture.
-				expect(s.solid.bottom, `wipe began over the tile at ${y}`).toBeLessThanOrEqual(s.card.y);
+				expect(s.solid.bottom, `wipe began over the picture at ${y}`).toBeLessThanOrEqual(s.picture.y);
 				wipeStart = y;
 				break;
 			}
 		}
 		expect(wipeStart).toBeGreaterThan(0);
 		// ...and neither the wipe's backdrop nor the finished word ever cuts into the
-		// tile, all the way to the dock, while the tile climbs back past the held word.
+		// picture, all the way to the dock, while the tile climbs back past the held word.
 		const travel = await dockTravel(page);
 		for (let y = wipeStart; y <= travel; y += 8) {
 			const s = await at(page, y);
-			expect(s.solid.bottom, `the backdrop covers the tile at ${y}`).toBeLessThanOrEqual(s.card.y);
+			expect(s.solid.bottom, `the backdrop covers the picture at ${y}`).toBeLessThanOrEqual(s.picture.y);
 		}
 		const docked = await at(page, Math.ceil(travel));
 		expect(Math.abs(docked.card.y - docked.first.y)).toBeLessThan(1);
@@ -272,10 +278,12 @@ test.describe("phone 390×844", () => {
 	for (const [w, h] of [
 		[390, 844],
 		[360, 740],
+		[320, 568],
+		[430, 932],
 		[820, 1180],
 		[900, 1200],
 	] as const) {
-		test(`at ${w}×${h} the wipe is done before the row arrives, clear of the tile`, async ({ page }) => {
+		test(`at ${w}×${h} the wipe is done before the row arrives, clear of the picture`, async ({ page }) => {
 			await open(page, w, h);
 			const rest = await at(page, 0);
 			const top = await holdTop(page);
@@ -285,9 +293,21 @@ test.describe("phone 390×844", () => {
 			for (let y = Math.floor(meet) - 200; y <= Math.ceil(meet) + 40; y += 8) {
 				const s = await at(page, y);
 				if (s.clip < 1) {
-					expect(s.solid.bottom, `the backdrop covers the tile at ${y}`).toBeLessThanOrEqual(s.card.y);
+					expect(s.solid.bottom, `the backdrop covers the picture at ${y}`).toBeLessThanOrEqual(s.picture.y);
 				}
 			}
+		});
+
+		test(`at ${w}×${h} the word overlaps the picture's top by half a word, and only the word does`, async ({ page }) => {
+			await open(page, w, h);
+			const s = await at(page, 0);
+			expect(Math.abs(s.word.bottom - s.picture.y - s.word.h / 2), "half a word over the picture").toBeLessThan(1.5);
+			expect(overlaps(s.tagline, s.picture), "not the tagline").toBe(false);
+			expect(overlaps(s.intro, s.picture), "not the blurb").toBe(false);
+			// It still lands exactly in its cell.
+			const travel = await dockTravel(page);
+			const docked = await at(page, Math.ceil(travel));
+			expect(Math.abs(docked.card.y - docked.first.y), "landed in its cell").toBeLessThan(1);
 		});
 	}
 });
@@ -395,19 +415,23 @@ test.describe("the opener is its own first screen", () => {
 			await open(page, w, h);
 			const s = await at(page, 0);
 			const header = await page.evaluate(() => document.querySelector(".site-header")!.getBoundingClientRect().bottom);
-			// The group's top on a phone is the word over the tile's top; on a
-			// desktop the tile's own (the lockup centres inside its height).
-			const top = Math.min(s.word.y, s.card.y);
+			// The group's top on a phone is the word over the picture, and its foot the
+			// picture's (the tile's empty bands aren't part of what's seen); on a desktop
+			// it is the tile's own (the lockup centres inside its height).
+			const phone = w <= 900;
+			const top = phone ? s.word.y : Math.min(s.word.y, s.card.y);
+			const foot = phone ? s.picture.bottom : s.card.bottom;
 			const above = top - header;
-			const below = s.first.y - s.card.bottom;
+			const below = s.first.y - foot;
 			expect(Math.abs(above - below), `above ${above}, below ${below}`).toBeLessThan(1.5);
 		});
 	}
 
-	test("a phone keeps the word's overlap of the tile", async ({ page }) => {
+	test("a phone keeps the word's overlap of the picture, the empty header band parked above it", async ({ page }) => {
 		await open(page, 390, 844);
 		const s = await at(page, 0);
-		expect(Math.abs(s.card.y - (s.word.y + s.word.h / 2))).toBeLessThan(1);
+		expect(Math.abs(s.picture.y - (s.word.y + s.word.h / 2))).toBeLessThan(1);
+		expect(s.picture.y - s.card.y, "the header's empty band above the picture").toBeGreaterThan(40);
 	});
 
 	test("a short window is top-anchored, not pushed under the header", async ({ page }) => {

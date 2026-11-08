@@ -1,10 +1,12 @@
 ---
-// VideoChrome — the card the clip wears once docked, laid over it as one layer:
-// the frame, a CardHeader whose title is the clip's label, and a footer. A
-// figcaption, in the carousel's `caption` slot, so the clip is named once, by
-// its own figure, at every opacity; nothing here takes a place in the stage's
-// flow, so the clip keeps the whole cell and only opacity ever changes
-// (./videos.css).
+// VideoChrome — the card the clip wears once docked, laid over the stage as one
+// layer: the frame, a CardHeader whose title is the clip's label, and a footer.
+// A figcaption, in the carousel's `caption` slot, so the clip is named once, by
+// its own figure, at every opacity. Nothing here takes a place in the stage's
+// flow: the stage holds its header and footer bands empty for it, so the clip
+// is the same box floating and docked, and only opacity ever changes
+// (./videos.css). If the header or footer changes height, update their bands
+// there (--vc-head-h, --vc-foot-h); tests/video-card.spec.ts compares them.
 //
 // Server-rendered with the first clip; the element rewrites the [data-vc-*]
 // fields on every selection, so the hooks go on the elements that hold the

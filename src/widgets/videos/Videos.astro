@@ -49,9 +49,9 @@ const { class: className, ...rest } = Astro.props;
 	    same wherever it appears. No `intro`: the dock is its entrance. */}
 	{/* The tone is tuned once per theme, in src/styles/halftone.css (.wx-videos). */}
 	{/* No card chrome on the Widget: the halftone sits straight on the page,
-	    filling the cell, and the card it wears once docked is VideoChrome, an
-	    overlay in the carousel's caption slot that fades in as the dock ends
-	    (./videos.css). */}
+	    between the empty bands the chrome will take, and the card it wears once
+	    docked is VideoChrome, an overlay in the carousel's caption slot that
+	    fades in over those bands as the dock ends (./videos.css). */}
 	{/* TWO VARIANTS, one per grid step, each Deferred to the widths that show it
 	    (videos.css): the other is never created, so it costs no WebGL context
 	    and no video download.

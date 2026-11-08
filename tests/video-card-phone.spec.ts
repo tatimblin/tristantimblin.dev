@@ -70,7 +70,7 @@ async function touchDrag(
 	await end();
 }
 
-test("the ruler lays over the footer, the clip keeps the cell, the phone's DPR cap stands", async ({ page }) => {
+test("the ruler lays over the footer, the clip sits between the header and footer, the phone's DPR cap stands", async ({ page }) => {
 	await open(page);
 	await dock(page);
 	await expect.poll(() => page.evaluate(() => Number(getComputedStyle(document.querySelector(".wx-videos__compact .vc__ruler")!).opacity))).toBe(1);
@@ -83,16 +83,22 @@ test("the ruler lays over the footer, the clip keeps the cell, the phone's DPR c
 			grid: r(".wx-videos__compact .vc__grid"),
 			ruler: r(".wx-videos__compact .vc__ruler"),
 			foot: r(".wx-videos__foot"),
+			head: r(".wx-videos__chrome .ds-card-header"),
+			canvas: r(".wx-videos__compact .vc__grid canvas"),
 			canvasRatio: canvas.width / grid.clientWidth,
+			canvasRatioH: canvas.height / grid.clientHeight,
 			cell: grid.getAttribute("cell-size"),
 			ticks: document.querySelectorAll(".wx-videos__compact .vc__strip .vc__tick").length,
 			years: document.querySelectorAll(".wx-videos__compact .vc__tick-year").length,
 		};
 	});
-	expect(Math.abs(m.grid.height - m.card.height), "the clip keeps the whole cell").toBeLessThan(1);
-	expect(Math.abs(m.grid.width - m.card.width)).toBeLessThan(1);
+	expect(Math.abs(m.grid.y - m.head.bottom), "the clip starts under the header").toBeLessThan(0.75);
+	expect(Math.abs(m.grid.bottom - m.foot.y), "and ends on the footer").toBeLessThan(0.75);
+	expect(Math.abs(m.grid.width - m.card.width), "the whole width of the cell").toBeLessThan(1);
+	expect(Math.abs(m.canvas.height - m.grid.height), "the canvas fills that box, not the old cell").toBeLessThan(1);
 	expect(m.cell).toBe("4");
 	expect(m.canvasRatio, "the phone tile is rendered at 1×").toBeLessThanOrEqual(1);
+	expect(m.canvasRatioH, "in both axes").toBeLessThanOrEqual(1.01);
 	expect(Math.abs(m.ruler.bottom - m.card.bottom), "the ruler sits on the card's foot").toBeLessThan(1);
 	expect(Math.abs(m.ruler.top - m.foot.top), "and covers the footer").toBeLessThanOrEqual(2);
 	expect(m.ticks, "one tick per clip").toBe(clips.length);
