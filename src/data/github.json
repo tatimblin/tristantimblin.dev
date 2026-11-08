@@ -1,47 +1,8 @@
 {
-	"updated": "2026-11-07",
+	"updated": "2026-11-08",
 	"username": "tatimblin",
-	"totalContributions": 2994,
+	"totalContributions": 3015,
 	"weeks": [
-		{
-			"days": [
-				{
-					"date": "2025-11-02",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2025-11-03",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2025-11-04",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2025-11-05",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2025-11-06",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2025-11-07",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2025-11-08",
-					"count": 4,
-					"level": 1
-				}
-			]
-		},
 		{
 			"days": [
 				{
@@ -2065,8 +2026,17 @@
 				},
 				{
 					"date": "2026-11-07",
-					"count": 0,
-					"level": 0
+					"count": 11,
+					"level": 1
+				}
+			]
+		},
+		{
+			"days": [
+				{
+					"date": "2026-11-08",
+					"count": 10,
+					"level": 1
 				}
 			]
 		}
@@ -2074,17 +2044,17 @@
 	"languages": [
 		{
 			"name": "TypeScript",
-			"percent": 46.2,
+			"percent": 46.3,
 			"color": "#3178c6"
 		},
 		{
 			"name": "Rust",
-			"percent": 34.1,
+			"percent": 34,
 			"color": "#dea584"
 		},
 		{
 			"name": "JavaScript",
-			"percent": 11.1,
+			"percent": 11,
 			"color": "#f1e05a"
 		},
 		{
@@ -2099,7 +2069,7 @@
 		},
 		{
 			"name": "Astro",
-			"percent": 1.9,
+			"percent": 2,
 			"color": "#ff5a03"
 		}
 	]
