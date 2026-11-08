@@ -20,11 +20,16 @@ import { test, expect, type Page } from "./fixtures/test";
  *  land within ~1.5px: the line box's height rounds per face there. */
 /** How far JS off may stray from JS on, per box edge, by viewport width.
  *
- *  Desktop: half a pixel. Every length there is the stylesheet's own arithmetic on
- *  face constants, so the two frames agree to rounding (measured: under 0.5px at
- *  1024–1920 on macOS and on Linux). It used to be 1px, and Linux sat 5.9px out
- *  until the wordmark's ink box stopped being re-measured at runtime (see
- *  fitWordmark in theme/stories-heading/src/index.ts).
+ *  Desktop: a pixel. Every length there is the stylesheet's own arithmetic on face
+ *  constants, except where the script reads a line box back off layout: on Linux
+ *  the heading's ("other stories", and the "&" placed from it) lands ~0.75px
+ *  lower relative to the wordmark than the stylesheet predicts, at every desktop
+ *  width; macOS stays under 0.5px. A bottom-anchored desktop hero hid that by
+ *  shifting the wordmark the other way (the measured group in its lead), so this
+ *  was briefly half a pixel; the short hero anchors the wordmark itself, so it
+ *  shows whole. Linux once sat 5.9px out, until the wordmark's ink box stopped
+ *  being re-measured at runtime (see fitWordmark in
+ *  theme/stories-heading/src/index.ts).
  *
  *  Phones: a pixel and a half. What is left there is the engine rounding each face's
  *  ascent and descent to whole pixels inside the "&"'s and the heading's line boxes,
@@ -35,7 +40,7 @@ import { test, expect, type Page } from "./fixtures/test";
  *  1.5px (880px) and, at 901px, 1.75px on both platforms, so those sizes stay out
  *  of the list. A first-frame regression of the kind this guards against (the
  *  hero moving by its rough guesses) is tens of pixels. */
-const toleranceAt = (width: number) => (width >= 1024 ? 0.5 : 1.5);
+const toleranceAt = (width: number) => (width >= 1024 ? 1 : 1.5);
 const VIEWPORTS = [
 	{ width: 1920, height: 1080 },
 	{ width: 1440, height: 900 },
