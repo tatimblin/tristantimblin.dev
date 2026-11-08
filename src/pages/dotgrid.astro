@@ -17,7 +17,6 @@ import Chip from "@whois/design-system/Chip";
 import Button from "@whois/design-system/Button";
 import "@tristimb/dotted-grid/styles.css";
 import { media } from "../lib/media";
-import { attrKnobs, colourKnobs, toneKnobs } from "../lib/halftone-controls";
 
 const SOURCES = [
 	{ label: "fabric", src: media("videos/fabric.mp4"), webm: media("videos/fabric.webm") },
@@ -26,7 +25,40 @@ const SOURCES = [
 const SRC = SOURCES[0].src;
 const SRC_WEBM = SOURCES[0].webm;
 
-const PRESETS =["fabric-cream", "fabric-dark", "beach", "duotone-sepia", "phosphor-green"];
+// Attribute knobs: one attribute each. `zeroOff` marks the "absent = off"
+// attributes (0 removes the attribute rather than setting it).
+const attrKnobs = [
+	{ attr: "cell-size", min: 2, max: 24, step: 1, value: 6 },
+	{ attr: "color-reveal", min: 0, max: 300, step: 10, value: 0, zeroOff: true },
+	{ attr: "shimmer", label: "shimmer %", min: 0, max: 100, step: 1, value: 0, zeroOff: true },
+	{ attr: "reveal-boost", min: 0, max: 1, step: 0.05, value: 0.3 },
+];
+
+// Tone knobs: one --dg-* variable each. Initial values are the fabric-cream
+// preset's; the page script applies the preset on load anyway.
+const toneKnobs = [
+	{ name: "dot-scale", min: 0.2, max: 1.5, step: 0.05, value: 1.1 },
+	{ name: "levels", min: 1, max: 12, step: 1, value: 6 },
+	{ name: "cutoff", min: 0, max: 1, step: 0.02, value: 0.06 },
+	{ name: "feather", min: 0, max: 1, step: 0.05, value: 0.2 },
+	{ name: "denoise", min: 0, max: 1, step: 0.05, value: 0.3 },
+	{ name: "gamma", min: 0.2, max: 3, step: 0.05, value: 0.4 },
+	{ name: "contrast", min: 0.2, max: 3, step: 0.05, value: 1.05 },
+	{ name: "dot-shape", label: "dot-shape (0 sq / 1 circle / 2 morph)", min: 0, max: 2, step: 1, value: 1 },
+	{ name: "bloom", min: 0, max: 1, step: 0.05, value: 0 },
+	{ name: "crosshatch", min: 0, max: 1, step: 0.05, value: 0 },
+];
+
+// Colour knobs: a picker plus an "auto" box. Auto removes the variable, so the
+// grid falls back to its pane's theme (or, for glow, the paper's contrast pole).
+const colourKnobs = [
+	{ name: "ink", value: "#191918" },
+	{ name: "ink-hi", value: "#191918" },
+	{ name: "paper", value: "#fff8eb" },
+	{ name: "glow", value: "#000000" },
+];
+
+const PRESETS = ["fabric-cream", "fabric-dark", "beach", "duotone-sepia", "phosphor-green"];
 const PREVIEWS = ["light", "dark", "split"];
 ---
 
@@ -137,7 +169,6 @@ const PREVIEWS = ["light", "dark", "split"];
 	<script>
 		import "@tristimb/dotted-grid";
 		import { onPage } from "@whois/design-system/lib/lifecycle";
-		import { DOT_SHAPES } from "../lib/halftone-controls";
 
 		type Grid = HTMLElement & { refreshTone?: () => void };
 		type Colour = "ink" | "ink-hi" | "paper" | "glow";
@@ -179,6 +210,7 @@ const PREVIEWS = ["light", "dark", "split"];
 			},
 		};
 
+		const SHAPES = ["square", "circle", "morph"];
 		const grids = () => Array.from(document.querySelectorAll<Grid>("[data-grid]"));
 		const cssText = (decls: Array<[string, string]>) =>
 			`dotted-grid {\n${decls.map(([k, v]) => `\t${k}: ${v};`).join("\n")}\n}\n`;
@@ -221,7 +253,7 @@ const PREVIEWS = ["light", "dark", "split"];
 				out.push(["--dg-polarity", pol ?? "positive"]);
 				for (const r of $$<HTMLInputElement>("[data-var]")) {
 					const name = r.dataset.var!;
-					out.push([`--dg-${name}`, name === "dot-shape" ? DOT_SHAPES[+r.value] : r.value]);
+					out.push([`--dg-${name}`, name === "dot-shape" ? SHAPES[+r.value] : r.value]);
 				}
 				return out;
 			};
