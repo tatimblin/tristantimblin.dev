@@ -30,7 +30,7 @@ import "@whois/wobble-text/styles.css";
 	{/* SCENE (>900px): the fabric clip as a halftone. Its tone (ink, gamma,
 	     bloom, ...) is per theme and lives in src/styles/halftone.css, NOT here:
 	     a tuning attribute would beat the stylesheet and pin that value in both
-	     themes. `intro` develops it in on the first frame, fullest dots first.
+	     themes. `intro` fades it up on the first frame, every dot growing in together.
 	     Each scene is Deferred to the breakpoint that shows it (the queries are
 	     the CSS's below): the other is never created, so it costs no WebGL
 	     context and no video download. */}
@@ -43,7 +43,7 @@ import "@whois/wobble-text/styles.css";
 			max-dpr="1"
 			cell-size="6"
 			intro-delay="0"
-			intro="3200"
+			intro="1200"
 		/>
 	</Deferred>
 
@@ -62,7 +62,7 @@ import "@whois/wobble-text/styles.css";
 			maxDpr={1}
 			cellSize={4}
 			introDelay={0}
-			intro={3200}
+			intro={1200}
 			xfade={1600}
 			xfadeMode="threshold"
 			xfadeLive

@@ -7,7 +7,7 @@ import sharp from "sharp";
  * <dotted-grid> reads its tone from --dg-* custom properties (src/styles/halftone.css
  * sets them per theme) and re-reads them when <html>'s class / data-theme / style
  * changes. These check the RESULT, in pixels, on a reduced-motion frame (the video
- * paused on its first frame, no intro wipe), so they hold whatever the tuning is
+ * paused on its first frame, no intro), so they hold whatever the tuning is
  * as long as it stays sane:
  *
  *   - cream: the frame stays mostly paper. The failure this guards is FLOODING —
