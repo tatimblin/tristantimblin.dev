@@ -4,7 +4,7 @@ import { test, expect, type Page } from "./fixtures/test";
  * THE VIDEOS CARD PUTS ITS CHROME ON AS IT DOCKS (src/widgets/videos): the bare
  * clip floats in the opener, and over the end of the dock a frame, header and
  * footer fade in on the same scroll timeline that moves it. Only the overlay's
- * opacity changes, so the clip keeps its whole cell.
+ * opacity changes, so the clip stays one size, between the header and footer.
  */
 
 const DESKTOP = { width: 1440, height: 900 };
@@ -211,6 +211,57 @@ test("focus on the ruler brings the floating chrome on", async ({ page }) => {
 	expect(await chrome(page)).toBe(0);
 	await page.locator(".wx-videos__wide .vc__ruler").focus();
 	expect(await chrome(page)).toBe(1);
+});
+
+for (const state of ["floating", "docked"] as const) {
+	test(`the ruler's years are hidden at rest and come on with the ruler (${state})`, async ({ page }) => {
+		await open(page);
+		if (state === "docked") await scrollTo(page, Math.ceil(await travel(page)));
+		const ruler = page.locator(".wx-videos__wide .vc__ruler");
+		const year = ruler.locator(".vc__tick-year").first();
+		await expect(year).toHaveCSS("opacity", "0");
+
+		// Before any mouse input, so a scripted focus counts as keyboard focus.
+		await ruler.focus();
+		await expect(year).toHaveCSS("opacity", "1");
+		await ruler.evaluate((el: HTMLElement) => el.blur());
+		await expect(year).toHaveCSS("opacity", "0");
+
+		const box = (await ruler.boundingBox())!;
+		const x = box.x + box.width / 2;
+		const y = box.y + box.height / 2;
+		const hit = await page.evaluate(
+			([px, py]) => !!document.elementFromPoint(px, py)?.closest(".wx-videos__wide .vc__ruler"),
+			[x, y],
+		);
+		expect(hit, "the pointer lands on the ruler").toBe(true);
+		await page.mouse.move(x, y);
+		await expect(year).toHaveCSS("opacity", "1");
+
+		// A scrub holds them when the pointer strays, and a click leaves no focus cue.
+		await page.mouse.down();
+		await page.mouse.move(x, y - 40, { steps: 4 });
+		await page.mouse.move(box.x - 200, y - 40, { steps: 4 });
+		await expect(ruler).toHaveClass(/is-dragging/);
+		await expect(year).toHaveCSS("opacity", "1");
+		await page.mouse.up();
+		await page.mouse.move(0, 0);
+		await expect(year).toHaveCSS("opacity", "0");
+	});
+}
+
+test("the ruler's years keep their place, stay on in print, and do not fade under reduced motion", async ({
+	page,
+}) => {
+	await page.emulateMedia({ reducedMotion: "reduce" });
+	await open(page);
+	const year = page.locator(".wx-videos__wide .vc__tick-year").first();
+	await expect(year).toHaveCSS("opacity", "0");
+	await expect(year).toHaveCSS("transition-duration", "0s");
+	await expect(year).toBeAttached();
+	expect((await year.boundingBox())!.width, "the label keeps its box").toBeGreaterThan(0);
+	await page.emulateMedia({ reducedMotion: "no-preference", media: "print" });
+	await expect(year).toHaveCSS("opacity", "1");
 });
 
 test("the header is the same band as its neighbours, and names the selected clip", async ({ page }) => {

@@ -5,9 +5,9 @@
  * Plain CSS (not an Astro scoped <style>): the host is rendered by
  * VideoCarousel.astro, and the light theme's dot-colour rule reaches the
  * <dotted-grid> inside it. Nothing here selects a .vc__* internal but the
- * stage and grid the chrome rides over, and the ruler, which the two-column
- * grid hides — the package's `fill` attribute and --vc-stage-radius do the
- * rest. The .wx-videos prefix keeps everything
+ * stage and grid the chrome rides over, and the ruler and its year labels,
+ * which the two-column grid hides — the package's `fill` attribute and
+ * --vc-stage-radius do the rest. The .wx-videos prefix keeps everything
  * contained to this widget; the grid rule below keys on the grid that HOLDS it
  * (:has), so the page needs no class of its own for it. */
 
@@ -264,6 +264,29 @@
 	.wx-videos__chrome,
 	.wx-videos__compact .vc__ruler {
 		opacity: 1 !important;
+	}
+}
+
+/* THE RULER'S YEARS come on with the ruler: hidden at rest where a pointer can
+   bring them back, and shown while it hovers, while a scrub holds it (the
+   pointer may stray off it) and on keyboard focus. :focus-visible, not the
+   package's :focus-within, or a click would leave them on until the next blur.
+   Opacity only, so the labels keep their place and nothing moves. A wide touch
+   screen has no hover and keeps them, and so does a page in print; the compact
+   ruler has none. */
+@media screen and (min-width: 901px) and (hover: hover) {
+	.wx-videos__wide .vc__tick-year {
+		opacity: 0;
+	}
+	.wx-videos__wide .vc__ruler:hover .vc__tick-year,
+	.wx-videos__wide .vc__ruler.is-dragging .vc__tick-year,
+	.wx-videos__wide .vc__ruler:focus-visible .vc__tick-year {
+		opacity: 1;
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	.wx-videos__wide .vc__tick-year {
+		transition: opacity var(--duration-standard) var(--ease-standard);
 	}
 }
 
