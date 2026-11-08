@@ -33,12 +33,12 @@ const unquote = (s: string) => s.split(",")[0].trim().replace(/^["']|["']$/g, ""
 
 /** role → [selector, expected first family in the stack, weight it is used at] */
 const ROLES: Array<[string, string, string, number]> = [
-	["wordmark (hero)", ".sh__wordmark-text", "DM Sans", 500],
-	["heading (other stories)", ".sh__outline", "DM Sans", 500],
-	["hero lede", ".hero-intro__lede p", "DM Sans", 500],
-	["widget UI", ".home__widgets .ds-widget", "DM Sans", 400],
+	["wordmark (hero)", ".sh__outline", "DM Sans", 500],
+	["& other stories", ".sh__tagline", "DM Sans", 500],
+	["hero lede", ".sh__sub > :last-child", "DM Sans", 500],
+	["widget UI", ".home .ds-widget-grid .ds-widget", "DM Sans", 400],
 	["widget figure", ".ds-figure__num", "DM Sans", 400],
-	["label voice", ".home__widgets .ds-mono", "DM Sans", 400],
+	["label voice", ".home .ds-widget-grid .ds-mono", "DM Sans", 400],
 ];
 
 /** Every cut, by family: the weights fonts.css declares, each in two subsets. */
@@ -57,7 +57,7 @@ test("every role resolves to its face, and that face is loaded", async ({ page }
 	// The widget row is below the fold and the footer carousel builds its ruler on
 	// hydration, so bring them in before asking what they are set in.
 	await page.evaluate(() =>
-		document.querySelector(".home__widgets")?.scrollIntoView({ block: "center" })
+		document.querySelector(".ds-figure__num")?.scrollIntoView({ block: "center" })
 	);
 	await page.waitForFunction(() => document.fonts.status === "loaded", undefined, {
 		timeout: 15_000,

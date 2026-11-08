@@ -28,7 +28,7 @@ test("the stubbed host is the site's media host", async () => {
 test("the home page's videos come from the stub", async ({ page }) => {
 	const responses = watchMedia(page);
 	await page.goto("/");
-	await expect(page.locator("dotted-grid.hero__video")).toHaveAttribute("data-ready", "true", {
+	await expect(page.locator(".wx-videos dotted-grid")).toHaveAttribute("data-ready", "true", {
 		timeout: 15_000,
 	});
 	// Scroll down the page, so anything that loads on approach asks too.
@@ -46,7 +46,7 @@ test("a context the spec makes itself is stubbed too", async ({ browser, baseURL
 	const page = await context.newPage();
 	const responses = watchMedia(page);
 	await page.goto("/");
-	await expect(page.locator("dotted-grid.hero__video")).toHaveAttribute("data-ready", "true", {
+	await expect(page.locator(".wx-videos dotted-grid")).toHaveAttribute("data-ready", "true", {
 		timeout: 15_000,
 	});
 	expect(responses.length).toBeGreaterThan(0);

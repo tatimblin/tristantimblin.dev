@@ -60,7 +60,10 @@ for (const [device, use] of [
 			await wheelPass(page, cdp, device);
 			const after = await engine(cdp);
 			const y = await page.evaluate(() => scrollY);
-			expect(y, "the pass scrolled the page").toBeGreaterThan(1000);
+			// To the page's end or a thousand pixels, whichever is nearer: the desktop
+			// page is shorter than one pass of the wheel now.
+			const end = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+			expect(y, "the pass scrolled the page").toBeGreaterThanOrEqual(Math.min(1000, end - 2));
 
 			const frames = await page.evaluate(
 				(t0) =>

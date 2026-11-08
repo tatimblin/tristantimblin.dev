@@ -8,7 +8,7 @@
   --container-pad: clamp(1rem, 4vw, 2rem);
   /* THE CONTAINER AS AN INSET — the one source for every full-width row that
      sits in the site's container: the site header, the homepage's hero and
-     content rows (FullHeroLayout's --hero-inset is this), the blog's columns.
+     content rows (HomeLayout's .container), the blog's columns.
      --container-pad gutters, the content capped at --container-max and
      centred; above the cap the inset grows to absorb the extra width. Padding
      a full-width box by it, rather than centring a max-width box, is what
@@ -142,7 +142,7 @@ img {
 
 /* THE CONTAINER: a full-width row padded by the inset above, which is how
    every contained row on the site sits — the site header and footer, the
-   homepage's rows (FullHeroLayout's --hero-inset is the same inset), the
+   homepage's rows, the
    blog's wide column. Compose the class; never centre a max-width box (the
    half-scrollbar disagreement the inset's note explains). */
 .container {

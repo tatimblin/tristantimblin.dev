@@ -12,13 +12,12 @@ import { test, expect, type Page } from "./fixtures/test";
  *
  *   1. NO-JS        with scripting off, nothing is hidden — the class is never added.
  *   2. TERMINAL     with every asset blocked, content still appears (the backstop).
- *   3. HERO-FREE    nothing inside .fh is ever gated (its text block is the LCP
+ *   3. HERO-FREE    nothing in the lockup is ever gated (its wordmark is the LCP
  *                   element, so a reveal there would delay a real metric).
  *   4. REDUCED      the reduced-motion visitor is never armed at all.
  *   5. TOKENS       the motion tokens survive the production build (the canary for
  *                   a silently-dropped declaration — see the shorthand trap in
  *                   stories-heading/styles.css).
- *   6. RULER        the mobile scrubber reads years-above-ticks, on one level row.
  *
  * Run against the BUILT site (see playwright.config.ts) so minification hazards are
  * in scope.
@@ -125,18 +124,13 @@ test.describe("reveal — safety", () => {
 	test("3. HERO-FREE: no reveal gates the hero", async ({ page }) => {
 		await page.goto("/");
 
-		// The SCENE and HEADING regions must contain no reveal targets: the homepage's
-		// LCP element is the wordmark text inside the heading region, so gating
-		// anything here would trade a real metric for a cosmetic one. A guard against
-		// a future "improvement" that extends the reveal upward into the hero.
-		//
-		// Scoped to those two regions, NOT to `.fh` as a whole — `.fh` wraps the entire
-		// page including the content riser (`.fh__content`), where the below-the-fold
-		// copy and widgets legitimately live and ARE revealed.
-		const inScene = await page.locator(".fh__scene [data-reveal]").count();
-		const inHeading = await page.locator(".fh__heading [data-reveal]").count();
-		expect(inScene).toBe(0);
-		expect(inHeading).toBe(0);
+		// The lockup must contain no reveal targets: the homepage's LCP element is
+		// the wordmark text inside it, so gating anything here would trade a real
+		// metric for a cosmetic one. A guard against a future "improvement" that
+		// extends the reveal upward into the opener. (The grid around it holds the
+		// cards, which legitimately ARE revealed.)
+		expect(await page.locator("stories-heading [data-reveal]").count()).toBe(0);
+		expect(await page.locator("stories-heading[data-reveal]").count()).toBe(0);
 
 		// And the lockup itself is fully opaque from the start.
 		const heroOpacity = await page.evaluate(() => {
@@ -245,7 +239,7 @@ test.describe("reveal — safety", () => {
 
 		// Plain scroll, NOT locator.scrollIntoViewIfNeeded() — see the note on the same
 		// call in "the widget row is held until scrolled to". This widget sits in
-		// .home__widgets, the row that never fully settles (its reveal transition and the
+		// the widget grid, the row that never fully settles (its reveal transition and the
 		// video widget's scroll-driven dock lift both animate it), so waiting for the box
 		// to stop moving times out at 30s on a slow runner instead of asserting anything.
 		// We only need it on screen so its IntersectionObserver fires.
@@ -343,7 +337,7 @@ test.describe("reveal — below-the-fold behaviour", () => {
 		// because the animations finished inside the actionability poll; CI is slower.)
 		// We only need the row on screen so the IntersectionObserver fires.
 		await page.evaluate(() =>
-			document.querySelector(".home__widgets")?.scrollIntoView({ block: "center" })
+			document.querySelector('[data-widget="cursive"]')?.scrollIntoView({ block: "center" })
 		);
 
 		// The stagger is implemented as transition-delay, so assert the MECHANISM
@@ -435,384 +429,6 @@ test.describe("reveal — below-the-fold behaviour", () => {
 		}, imgs);
 
 		expect(mismatches).toEqual([]);
-	});
-});
-
-test.describe("ruler — mobile scrubber orientation", () => {
-	test("years sit ABOVE the ticks, which stand on the hero's bottom edge", async ({
-		page,
-	}) => {
-		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto("/");
-		// The strip is generated on hydration; wait for the element to announce it.
-		await page.waitForFunction(
-			() => !!document.querySelector(".hero-carousel[data-ready]"),
-			undefined,
-			{ timeout: 6000 }
-		);
-
-		const rows = await page.evaluate(() => {
-			const labels = Array.from(
-				document.querySelectorAll<HTMLElement>(".hero-carousel .vc__tick-year")
-			);
-			return labels.map((label) => {
-				const tick = label.closest<HTMLElement>(".vc__tick")!;
-				const t = tick.getBoundingClientRect();
-				const l = label.getBoundingClientRect();
-				return {
-					labelTop: Number(l.top.toFixed(1)),
-					labelBottom: Number(l.bottom.toFixed(1)),
-					tickTop: Number(t.top.toFixed(1)),
-					tickBottom: Number(t.bottom.toFixed(1)),
-					tickHeight: Number(t.height.toFixed(1)),
-				};
-			});
-		});
-		const sceneBottom = await page.evaluate(
-			() => document.querySelector(".fh__scene")!.getBoundingClientRect().bottom
-		);
-
-		expect(rows.length).toBeGreaterThan(1);
-
-		for (const row of rows) {
-			// The year reads above its tick. This is the hero's BASELINE-DOWN arrangement
-			// (`ruler-baseline="bottom"`): the ticks stand on the scene's bottom edge and
-			// grow upward, so the lines run all the way to the foot of the screen.
-			expect(row.labelBottom).toBeLessThanOrEqual(row.tickTop + 0.5);
-			expect(Math.abs(row.tickBottom - sceneBottom)).toBeLessThan(1);
-		}
-
-		// Ticks are magnified per-frame toward the centre marker, so their TOPS vary.
-		// The label row must nonetheless stay level — that only holds if the labels are
-		// anchored to the shared baseline rather than to each tick's moving edge (the
-		// bobbing-label bug fixed in b207f96, mirrored onto this axis).
-		const labelTops = new Set(rows.map((r) => r.labelTop));
-		const tickBaselines = new Set(rows.map((r) => r.tickBottom));
-		expect(labelTops.size).toBe(1);
-		expect(tickBaselines.size).toBe(1);
-		// And the magnification really is live, so "level" isn't passing by accident.
-		expect(new Set(rows.map((r) => r.tickHeight)).size).toBeGreaterThan(1);
-	});
-
-	test("the clip runs under the strip to the edge, dissolving from above the caption", async ({
-		page,
-	}) => {
-		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto("/");
-		await page.waitForFunction(
-			() => !!document.querySelector(".hero-carousel[data-ready]"),
-			undefined,
-			{ timeout: 6000 }
-		);
-
-		const geo = await page.evaluate(() => {
-			// The dissolve lives on .vc__grid — the CLIP alone — and runs from a lead-in
-			// above the caption all the way down to the scene's bottom edge, under the
-			// strip. See the baseline-down scene note in
-			// @tristimb/video-carousel/styles.css. It is measured against the clip's box.
-			const grid = document.querySelector<HTMLElement>(".hero-carousel .vc__grid")!;
-			const carousel = document.querySelector<HTMLElement>(".hero-carousel")!;
-
-			// Resolve the band to px by probing a real box: getComputedStyle returns the
-			// authored calc() for a custom property, unevaluated.
-			const probe = document.createElement("div");
-			carousel.appendChild(probe);
-			probe.style.height = "var(--hero-vc-fade-start)";
-			const fadeStart = probe.getBoundingClientRect().height;
-			probe.style.height = "var(--hero-vc-dissolve)";
-			const band = probe.getBoundingClientRect().height;
-			probe.remove();
-
-			const gridBottom = grid.getBoundingClientRect().bottom;
-			const caption = document
-				.querySelector<HTMLElement>(".hero-carousel .vc__caption")!
-				.getBoundingClientRect();
-			const labels = Array.from(
-				document.querySelectorAll<HTMLElement>(".hero-carousel .vc__tick-year")
-			).map((l) => Number(l.getBoundingClientRect().top.toFixed(1)));
-			const ticks = Array.from(
-				document.querySelectorAll<HTMLElement>(".hero-carousel .vc__tick")
-			).map((t) => Number(t.getBoundingClientRect().top.toFixed(1)));
-			return {
-				masked:
-					getComputedStyle(grid).maskImage !== "none" &&
-					getComputedStyle(grid).maskImage.includes("gradient"),
-				// Where the clip starts dissolving, and where it is fully gone.
-				fadeStart: Number((gridBottom - fadeStart).toFixed(1)),
-				fadeEnd: Number((gridBottom - fadeStart + band).toFixed(1)),
-				captionTop: Number(caption.top.toFixed(1)),
-				gridBottom: Number(gridBottom.toFixed(1)),
-				sceneBottom: Number(
-					document.querySelector(".fh__scene")!.getBoundingClientRect().bottom.toFixed(1)
-				),
-				labels,
-				ticks,
-			};
-		});
-
-		expect(geo.masked).toBe(true);
-		// The caption rides INSIDE the fade, which begins above it, so the halftone
-		// behind the type is already well down and the caption reads...
-		expect(geo.fadeStart).toBeLessThan(geo.captionTop);
-		// ...and the clip reaches the very bottom, under the strip: the fade is spent
-		// only at the scene's edge, so the ticks and years overlap its last trace.
-		expect(Math.abs(geo.gridBottom - geo.sceneBottom)).toBeLessThan(1);
-		expect(Math.abs(geo.fadeEnd - geo.sceneBottom)).toBeLessThan(1);
-		for (const top of geo.labels) expect(top).toBeLessThan(geo.fadeEnd);
-		for (const top of geo.ticks) expect(top).toBeLessThan(geo.fadeEnd);
-	});
-
-	test("ONE fade, on the clip alone, with the caption in it and the strip below", async ({
-		page,
-	}) => {
-		// THE THREE BUGS THIS PINS, all of which showed up as the foot of the mobile hero
-		// looking wrong:
-		//
-		//  1. SWALLOWED BY THE FADE. The clip's bottom fade used to start at 78% of the
-		//     hero height, which at 390x844 put it ~120px ABOVE the bottom UI — the
-		//     caption and the whole ruler sat inside it, and the halftone behind the
-		//     ticks measured 9% of its mid-video strength (luminance 10.0 vs 24.6), so
-		//     the scrubber appeared to float on flat black.
-		//
-		//  2. TWO FADES. Fixing (1) by giving the clip and the strip their own bottom
-		//     gradients produced a second artifact: each `100%` resolves against its own
-		//     box (full scene vs a ~46px strip), so the two ramps disagreed and each had
-		//     its own hard start edge — read as two stacked fade-outs.
-		//
-		//  3. THE CAPTION READ AS HERO COPY. It used to sit ABOVE the ruler, which put it
-		//     directly under the intro lede where it looked like one more line of the
-		//     page's own text rather than a label on the video.
-		//
-		// The fix for all three is one gradient on the CLIP ONLY, ending at the ruler's
-		// tick band, with the strip and then the caption stacked below it in that order.
-		// These assertions encode that architecture: exactly one masked layer, no
-		// ancestor or sibling re-masking, and the reading order of the foot. Geometry
-		// rather than pixels — the scene is live video, so luminance is too noisy to
-		// assert on, but "which layer carries the mask" is exact.
-		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto("/");
-		await page.waitForFunction(
-			() => !!document.querySelector(".hero-carousel[data-ready]"),
-			undefined,
-			{ timeout: 6000 }
-		);
-
-		const geo = await page.evaluate(() => {
-			const carousel = document.querySelector<HTMLElement>(".hero-carousel")!;
-			const main = document.querySelector<HTMLElement>(".hero-carousel .vc__main")!;
-			const grid = document.querySelector<HTMLElement>(".hero-carousel .vc__grid")!;
-			const ruler = document.querySelector<HTMLElement>(
-				".hero-carousel .vc__ruler"
-			)!;
-			const caption = document.querySelector<HTMLElement>(
-				".hero-carousel .vc__caption"
-			)!;
-
-			const probe = document.createElement("div");
-			carousel.appendChild(probe);
-			probe.style.height = "var(--hero-vc-fade-start)";
-			const fadeStartVar = probe.getBoundingClientRect().height;
-			probe.style.height = "var(--hero-vc-dissolve)";
-			const dissolve = probe.getBoundingClientRect().height;
-			probe.remove();
-
-			const g = grid.getBoundingClientRect();
-			const r = ruler.getBoundingClientRect();
-			const c = caption.getBoundingClientRect();
-			return {
-				gridMask: getComputedStyle(grid).maskImage,
-				mainMask: getComputedStyle(main).maskImage,
-				rulerMask: getComputedStyle(ruler).maskImage,
-				fadeStart: g.bottom - fadeStartVar,
-				fadeEnd: g.bottom - fadeStartVar + dissolve,
-				rulerTop: r.top,
-				rulerBottom: r.bottom,
-				captionTop: c.top,
-				captionBottom: c.bottom,
-				sceneBottom: document
-					.querySelector<HTMLElement>(".fh__scene")!
-					.getBoundingClientRect().bottom,
-				// The rest dim lives on the TICKS (--vc-ruler-dim), not the ruler box, so
-				// the accent playhead on the ruler stays at full strength.
-				rulerOpacity: getComputedStyle(ruler).getPropertyValue("--vc-ruler-dim").trim(),
-				captionOpacity: getComputedStyle(caption).opacity,
-				yearTops: Array.from(
-					document.querySelectorAll<HTMLElement>(".hero-carousel .vc__tick-year")
-				).map((l) => l.getBoundingClientRect().top),
-			};
-		});
-
-		// ONE masked layer: the clip carries the gradient...
-		expect(geo.gridMask).toContain("gradient");
-		// ...and neither the shared parent nor the strip re-masks. The parent is the one
-		// that matters most here: a mask there applies to the WHOLE subtree, which is
-		// what dragged the ruler and caption into the fade (bug 1).
-		expect(geo.mainMask).toBe("none");
-		expect(geo.rulerMask).toBe("none");
-
-		// Anchored to measured geometry, not a percentage of the hero (bug 1).
-		expect(geo.gridMask).toContain("calc");
-		expect(geo.gridMask).not.toContain("78%");
-
-		// The dissolve BEGINS above the caption, so the type sits on a dimmed clip...
-		expect(geo.fadeStart).toBeLessThan(geo.captionTop);
-		// ...and ENDS at the scene's bottom edge, under the strip — one ramp across the
-		// whole foot, not one that stops at the ruler and leaves a second edge there.
-		expect(Math.abs(geo.fadeEnd - geo.sceneBottom)).toBeLessThan(1);
-
-		// READING ORDER (bug 3): caption inside the clip, THEN the ruler, which is the
-		// last thing in the scene and stands on its bottom edge. The caption is held in
-		// the video rather than under it, which is what stops it reading as hero copy.
-		expect(geo.captionBottom).toBeLessThanOrEqual(geo.rulerTop);
-		expect(Math.abs(geo.rulerBottom - geo.sceneBottom)).toBeLessThan(1);
-
-		// Both rest at the same lowered opacity, so they read as one band of video
-		// chrome rather than as page text.
-		expect(Number(geo.captionOpacity)).toBe(Number(geo.rulerOpacity));
-		expect(Number(geo.rulerOpacity)).toBeLessThan(1);
-	});
-
-	test("the foot re-stacks when the caption wraps", async ({ page }) => {
-		// THE BUG THIS PINS, which was silent and permanent. The caption's height is an
-		// INPUT to the foot's extent (the ruler-on-top layout lifted the strip by exactly
-		// that much; this one stacks the caption over the strip), and that extent is what
-		// the hero reserves room for. So publishMetrics() has to write --vc-caption-h
-		// BEFORE it measures — otherwise it reports a position about to be left.
-		//
-		// Nothing would ever correct that: publishMetrics runs from a ResizeObserver, and
-		// the consequence of the write is that the ruler MOVES, not that it resizes, so no
-		// second callback is delivered. The published extent stays one caption-height
-		// short forever. Measured at a two-line caption: 27px short, and the heading group
-		// overlapped the ruler by 3px.
-		//
-		// Asserted as an INVARIANT ACROSS WRAP COUNTS rather than against fixed numbers:
-		// what must hold is that the three bands keep their spacing however tall the
-		// caption gets.
-		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto("/");
-		await page.waitForFunction(
-			() => !!document.querySelector(".hero-carousel[data-ready]"),
-			undefined,
-			{ timeout: 6000 }
-		);
-
-		const measure = () =>
-			page.evaluate(() => {
-				const host = document.querySelector<HTMLElement>(".hero-carousel")!;
-				const r = (s: string) =>
-					document.querySelector<HTMLElement>(s)!.getBoundingClientRect();
-
-				// The caption's top edge as the STYLESHEET computes it — the strip, the gap
-				// and the caption stacked from the bottom — resolved to px by probing a
-				// real box (getComputedStyle hands back the authored calc()).
-				const probe = document.createElement("div");
-				probe.style.height =
-					"calc(var(--vc-ruler-h) + var(--hero-vc-cap-gap) + var(--vc-caption-h))";
-				host.appendChild(probe);
-				const wantExtent = probe.getBoundingClientRect().height;
-				probe.remove();
-
-				const ruler = r(".hero-carousel .vc__ruler");
-				const caption = r(".hero-carousel .vc__caption");
-				return {
-					// What JS published vs. what CSS actually laid out. These must agree —
-					// their disagreement IS the staleness.
-					published: parseFloat(
-						getComputedStyle(host).getPropertyValue("--vc-bottom-ui-extent")
-					),
-					laidOut:
-						host.getBoundingClientRect().bottom - Math.min(ruler.top, caption.top),
-					wantExtent,
-					captionGap: ruler.top - caption.bottom,
-					clearance: Math.min(ruler.top, caption.top) - r(".hero-intro").bottom,
-				};
-			});
-
-		const setCaption = (desc: string, loc: string) =>
-			page.evaluate(
-				([d, l]) => {
-					document.querySelector(".hero-carousel .vc__desc")!.textContent = d;
-					document.querySelector(".hero-carousel .vc__loc")!.textContent = l;
-				},
-				[desc, loc]
-			);
-
-		// Start from a known one-line caption (a title, no place) rather than whatever
-		// the first clip says, so each step below is one run taller than the last.
-		await setCaption("JOINED FISKER", "");
-		await page.waitForTimeout(600);
-		const rows = [await measure()];
-		for (const [desc, loc] of [
-			// The same title plus a place...
-			["JOINED FISKER", "SAN FRANCISCO CALIFORNIA"],
-			// ...then a title that wraps on top of that.
-			[
-				"A MUCH LONGER DESCRIPTION THAT IS GUARANTEED TO WRAP ONTO SEVERAL LINES",
-				"SOMEWHERE VERY FAR AWAY INDEED",
-			],
-		]) {
-			await setCaption(desc, loc);
-			// The RO → publish → re-layout round trip needs a couple of frames.
-			await page.waitForTimeout(600);
-			rows.push(await measure());
-		}
-
-		for (const row of rows) {
-			// The published extent describes where the ruler REALLY is (the staleness bug),
-			// and matches what the stylesheet asked for.
-			expect(Math.abs(row.published - row.laidOut)).toBeLessThan(1);
-			expect(Math.abs(row.published - row.wantExtent)).toBeLessThan(1);
-			// The caption never collides with the strip below it...
-			expect(row.captionGap).toBeGreaterThan(0);
-			// ...and the heading group still clears the whole foot.
-			expect(row.clearance).toBeGreaterThan(0);
-		}
-
-		// The caption really did grow, so the invariants above aren't holding vacuously.
-		expect(new Set(rows.map((r) => Math.round(r.laidOut))).size).toBe(rows.length);
-	});
-
-	test("nothing paints a hard-edged band across the strip", async ({ page }) => {
-		// THE BUG THIS PINS. The ruler carried a legibility scrim — a to-bottom black
-		// wash behind the year row — whose hard TOP edge darkened the strip, after which
-		// the halftone brightened again before the real bottom dissolve. Measured
-		// background luminance (dot pattern averaged out): ~14 under the wash, recovering
-		// to ~25 below it, then fading. A decline, a recovery, then a second decline
-		// reads as two fade-outs stacked on one edge.
-		//
-		// Asserted as a STYLE contract rather than by sampling pixels: the scene is live
-		// video behind a halftone shader, so a luminance threshold here would be flaky.
-		// What must hold is that nothing paints an opaque, hard-edged band across the
-		// strip — any wash has to be feathered at both ends.
-		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto("/");
-		await page.waitForFunction(
-			() => !!document.querySelector(".hero-carousel[data-ready]"),
-			undefined,
-			{ timeout: 6000 }
-		);
-
-		const bg = await page.evaluate(() => {
-			const ruler = document.querySelector<HTMLElement>(
-				".hero-carousel .vc__ruler"
-			)!;
-			const cs = getComputedStyle(ruler);
-			return { image: cs.backgroundImage, color: cs.backgroundColor };
-		});
-
-		// No background layer at all is the shipped answer. If one is ever reintroduced
-		// it must START transparent — a gradient whose first stop is opaque is exactly
-		// the hard top edge that produced the phantom second fade.
-		const hasImage = bg.image !== "none" && bg.image.trim() !== "";
-		if (hasImage) {
-			const firstStop = bg.image.slice(0, bg.image.indexOf(",", bg.image.indexOf("(")));
-			expect(
-				/rgba\([^)]*,\s*0\s*\)|transparent/.test(firstStop),
-				`the ruler's background must start transparent (feathered), got: ${bg.image}`
-			).toBe(true);
-		}
-		// And no flat opaque fill, which would band the strip with two hard edges.
-		expect(bg.color === "rgba(0, 0, 0, 0)" || bg.color === "transparent").toBe(true);
 	});
 });
 

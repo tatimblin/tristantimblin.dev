@@ -3,7 +3,7 @@ import { test, expect, type Page } from "./fixtures/test";
 /**
  * THE HERO INTRO FADE.
  *
- * The intro/CTAs under "other stories" are shown at rest and fade out over the first
+ * "& other stories" and the intro under "tristan" are shown at rest and fade out over the first
  * sliver of scroll. The invariant that matters is the boring half — AT THE TOP OF THE
  * PAGE, THE INTRO IS VISIBLE — because that is the half that broke in production.
  *
@@ -213,8 +213,8 @@ test.describe("hero intro — the fade at rest", () => {
 
 					// Only rules that BIND to a scroll/view timeline. Matching on the
 					// property's mere presence over-reports: `animation: none` resets
-					// animation-timeline to `auto`, so the ≤900px rule that switches the
-					// "&" parallax off would read as an ungated binding when it is the
+					// animation-timeline to `auto`, so a rule that switches an effect off
+					// would read as an ungated binding when it is the
 					// opposite — a rule that removes one.
 					const style = rule as CSSStyleRule;
 					const timeline = style.style?.getPropertyValue("animation-timeline");
@@ -240,8 +240,9 @@ test.describe("hero intro — the fade at rest", () => {
 			return found;
 		});
 
-		// The lockup's three effects: the wipe, the intro fade, the "&" parallax.
-		expect(rules.length).toBeGreaterThanOrEqual(3);
+		// The lockup's three effects (the drift, the wipe, the fade) and the
+		// videos card's dock.
+		expect(rules.length).toBeGreaterThanOrEqual(4);
 		for (const r of rules) {
 			expect(
 				r.gated,
@@ -269,7 +270,7 @@ test.describe("hero intro — the fade at rest", () => {
 		// Measured: that is exactly what shipped on the first attempt here. The fix is to
 		// write every part as a longhand so there is no shorthand to fold into, and this
 		// asserts the OUTCOME rather than the syntax — an animation that is actually
-		// running, on a scroll timeline, for each of the lockup's three effects.
+		// running, on a scroll timeline, for each of the lockup's three effects and the dock.
 		//
 		// This is why the suite runs against `astro build` output and not the dev server
 		// (see playwright.config.ts): dev does not minify, so dev cannot catch it.
@@ -279,7 +280,7 @@ test.describe("hero intro — the fade at rest", () => {
 			.waitFor({ state: "attached", timeout: 10_000 });
 
 		const running = await page.evaluate(() =>
-			[".sh__solid", ".sh__sub", ".sh__amp"].map((selector) => {
+			[".sh__wordmark", ".sh__solid", ".sh__sub", ".wx-videos"].map((selector) => {
 				const el = document.querySelector(selector);
 				const anims = el ? el.getAnimations() : [];
 				return {

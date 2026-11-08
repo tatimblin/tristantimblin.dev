@@ -1,14 +1,14 @@
-/* Videos widget — the video carousel docked as a 1×2 cell on the grid's right
- * edge, ruler protruding into the page gutter, with a scroll-driven parallax
- * lift.
+/* Videos widget — the video carousel as a 1×2 cell in the grid's last column,
+ * parked at rest in the homepage's opener above it and docked by a
+ * scroll-driven parallax.
  *
  * Plain CSS (not an Astro scoped <style>): the host is rendered by
  * VideoCarousel.astro, and the light theme's dot-colour rule reaches the
- * <dotted-grid> inside it. Nothing here selects a .vc__* internal any more —
- * the package's `fill` attribute and --vc-stage-radius do that job. The
- * .wx-videos prefix keeps everything contained to this widget; the grid rule
- * below keys on the grid that HOLDS it (:has), so the page needs no class of
- * its own for it. */
+ * <dotted-grid> inside it. Nothing here selects a .vc__* internal but the
+ * ruler, which the two-column grid hides — the package's `fill` attribute and
+ * --vc-stage-radius do the rest. The .wx-videos prefix keeps everything
+ * contained to this widget; the grid rule below keys on the grid that HOLDS it
+ * (:has), so the page needs no class of its own for it. */
 
 /* THE RULER'S ROOM. The carousel is `fill` with `ruler-side="right"`, so its
    ruler and the gap before it OVERHANG the cell by --vc-ruler-w + --vc-main-gap
@@ -16,28 +16,26 @@
    so the grid can read the same number the ruler is drawn with, rather than
    restating it. The grid reserves that much to its right so the ruler lands in
    the page gutter rather than a content column.
-   The page is contained (FullHeroLayout caps --hero-inset at --container-max), so
-   on wide screens the margin outside the container already holds the ruler: only
-   the part it can't absorb is reserved, and once the margin is wide enough the
-   grid — and the card's right edge — runs to the container edge like every other
-   row. */
+   The page is contained (.container's --container-inset), so on wide screens
+   the margin outside the container already holds the ruler: only the part it
+   can't absorb is reserved, and once the margin is wide enough the grid — and
+   the card's right edge — runs to the container edge like every other row. */
 .ds-widget-grid:has(.wx-videos) {
-	--vc-outer-margin: calc(
-		var(--hero-inset, var(--container-pad)) - var(--container-pad)
-	);
+	--vc-outer-margin: calc(var(--container-inset) - var(--container-pad));
 	padding-inline-end: max(
 		0px,
 		var(--vc-ruler-w) + var(--vc-main-gap) - var(--vc-outer-margin)
 	);
 }
 
-/* The video cell: pinned to the rightmost column, spanning the top two rows.
-   Numeric column (not -1/-2): the grid has no explicit row template, so negative
-   lines are unreliable with grid-auto-flow: dense + implicit tracks.
-   grid-auto-flow: dense then packs the auto-placed 1×1 widgets around this. */
+/* The video cell: the last column, the first two rows of cards (row 1 is the
+   page's opener, HomeLayout.astro). Numeric lines (not -1/-2): the grid has no
+   explicit row template, so negative lines are unreliable with
+   grid-auto-flow: dense + implicit tracks. grid-auto-flow: dense then packs the
+   auto-placed 1×1 widgets around this. */
 .wx-videos {
 	grid-column: var(--widget-cols, 4) / span 1;
-	grid-row: 1 / span 2;
+	grid-row: 2 / span 2;
 	/* Explicit 2-row span sets the height; release the DS 1×2 box so it
 	   doesn't fight the row span. SIZE CONTAINMENT so it never sets the span either:
 	   without it the carousel's content (a 1:2 box off its column width) sized the
@@ -52,76 +50,107 @@
 	aspect-ratio: auto;
 	block-size: auto;
 
-	/* Parallax hook: lifted UP the page when scrolled to top, eased to 0 as the
-	   grid docks into view. Where scroll timelines exist the animation below
-	   drives it; elsewhere ./client.ts writes --vc-dock-lift on scroll.
-	   Defaults to 0 → no-JS / reduced-motion / mobile render docked. */
-	transform: translateY(var(--vc-dock-lift, 0px));
+	/* THE PARK: how far the card is lifted at rest — its own height (two cells
+	   and the gap) and the gap above it, which puts it in the opener's last
+	   column, bottom-aligned with the opener's row. That row is at least this
+	   tall (HomeLayout.astro), so the parked card never rises above it. The
+	   grid's own sizes, so the park is final on the first frame. */
+	--vc-dock-travel: calc(2 * var(--widget-cell) + 2 * var(--widget-grid-gap));
+	/* THE STATIC STATE is parked: an engine without scroll timelines shows it
+	   there until ./client.ts drives --vc-dock-lift (and without the script,
+	   keeps it there, in the open column of the opener). Reduced motion docks
+	   it outright (below). */
+	transform: translateY(
+		var(--vc-dock-lift, calc(-1 * var(--vc-dock-travel)))
+	);
 	will-change: transform;
 	position: relative;
 	z-index: 1;
 }
 
-/* THE DOCK, on the compositor: a scroll-progress animation from the lift that
-   parks the card on the fold (−travel) to none, over the first `span` px of
-   page scroll, eased by smoothstep — cubic-bezier(1/3, 0, 2/3, 1) IS
-   smoothstep (3t² − 2t³) exactly, its x linear in the curve's parameter.
-   ./client.ts measures span and travel from the slot (on load and whenever
-   the page reflows) and marks the card data-dock once it has; before that the
-   card renders docked, as it did before its script ran. The arithmetic, and
-   why it never stalls or reverses, is at the top of ./client.ts.
+@media (prefers-reduced-motion: reduce) {
+	.wx-videos {
+		transform: none;
+	}
+}
+
+/* THE DOCK, on the compositor: a scroll-progress animation from the park to
+   none over the first --vc-dock-travel px of page scroll — the card's cell
+   comes to rest where the card started on the screen. Eased out:
+   cubic-bezier(1/3, 2/3, 2/3, 1) IS 2t − t² exactly (its x linear in the
+   curve's parameter), so the card drops down the page at twice the scroll at
+   first — falling DOWN the screen, faster than the page, out from under
+   anything it was parked beside — and eases to 1:1 as it settles into its
+   cell, with no velocity jump at the dock. On the screen it drops a quarter of
+   its travel at most and comes back up into place.
    Gated as stories-heading's are (theme/stories-heading/src/styles.css):
-   reduced motion and the compact grid never apply it, and an engine without
-   scroll timelines keeps the static state above for the script to drive —
-   cssDrivesDock() in ./client.ts is the same feature test. Never remove the
-   @supports wrapper: without it such an engine would run this on the document
-   timeline and paint the TO keyframe forever. */
-@media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
+   reduced motion never applies it, and an engine without scroll timelines
+   keeps the static state above for ./client.ts to drive — cssDrivesDock()
+   there is the same feature test. Never remove the @supports wrapper: without
+   it such an engine would run this on the document timeline and paint the TO
+   keyframe forever. */
+@media (prefers-reduced-motion: no-preference) {
 	@supports (animation-timeline: scroll()) {
-		.wx-videos[data-dock] {
+		.wx-videos {
 			animation-name: vc-dock;
-			animation-timing-function: cubic-bezier(0.3333333333, 0, 0.6666666667, 1);
+			animation-timing-function: cubic-bezier(0.3333333333, 0.6666666667, 0.6666666667, 1);
 			animation-fill-mode: both;
 			animation-timeline: scroll(root block);
-			animation-range: 0px var(--vc-dock-span);
+			animation-range: 0px var(--vc-dock-travel);
 		}
 	}
 }
 @keyframes vc-dock {
 	from {
-		transform: translateY(calc(-1 * var(--vc-dock-travel, 0px)));
+		transform: translateY(calc(-1 * var(--vc-dock-travel)));
 	}
 	to {
 		transform: translateY(0px);
 	}
 }
 
-
 /* FILL THE CELL. The clip IS the widget, so the carousel is `fill` (its own
    attribute, video-carousel/styles.css): the stage takes the whole 1×2 cell
    rather than a 9:16 box at its top, and the grid cover-maps the clip into it.
    The clips are 9:16 portrait (360×640); the cell is two square rows plus a
-   gap, ~1:2 — a little narrower, so only the sides are trimmed (~11% of the
-   clip's width at 1440, split evenly, where there is nothing a portrait phone
-   clip frames). The ruler stretches with the stage, so it spans the cell's
-   full height too. This rule only gives the host the cell's height and rounds
-   the stage to the card corner the tiles beside it wear. */
+   gap, ~1:2 — a little narrower, so only the sides are trimmed, where there
+   is nothing a portrait phone clip frames. The ruler stretches with the
+   stage, so it spans the cell's full height too. This rule only gives the
+   host the cell's height and rounds the stage to the card corner the tiles
+   beside it wear. */
 .wx-videos video-carousel {
 	flex: 1 1 auto;
 	min-height: 0;
 	--vc-stage-radius: var(--border-radius-2);
 }
 
+/* One variant per grid step (Videos.astro); a resize across the step can have
+   created both. */
+.wx-videos__compact {
+	display: none;
+}
+
 /* THE COMPACT STEP (the grid's own, widget-grid.css; WIDGET_COMPACT_MQ for a
-   script): at two columns the carousel is promoted into the HERO scene (see
-   src/pages/index.astro → .hero-carousel), so the footer copy is hidden here
-   to avoid showing it twice. Drop the reserved ruler gutter too. A viewport
-   query, as the grid's is — this follows the column count, not the cell. */
+   script): two columns, the card in the second. No ruler — so none of its
+   room either: the grid reserves none and the cell is all clip — and no
+   input; the clips advance on their own. A viewport query, as the grid's
+   is — this follows the column count, not the cell. */
 @media (max-width: 900px) {
 	.ds-widget-grid:has(.wx-videos) {
-		padding-inline-end: 0;
+		--vc-ruler-w: 0px;
+		--vc-main-gap: 0px;
 	}
 	.wx-videos {
+		grid-column: 2 / span 1;
+	}
+	.wx-videos__wide {
+		display: none;
+	}
+	.wx-videos__compact {
+		display: flex;
+		pointer-events: none;
+	}
+	.wx-videos .vc__ruler {
 		display: none;
 	}
 }

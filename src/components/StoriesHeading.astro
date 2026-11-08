@@ -2,66 +2,35 @@
 // The "tristan / & other stories" lockup.
 //
 // Structure (see theme/stories-heading for the mechanics):
-//   .sh__wordmark — the full-width "tristan" SVG; fills gutter-to-gutter. JS
-//                   measures the glyph bbox and sets the viewBox so width:100%
-//                   fills exactly at any viewport. The viewBox and baseline
-//                   authored below ARE that measurement (DM Sans Medium at
-//                   300px), so the first frame already has the final box; JS
-//                   only confirms it. Re-measure them if the face changes.
-//   .sh__amp      — the big "&", overlapping the wordmark (indented). It
-//                   parallaxes + fades on its OWN viewport position.
-//   .sh__track    — reserves the pin duration in normal flow for "other stories".
-//     .sh__pin    — position:sticky at --sh-top; "other stories" pins here.
-//       .sh__heading — the outline→solid font-swap reveal that wipes while pinned.
-//     .sh__sub    — the page-authored intro, a STATIC SIBLING of the pin (not a
-//                   child of it) so it scrolls with the page under its own steam.
+//   .sh__wordmark — the h1: "tristan", sized in CSS to the lockup's width, and
+//                   position: sticky — from the first pixel of scroll it drifts
+//                   up a little slower than the page, pins near the top, and
+//                   rides down the lockup's box until that box ends, then scrolls
+//                   on with whatever follows. Its text is visually hidden ("Tristan
+//                   & other stories"); what shows are two aria-hidden layers:
+//     .sh__outline  the outlined word, filled with the page colour,
+//     .sh__solid    the solid word on an opaque backdrop, wobbling, clipped in
+//                   by the outline→solid wipe once the word pins.
+//   .sh__sub      — "& other stories", then the page-authored intro (the default
+//                   slot). Not sticky: it scrolls with the page, and fades out
+//                   over the first stretch of scroll.
 //
-// The "&" and "other stories" are DECOUPLED: each has its own scroll driver.
-//
-// This component owns ONLY the lockup. The body copy + video carousel are the
-// page's responsibility: they live in the content region that FLOWS BELOW this
-// (see FullHeroLayout's .fh__content riser), which rises into the empty space the
-// pinned lockup reserves and pushes it away.
-//
-// "other stories" renders TWICE — an outline layer and a solid layer in the same
-// box — so the reveal clip can wipe one over the other.
+// The component owns the lockup only. Where it sits, how wide it is and how
+// tall its box (the pin's range) is are the layout's: see HomeLayout.astro.
+import Text from "@whois/design-system/Text";
 ---
 
 <stories-heading>
 	<h1 class="sh__wordmark">
 		<span class="ds-visually-hidden">Tristan &amp; other stories</span>
-		<svg
-			class="sh__wordmark-svg"
-			aria-hidden="true"
-			viewBox="0 0 860.11 221.10"
-			preserveAspectRatio="xMinYMid meet"
-		>
-			<text x="0" y="217.50" class="sh__wordmark-text">tristan</text>
-		</svg>
+		<span class="sh__outline" aria-hidden="true">tristan</span>
+		<span class="sh__solid" aria-hidden="true"><wobble-text scale="5" speed="0.3">tristan</wobble-text></span>
 	</h1>
-
-	<div class="sh__amp" data-sh-amp aria-hidden="true">&amp;</div>
-
-	<div class="sh__track" data-sh-track>
-		<div class="sh__pin" data-sh-pin>
-			<p class="sh__heading" aria-hidden="true">
-				<span class="sh__outline" aria-hidden="true">other stories</span>
-				<span class="sh__solid"><wobble-text scale="5" speed="0.3">other stories</wobble-text></span>
-			</p>
-		</div>
-		{/* Sub-lockup (the page-authored intro). A STATIC SIBLING OF THE PIN, and the
-		     sibling part is the whole point: it flows directly below the pin's NATURAL
-		     position — which is the top of the track, i.e. exactly under "other stories"
-		     at rest — but, not being sticky itself, it then scrolls away with the page
-		     under the browser's own compositor.
-		     It used to live INSIDE the pin (absolute, top:100%), which glued it to the
-		     viewport and forced JS to fake normal scrolling by writing
-		     translateY(-scrollY) every frame. That transform is main-thread work racing
-		     a compositor-thread scroll, so on touch devices it was permanently a few
-		     frames behind the page — the "laggy intro". Nothing can make that smooth;
-		     the fix is to not do it. Keep this OUT of the pin.
-		     The track has an explicit height, so this reserves no extra flow space —
-		     it overlays the empty region the rising body copy fills, exactly as before. */}
-		<div class="sh__sub"><slot /></div>
+	<div class="sh__sub">
+		{/* One line, in the hero face: the rest of the name, read with the h1 above. */}
+		<Text as="p" class="sh__tagline" family="hero" size={6} responsive aria-hidden="true">
+			&amp; other stories
+		</Text>
+		<slot />
 	</div>
 </stories-heading>

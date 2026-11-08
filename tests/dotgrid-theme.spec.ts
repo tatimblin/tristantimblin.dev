@@ -11,8 +11,8 @@ import sharp from "sharp";
  * as long as it stays sane:
  *
  *   - cream: the frame stays mostly paper. The failure this guards is FLOODING —
- *     negative polarity (or a gamma far too low) on the fabric clip, which is mostly
- *     shadow, turns the hero into a slab of ink.
+ *     negative polarity (or a gamma far too low) on a clip that is mostly
+ *     shadow (the suite's stub is the fabric clip), turns the card into a slab of ink.
  *   - dark: the frame stays mostly dark.
  *   - a raw class flip, with no event, repaints a grid that is not animating.
  *   - the playground's split preview really shows two different grounds.
@@ -42,20 +42,20 @@ async function openHome(page: Page, theme: "light" | "dark") {
 	await page.emulateMedia({ reducedMotion: "reduce" });
 	await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
 	await page.goto("/");
-	const grid = page.locator("dotted-grid.hero__video");
+	const grid = page.locator(".wx-videos dotted-grid");
 	await expect(grid).toHaveAttribute("data-ready", "true", { timeout: 15_000 });
 	await page.waitForTimeout(500); // the first frame's one-shot paint
 	return grid;
 }
 
-test("cream: the hero halftone stays mostly paper (no flooding)", async ({ page }) => {
+test("cream: the videos card's halftone stays mostly paper (no flooding)", async ({ page }) => {
 	const grid = await openHome(page, "light");
 	const { mean, ink } = await measure(grid);
 	expect(mean, "mean brightness on cream").toBeGreaterThan(0.6);
 	expect(ink, "share of the frame in ink").toBeLessThan(0.4);
 });
 
-test("dark: the hero halftone stays mostly dark", async ({ page }) => {
+test("dark: the videos card's halftone stays mostly dark", async ({ page }) => {
 	const grid = await openHome(page, "dark");
 	const { mean } = await measure(grid);
 	expect(mean, "mean brightness on dark").toBeLessThan(0.3);

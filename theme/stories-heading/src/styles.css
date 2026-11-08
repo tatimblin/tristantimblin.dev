@@ -1,378 +1,152 @@
 /* <stories-heading> — the "tristan / & other stories" lockup.
 
    Structure:
-     .sh__wordmark  the full-width "tristan" SVG; width:100% fills gutter-to-gutter
-                    (JS sizes the viewBox to the glyph bbox, so no baked ratio).
-     .sh__amp       the big "&", behind "other stories" and up into the wordmark. It parallaxes
-                    + fades on its OWN viewport position — decoupled from below.
-     .sh__track     reserves the pin duration in normal flow for "other stories"
-                    (height = --sh-reveal + --sh-hold + --sh-pin-height): the
-                    hero's lower half, then the wipe.
-     .sh__pin       position:sticky at --sh-top; holds "other stories" while the
-                    track scrolls past. Empty space below the pin is what the
-                    rising body copy fills before bumping the heading away.
-     .sh__heading   the outline→solid font-swap reveal that wipes while pinned.
+     .sh__wordmark  the h1. "tristan", as wide as --sh-wordmark-w, position:
+                    sticky at --sh-top: it pins and rides down the host's box
+                    until the box ends, then scrolls on with what follows. So
+                    the HOST'S HEIGHT IS THE PIN'S RANGE, and the consumer sets
+                    it (a min-block-size, a grid row).
+       .sh__outline the word outlined, filled with the page colour, so it reads
+                    over a picture it may overlap.
+       .sh__solid   the word solid, wobbling (<wobble-text>), on an opaque
+                    backdrop, clipped in from the bottom by the wipe.
+     .sh__sub       "& other stories" and the page's intro: in flow, not
+                    sticky, faded out over the first --sh-sub-fade-px of scroll.
 
-   THE SCROLL-DRIVEN EFFECTS ARE CSS, NOT JS. All three — the outline→solid wipe,
-   the intro fade, the "&" parallax — run on scroll-progress timelines, so the
-   compositor advances them and there is no per-frame main-thread work to fall
-   behind a touch scroll. See the block at the foot of this file. */
+   THE SCROLL-DRIVEN EFFECTS ARE CSS, NOT JS. The drift, the wipe and the fade run on
+   scroll-progress timelines, so the compositor advances them and there is no
+   per-frame main-thread work to fall behind a touch scroll. See the block at
+   the foot of this file; index.ts is the fallback for engines without them.
+
+   THE KNOBS, all set by the consumer on the host:
+     --sh-wordmark-w  the word's width (default: the nearest container's).
+     --sh-top         the sticky line.
+     --sh-pin-at      the scroll offset at which the sticky line catches the
+                      word's resting box (its rest top less --sh-top). Over it
+                      the word drifts up at --sh-drift-rate of the scroll
+                      instead of 1:1, so it pins a little later, at
+                      --sh-pinned-at (read it; don't set it).
+     --sh-wipe-at     the scroll offset the wipe starts at: where the word pins
+                      (--sh-pinned-at), or later if it must first clear
+                      something (the solid layer's backdrop is opaque).
+     --sh-reveal      the scroll the wipe plays over.
+     --sh-sub-w       the intro's inline size (default: the host's). */
 
 stories-heading {
+	display: block;
+	position: relative;
+	/* The host may be wider than its text (a full row, with something to the
+	   right of the lockup); its empty area must not swallow pointers meant for
+	   what lies under it. The text opts back in. */
+	pointer-events: none;
 	--sh-clip: 1;
-	/* Where "other stories" pins. The sticky line must FOLLOW the group: a fixed line
-	   clamps the pin whenever the lead would place it lower, which
-	   silently opens a gap between the wordmark and "other stories" (34px of slack on
-	   a short phone). Derived from the same lead the layout uses, so the clamp
-	   coincides with the group's natural position — zero slack at rest, and
-	   "other stories" sits exactly one --sh-heading-gap from the wordmark (now negative,
-	   so it overlaps up into it).
-	   Falls back to mid-viewport when used outside a .fh hero (--hero-lead unset). */
-	--sh-top: calc(
-		var(--hero-lead, 50svh) + var(--sh-wordmark-h, 0px) +
-			var(--sh-heading-gap)
-	);
-	/* Scroll distance over which the outline→solid reveal plays out while pinned. */
+	--sh-top: 0px;
+	--sh-pin-at: 0px;
+	/* THE DRIFT: from the first pixel of scroll the word rises at this share of
+	   the page's speed — a gentle parallax — until it reaches the sticky line.
+	   MUST MATCH the 80% stop in sh-wordmark-drift below (keyframe offsets
+	   cannot read a variable) and DRIFT_RATE in index.ts. */
+	--sh-drift-rate: 0.8;
+	--sh-pinned-at: calc(var(--sh-pin-at) / var(--sh-drift-rate));
+	--sh-wipe-at: var(--sh-pinned-at);
 	--sh-reveal: 300px;
-	/* Where the scene's PICTURE ends, from the top of the document. The wipe is
-	   gated on this edge (its opaque backdrop must not cut into the halftone). A
-	   full-height scene ends with the hero; a consumer whose picture stops short
-	   (cut at the wordmark) sets --sh-scene-bottom to that edge instead. */
-	--sh-wipe-at: max(
-		0px,
-		calc(var(--sh-scene-bottom, var(--hero-height, 100svh)) - var(--sh-top))
-	);
-	/* The rest of the pinned scroll: the scroll that carries "other stories" from
-	   the pin line clear of the scene's picture, while it holds at the centred pin
-	   line. DERIVED, not tuned: that distance is exactly --sh-wipe-at (0 when the
-	   picture already ends above the pin), and the wipe plays over the --sh-reveal
-	   after it. The --space-6 is a short rest once the wipe is done, before the
-	   rising copy (which adds no spacing of its own) pushes the heading away; on
-	   mobile it also carries the heading clear of the date scrubber. */
-	--sh-hold: calc(var(--sh-wipe-at) + var(--space-6));
-	display: block;
-	position: relative;
-	z-index: 1; /* the lockup rides over the content riser where they overlap */
-	/* The lockup's box (and its pinned "other stories", at z-index 3) is full-width
-	   but only its left-aligned text is visible; its empty area would otherwise sit
-	   OVER content rising below (the video ruler at ~50vh) and swallow its
-	   drag/click. Let pointers fall THROUGH the decorative lockup — the visible text
-	   layers re-enable interaction below. */
-	pointer-events: none;
+	/* THE WORD'S ADVANCE, in em of its own size: "tristan" in the hero face at
+	   the hero tracking. A MEASUREMENT OF THE FACE (DM Sans Medium, -0.03em),
+	   not tuning — it is what lets the stylesheet size the word to a width with
+	   no script, so the first frame is the final one. Re-measure it if the face,
+	   the weight, the tracking or the word changes (tests/home-opener.spec.ts
+	   fails when the word stops filling its width). */
+	--sh-wordmark-em: 2.8669;
+	/* How far the solid layer's backdrop reaches past the word's box on every
+	   side: room for <wobble-text>'s displacement, which shoves glyphs a few px
+	   off their box, so neither layer's ink pokes out past the other. */
+	--sh-cover: var(--space-2);
 }
 
-/* --- The first frame: what index.ts will measure, before it has ----------
+/* --- "tristan" ------------------------------------------------------------ */
 
-   Every size the script measures is a FIXED FRACTION OF THE WORDMARK'S WIDTH (the
-   faces never change, so neither do their proportions), and the wordmark is as wide
-   as the gutters allow. So the stylesheet can state the answer up front and the
-   lockup paints in its final place on the first frame — the script then confirms it
-   to the pixel. These used to be rough guesses (rem steps, a 42svh allowance) that
-   the script corrected at the end of the page's first long task: the lockup jumped
-   ~240px and the hero grew by 270px, a 0.2 layout shift on every desktop load.
-
-   THE CONSTANTS ARE MEASUREMENTS OF THE FACES, not tuning. Change the wordmark's or
-   the heading's face, weight or tracking and they go stale; re-measure them from the
-   values index.ts publishes (style="" on the host and on .fh) at any viewport.
-   tests/hero-first-frame.spec.ts fails when they
-   drift by more than a pixel.
-
-   Declared on the host AND on the hero around it (.fh, where fitFold() publishes the
-   fold's sizes), so the fold below can be estimated from the same numbers. */
-stories-heading,
-.fh:has(stories-heading) {
-	/* The wordmark spans the hero's gutters (.fh__heading's inline padding). */
-	--sh-wordmark-w: calc(100vw - 2 * var(--hero-inset, 0px));
-	/* "other stories"'s width as a share of the wordmark's; fitHeading() in
-	   index.ts reads it. Larger on phones (below), where the wordmark is narrow. */
-	--sh-heading-ratio: 0.5;
-	/* fitHeading(): the phrase's advance is 5.632em in the hero face. */
-	--sh-heading-fitsize: calc(
-		var(--sh-heading-ratio) * var(--sh-wordmark-w) / 5.632
-	);
-	/* Vertical offset from "tristan" to "other stories": the wordmark's baseline down
-	   to the heading's box top. Drives both the track's flow margin and the --sh-top
-	   sticky line together, so they stay coincident (zero slack at rest). NEGATIVE in
-	   practice: the heading's ascenders tuck up across the wordmark's baseline.
-	   fitHeadingTuck() measures it (the heading's tallest ink TUCK_CLEARANCE em across
-	   the baseline); tune the LOOK there, not here. */
-	--sh-heading-gap: calc(-0.203 * var(--sh-heading-fitsize));
-	/* The pin's height: the heading's line box, ~0.8975em at line-height 0.85 (the
-	   heading face's ink sits in the body face's taller strut). The engine rounds
-	   each face's metrics to whole px and the script publishes offsetHeight, also
-	   whole px; the 0.45px centres the estimate on those roundings. */
-	--sh-pin-height: calc(0.8975 * var(--sh-heading-fitsize) + 0.45px);
-	/* Separation from "other stories" down to the intro/CTAs — the intro is page copy
-	   that follows the heading, not a subhead of it. Halved on mobile (see the ≤900px
-	   block) where the tighter column wants less air. */
-	--sh-sub-gap: var(--space-5);
-}
-
-stories-heading {
-	/* The wordmark's height: its viewBox's aspect (StoriesHeading.astro authors the
-	   measured box). On a hero, inherited from the .fh estimate below. */
-	--sh-wm-h: var(--sh-wordmark-h, calc(var(--sh-wordmark-w) * 221.1 / 860.11));
-	/* fitAmp(): the "&"'s ink is AMP_SIZE_RATIO (0.6) of the wordmark's, and its ink
-	   rises 0.712em; its ink centre sits AMP_CENTER (0.21) of the way across the
-	   wordmark, the ink being 0.765em wide; its baseline (0.8505em into its box) on
-	   the heading's (0.8278em into the pin). */
-	--sh-amp-size: calc(0.6 * var(--sh-wm-h) / 0.712);
-	--sh-amp-left: calc(0.21 * var(--sh-wordmark-w) - 0.3825 * var(--sh-amp-size));
-	--sh-amp-top: calc(
-		var(--sh-wm-h) + var(--sh-heading-gap) + 0.8278 * var(--sh-heading-fitsize) -
-			0.8505 * var(--sh-amp-size)
-	);
-	/* alignHeadingLayers(): the solid layer's registration. Both layers are one face,
-	   so these are only the cover lift (the ink above the box plus COVER_SLACK) and the
-	   baseline drop it causes. */
-	--sh-solid-cover: calc(9.65px - 0.0512em);
-	--sh-solid-shift: 9.4px;
-}
-
-/* THE FOLD'S SIZES, which fitFold() measures onto .fh: the wordmark, the lockup (down
-   to "other stories"'s foot) and the group (down to the intro's). The intro is the
-   page's own copy, so the page states its height as --sh-intro-h (the --sh-sub-gap
-   above it included); without one the group is the lockup. The header's band
-   (--sh-header-h) is the page's to estimate too. */
-.fh:has(stories-heading) {
-	--sh-wordmark-h: calc(var(--sh-wordmark-w) * 221.1 / 860.11);
-	--sh-lockup-h: calc(
-		var(--sh-wordmark-h) + var(--sh-heading-gap) + var(--sh-pin-height)
-	);
-	--sh-group-h: calc(var(--sh-lockup-h) + var(--sh-intro-h, 0px));
-}
-
-/* --- "tristan" wordmark ------------------------------------------------- */
-
-/* Full-width SVG: fills the gutter (the .fh__heading inset). No max-width. */
 .sh__wordmark {
-	margin: 0;
-	position: relative;
-	/* The BOTTOM of the lockup's three layers: "other stories" (5) over the "&" (4)
-	   over "tristan" (3). Both overlap it at rest: "other stories"'s ascenders tuck
-	   across its baseline (see fitHeadingTuck) and the "&" knocks a hole out of "tr". */
-	z-index: 3;
-	pointer-events: auto; /* the host opts pointers out; the visible glyphs opt back in */
-}
-
-.sh__wordmark-svg {
-	display: block;
-	width: 100%;
-	height: auto;
-}
-
-.sh__wordmark-text {
-	font-family: var(--font-hero, ui-sans-serif, system-ui, sans-serif);
-	/* DM Sans MEDIUM. Set this large, the Bold's stems close up the counters of
-	   the a and the n; the Medium keeps the word open.
-	   Changing this moves the wordmark's ink metrics, which JS measures into
-	   --sh-group-h and thence the whole hero fold — re-run tests/hero-fold.spec.ts
-	   after any change here. */
-		font-weight: var(--font-weight-500, 500);
-	letter-spacing: var(--tracking-hero, -0.02em);
-	fill: var(--text-primary, CanvasText);
-	/* SVG user units; the viewBox is resized to the real glyph bbox in JS, so
-	   this only sets the internal proportions, not the on-screen size. */
-	font-size: 300px;
-}
-
-/* --- Ampersand -------------------------------------------------------- */
-
-/* A display glyph standing BEHIND "other stories" and OVER "tristan", ABSOLUTELY
-   positioned so it takes no flow space. JS (fitAmp) sizes its ink to 0.6x the
-   wordmark's ink height (--sh-amp-size), seats its baseline on the heading's
-   (--sh-amp-top) and centres it a fifth of the way across the wordmark, over the
-   "r" (--sh-amp-left), so it rises from behind "other stories" to about the
-   wordmark's x-height midline.
-   FILL + DOUBLE OUTLINE: the glyph is FILLED with the background colour (knocking
-   out the scene's halftone behind it) and stroked in the foreground colour
-   (--sh-amp-stroke) — the same 1px outline "other stories" is drawn in at rest; a
-   ::before behind it re-draws the "&" with a WIDER background-colour stroke
-   (--sh-amp-halo) so a clear ring separates the outline from the dots it crosses.
-   Theme tokens only, so it flips with data-theme like the rest of the lockup.
-   BETWEEN THE WORDS in z, the live site's layering: the background fill knocks a
-   hole out of "tr" (the intended look), and "other stories" — itself a
-   background-filled outline — overlays its lower half.
-   Its parallax + fade are scroll-driven (the foot of this file): the "&" leaves
-   with "tristan" while "other stories" pins. */
-.sh__amp {
-	--sh-amp-stroke: 1px; /* the foreground outline */
-	--sh-amp-halo: 0.625rem; /* the wider background-colour ring around it */
-	position: absolute;
-	z-index: 4;
-	top: var(--sh-amp-top, 0);
-	left: var(--sh-amp-left, 20%);
-	font-family: var(--font-hero, ui-sans-serif, system-ui, sans-serif);
-	font-size: var(--sh-amp-size);
-	font-weight: var(--font-hero-weight, 500);
-	line-height: 1;
-	color: var(--color-bg, #0a0a0a);
-	-webkit-text-stroke: var(--sh-amp-stroke) var(--color-fg, #ededed);
-	white-space: nowrap;
-	pointer-events: none;
-	/* parallax (translateY) + fade, both from the "&"'s OWN scroll position. */
-	transform: translateY(var(--sh-amp-shift, 0));
-	opacity: var(--sh-amp-opacity, 1);
-	will-change: transform, opacity;
-}
-
-/* The background-colour halo: the same glyph, wider stroke, painted BEHIND the
-   real outline (z-index -1) so only its outer ring shows. */
-.sh__amp::before {
-	content: "&";
-	position: absolute;
-	inset: 0;
-	z-index: -1;
-	color: var(--color-bg, #0a0a0a);
-	-webkit-text-stroke: var(--sh-amp-halo) var(--color-bg, #0a0a0a);
-}
-
-/* --- "other stories" heading ------------------------------------------- */
-
-/* Reserve the pinned scroll distance in normal flow. The pin stays stuck for
-   (track height − pin height), so add the measured pin height (--sh-pin-height)
-   to reveal + hold to get exactly that much fixed scroll. The empty space below
-   the lockup is what the paragraph rises into. */
-.sh__track {
-	position: relative;
-	/* Follow "tristan" (the "&" is absolutely positioned and takes no flow space) by
-	   the measured --sh-heading-gap (see fitHeadingTuck). */
-	margin-block-start: var(--sh-heading-gap);
-	height: calc(var(--sh-reveal) + var(--sh-hold) + var(--sh-pin-height));
-}
-
-/* "other stories" pins mid-viewport with plain CSS sticky at --sh-top. */
-.sh__pin {
 	position: sticky;
 	top: var(--sh-top);
-	/* Ride ABOVE the opaque content riser so it stays visible as copy rises, and
-	   above both the "&" (4) and the wordmark (3), so the lockup stacks
-	   "other stories" → "&" → "tristan".
-	   The solid layer's opaque --color-bg backdrop sits at this level too, but it is
-	   fully clipped away at rest (--sh-clip 1) and its reveal is gated until the
-	   phrase has cleared the scene — see the `scene` field in index.ts. */
-	z-index: 5;
-}
-
-/* Flush to the left gutter — the same left column the body copy starts on, so
-   "other stories" and the paragraph share a left edge. */
-.sh__heading {
-	position: relative;
-	margin: 0;
-	/* Shrink-wrap to the text: as a block element it would be full page width, and
-	   the absolutely-positioned .sh__solid (inset:0, opaque --color-bg backdrop)
-	   would then paint a full-width band across everything to its right (e.g. the
-	   carousel). fit-content confines that backdrop to the text itself. */
+	/* Over whatever the word overlaps (a picture beside it on a phone). */
+	z-index: 1;
 	width: fit-content;
-	/* Re-enable interaction on the visible text (the track opts pointers out so the
-	   empty pinned area doesn't block content below); fit-content keeps this to the
-	   glyphs, so only the text itself is a pointer target. */
+	margin: 0;
 	pointer-events: auto;
-	/* --sh-heading-ratio of the wordmark's width: estimated above for the first
-	   frame, then measured by fitHeading() in JS. */
-	font-size: var(--sh-heading-fitsize);
-	/* The OUTLINE layer's weight (the solid layer overrides it with its own). Stated
-	   here rather than left to inherit so the layer never picks up a UA heading bold.
-	   The two layers no longer share a face — see .sh__solid — so they no longer
-	   share advance widths either; the JS fit sizes this box to the WIDER of the
-	   two, which is what keeps the clip-path from shaving either one. */
+	/* The drift (the foot of this file); --sh-shift is the fallback's. */
+	transform: translateY(var(--sh-shift, 0px));
+	font-family: var(--font-hero, ui-sans-serif, system-ui, sans-serif);
+	/* DM Sans MEDIUM. Set this large, the Bold's stems close up the counters of
+	   the a and the n; the Medium keeps the word open. */
 	font-weight: var(--font-hero-weight, 500);
-	line-height: 0.85;
-		/* The hero face's display tracking (the site's token), named so the solid
-	   layer can ADD its registration tracking to it rather than restate the
-	   value and drift from it. */
-	--sh-tracking: var(--tracking-hero, -0.02em);
-	letter-spacing: var(--sh-tracking);
+	letter-spacing: var(--tracking-hero, -0.03em);
+	font-size: calc(var(--sh-wordmark-w, 100cqi) / var(--sh-wordmark-em));
+	/* A box no taller than the ink needs: the face's ink rises 0.725em and
+	   drops 0.012em, and at 0.8 the line box runs from 0.741em above the
+	   baseline to 0.059em below it. */
+	line-height: 0.8;
 	white-space: nowrap;
-	/* fit-content sizes the box to the text ADVANCE width, but a glyph.s ink
-	   (the trailing "s") overshoots its advance via the right side-bearing — and the
-	   solid layer's clip-path (border-box) would shave it. Trailing padding gives the
-	   ink (and the wobble-text displacement) room; the solid layer's --color-bg
-	   backdrop makes the extra width invisible against the page. */
-	padding-inline-end: 0.12em;
 }
 
-/* Sub-lockup: the page-authored intro. A STATIC SIBLING of the pin inside the
-   track (see StoriesHeading.astro), so it flows directly beneath "other stories"
-   at rest and then SCROLLS AWAY WITH THE PAGE on the browser's own compositor.
-   The track's height is explicit, so this reserves no flow space of its own — the
-   rising body copy still meets "other stories" directly.
+/* The outline is in flow and defines the box; the solid lies over it. */
+.sh__outline {
+	display: block;
+	color: var(--color-bg, Canvas);
+	-webkit-text-stroke: 1px var(--color-fg, CanvasText);
+}
 
-   IT USED TO BE `position: absolute` INSIDE THE STICKY PIN, and that is the bug
-   this rule exists to prevent coming back. A sticky ancestor is the containing
-   block for an absolute child, so the intro was glued to the viewport; to make it
-   look like ordinary page content the driver wrote translateY(-scrollY) on it
-   every frame. Main-thread transform vs. compositor-thread scroll: on any touch
-   device the intro rode a few frames behind the rest of the page, permanently,
-   and no amount of making the handler cheaper fixes that — the two are simply not
-   the same clock. Flow layout does the identical motion for free and in perfect
-   register. Do not re-introduce a scroll-linked transform here.
+/* The solid: the same face, so the two layers register glyph for glyph with no
+   correction. Its box reaches --sh-cover past the word's on every side, and
+   pads the text back by as much, so the text sits exactly where the outline's
+   does while the backdrop covers the outline's stroke and the wobble. Hidden
+   from the top by --sh-clip, so the wipe reveals it from the bottom up. */
+.sh__solid {
+	position: absolute;
+	inset: calc(-1 * var(--sh-cover));
+	padding: var(--sh-cover);
+	color: var(--color-fg, CanvasText);
+	background: var(--color-bg, Canvas);
+	clip-path: inset(calc(var(--sh-clip) * 100%) 0 0 0);
+}
 
-   FADE-ON-SCROLL: opacity only, over the first --sh-sub-fade-px of scroll, so the
-   intro is gone before it travels up into the pinned "other stories" it would
-   otherwise slide behind. visibility flips at the end so the invisible block stops
-   taking pointer events. The animation itself is at the foot of this file, with the
-   component's other two scroll-driven effects.
+/* Reduced motion: no wipe — the solid word shows from the start. (<wobble-text>
+   holds its displacement still under the same preference.) */
+@media (prefers-reduced-motion: reduce) {
+	.sh__solid {
+		clip-path: none;
+	}
+}
 
-   THE FADE HAS BEEN A SCROLL-TIMELINE, THEN JS, AND IS A SCROLL-TIMELINE AGAIN. That
-   is not indecision; each move fixed the previous one's real defect, and the reasoning
-   is worth keeping because both failure modes are easy to walk back into.
+/* --- "& other stories" and the intro ---------------------------------------- */
 
-   As a scroll-timeline it once failed INVISIBLE. An engine that does not know
-   `animation-timeline` drops that declaration and keeps the rest, so the animation
-   lands on the DOCUMENT timeline with `duration: auto` — which resolves to 0s — and
-   `fill: both` paints the element at its TO keyframe: opacity 0, visibility hidden.
-   The fade's end state, forever, at every scroll position. Measured on Firefox at the
-   time: hidden at scroll 0 on 5/12 cold loads.
-
-   As JS it failed LATE. A scroll handler runs on the main thread while the scroll runs
-   on the compositor, so on a phone it trailed the page — the same mismatch documented
-   above for the transform.
-
-   It is CSS again because the thing that made the gate unusable is gone. `@supports`
-   always described the right condition; the problem was that the site bundled a
-   scroll-timeline polyfill which does not transpile @supports conditions, so gating
-   deleted the fade on exactly the engines it existed for. Section.astro dropped that
-   polyfill, so the gate now means what it says: no feature, no animation, and the
-   static state below is what shows. Keep it gated, and keep these declarations
-   SHOWN — that pair is the whole safety property.
-
-   AND THE JS DRIVER IS STILL THERE, for the engines the gate excludes. Firefox has no
-   scroll timelines (measured on 153), so without a fallback the gate would trade a
-   laggy fade for no fade at all. index.ts runs the old per-frame driver behind the
-   same feature test, and only there — see cssDrivesScroll. */
 .sh__sub {
-	/* Separate the intro from "other stories": it is page copy that follows the
-	   heading, NOT a subhead of it, so it sits a clear step below rather than tight to
-	   the wordmark→heading rhythm (--sh-heading-gap). The page's slotted content must
-	   not add its OWN top margin on top of this — author the whole gap here. */
-	margin-block-start: var(--sh-sub-gap);
-	/* The visible content is the lede text; this WRAPPER is a full-width box, and
-	   where it overlays the scene's bottom UI its empty area would swallow the
-	   scrubber's drag. Pointers fall through; the slotted content opts back in
-	   (same pattern as .fh__heading / the host / .sh__heading / .site-header). */
-	pointer-events: none;
-	/* The scroll distance the fade plays over, so the timing lives here in CSS with the
-	   rest of the lockup's tuning — it is read straight into the animation-range below. */
+	inline-size: var(--sh-sub-w, auto);
+	margin-block-start: var(--space-3);
+	pointer-events: auto;
+	/* The scroll distance the fade plays over, read straight into the
+	   animation-range below (and by the fallback driver). */
 	--sh-sub-fade-px: 100px;
-	/* THE STATIC STATE, and it must stay SHOWN. This is what every path that does not
-	   run the animation lands on: reduced motion, print, and an engine without scroll
-	   timelines before its JS fallback has published anything. Never invert these —
-	   inverted, each of those paths becomes invisible content, which is precisely the
-	   bug this component already shipped once.
-	   The custom properties exist for that fallback driver (index.ts publishes them on
-	   engines without scroll timelines); UNSET they read as fully shown, which is the
-	   point of writing them as var() with these defaults rather than as literals. */
+	/* THE STATIC STATE, and it must stay SHOWN. It is what every path that does
+	   not run the animation lands on: reduced motion, print, and an engine
+	   without scroll timelines before its fallback has published anything. The
+	   custom properties exist for that fallback (index.ts); UNSET they read as
+	   fully shown, which is the point of writing them as var() with these
+	   defaults rather than as literals. */
 	opacity: var(--sh-sub-opacity, 1);
 	visibility: var(--sh-sub-visibility, visible);
 }
 
-/* Reduced motion: no fade. The intro is already in normal flow (it is a plain
-   static sibling of the pin now, in every mode), so the only thing left to undo is
-   the scroll-driven opacity. The JS driver ALSO skips publishing the fade under
-   this preference, so these declarations are the belt to that braces; they override
-   the custom properties outright rather than trusting the driver to have stayed
-   away. */
+.sh__tagline {
+	margin: 0;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+/* Under "& other stories", a step down: the page's intro. */
+.sh__tagline + * {
+	margin-block-start: var(--space-4);
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.sh__sub {
 		opacity: 1;
@@ -380,7 +154,7 @@ stories-heading {
 	}
 }
 
-/* A hidden intro must never print blank, and print has no scroll position to fade
+/* A faded intro must never print blank, and print has no scroll to fade
    against. Mirrors the print block in src/styles/reveal.css. */
 @media print {
 	.sh__sub {
@@ -389,170 +163,55 @@ stories-heading {
 	}
 }
 
-/* --- Two-layer face swap ----------------------------------------------- */
-
-/* The outline face stays in normal flow and defines the box. The solid face is
-   overlaid exactly on top of it and clipped in for the wipe. */
-.sh__heading .sh__solid {
-	position: absolute;
-	inset: 0;
-	/* ...but with the TOP edge lifted clear of the ink. line-height 0.85 means both
-	   layers' ascenders paint above this box, and the box is both the opaque mask's
-	   extent and the clip-path's reference — so at inset:0 the outline's tallest
-	   glyphs poked out above the mask and the solid's own tips got clipped off.
-	   alignHeadingLayers() in index.ts measures how far to lift. */
-	top: calc(-1 * var(--sh-solid-cover, 0em));
-}
-
-/* The baseline registration rides the TEXT, not the layer box.
-   It cannot go on .sh__solid itself: that box is both the opaque mask and the
-   clip-path's reference box, and a transform moves it bodily — so shifting the box
-   to seat the baseline dragged the mask straight back down over the cover lift, and
-   the two corrections cancelled. Transforming the inner wrapper leaves the box (and
-   therefore the mask and the wipe) exactly where the cover put it. */
-.sh__solid > * {
-	transform: translateY(var(--sh-solid-shift, 0em));
-}
-
-/* Outline (shown first): a light stroke of the outline face, FILLED with the
-   background colour. --sh-outline-font selects the face; by default it is the same
-   hero face as the solid layer so glyphs register exactly through the wipe. Point
-   it at another face (--font-heading, say) to make the wipe a typeface swap as
-   well as a fill — but check the alignment, since a different face means different
-   advance widths and the two layers will drift across the word. */
-.sh__outline {
-	font-family: var(
-		--sh-outline-font,
-		var(--font-hero, ui-sans-serif, system-ui, sans-serif)
-	);
-	font-weight: var(--font-hero-weight, 500);
-	color: var(--color-bg, Canvas);
-	-webkit-text-stroke: 1px var(--color-fg, CanvasText);
-}
-
-/* Solid (revealed): the heading face, on an opaque backdrop so the wipe masks the
-   outline beneath it. Hidden from the top by --sh-clip → fully shown at --sh-clip 0.
-   The hero and heading roles are both DM Sans Medium today, so the wipe is a FILL
-   change on one face. It is built to also be a TYPEFACE swap: the two layers may
-   resolve to faces with different advance widths, which is why
-   measureHeadingWidth() in index.ts fits the box to the wider of the two layers
-   instead of to the in-flow outline alone. */
-.sh__solid {
-	font-family: var(--font-heading, ui-sans-serif, system-ui, sans-serif);
-	font-weight: var(--font-heading-weight, 500);
-	/* Registration onto the outline — four corrections, all measured per-face by
-	   alignHeadingLayers() in index.ts, none of them a hand-tuned nudge (each is
-	   ~0 while both layers share a face, and re-derives if they stop):
-	     scale  matches the painted ink height,
-	     cover  lifts this box's top clear of both layers' ink (see the rule above),
-	     shift  drops its baseline onto the outline's,
-	     track  closes the advance difference so both start AND end on the same x. */
-	font-size: calc(1em * var(--sh-solid-scale, 1));
-	letter-spacing: calc(var(--sh-tracking) + var(--sh-solid-track, 0em));
-	color: var(--color-fg, CanvasText);
-	background: var(--color-bg, Canvas);
-	clip-path: inset(calc(var(--sh-clip) * 100%) 0 0 0);
-}
-
-/* Reduced motion: no reveal wipe — the solid face shows immediately. */
-@media (prefers-reduced-motion: reduce) {
-	.sh__solid {
-		clip-path: none;
-	}
-}
-
-/* --- Tablet / mobile ---------------------------------------------------- */
-/* Keep the pin + outline→solid reveal, but tuned for one column: a SHORTER
-   --sh-reveal so the wipe plays over a small scroll, the "&" static (no
-   parallax), and the wordmark filling the full gutter width. "other stories"
-   still pins and is pushed away by the rising copy — same mechanism as desktop. */
-@media (max-width: 900px) {
-	stories-heading,
-	.fh:has(stories-heading) {
-		--sh-heading-ratio: 0.7;
-		/* Half the desktop intro separation (24px → 12px): the tighter single column
-		   wants less air between "other stories" and the intro. */
-		--sh-sub-gap: var(--space-3);
-	}
-	stories-heading {
-		/* Reveal wipe plays over 100px of scroll (vs 300px on desktop). The hold is
-		   the base rule's: pinned while the scene, scrubber and all, scrolls past. */
-		--sh-reveal: 100px;
-	}
-
-	/* The "&" stays absolutely positioned behind "other stories" (JS places it) but is static — no parallax/fade — in the stacked layout.
-	   `animation: none`, not just `transform: none`: an animation with fill:both
-	   outranks a normal declaration, so overriding the transform alone would lose to
-	   the parallax timeline. Switching the animation off is what actually stops it. */
-	.sh__amp {
-		animation: none;
-		transform: none;
-		opacity: 1;
-	}
-}
-
 /* --- SCROLL-DRIVEN EFFECTS ---------------------------------------------------
-   Every scroll-linked animation in this component, in one place, on scroll-progress
-   timelines rather than a scroll handler.
+   All three scroll-linked animations, in one place, on scroll-progress timelines.
 
-   WHY NOT JS. These used to be a `scroll` listener writing custom properties from a
-   coalesced rAF. That work runs on the MAIN thread while the scroll itself runs on
-   the COMPOSITOR, so on a touch device the effects trailed the page by however many
-   frames the main thread was behind — the same mismatch that made the intro's old
-   translateY(-scrollY) unusable (see .sh__sub). No optimisation of the handler fixes
-   it; the two are not the same clock. A scroll timeline hands the progress to the
-   compositor, which is the only way to stay in step.
+   WHY NOT JS. A `scroll` listener writing custom properties runs on the MAIN
+   thread while the scroll runs on the COMPOSITOR, so on a touch device the
+   effects trailed the page by however many frames the main thread was behind.
+   A scroll timeline hands the progress to the compositor.
 
-   WHY THIS IS SAFE NOW, when the same mechanism was ripped out of .sh__sub before.
-   That failure was never really about scroll timelines: an engine that does not know
-   `animation-timeline` drops ONLY that declaration and runs the rest on the document
-   timeline, where `duration: auto` resolves to 0s and `fill: both` paints the element
-   at its TO keyframe forever. For the intro that keyframe was opacity 0 — content
-   invisible, permanently. `@supports` gates it correctly, but the site then bundled a
-   scroll-timeline polyfill that does not transpile @supports conditions, so gating
-   deleted the effect on the very engines it existed for. The polyfill is gone now
-   (Section.astro dropped it), so the gate below is clean: engines with the feature
-   animate, engines without keep the static state above and nothing snaps to a
-   to-keyframe. Never remove the @supports wrapper.
+   GATED, AND THE GATE MATTERS. An engine that does not know
+   `animation-timeline` drops ONLY that declaration and runs the rest on the
+   document timeline, where `duration: auto` resolves to 0s and `fill: both`
+   paints the TO keyframe forever — for the intro, opacity 0: content invisible,
+   permanently. So the block is behind `@supports`, and such an engine keeps the
+   static state above (shown, unwiped) for index.ts's fallback to drive. Never
+   remove the @supports wrapper.
 
-   REDUCED MOTION is the outer gate, not an override. An animation with `fill: both`
-   beats a normal declaration in the cascade, so a `@media (prefers-reduced-motion:
-   reduce)` rule further down could NOT switch these off — it has to be that the
-   animation is never applied at all.
+   REDUCED MOTION is the outer gate, not an override: an animation with
+   `fill: both` beats a normal declaration, so a later reduce rule could not
+   switch these off — they must never be applied at all. Print likewise (the
+   `screen` in the query): a page printed while scrolled would print faded.
 
-   THE RANGES ARE MEASURED GEOMETRY, not tuned numbers. Each is the same arithmetic
-   the old JS did, rearranged to be a function of scroll offset:
+   THE RANGES are the consumer's geometry: the drift from the top to
+   --sh-pinned-at; the wipe from --sh-wipe-at over --sh-reveal; the fade from
+   the top over --sh-sub-fade-px.
 
-     wipe   started when "other stories" cleared the scene's bottom edge, i.e. when
-            headingTop == sceneBottom. The heading is sticky at --sh-top and the
-            picture's bottom sits --sh-scene-bottom down the document, so that is
-            scroll offset --sh-wipe-at, running for --sh-reveal.
-     intro  0 → --sh-sub-fade-px of scroll, exactly as before.
-     "&"    its own viewport position: from its top at 60vh to its top at 10vh. The
-            "&" sits --sh-amp-top below the host, which starts --hero-lead down the
-            document, so those are scroll offsets (top − 60vh) and (top − 10vh) —
-            the start floored at 0: the "&" stands behind "other stories", low
-            enough that its top can rest above 60vh, and without the floor it would
-            load already part-way down its drift.
-            vh, not svh: the JS this replaces measured window.innerHeight, and this
-            effect only runs above 900px where the two agree. */
+   THE DRIFT rides on the sticky, not instead of it. Sticky alone moves the
+   word 1:1 with the page until --sh-pin-at, then holds it. The drift adds a
+   translate that rises linearly to (1 − rate) · --sh-pin-at as the sticky line
+   catches the box — so far the word has moved at `rate` of the scroll — and
+   falls back to 0 by --sh-pinned-at, exactly as the word's paint reaches the
+   sticky line, where it holds. Past that the transform is 0, so the sticky
+   alone carries it to rest: the pin's end, and where it comes to rest, are
+   unchanged. Reduced motion never applies it: plain sticky. */
 
-@media (prefers-reduced-motion: no-preference) {
+@media screen and (prefers-reduced-motion: no-preference) {
 	@supports (animation-timeline: scroll()) {
-		/* THE WIPE. Animates clip-path directly rather than the --sh-clip number it
-		   replaces: inset() interpolates natively, so this needs no @property
-		   registration to avoid stepping discretely at 50%. --sh-clip remains the
-		   static, un-animated state for engines that skip this block. */
+		.sh__wordmark {
+			animation-name: sh-wordmark-drift;
+			animation-timing-function: linear;
+			animation-fill-mode: both;
+			animation-timeline: scroll(root block);
+			animation-range: 0px var(--sh-pinned-at);
+		}
+
 		.sh__solid {
-			/* clip-path is NOT a compositor-animatable property — unlike the opacity and
-			   transform below, it costs a main-thread style+paint per frame, and this
-			   layer is expensive to paint (it carries <wobble-text>'s displacement
-			   filter). The hint gets it its own layer so that repaint stays local
-			   instead of dirtying the heading around it. Measured over 3 runs at 8x CPU
-			   throttle, scrolling the wipe's whole range: worst frame 88.1ms → 73.3ms,
-			   median 48.0 → 45.1. It does not make the wipe composited; nothing can,
-			   short of rebuilding the effect out of transforms, which would put a
-			   transform on the very boxes alignHeadingLayers measures. */
+			/* clip-path is not compositor-animatable: each frame of the wipe is a
+			   main-thread paint of this layer, which is expensive (it carries
+			   <wobble-text>'s displacement filter). The hint keeps that repaint on
+			   its own layer instead of dirtying the heading around it. */
 			will-change: clip-path;
 			animation-name: sh-heading-wipe;
 			animation-timing-function: linear;
@@ -569,18 +228,26 @@ stories-heading {
 			animation-timeline: scroll(root block);
 			animation-range: 0 var(--sh-sub-fade-px);
 		}
-
-		.sh__amp {
-			animation-name: sh-amp-parallax;
-			animation-timing-function: linear;
-			animation-fill-mode: both;
-			animation-timeline: scroll(root block);
-			animation-range: max(0px, calc(var(--hero-lead) + var(--sh-amp-top) - 60vh))
-				calc(var(--hero-lead) + var(--sh-amp-top) - 10vh);
-		}
 	}
 }
 
+/* The 80% stop is --sh-drift-rate: the scroll at which the sticky line catches
+   the box (--sh-pin-at) as a share of the range (--sh-pin-at / rate). */
+@keyframes sh-wordmark-drift {
+	from {
+		transform: translateY(0px);
+	}
+	80% {
+		transform: translateY(calc((1 - var(--sh-drift-rate)) * var(--sh-pin-at)));
+	}
+	to {
+		transform: translateY(0px);
+	}
+}
+
+/* Animates clip-path itself rather than --sh-clip: inset() interpolates
+   natively, so this needs no @property registration. --sh-clip stays the
+   static, un-animated state for engines that skip the block above. */
 @keyframes sh-heading-wipe {
 	from {
 		clip-path: inset(100% 0 0 0);
@@ -590,8 +257,8 @@ stories-heading {
 	}
 }
 
-/* visibility flips discretely at the end, so the invisible block stops taking
-   pointer events — the same discrete step the old driver published. */
+/* visibility flips at the end, so the invisible block stops taking pointer
+   events. */
 @keyframes sh-sub-fade {
 	from {
 		opacity: 1;
@@ -603,28 +270,5 @@ stories-heading {
 	to {
 		opacity: 0;
 		visibility: hidden;
-	}
-}
-
-/* The "&" drifts DOWN and dissolves on the way, gone exactly as the drift ends.
-   The hold matters: fading from the first pixel would make it a glyph that is always
-   half-there, and the drift would never read on its own. Holding it opaque for the
-   first stretch lets the movement register first, and the fade then reads as the mark
-   leaving rather than as a permanently dim one.
-   TRANSFORM IS ONLY KEYED AT THE ENDS, deliberately — CSS interpolates each property
-   between the keyframes that mention it, so the 40% stop shapes opacity alone and the
-   drift stays linear across the whole range.
-   AMP_FADE_START in index.ts is this same 40%, for the fallback driver. Change both. */
-@keyframes sh-amp-parallax {
-	from {
-		transform: translateY(0);
-		opacity: 1;
-	}
-	40% {
-		opacity: 1;
-	}
-	to {
-		transform: translateY(100px);
-		opacity: 0;
 	}
 }

@@ -1,12 +1,5 @@
 ---
-import FullHeroLayout from "../layouts/FullHeroLayout.astro";
-import StoriesHeading from "../components/StoriesHeading.astro";
-import SiteHeader from "../components/SiteHeader.astro";
-import VideoCarousel from "../components/VideoCarousel.astro";
-import Deferred from "../components/Deferred.astro";
-import Grid from "@whois/design-system/Grid";
-import GridItem from "@whois/design-system/GridItem";
-import WidgetGrid from "@whois/design-system/WidgetGrid";
+import HomeLayout from "../layouts/HomeLayout.astro";
 import Text from "@whois/design-system/Text";
 import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import BikeStats from "../widgets/bike-stats/BikeStats.astro";
@@ -16,273 +9,43 @@ import Volo from "../widgets/volo/Volo.astro";
 import Readers from "../widgets/readers/Readers.astro";
 import Cursive from "../widgets/cursive/Cursive.astro";
 import Amc from "../widgets/amc/Amc.astro";
-import { media } from "../lib/media";
-import "@whois/stories-heading/styles.css";
-import "@tristimb/dotted-grid/styles.css";
-import "@tristimb/video-carousel/styles.css";
-import "@whois/wobble-text/styles.css";
 ---
 
-<FullHeroLayout
+<HomeLayout
 	title="Tristan Timblin"
 	description="Tristan Timblin — American computer programmer and human-computer interaction engineer."
 >
-	{/* SCENE (>900px): the fabric clip as a halftone. Its tone (ink, gamma,
-	     bloom, ...) is per theme and lives in src/styles/halftone.css, NOT here:
-	     a tuning attribute would beat the stylesheet and pin that value in both
-	     themes. `intro` fades it up on the first frame, every dot growing in together.
-	     Each scene is Deferred to the breakpoint that shows it (the queries are
-	     the CSS's below): the other is never created, so it costs no WebGL
-	     context and no video download. */}
-	<Deferred slot="scene" media="(min-width: 901px)">
-		<dotted-grid
-			class="hero__video"
-			src={media("videos/fabric.mp4")}
-			src-webm={media("videos/fabric.webm")}
-			rate="0.93"
-			max-dpr="1"
-			cell-size="6"
-			intro-delay="0"
-			intro="1200"
-		/>
-	</Deferred>
+	{/* The intro, under "& other stories". A Text, not a Body: a small caps
+	     statement in the heading face, not reading copy. */}
+	<Text slot="intro" as="p" size={1} caps family="heading" spaced variant="secondary">
+		American computer programmer and human-computer interaction engineer.
+	</Text>
 
-	{/* SCENE (≤900px): the video carousel, full-bleed, with its date scrubber along
-	     the bottom edge; videos.css hides the footer copy at the same breakpoint.
-	     Same intro as the fabric so both variants make the same entrance. maxDpr 1
-	     because the halftone's cost is per pixel and this canvas is the whole
-	     viewport. The finer grid than the footer card's: the clip sits under the
-	     wordmark. Its per-theme tone is in src/styles/halftone.css. */}
-	<Deferred slot="scene" media="(max-width: 900px)">
-		<VideoCarousel
-			class="hero-carousel"
-			scene
-			orientation="horizontal"
-			rulerBaseline="bottom"
-			maxDpr={1}
-			cellSize={4}
-			introDelay={0}
-			intro={1200}
-			xfade={1600}
-			xfadeMode="threshold"
-			xfadeLive
-		/>
-	</Deferred>
-
-	<SiteHeader slot="heading" />
-
-	{/* The wordmark and the "& other stories" lockup; the intro lede is its default
-	     slot, so it flows beneath "other stories" as one group. */}
-	<StoriesHeading slot="heading">
-		{/* On a twelve-column grid (--home-columns), so the lede's measure is five
-		     columns rather than an eyeballed max-width. */}
-		<Grid class="hero-intro" align="end" templateColumns="var(--home-columns)" gapX={5}>
-			<GridItem class="hero-intro__lede">
-				{/* A Text, not a Body: a small caps statement in the heading face, not
-				     reading copy. */}
-				<Text as="p" size={1} caps family="heading" spaced variant="secondary">
-					American computer programmer and human-computer interaction engineer.
-				</Text>
-			</GridItem>
-		</Grid>
-	</StoriesHeading>
-
-	{/* WIDGETS. Mixed sizes in non-packed DOM order; grid-auto-flow: dense re-packs
-	     them, so data-reveal-order follows the VISUAL left-to-right packing rather
-	     than DOM order (the 1×2 video cell is authored first but lands last).
+	{/* WIDGETS, after the opener row (HomeLayout). Mixed sizes in non-packed DOM
+	     order; grid-auto-flow: dense re-packs them, so data-reveal-order follows
+	     the VISUAL left-to-right packing rather than DOM order.
 	     The DOM order is what packs on desktop: the videos pin the right column
-	     of rows 1–2, so now playing and bay wheels stack beside Volo there, and
-	     the cursive 2×2 opens rows 3–4 with github and visitors beside it, and
-	     the AMC 1×1 under github. The only gap is the short end of the last row
-	     (15 cells over 4 columns).
-	     The videos card is its own reveal group: a group waits for every member to
-	     be in view, and this card paints ~90vh above its slot (the dock lift), so
-	     grouped with the row it stayed invisible until the row arrived and the
-	     parallax played unseen. `data-reveal-eager` trips it just before the fold,
-	     where its entrance starts. */}
-	<div class="container home__widgets">
-		<WidgetGrid cols={4}>
-			<Videos data-reveal data-reveal-group="videos" data-reveal-eager />
+	     of the first two card rows, so now playing and bay wheels stack beside
+	     Volo there, and the cursive 2×2 opens the next two with github and
+	     visitors beside it, and the AMC 1×1 under github. The only gap is the
+	     short end of the last row (15 cells over 4 columns; over 2 on a phone,
+	     the same one hole).
+	     The videos card is its own reveal group: it is on screen from the first
+	     frame, parked in the opener above its cell, so it reveals at once
+	     (`data-reveal-eager`) rather than waiting for the row it docks into. */}
+	<Videos data-reveal data-reveal-group="videos" data-reveal-eager />
 
-			<NowPlaying data-reveal data-reveal-group="widgets" data-reveal-order="0" />
+	<NowPlaying data-reveal data-reveal-group="widgets" data-reveal-order="0" />
 
-			<Volo data-reveal data-reveal-group="widgets" data-reveal-order="1" />
+	<Volo data-reveal data-reveal-group="widgets" data-reveal-order="1" />
 
-			<BikeStats data-reveal data-reveal-group="widgets" data-reveal-order="2" />
+	<BikeStats data-reveal data-reveal-group="widgets" data-reveal-order="2" />
 
-			<Cursive data-reveal data-reveal-group="widgets" data-reveal-order="3" />
+	<Cursive data-reveal data-reveal-group="widgets" data-reveal-order="3" />
 
-			<Github data-reveal data-reveal-group="widgets" data-reveal-order="4" />
+	<Github data-reveal data-reveal-group="widgets" data-reveal-order="4" />
 
-			<Readers data-reveal data-reveal-group="widgets" data-reveal-order="5" />
+	<Readers data-reveal data-reveal-group="widgets" data-reveal-order="5" />
 
-			<Amc data-reveal data-reveal-group="widgets" data-reveal-order="6" />
-		</WidgetGrid>
-	</div>
-
-	<script>
-		import "@whois/stories-heading";
-		import "@tristimb/dotted-grid";
-		import "@tristimb/video-carousel";
-		import "@whois/wobble-text";
-		// The cards' scripts: each <Widget name> above is mounted from its own
-		// chunk when it comes due (src/widgets/index.ts).
-		import "../widgets";
-	</script>
-</FullHeroLayout>
-
-<style>
-	/* SCENE: two layers in FullHeroLayout's .fh__scene; one shows per breakpoint.
-	   `.hero-carousel` lands on the <video-carousel> host, which belongs to
-	   VideoCarousel.astro's style scope, so its rules are :global(). */
-	.hero__video {
-		position: absolute;
-		/* Inside FullHeroLayout's scene box: held in by the frame at the top and
-		   sides, cut at the wordmark's midline. */
-		inset: var(--hero-frame, 0px) var(--hero-scene-inset) auto;
-		width: auto;
-		height: calc(var(--hero-scene-cut) - var(--hero-frame, 0px));
-		--dotted-grid-height: calc(var(--hero-scene-cut) - var(--hero-frame, 0px));
-		display: block;
-		/* Full strength: an opacity here would cap the highlights too; the tone is
-		   set by the element's own gamma/contrast. */
-	}
-
-	:global(.hero-carousel) {
-		display: none;
-	}
-	/* THE FIRST FRAME'S FOLD. The heading measures the hero's parts once its script
-	   runs; the parts it cannot know from its own type are this page's, so the page
-	   states them up front (see "The first frame" in
-	   theme/stories-heading/src/styles.css): the site header's band (padding-block
-	   --space-4 round one line of --font-size-1, rounded up as the heading rounds
-	   it) and the intro under the lockup (--sh-sub-gap, then the lede: two lines of
-	   --font-size-1 at the body leading at every width it reaches on desktop and on
-	   most phones). */
-	:global(.fh) {
-		--sh-header-h: round(
-			up,
-			2 * var(--space-4) + var(--font-size-1) * var(--line-height-body),
-			1px
-		);
-		--sh-intro-h: calc(
-			var(--sh-sub-gap) + 2 * var(--font-size-1) * var(--line-height-body)
-		);
-	}
-	/* THE DESKTOP HERO: framed, short. An empty margin the height of the site
-	   header's band (--sh-header-h, which the heading measures, estimated above
-	   until it does) runs round the top and sides; the halftone fills the frame
-	   for a fixed --home-scene-h down to the wordmark's midline, so the lead is
-	   whatever puts that midline there, and the hero ends under the intro rather
-	   than at the fold. The halftone stops above "other stories", so the
-	   heading's wipe needn't wait for the hero to scroll past: tell it where the
-	   picture really ends. */
-	@media (min-width: 901px) {
-		:global(.fh) {
-			--home-scene-h: 400px;
-			--hero-frame: var(--sh-header-h);
-			/* The lead that puts the wordmark's midline --home-scene-h below the
-			   frame, from the wordmark's ESTIMATED height (its viewBox aspect over
-			   the CSS-only --sh-wordmark-w) so the script never moves it. */
-			--hero-lead-ideal: calc(
-				var(--hero-frame) + var(--home-scene-h) -
-					var(--sh-wordmark-w) * 221.1 / 860.11 / 2
-			);
-			--hero-min-height: 0px;
-			--sh-scene-bottom: var(--hero-scene-cut);
-		}
-		/* A frame, not a vignette: the box's edges are the margin's, so the scene's
-		   edge fade is off. */
-		:global(.fh__scene:has(.hero__video)) {
-			--fh-scene-mask: none;
-		}
-	}
-
-	@media (max-width: 900px) {
-		.hero__video {
-			display: none;
-		}
-		:global(.hero-carousel) {
-			display: block;
-		}
-		/* The carousel's scrubber + caption, which it measures as --hero-floor once
-		   it runs (FullHeroLayout): ~99px at every phone width. */
-		:global(.fh) {
-			--hero-floor-estimate: 99px;
-		}
-
-		/* The scene's edge fade would mask the carousel's bottom-pinned ruler and
-		   caption too (a mask applies to the whole subtree, and no z-index escapes
-		   it); the carousel's `scene` variant fades its clip alone instead. */
-		:global(.fh__scene:has(.hero-carousel)) {
-			--fh-scene-mask: none;
-		}
-	}
-
-	/* THE PHONE SCENE FADES OUT ON SCROLL. Full height, the scrubber standing on
-	   the hero's bottom edge with the caption over the clip above it, and the
-	   whole carousel dissolves over the first half screen of scroll, so the
-	   lockup carries on over plain page. A scroll-progress
-	   timeline, for the reasons in theme/stories-heading/src/styles.css: the
-	   compositor advances it, so it cannot trail a touch scroll. Gated the same way
-	   too — an engine without scroll timelines (Firefox) keeps the static state,
-	   the scene simply shown; reduced motion never applies the animation. */
-	@media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
-		@supports (animation-timeline: scroll()) {
-			:global(.hero-carousel) {
-				animation-name: hero-scene-fade;
-				animation-timing-function: linear;
-				animation-fill-mode: both;
-				animation-timeline: scroll(root block);
-				animation-range: 0 50svh;
-			}
-		}
-	}
-	/* visibility flips at the end, so the gone scrubber stops taking drags. */
-	@keyframes hero-scene-fade {
-		from {
-			opacity: 1;
-			visibility: visible;
-		}
-		99.9% {
-			visibility: visible;
-		}
-		to {
-			opacity: 0;
-			visibility: hidden;
-		}
-	}
-
-	/* THE LEDE'S COLUMNS: five of twelve on desktop, the full width on phones. */
-	.hero-intro {
-		--home-columns: repeat(12, 1fr);
-	}
-	.hero-intro__lede {
-		grid-column: 1 / span 5;
-		min-width: 0;
-	}
-	@media (max-width: 900px) {
-		.hero-intro {
-			--home-columns: minmax(0, 1fr);
-		}
-		.hero-intro__lede {
-			grid-column: 1;
-		}
-	}
-
-	/* HERO INTRO. No top margin: .sh__sub already supplies the gap that binds it to
-	   "other stories". Pointers fall through the full-width box (on mobile it
-	   overlays the scene's date scrubber); the lede text opts back in. */
-	.hero-intro {
-		pointer-events: none;
-	}
-	.hero-intro__lede p {
-		pointer-events: auto;
-	}
-
-	/* WIDGETS */
-	.home__widgets {
-		margin-block-start: var(--space-10);
-		padding-block-end: var(--space-10);
-	}
-</style>
+	<Amc data-reveal data-reveal-group="widgets" data-reveal-order="6" />
+</HomeLayout>

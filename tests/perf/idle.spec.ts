@@ -68,7 +68,7 @@ for (const [device, use] of [
 			await load(page);
 			await mountAll(page);
 			// Mid-page, where the most runs: the heading's wobble, a halftone, cards.
-			const mid = await page.evaluate(() => document.querySelector(".home__widgets")!.getBoundingClientRect().top + scrollY - 200);
+			const mid = await page.evaluate(() => document.querySelector(`[data-reveal-order="0"]`)!.getBoundingClientRect().top + scrollY - 200);
 			await scrollTo(page, mid);
 			const visible = await during(page, 1000);
 			observed("visible, mid-page", visible);
@@ -96,10 +96,12 @@ for (const [device, use] of [
 			await load(page);
 			await mountAll(page);
 			// Two places, so every card is out of sight in one of them: the top
-			// (every card below the fold but the docking videos card) and the end.
+			// (the lower cards out of sight) and the end (the upper ones).
 			for (const at of ["top", "end"] as const) {
 				await scrollTo(page, at === "top" ? 0 : await page.evaluate(() => document.documentElement.scrollHeight));
-				await page.waitForTimeout(700);
+				// Longer than the carousel's 1.6s crossfade: one begun as the videos card
+				// left the screen writes to its DOM when it finishes.
+				await page.waitForTimeout(2000);
 				const active = await activeWidgets(page);
 				let frames!: Awaited<ReturnType<typeof during>>;
 				const work = await widgetMutations(page, async () => {

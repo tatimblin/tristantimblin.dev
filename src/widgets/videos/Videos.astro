@@ -1,18 +1,18 @@
 ---
-// Videos — the video carousel adopted into the widget grid as a 1×2 cell on the
-// grid's right edge, with the date ruler protruding into the page gutter. The
-// carousel's true layout home is this cell; a scroll-driven lift (a CSS
-// scroll-progress animation in ./videos.css, measured and — where scroll
-// timelines are missing — driven by ./client.ts) makes it visually START high
-// on the page and PARALLAX down to dock here as the grid scrolls into view. On
-// mobile it goes full width and the lift is disabled. The generic carousel
-// lives in ../../components; this module owns only its grid placement +
-// docking behaviour.
+// Videos — the video carousel adopted into the widget grid as a 1×2 cell in
+// the grid's last column. The carousel's true layout home is this cell; a
+// scroll-driven lift (a CSS scroll-progress animation in ./videos.css, with
+// ./client.ts as the fallback where scroll timelines are missing) parks it at
+// rest in the homepage's opener, the row above (src/layouts/HomeLayout.astro),
+// and drops it down into the cell faster than the page scrolls. The generic
+// carousel lives in ../../components; this module owns only its grid placement
+// and docking behaviour.
 //
-// The runtime mounts it `eager`, at page load and before every other card:
-// the lift parks the card on the fold at scroll 0, and that has to be in place
-// before the page can be scrolled. `contain="layout"`: the ruler overhangs the
-// cell, which paint containment (content-visibility) would clip.
+// The runtime mounts it `eager`, at page load and before every other card: on
+// an engine without scroll timelines the script is what drives the dock, and
+// that has to be in place before the page can be scrolled.
+// `contain="layout"`: the ruler overhangs the cell, which paint containment
+// (content-visibility) would clip.
 //
 // Props pass through to the <Widget> (a class, the page's data-reveal
 // choreography — see index.astro for why this card reveals on its own). NB
@@ -20,7 +20,7 @@
 // — two independent properties, so they compose instead of overwriting each
 // other.
 import Widget from "@whois/design-system/Widget";
-import { WIDGET_WIDE_MQ } from "@whois/design-system/lib/breakpoints";
+import { WIDGET_COMPACT_MQ, WIDGET_WIDE_MQ } from "@whois/design-system/lib/breakpoints";
 import Deferred from "../../components/Deferred.astro";
 import VideoCarousel from "../../components/VideoCarousel.astro";
 import "./videos.css";
@@ -42,18 +42,24 @@ const { class: className, ...rest } = Astro.props;
 	chrome={false}
 	{...rest}
 >
-	{/* Clip changes get the threshold transition here too, so the carousel behaves the
-	    same wherever it appears. No `intro` though: this cell is mid-page behind a
-	    scroll-driven dock, so a develop-in entrance would play unseen. */}
+	{/* Clip changes get the threshold transition, so the carousel behaves the
+	    same wherever it appears. No `intro`: the dock is its entrance. */}
 	{/* The tone is tuned once per theme, in src/styles/halftone.css (.wx-videos). */}
 	{/* No card chrome: the halftone sits straight on the page, filling the cell,
 	    with its caption laid over the clip's corner as a TV caption. */}
-	{/* Deferred to the widths that show the card (videos.css hides it at the
-	    grid's compact step, where the carousel is the hero scene instead): at
-	    the others it is never created, so it costs no WebGL context and no
-	    video download. */}
+	{/* TWO VARIANTS, one per grid step, each Deferred to the widths that show it
+	    (videos.css): the other is never created, so it costs no WebGL context
+	    and no video download.
+	    Four columns: the date ruler beside the cell, out in the page gutter.
+	    Two columns: no ruler (a phone's gutter has no room for it, and ~25 clips
+	    across a 167px tile would be under 7px a clip), so the clips advance on
+	    their own and the tile takes no input; the orientation is pinned so the
+	    hidden ruler never flips to a strip under the clip. Rendered at 1× (the
+	    halftone's cost is per pixel) on a finer lattice, so the picture still
+	    reads at a phone tile's width. */}
 	<Deferred media={WIDGET_WIDE_MQ}>
 		<VideoCarousel
+			class="wx-videos__wide"
 			fill
 			rulerSide="right"
 			captionOverlay
@@ -61,6 +67,20 @@ const { class: className, ...rest } = Astro.props;
 			xfadeMode="threshold"
 			xfadeLive
 			cellSize={6}
+		/>
+	</Deferred>
+	<Deferred media={WIDGET_COMPACT_MQ}>
+		<VideoCarousel
+			class="wx-videos__compact"
+			fill
+			rulerSide="right"
+			orientation="vertical"
+			captionOverlay
+			xfade={1600}
+			xfadeMode="threshold"
+			xfadeLive
+			cellSize={4}
+			maxDpr={1}
 		/>
 	</Deferred>
 </Widget>

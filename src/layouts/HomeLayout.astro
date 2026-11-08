@@ -1,0 +1,128 @@
+---
+// HomeLayout — the homepage's shell: the site header in the flow, then ONE
+// widget grid whose first row is the opener and whose other rows are the
+// page's cards (the default slot).
+//
+//   the opener  the lockup (StoriesHeading: "tristan", "& other stories" and
+//               the page's intro, slot="intro") in the grid's left columns,
+//               and an open right column where the videos card is parked at
+//               rest (src/widgets/videos/videos.css lifts it up out of its
+//               own cell, rows 2–3 of the last column, by exactly this row and
+//               the gap: the two files share the arithmetic below).
+//   the cards   everything else, dense-packed from the row after.
+//
+// One grid, so the opener sits on the cards' own columns: the lockup is two
+// cells wide to the pixel, the parked carousel is in its column, and "tristan"
+// pins and rides down the opener's row until it rests one gap above the first
+// row of cards — no measurement, no script, the same with or without one.
+import type { ComponentProps } from "astro/types";
+import Layout from "./Layout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import StoriesHeading from "../components/StoriesHeading.astro";
+import WidgetGrid from "@whois/design-system/WidgetGrid";
+import "@whois/stories-heading/styles.css";
+import "@whois/wobble-text/styles.css";
+import "@tristimb/dotted-grid/styles.css";
+import "@tristimb/video-carousel/styles.css";
+
+type Props = ComponentProps<typeof Layout>;
+
+const props = Astro.props;
+---
+
+<Layout {...props}>
+	<SiteHeader variant="flow" />
+	<main class="container home">
+		<WidgetGrid cols={4}>
+			<StoriesHeading>
+				<slot name="intro" />
+			</StoriesHeading>
+			<slot />
+		</WidgetGrid>
+	</main>
+</Layout>
+
+<script>
+	import "@whois/stories-heading";
+	import "@whois/wobble-text";
+	import "@tristimb/dotted-grid";
+	import "@tristimb/video-carousel";
+	// The cards' scripts: each <Widget name> in the slot is mounted from its own
+	// chunk when it comes due (src/widgets/index.ts).
+	import "../widgets";
+</script>
+
+<style is:global>
+	.home {
+		/* THE SITE HEADER'S BAND: its block padding round one line of the bar's
+		   type (SiteHeader). Stated rather than measured, so where "tristan" pins
+		   (below) is known before any script runs; tests/home-opener.spec.ts holds
+		   it to the real bar. */
+		--home-header-h: calc(
+			2 * var(--space-4) + var(--font-size-1) * var(--line-height-body)
+		);
+		/* From the header down to the opener. */
+		--home-lead: var(--space-8);
+		padding-block: var(--home-lead) var(--space-10);
+	}
+
+	/* THE OPENER: the lockup, across the grid's whole first row, so no card
+	   packs into it (its box lets pointers through to the parked carousel; the
+	   text opts back in). Every size here is the grid's own (--widget-cell,
+	   --widget-grid-gap, widget-grid.css), so it lands on the cards' columns at
+	   every width. */
+	.home stories-heading {
+		grid-column: 1 / -1;
+		grid-row: 1;
+		/* Over the parked carousel, which "tristan" overlaps on a phone. */
+		z-index: 2;
+		/* A 1×2 tile's height: the videos card, parked at this row's foot. */
+		--home-tile-h: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
+		/* THE LEFT COLUMN: two cells and the gap — "tristan" fills it, the
+		   intro is set in it. The third column is the air between it and the
+		   carousel in the fourth. */
+		--sh-wordmark-w: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
+		--sh-sub-w: var(--sh-wordmark-w);
+		/* Its box: the line height over the size the width gives it. */
+		--home-word-h: calc(0.8 * var(--sh-wordmark-w) / var(--sh-wordmark-em));
+		/* THE ROW'S HEIGHT, and so the pin's range: at least the tile's, so the
+		   parked carousel (bottom-aligned with the row) never rises above it. */
+		min-block-size: var(--home-tile-h);
+		/* It pins a step from the top, the header having scrolled away. */
+		--sh-top: var(--space-4);
+		/* Where the sticky line catches the word's resting box: its rest top (the
+		   header and the lead down) less the line. The word drifts up from the
+		   first pixel of scroll a little slower than the page, so it pins a
+		   little later, at --sh-pinned-at (stories-heading/styles.css), and THE
+		   WIPE starts there (the component's default --sh-wipe-at). */
+		--sh-pin-at: calc(var(--home-header-h) + var(--home-lead) - var(--sh-top));
+		/* ...and finishes while it is still pinned: within the row's height less
+		   the word's (the sticky's range) less the drift's late start, a step
+		   short of the end. */
+		--sh-reveal: min(
+			300px,
+			var(--home-tile-h) - var(--home-word-h) - (var(--sh-pinned-at) - var(--sh-pin-at)) -
+				var(--space-5)
+		);
+	}
+
+	/* PHONES AND TABLETS (the grid's compact step, two columns): "tristan" spans
+	   both and runs over the top of the carousel tile, which is parked half a
+	   word down the right column; "& other stories" and the intro take the left
+	   column beside it. The wipe plays over 100px, and the parked tile has
+	   already dropped clear of the pinned word by the time the word pins
+	   (videos.css: it falls faster than the page at first) — so here too the
+	   wipe waits for nothing but the pin (tests/home-opener.spec.ts holds the
+	   tile's clearance at the wipe's first frame). */
+	@media (max-width: 900px) {
+		.home {
+			--home-lead: var(--space-2);
+		}
+		.home stories-heading {
+			--home-tile-drop: calc(var(--home-word-h) / 2);
+			min-block-size: calc(var(--home-tile-drop) + var(--home-tile-h));
+			--sh-sub-w: var(--widget-cell);
+			--sh-reveal: 100px;
+		}
+	}
+</style>

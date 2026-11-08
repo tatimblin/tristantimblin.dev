@@ -25,6 +25,9 @@ const reach = (page: Page) =>
 test("loads nothing until the card nears the viewport", async ({ page }) => {
 	const bundle: string[] = [];
 	page.on("request", (r) => r.url().startsWith(CURSIVE_TERMINAL) && bundle.push(r.url()));
+	// A short window, so the card is more than the runtime's one screen away: at
+	// ordinary heights the opener is short enough that it is due from the load.
+	await page.setViewportSize({ width: 1440, height: 300 });
 	await page.goto("/");
 	await expect(card(page)).toHaveAttribute("data-state", "idle");
 	await page.waitForTimeout(500);

@@ -18,17 +18,15 @@
 /** Cumulative layout shift over a load and a scroll through every card. */
 export const CLS = 0.01;
 
-/** WebGL contexts once the page has loaded (the halftones). Desktop: the hero
- *  fabric and the videos card. Phone: the hero carousel only (the videos card
- *  is hidden there, and <Deferred> never builds the desktop scene). */
-export const WEBGL = { desktop: 2, mobile: 1 };
+/** WebGL contexts once the page has loaded (the halftones): the videos card's,
+ *  at either width — the homepage has no halftone hero, and <Deferred> builds
+ *  only the card's variant for the width. */
+export const WEBGL = { desktop: 1, mobile: 1 };
 
 /** Videos fetched from the media bucket in the load window (ENGINE_WINDOW_MS,
- *  below), before any scroll: each halftone's clip, plus one <link rel=prefetch> for
- *  the carousel's next clip (its crossfade needs it decoded on time). Desktop:
- *  the fabric, the videos card's first clip and its next. Phone: the hero
- *  carousel's first clip and its next. */
-export const MEDIA_REQUESTS = { desktop: 3, mobile: 2 };
+ *  below), before any scroll: the videos card's first clip, plus one
+ *  <link rel=prefetch> for its next (its crossfade needs it decoded on time). */
+export const MEDIA_REQUESTS = { desktop: 2, mobile: 2 };
 
 /** Script files fetched in the load window, before the first scroll, and
  *  which widget chunks may be among them: `eager` (videos), `idle` (now playing) and `near` cards within a
@@ -42,7 +40,9 @@ export const JS_BEFORE_SCROLL = {
 		files: 26,
 		widgets: ["amc", "bike-stats", "cursive", "github", "now-playing", "readers", "videos", "volo"],
 	},
-	mobile: { files: 21, widgets: ["bike-stats", "now-playing", "videos", "volo"] },
+	// The phone's opener is shorter than the full-screen hero it replaced, so the
+	// cursive card (its chunk and the agent's bundle) now sits within that screen.
+	mobile: { files: 23, widgets: ["bike-stats", "cursive", "now-playing", "videos", "volo"] },
 };
 
 /** DOM elements once every card has mounted (light DOM; a shadow root's are

@@ -25,7 +25,7 @@ const pageColour = (page: Page) => page.evaluate(() => getComputedStyle(document
 const toggle = (page: Page) => page.locator("[data-theme-toggle]");
 
 /** The first framed card on the home page (the videos tile is chrome={false}). */
-const CARD = ".home__widgets .ds-card:not(.ds-card--chrome-false)";
+const CARD = ".home .ds-widget-grid .ds-card:not(.ds-card--chrome-false)";
 
 test("a first visit is light: the attribute, and the cream page", async ({ page }) => {
 	await page.goto("/");

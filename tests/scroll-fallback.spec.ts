@@ -126,6 +126,31 @@ test("the intro is visible at rest on any engine", async ({ page }) => {
 	expect(sub.visibility).toBe("visible");
 });
 
+test("the word drifts from the first pixel of scroll, then pins, on any engine", async ({
+	page,
+}) => {
+	// "tristan" never sits still waiting to pin: from scroll 0 it rises at
+	// --sh-drift-rate of the page (a CSS animation, or the fallback's --sh-shift),
+	// then holds at the sticky line. Either mechanism, the same outcome.
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await page.goto("/");
+	await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+	const topAt = async (y: number) => {
+		await page.evaluate((v) => window.scrollTo(0, v), y);
+		await page.waitForTimeout(250);
+		return page.evaluate(() => document.querySelector(".sh__wordmark")!.getBoundingClientRect().top);
+	};
+	const rest = await topAt(0);
+	const early = await topAt(20);
+	// Moving at once, and slower than the page.
+	expect(rest - early, "still at scroll 20").toBeGreaterThan(10);
+	expect(rest - early, "moving with the page, not drifting").toBeLessThan(19);
+	// Then pinned: the same place across a stretch of scroll.
+	const a = await topAt(200);
+	const b = await topAt(260);
+	expect(Math.abs(a - b), "pinned").toBeLessThan(0.5);
+});
+
 /**
  * THE VIDEOS CARD'S DOCK LIFT is the same arrangement: a CSS scroll-progress
  * animation where the engine has scroll timelines (src/widgets/videos/videos.css),
@@ -167,9 +192,9 @@ test("the dock lift is driven by exactly one mechanism, and docks either way", a
 		expect(rest.scrollAnimations).toBe(0);
 		expect(rest.inlineLift, "no scroll timelines and no JS fallback either").not.toBe("");
 	}
-	expect(rest.lift, "parked below its slot at scroll 0").toBeLessThan(-100);
+	expect(rest.lift, "parked above its slot at scroll 0").toBeLessThan(-100);
 
-	const mid = await at(600);
+	const mid = await at(200);
 	expect(mid.lift).toBeGreaterThan(rest.lift);
 	expect(mid.lift).toBeLessThan(0);
 	expect((await at(3000)).lift, "docked: no lift left").toBe(0);
