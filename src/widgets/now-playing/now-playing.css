@@ -27,6 +27,10 @@
 	--ssp-gap: var(--widget-gap);
 	--ssp-radius: var(--border-radius-tile);
 	--ssp-marquee-gap: var(--space-6);
+	/* The skeleton's timestamps are this tall and the real ones are a line of
+	   the mono voice (the part rule below), so the ruler holds still when the
+	   first message replaces the skeleton. */
+	--ssp-timestamp-size: var(--voice-mono-size);
 	/* The progress bar is the component's <progress>, painted with --ssp-track
 	   (the whole bar) and --ssp-accent (the elapsed stretch) as backgrounds —
 	   so both can be ticks instead of fills: the track in the dim ink, the
@@ -144,22 +148,44 @@
 }
 
 /* Compact tiles (the grid's compact-cell query, widget-grid.css): the header
-   can't hold the title and the pill, and the text and ruler leave the cover
-   no height. So the pill goes (the timestamps still say whether the track
-   moves), and the cover becomes a small tile beside the title and artist
-   instead of over them — the art stays, at the size of the two lines it sits
-   next to. A rule about the CELL, so a container query, not a viewport one. */
+   can't hold the title and the pill, so the pill goes (the timestamps still
+   say whether the track moves). */
 @container widget (max-width: 624px) {
 	.wx-nowplaying .wx-np-state {
 		display: none;
 	}
+}
+
+/* A small card: the text and ruler leave the cover almost no height (about
+   24px in a 208px card), so the cover becomes a small tile beside the title and
+   artist instead of over them, at the size of the two lines it sits next to.
+   This is about the CARD, and the `widget` container is the whole grid, which
+   is 912px wide on a desktop whose cards are 208px. So the body is the
+   container, and 268px is its content box in a 300px card (the fluid scale's
+   reference cell, widget-grid.css, less twice --widget-pad at that size); a 1×1
+   is square, so its width says how much height there is too. The container is
+   the body, not the card, because a container's layout containment snaps its
+   contents to the pixel: the card's edge stays where the grid put it.
+
+   A grid, not the component's row: its .text has no part to style, and is
+   `flex: none; width: 100%`, which in a row runs the text a tile's width past
+   the card. A grid item's 100% is its own track. With no cover the text is the
+   only item, in the auto track, which grows to the row's width at most.
+   align-content: end, so that on a phone, where the tile is a fraction of a
+   pixel taller than the room above the ruler, the row spills into the body's
+   padding at its top rather than onto the ruler. */
+.wx-nowplaying .ds-card-body {
+	container: now-playing / inline-size;
+}
+@container now-playing (max-width: 268px) {
 	.wx-nowplaying spotify-player::part(details) {
-		flex-direction: row;
-		align-items: flex-end;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-content: end;
+		align-items: end;
 		gap: var(--space-2);
 	}
 	.wx-nowplaying spotify-player::part(album) {
-		flex: none;
 		inline-size: var(--space-8);
 		block-size: var(--space-8);
 		margin-block-end: 0;
