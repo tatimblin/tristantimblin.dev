@@ -146,8 +146,8 @@ test("the word drifts from the first pixel of scroll, then pins, on any engine",
 	expect(rest - early, "still at scroll 20").toBeGreaterThan(10);
 	expect(rest - early, "moving with the page, not drifting").toBeLessThan(19);
 	// Then pinned: the same place across a stretch of scroll.
-	const a = await topAt(200);
-	const b = await topAt(260);
+	const a = await topAt(500);
+	const b = await topAt(560);
 	expect(Math.abs(a - b), "pinned").toBeLessThan(0.5);
 });
 

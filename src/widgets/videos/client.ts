@@ -1,8 +1,8 @@
 // THE DOCK LIFT'S FALLBACK. The card's true layout home is its 1×2 cell; a
 // transform only shifts where it PAINTS, so the grid keeps the cell reserved
-// and the other widgets flow around it throughout. At rest it is parked at
-// the top of the opener's last column, and as the page scrolls it comes down
-// into the cell (videos.css):
+// and the other widgets flow around it throughout. At rest it is parked in
+// the opener's centred group, and as the page scrolls it comes down into the
+// cell (videos.css):
 //
 //   travel = --vc-dock-travel                          // the park
 //   range  = min(travel, the page's whole scroll)      // where it lands

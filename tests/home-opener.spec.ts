@@ -121,8 +121,11 @@ test.describe("desktop 1440×900", () => {
 		// The carousel is a 1×2 tile: its width is a card's, its height two and a gap.
 		expect(Math.abs(s.card.w - s.first.w)).toBeLessThan(1);
 		expect(s.card.h).toBeGreaterThan(2 * s.first.w);
-		// Parked level with the word, in the opener above the cards.
-		expect(Math.abs(s.card.y - s.word.y)).toBeLessThan(1);
+		// The lockup centres beside the tile (the copy's stated height, not its
+		// measured one, decides its side), both above the cards.
+		const lockupMid = (s.word.y + s.intro.bottom) / 2;
+		const cardMid = (s.card.y + s.card.bottom) / 2;
+		expect(Math.abs(lockupMid - cardMid), "on one axis").toBeLessThan(6);
 		expect(s.card.bottom).toBeLessThan(s.first.y);
 	});
 
@@ -165,7 +168,9 @@ test.describe("desktop 1440×900", () => {
 
 		// Sample the pinned stretch: the word holds still while the clip runs 1 → 0.
 		const samples = [];
-		for (let y = 0; y <= 600; y += 10) samples.push({ y, ...(await at(page, y)) });
+		// Past the pin (at 1.25 × the word's distance to the sticky line) and the
+		// wipe's whole range, to the pin's end.
+		for (let y = 0; y <= 745; y += 10) samples.push({ y, ...(await at(page, y)) });
 		const pinTop = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".sh__wordmark")!).top));
 		const pinned = samples.filter((s) => Math.abs(s.word.y - pinTop) < 0.5);
 		expect(pinned.length).toBeGreaterThan(10);
@@ -254,10 +259,13 @@ test.describe("phone 390×844", () => {
 	});
 });
 
+/** The page's whole scroll. */
+const maxScroll = (page: Page) =>
+	page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+
 test.describe("the opener is its own first screen", () => {
 	for (const [w, h] of [
 		[1440, 900],
-		[1920, 1200],
 		[390, 844],
 	] as const) {
 		test(`at ${w}×${h} the first row starts just below the fold`, async ({ page }) => {
@@ -269,13 +277,78 @@ test.describe("the opener is its own first screen", () => {
 		});
 	}
 
-	test("a window whose opener outreaches the page's scroll still lands at the page's end", async ({ page }) => {
-		await open(page, 1920, 1200);
+	for (const [w, h] of [
+		[1920, 1200],
+		[2560, 1440],
+	] as const) {
+		test(`at ${w}×${h} the opener is capped and the cards peek in`, async ({ page }) => {
+			await open(page, w, h);
+			const s = await at(page, 0);
+			expect(s.first.y, "the opener stopped growing").toBeLessThan(1000);
+			expect(s.first.y, "the row peeks in").toBeLessThan(h);
+			expect(s.first.y, "but it is still a first screen").toBeGreaterThan(900);
+		});
+
+		// The tall-window defect: the page ran out of scroll with the word short of
+		// its rest, or ended with its letters cropped by the top of the window.
+		test(`at ${w}×${h} the word can settle and the page doesn't end on it`, async ({ page }) => {
+			await open(page, w, h);
+			const rest = await at(page, 0);
+			const max = await maxScroll(page);
+			const settle = rest.first.y - 24 - rest.word.h - 16;
+			expect(max, "scroll enough to settle").toBeGreaterThanOrEqual(settle);
+			const settled = await at(page, settle);
+			expect(Math.abs(settled.word.y - 16), "still pinned as it settles").toBeLessThan(1.5);
+			expect(Math.abs(settled.first.y - settled.word.bottom - 24), "rests a gap above the row").toBeLessThan(1.5);
+			const end = await at(page, max);
+			expect(Math.abs(end.card.y - end.first.y), "and the card has landed").toBeLessThan(1);
+			expect(end.word.bottom, "the word has gone, not half-gone").toBeLessThanOrEqual(0);
+		});
+	}
+
+	test("if the opener ever outreaches the page's scroll, the dock lands at the page's end", async ({ page }) => {
+		await open(page, 2560, 1440);
+		// The settle floor keeps this from happening on its own; without it the
+		// timeline's min(travel, 100%) is what lands the card.
+		await page.addStyleTag({ content: ".home { min-block-size: 0 !important; }" });
 		const travel = await dockTravel(page);
-		const max = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+		const max = await maxScroll(page);
 		expect(travel, "the geometry this guards").toBeGreaterThan(max);
 		const end = await at(page, max);
 		expect(Math.abs(end.card.y - end.first.y)).toBeLessThan(1);
+	});
+
+	for (const [w, h, name] of [
+		[1440, 900, "desktop"],
+		[1920, 1200, "a tall window"],
+		[2560, 1440, "a very tall window"],
+		[390, 844, "a phone"],
+	] as const) {
+		test(`${name}: the group is centred between the header and the first row`, async ({ page }) => {
+			await open(page, w, h);
+			const s = await at(page, 0);
+			const header = await page.evaluate(() => document.querySelector(".site-header")!.getBoundingClientRect().bottom);
+			// The group's top on a phone is the word over the tile's top; on a
+			// desktop the tile's own (the lockup centres inside its height).
+			const top = Math.min(s.word.y, s.card.y);
+			const above = top - header;
+			const below = s.first.y - s.card.bottom;
+			expect(Math.abs(above - below), `above ${above}, below ${below}`).toBeLessThan(1.5);
+		});
+	}
+
+	test("a phone keeps the word's overlap of the tile", async ({ page }) => {
+		await open(page, 390, 844);
+		const s = await at(page, 0);
+		expect(Math.abs(s.card.y - (s.word.y + s.word.h / 2))).toBeLessThan(1);
+	});
+
+	test("a short window is top-anchored, not pushed under the header", async ({ page }) => {
+		await open(page, 844, 390);
+		const s = await at(page, 0);
+		const header = await page.evaluate(() => document.querySelector(".site-header")!.getBoundingClientRect().bottom);
+		expect(s.word.y, "below the header").toBeGreaterThanOrEqual(header);
+		expect(s.word.y - header, "at the opener's top").toBeLessThan(10);
 	});
 
 	for (const [w, h, name] of [
@@ -312,9 +385,9 @@ test.describe("the opener is its own first screen", () => {
 		expect(near.clip, "no wipe before the pin").toBe(1);
 		const gone = await at(page, 100);
 		expect(gone.subOpacity).toBe(0);
-		const late = await at(page, 700);
+		const late = await at(page, 740);
 		expect(Math.abs(late.word.y - 16), "still pinned deep into the opener").toBeLessThan(1);
-		expect(late.clip, "wiped well before the pin ends").toBe(0);
+		expect(late.clip, "wiped before the pin ends").toBe(0);
 	});
 });
 

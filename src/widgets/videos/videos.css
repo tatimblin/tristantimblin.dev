@@ -50,10 +50,9 @@
 	aspect-ratio: auto;
 	block-size: auto;
 
-	/* THE PARK: how far the card is lifted at rest, up to the top of the
-	   opener's last column. HomeLayout.astro states it, from the opener's height
-	   (a screen, or the card's room if that is more), so the park is final on
-	   the first frame. */
+	/* THE PARK: how far the card is lifted at rest, up to its place in the
+	   opener's centred group. HomeLayout.astro states it, from the opener's
+	   height and the centring, so the park is final on the first frame. */
 	--vc-dock-travel: var(--home-dock-travel);
 	/* THE STATIC STATE is parked: an engine without scroll timelines shows it
 	   there until ./client.ts drives --vc-dock-lift (and without the script,
