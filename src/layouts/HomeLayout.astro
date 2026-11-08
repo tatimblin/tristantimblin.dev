@@ -3,12 +3,14 @@
 // widget grid whose first row is the opener and whose other rows are the
 // page's cards (the default slot).
 //
-//   the opener  the lockup (StoriesHeading: "tristan", "& other stories" and
-//               the page's intro, slot="intro") in the grid's left columns,
-//               and an open right column where the videos card is parked at
-//               rest (src/widgets/videos/videos.css lifts it up out of its
-//               own cell, rows 2–3 of the last column, by exactly this row and
-//               the gap: the two files share the arithmetic below).
+//   the opener  a first screen of its own: the lockup (StoriesHeading:
+//               "tristan", "& other stories" and the page's intro,
+//               slot="intro") in the grid's left columns, and an open right
+//               column where the videos card is parked at rest, with empty
+//               space opening beneath them down to the fold
+//               (src/widgets/videos/videos.css lifts the card out of its own
+//               cell, rows 2–3 of the last column, by --home-dock-travel,
+//               stated below).
 //   the cards   everything else, dense-packed from the row after.
 //
 // One grid, so the opener sits on the cards' own columns: the lockup is two
@@ -66,28 +68,61 @@ const props = Astro.props;
 		padding-block: var(--home-lead) var(--space-10);
 	}
 
+	/* THE OPENER'S GEOMETRY, on the grid so the lockup and the videos card read
+	   the same numbers. Every size is the grid's own (--widget-cell,
+	   --widget-grid-gap, widget-grid.css), so it lands on the cards' columns at
+	   every width, and all of it is stylesheet, so the first frame is final. */
+	.home .ds-widget-grid {
+		/* A 1×2 tile's height: the videos card, parked at the top of the opener. */
+		--home-tile-h: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
+		/* "tristan"'s box: two cells wide, the line height over the size that
+		   width gives it. */
+		--home-word-h: calc(
+			0.8 * (2 * var(--widget-cell) + var(--widget-grid-gap)) / var(--sh-wordmark-em)
+		);
+		/* How far below the opener's top the parked card sits (phones, below). */
+		--home-tile-drop: 0px;
+		/* THE FOLD: the row height that puts the first row of cards a step below
+		   the small viewport's bottom. svh, so a mobile browser's collapsing
+		   chrome never resizes it. */
+		--home-fold: calc(
+			100svh + var(--space-4) - var(--home-header-h) - var(--home-lead) -
+				var(--widget-grid-gap)
+		);
+		/* THE ROW'S HEIGHT, and so the pin's range: a screen, or the parked card's
+		   room if that is more. A floor: the lockup's own content can still grow
+		   the row (a large root font), and then the card parks that much lower
+		   and still lands in its cell. */
+		--home-opener-h: max(var(--home-tile-drop) + var(--home-tile-h), var(--home-fold));
+		/* THE PARK: from its cell (the row after, a gap down) up to the top of the
+		   opener, less the drop. It is also the dock's scroll range
+		   (videos.css), which brings the cell to where the card started. */
+		--home-dock-travel: calc(
+			var(--home-opener-h) + var(--widget-grid-gap) - var(--home-tile-drop)
+		);
+	}
+
+	/* A printed page has no fold to clear. */
+	@media print {
+		.home .ds-widget-grid {
+			--home-fold: 0px;
+		}
+	}
+
 	/* THE OPENER: the lockup, across the grid's whole first row, so no card
 	   packs into it (its box lets pointers through to the parked carousel; the
-	   text opts back in). Every size here is the grid's own (--widget-cell,
-	   --widget-grid-gap, widget-grid.css), so it lands on the cards' columns at
-	   every width. */
+	   text opts back in). */
 	.home stories-heading {
 		grid-column: 1 / -1;
 		grid-row: 1;
 		/* Over the parked carousel, which "tristan" overlaps on a phone. */
 		z-index: 2;
-		/* A 1×2 tile's height: the videos card, parked at this row's foot. */
-		--home-tile-h: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
 		/* THE LEFT COLUMN: two cells and the gap — "tristan" fills it, the
 		   intro is set in it. The third column is the air between it and the
 		   carousel in the fourth. */
 		--sh-wordmark-w: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
 		--sh-sub-w: var(--sh-wordmark-w);
-		/* Its box: the line height over the size the width gives it. */
-		--home-word-h: calc(0.8 * var(--sh-wordmark-w) / var(--sh-wordmark-em));
-		/* THE ROW'S HEIGHT, and so the pin's range: at least the tile's, so the
-		   parked carousel (bottom-aligned with the row) never rises above it. */
-		min-block-size: var(--home-tile-h);
+		min-block-size: var(--home-opener-h);
 		/* It pins a step from the top, the header having scrolled away. */
 		--sh-top: var(--space-4);
 		/* Where the sticky line catches the word's resting box: its rest top (the
@@ -101,7 +136,7 @@ const props = Astro.props;
 		   short of the end. */
 		--sh-reveal: min(
 			300px,
-			var(--home-tile-h) - var(--home-word-h) - (var(--sh-pinned-at) - var(--sh-pin-at)) -
+			var(--home-opener-h) - var(--home-word-h) - (var(--sh-pinned-at) - var(--sh-pin-at)) -
 				var(--space-5)
 		);
 	}
@@ -118,9 +153,10 @@ const props = Astro.props;
 		.home {
 			--home-lead: var(--space-2);
 		}
-		.home stories-heading {
+		.home .ds-widget-grid {
 			--home-tile-drop: calc(var(--home-word-h) / 2);
-			min-block-size: calc(var(--home-tile-drop) + var(--home-tile-h));
+		}
+		.home stories-heading {
 			--sh-sub-w: var(--widget-cell);
 			--sh-reveal: 100px;
 		}

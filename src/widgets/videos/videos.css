@@ -50,12 +50,11 @@
 	aspect-ratio: auto;
 	block-size: auto;
 
-	/* THE PARK: how far the card is lifted at rest — its own height (two cells
-	   and the gap) and the gap above it, which puts it in the opener's last
-	   column, bottom-aligned with the opener's row. That row is at least this
-	   tall (HomeLayout.astro), so the parked card never rises above it. The
-	   grid's own sizes, so the park is final on the first frame. */
-	--vc-dock-travel: calc(2 * var(--widget-cell) + 2 * var(--widget-grid-gap));
+	/* THE PARK: how far the card is lifted at rest, up to the top of the
+	   opener's last column. HomeLayout.astro states it, from the opener's height
+	   (a screen, or the card's room if that is more), so the park is final on
+	   the first frame. */
+	--vc-dock-travel: var(--home-dock-travel);
 	/* THE STATIC STATE is parked: an engine without scroll timelines shows it
 	   there until ./client.ts drives --vc-dock-lift (and without the script,
 	   keeps it there, in the open column of the opener). Reduced motion docks
@@ -77,12 +76,13 @@
 /* THE DOCK, on the compositor: a scroll-progress animation from the park to
    none over the first --vc-dock-travel px of page scroll — the card's cell
    comes to rest where the card started on the screen. Eased out:
-   cubic-bezier(1/3, 2/3, 2/3, 1) IS 2t − t² exactly (its x linear in the
-   curve's parameter), so the card drops down the page at twice the scroll at
-   first — falling DOWN the screen, faster than the page, out from under
-   anything it was parked beside — and eases to 1:1 as it settles into its
-   cell, with no velocity jump at the dock. On the screen it drops a quarter of
-   its travel at most and comes back up into place.
+   cubic-bezier(1/3, 1/2, 2/3, 1) IS 1.5t − 0.5t³ exactly (its x linear in the
+   curve's parameter), so the card moves down the page at 1.5× the scroll at
+   first — a little faster than the page, slipping down the screen and out
+   from under anything it was parked beside — and eases to moving with the page
+   as it settles into its cell, with no velocity jump at the dock. On the
+   screen it sinks at most 0.19 of its travel and comes back up into place: the
+   opener is a full screen, and a steeper start (2×) read as a drop over it.
    Gated as stories-heading's are (theme/stories-heading/src/styles.css):
    reduced motion never applies it, and an engine without scroll timelines
    keeps the static state above for ./client.ts to drive — cssDrivesDock()
@@ -93,10 +93,12 @@
 	@supports (animation-timeline: scroll()) {
 		.wx-videos {
 			animation-name: vc-dock;
-			animation-timing-function: cubic-bezier(0.3333333333, 0.6666666667, 0.6666666667, 1);
+			animation-timing-function: cubic-bezier(0.3333333333, 0.5, 0.6666666667, 1);
 			animation-fill-mode: both;
 			animation-timeline: scroll(root block);
-			animation-range: 0px var(--vc-dock-travel);
+			/* A tall window's opener can ask for more scroll than the page has:
+			   the page's end is the dock's last chance, so it lands there. */
+			animation-range: 0px min(var(--vc-dock-travel), 100%);
 		}
 	}
 }

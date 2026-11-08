@@ -1,12 +1,13 @@
 // THE DOCK LIFT'S FALLBACK. The card's true layout home is its 1×2 cell; a
 // transform only shifts where it PAINTS, so the grid keeps the cell reserved
-// and the other widgets flow around it throughout. At rest it is parked in
-// the opener's last column, one tile and one gap up, and as the page scrolls
-// it drops into the cell (videos.css):
+// and the other widgets flow around it throughout. At rest it is parked at
+// the top of the opener's last column, and as the page scrolls it comes down
+// into the cell (videos.css):
 //
-//   travel = the card's height + the grid's row gap   // the park
-//   q      = clamp01(scrollY / travel)
-//   lift   = −travel · (1 − (2q − q²))                 // −travel at rest → 0 docked
+//   travel = --vc-dock-travel                          // the park
+//   range  = min(travel, the page's whole scroll)      // where it lands
+//   q      = clamp01(scrollY / range)
+//   lift   = −travel · (1 − (1.5q − 0.5q³))            // −travel at rest → 0 docked
 //
 // ONE MECHANISM PER ENGINE (the stories-heading pattern; tests/scroll-fallback
 // .spec.ts pins both halves). Where scroll timelines exist, all of that is a
@@ -18,8 +19,8 @@
 import type { WidgetContext } from "@whois/design-system/lib/widgets";
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-/** videos.css's cubic-bezier(1/3, 2/3, 2/3, 1). */
-const easeOut = (t: number) => t * (2 - t);
+/** videos.css's cubic-bezier(1/3, 1/2, 2/3, 1). */
+const easeOut = (t: number) => 1.5 * t - 0.5 * t * t * t;
 const px = (v: number) => `${v.toFixed(2)}px`;
 
 /** Matches the @supports condition in videos.css exactly. */
@@ -28,9 +29,10 @@ export const cssDrivesDock = () =>
 	typeof CSS.supports === "function" &&
 	CSS.supports("animation-timeline", "scroll()");
 
-/** The lift at scroll offset `y`, for a park `travel` px up. */
-export const liftAt = (y: number, travel: number) =>
-	travel > 0 ? -travel * (1 - easeOut(clamp01(y / travel))) : 0;
+/** The lift at scroll offset `y`, for a park `travel` px up, docking over
+ *  `range` px of scroll. */
+export const liftAt = (y: number, travel: number, range = travel) =>
+	travel > 0 && range > 0 ? -travel * (1 - easeOut(clamp01(y / range))) : 0;
 
 export function mount(el: HTMLElement, ctx: WidgetContext) {
 	if (cssDrivesDock()) return;
@@ -38,15 +40,23 @@ export function mount(el: HTMLElement, ctx: WidgetContext) {
 	const reduced = matchMedia("(prefers-reduced-motion: reduce)");
 
 	let travel = 0;
+	let range = 0;
 	let lift = Number.NaN;
 
-	// The park, from layout: the card's own height (offsetHeight ignores the
-	// transform) and the row gap above it. The same two numbers videos.css
-	// reads from the grid's custom properties.
+	// The park: videos.css's own --vc-dock-travel, so the two cannot disagree.
+	// A calc() of other properties, which getComputedStyle hands back
+	// unevaluated, so it is resolved by sizing a throwaway box with it.
 	const measure = () => {
-		const grid = el.parentElement;
-		const gap = grid ? parseFloat(getComputedStyle(grid).rowGap) || 0 : 0;
-		travel = el.offsetHeight + gap;
+		const probe = document.createElement("div");
+		probe.setAttribute("aria-hidden", "true");
+		probe.style.cssText =
+			"position:absolute;visibility:hidden;width:0;height:var(--vc-dock-travel, 0px)";
+		el.appendChild(probe);
+		travel = probe.getBoundingClientRect().height;
+		probe.remove();
+		// As the stylesheet's range, min(travel, 100%): the page's end if it comes first.
+		const root = document.documentElement;
+		range = Math.min(travel, Math.max(0, root.scrollHeight - window.innerHeight));
 	};
 
 	// The per-scroll work: one scrollY read and, if it moved, one custom-property
@@ -54,7 +64,7 @@ export function mount(el: HTMLElement, ctx: WidgetContext) {
 	let pending = false;
 	const drive = () => {
 		pending = false;
-		const next = reduced.matches ? 0 : liftAt(window.scrollY, travel);
+		const next = reduced.matches ? 0 : liftAt(window.scrollY, travel, range);
 		if (px(next) === px(lift)) return;
 		lift = next;
 		el.style.setProperty("--vc-dock-lift", px(next));
@@ -78,7 +88,7 @@ export function mount(el: HTMLElement, ctx: WidgetContext) {
 		"scroll",
 		() => {
 			// Docked and still below the dock: nothing can change.
-			if (lift === 0 && window.scrollY >= travel) return;
+			if (lift === 0 && window.scrollY >= range) return;
 			schedule();
 		},
 		{ passive: true, signal },

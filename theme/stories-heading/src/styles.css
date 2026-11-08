@@ -32,6 +32,17 @@
      --sh-reveal      the scroll the wipe plays over.
      --sh-sub-w       the intro's inline size (default: the host's). */
 
+/* THE WORD'S ADVANCE, in em of its own size: "tristan" in the hero face at
+   the hero tracking. A MEASUREMENT OF THE FACE (DM Sans Medium, -0.03em),
+   not tuning — it is what lets the stylesheet size the word to a width with
+   no script, so the first frame is the final one. Re-measure it if the face,
+   the weight, the tracking or the word changes (tests/hero-first-frame.spec.ts
+   fails when the word stops filling its width). On :root so a layout can size
+   round the word (HomeLayout's --home-word-h). */
+:root {
+	--sh-wordmark-em: 2.8669;
+}
+
 stories-heading {
 	display: block;
 	position: relative;
@@ -50,13 +61,6 @@ stories-heading {
 	--sh-pinned-at: calc(var(--sh-pin-at) / var(--sh-drift-rate));
 	--sh-wipe-at: var(--sh-pinned-at);
 	--sh-reveal: 300px;
-	/* THE WORD'S ADVANCE, in em of its own size: "tristan" in the hero face at
-	   the hero tracking. A MEASUREMENT OF THE FACE (DM Sans Medium, -0.03em),
-	   not tuning — it is what lets the stylesheet size the word to a width with
-	   no script, so the first frame is the final one. Re-measure it if the face,
-	   the weight, the tracking or the word changes (tests/home-opener.spec.ts
-	   fails when the word stops filling its width). */
-	--sh-wordmark-em: 2.8669;
 	/* How far the solid layer's backdrop reaches past the word's box on every
 	   side: room for <wobble-text>'s displacement, which shoves glyphs a few px
 	   off their box, so neither layer's ink pokes out past the other. */

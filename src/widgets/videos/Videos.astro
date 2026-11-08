@@ -3,8 +3,9 @@
 // the grid's last column. The carousel's true layout home is this cell; a
 // scroll-driven lift (a CSS scroll-progress animation in ./videos.css, with
 // ./client.ts as the fallback where scroll timelines are missing) parks it at
-// rest in the homepage's opener, the row above (src/layouts/HomeLayout.astro),
-// and drops it down into the cell faster than the page scrolls. The generic
+// rest at the top of the homepage's opener, the row above
+// (src/layouts/HomeLayout.astro), and brings it down into the cell a little
+// faster than the page scrolls. The generic
 // carousel lives in ../../components; this module owns only its grid placement
 // and docking behaviour.
 //

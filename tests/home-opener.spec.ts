@@ -55,6 +55,19 @@ async function at(page: Page, y: number) {
 const overlaps = (a: Box, b: Box) =>
 	a.x < b.right - 0.5 && b.x < a.right - 0.5 && a.y < b.bottom - 0.5 && b.y < a.bottom - 0.5;
 
+/** The stylesheet's --vc-dock-travel, in px. */
+function dockTravel(page: Page): Promise<number> {
+	return page.evaluate(() => {
+		const probe = document.createElement("div");
+		probe.style.cssText = "position:absolute;visibility:hidden;width:0;height:var(--vc-dock-travel)";
+		const card = document.querySelector(".wx-videos")!;
+		card.appendChild(probe);
+		const h = probe.getBoundingClientRect().height;
+		probe.remove();
+		return h;
+	});
+}
+
 async function open(page: Page, width: number, height: number) {
 	await page.setViewportSize({ width, height });
 	await page.goto("/");
@@ -113,6 +126,25 @@ test.describe("desktop 1440×900", () => {
 		expect(s.card.bottom).toBeLessThan(s.first.y);
 	});
 
+	test("the speed reads a little faster than the page, and it lands in its cell", async ({ page }) => {
+		await open(page, 1440, 900);
+		const travel = await dockTravel(page);
+		const rest = await at(page, 0);
+		const s = await at(page, 40);
+		const docSpeed = (s.card.y + 40 - rest.card.y) / 40;
+		expect(docSpeed, "faster than the page").toBeGreaterThan(1.3);
+		expect(docSpeed, "but not a drop").toBeLessThan(1.6);
+		// Never ahead of its cell, and in it at the end of the range.
+		for (const q of [0.25, 0.5, 0.75, 0.95]) {
+			const m = await at(page, Math.round(travel * q));
+			expect(m.card.y, `still above its cell at ${q}`).toBeLessThan(m.first.y);
+		}
+		const landed = await at(page, Math.ceil(travel));
+		expect(Math.abs(landed.card.y - landed.first.y)).toBeLessThan(1);
+		// The cell comes to rest where the card started on the screen.
+		expect(Math.abs(landed.card.y - rest.card.y)).toBeLessThan(2);
+	});
+
 	test("at 100px the intro and '& other stories' are gone, 'tristan' is not", async ({ page }) => {
 		await open(page, 1440, 900);
 		const s = await at(page, 100);
@@ -152,8 +184,8 @@ test.describe("desktop 1440×900", () => {
 
 	test("the word comes to rest above the first row and leaves with it", async ({ page }) => {
 		await open(page, 1440, 900);
-		const a = await at(page, 600);
-		const b = await at(page, 700);
+		const a = await at(page, 900);
+		const b = await at(page, 1000);
 		expect(a.word.bottom).toBeLessThanOrEqual(a.first.y);
 		expect(a.first.y - a.word.bottom, "rests directly above the row").toBeLessThan(40);
 		expect(Math.abs(a.word.y - a.first.y - (b.word.y - b.first.y)), "moves with the grid").toBeLessThan(0.5);
@@ -165,11 +197,11 @@ test.describe("desktop 1440×900", () => {
 		const s1 = await at(page, 100);
 		// Its document position moved further than the page scrolled.
 		expect(s1.card.y + 100 - rest.card.y).toBeGreaterThan(100);
-		const docked = await at(page, 600);
+		const docked = await at(page, 900);
 		// In its cell: the top of the first card row, two rows tall, its column's width.
 		expect(Math.abs(docked.card.y - docked.first.y)).toBeLessThan(0.5);
 		expect(Math.abs(docked.card.w - docked.first.w)).toBeLessThan(0.5);
-		const later = await at(page, 700);
+		const later = await at(page, 1000);
 		expect(Math.abs(later.card.y - docked.card.y + 100)).toBeLessThan(0.5);
 	});
 });
@@ -186,9 +218,6 @@ test.describe("phone 390×844", () => {
 		expect(overlaps(s.word, s.card)).toBe(true);
 		expect(overlaps(s.tagline, s.card)).toBe(false);
 		expect(overlaps(s.intro, s.card)).toBe(false);
-		// The first row of cards is in view.
-		expect(s.first.y).toBeLessThan(844);
-		expect(s.first.bottom).toBeLessThan(844);
 		// No scrubber, and the tile takes no input.
 		await expect(page.locator(".wx-videos .vc__ruler")).toBeHidden();
 		expect(
@@ -212,8 +241,80 @@ test.describe("phone 390×844", () => {
 			}
 		}
 		expect(started).toBe(true);
-		const docked = await at(page, 800);
-		expect(Math.abs(docked.card.y - docked.first.y)).toBeLessThan(0.5);
+		// ...and the tile stays clear of the pinned word on the way down.
+		const travel = await dockTravel(page);
+		for (let y = 80; y <= travel; y += 40) {
+			const s = await at(page, y);
+			if (s.clip < 1 && s.word.y < 20) {
+				expect(s.solid.bottom, `the word covers the tile at ${y}`).toBeLessThanOrEqual(s.card.y);
+			}
+		}
+		const docked = await at(page, Math.ceil(travel));
+		expect(Math.abs(docked.card.y - docked.first.y)).toBeLessThan(1);
+	});
+});
+
+test.describe("the opener is its own first screen", () => {
+	for (const [w, h] of [
+		[1440, 900],
+		[1920, 1200],
+		[390, 844],
+	] as const) {
+		test(`at ${w}×${h} the first row starts just below the fold`, async ({ page }) => {
+			await open(page, w, h);
+			const s = await at(page, 0);
+			expect(s.first.y, "above the fold").toBeGreaterThanOrEqual(h);
+			expect(s.first.y, "not far below it").toBeLessThan(h + 40);
+			expect(s.card.y, "the parked card is above the fold").toBeLessThan(h);
+		});
+	}
+
+	test("a window whose opener outreaches the page's scroll still lands at the page's end", async ({ page }) => {
+		await open(page, 1920, 1200);
+		const travel = await dockTravel(page);
+		const max = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+		expect(travel, "the geometry this guards").toBeGreaterThan(max);
+		const end = await at(page, max);
+		expect(Math.abs(end.card.y - end.first.y)).toBeLessThan(1);
+	});
+
+	for (const [w, h, name] of [
+		[844, 390, "a short landscape window"],
+		[1440, 500, "a short desktop window"],
+	] as const) {
+		test(`in ${name} the opener still holds the parked card and its content`, async ({ page }) => {
+			await open(page, w, h);
+			const s = await at(page, 0);
+			expect(s.first.y).toBeGreaterThanOrEqual(h);
+			expect(s.card.bottom, "the parked card clears the first row").toBeLessThan(s.first.y);
+			expect(s.intro.bottom, "the lockup fits").toBeLessThanOrEqual(s.first.y);
+		});
+	}
+
+	test("a large root font grows the opener, and the card still lands", async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.addInitScript(() => {
+			document.addEventListener("DOMContentLoaded", () => {
+				document.documentElement.style.fontSize = "250%";
+			});
+		});
+		await page.goto("/");
+		await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+		const s = await at(page, 0);
+		expect(s.intro.bottom, "the row holds its content").toBeLessThanOrEqual(s.first.y);
+		const docked = await at(page, 3000);
+		expect(Math.abs(docked.card.y - docked.first.y)).toBeLessThan(1);
+	});
+
+	test("the wipe and the fades start where they did, over a longer pin", async ({ page }) => {
+		await open(page, 1440, 900);
+		const near = await at(page, 60);
+		expect(near.clip, "no wipe before the pin").toBe(1);
+		const gone = await at(page, 100);
+		expect(gone.subOpacity).toBe(0);
+		const late = await at(page, 700);
+		expect(Math.abs(late.word.y - 16), "still pinned deep into the opener").toBeLessThan(1);
+		expect(late.clip, "wiped well before the pin ends").toBe(0);
 	});
 });
 
@@ -251,4 +352,10 @@ test("print shows the intro and '& other stories'", async ({ page }) => {
 		return { opacity: Number(cs.opacity), visibility: cs.visibility };
 	});
 	expect(sub).toEqual({ opacity: 1, visibility: "visible" });
+	// No fold on paper: the opener is only as tall as the parked card needs.
+	const fit = await page.evaluate(() => ({
+		opener: document.querySelector("stories-heading")!.getBoundingClientRect().height,
+		card: (document.querySelector(".wx-videos") as HTMLElement).offsetHeight,
+	}));
+	expect(fit.opener).toBeLessThanOrEqual(fit.card + 1);
 });
