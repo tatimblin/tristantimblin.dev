@@ -14,8 +14,8 @@
 // `name` hands the card to the widget runtime (lib/widgets.ts, WIDGETS.md):
 // the site's src/widgets/<name>/client.ts is loaded and mounted on it, `load`
 // says when (`near`, the default: a screen ahead of the viewport; `idle`:
-// once the page has loaded; `eager`: at once, for a card whose script places
-// it on the page before anything can scroll — the videos card's dock lift).
+// once the page has loaded; `eager`: at once, for a card whose script must be
+// in place before anything can scroll — the videos card's dock-lift fallback).
 // Without a name the card is static.
 // `contain` isolates the card from its neighbours (widget-grid.css):
 // `auto` (the default) is content-visibility: auto, so an off-screen card

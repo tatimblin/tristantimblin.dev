@@ -54,7 +54,7 @@ const FILES = Object.entries(CUTS).flatMap(([family, weights]) =>
 
 test("every role resolves to its face, and that face is loaded", async ({ page }) => {
 	await page.goto("/");
-	// The widget row is below the fold and the footer carousel builds its ruler on
+	// The widget row is below the fold and the carousel builds its ruler on
 	// hydration, so bring them in before asking what they are set in.
 	await page.evaluate(() =>
 		document.querySelector(".ds-figure__num")?.scrollIntoView({ block: "center" })

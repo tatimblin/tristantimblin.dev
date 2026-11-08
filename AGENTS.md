@@ -194,7 +194,7 @@ links `--link-color` / `--link-decoration*`, transitions `--duration-standard` +
 `--dg-levels`, `--dg-bloom`, `--dg-crosshatch`, `--dg-denoise`,
 `--dg-dot-shape`); precedence is **attribute → CSS variable → default**, and it
 re-reads them whenever `<html>`'s `class` / `data-theme` / `style` changes. The
-per-theme presets (hero, phone carousel, footer clip) live in
+per-theme presets (section hero, videos card) live in
 `src/styles/halftone.css` under `[data-theme=…]`, inked from `--halftone-ink` /
 `--halftone-ink-soft`. Keep tuning out of the markup: an attribute pins its
 setting in both themes and silently beats the preset. Tune live at `/dotgrid`.

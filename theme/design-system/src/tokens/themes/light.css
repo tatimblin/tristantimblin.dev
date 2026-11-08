@@ -96,7 +96,7 @@
 	--code-token-punctuation: var(--text-secondary);
 
 	/* HALFTONE. Dark ink on cream, newsprint-style — the bridge hands these
-	   to <dotted-grid> / <video-carousel> as --color-fg. The footer-row clip
+	   to <dotted-grid> / <video-carousel> as --color-fg. The videos card's clip
 	   IS its widget, and its clips are mostly bright — which positive polarity
 	   prints as ink — so it takes the tertiary grey, the dashed edge's colour,
 	   and reads as a picture on the page rather than a dark block. */

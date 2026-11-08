@@ -16,8 +16,8 @@ import { test, expect, type Page } from "./fixtures/test";
  *                   element, so a reveal there would delay a real metric).
  *   4. REDUCED      the reduced-motion visitor is never armed at all.
  *   5. TOKENS       the motion tokens survive the production build (the canary for
- *                   a silently-dropped declaration — see the shorthand trap in
- *                   stories-heading/styles.css).
+ *                   a silently-dropped declaration — see the longhands note in
+ *                   src/styles/reveal.css).
  *
  * Run against the BUILT site (see playwright.config.ts) so minification hazards are
  * in scope.
@@ -183,10 +183,8 @@ test.describe("reveal — safety", () => {
 		// ClientRouter swaps the document; the coordinator must tear down and rebuild
 		// without double-binding or stranding anything hidden.
 		//
-		// Navigate by dispatching the click rather than locator.click(): the CTA lives
-		// inside the hero lockup, which parallaxes and (on desktop) is position:fixed, so
-		// waiting for an "actionable" stable box is a slow-runner flake waiting to
-		// happen. The navigation is what this test cares about, not the hit-testing.
+		// Navigate by dispatching the click rather than locator.click(): the navigation
+		// is what this test cares about, not the hit-testing.
 		await page.evaluate(() => {
 			const link = Array.from(document.querySelectorAll<HTMLAnchorElement>("a")).find(
 				(a) => a.textContent?.trim() === "Writing"

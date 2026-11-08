@@ -107,7 +107,7 @@ Work top-down. Stop at the first rule that matches.
 |---|-----------|---------|
 | 1 | What you're building maps to a component (any text/heading, layout, button, card, pill, chip, link, list, icon, a figure, a hit area) | **Use the DS component.** This is the default. |
 | 2 | Bespoke/one-off layout or site visual with no matching component | **Write your own CSS, but consume DS tokens** — `var(--space-*)`, `var(--font-size-*)`, colors, `var(--border-radius-*)`, `--bar-width`, `--shadow-*`, the durations. Never hardcode a value a token exists for. |
-| 3 | A genuinely unique, non-reusable visual (hero dotted-grid, the stories-heading lockup, page-specific art direction) | **Hand-roll it** — but still pull spacing/color from tokens where any apply. |
+| 3 | A genuinely unique, non-reusable visual (the section hero's dotted-grid, the stories-heading lockup, page-specific art direction) | **Hand-roll it** — but still pull spacing/color from tokens where any apply. |
 | 4 | The same component-like pattern now appears in **≥2 places**, or you're about to duplicate component CSS | **Expand the package** — add/extend a component (see *Authoring* below). Don't copy-paste. |
 
 **Hard don'ts:**
@@ -529,7 +529,7 @@ with metric-matched fallbacks in `src/styles/fonts.css`):
 
 | Token | Face | Where |
 | --- | --- | --- |
-| `--font-hero` + `--font-hero-weight` | DM Sans Medium (500) | the hero lockup only: the wordmark, the "&", "other stories" |
+| `--font-hero` + `--font-hero-weight` | DM Sans Medium (500) | the hero lockup only: the wordmark, "& other stories" |
 | `--font-heading` + `--font-heading-weight` | DM Sans Medium (500) | every heading: the post title, section heads, DS `H1`–`H4`, a bare `h2`, the hero lede |
 | `--font-ui` | DM Sans | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome |
 | `--font-display` + `--font-display-weight` | DM Sans Medium (500) | the big numeral: `Stat variant="numeral"` |

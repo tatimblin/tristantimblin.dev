@@ -6,21 +6,18 @@
  *
  * WHAT THIS DELIBERATELY DOES NOT TOUCH:
  *
- *  1. THE HERO. Never mark anything inside `.fh`: the homepage's LCP element is
- *     the wordmark, so holding it back for `document.fonts.ready` trades a
+ *  1. THE LOCKUP. Never mark anything inside `stories-heading`: the homepage's LCP
+ *     element is the wordmark, so holding it back for `document.fonts.ready` trades a
  *     one-frame reflow for hundreds of ms of measured LCP. Each custom element
  *     fades its own generated layer from inside its package.
  *
- *  2. ANY PROPERTY BUT `opacity`. stories-heading's fitFold() measures `.sh__sub`
- *     (`position: fixed` on desktop) in viewport coordinates, so any ancestor with
- *     `transform`, `translate`, `filter`, `backdrop-filter`, `contain: paint` or
- *     `content-visibility` becomes its containing block and silently corrupts the
- *     fold (measured: `filter: blur(0px)` moved it 490px). Opacity is neither a
- *     containing block nor an input to any measurement.
+ *  2. ANY PROPERTY BUT `opacity` AND `translate`. Both animate on the compositor, so
+ *     a reveal costs the page no layout; tools/lint/composited.test.ts fails a
+ *     transition on a geometry property.
  *
- *  3. `pointer-events`. The hero's full-width boxes fall through to the date
- *     scrubber beneath them (tests/hero-fold.spec.ts); an `auto` anywhere in that
- *     chain breaks reachability.
+ *  3. `pointer-events`. The lockup's full-width box falls through to the parked
+ *     videos card beneath it (HomeLayout.astro); an `auto` anywhere in that chain
+ *     breaks reachability.
  *
  *  4. `.sh__sub`'s opacity. Its scroll-timeline animation with `fill-mode: both`
  *     forces `opacity: 1` at scroll 0 from the animation origin, which outranks
@@ -41,8 +38,8 @@ const IN_VIEW_MARGIN = "0px 0px -10% 0px";
 const IN_VIEW_THRESHOLD = 0.2;
 
 /** `data-reveal-eager`: fire before the element reaches the viewport, for one
- *  whose own entrance is scroll-driven (the videos carousel parallaxes ~90vh as
- *  it docks) and would otherwise play out behind an opacity of 0. */
+ *  whose own entrance is scroll-driven (the videos card, parked in the opener,
+ *  drops into its cell) and would otherwise play out behind an opacity of 0. */
 const EAGER_MARGIN = "0px 0px 20% 0px";
 const EAGER_THRESHOLD = 0;
 

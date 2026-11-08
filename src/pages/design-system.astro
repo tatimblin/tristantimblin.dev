@@ -98,8 +98,8 @@ const edgeTokens = [
 	["--code-bg", "a fenced block's slab (a pale wash by day, near-black at night), --code-fg on it and --code-border round it"],
 	["--code-snippet-background", "inline code's wash"],
 	["--link-color", "every link: underlined at rest, plain under the pointer"],
-	["--halftone-ink", "the hero halftone's ink (-> --dg-ink in halftone.css)"],
-	["--halftone-ink-soft", "the footer clip's softer ink"],
+	["--halftone-ink", "a halftone's default ink (-> --color-fg in bridge.css)"],
+	["--halftone-ink-soft", "the videos card's softer ink"],
 ] as const;
 
 // A sixteen-step sequencer row, for the tile grid: which steps are on.
@@ -254,7 +254,7 @@ const faces = [
 	{
 		token: "--font-hero",
 		name: "DM Sans Medium",
-		use: "the hero lockup \u2014 the wordmark and \u201cother stories\u201d; the solid accent \u201c&\u201d",
+		use: "the hero lockup \u2014 the wordmark and \u201c& other stories\u201d",
 		css: "font-family: var(--font-hero); font-weight: var(--font-hero-weight);",
 	},
 	{

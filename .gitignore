@@ -28,7 +28,7 @@ pnpm-debug.log*
 
 .playwright-mcp/
 
-# Playwright test output (see tests/hero-fold.spec.ts)
+# Playwright test output
 test-results/
 playwright-report/
 

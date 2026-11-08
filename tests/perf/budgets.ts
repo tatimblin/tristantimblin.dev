@@ -33,7 +33,7 @@ export const MEDIA_REQUESTS = { desktop: 2, mobile: 2 };
  *  screen of the first viewport. Every other card's chunk waits for the scroll.
  *  `files` is exact today: the page's 12 shared scripts, those widgets'
  *  chunks, and the shared chunks they import (Volo's faces and keys). With
- *  the copy moved to /about and the desktop hero short, the whole desktop grid
+ *  the copy moved to /about and the opener a single row, the whole desktop grid
  *  sits within a screen of the first viewport, so every card loads. */
 export const JS_BEFORE_SCROLL = {
 	desktop: {

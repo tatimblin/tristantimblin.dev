@@ -181,8 +181,9 @@ const PREVIEWS = ["light", "dark", "split"];
 			tone: Record<string, number>;
 		};
 
-		// The presets. fabric-cream and fabric-dark are the site's hero tunings (the
-		// same numbers as src/styles/halftone.css); the rest are starting points.
+		// The presets, all starting points. fabric-cream and fabric-dark are the
+		// fabric clip's own, not the section hero's tuning (different numbers; that
+		// one is in src/styles/halftone.css).
 		const PRESETS: Record<string, Preset> = {
 			"fabric-cream": {
 				source: "fabric",

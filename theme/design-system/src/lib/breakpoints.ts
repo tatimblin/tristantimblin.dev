@@ -5,7 +5,7 @@
  * xl 1280 — and at ONE more, the widget grid's COMPACT step: at and below
  * 900px the grid drops from four columns to two (widget-grid.css), and a
  * widget's own script follows it (a band that is a touch target only when a
- * column is wide enough; the carousel promoted into the hero). Written once
+ * column is wide enough; which of the videos card's carousels is built). Written once
  * here and once in widget-grid.css, and nowhere else: a widget reads these.
  *
  * The convention for the direction: a rule that TAKES SOMETHING AWAY as the

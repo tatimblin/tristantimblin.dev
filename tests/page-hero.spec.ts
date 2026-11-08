@@ -1,7 +1,7 @@
 import { test, expect } from "./fixtures/test";
 
 /**
- * THE SECTION HERO (PageHero, on /txt and /about): the homepage's halftone
+ * THE SECTION HERO (PageHero, on /txt and /about): the fabric halftone
  * over the page's title, persisted across the client router so moving between
  * the section pages keeps the picture running instead of rebuilding it — the
  * same element, the same canvas (so the same WebGL context), the intro not

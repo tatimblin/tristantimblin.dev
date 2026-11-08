@@ -27,21 +27,8 @@ interface Props {
 	 * (the element's `fill` attribute; see the package's styles.css).
 	 */
 	fill?: boolean;
-	/**
-	 * The carousel as a full-bleed background scene: the clip cover-fills the host
-	 * and dissolves into the ruler, which sits along the bottom edge above the
-	 * caption (the element's `scene` attribute). Pair with `orientation="horizontal"`.
-	 */
-	scene?: boolean;
 	/** Extra class(es) forwarded to the <video-carousel> host. */
 	class?: string;
-	/**
-	 * Fade the halftone up on first arrival (the stage's <dotted-grid> `intro`,
-	 * a duration in ms; `introDelay` the hold before it). Opt-in: an entrance earns
-	 * its keep where the carousel IS the hero, not mid-page behind a scroll dock.
-	 */
-	intro?: number;
-	introDelay?: number;
 	/**
 	 * Animate clip-to-clip changes: `xfade` is the length in ms, `xfadeMode` the
 	 * style, and `xfadeLive` keeps both clips playing through the blend (which
@@ -59,8 +46,8 @@ interface Props {
 	 */
 	cellSize?: number;
 	/**
-	 * Cap on the halftone's render DPR. The shader's cost is per pixel, so a
-	 * full-bleed consumer passes 1; see effectiveDpr() in @tristimb/dotted-grid for
+	 * Cap on the halftone's render DPR. The shader's cost is per pixel, so the
+	 * phone's tile passes 1; see effectiveDpr() in @tristimb/dotted-grid for
 	 * why it must stay an integer.
 	 */
 	maxDpr?: number;
@@ -69,13 +56,6 @@ interface Props {
 	 * hugging each line (the element's `caption-overlay` attribute).
 	 */
 	captionOverlay?: boolean;
-	/**
-	 * Which edge a horizontal ruler's ticks stand on: `top` (default) hangs them
-	 * under the clip with the years below; `bottom` stands them on the strip's
-	 * floor with the years above — for a scene ruler sitting on the page edge
-	 * (the element's `ruler-baseline` attribute).
-	 */
-	rulerBaseline?: "top" | "bottom";
 }
 
 // The clips are data (src/data/video-clips.json): footage prepared by
@@ -87,17 +67,13 @@ const {
 	rulerSide = "left",
 	orientation,
 	fill = false,
-	scene = false,
 	class: className,
-	intro,
-	introDelay,
 	xfade,
 	xfadeMode,
 	xfadeLive,
 	cellSize = 7,
 	maxDpr,
 	captionOverlay = false,
-	rulerBaseline,
 } = Astro.props;
 
 const first = clips[0];
@@ -115,9 +91,7 @@ const webm = (src: string) => media(src.replace(/\.mp4$/, ".webm"));
 	ruler-side={rulerSide}
 	orientation={orientation}
 	fill={fill ? "" : undefined}
-	scene={scene ? "" : undefined}
 	caption-overlay={captionOverlay ? "" : undefined}
-	ruler-baseline={rulerBaseline}
 >
 	{/* Ruler + video share a row so the ruler's height tracks the video box only. */}
 	<div class="vc__main">
@@ -151,8 +125,6 @@ const webm = (src: string) => media(src.replace(/\.mp4$/, ".webm"));
 				no-loop
 				max-dpr={maxDpr}
 				cell-size={cellSize}
-				intro={intro}
-				intro-delay={introDelay}
 				xfade={xfade}
 				xfade-mode={xfadeMode}
 				xfade-live={xfadeLive ? "" : undefined}
@@ -180,10 +152,10 @@ const webm = (src: string) => media(src.replace(/\.mp4$/, ".webm"));
 <style>
 	/* Until the element upgrades, the ruler is only its authored tick buttons,
 	   laid out in a column; the upgrade rebuilds it (ticks, years, orientation) in
-	   the same task. Shown in that pre-upgrade state it painted a ~380px column
-	   down the phone hero for the first frames and then jumped into the scrubber,
-	   a layout shift of ~0.07. Hidden, it simply appears where it belongs. It does
-	   nothing without the script either. */
+	   the same task. Shown in that pre-upgrade state it would paint a column of
+	   bare buttons for the first frames and then jump into the scrubber, a layout
+	   shift. Hidden, it simply appears where it belongs. It does nothing without
+	   the script either. */
 	video-carousel:not(:defined) .vc__ruler {
 		visibility: hidden;
 	}

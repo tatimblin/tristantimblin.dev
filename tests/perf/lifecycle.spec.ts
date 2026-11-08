@@ -32,8 +32,8 @@ async function held(page: Page) {
 }
 
 async function roundTrip(page: Page) {
-	// Dispatched, not hit-tested: the link is in the parallaxing hero
-	// (tests/reveal.spec.ts test 6 says why).
+	// Dispatched, not hit-tested: the round trip is what this measures, not the
+	// link (as in tests/reveal.spec.ts test 6).
 	await page.evaluate(() =>
 		[...document.querySelectorAll<HTMLAnchorElement>("a")].find((a) => a.textContent?.trim() === "Writing")?.click(),
 	);

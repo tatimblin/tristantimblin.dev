@@ -5,11 +5,8 @@
 // --color-fg / --color-bg when data-theme flips, and this bar reads
 // --text-primary and --accent directly).
 //
-// Two placements, one component — so the site has one header, not two:
-//   overlay  (default) absolute over the top of the full-viewport dotgrid scene
-//            (AXIOM-style), rendered inside the landing hero.
-//   flow     in the normal flow at the top of a page — the blog's quiet top bar
-//            (BlogLayout, which PostLayout wraps).
+// One bar in the normal flow at the top of every page: the homepage's
+// (HomeLayout) and the blog's (BlogLayout, which PostLayout wraps).
 //
 // Nav is data-driven; pass `links` to change it per page, and `trail` to put
 // the page's path after the brand (a post: `/ txt / <slug>`). The brand, the
@@ -25,7 +22,6 @@ import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 
 interface Props {
 	links?: Array<{ label: string; href: string }>;
-	variant?: "overlay" | "flow";
 	/** Where the page sits, after the brand: `tristantimblin.dev / txt / mega-desk`.
 	 *  A step with an href links up; the last one is the page itself. `slug`
 	 *  lets it shorten on a narrow bar. */
@@ -37,7 +33,6 @@ const {
 		{ label: "Writing", href: "/txt/" },
 		{ label: "About Me", href: "/about/" },
 	],
-	variant = "overlay",
 	trail = [],
 } = Astro.props;
 
@@ -49,7 +44,7 @@ const isCurrent = (href: string) => href !== "/" && path.startsWith(href);
 {/* A .container row (global.css): the brand and nav sit on the same line as
      every contained row on the site — the homepage's, the blog's wide column,
      the footer. */}
-<header class:list={["site-header", "container", variant === "flow" && "site-header--flow"]}>
+<header class="site-header container">
 	<span class="site-header__path">
 		<Anchor variant="ink" class="site-header__brand" href="/" aria-label="tristantimblin.dev">
 			<span class="site-header__domain">tristantimblin.dev</span><span class="site-header__home" aria-hidden="true">~</span>
@@ -122,23 +117,12 @@ const isCurrent = (href: string) => href !== "/" && path.startsWith(href);
 </script>
 
 <style>
-	/* Overlay the top of the hero scene. Absolute (not fixed) so it scrolls away
-	   with the hero. z-index 4 sits above .fh__heading (3) and the scene (0). */
 	.site-header {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		z-index: 4;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-4);
 		padding-block: var(--space-4);
-		background: transparent;
-		/* Let pointers fall through the empty bar to the scene; the brand + links
-		   re-enable interaction on themselves (same pattern as the lockup). */
-		pointer-events: none;
 		/* UI FACE, set once on the bar so the brand and the nav links keep reading in
 		   the same voice — which was the point of the earlier change that put them
 		   both on the body face. The matching is right; the face was not. A 14px bar
@@ -146,23 +130,16 @@ const isCurrent = (href: string) => href !== "/" && path.startsWith(href);
 		   page rather than saying anything, which is precisely the role --font-ui is
 		   defined for ("the small, functional type that LABELS things rather than
 		   says them" — tokens.overrides.css). The body face, Roboto Mono, has a voice
-		   built for a paragraph; at chrome size that voice competes with the hero it
-		   is overlaying. DM Sans recedes, so the bar reads as bar. */
+		   built for a paragraph; at chrome size that voice competes with the page
+		   below it. DM Sans recedes, so the bar reads as bar. */
 		font-family: var(--font-ui);
-	}
-
-	/* In the flow: a plain bar above the page, hit-testable everywhere. */
-	.site-header--flow {
-		position: static;
-		pointer-events: auto;
 	}
 
 	/* The brand and the links: the face comes from .site-header (brand and nav
 	   are one object), the ink, the hover and the ring from the Anchor. What is
-	   left is the size and the pointer opt-in. */
+	   left is the size. */
 	.site-header__brand,
 	.site-header__link {
-		pointer-events: auto;
 		font-size: var(--font-size-1);
 	}
 	.site-header__brand {

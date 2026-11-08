@@ -167,7 +167,7 @@
    pass (measured: ~30ms of FCP).
    WHY NOT content-visibility ALL THE TIME: its layout/paint containment
    makes the card an isolation boundary, and the engine pixel-snaps the
-   card's contents to it. The cards sit on fractional pixels (the hero above
+   card's contents to it. The cards sit on fractional pixels (the opener above
    is sized in calc()), so a contained card drew every hairline and glyph
    inside it up to half a pixel off where it draws uncontained — measured:
    ~11k pixels changed across the grid at 1440×900. Contained only while far,

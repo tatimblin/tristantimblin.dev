@@ -56,10 +56,10 @@ jobs:
               - '!src/data/**'
               - '!**/*.md'
 
-  # Layout invariants that only a real engine can confirm — chiefly the mobile hero
-  # fold, where the heading group and the scene's bottom UI are in separate
-  # coordinate systems and nothing in flow reserves space between them
-  # (tests/hero-fold.spec.ts). Gates the deploy.
+  # Layout invariants that only a real engine can confirm — chiefly the homepage's
+  # opener, where the pinned wordmark and the parked videos card are placed by
+  # arithmetic in separate stylesheets, with no measurement between them
+  # (tests/home-opener.spec.ts). Gates the deploy.
   test:
     needs: changes
     if: github.event_name != 'push' || needs.changes.outputs.code == 'true'

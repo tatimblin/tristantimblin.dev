@@ -147,7 +147,7 @@ export async function engine(cdp: CDPSession) {
 export const CONTINUOUS = ["wobble-text"];
 
 /** Wait until nothing has asked for a frame for `quietMs` (but the copy's
- *  wobble, while it is in view): the hero's intro over, the mounts done. */
+ *  wobble, while it is in view): the mounts done. */
 export async function settle(page: Page, quietMs = 1000, timeout = 20_000) {
 	// rAF callbacks other than the scheduler's own frames, and scheduler
 	// callbacks other than the continuous ones.
@@ -168,9 +168,8 @@ export async function settle(page: Page, quietMs = 1000, timeout = 20_000) {
 	throw new Error(`the page never went quiet (${JSON.stringify((await counts(page)).rafBy)})`);
 }
 
-/** Past everything a load schedules for itself: the halftones' 3.2s intro and
- *  the reveal's 3s fail-visible backstop (Layout.astro), which restyles the
- *  page once more when it lifts. */
+/** Past everything a load schedules for itself: the reveal's 3s fail-visible
+ *  backstop (Layout.astro), which restyles the page once more when it lifts. */
 const LOAD_SETTLES_MS = 3600;
 
 /** Load the homepage and let it settle. `alongside` runs from the moment the

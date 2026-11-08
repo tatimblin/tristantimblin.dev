@@ -66,8 +66,9 @@ return a destroy, which runs before the next swap. `ctx`:
   in an idle callback.
 - **`idle`** — once the page has loaded, in an idle callback: for a card
   whose data should be live before it is seen (now playing's stream).
-- **`eager`** — at once, ahead of the rest: only for a card that must be
-  placed before the page can scroll (the videos card's dock lift).
+- **`eager`** — at once, ahead of the rest: only for a card whose script must
+  be in place before the page can scroll (the videos card's dock-lift
+  fallback, on an engine without scroll timelines).
 
 Mounts run one at a time with a yield between them. A module that fails to
 load, or a mount that throws, marks that card `data-widget-state="failed"` and
@@ -142,7 +143,7 @@ injected before any script; `frame.ts` hands the probe its counters
 | Budget | What it checks | Spec |
 | --- | --- | --- |
 | CLS | ≤ 0.01 over a load and a scroll through every card | `load.spec.ts` |
-| WebGL contexts | at load: desktop 2, phone 1 | `load.spec.ts` |
+| WebGL contexts | at load: desktop 1, phone 1 | `load.spec.ts` |
 | Media requests | videos fetched in the load window (the first 6s) | `load.spec.ts` |
 | Scripts before the first scroll | how many files, in the load window, and which widget chunks may be among them | `load.spec.ts` |
 | Engine work | CDP layout and style-recalc counts over a fixed load window and over a scroll pass: a ceiling 1.5× the most seen | `load.spec.ts`, `scroll.spec.ts` |

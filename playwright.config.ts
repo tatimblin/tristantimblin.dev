@@ -1,9 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Layout-invariant tests (see tests/hero-fold.spec.ts). The hero's fold arithmetic is
- * geometric and spans a viewport × content × preference matrix, so it can only be
- * confirmed by measuring real boxes in a real engine.
+ * Layout-invariant tests (see tests/home-opener.spec.ts). The opener's arithmetic is
+ * geometric and spans a viewport × preference matrix, so it can only be confirmed
+ * by measuring real boxes in a real engine.
  *
  * Serves the BUILT site via `astro preview` rather than the dev server, for two
  * reasons: `astro dev` daemonizes itself in Astro 7 (it returns immediately, which

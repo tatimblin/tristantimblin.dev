@@ -2,8 +2,8 @@
  *
  * Marked elements ([data-reveal]) start invisible and ease in once their asset has
  * decoded and they've scrolled into view. Only `opacity` and `translate` are ever
- * touched, and `translate` only BELOW the fold — see the module's header for why
- * the hero is opacity-free and why no geometric property may appear here.
+ * touched — see the module's header for why the lockup is never marked and why no
+ * geometric property may appear here.
  *
  * THE HIDDEN RULE REQUIRES TWO CONDITIONS: `html.reveal-armed` (set by the inline
  * head script in Layout.astro, which also schedules its own removal) AND the
@@ -24,9 +24,8 @@
 
 /* LONGHANDS, not the `transition` shorthand. A shorthand carrying an unresolved
    custom property is invalid-at-computed-value and drops the WHOLE declaration —
-   the same class of silent, production-only failure as the animation-timeline
-   shorthand trap documented in stories-heading/styles.css. Longhands fail
-   independently, so a missing token costs the timing, not the reveal. */
+   a silent, production-only failure. Longhands fail independently, so a missing
+   token costs the timing, not the reveal. */
 [data-reveal] {
 	transition-property: opacity, translate;
 	transition-duration: var(--duration-reveal);
