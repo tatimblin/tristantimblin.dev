@@ -13,6 +13,14 @@ import CardHeader from "@whois/design-system/CardHeader";
 import Mono from "@whois/design-system/Mono";
 import clips from "../../data/video-clips.json";
 
+interface Props {
+	/** The footer is the compact variant's scrubber: a band for the ticks (the
+	 *  carousel's ruler, placed over it in ./videos.css) and one line that
+	 *  swaps between the date and the location (./client.ts). */
+	scrub?: boolean;
+}
+
+const { scrub = false } = Astro.props;
 const first = clips[0];
 ---
 
@@ -20,8 +28,20 @@ const first = clips[0];
 	<CardHeader squeeze="title">
 		<span slot="title" class="wx-videos__label" data-vc-desc>{first?.description}</span>
 	</CardHeader>
-	<div class="wx-videos__foot">
-		<Mono class="wx-videos__loc" variant="text" tone="secondary" truncate data-vc-loc>{first?.location}</Mono>
-		<Mono class="wx-videos__date" variant="value" data-vc-date>{first?.date}</Mono>
-	</div>
+	{
+		scrub ? (
+			<div class="wx-videos__foot wx-videos__foot--scrub">
+				<span class="wx-videos__band" />
+				<span class="wx-videos__line">
+					<Mono variant="text" tone="secondary" truncate data-vc-date>{first?.date}</Mono>
+					<Mono variant="text" tone="secondary" truncate data-vc-loc>{first?.location}</Mono>
+				</span>
+			</div>
+		) : (
+			<div class="wx-videos__foot">
+				<Mono class="wx-videos__loc" variant="text" tone="secondary" truncate data-vc-loc>{first?.location}</Mono>
+				<Mono class="wx-videos__date" variant="value" data-vc-date>{first?.date}</Mono>
+			</div>
+		)
+	}
 </figcaption>

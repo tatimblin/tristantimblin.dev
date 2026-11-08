@@ -56,8 +56,11 @@
 	   height and the centring, so the park is final on the first frame. */
 	--vc-dock-travel: var(--home-dock-travel);
 	/* How much scroll the chrome takes to fade in: the last stretch of the dock,
-	   where the card is already moving with the page (see THE CHROME below). */
-	--vc-chrome-run: var(--space-8);
+	   where the card is already moving with the page (see THE CHROME below). At
+	   d px before the end the card is 1.5d²/travel from its cell, so a run of a
+	   fixed 48px would start 7.4px off on a short phone (a 444px travel): at most
+	   8% of the travel keeps the start within 6px at every size. */
+	--vc-chrome-run: min(var(--space-8), var(--vc-dock-travel) * 0.08);
 	/* THE STATIC STATE is parked: an engine without scroll timelines shows it
 	   there until ./client.ts drives --vc-dock-lift (and without the script,
 	   keeps it there, in the open column of the opener). Reduced motion docks
@@ -199,7 +202,8 @@
    page; it has fully landed when this ends. */
 @media (prefers-reduced-motion: no-preference) {
 	@supports (animation-timeline: scroll()) {
-		.wx-videos__chrome {
+		.wx-videos__chrome,
+		.wx-videos__compact .vc__ruler {
 			animation-name: vc-chrome;
 			animation-timing-function: linear;
 			animation-fill-mode: both;
@@ -225,9 +229,43 @@
 	opacity: 1 !important;
 }
 @media print {
-	.wx-videos__chrome {
+	.wx-videos__chrome,
+	.wx-videos__compact .vc__ruler {
 		opacity: 1 !important;
 	}
+}
+
+/* THE COMPACT FOOTER: the tick band, then one line where the date and the
+   location share a cell (./client.ts swaps them when a clip changes and holds
+   the date through a scrub; a clip with no location stays on the date). */
+.wx-videos__foot--scrub {
+	display: grid;
+	justify-content: stretch;
+	align-items: stretch;
+	gap: var(--space-1);
+	padding: 0 var(--widget-pad) var(--space-2);
+}
+.wx-videos__band {
+	display: block;
+	block-size: var(--space-5);
+}
+.wx-videos__line {
+	display: grid;
+	min-inline-size: 0;
+}
+.wx-videos__line > * {
+	grid-area: 1 / 1;
+	min-inline-size: 0;
+}
+.wx-videos__line [data-vc-date] {
+	opacity: 0;
+}
+.wx-videos__line:has([data-vc-loc]:empty) [data-vc-date],
+.wx-videos__line[data-scrub] [data-vc-date] {
+	opacity: 1;
+}
+.wx-videos__line[data-scrub] [data-vc-loc] {
+	opacity: 0;
 }
 
 /* One variant per grid step (Videos.astro); a resize across the step can have
@@ -237,10 +275,14 @@
 }
 
 /* THE COMPACT STEP (the grid's own, widget-grid.css; WIDGET_COMPACT_MQ for a
-   script): two columns, the card in the second. No ruler — so none of its
-   room either: the grid reserves none and the cell is all clip — and no
-   input; the clips advance on their own. A viewport query, as the grid's
-   is — this follows the column count, not the cell. */
+   script): two columns, the card in the second. No gutter ruler, so none of
+   its room either: the grid reserves none and the cell is all clip. The ruler
+   lays over the footer instead, out of the flow so the clip keeps the cell,
+   full width over the whole footer (a target the height of the footer, the
+   ticks along its top edge), on the chrome's fade. The tile takes no input
+   until it has docked: the fade alone wouldn't stop hit-testing, and the host
+   stays pointer-events: none; ./client.ts sets data-vc-docked. A viewport
+   query, as the grid's is — this follows the column count, not the cell. */
 @media (max-width: 900px) {
 	.ds-widget-grid:has(.wx-videos) {
 		--vc-ruler-w: 0px;
@@ -254,9 +296,28 @@
 	}
 	.wx-videos__compact {
 		display: flex;
+		position: relative;
 		pointer-events: none;
+		/* The footer's height (VideoChrome), from its parts — the ruler is a
+		   sibling of the stage, so it can't read the box: the rule, the band,
+		   the gap, the line and the pad. */
+		--vc-foot-h: calc(
+			var(--border-width) + var(--space-5) + var(--space-1) + var(--voice-mono-size) * var(--line-height-ui) +
+				var(--space-2)
+		);
 	}
-	.wx-videos .vc__ruler {
-		display: none;
+	.wx-videos__compact .vc__ruler {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 0;
+		inline-size: auto;
+		/* The package reserves --vc-ruler-h and, below 640px, a top margin. */
+		block-size: var(--vc-foot-h);
+		margin-block-start: 0;
+		z-index: 2;
+		opacity: var(--vc-chrome, 1);
+	}
+	.wx-videos[data-vc-docked] .wx-videos__compact .vc__ruler {
+		pointer-events: auto;
 	}
 }

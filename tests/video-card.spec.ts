@@ -57,19 +57,34 @@ test("the floating clip is bare; the chrome is on once the dock has landed", asy
 	expect(await chrome(page), "past the dock").toBe(1);
 });
 
-test("the fade starts with the card within a few px of its cell, and ends docked", async ({ page }) => {
-	await open(page);
-	const end = await travel(page);
-	const offsetAt = async (y: number) => {
-		await scrollTo(page, y);
-		return page.evaluate(
-			() => new DOMMatrix(getComputedStyle(document.querySelector(".wx-videos")!).transform).m42,
-		);
-	};
-	const atStart = Math.abs(await offsetAt(Math.ceil(end) - 48));
-	expect(atStart, "off its cell as the chrome starts").toBeLessThanOrEqual(6);
-	expect(await offsetAt(Math.ceil(end)), "landed as the chrome finishes").toBeCloseTo(0, 0);
-});
+for (const viewport of [DESKTOP, { width: 390, height: 844 }, { width: 360, height: 640 }]) {
+	test(`the fade starts with the card within a few px of its cell, and ends docked (${viewport.width}×${viewport.height})`, async ({
+		page,
+	}) => {
+		await open(page, viewport);
+		const end = await travel(page);
+		const run = await page.evaluate(() => {
+			const host = document.querySelector<HTMLElement>(".wx-videos")!;
+			const probe = document.createElement("div");
+			probe.style.cssText = "position:absolute;visibility:hidden;height:var(--vc-chrome-run)";
+			host.appendChild(probe);
+			const h = probe.getBoundingClientRect().height;
+			probe.remove();
+			return h;
+		});
+		const offsetAt = async (y: number) => {
+			await scrollTo(page, y);
+			return page.evaluate(
+				() => new DOMMatrix(getComputedStyle(document.querySelector(".wx-videos")!).transform).m42,
+			);
+		};
+		const atStart = Math.abs(await offsetAt(Math.ceil(end - run)));
+		expect(atStart, "off its cell as the chrome starts").toBeLessThanOrEqual(6);
+		expect(await chrome(page), "and only just beginning to fade").toBeLessThanOrEqual(0.05);
+		expect(await offsetAt(Math.ceil(end)), "landed as the chrome finishes").toBeCloseTo(0, 0);
+		expect(await chrome(page)).toBe(1);
+	});
+}
 
 test("where the page ends before the travel does, the chrome lands with the dock there", async ({
 	page,

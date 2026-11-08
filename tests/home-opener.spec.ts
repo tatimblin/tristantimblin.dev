@@ -212,7 +212,7 @@ test.describe("desktop 1440×900", () => {
 });
 
 test.describe("phone 390×844", () => {
-	test("at rest: a 1×2 tile in the right column, no scrubber, only 'tristan' over it", async ({ page }) => {
+	test("at rest: a 1×2 tile in the right column, the scrubber dormant, only 'tristan' over it", async ({ page }) => {
 		await open(page, 390, 844);
 		const s = await at(page, 0);
 		// Right column, a 1×2 of the phone's cells.
@@ -223,11 +223,17 @@ test.describe("phone 390×844", () => {
 		expect(overlaps(s.word, s.card)).toBe(true);
 		expect(overlaps(s.tagline, s.card)).toBe(false);
 		expect(overlaps(s.intro, s.card)).toBe(false);
-		// No scrubber, and the tile takes no input.
-		await expect(page.locator(".wx-videos .vc__ruler")).toBeHidden();
-		expect(
-			await page.evaluate(() => getComputedStyle(document.querySelector(".wx-videos video-carousel")!).pointerEvents),
-		).toBe("none");
+		// The scrubber is faded out and locked until the card docks, and the tile
+		// takes no input.
+		const dormant = await page.evaluate(() => {
+			const ruler = document.querySelector<HTMLElement>(".wx-videos .vc__ruler")!;
+			return {
+				opacity: getComputedStyle(ruler).opacity,
+				inert: ruler.inert,
+				host: getComputedStyle(document.querySelector(".wx-videos video-carousel")!).pointerEvents,
+			};
+		});
+		expect(dormant).toEqual({ opacity: "0", inert: true, host: "none" });
 	});
 
 	test("the word moves at once; the wipe waits until it is clear of the tile", async ({ page }) => {

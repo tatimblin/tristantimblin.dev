@@ -21,6 +21,8 @@ interface Props {
 	rulerSide?: "left" | "right";
 	/** Pin the ruler axis (bypasses the ≤640px auto-flip). Omit for responsive. */
 	orientation?: "vertical" | "horizontal";
+	/** "even": one ruler tick per clip, for a list too bunched in time to scrub. */
+	axis?: "even";
 	/**
 	 * The host has been given a box (a grid cell with a definite height) and the
 	 * clip fills it; with `rulerSide="right"` the ruler overhangs the host's edge
@@ -66,6 +68,7 @@ const clips: Clip[] = clipsData;
 const {
 	rulerSide = "left",
 	orientation,
+	axis,
 	fill = false,
 	class: className,
 	xfade,
@@ -90,6 +93,7 @@ const webm = (src: string) => media(src.replace(/\.mp4$/, ".webm"));
 	tick-src="/audio/tick_004.ogg"
 	ruler-side={rulerSide}
 	orientation={orientation}
+	axis={axis}
 	fill={fill ? "" : undefined}
 	caption-overlay={captionOverlay ? "" : undefined}
 >

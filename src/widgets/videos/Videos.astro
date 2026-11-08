@@ -56,12 +56,11 @@ const { class: className, ...rest } = Astro.props;
 	    (videos.css): the other is never created, so it costs no WebGL context
 	    and no video download.
 	    Four columns: the date ruler beside the cell, out in the page gutter.
-	    Two columns: no ruler (a phone's gutter has no room for it, and ~25 clips
-	    across a 167px tile would be under 7px a clip), so the clips advance on
-	    their own and the tile takes no input; the orientation is pinned so the
-	    hidden ruler never flips to a strip under the clip. Rendered at 1× (the
-	    halftone's cost is per pixel) on a finer lattice, so the picture still
-	    reads at a phone tile's width. */}
+	    Two columns: a horizontal ruler laid over the footer, one tick per clip
+	    (the even axis: ~28 clips bunched by date would be under 7px each, and
+	    the footer's line says when), usable only once docked (./videos.css,
+	    ./client.ts). Rendered at 1× (the halftone's cost is per pixel) on a
+	    finer lattice, so the picture still reads at a phone tile's width. */}
 	<Deferred media={WIDGET_WIDE_MQ}>
 		<VideoCarousel
 			class="wx-videos__wide"
@@ -80,14 +79,15 @@ const { class: className, ...rest } = Astro.props;
 			class="wx-videos__compact"
 			fill
 			rulerSide="right"
-			orientation="vertical"
+			orientation="horizontal"
+			axis="even"
 			xfade={1600}
 			xfadeMode="threshold"
 			xfadeLive
 			cellSize={4}
 			maxDpr={1}
 		>
-			<VideoChrome slot="caption" />
+			<VideoChrome slot="caption" scrub />
 		</VideoCarousel>
 	</Deferred>
 </Widget>
