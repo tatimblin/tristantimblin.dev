@@ -129,22 +129,26 @@ const webm = (src: string) => media(src.replace(/\.mp4$/, ".webm"));
 				xfade-mode={xfadeMode}
 				xfade-live={xfadeLive ? "" : undefined}
 			></dotted-grid>
-			{/* Title then place, no date (the ruler says when). Each run sits in its
-			   own line so `caption-overlay` can give it one highlight that follows the
-			   text across a wrap; both wrappers are `display: contents` otherwise. The
-			   element rewrites the [data-vc-*] fields on every selection. */}
-			<figcaption class="vc__caption">
-				<span class="vc__cap-line">
-					<span class="vc__cap-run vc__cap-run--title">
-						<Mono class="vc__desc" tone="primary" data-vc-desc>{first?.description}</Mono>
+			{/* The `caption` slot replaces this figcaption outright, for a consumer
+			   that draws its own: it keeps the [data-vc-*] hooks and the element fills
+			   them. Title then place, no date (the ruler says when). Each run sits in
+			   its own line so `caption-overlay` can give it one highlight that follows
+			   the text across a wrap; both wrappers are `display: contents` otherwise.
+			   The element rewrites the [data-vc-*] fields on every selection. */}
+			<slot name="caption">
+				<figcaption class="vc__caption">
+					<span class="vc__cap-line">
+						<span class="vc__cap-run vc__cap-run--title">
+							<Mono class="vc__desc" tone="primary" data-vc-desc>{first?.description}</Mono>
+						</span>
 					</span>
-				</span>
-				<span class="vc__cap-line">
-					<span class="vc__cap-run vc__cap-run--meta">
-						<Mono class="vc__loc" variant="text" data-vc-loc>{first?.location}</Mono>
+					<span class="vc__cap-line">
+						<span class="vc__cap-run vc__cap-run--meta">
+							<Mono class="vc__loc" variant="text" data-vc-loc>{first?.location}</Mono>
+						</span>
 					</span>
-				</span>
-			</figcaption>
+				</figcaption>
+			</slot>
 		</figure>
 	</div>
 </video-carousel>

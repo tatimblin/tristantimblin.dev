@@ -24,6 +24,7 @@ import Widget from "@whois/design-system/Widget";
 import { WIDGET_COMPACT_MQ, WIDGET_WIDE_MQ } from "@whois/design-system/lib/breakpoints";
 import Deferred from "../../components/Deferred.astro";
 import VideoCarousel from "../../components/VideoCarousel.astro";
+import VideoChrome from "./VideoChrome.astro";
 import "./videos.css";
 
 interface Props {
@@ -47,8 +48,10 @@ const { class: className, ...rest } = Astro.props;
 	{/* Clip changes get the threshold transition, so the carousel behaves the
 	    same wherever it appears. No `intro`: the dock is its entrance. */}
 	{/* The tone is tuned once per theme, in src/styles/halftone.css (.wx-videos). */}
-	{/* No card chrome: the halftone sits straight on the page, filling the cell,
-	    with its caption laid over the clip's corner as a TV caption. */}
+	{/* No card chrome on the Widget: the halftone sits straight on the page,
+	    filling the cell, and the card it wears once docked is VideoChrome, an
+	    overlay in the carousel's caption slot that fades in as the dock ends
+	    (./videos.css). */}
 	{/* TWO VARIANTS, one per grid step, each Deferred to the widths that show it
 	    (videos.css): the other is never created, so it costs no WebGL context
 	    and no video download.
@@ -64,12 +67,13 @@ const { class: className, ...rest } = Astro.props;
 			class="wx-videos__wide"
 			fill
 			rulerSide="right"
-			captionOverlay
 			xfade={1600}
 			xfadeMode="threshold"
 			xfadeLive
 			cellSize={6}
-		/>
+		>
+			<VideoChrome slot="caption" />
+		</VideoCarousel>
 	</Deferred>
 	<Deferred media={WIDGET_COMPACT_MQ}>
 		<VideoCarousel
@@ -77,12 +81,13 @@ const { class: className, ...rest } = Astro.props;
 			fill
 			rulerSide="right"
 			orientation="vertical"
-			captionOverlay
 			xfade={1600}
 			xfadeMode="threshold"
 			xfadeLive
 			cellSize={4}
 			maxDpr={1}
-		/>
+		>
+			<VideoChrome slot="caption" />
+		</VideoCarousel>
 	</Deferred>
 </Widget>

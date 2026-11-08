@@ -1,0 +1,27 @@
+---
+// VideoChrome — the card the clip wears once docked, laid over it as one layer:
+// the frame, a CardHeader whose title is the clip's label, and a footer. A
+// figcaption, in the carousel's `caption` slot, so the clip is named once, by
+// its own figure, at every opacity; nothing here takes a place in the stage's
+// flow, so the clip keeps the whole cell and only opacity ever changes
+// (./videos.css).
+//
+// Server-rendered with the first clip; the element rewrites the [data-vc-*]
+// fields on every selection, so the hooks go on the elements that hold the
+// text. The title is a plain span: the header's own Mono sets the title voice.
+import CardHeader from "@whois/design-system/CardHeader";
+import Mono from "@whois/design-system/Mono";
+import clips from "../../data/video-clips.json";
+
+const first = clips[0];
+---
+
+<figcaption class="wx-videos__chrome">
+	<CardHeader squeeze="title">
+		<span slot="title" class="wx-videos__label" data-vc-desc>{first?.description}</span>
+	</CardHeader>
+	<div class="wx-videos__foot">
+		<Mono class="wx-videos__loc" variant="text" tone="secondary" truncate data-vc-loc>{first?.location}</Mono>
+		<Mono class="wx-videos__date" variant="value" data-vc-date>{first?.date}</Mono>
+	</div>
+</figcaption>

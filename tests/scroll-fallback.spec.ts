@@ -200,3 +200,43 @@ test("the dock lift is driven by exactly one mechanism, and docks either way", a
 	expect((await at(3000)).lift, "docked: no lift left").toBe(0);
 	expect((await at(0)).lift, "and lifted again on the way back up").toBeCloseTo(rest.lift, 0);
 });
+
+/** The chrome it puts on as it docks: the same arrangement again, one layer's
+ *  opacity on the dock's timeline, or --vc-chrome written from client.ts. */
+test("the chrome's fade is driven by exactly one mechanism, and lands either way", async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await page.goto("/");
+	await page.locator(".wx-videos[data-widget-state=mounted]").waitFor({ state: "attached", timeout: 15_000 });
+
+	const at = async (y: number) => {
+		await page.evaluate((v) => window.scrollTo(0, v), y);
+		await page.waitForTimeout(250);
+		return page.evaluate(() => {
+			const el = document.querySelector<HTMLElement>(".wx-videos")!;
+			const chrome = document.querySelector<HTMLElement>(".wx-videos__chrome")!;
+			return {
+				supports:
+					typeof CSS !== "undefined" &&
+					typeof CSS.supports === "function" &&
+					CSS.supports("animation-timeline", "scroll()"),
+				scrollAnimations: chrome
+					.getAnimations()
+					.filter((a) => /ScrollTimeline/.test(a.timeline?.constructor?.name ?? "")).length,
+				inlineChrome: el.style.getPropertyValue("--vc-chrome"),
+				opacity: Number(getComputedStyle(chrome).opacity),
+			};
+		});
+	};
+
+	const rest = await at(0);
+	if (rest.supports) {
+		expect(rest.scrollAnimations, "CSS should drive the chrome here").toBe(1);
+		expect(rest.inlineChrome, "the JS fallback is ALSO running").toBe("");
+	} else {
+		expect(rest.scrollAnimations).toBe(0);
+		expect(rest.inlineChrome, "no scroll timelines and no JS fallback either").toBe("0.000");
+	}
+	expect(rest.opacity, "bare at rest").toBe(0);
+	expect((await at(3000)).opacity, "on once docked").toBe(1);
+	expect((await at(0)).opacity, "and off again on the way back up").toBe(0);
+});

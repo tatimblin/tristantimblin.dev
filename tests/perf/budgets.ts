@@ -72,7 +72,7 @@ export const WIDGET_GZIP = {
 	github: 300,
 	"now-playing": 7100,
 	readers: 1300,
-	videos: 1000,
+	videos: 1200,
 	volo: 1200,
 } as Record<string, number>;
 /** A new widget's chunk, until it is given its own line above. */

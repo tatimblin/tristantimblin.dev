@@ -38,7 +38,7 @@ const ROLES: Array<[string, string, string, number]> = [
 	["hero lede", ".sh__sub > :last-child", "DM Sans", 500],
 	["widget UI", ".home .ds-widget-grid .ds-widget", "DM Sans", 400],
 	["widget figure", ".ds-figure__num", "DM Sans", 400],
-	["label voice", ".home .ds-widget-grid .ds-mono", "DM Sans", 400],
+	["label voice", ".home .ds-widget-grid .ds-mono:not(.ds-mono--variant-title)", "DM Sans", 400],
 ];
 
 /** Every cut, by family: the weights fonts.css declares, each in two subsets. */
