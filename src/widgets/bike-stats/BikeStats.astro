@@ -164,7 +164,8 @@ const inkAspect = pngAspect(readFileSync(`public${INK}`));
 	   the card has not been marked in, so every failure path lands on visible.
 	   It rolls in forward, from the left. */
 	@media (prefers-reduced-motion: no-preference) {
-		:global(html.reveal-armed) .wx-baywheels:not([data-reveal-state="in"]) .wx-bw-bike {
+		:global(html.reveal-armed) .wx-baywheels:not([data-reveal-state="in"]) .wx-bw-bike,
+		.wx-baywheels[data-reveal-state="pending"] .wx-bw-bike {
 			opacity: 0;
 			translate: calc(-1 * var(--space-8)) 0;
 		}

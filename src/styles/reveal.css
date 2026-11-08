@@ -12,7 +12,12 @@
  * VISIBLE. The un-armed document is the visible document. */
 
 @media (prefers-reduced-motion: no-preference) {
-	html.reveal-armed [data-reveal]:not([data-reveal-state="in"]) {
+	/* The second selector: a card in a grid is held until it is reached however
+	   long that takes, past the head script's backstop. Only the running
+	   coordinator ever writes "pending", so that is still a state every failure
+	   path lands out of (it is the same "script is alive" the class stands for). */
+	html.reveal-armed [data-reveal]:not([data-reveal-state="in"]),
+	[data-reveal="row"][data-reveal-state="pending"] {
 		opacity: 0;
 		/* `translate`, NOT `transform`: it composes with the JS-driven transforms
 		   already on some of these elements (the widget grid's --vc-dock-lift, the
@@ -43,6 +48,7 @@
    bike-stats reveal's own reduced-motion block. */
 @media (prefers-reduced-motion: reduce) {
 	[data-reveal],
+	[data-reveal="row"][data-reveal-state="pending"],
 	html.reveal-armed [data-reveal]:not([data-reveal-state="in"]) {
 		opacity: 1;
 		translate: none;
@@ -53,6 +59,7 @@
 /* A hidden region must never print blank. */
 @media print {
 	[data-reveal],
+	[data-reveal="row"][data-reveal-state="pending"],
 	html.reveal-armed [data-reveal]:not([data-reveal-state="in"]) {
 		opacity: 1;
 		translate: none;

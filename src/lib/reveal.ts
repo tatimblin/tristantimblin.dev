@@ -27,8 +27,12 @@
  * inline head script that also schedules its own removal) AND the absence of the
  * revealed state, so every failure path ends shown: no JS → never armed; bundle
  * 404s → the inline backstop disarms; an asset hangs → the deadline fires.
+ * A widget card alone outlasts that backstop: once this coordinator has marked it
+ * "pending" (which only a running coordinator can), it is held until it is reached
+ * however late that is, so a card scrolled to after 3s still has its entrance.
  */
 
+import { arrivals, type Arrival } from "@whois/design-system/lib/activity";
 import { whenMounted } from "@whois/design-system/lib/widgets";
 
 /** Cap on how long a reveal waits for its assets before revealing anyway. */
@@ -132,7 +136,8 @@ function withDeadline(promise: Promise<unknown>, ms: number): Promise<void> {
 }
 
 class RevealCoordinator {
-	private observers: IntersectionObserver[] = [];
+	/** Drops every wait on the shared observers (activity.ts) at teardown. */
+	private watching = new AbortController();
 	private timers: number[] = [];
 	private destroyed = false;
 
@@ -182,42 +187,38 @@ class RevealCoordinator {
 	 * ones that reach it in the same observer callback (a row, or everything a jump
 	 * lands on) stagger top to bottom, left to right. Measured, not authored: the
 	 * grid's dense packing puts them somewhere other than DOM order, differently per
-	 * column count.
+	 * column count. On the widget runtime's own observers (activity.ts): the mount is
+	 * its subscription a screen ahead, this is another at the in-view line.
 	 */
 	private watchRows(cards: HTMLElement[]) {
-		const io = new IntersectionObserver(
-			(entries, observer) => {
-				const arrived = entries.filter((e) => e.isIntersecting);
-				for (const entry of arrived) observer.unobserve(entry.target);
-				const landed = new Set(arrived.map((e) => e.target));
-				// A jump can carry a card clean past the view with no callback of its
+		const watch = arrivals(
+			cards,
+			(arrived) => {
+				const landed = new Set(arrived.map((a) => a.el));
+				// A jump can carry a card clean past the view with no report of its
 				// own: shown at once, so it is there when the visitor scrolls back.
 				for (const el of cards) {
 					if (el.dataset.revealState === "in" || landed.has(el)) continue;
 					if (el.getBoundingClientRect().bottom < 0) {
-						observer.unobserve(el);
+						watch.release(el);
 						el.dataset.revealState = "in";
 					}
 				}
 				if (arrived.length) void this.revealArrival(arrived);
 				else this.scheduleDisarm();
 			},
-			{ rootMargin: IN_VIEW_MARGIN, threshold: ROW_THRESHOLD }
+			{ margin: IN_VIEW_MARGIN, threshold: ROW_THRESHOLD, signal: this.watching.signal }
 		);
-		for (const el of cards) io.observe(el);
-		this.observers.push(io);
 	}
 
-	private async revealArrival(arrived: IntersectionObserverEntry[]) {
+	private async revealArrival(arrived: Arrival[]) {
 		// Sorted on the observer's own rects, so nothing here forces a layout. Rounded,
 		// because the cards of a row sit on the same fractional pixel only nearly.
 		const ordered = [...arrived]
 			.sort(
-				(a, b) =>
-					Math.round(a.boundingClientRect.top) - Math.round(b.boundingClientRect.top) ||
-					a.boundingClientRect.left - b.boundingClientRect.left
+				(a, b) => Math.round(a.rect.top) - Math.round(b.rect.top) || a.rect.left - b.rect.left
 			)
-			.map((e) => e.target as HTMLElement);
+			.map((a) => a.el as HTMLElement);
 
 		await this.whenReady(ordered);
 		if (this.destroyed) return;
@@ -241,23 +242,22 @@ class RevealCoordinator {
 		);
 	}
 
-	/** Resolve on first intersection, then unobserve. */
+	/** Resolve on first intersection; on the shared observers, one per margin and
+	 *  threshold however many elements are waiting. */
 	private whenInView(el: HTMLElement): Promise<void> {
+		const eager = el.dataset.reveal === "eager";
 		return new Promise<void>((resolve) => {
-			const io = new IntersectionObserver(
-				(entries, observer) => {
-					for (const entry of entries) {
-						if (!entry.isIntersecting) continue;
-						observer.unobserve(entry.target);
-						resolve();
-					}
+			arrivals(
+				[el],
+				(arrived) => {
+					if (arrived.length) resolve();
 				},
-				el.dataset.reveal === "eager"
-					? { rootMargin: EAGER_MARGIN, threshold: EAGER_THRESHOLD }
-					: { rootMargin: IN_VIEW_MARGIN, threshold: IN_VIEW_THRESHOLD }
+				{
+					margin: eager ? EAGER_MARGIN : IN_VIEW_MARGIN,
+					threshold: eager ? EAGER_THRESHOLD : IN_VIEW_THRESHOLD,
+					signal: this.watching.signal,
+				}
 			);
-			io.observe(el);
-			this.observers.push(io);
 		});
 	}
 
@@ -280,8 +280,7 @@ class RevealCoordinator {
 
 	destroy() {
 		this.destroyed = true;
-		for (const io of this.observers) io.disconnect();
-		this.observers = [];
+		this.watching.abort();
 		for (const t of this.timers) window.clearTimeout(t);
 		this.timers = [];
 		// A swap mid-flight must not strand anything hidden.

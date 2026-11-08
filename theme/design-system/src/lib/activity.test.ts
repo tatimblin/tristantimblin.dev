@@ -135,6 +135,70 @@ describe("activity", () => {
 		expect(late.active).toBe(true);
 	});
 
+	test("arrivals: one report for all that arrive together, once each, then released", async () => {
+		const t = env();
+		const hub = createActivityHub(t.env);
+		const [x, y, z] = [el(), el(), el()];
+		const reports: Element[][] = [];
+		hub.arrivals([x, y, z], (arrived) => reports.push(arrived.map((a) => a.el)), { margin: "0px" });
+		expect(t.ios).toHaveLength(1);
+		t.ios[0].batch([x, y], true);
+		await Promise.resolve();
+		expect(reports).toEqual([[x, y]]);
+		expect(t.ios[0].targets.has(x)).toBe(false);
+		expect(t.ios[0].targets.has(z)).toBe(true);
+		t.ios[0].fire(z, true);
+		await Promise.resolve();
+		expect(reports).toEqual([[x, y], [z]]);
+		expect(hub.observerCount(), "the last release retires the observer").toBe(0);
+	});
+
+	test("arrivals hands over the observer's rect, and an out-of-view report arrives empty", async () => {
+		const t = env();
+		const hub = createActivityHub(t.env);
+		const target = el();
+		const reports: unknown[] = [];
+		hub.arrivals([target], (arrived) => reports.push(arrived.map((a) => a.rect)));
+		t.ios[0].fire(target, false);
+		await Promise.resolve();
+		expect(reports).toEqual([[]]);
+		expect(t.ios[0].targets.has(target)).toBe(true);
+		const io = t.ios[0];
+		io.fire(target, true);
+		await Promise.resolve();
+		expect(reports.at(-1)).toEqual([{ top: 0, left: 0 }]);
+	});
+
+	test("arrivals: release and abort stop waiting; a threshold is its own observer", async () => {
+		const t = env();
+		const hub = createActivityHub(t.env);
+		const [x, y] = [el(), el()];
+		const ac = new AbortController();
+		const reports: Element[][] = [];
+		const watch = hub.arrivals([x, y], (arrived) => reports.push(arrived.map((a) => a.el)), {
+			signal: ac.signal,
+		});
+		hub.arrivals([x], () => {}, { threshold: 0.2 });
+		expect(t.ios).toHaveLength(2);
+		watch.release(x);
+		expect(t.ios[0].targets.has(x)).toBe(false);
+		t.ios[0].fire(y, true);
+		ac.abort();
+		await Promise.resolve();
+		expect(reports, "an abort drops a report in flight").toEqual([]);
+		expect(hub.observerCount()).toBe(1);
+	});
+
+	test("arrivals and activity on one margin share its observer", () => {
+		const t = env();
+		const hub = createActivityHub(t.env);
+		const [x, y] = [el(), el()];
+		hub.activity(x);
+		hub.arrivals([y], () => {});
+		expect(t.ios).toHaveLength(1);
+		expect(t.ios[0].targets.size).toBe(2);
+	});
+
 	test("a listener that throws is reported, and the others in the same report still hear it", () => {
 		const t = env();
 		const hub = createActivityHub(t.env);

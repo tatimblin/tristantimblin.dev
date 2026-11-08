@@ -75,6 +75,15 @@ async function settleReveal(page: Page) {
 	);
 }
 
+/** Scroll the whole page, so every card reaches its in-view line. */
+async function walkPage(page: Page) {
+	const height = await page.evaluate(() => document.documentElement.scrollHeight);
+	for (let y = 0; y <= height; y += 300) {
+		await page.evaluate((v) => window.scrollTo(0, v), y);
+		await page.waitForTimeout(40);
+	}
+}
+
 test.describe("reveal — safety", () => {
 	test("1. NO-JS: nothing is hidden when scripting is off", async ({ browser }) => {
 		// The hidden rule is scoped to a class only script can add, so with no script
@@ -178,6 +187,7 @@ test.describe("reveal — safety", () => {
 
 	test("6. IDEMPOTENT: survives a view-transition round trip", async ({ page }) => {
 		await page.goto("/");
+		await walkPage(page);
 		await settleReveal(page);
 
 		// ClientRouter swaps the document; the coordinator must tear down and rebuild
@@ -256,6 +266,7 @@ test.describe("reveal — safety", () => {
 
 		await page.goto("/");
 		await show();
+		await walkPage(page);
 		await settleReveal(page);
 		await expectWatermarkShown("first load");
 
@@ -411,6 +422,74 @@ test.describe("reveal — below-the-fold behaviour", () => {
 		expect((await readReveal(page)).faded).toBe(0);
 	});
 
+	/** Every IntersectionObserver a page constructs, by its options. */
+	async function countObservers(page: Page) {
+		await page.addInitScript(() => {
+			const made: string[] = [];
+			(window as unknown as { __ios: string[] }).__ios = made;
+			const Real = window.IntersectionObserver;
+			window.IntersectionObserver = class extends Real {
+				constructor(cb: IntersectionObserverCallback, opts?: IntersectionObserverInit) {
+					super(cb, opts);
+					made.push(`${opts?.rootMargin ?? ""}|${String(opts?.threshold ?? 0)}`);
+				}
+			};
+		});
+	}
+	const made = (page: Page) => page.evaluate(() => (window as unknown as { __ios: string[] }).__ios);
+
+	test("the entrance is a subscription on the framework's observers, not an observer per card", async ({
+		page,
+	}) => {
+		await countObservers(page);
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/");
+		await page.waitForFunction(
+			() => document.querySelector('[data-reveal="row"]')?.hasAttribute("data-reveal-state") === true
+		);
+		const ios = await made(page);
+		expect(ios.filter((k) => k === "0px 0px -10% 0px|0"), "one for all the cards").toHaveLength(1);
+		expect(new Set(ios).size, "nothing made twice").toBe(ios.length);
+	});
+
+	test("a post's images share one observer", async ({ page }) => {
+		await countObservers(page);
+		await page.goto("/txt/mega-desk/");
+		await page.waitForFunction(
+			() => document.querySelector("[data-reveal]")?.hasAttribute("data-reveal-state") === true
+		);
+		const targets = await page.locator("[data-reveal]").count();
+		expect(targets).toBeGreaterThan(1);
+		expect((await made(page)).filter((k) => k === "0px 0px -10% 0px|0.2")).toHaveLength(1);
+	});
+
+	test("a card reached after the backstop still has its entrance", async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/");
+		const cursive = page.locator('[data-widget="cursive"]');
+		await expect(cursive).toHaveAttribute("data-reveal-state", "pending");
+		// Past the head script's 3s, which disarms the page.
+		await page.waitForFunction(() => !document.documentElement.classList.contains("reveal-armed"), undefined, {
+			timeout: 6000,
+		});
+		await page.waitForTimeout(1200);
+		expect(await cursive.evaluate((el) => Number(getComputedStyle(el).opacity)), "still held").toBe(0);
+		await page.evaluate(() => document.querySelector('[data-widget="cursive"]')?.scrollIntoView({ block: "center" }));
+		await expect(cursive).toHaveAttribute("data-reveal-state", "in", { timeout: 6000 });
+		await expect
+			.poll(() => cursive.evaluate((el) => Number(getComputedStyle(el).opacity)), { timeout: 4000 })
+			.toBe(1);
+	});
+
+	test("a card a screen ahead is built, and still waits to be shown", async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/");
+		const nowPlaying = page.locator('[data-widget="now-playing"]');
+		await expect(nowPlaying).toHaveAttribute("data-widget-state", "mounted", { timeout: 10_000 });
+		// Mounted on its near subscription, while its entrance hasn't been reached.
+		await expect(nowPlaying).toHaveAttribute("data-reveal-state", "pending");
+	});
+
 	test("a card's box doesn't move when it comes in", async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await page.goto("/");
@@ -466,16 +545,10 @@ test.describe("reveal — below-the-fold behaviour", () => {
 		// stays "pending" until it is actually scrolled to.
 		expect(held?.state).toBe("pending");
 
-		// While ARMED, a pending row must be fully invisible — that is in-view gating
-		// doing its job, and the assertion that would catch a real regression.
-		//
-		// Once DISARMED the opacity is not assertable: the inline script's 3s
-		// terminality backstop un-hides everything by dropping the class, and the row
-		// then fades over ~900ms, so a sample can legitimately land anywhere in 0..1.
-		// (On a slow machine the backstop can beat this check entirely.) The reveal's
-		// own terminality is covered by test 2; here we only care that nothing was
-		// revealed EARLY, which the state assertion above already establishes.
-		if (held?.armed) expect(held.opacity).toBe(0);
+		// A pending card is fully invisible, armed or not: that is in-view gating
+		// doing its job, and the assertion that would catch a real regression. (The
+		// inline backstop's own terminality is covered by test 2.)
+		expect(held?.opacity).toBe(0);
 
 		// Plain scroll, NOT locator.scrollIntoViewIfNeeded(): that waits for the element
 		// to be "actionable", i.e. for its box to stop moving. This row never fully

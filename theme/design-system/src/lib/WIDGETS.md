@@ -81,7 +81,9 @@ nothing else. The card walks `queued → loading → mounted | failed` in
 Any card in a widget grid comes in by itself; a page marks nothing. `<Widget>`
 renders `data-reveal`, and the site's coordinator (`src/lib/reveal.ts`, with
 the motion in `src/styles/reveal.css`) fades it in once its top crosses the
-in-view line and it has mounted, under a 600ms deadline.
+in-view line and it has mounted, under a 600ms deadline. It is held until then
+however long that takes; the page's 3s backstop is only for a coordinator that
+never ran.
 
 - **default** — as the card reaches the view. Cards that arrive together (a
   row, or whatever a jump lands on) stagger by `--reveal-stagger`, top to
@@ -92,8 +94,12 @@ in-view line and it has mounted, under a 600ms deadline.
   whose own motion is its entrance (the videos card's dock).
 - **`false`** — no entrance.
 
-Loading is separate: the load modes above fetch and mount ahead of the view,
-so a card is ready by the time its entrance plays. Never hold a card's content
+Loading is separate, but on the same mechanism: the observers in `activity.ts`
+(one per margin and threshold, shared by the whole page). The load modes above
+are one subscription, a screen ahead, so a card is built before it is shown;
+the entrance is another, at the in-view line, through `arrivals()`, the
+one-shot form that reports what came into view together. Don't start an
+IntersectionObserver for a widget; take a subscription. Never hold a card's content
 back for the entrance from inside the widget; key CSS on
 `data-reveal-state="in"` if something must wait for it (the bike's slide-in).
 
