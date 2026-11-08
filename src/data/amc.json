@@ -1,5 +1,5 @@
 {
-	"updated": "2026-11-07T17:53:31.797Z",
+	"updated": "2026-11-08T18:08:14.248Z",
 	"movies": [
 		{
 			"id": null,
@@ -1320,17 +1320,6 @@
 			"day": "Saturday",
 			"iso": "2026-10-31",
 			"start": "2026-10-31T19:15"
-		},
-		{
-			"id": null,
-			"name": "You Can See Everything",
-			"poster": null,
-			"theatre": "AMC Kabuki 8",
-			"date": "November 7, 2026",
-			"time": "4:15pm",
-			"day": "Saturday",
-			"iso": "2026-11-07",
-			"start": "2026-11-07T16:15"
 		},
 		{
 			"id": null,
