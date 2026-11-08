@@ -1,5 +1,5 @@
-/** --sh-drift-rate in styles.css (and the 80% stop of its keyframes). */
-const DRIFT_RATE = 0.8;
+/** --sh-drift-rate in styles.css (and the 15% stop of its keyframes). */
+const DRIFT_RATE = 0.15;
 
 /** Clamp `x` to [0, 1]. */
 function clamp01(x: number): number {

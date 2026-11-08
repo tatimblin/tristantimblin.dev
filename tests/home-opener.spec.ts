@@ -68,6 +68,13 @@ function dockTravel(page: Page): Promise<number> {
 	});
 }
 
+/** Where the word holds: its sticky `top`. */
+const holdTop = (page: Page) =>
+	page.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".sh__wordmark")!).top));
+
+/** The scroll at which the first row arrives under the held word (a gap below it). */
+const meetAt = (rest: { first: Box; word: Box }, top: number) => rest.first.y - 24 - top - rest.word.h;
+
 async function open(page: Page, width: number, height: number) {
 	await page.setViewportSize({ width, height });
 	await page.goto("/");
@@ -156,29 +163,28 @@ test.describe("desktop 1440×900", () => {
 		expect(await page.locator(".sh__wordmark").isVisible()).toBe(true);
 	});
 
-	test("the word drifts from the first pixel, pins, wipes to solid while pinned, and wobbles", async ({
+	test("the word drifts from the first pixel, holds, wipes to solid while held, and wobbles", async ({
 		page,
 	}) => {
 		await open(page, 1440, 900);
 		const rest = await at(page, 0);
-		const early = await at(page, 10);
-		expect(rest.word.y - early.word.y, "moves at once").toBeGreaterThan(5);
-		expect(rest.word.y - early.word.y, "slower than the page").toBeLessThan(9.5);
+		const early = await at(page, 20);
+		expect(rest.word.y - early.word.y, "moves at once").toBeGreaterThan(1.5);
+		expect(rest.word.y - early.word.y, "a fraction of the page").toBeLessThan(6);
 		expect(early.clip, "no wipe before the pin").toBe(1);
+		const top = await holdTop(page);
+		expect(rest.word.y - top, "a few dozen px in all").toBeGreaterThan(20);
+		expect(rest.word.y - top, "not leaving the middle").toBeLessThan(50);
 
-		// Sample the pinned stretch: the word holds still while the clip runs 1 → 0.
+		// Sample up to the row's arrival: the word holds still while the clip runs 1 → 0.
+		const meet = meetAt(rest, top);
 		const samples = [];
-		// Past the pin (at 1.25 × the word's distance to the sticky line) and the
-		// wipe's whole range, to the pin's end.
-		for (let y = 0; y <= 745; y += 10) samples.push({ y, ...(await at(page, y)) });
-		const pinTop = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".sh__wordmark")!).top));
-		const pinned = samples.filter((s) => Math.abs(s.word.y - pinTop) < 0.5);
-		expect(pinned.length).toBeGreaterThan(10);
-		const firstPinned = pinned[0];
-		const lastPinned = pinned[pinned.length - 1];
-		// Starts as it pins (within a sample), done before it lets go.
-		expect(firstPinned.clip).toBeGreaterThan(0.9);
-		expect(lastPinned.clip).toBe(0);
+		for (let y = 0; y <= meet; y += 10) samples.push({ y, ...(await at(page, y)) });
+		const held = samples.filter((s) => Math.abs(s.word.y - top) < 0.5);
+		expect(held.length).toBeGreaterThan(10);
+		// Starts as it holds (within a sample), done before the row arrives.
+		expect(held[0].clip).toBeGreaterThan(0.9);
+		expect(held[held.length - 1].clip).toBe(0);
 		for (let i = 1; i < samples.length; i++) expect(samples[i].clip).toBeLessThanOrEqual(samples[i - 1].clip + 1e-3);
 		// The solid layer carries the wobble's displacement filter.
 		const filter = await page.evaluate(
@@ -239,35 +245,89 @@ test.describe("phone 390×844", () => {
 	test("the word moves at once; the wipe waits until it is clear of the tile", async ({ page }) => {
 		await open(page, 390, 844);
 		const rest = await at(page, 0);
-		const early = await at(page, 10);
-		expect(rest.word.y - early.word.y).toBeGreaterThan(5);
-		let started = false;
+		const early = await at(page, 20);
+		expect(rest.word.y - early.word.y).toBeGreaterThan(1.5);
+		let wipeStart = -1;
 		for (let y = 0; y <= 400; y += 2) {
 			const s = await at(page, y);
 			if (s.clip < 1) {
 				// The solid layer's opaque box must already be off the picture.
 				expect(s.solid.bottom, `wipe began over the tile at ${y}`).toBeLessThanOrEqual(s.card.y);
-				started = true;
+				wipeStart = y;
 				break;
 			}
 		}
-		expect(started).toBe(true);
-		// ...and the tile stays clear of the pinned word on the way down.
+		expect(wipeStart).toBeGreaterThan(0);
+		// ...and neither the wipe's backdrop nor the finished word ever cuts into the
+		// tile, all the way to the dock, while the tile climbs back past the held word.
 		const travel = await dockTravel(page);
-		for (let y = 80; y <= travel; y += 40) {
+		for (let y = wipeStart; y <= travel; y += 8) {
 			const s = await at(page, y);
-			if (s.clip < 1 && s.word.y < 20) {
-				expect(s.solid.bottom, `the word covers the tile at ${y}`).toBeLessThanOrEqual(s.card.y);
-			}
+			expect(s.solid.bottom, `the backdrop covers the tile at ${y}`).toBeLessThanOrEqual(s.card.y);
 		}
 		const docked = await at(page, Math.ceil(travel));
 		expect(Math.abs(docked.card.y - docked.first.y)).toBeLessThan(1);
 	});
+
+	for (const [w, h] of [
+		[390, 844],
+		[360, 740],
+		[820, 1180],
+		[900, 1200],
+	] as const) {
+		test(`at ${w}×${h} the wipe is done before the row arrives, clear of the tile`, async ({ page }) => {
+			await open(page, w, h);
+			const rest = await at(page, 0);
+			const top = await holdTop(page);
+			const meet = meetAt(rest, top);
+			const atMeet = await at(page, Math.floor(meet));
+			expect(atMeet.clip, "wiped before the row arrives").toBe(0);
+			for (let y = Math.floor(meet) - 200; y <= Math.ceil(meet) + 40; y += 8) {
+				const s = await at(page, y);
+				if (s.clip < 1) {
+					expect(s.solid.bottom, `the backdrop covers the tile at ${y}`).toBeLessThanOrEqual(s.card.y);
+				}
+			}
+		});
+	}
 });
 
 /** The page's whole scroll. */
 const maxScroll = (page: Page) =>
 	page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+
+test.describe("the word holds in the middle", () => {
+	for (const [w, h] of [
+		[1440, 900],
+		[1920, 1200],
+		[1638, 980],
+		[390, 844],
+	] as const) {
+		test(`at ${w}×${h} it stays near its rest until the first row meets it, and never overlaps the row`, async ({
+			page,
+		}) => {
+			await open(page, w, h);
+			const rest = await at(page, 0);
+			const top = await holdTop(page);
+			const meet = meetAt(rest, top);
+			const rise = rest.word.y - top;
+			expect(rise, "a few dozen px in all").toBeGreaterThan(20);
+			expect(rise, "not leaving the middle").toBeLessThan(50);
+			for (let y = 0; y <= meet; y += 8) {
+				const s = await at(page, y);
+				expect(s.word.y, `above its hold at ${y}`).toBeGreaterThanOrEqual(top - 0.5);
+				expect(s.word.y, `below its rest at ${y}`).toBeLessThanOrEqual(rest.word.y + 0.5);
+				expect(s.word.bottom, `into the first row at ${y}`).toBeLessThanOrEqual(s.first.y);
+			}
+			// The row arrives one gap below it, and from there they leave together.
+			const met = await at(page, Math.ceil(meet));
+			expect(Math.abs(met.first.y - met.word.bottom - 24), "a gap above the row").toBeLessThan(1.5);
+			const later = await at(page, Math.ceil(meet) + 120);
+			expect(Math.abs(met.word.y - later.word.y - 120), "rides up with the row").toBeLessThan(1.5);
+			expect(later.first.y - later.word.bottom, "the same gap").toBeGreaterThanOrEqual(23);
+		});
+	}
+});
 
 test.describe("the opener is its own first screen", () => {
 	for (const [w, h] of [
@@ -301,10 +361,11 @@ test.describe("the opener is its own first screen", () => {
 			await open(page, w, h);
 			const rest = await at(page, 0);
 			const max = await maxScroll(page);
-			const settle = rest.first.y - 24 - rest.word.h - 16;
+			const top = await holdTop(page);
+			const settle = meetAt(rest, top);
 			expect(max, "scroll enough to settle").toBeGreaterThanOrEqual(settle);
 			const settled = await at(page, settle);
-			expect(Math.abs(settled.word.y - 16), "still pinned as it settles").toBeLessThan(1.5);
+			expect(Math.abs(settled.word.y - top), "still pinned as it settles").toBeLessThan(1.5);
 			expect(Math.abs(settled.first.y - settled.word.bottom - 24), "rests a gap above the row").toBeLessThan(1.5);
 			const end = await at(page, max);
 			expect(Math.abs(end.card.y - end.first.y), "and the card has landed").toBeLessThan(1);
@@ -385,15 +446,18 @@ test.describe("the opener is its own first screen", () => {
 		expect(Math.abs(docked.card.y - docked.first.y)).toBeLessThan(1);
 	});
 
-	test("the wipe and the fades start where they did, over a longer pin", async ({ page }) => {
+	test("the fades still start at the top; the wipe starts at the hold and ends before the row", async ({ page }) => {
 		await open(page, 1440, 900);
+		const rest = await at(page, 0);
 		const near = await at(page, 60);
 		expect(near.clip, "no wipe before the pin").toBe(1);
+		expect(near.subOpacity, "the fade is under way").toBeLessThan(1);
 		const gone = await at(page, 100);
 		expect(gone.subOpacity).toBe(0);
-		const late = await at(page, 740);
-		expect(Math.abs(late.word.y - 16), "still pinned deep into the opener").toBeLessThan(1);
-		expect(late.clip, "wiped before the pin ends").toBe(0);
+		const top = await holdTop(page);
+		const late = await at(page, Math.floor(meetAt(rest, top)) - 4);
+		expect(Math.abs(late.word.y - top), "still held as the row arrives").toBeLessThan(1);
+		expect(late.clip, "wiped before the row arrives").toBe(0);
 	});
 });
 
@@ -408,8 +472,8 @@ test("reduced motion: no drift, wipe, fade or parallax, and everything shows", a
 	// The carousel renders in its cell, with no lift.
 	expect(Math.abs(rest.card.y - rest.first.y)).toBeLessThan(0.5);
 	const s = await at(page, 40);
-	// The word moves 1:1 with the page until it pins (sticky, no drift).
-	expect(rest.word.y - s.word.y).toBeCloseTo(40, 0);
+	// No drift: it holds where it rests from the first pixel (plain sticky).
+	expect(Math.abs(rest.word.y - s.word.y)).toBeLessThan(0.5);
 	expect(s.subOpacity).toBe(1);
 	expect(s.clip).toBe(0);
 	expect(

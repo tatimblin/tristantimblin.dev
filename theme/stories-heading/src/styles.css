@@ -20,12 +20,13 @@
 
    THE KNOBS, all set by the consumer on the host:
      --sh-wordmark-w  the word's width (default: the nearest container's).
-     --sh-top         the sticky line.
+     --sh-top         the sticky line: where the word holds.
      --sh-pin-at      the scroll offset at which the sticky line catches the
-                      word's resting box (its rest top less --sh-top). Over it
-                      the word drifts up at --sh-drift-rate of the scroll
-                      instead of 1:1, so it pins a little later, at
-                      --sh-pinned-at (read it; don't set it).
+                      word's resting box (its rest top less --sh-top), which is
+                      also how far the word rises in all. Over it the word
+                      drifts up at --sh-drift-rate of the scroll instead of 1:1,
+                      so it pins later, at --sh-pinned-at (read it; don't set
+                      it).
      --sh-wipe-at     the scroll offset the wipe starts at: where the word pins
                       (--sh-pinned-at), or later if it must first clear
                       something (the solid layer's backdrop is opaque).
@@ -55,9 +56,9 @@ stories-heading {
 	--sh-pin-at: 0px;
 	/* THE DRIFT: from the first pixel of scroll the word rises at this share of
 	   the page's speed — a gentle parallax — until it reaches the sticky line.
-	   MUST MATCH the 80% stop in sh-wordmark-drift below (keyframe offsets
+	   MUST MATCH the 15% stop in sh-wordmark-drift below (keyframe offsets
 	   cannot read a variable) and DRIFT_RATE in index.ts. */
-	--sh-drift-rate: 0.8;
+	--sh-drift-rate: 0.15;
 	--sh-pinned-at: calc(var(--sh-pin-at) / var(--sh-drift-rate));
 	--sh-wipe-at: var(--sh-pinned-at);
 	--sh-reveal: 300px;
@@ -198,8 +199,9 @@ stories-heading {
    catches the box — so far the word has moved at `rate` of the scroll — and
    falls back to 0 by --sh-pinned-at, exactly as the word's paint reaches the
    sticky line, where it holds. Past that the transform is 0, so the sticky
-   alone carries it to rest: the pin's end, and where it comes to rest, are
-   unchanged. Reduced motion never applies it: plain sticky. */
+   alone carries it down the host's box to rest: the pin's end, and where it
+   comes to rest, are the host's. Reduced motion never applies it: plain
+   sticky. */
 
 @media screen and (prefers-reduced-motion: no-preference) {
 	@supports (animation-timeline: scroll()) {
@@ -235,13 +237,13 @@ stories-heading {
 	}
 }
 
-/* The 80% stop is --sh-drift-rate: the scroll at which the sticky line catches
+/* The 15% stop is --sh-drift-rate: the scroll at which the sticky line catches
    the box (--sh-pin-at) as a share of the range (--sh-pin-at / rate). */
 @keyframes sh-wordmark-drift {
 	from {
 		transform: translateY(0px);
 	}
-	80% {
+	15% {
 		transform: translateY(calc((1 - var(--sh-drift-rate)) * var(--sh-pin-at)));
 	}
 	to {
