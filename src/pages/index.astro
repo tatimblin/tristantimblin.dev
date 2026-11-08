@@ -9,6 +9,12 @@ import Volo from "../widgets/volo/Volo.astro";
 import Readers from "../widgets/readers/Readers.astro";
 import Cursive from "../widgets/cursive/Cursive.astro";
 import Amc from "../widgets/amc/Amc.astro";
+
+// Dev only. A dynamic import, so that a build never reaches the component (its
+// script would otherwise be bundled just for being imported).
+const HalftoneTuner = import.meta.env.DEV
+	? (await import("../components/HalftoneTuner.astro")).default
+	: null;
 ---
 
 <HomeLayout
@@ -45,4 +51,6 @@ import Amc from "../widgets/amc/Amc.astro";
 	<Readers />
 
 	<Amc />
+
+	{HalftoneTuner && <HalftoneTuner />}
 </HomeLayout>
