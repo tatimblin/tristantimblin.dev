@@ -181,8 +181,15 @@ import "@whois/wobble-text/styles.css";
 		:global(.fh) {
 			--home-scene-h: 400px;
 			--hero-frame: var(--sh-header-h);
+			/* From the wordmark's ESTIMATED height (its viewBox aspect over the
+			   CSS-only --sh-wordmark-w), not the measured --sh-wordmark-h: the
+			   lead must come out the same with the script as without it, and the
+			   measurement can differ from the aspect by a pixel or two (Linux
+			   snaps the SVG's box). The scene's foot then sits within a pixel of
+			   --home-scene-h either way. */
 			--hero-lead-ideal: calc(
-				var(--hero-frame) + var(--home-scene-h) - var(--sh-wordmark-h, 0px) / 2
+				var(--hero-frame) + var(--home-scene-h) -
+					var(--sh-wordmark-w) * 221.1 / 860.11 / 2
 			);
 			--hero-min-height: 0px;
 			--sh-scene-bottom: var(--hero-scene-cut);
