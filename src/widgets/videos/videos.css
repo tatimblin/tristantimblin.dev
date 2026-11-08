@@ -147,6 +147,10 @@
 	border-radius: var(--radius-box);
 	overflow: hidden;
 }
+/* The playhead is the bare line, without the package's dot on its free end. */
+.wx-videos .vc__marker::before {
+	content: none;
+}
 .wx-videos__chrome {
 	position: absolute;
 	inset: 0;
