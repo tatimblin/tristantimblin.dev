@@ -298,7 +298,8 @@ test.describe("/txt/", () => {
 
 	test("reduced motion: the swap is instant", async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: "reduce" });
-		await page.setViewportSize({ width: 1440, height: 900 });
+		// Tall enough that the posts hovered here clear the page hero.
+		await page.setViewportSize({ width: 1440, height: 1400 });
 		await page.goto("/txt/");
 		await page.mouse.move(1, 1);
 		const { x, y } = await titleCentre(page, 2);
@@ -392,7 +393,7 @@ test.describe("/txt/", () => {
 	test("mouse: a click on a closed post with no movement first only opens it; a second click navigates", async ({
 		page,
 	}) => {
-		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.setViewportSize({ width: 1440, height: 1400 });
 		await page.goto("/txt/");
 		// No prior move: the first pointer event the page sees is this press,
 		// so the hover gate has not opened anything.
@@ -441,7 +442,8 @@ test.describe("/txt/", () => {
 
 	for (const width of [1440, 375]) {
 		test(`the newest post is open after every arrival at ${width}`, async ({ page }) => {
-			await page.setViewportSize({ width, height: width < 640 ? 812 : 900 });
+			// Tall enough that the posts hovered here clear the page hero.
+			await page.setViewportSize({ width, height: width < 640 ? 1300 : 1400 });
 			const writing = page.locator('.site-header a[href="/txt/"]').first();
 			const arrived = async (how: string) => {
 				await expect(page).toHaveURL(/\/txt\/$/);
@@ -531,7 +533,7 @@ test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) 
 		ignoreDefaultArgs: ["--disable-back-forward-cache"],
 	});
 	try {
-		const page = await browser.newPage({ baseURL, viewport: { width: 1440, height: 900 } });
+		const page = await browser.newPage({ baseURL, viewport: { width: 1440, height: 1400 } });
 		await page.goto("/txt/");
 		await page.evaluate(() => ((window as unknown as { __kept: boolean }).__kept = true));
 		await page.mouse.move(1, 1);
@@ -1103,11 +1105,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect.poll(fits).toBe(true);
 		const short = (await shown.textContent()) ?? "";
 		expect(short.length).toBeLessThan(slug.length);
-		expect(short.startsWith("assrtng")).toBe(true);
+		expect(short.startsWith("assr")).toBe(true);
 		await expect(page.locator(".site-header__step--here .ds-visually-hidden")).toHaveText(slug);
 
 		// Back to a wide bar: the whole slug again.
-		await page.setViewportSize({ width: 1210, height: 700 });
+		await page.setViewportSize({ width: 1440, height: 700 });
 		await expect(shown).toHaveText(slug);
 	});
 

@@ -207,7 +207,11 @@ export async function scrollTo(page: Page, y: number) {
 /** Bring every widget card past the viewport, so all have mounted. */
 export async function mountAll(page: Page) {
 	const height = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
-	for (let y = 0; y <= height + 1; y += 400) await scrollTo(page, Math.min(y, height));
+	// Steps of 400, always ending ON the bottom: a page whose height isn't a
+	// multiple of 400 would otherwise stop short, and the last row's cards would
+	// never come into view.
+	for (let y = 0; y < height; y += 400) await scrollTo(page, y);
+	await scrollTo(page, height);
 	await page.waitForFunction(
 		() =>
 			[...document.querySelectorAll<HTMLElement>("[data-widget]")].every((el) =>

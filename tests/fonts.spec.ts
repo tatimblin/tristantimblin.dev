@@ -36,7 +36,6 @@ const ROLES: Array<[string, string, string, number]> = [
 	["wordmark (hero)", ".sh__wordmark-text", "DM Sans", 500],
 	["heading (other stories)", ".sh__outline", "DM Sans", 500],
 	["hero lede", ".hero-intro__lede p", "DM Sans", 500],
-	["body copy", ".home__copy p", "Roboto Mono", 400],
 	["widget UI", ".home__widgets .ds-widget", "DM Sans", 400],
 	["widget figure", ".ds-figure__num", "DM Sans", 400],
 	["label voice", ".home__widgets .ds-mono", "DM Sans", 400],
@@ -88,6 +87,27 @@ test("every role resolves to its face, and that face is loaded", async ({ page }
 		expect(r.weight, `${r.name}: wrong cut`).toBe(r.expectedWeight);
 		expect(r.loaded, `${r.name}: "${r.expected}" is not loaded — the page is rendering in a fallback`).toBe(true);
 	}
+});
+
+test("body copy is set in Roboto Mono, and it is loaded", async ({ page }) => {
+	// The homepage holds no reading copy; /about does.
+	await page.goto("/about/");
+	await page.waitForFunction(() => document.fonts.status === "loaded", undefined, {
+		timeout: 15_000,
+	});
+	const body = await page.evaluate(() => {
+		const el = document.querySelector<HTMLElement>(".about__copy p");
+		return {
+			found: !!el,
+			family: el ? getComputedStyle(el).fontFamily : "",
+			weight: el ? Number(getComputedStyle(el).fontWeight) : null,
+			loaded: document.fonts.check('400 16px "Roboto Mono"'),
+		};
+	});
+	expect(body.found, "no body copy on /about — has the markup moved?").toBe(true);
+	expect(unquote(body.family)).toBe("Roboto Mono");
+	expect(body.weight).toBe(400);
+	expect(body.loaded, '"Roboto Mono" is not loaded — the copy is rendering in a fallback').toBe(true);
 });
 
 test("each built woff2 is served", async ({ request }) => {

@@ -107,9 +107,11 @@ const { title, description, image } = Astro.props;
 		   does not move the baseline. In CSS rather than JS on purpose: a lead
 		   derived from the scene's MEASURED height makes every grown state
 		   self-justifying and the hero never shrinks back; here both clamps read the
-		   same fixed 100svh, so there is no hysteresis. */
+		   same fixed 100svh, so there is no hysteresis. A consumer whose hero is
+		   shorter than the screen lowers that floor (--hero-min-height); the height
+		   is then just the sum. */
 		--hero-height: max(
-			100svh,
+			var(--hero-min-height, 100svh),
 			calc(
 				var(--hero-lead) + var(--sh-group-h, 0px) + var(--hero-fold-gap) +
 					var(--hero-reserve)

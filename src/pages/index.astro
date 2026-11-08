@@ -7,11 +7,7 @@ import Deferred from "../components/Deferred.astro";
 import Grid from "@whois/design-system/Grid";
 import GridItem from "@whois/design-system/GridItem";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
-import Body from "@whois/design-system/Body";
 import Text from "@whois/design-system/Text";
-import Anchor from "@whois/design-system/Anchor";
-import Blockquote from "@whois/design-system/Blockquote";
-import Mono from "@whois/design-system/Mono";
 import NowPlaying from "../widgets/now-playing/NowPlaying.astro";
 import BikeStats from "../widgets/bike-stats/BikeStats.astro";
 import Github from "../widgets/github/Github.astro";
@@ -78,8 +74,8 @@ import "@whois/wobble-text/styles.css";
 	{/* The wordmark and the "& other stories" lockup; the intro lede is its default
 	     slot, so it flows beneath "other stories" as one group. */}
 	<StoriesHeading slot="heading">
-		{/* On the same grid as the body copy below (--home-columns), so the lede
-		     shares its exact measure rather than an eyeballed max-width. */}
+		{/* On a twelve-column grid (--home-columns), so the lede's measure is five
+		     columns rather than an eyeballed max-width. */}
 		<Grid class="hero-intro" align="end" templateColumns="var(--home-columns)" gapX={5}>
 			<GridItem class="hero-intro__lede">
 				{/* A Text, not a Body: a small caps statement in the heading face, not
@@ -90,39 +86,6 @@ import "@whois/wobble-text/styles.css";
 			</GridItem>
 		</Grid>
 	</StoriesHeading>
-
-	<div class="container">
-		<Grid class="home__grid" templateColumns="var(--home-columns)" gapX={5}>
-			{/* data-reveal on the grid CELL, not on <wobble-text>: the reveal's opacity
-			     and the element's `filter` must stay on separate boxes (see
-			     src/lib/reveal.ts on containing blocks). */}
-			<GridItem class="home__copy" data-reveal>
-				<wobble-text scale="3.2" speed="0.3">
-					<Body>
-						I am a craftsman, I create things to be used. Even if they often are
-						not, it is for the love of the process. My creativite nature comes
-						through in an empathetic design, where with a deep understanding of
-						another I can build them worlds.
-					</Body>
-					<Blockquote class="home__quote" cite="https://future-sf.com/fiction/1700/">
-						<Body>
-							I'm arrogant enough to demand the Reader's complete, total
-							attention. The Reader should likewise demand that the Writer puts
-							all of herself into her text, to infuse it with her soul. We
-							deserve each other. It's an act of love to read and an act of love
-							to write.
-						</Body>
-						<Mono as="footer">
-							Ken Liu, in <Anchor discreet underline="always" href="https://future-sf.com/fiction/1700/">&ldquo;Good Stories&rdquo;</Anchor>
-						</Mono>
-					</Blockquote>
-					<Body>
-						So I build to be read. With care in what won't be seen.
-					</Body>
-				</wobble-text>
-			</GridItem>
-		</Grid>
-	</div>
 
 	{/* WIDGETS. Mixed sizes in non-packed DOM order; grid-auto-flow: dense re-packs
 	     them, so data-reveal-order follows the VISUAL left-to-right packing rather
@@ -206,17 +169,22 @@ import "@whois/wobble-text/styles.css";
 			var(--sh-sub-gap) + 2 * var(--font-size-1) * var(--line-height-body)
 		);
 	}
-	/* THE DESKTOP HERO: framed, the group on the floor. An empty margin the
-	   height of the site header's band (--sh-header-h, which the heading
-	   measures, estimated above until it does) runs round the top, sides and foot; the
-	   halftone fills the frame down to the wordmark's midline, and the lockup and
-	   intro rest on the frame's bottom edge. The halftone stops above "other
-	   stories", so the heading's wipe needn't wait for the hero to scroll past:
-	   tell it where the picture really ends. */
+	/* THE DESKTOP HERO: framed, short. An empty margin the height of the site
+	   header's band (--sh-header-h, which the heading measures, estimated above
+	   until it does) runs round the top and sides; the halftone fills the frame
+	   for a fixed --home-scene-h down to the wordmark's midline, so the lead is
+	   whatever puts that midline there, and the hero ends under the intro rather
+	   than at the fold. The halftone stops above "other stories", so the
+	   heading's wipe needn't wait for the hero to scroll past: tell it where the
+	   picture really ends. */
 	@media (min-width: 901px) {
 		:global(.fh) {
+			--home-scene-h: 400px;
 			--hero-frame: var(--sh-header-h);
-			--hero-lead-ideal: 100svh;
+			--hero-lead-ideal: calc(
+				var(--hero-frame) + var(--home-scene-h) - var(--sh-wordmark-h, 0px) / 2
+			);
+			--hero-min-height: 0px;
 			--sh-scene-bottom: var(--hero-scene-cut);
 		}
 		/* A frame, not a vignette: the box's edges are the margin's, so the scene's
@@ -281,24 +249,19 @@ import "@whois/wobble-text/styles.css";
 		}
 	}
 
-	/* THE PAGE'S COLUMNS: one template for the hero lede and the content row, so
-	   the two share one measure and one left edge. */
-	.hero-intro,
-	.home__grid {
+	/* THE LEDE'S COLUMNS: five of twelve on desktop, the full width on phones. */
+	.hero-intro {
 		--home-columns: repeat(12, 1fr);
 	}
-	.hero-intro__lede,
-	.home__copy {
+	.hero-intro__lede {
 		grid-column: 1 / span 5;
 		min-width: 0;
 	}
 	@media (max-width: 900px) {
-		.hero-intro,
-		.home__grid {
+		.hero-intro {
 			--home-columns: minmax(0, 1fr);
 		}
-		.hero-intro__lede,
-		.home__copy {
+		.hero-intro__lede {
 			grid-column: 1;
 		}
 	}
@@ -311,25 +274,6 @@ import "@whois/wobble-text/styles.css";
 	}
 	.hero-intro__lede p {
 		pointer-events: auto;
-	}
-
-	/* CONTENT ROW. The copy rises into "other stories" and pushes it away; the
-	   pin lets go when the riser's top edge meets it, so this padding (opaque,
-	   inside the riser) is the gap held between the pinned heading and the
-	   paragraph. */
-	.home__grid {
-		padding-block-start: var(--space-6);
-	}
-	@media (max-width: 900px) {
-		.home__grid {
-			padding-block-start: var(--space-4);
-		}
-	}
-	.home__copy :global(p + p) {
-		margin-block-start: var(--space-5);
-	}
-	.home__quote {
-		margin-block: var(--space-5) var(--space-6);
 	}
 
 	/* WIDGETS */

@@ -1,0 +1,62 @@
+---
+// /about — the statement that used to sit under the homepage hero, under
+// BlogLayout's halftone hero (PageHero), on the site container so the copy
+// starts on the title's edge, at the reading measure. The header's "About Me"
+// link comes here.
+import BlogLayout from "../layouts/BlogLayout.astro";
+import Body from "@whois/design-system/Body";
+import Anchor from "@whois/design-system/Anchor";
+import Blockquote from "@whois/design-system/Blockquote";
+import Mono from "@whois/design-system/Mono";
+import "@whois/wobble-text/styles.css";
+---
+
+<BlogLayout
+	hero
+	wide
+	title="About Me — Tristan Timblin"
+	description="Tristan Timblin — a craftsman who builds things to be used, finding creativity through empathetic design."
+	heading="About Me"
+>
+	<div class="about__copy">
+		<wobble-text scale="3.2" speed="0.3">
+			<Body>
+				I am a craftsman, I create things to be used. Even if they often are
+				not, it is for the love of the process. My creativite nature comes
+				through in an empathetic design, where with a deep understanding of
+				another I can build them worlds.
+			</Body>
+			<Blockquote class="about__quote" cite="https://future-sf.com/fiction/1700/">
+				<Body>
+					I'm arrogant enough to demand the Reader's complete, total
+					attention. The Reader should likewise demand that the Writer puts
+					all of herself into her text, to infuse it with her soul. We
+					deserve each other. It's an act of love to read and an act of love
+					to write.
+				</Body>
+				<Mono as="footer">
+					Ken Liu, in <Anchor discreet underline="always" href="https://future-sf.com/fiction/1700/">&ldquo;Good Stories&rdquo;</Anchor>
+				</Mono>
+			</Blockquote>
+			<Body>
+				So I build to be read. With care in what won't be seen.
+			</Body>
+		</wobble-text>
+	</div>
+
+	<script>
+		import "@whois/wobble-text";
+	</script>
+</BlogLayout>
+
+<style>
+	.about__copy {
+		max-width: var(--measure-prose);
+	}
+	.about__copy :global(p + p) {
+		margin-block-start: var(--space-5);
+	}
+	.about__quote {
+		margin-block: var(--space-5) var(--space-6);
+	}
+</style>

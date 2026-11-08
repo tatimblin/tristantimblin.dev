@@ -22,41 +22,34 @@
  * attribute on the element would beat these variables, so keep tone here.
  */
 
-/* --- Desktop hero: the fabric clip ---------------------------------------- */
+/* --- The heroes: the phone carousel behind the wordmark, and the desktop
+   fabric clip (the homepage's and the section pages', PageHero) in its tone --- */
 
-.hero__video {
-	--dg-polarity: positive;
-	--dg-levels: 6;
-	--dg-contrast: 1.05;
-}
-
-[data-theme="light"] .hero__video {
-	--dg-gamma: 0.4;
-	--dg-dot-scale: 1.1;
-	--dg-dot-shape: circle;
-	--dg-cutoff: 0.06;
-	--dg-feather: 0.2;
-	--dg-denoise: 0.3;
-	--dg-bloom: 0;
-	--dg-crosshatch: 0;
-}
-
-[data-theme="dark"] .hero__video {
-	--dg-gamma: 0.55;
-	--dg-dot-scale: 1.15;
-	--dg-dot-shape: morph;
-	--dg-cutoff: 0;
-	--dg-feather: 0.65;
-	--dg-denoise: 0.1;
-	--dg-bloom: 0.5;
-	--dg-crosshatch: 0.3;
-}
-
-/* --- Phone hero: the carousel behind the wordmark ------------------------- */
-
-.hero-carousel dotted-grid {
+.hero-carousel dotted-grid,
+.hero__video,
+.page-hero__grid {
 	--dg-polarity: positive;
 	--dg-levels: 10;
+}
+
+/* The desktop fabric clip on cream: an open field of small square cells in the
+   soft ink (the videos card's), gapped so the fabric's ripples separate into
+   streaks. 8 levels is what leaves a sparse few cells dark: the brightest
+   peaks snap to the top step, which the highlight darkens; at 12 they stop a
+   step short. */
+[data-theme="light"] .hero__video,
+[data-theme="light"] .page-hero__grid {
+	--dg-ink: var(--halftone-ink-soft);
+	--dg-dot-shape: square;
+	--dg-dot-scale: 0.8;
+	--dg-levels: 8;
+	--dg-cutoff: 0.04;
+	--dg-feather: 0.2;
+	--dg-denoise: 0.3;
+	--dg-gamma: 0.2;
+	--dg-contrast: 1.35;
+	--dg-bloom: 0.25;
+	--dg-crosshatch: 0.05;
 }
 
 [data-theme="light"] .hero-carousel dotted-grid {
@@ -70,10 +63,28 @@
 
 /* The tertiary ink, a mid warm grey: under the wordmark at reduced opacity it
    reads at a picture's weight, where the full ink would compete with the type. */
-[data-theme="dark"] .hero-carousel dotted-grid {
+[data-theme="dark"] .hero-carousel dotted-grid,
+[data-theme="dark"] .hero__video,
+[data-theme="dark"] .page-hero__grid {
 	--dg-ink: var(--text-tertiary);
 	--dg-gamma: 0.5;
 	--dg-contrast: 1.1;
+}
+
+/* The desktop fabric clip on the dark page: the light theme's open composition
+   in the tertiary ink. The cutoff empties the dark cells and crosshatch is off
+   (it engraves exactly those), so only the band and its ripples carry dots. */
+[data-theme="dark"] .hero__video,
+[data-theme="dark"] .page-hero__grid {
+	--dg-dot-shape: square;
+	--dg-dot-scale: 0.8;
+	--dg-levels: 8;
+	--dg-cutoff: 0.1;
+	--dg-feather: 0.1;
+	--dg-denoise: 0.3;
+	--dg-contrast: 1.35;
+	--dg-bloom: 0.25;
+	--dg-crosshatch: 0;
 }
 
 /* --- Footer widget: the clip IS the tile ---------------------------------- */

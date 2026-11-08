@@ -1,12 +1,12 @@
 import { test, expect } from "./fixtures/test";
 
 /**
- * THE DESKTOP HERO (>900px): framed, the group on the floor, the carousel below
- * the fold.
+ * THE DESKTOP HERO (>900px): framed and short, the carousel below the fold.
  *
  *   1. FRAME     the halftone is held in by one empty margin — the site header's
  *                band — at the top and sides, and is cut at the wordmark's midline.
- *   2. FLOOR     the lockup and intro rest on the same margin above the fold.
+ *   2. SHORT     the halftone is a fixed 400px, and the hero ends one fold gap
+ *                under the intro rather than at the fold.
  *   3. DOCK      the videos card is out of sight on load (parked on the fold), rises
  *                through the page as it scrolls, never reversing, and ends pinned in
  *                its grid cell with no lift left.
@@ -30,8 +30,18 @@ for (const [w, h] of [
 				grid: r(".hero__video"),
 				wmMid: (wm.top + wm.bottom) / 2,
 				introBottom: r(".hero-intro").bottom,
+				heroBottom: r(".fh__scene").bottom,
+				// A custom property computes to its unresolved expression; a probe's
+				// height resolves it.
+				foldGap: (() => {
+					const probe = document.createElement("div");
+					probe.style.cssText = "position:absolute;height:var(--hero-fold-gap)";
+					document.querySelector(".fh")!.appendChild(probe);
+					const h = probe.getBoundingClientRect().height;
+					probe.remove();
+					return h;
+				})(),
 				vw: window.innerWidth,
-				vh: window.innerHeight,
 			};
 		});
 		const frame = geo.header;
@@ -42,8 +52,12 @@ for (const [w, h] of [
 		expect(Math.abs(geo.vw - geo.grid.right - frame)).toBeLessThan(1);
 		// ...the picture cut through "tristan"...
 		expect(Math.abs(geo.grid.bottom - geo.wmMid)).toBeLessThan(1);
-		// ...and the group resting on the same margin at the foot.
-		expect(Math.abs(geo.vh - geo.introBottom - frame)).toBeLessThan(1);
+		// ...a fixed height (index.astro's --home-scene-h), given up only on a
+		// screen too short to show it AND the intro above the fold...
+		if (h >= 900) expect(Math.abs(geo.grid.height - 400)).toBeLessThan(1);
+		else expect(geo.grid.height).toBeLessThanOrEqual(400 + 1);
+		// ...and the hero ending one fold gap under the group, not at the fold.
+		expect(Math.abs(geo.heroBottom - geo.introBottom - geo.foldGap)).toBeLessThan(1);
 	});
 }
 
@@ -74,8 +88,14 @@ test("the videos card waits under the fold, rises, and docks", async ({ page }) 
 	expect(rest.top).toBeGreaterThanOrEqual(900 - 1);
 	expect(rest.lift).toBeLessThan(0);
 
+	// Sampled within the page's scroll range: past its end the page stops, and
+	// so does the card.
+	const end = Math.min(
+		1600,
+		await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)
+	);
 	const tops: number[] = [];
-	for (let y = 100; y <= 1600; y += 100) tops.push((await at(y)).top);
+	for (let y = 100; y <= end; y += 100) tops.push((await at(y)).top);
 	for (let i = 1; i < tops.length; i++) {
 		expect(
 			tops[i],
@@ -83,5 +103,5 @@ test("the videos card waits under the fold, rises, and docks", async ({ page }) 
 		).toBeLessThan(tops[i - 1]);
 	}
 	// Docked: no lift left once the grid has framed.
-	expect((await at(1600)).lift).toBe(0);
+	expect((await at(end)).lift).toBe(0);
 });

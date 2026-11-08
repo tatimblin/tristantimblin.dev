@@ -452,7 +452,9 @@ test.describe("hero fold — desktop", () => {
 			);
 
 		const rest = await readFold(page);
-		expect(rest.grew).toBeCloseTo(0, 0);
+		// The desktop hero is short (index.astro's --home-scene-h): it ends under the
+		// group, well above the fold.
+		expect(rest.grew).toBeLessThan(0);
 		expect(rest.wordmarkToOtherStories).toBeCloseTo(rest.headingGap, 0);
 
 		// The group's height must not depend on where the page happens to be scrolled.

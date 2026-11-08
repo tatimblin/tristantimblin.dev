@@ -67,8 +67,8 @@ for (const [device, use] of [
 		test("a hidden tab: no frame callbacks, no rAF, no video frames", async ({ page }) => {
 			await load(page);
 			await mountAll(page);
-			// Mid-page, where the most runs: the copy's wobble, a halftone, cards.
-			const mid = await page.evaluate(() => document.querySelector(".home__copy")!.getBoundingClientRect().top + scrollY - 200);
+			// Mid-page, where the most runs: the heading's wobble, a halftone, cards.
+			const mid = await page.evaluate(() => document.querySelector(".home__widgets")!.getBoundingClientRect().top + scrollY - 200);
 			await scrollTo(page, mid);
 			const visible = await during(page, 1000);
 			observed("visible, mid-page", visible);

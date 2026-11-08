@@ -33,7 +33,10 @@ interface Props {
 }
 
 const {
-	links = [{ label: "Writing", href: "/txt/" }],
+	links = [
+		{ label: "Writing", href: "/txt/" },
+		{ label: "About Me", href: "/about/" },
+	],
 	variant = "overlay",
 	trail = [],
 } = Astro.props;
