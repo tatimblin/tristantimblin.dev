@@ -85,10 +85,20 @@
 	--dg-feather: 0.4;
 }
 
+/* On cream, the section hero's family: its square cells, levels and gamma. The
+   cutoff, denoise and crosshatch stay a step apart for footage with subjects in
+   it, which the fabric clip doesn't have. */
 [data-theme="light"] .wx-videos dotted-grid {
-	--dg-gamma: 0.42;
-	--dg-cutoff: 0.12;
-	--dg-dot-scale: 1;
+	--dg-dot-shape: square;
+	--dg-dot-scale: 0.8;
+	--dg-levels: 8;
+	--dg-cutoff: 0.18;
+	--dg-feather: 0.2;
+	--dg-denoise: 0.5;
+	--dg-gamma: 0.2;
+	--dg-contrast: 1.25;
+	--dg-bloom: 0.25;
+	--dg-crosshatch: 0.1;
 }
 
 [data-theme="dark"] .wx-videos dotted-grid {
