@@ -26,22 +26,32 @@
  * FAILING VISIBLE. The hidden rule requires BOTH `html.reveal-armed` (added by an
  * inline head script that also schedules its own removal) AND the absence of the
  * revealed state, so every failure path ends shown: no JS → never armed; bundle
- * 404s → the inline backstop disarms; an asset hangs → the group deadline fires.
+ * 404s → the inline backstop disarms; an asset hangs → the deadline fires.
  */
 
 import { whenMounted } from "@whois/design-system/lib/widgets";
 
-/** Cap on how long a group waits for its assets before revealing anyway. */
+/** Cap on how long a reveal waits for its assets before revealing anyway. */
 const DEADLINE_MS = 600;
 
 const IN_VIEW_MARGIN = "0px 0px -10% 0px";
 const IN_VIEW_THRESHOLD = 0.2;
 
-/** `data-reveal-eager`: fire before the element reaches the viewport, for one
+/** `data-reveal="eager"`: fire before the element reaches the viewport, for one
  *  whose own entrance is scroll-driven (the videos card, parked in the opener,
  *  drops into its cell) and would otherwise play out behind an opacity of 0. */
 const EAGER_MARGIN = "0px 0px 20% 0px";
 const EAGER_THRESHOLD = 0;
+
+/** `data-reveal="row"`: a card in a widget grid (Widget.astro marks them). It
+ *  comes in when its TOP crosses the in-view line, whatever its height, so the
+ *  cards of one row arrive in one observer callback and stagger across it. */
+const ROW_THRESHOLD = 0;
+
+/** The most steps of --reveal-stagger one arrival may spread over: a jump that
+ *  brings a screenful in at once closes up its pitch, so the last card still
+ *  starts soon and no two start together. */
+const MAX_STAGGER_STEPS = 3;
 
 const ARMED_CLASS = "reveal-armed";
 
@@ -149,52 +159,86 @@ class RevealCoordinator {
 			if (el.dataset.revealState !== "in") el.dataset.revealState = "pending";
 		}
 
-		for (const [, members] of this.groupBy(targets)) this.runGroup(members);
+		const rows = targets.filter((el) => el.dataset.reveal === "row");
+		if (rows.length) this.watchRows(rows);
+		for (const el of targets) {
+			if (el.dataset.reveal !== "row") this.runSolo(el);
+		}
 	}
 
-	/** Bucket by `data-reveal-group`; ungrouped elements each form their own group
-	 *  so they reveal independently. */
-	private groupBy(targets: HTMLElement[]): Map<string, HTMLElement[]> {
-		const groups = new Map<string, HTMLElement[]>();
-		for (const [i, el] of targets.entries()) {
-			const name = el.dataset.revealGroup || `__solo-${i}`;
-			const list = groups.get(name) ?? [];
-			list.push(el);
-			groups.set(name, list);
-		}
-		return groups;
-	}
-
-	private async runGroup(members: HTMLElement[]) {
-		// In view first, then the deadline: a group far down the page would otherwise
-		// burn its budget off screen and arrive already revealed.
-		await Promise.all(members.map((el) => this.whenInView(el)));
+	private async runSolo(el: HTMLElement) {
+		// In view first, then the deadline: an element far down the page would
+		// otherwise burn its budget off screen and arrive already revealed.
+		await this.whenInView(el);
 		if (this.destroyed) return;
-
-		// A widget card also waits for its script's mount (the widget runtime
-		// loads it as the card nears), so it never fades in half-built: a fan of
-		// posters with no posters, a ring with no ticks. Under the same deadline.
-		await withDeadline(
-			Promise.all(members.flatMap((el) => [...assetsOf(el), whenMounted(el)])),
-			DEADLINE_MS
-		);
+		await this.whenReady([el]);
 		if (this.destroyed) return;
-
-		// Stagger via transition-delay rather than timers: it cannot outlive a teardown.
-		const ordered = [...members].sort(
-			(a, b) => this.orderOf(a, members) - this.orderOf(b, members)
-		);
-		for (const [i, el] of ordered.entries()) {
-			if (i > 0) el.style.transitionDelay = `calc(var(--reveal-stagger) * ${i})`;
-			el.dataset.revealState = "in";
-		}
-
+		el.dataset.revealState = "in";
 		this.scheduleDisarm();
 	}
 
-	private orderOf(el: HTMLElement, members: HTMLElement[]): number {
-		const raw = Number(el.dataset.revealOrder);
-		return Number.isFinite(raw) ? raw : members.indexOf(el);
+	/**
+	 * The cards of a widget grid: each comes in as it reaches the view, and the
+	 * ones that reach it in the same observer callback (a row, or everything a jump
+	 * lands on) stagger top to bottom, left to right. Measured, not authored: the
+	 * grid's dense packing puts them somewhere other than DOM order, differently per
+	 * column count.
+	 */
+	private watchRows(cards: HTMLElement[]) {
+		const io = new IntersectionObserver(
+			(entries, observer) => {
+				const arrived = entries.filter((e) => e.isIntersecting);
+				for (const entry of arrived) observer.unobserve(entry.target);
+				const landed = new Set(arrived.map((e) => e.target));
+				// A jump can carry a card clean past the view with no callback of its
+				// own: shown at once, so it is there when the visitor scrolls back.
+				for (const el of cards) {
+					if (el.dataset.revealState === "in" || landed.has(el)) continue;
+					if (el.getBoundingClientRect().bottom < 0) {
+						observer.unobserve(el);
+						el.dataset.revealState = "in";
+					}
+				}
+				if (arrived.length) void this.revealArrival(arrived);
+				else this.scheduleDisarm();
+			},
+			{ rootMargin: IN_VIEW_MARGIN, threshold: ROW_THRESHOLD }
+		);
+		for (const el of cards) io.observe(el);
+		this.observers.push(io);
+	}
+
+	private async revealArrival(arrived: IntersectionObserverEntry[]) {
+		// Sorted on the observer's own rects, so nothing here forces a layout. Rounded,
+		// because the cards of a row sit on the same fractional pixel only nearly.
+		const ordered = [...arrived]
+			.sort(
+				(a, b) =>
+					Math.round(a.boundingClientRect.top) - Math.round(b.boundingClientRect.top) ||
+					a.boundingClientRect.left - b.boundingClientRect.left
+			)
+			.map((e) => e.target as HTMLElement);
+
+		await this.whenReady(ordered);
+		if (this.destroyed) return;
+
+		// Stagger via transition-delay rather than timers: it cannot outlive a teardown.
+		const pitch = Math.min(1, MAX_STAGGER_STEPS / Math.max(1, ordered.length - 1));
+		for (const [i, el] of ordered.entries()) {
+			if (i > 0) el.style.transitionDelay = `calc(var(--reveal-stagger) * ${(i * pitch).toFixed(3)})`;
+			el.dataset.revealState = "in";
+		}
+		this.scheduleDisarm();
+	}
+
+	/** A widget card also waits for its script's mount (the widget runtime loads
+	 *  it as the card nears), so it never fades in half-built: a fan of posters with
+	 *  no posters, a ring with no ticks. Under the deadline. */
+	private whenReady(els: HTMLElement[]): Promise<void> {
+		return withDeadline(
+			Promise.all(els.flatMap((el) => [...assetsOf(el), whenMounted(el)])),
+			DEADLINE_MS
+		);
 	}
 
 	/** Resolve on first intersection, then unobserve. */
@@ -208,7 +252,7 @@ class RevealCoordinator {
 						resolve();
 					}
 				},
-				el.dataset.revealEager !== undefined
+				el.dataset.reveal === "eager"
 					? { rootMargin: EAGER_MARGIN, threshold: EAGER_THRESHOLD }
 					: { rootMargin: IN_VIEW_MARGIN, threshold: IN_VIEW_THRESHOLD }
 			);

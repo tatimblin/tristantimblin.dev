@@ -277,6 +277,156 @@ test.describe("reveal — safety", () => {
 });
 
 test.describe("reveal — below-the-fold behaviour", () => {
+	/** The cards that take part in the stagger, as the page packed them. */
+	const cards = (page: Page) =>
+		page.evaluate(() =>
+			Array.from(document.querySelectorAll<HTMLElement>('[data-reveal="row"]')).map((el) => {
+				const r = el.getBoundingClientRect();
+				// Without the entrance's own rise, which may be mid-flight.
+				const t = getComputedStyle(el).translate;
+				const rise = t === "none" ? 0 : parseFloat(t.split(" ")[1] ?? "0") || 0;
+				return {
+					name: el.dataset.widget,
+					top: Math.round(r.top - rise + scrollY),
+					left: r.left,
+					state: el.dataset.revealState,
+					delayMs: Math.round(parseFloat(getComputedStyle(el).transitionDelay) * 1000),
+				};
+			})
+		);
+
+	test("each card waits for its own turn: a lower one is held while an upper one is in", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/");
+		await page.waitForFunction(
+			() => document.querySelector('[data-reveal="row"]')?.hasAttribute("data-reveal-state") === true
+		);
+		// Bring only the first row into view (its top, past the in-view line).
+		await page.evaluate(() => {
+			const top = document.querySelector('[data-widget="now-playing"]')!.getBoundingClientRect().top;
+			window.scrollTo(0, top + scrollY - 500);
+		});
+		await page.waitForFunction(
+			() =>
+				document.querySelector<HTMLElement>('[data-widget="now-playing"]')?.dataset.revealState === "in",
+			undefined,
+			{ timeout: 6000 }
+		);
+		const state = await cards(page);
+		const byName = Object.fromEntries(state.map((c) => [c.name, c]));
+		expect(byName["now-playing"].state).toBe("in");
+		expect(byName["cursive"].state, "a card further down waits").toBe("pending");
+		expect(byName["amc"].state).toBe("pending");
+	});
+
+	test("cards that arrive together start left to right, not at once", async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/");
+		await page.waitForFunction(
+			() => document.querySelector('[data-reveal="row"]')?.hasAttribute("data-reveal-state") === true
+		);
+		// Walk down, so this row arrives on its own rather than with the rows above it.
+		const target = await page.evaluate(
+			() => document.querySelector(".wx-cursive")!.getBoundingClientRect().top + scrollY - 500
+		);
+		for (let y = 0; y <= target; y += 100) {
+			await page.evaluate((v) => window.scrollTo(0, v), y);
+			await page.waitForTimeout(100);
+		}
+		await page.evaluate((v) => window.scrollTo(0, v), target);
+		await page.waitForFunction(
+			() =>
+				["cursive", "github", "readers"].every(
+					(n) =>
+						document.querySelector<HTMLElement>(`[data-widget="${n}"]`)?.dataset.revealState === "in"
+				),
+			undefined,
+			{ timeout: 6000 }
+		);
+		const row = (await cards(page))
+			.filter((c) => ["cursive", "github", "readers"].includes(c.name!))
+			.sort((a, b) => a.left - b.left);
+		expect(new Set(row.map((c) => c.top)).size, "these three share a row").toBe(1);
+		const delays = row.map((c) => c.delayMs);
+		expect(delays[0], "the leftmost leads").toBe(0);
+		expect(delays[1]).toBeGreaterThan(delays[0]);
+		expect(delays[2]).toBeGreaterThan(delays[1]);
+	});
+
+	test("the order is the packed grid's on a phone too", async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto("/");
+		await page.waitForFunction(
+			() => document.querySelector('[data-reveal="row"]')?.hasAttribute("data-reveal-state") === true
+		);
+		await page.evaluate(() =>
+			window.scrollTo(0, document.documentElement.scrollHeight)
+		);
+		await settleReveal(page);
+		// Everything in view at the jump's end: in packed order, delays rising.
+		const inView = await page.evaluate(() =>
+			Array.from(document.querySelectorAll<HTMLElement>('[data-reveal="row"]'))
+				.map((el) => {
+					const r = el.getBoundingClientRect();
+					return {
+						top: Math.round(r.top),
+						left: r.left,
+						bottom: r.bottom,
+						delayMs: parseFloat(getComputedStyle(el).transitionDelay) * 1000,
+					};
+				})
+				.filter((c) => c.bottom > 0 && c.top < innerHeight)
+				.sort((a, b) => a.top - b.top || a.left - b.left)
+		);
+		expect(inView.length).toBeGreaterThan(1);
+		for (let i = 1; i < inView.length; i++) {
+			expect(inView[i].delayMs).toBeGreaterThan(inView[i - 1].delayMs);
+		}
+	});
+
+	test("a jump to the bottom leaves nothing invisible and queues no long stagger", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/");
+		await page.waitForFunction(
+			() => document.querySelector('[data-reveal="row"]')?.hasAttribute("data-reveal-state") === true
+		);
+		await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+		await page.waitForFunction(
+			() =>
+				Array.from(document.querySelectorAll<HTMLElement>('[data-reveal="row"]')).every(
+					(el) => el.getBoundingClientRect().top > innerHeight * 0.9 || el.dataset.revealState === "in"
+				),
+			undefined,
+			{ timeout: 6000 }
+		);
+		const state = await cards(page);
+		// Everything the jump passed or landed on has come in, in no more than three steps.
+		expect(Math.max(...state.map((c) => c.delayMs))).toBeLessThanOrEqual(3 * 90);
+		await page.evaluate(() => window.scrollTo(0, 0));
+		await settleReveal(page);
+		expect((await readReveal(page)).faded).toBe(0);
+	});
+
+	test("a card's box doesn't move when it comes in", async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/");
+		const read = () =>
+			page.evaluate(() => {
+				const el = document.querySelector<HTMLElement>('[data-widget="github"]')!;
+				return { top: el.offsetTop, left: el.offsetLeft, w: el.offsetWidth, h: el.offsetHeight };
+			});
+		const before = await read();
+		await page.evaluate(() =>
+			document.querySelector(".wx-github")?.scrollIntoView({ block: "center" })
+		);
+		await settleReveal(page);
+		expect(await read()).toEqual(before);
+	});
+
 	test("the widget row is held until scrolled to, then staggers in", async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await page.goto("/");
@@ -296,13 +446,13 @@ test.describe("reveal — below-the-fold behaviour", () => {
 		await page.waitForFunction(
 			() =>
 				document
-					.querySelector('[data-reveal-group="widgets"]')
+					.querySelector('[data-reveal="row"]')
 					?.hasAttribute("data-reveal-state") === true,
 			undefined,
 			{ timeout: 6000 }
 		);
 		const held = await page.evaluate(() => {
-			const el = document.querySelector<HTMLElement>('[data-reveal-group="widgets"]');
+			const el = document.querySelector<HTMLElement>('[data-reveal="row"]');
 			return el
 				? {
 						opacity: Number(getComputedStyle(el).opacity),
@@ -338,36 +488,14 @@ test.describe("reveal — below-the-fold behaviour", () => {
 			document.querySelector('[data-widget="cursive"]')?.scrollIntoView({ block: "center" })
 		);
 
-		// The stagger is implemented as transition-delay, so assert the MECHANISM
-		// rather than racing the animation and sampling opacities mid-flight.
-		// Delay must rise monotonically with declared order — and order deliberately
-		// differs from DOM order here, because `grid-auto-flow: dense` re-packs the
-		// 1×2 video cell into the last column even though it is authored first.
 		await page.waitForFunction(
 			() =>
-				Array.from(
-					document.querySelectorAll<HTMLElement>('[data-reveal-group="widgets"]')
-				).every((el) => el.dataset.revealState === "in"),
+				document.querySelector<HTMLElement>('[data-widget="cursive"]')?.dataset.revealState === "in",
 			undefined,
 			{ timeout: 6000 }
 		);
-		const delays = await page.evaluate(() =>
-			Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-group="widgets"]'))
-				.map((el) => ({
-					order: Number(el.dataset.revealOrder),
-					delayMs: Math.round(
-						parseFloat(getComputedStyle(el).transitionDelay) * 1000
-					),
-				}))
-				.sort((a, b) => a.order - b.order)
-		);
-		expect(delays.length).toBeGreaterThan(1);
-		// First in the visual order leads with no delay.
-		expect(delays[0].delayMs).toBe(0);
-		for (let i = 1; i < delays.length; i++) {
-			expect(delays[i].delayMs).toBeGreaterThan(delays[i - 1].delayMs);
-		}
 
+		await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
 		await settleReveal(page);
 		expect((await readReveal(page)).faded).toBe(0);
 	});

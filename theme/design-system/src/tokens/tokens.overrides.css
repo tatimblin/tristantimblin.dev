@@ -178,9 +178,9 @@
 	 * than a bespoke length so the motion shares the layout's rhythm. */
 	--reveal-rise: var(--space-4);
 
-	/* Delay between successive members of a staggered reveal group. Small: it
-	 * multiplies by the member's index, so a large value makes late items in a
-	 * long group feel abandoned. */
+	/* Delay between successive widget cards arriving together. Small: it
+	 * multiplies by the card's place in the arrival, so a large value makes the
+	 * last card feel abandoned. */
 	--reveal-stagger: 90ms;
 }
 

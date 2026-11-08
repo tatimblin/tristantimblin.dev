@@ -21,6 +21,10 @@
 // `auto` (the default) is content-visibility: auto, so an off-screen card
 // costs no layout or paint; `layout` is for a card whose content overhangs it
 // (the videos card's ruler), which paint containment would clip.
+// `reveal` is the card's entrance (WIDGETS.md): by default it fades in as it
+// reaches the view, staggered left to right with the rest of its row; `eager`
+// comes in before it is reached, for a card whose own motion is its entrance;
+// `false` opts out.
 import { cx } from "../lib/cx";
 import Card from "./Card.astro";
 
@@ -35,6 +39,8 @@ interface Props {
 	load?: "near" | "idle" | "eager";
 	/** How it is isolated from the cards round it. */
 	contain?: "auto" | "layout";
+	/** Its entrance. */
+	reveal?: boolean | "eager";
 	class?: string;
 	[key: string]: unknown;
 }
@@ -45,6 +51,7 @@ const {
 	name,
 	load = "near",
 	contain = "auto",
+	reveal = true,
 	class: className,
 	...rest
 } = Astro.props;
@@ -66,6 +73,7 @@ const hasMeta = Astro.slots.has("meta");
 	title={title}
 	data-widget={name}
 	data-widget-load={name ? load : undefined}
+	data-reveal={reveal === false ? undefined : reveal === "eager" ? "eager" : "row"}
 	{...rest}
 >
 	{

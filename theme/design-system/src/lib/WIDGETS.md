@@ -76,6 +76,27 @@ nothing else. The card walks `queued → loading → mounted | failed` in
 `data-widget-state` and fires `widget:settled`; `whenMounted(el)` waits for it
 (the page's reveal does, so no card fades in half-built).
 
+## The entrance (`<Widget reveal>`)
+
+Any card in a widget grid comes in by itself; a page marks nothing. `<Widget>`
+renders `data-reveal`, and the site's coordinator (`src/lib/reveal.ts`, with
+the motion in `src/styles/reveal.css`) fades it in once its top crosses the
+in-view line and it has mounted, under a 600ms deadline.
+
+- **default** — as the card reaches the view. Cards that arrive together (a
+  row, or whatever a jump lands on) stagger by `--reveal-stagger`, top to
+  bottom and left to right by where the grid actually packed them, closing up
+  to fit within three steps. A card a jump carries past the view is shown at
+  once.
+- **`eager`** — before it is reached, not part of any stagger: for a card
+  whose own motion is its entrance (the videos card's dock).
+- **`false`** — no entrance.
+
+Loading is separate: the load modes above fetch and mount ahead of the view,
+so a card is ready by the time its entrance plays. Never hold a card's content
+back for the entrance from inside the widget; key CSS on
+`data-reveal-state="in"` if something must wait for it (the bike's slide-in).
+
 ## Containment (`<Widget contain>`)
 
 - **`auto`** (default) — `contain: style`, and `content-visibility: auto`

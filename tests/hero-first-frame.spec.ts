@@ -58,7 +58,7 @@ async function readOpener(page: Page) {
 			tagline: box(".sh__tagline"),
 			intro: box(".sh__sub > :last-child"),
 			carousel: laid(".wx-videos"),
-			firstCard: laid('[data-reveal-order="0"]'),
+			firstCard: laid('[data-widget="now-playing"]'),
 		};
 	});
 }

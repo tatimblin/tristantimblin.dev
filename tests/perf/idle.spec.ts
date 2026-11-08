@@ -68,7 +68,7 @@ for (const [device, use] of [
 			await load(page);
 			await mountAll(page);
 			// Mid-page, where the most runs: the heading's wobble, a halftone, cards.
-			const mid = await page.evaluate(() => document.querySelector(`[data-reveal-order="0"]`)!.getBoundingClientRect().top + scrollY - 200);
+			const mid = await page.evaluate(() => document.querySelector(`[data-widget="now-playing"]`)!.getBoundingClientRect().top + scrollY - 200);
 			await scrollTo(page, mid);
 			const visible = await during(page, 1000);
 			observed("visible, mid-page", visible);

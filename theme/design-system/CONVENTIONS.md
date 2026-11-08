@@ -304,10 +304,9 @@ is its `client.ts`, whose `mount(el, ctx)` the widget runtime calls when
 `stepFromKey(event, at, last)` from `lib/keys`.
 
 **A widget's shape** (`src/widgets/*`): a typed `Props` of `class` and a
-pass-through, spread onto its `<Widget>`, so the PAGE writes the row's
-choreography (`data-reveal`, the group, the order — `src/pages/index.astro`)
-and the widget knows nothing of it; a widget that must react to the page's
-reveal keys its CSS on `data-reveal-state="in"` (the bike's slide-in) rather
+pass-through, spread onto its `<Widget>`. The entrance is `<Widget>`'s own
+(`reveal`, in WIDGETS.md), so neither the page nor the widget stages it; a
+widget that must react to its reveal keys its CSS on `data-reveal-state="in"` (the bike's slide-in) rather
 than observing on its own. The HEADLINE FIGURE sits at the FOOT of the body
 (the contributions total, the visitors, the miles), with the graphic or the
 stat pairs above it, so a row of tiles reads its figures on one line. A

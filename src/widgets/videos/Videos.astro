@@ -15,9 +15,9 @@
 // `contain="layout"`: the ruler overhangs the cell, which paint containment
 // (content-visibility) would clip.
 //
-// Props pass through to the <Widget> (a class, the page's data-reveal
-// choreography — see index.astro for why this card reveals on its own). NB
-// the reveal writes `translate` while the dock lift writes `transform`
+// Props pass through to the <Widget> (a class). `reveal="eager"`: on screen from
+// the first frame, parked above its cell, so it comes in at once rather than
+// with the row it docks into. NB the reveal writes `translate` while the dock lift writes `transform`
 // — two independent properties, so they compose instead of overwriting each
 // other.
 import Widget from "@whois/design-system/Widget";
@@ -38,6 +38,7 @@ const { class: className, ...rest } = Astro.props;
 	size="1x2"
 	name="videos"
 	load="eager"
+	reveal="eager"
 	contain="layout"
 	class:list={["wx-videos", className]}
 	chrome={false}

@@ -35,7 +35,7 @@ async function at(page: Page, y: number) {
 			tagline: box(document.querySelector(".sh__tagline")),
 			intro: box(document.querySelector(".sh__sub > :last-child")),
 			card: box(document.querySelector(".wx-videos")),
-			first: box(document.querySelector('[data-reveal-order="0"]')),
+			first: box(document.querySelector('[data-widget="now-playing"]')),
 			subOpacity: Number(getComputedStyle(document.querySelector(".sh__sub")!).opacity),
 			/** 1 = all outline, 0 = all solid. */
 			clip: m ? Number(m[1]) / 100 : getComputedStyle(solid).clipPath === "none" ? 0 : 1,
