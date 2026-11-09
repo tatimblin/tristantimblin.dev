@@ -1,26 +1,12 @@
 import { test, expect, type Page } from "./fixtures/test";
 
 /**
- * THE REVEAL SAFETY INVARIANTS.
- *
- * src/lib/reveal.ts hides content and then eases it in. Hiding content from JS is
- * only defensible if EVERY failure path ends with it visible, so most of what these
- * tests assert is not the animation — it's terminality. The mechanism has three
- * independent escape hatches (the armed class is never added; the class is removed
- * by an inline timeout; the state attribute is set) and the tests below exercise
- * each, because in normal operation none of them ever fires.
- *
- *   1. NO-JS        with scripting off, nothing is hidden — the class is never added.
- *   2. TERMINAL     with every asset blocked, content still appears (the backstop).
- *   3. HERO-FREE    nothing in the lockup is ever gated (its wordmark is the LCP
- *                   element, so a reveal there would delay a real metric).
- *   4. REDUCED      the reduced-motion visitor is never armed at all.
- *   5. TOKENS       the motion tokens survive the production build (the canary for
- *                   a silently-dropped declaration — see the longhands note in
- *                   src/styles/reveal.css).
- *
- * Run against the BUILT site (see playwright.config.ts) so minification hazards are
- * in scope.
+ * THE REVEAL SAFETY INVARIANTS. src/lib/reveal.ts hides content and eases it in,
+ * which is only defensible if every failure path ends with it visible. Three
+ * independent escape hatches (the armed class never added; an inline timeout
+ * removes it; the state attribute set), none of which fire in normal operation,
+ * so each is exercised here. Against the built site, so minification is in scope
+ * (the longhands note in src/styles/reveal.css).
  */
 
 interface RevealState {
@@ -51,15 +37,10 @@ async function readReveal(page: Page): Promise<RevealState> {
 }
 
 /**
- * Wait until nothing is hidden any more.
- *
- * Waiting on the armed class alone is NOT enough, and the difference is the whole
- * subtlety of the mechanism: disarming only stops the hidden rule from MATCHING —
- * each element still has its ~900ms opacity transition to run, and the 3s backstop
- * can drop the class while off-screen groups are mid-fade. Measured on a
- * fully-blocked page: class removed at t=3308ms, opacity reached 1 at t=4119ms. So
- * poll the thing that actually matters — computed opacity — with a ceiling above
- * backstop + transition.
+ * Wait until nothing is hidden any more: computed opacity, not the armed class.
+ * Disarming only stops the hidden rule matching; each element still has its ~900ms
+ * transition to run, and the 3s backstop can drop the class mid-fade. The ceiling
+ * is above backstop + transition.
  */
 async function settleReveal(page: Page) {
 	await page.waitForFunction(
@@ -86,8 +67,7 @@ async function walkPage(page: Page) {
 
 test.describe("reveal — safety", () => {
 	test("1. NO-JS: nothing is hidden when scripting is off", async ({ browser }) => {
-		// The hidden rule is scoped to a class only script can add, so with no script
-		// the page must be fully visible. This is the "blank page" regression guard.
+		// The hidden rule is scoped to a class only script can add.
 		const context = await browser.newContext({ javaScriptEnabled: false });
 		const page = await context.newPage();
 		await page.goto("/");
@@ -110,9 +90,8 @@ test.describe("reveal — safety", () => {
 	});
 
 	test("2. TERMINAL: content appears even with every asset blocked", async ({ page }) => {
-		// Kill the images the coordinator waits on. Readiness can then never resolve
-		// normally, so this exercises the deadline + inline backstop — the branch that
-		// never runs in practice and where a permanently-hidden region would hide.
+		// With the images the coordinator waits on dead, readiness never resolves
+		// normally, which exercises the deadline + inline backstop.
 		await page.route("**/*.{webp,avif,png,jpg,jpeg,gif,mp4,webm}", (route) => route.abort());
 		await page.goto("/");
 
@@ -124,22 +103,15 @@ test.describe("reveal — safety", () => {
 		expect(state.total).toBeGreaterThan(0);
 		expect(state.armed).toBe(false);
 		expect(state.faded).toBe(0);
-		// NB: `pending` is deliberately NOT asserted here. The backstop reveals by
-		// removing the armed class, which un-hides everything WITHOUT walking the
-		// elements, so groups still below the fold keep their pending attribute
-		// forever — visible but never formally "revealed". That is the intended
-		// division of labour: the class is the safety net, the attribute is the happy
-		// path. Visibility is the invariant; the attribute is an implementation detail.
+		// `pending` is deliberately not asserted: the backstop un-hides by removing
+		// the class without walking the elements, so groups below the fold keep it.
 	});
 
 	test("3. HERO-FREE: no reveal gates the hero", async ({ page }) => {
 		await page.goto("/");
 
-		// The lockup must contain no reveal targets: the homepage's LCP element is
-		// the wordmark text inside it, so gating anything here would trade a real
-		// metric for a cosmetic one. A guard against a future "improvement" that
-		// extends the reveal upward into the opener. (The grid around it holds the
-		// cards, which legitimately ARE revealed.)
+		// The homepage's LCP element is the wordmark inside the lockup, so gating
+		// anything here would delay a real metric.
 		expect(await page.locator("stories-heading [data-reveal]").count()).toBe(0);
 		expect(await page.locator("stories-heading[data-reveal]").count()).toBe(0);
 
@@ -170,9 +142,8 @@ test.describe("reveal — safety", () => {
 	test("5. TOKENS: the motion layer survives the production build", async ({ page }) => {
 		await page.goto("/");
 
-		// Canary for the class of failure where a declaration is silently dropped in
-		// prod (a folded shorthand, an unresolved custom property, a token file that
-		// didn't ship) while dev looked fine.
+		// A declaration silently dropped in prod (a folded shorthand, an unresolved
+		// custom property, a token file that didn't ship) looks fine in dev.
 		const state = await readReveal(page);
 		expect(state.easeToken).toContain("cubic-bezier");
 		expect(state.durationToken).not.toBe("");
@@ -192,11 +163,9 @@ test.describe("reveal — safety", () => {
 		await walkPage(page);
 		await settleReveal(page);
 
-		// ClientRouter swaps the document; the coordinator must tear down and rebuild
-		// without double-binding or stranding anything hidden.
-		//
-		// Navigate by dispatching the click rather than locator.click(): the navigation
-		// is what this test cares about, not the hit-testing.
+		// ClientRouter swaps the document; the coordinator must rebuild without
+		// double-binding or stranding anything hidden. The click is dispatched, not
+		// locator.click(): the navigation matters here, not the hit-testing.
 		await page.evaluate(() => {
 			const link = Array.from(document.querySelectorAll<HTMLAnchorElement>("a")).find(
 				(a) => a.textContent?.trim() === "Writing"
@@ -216,29 +185,17 @@ test.describe("reveal — safety", () => {
 	test("7. LIFECYCLE: widget-owned reveals re-arm after a round trip", async ({
 		page,
 	}) => {
-		// The bike drawing (BikeStats.astro) is hidden while the page is armed and its
-		// card hasn't been marked `data-reveal-state="in"` by the reveal coordinator.
-		// Astro executes a component's bundled script exactly once, but ClientRouter
-		// replaces the DOM on every navigation — so anything that marks the card from
-		// module scope ends up on a detached node and the fresh card never comes in.
-		// Its resting state is then `opacity: 0`, so the regression is INVISIBLE
-		// CONTENT, not a missing flourish. (Measured on the old ::before watermark,
-		// which had its own observer: 0.66 on first load, 0 after a round trip.)
+		// Astro runs a component's bundled script once, but ClientRouter replaces the
+		// DOM on every navigation: anything that marks the card from module scope ends
+		// up on a detached node, and the bike (BikeStats.astro) rests at `opacity: 0`.
 		const bikeOpacity = () =>
 			page
 				.locator(".wx-baywheels .wx-bw-bike")
 				.evaluate((el: Element) => parseFloat(getComputedStyle(el).opacity));
 
-		// POLL, don't sample. Coming in starts a CSS TRANSITION on .wx-bw-bike, so
-		// the bike takes ~1s to reach its resting opacity of 1 — and settleReveal() does not
-		// cover it (that waits on the [data-reveal] coordinator's opacity, which is a
-		// different mechanism on a different element). Sampling once therefore caught the
-		// fade mid-flight at 0 and reported the lifecycle regression that this test
-		// exists to detect, on a widget that was in fact revealing perfectly well.
-		//
-		// Polling still catches the REAL regression: when the observer is left watching a
-		// detached node, the resting state is opacity 0 forever, so this never settles
-		// above 0 and fails on the timeout instead of on a race.
+		// Poll, don't sample: the bike has its own ~1s transition, which settleReveal()
+		// doesn't cover (it reads [data-reveal], a different element), so a single read
+		// can catch 0 mid-fade. A detached observer still fails, on the timeout.
 		const expectWatermarkShown = async (when: string) =>
 			expect
 				.poll(bikeOpacity, {
@@ -247,19 +204,12 @@ test.describe("reveal — safety", () => {
 				})
 				.toBeGreaterThan(0);
 
-		// Plain scroll, NOT locator.scrollIntoViewIfNeeded() — see the note on the same
-		// call in "the widget row is held until scrolled to". This widget sits in
-		// the widget grid, the row that never fully settles (its reveal transition and the
-		// video widget's scroll-driven dock lift both animate it), so waiting for the box
-		// to stop moving times out at 30s on a slow runner instead of asserting anything.
-		// We only need it on screen so its IntersectionObserver fires.
+		// Plain scroll, not scrollIntoViewIfNeeded(): the grid never fully settles (its
+		// reveal and the dock lift animate it), so waiting for a still box times out on
+		// a slow runner.
 		const show = async () => {
-			// Wait for the element FIRST. ClientRouter swaps the DOM asynchronously after
-			// the URL changes, so page.waitForURL() can return while the previous page's
-			// body is still mounted — at which point .wx-baywheels is null, the optional
-			// chain below silently no-ops, and the widget is never brought into view. The
-			// assertion then fails on a widget that was simply never scrolled to, which
-			// reads as the lifecycle regression rather than as the race it is.
+			// Wait for the element first: ClientRouter swaps the DOM after the URL changes,
+			// so the optional chain below can no-op on the previous page's body.
 			await page.locator(".wx-baywheels").waitFor({ state: "attached" });
 			await page.evaluate(() =>
 				document.querySelector(".wx-baywheels")?.scrollIntoView({ block: "center" })
@@ -501,18 +451,11 @@ test.describe("reveal — below-the-fold behaviour", () => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await page.goto("/");
 
-		// Held: the row is below the fold on load, so it must still be invisible.
-		// (If this ever fails because the viewport grew tall enough to include the
-		// widgets, the fix is a taller page or a shorter viewport — not deleting the
-		// assertion, which is the whole point of in-view gating.)
+		// Held: the row is below the fold on load, so it must still be invisible. If a
+		// taller viewport ever includes it, change the viewport, not the assertion.
 		//
-		// Wait for the coordinator to have MARKED the group with some state before
-		// measuring, rather than assuming it ran by the time page.goto resolved: under
-		// parallel load (this suite also builds pages carrying a dozen WebGL contexts)
-		// the module can land a beat later, which made this the one flaky assertion in
-		// the file. Waiting specifically for "pending" is wrong — by the time the wait
-		// runs the group may already have flipped to "in" — so wait for ANY state, then
-		// assert the held one below.
+		// Wait for ANY state, not "pending": the module can land late under parallel
+		// load, and by then the group may already have flipped to "in".
 		await page.waitForFunction(
 			() =>
 				document
@@ -532,22 +475,14 @@ test.describe("reveal — below-the-fold behaviour", () => {
 				: null;
 		});
 
-		// The row is below the fold, so it must never have been REVEALED — its state
-		// stays "pending" until it is actually scrolled to.
 		expect(held?.state).toBe("pending");
 
-		// A pending card is fully invisible, armed or not: that is in-view gating
-		// doing its job, and the assertion that would catch a real regression. (The
-		// inline backstop's own terminality is covered by test 2.)
+		// A pending card is fully invisible, armed or not.
 		expect(held?.opacity).toBe(0);
 
-		// Plain scroll, NOT locator.scrollIntoViewIfNeeded(): that waits for the element
-		// to be "actionable", i.e. for its box to stop moving. This row never fully
-		// settles — the reveal transition and the video widget's scroll-driven dock lift
-		// both animate it — so on a slow runner the wait times out and the test fails
-		// with a 30s timeout rather than a real assertion. (It passed locally purely
-		// because the animations finished inside the actionability poll; CI is slower.)
-		// We only need the row on screen so the IntersectionObserver fires.
+		// Plain scroll, not scrollIntoViewIfNeeded(): this row never fully settles (the
+		// reveal and the dock lift animate it), so waiting for a still box times out on
+		// a slow runner.
 		await page.evaluate(() =>
 			document.querySelector('[data-widget="cursive"]')?.scrollIntoView({ block: "center" })
 		);
@@ -565,10 +500,8 @@ test.describe("reveal — below-the-fold behaviour", () => {
 	});
 
 	test("post images carry intrinsic dimensions", async ({ page }) => {
-		// Not a reveal assertion: markdown can't express width/height, so these
-		// images shipped without them and reflowed the article as each decoded. The
-		// mapped <Img> takes them off the image's import (Astro reads the file at
-		// build time), so a re-export can't desync the numbers.
+		// Markdown can't express width/height, so the mapped <Img> takes them off the
+		// image's import; without them the article reflows as each decodes.
 		await page.goto("/txt/mega-desk/");
 		const imgs = await page.evaluate(() =>
 			Array.from(document.querySelectorAll<HTMLImageElement>(".ds-prose img")).map(
@@ -590,11 +523,8 @@ test.describe("reveal — below-the-fold behaviour", () => {
 			expect(img.async).toBe("async");
 		}
 
-		// The published aspect must match the REAL file, or the reserved box is wrong
-		// and the attributes make CLS worse rather than better. Decoded separately,
-		// because a lazy off-screen <img> reports naturalWidth 0 until it loads — so
-		// the page's own elements can't answer this. Load each source into a detached
-		// Image() (cache-warm, no layout involvement) and compare.
+		// The published aspect must match the real file. Read off a detached Image():
+		// a lazy off-screen <img> reports naturalWidth 0 until it loads.
 		const mismatches = await page.evaluate(async (list) => {
 			const bad: string[] = [];
 			await Promise.all(

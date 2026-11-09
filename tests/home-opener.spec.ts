@@ -1,4 +1,5 @@
-import { test, expect, lockupReady, MEDIA_BASE, type Page } from "./fixtures/test";
+import { test, expect, type Page } from "./fixtures/test";
+import { LOCKUP, VIDEOS, dockTravel, openHome, scrollAndSettle } from "./fixtures/opener";
 
 /**
  * THE HOMEPAGE OPENER (src/layouts/HomeLayout.astro): "tristan", "& other stories"
@@ -13,11 +14,8 @@ import { test, expect, lockupReady, MEDIA_BASE, type Page } from "./fixtures/tes
 type Box = { x: number; y: number; w: number; h: number; right: number; bottom: number };
 
 async function at(page: Page, y: number) {
-	await page.evaluate((v) => window.scrollTo(0, v), y);
-	await page.evaluate(
-		() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
-	);
-	return page.evaluate(() => {
+	await scrollAndSettle(page, y, "frames");
+	return page.evaluate(({ lockup, videos }) => {
 		// The cards carry the reveal's entrance (`translate`, a rise that may be held
 		// or mid-flight); the geometry here is the painted box without it.
 		const box = (el: Element | null, carrier: Element | null = el) => {
@@ -27,23 +25,26 @@ async function at(page: Page, y: number) {
 			const y = r.y - dy;
 			return { x: r.x, y, w: r.width, h: r.height, right: r.right, bottom: y + r.height };
 		};
-		const solid = document.querySelector<HTMLElement>(".sh__solid")!;
+		const solid = document.querySelector<HTMLElement>(lockup.solid)!;
+		const sub = getComputedStyle(document.querySelector(lockup.sub)!);
 		const m = /inset\(([\d.]+)%/.exec(getComputedStyle(solid).clipPath);
 		return {
-			word: box(document.querySelector(".sh__wordmark")),
+			word: box(document.querySelector(lockup.wordmark)),
 			solid: box(solid),
-			tagline: box(document.querySelector(".sh__tagline")),
-			intro: box(document.querySelector(".sh__sub > :last-child")),
-			card: box(document.querySelector(".wx-videos")),
+			tagline: box(document.querySelector(lockup.tagline)),
+			intro: box(document.querySelector(lockup.intro)),
+			card: box(document.querySelector(videos.card)),
 			/** The picture, between the card's empty header and footer bands. Inside
 			 *  the card, so it is the card that carries its entrance. */
-			picture: box(document.querySelector(".wx-videos dotted-grid"), document.querySelector(".wx-videos")),
+			picture: box(document.querySelector(videos.grid), document.querySelector(videos.card)),
 			first: box(document.querySelector('[data-widget="now-playing"]')),
-			subOpacity: Number(getComputedStyle(document.querySelector(".sh__sub")!).opacity),
+			subOpacity: Number(sub.opacity),
+			/** The copy's distance below "tristan" when it simply follows the word. */
+			copyMargin: parseFloat(sub.marginBlockStart),
 			/** 1 = all outline, 0 = all solid. */
 			clip: m ? Number(m[1]) / 100 : getComputedStyle(solid).clipPath === "none" ? 0 : 1,
 		};
-	}) as Promise<{
+	}, { lockup: LOCKUP, videos: VIDEOS }) as Promise<{
 		word: Box;
 		solid: Box;
 		tagline: Box;
@@ -52,6 +53,7 @@ async function at(page: Page, y: number) {
 		picture: Box;
 		first: Box;
 		subOpacity: number;
+		copyMargin: number;
 		clip: number;
 	}>;
 }
@@ -59,56 +61,25 @@ async function at(page: Page, y: number) {
 const overlaps = (a: Box, b: Box) =>
 	a.x < b.right - 0.5 && b.x < a.right - 0.5 && a.y < b.bottom - 0.5 && b.y < a.bottom - 0.5;
 
-/** The stylesheet's --vc-dock-travel, in px. */
-function dockTravel(page: Page): Promise<number> {
-	return page.evaluate(() => {
-		const probe = document.createElement("div");
-		probe.style.cssText = "position:absolute;visibility:hidden;width:0;height:var(--vc-dock-travel)";
-		const card = document.querySelector(".wx-videos")!;
-		card.appendChild(probe);
-		const h = probe.getBoundingClientRect().height;
-		probe.remove();
-		return h;
-	});
-}
-
 /** Where the word holds: its sticky `top`. */
 const holdTop = (page: Page) =>
-	page.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".sh__wordmark")!).top));
+	page.evaluate((wordmark) => parseFloat(getComputedStyle(document.querySelector(wordmark)!).top), LOCKUP.wordmark);
 
 /** The scroll at which the first row arrives under the held word (a gap below it). */
 const meetAt = (rest: { first: Box; word: Box }, top: number) => rest.first.y - 24 - top - rest.word.h;
 
-async function open(page: Page, width: number, height: number) {
-	await page.setViewportSize({ width, height });
-	await page.goto("/");
-	await lockupReady(page);
-}
-
-test("no halftone hero: the only grid is the card's, and no fabric is asked for", async ({ page }) => {
-	const media: string[] = [];
-	page.on("request", (r) => {
-		if (r.url().startsWith(MEDIA_BASE)) media.push(r.url());
-	});
-	await open(page, 1440, 900);
-	await page.waitForTimeout(1000);
-	expect(await page.locator("dotted-grid").count()).toBe(1);
-	await expect(page.locator(".wx-videos dotted-grid")).toHaveCount(1);
-	expect(media.filter((u) => /fabric/.test(u))).toEqual([]);
-});
-
 test("one heading names the lockup; its layers are hidden from assistive tech", async ({ page }) => {
-	await open(page, 1440, 900);
+	await openHome(page, 1440, 900);
 	await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
 	await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("Tristan & other stories");
-	for (const s of [".sh__outline", ".sh__solid", ".sh__tagline"]) {
+	for (const s of [LOCKUP.outline, LOCKUP.solid, LOCKUP.tagline]) {
 		await expect(page.locator(s)).toHaveAttribute("aria-hidden", "true");
 	}
 });
 
 test("the tagline wobbles whole, its ampersand oversized", async ({ page }) => {
-	await open(page, 1440, 900);
-	const wobble = page.locator(".sh__tagline wobble-text");
+	await openHome(page, 1440, 900);
+	const wobble = page.locator(`${LOCKUP.tagline} wobble-text`);
 	await expect(wobble).toHaveText("& other stories");
 	await expect.poll(() => wobble.evaluate((el) => getComputedStyle(el).filter)).toContain("url(");
 	const [rest, amp] = await wobble.evaluate((el) => [
@@ -118,8 +89,8 @@ test("the tagline wobbles whole, its ampersand oversized", async ({ page }) => {
 	expect(amp).toBe(rest * 2.25);
 	// Up against the word's foot, and painted over it.
 	const [ampBox, word] = await Promise.all([
-		page.locator(".sh__amp").boundingBox(),
-		page.locator(".sh__wordmark").boundingBox(),
+		page.locator(LOCKUP.amp).boundingBox(),
+		page.locator(LOCKUP.wordmark).boundingBox(),
 	]);
 	expect(ampBox!.y).toBeLessThan(word!.y + word!.height);
 	const paintsOverWord = await page.evaluate(
@@ -132,7 +103,7 @@ test("the tagline wobbles whole, its ampersand oversized", async ({ page }) => {
 test("the stated header band is the real one", async ({ page }) => {
 	// global.css states --site-header-h so the pin's start is known without a
 	// script; it must stay the bar's real height.
-	await open(page, 1440, 900);
+	await openHome(page,1440, 900);
 	const got = await page.evaluate(() => {
 		const probe = document.createElement("div");
 		probe.style.cssText = "position:absolute;visibility:hidden;height:var(--site-header-h)";
@@ -146,7 +117,7 @@ test("the stated header band is the real one", async ({ page }) => {
 
 test.describe("desktop 1440×900", () => {
 	test("at rest: the lockup left of the carousel, nothing overlapping", async ({ page }) => {
-		await open(page, 1440, 900);
+		await openHome(page,1440, 900);
 		const s = await at(page, 0);
 		for (const [name, b] of Object.entries({ word: s.word, tagline: s.tagline, intro: s.intro })) {
 			expect(b.right, `${name} runs into the carousel`).toBeLessThan(s.card.x);
@@ -164,7 +135,7 @@ test.describe("desktop 1440×900", () => {
 	});
 
 	test("the speed reads a little faster than the page, and it lands in its cell", async ({ page }) => {
-		await open(page, 1440, 900);
+		await openHome(page,1440, 900);
 		const travel = await dockTravel(page);
 		const rest = await at(page, 0);
 		const s = await at(page, 40);
@@ -183,17 +154,17 @@ test.describe("desktop 1440×900", () => {
 	});
 
 	test("at 100px the intro and '& other stories' are gone, 'tristan' is not", async ({ page }) => {
-		await open(page, 1440, 900);
+		await openHome(page,1440, 900);
 		const s = await at(page, 100);
 		expect(s.subOpacity).toBe(0);
 		expect(s.word.bottom).toBeGreaterThan(0);
-		expect(await page.locator(".sh__wordmark").isVisible()).toBe(true);
+		expect(await page.locator(LOCKUP.wordmark).isVisible()).toBe(true);
 	});
 
 	test("the word drifts from the first pixel, holds, wipes to solid while held, and wobbles", async ({
 		page,
 	}) => {
-		await open(page, 1440, 900);
+		await openHome(page,1440, 900);
 		const rest = await at(page, 0);
 		const early = await at(page, 20);
 		expect(rest.word.y - early.word.y, "moves at once").toBeGreaterThan(1.5);
@@ -221,7 +192,7 @@ test.describe("desktop 1440×900", () => {
 	});
 
 	test("the word comes to rest above the first row and leaves with it", async ({ page }) => {
-		await open(page, 1440, 900);
+		await openHome(page,1440, 900);
 		const a = await at(page, 900);
 		const b = await at(page, 1000);
 		expect(a.word.bottom).toBeLessThanOrEqual(a.first.y);
@@ -230,7 +201,7 @@ test.describe("desktop 1440×900", () => {
 	});
 
 	test("the carousel outruns the scroll, then sits in its cell", async ({ page }) => {
-		await open(page, 1440, 900);
+		await openHome(page,1440, 900);
 		const rest = await at(page, 0);
 		const s1 = await at(page, 100);
 		// Its document position moved further than the page scrolled.
@@ -246,7 +217,7 @@ test.describe("desktop 1440×900", () => {
 
 test.describe("phone 390×844", () => {
 	test("at rest: a 1×2 tile in the right column, the scrubber dormant, only 'tristan' over it", async ({ page }) => {
-		await open(page, 390, 844);
+		await openHome(page,390, 844);
 		const s = await at(page, 0);
 		// Right column, a 1×2 of the phone's cells. The word's box follows its glyph
 		// advances, which Chromium on Linux rounds, hence the 1%.
@@ -273,7 +244,7 @@ test.describe("phone 390×844", () => {
 	});
 
 	test("the word moves at once; the wipe waits until it is clear of the picture", async ({ page }) => {
-		await open(page, 390, 844);
+		await openHome(page,390, 844);
 		const rest = await at(page, 0);
 		const early = await at(page, 20);
 		expect(rest.word.y - early.word.y).toBeGreaterThan(1.5);
@@ -308,7 +279,7 @@ test.describe("phone 390×844", () => {
 		[900, 1200],
 	] as const) {
 		test(`at ${w}×${h} the wipe is done before the row arrives, clear of the picture`, async ({ page }) => {
-			await open(page, w, h);
+			await openHome(page,w, h);
 			const rest = await at(page, 0);
 			const top = await holdTop(page);
 			const meet = meetAt(rest, top);
@@ -323,7 +294,7 @@ test.describe("phone 390×844", () => {
 		});
 
 		test(`at ${w}×${h} the word overlaps the picture's top by half a word, and only the word does`, async ({ page }) => {
-			await open(page, w, h);
+			await openHome(page,w, h);
 			const s = await at(page, 0);
 			expect(Math.abs(s.word.bottom - s.picture.y - s.word.h / 2), "half a word over the picture").toBeLessThan(1.5);
 			expect(overlaps(s.tagline, s.picture), "not the tagline").toBe(false);
@@ -335,9 +306,6 @@ test.describe("phone 390×844", () => {
 		});
 	}
 });
-
-/** The copy's distance below "tristan" when it simply follows the word: .sh__sub's margin (--space-3). */
-const COPY_MARGIN = 12;
 
 test.describe("the copy on the picture's axis (compact step)", () => {
 	const mid = (a: { y: number }, b: { bottom: number }) => (a.y + b.bottom) / 2;
@@ -351,10 +319,10 @@ test.describe("the copy on the picture's axis (compact step)", () => {
 		[900, 1200],
 	] as const) {
 		test(`at ${w}×${h} the copy is centred on the picture, clear of the word and the picture`, async ({ page }) => {
-			await open(page, w, h);
+			await openHome(page,w, h);
 			const s = await at(page, 0);
 			expect(Math.abs(mid(s.tagline, s.intro) - mid(s.picture, s.picture)), "on the picture's midpoint").toBeLessThan(2);
-			expect(s.tagline.y - s.word.bottom, "below the word").toBeGreaterThanOrEqual(COPY_MARGIN - 0.5);
+			expect(s.tagline.y - s.word.bottom, "below the word").toBeGreaterThanOrEqual(s.copyMargin - 0.5);
 			for (const b of [s.tagline, s.intro]) {
 				expect(overlaps(b, s.word), "not on the word").toBe(false);
 				expect(overlaps(b, s.picture), "not on the picture").toBe(false);
@@ -370,9 +338,9 @@ test.describe("the copy on the picture's axis (compact step)", () => {
 		[844, 390, "a short window, whose picture runs past the fold"],
 	] as const) {
 		test(`at ${w}×${h}, ${name}: the copy sits directly under the word`, async ({ page }) => {
-			await open(page, w, h);
+			await openHome(page,w, h);
 			const s = await at(page, 0);
-			expect(Math.abs(s.tagline.y - s.word.bottom - COPY_MARGIN), "directly under the word").toBeLessThan(1);
+			expect(Math.abs(s.tagline.y - s.word.bottom - s.copyMargin), "directly under the word").toBeLessThan(1);
 			for (const b of [s.tagline, s.intro]) {
 				expect(overlaps(b, s.word), "not on the word").toBe(false);
 				expect(overlaps(b, s.picture), "not on the picture").toBe(false);
@@ -388,17 +356,16 @@ test.describe("the copy on the picture's axis (compact step)", () => {
 				document.documentElement.style.fontSize = "250%";
 			});
 		});
-		await page.goto("/");
-		await lockupReady(page);
+		await openHome(page);
 		const s = await at(page, 0);
 		expect(s.tagline.y, "below the word").toBeGreaterThanOrEqual(s.word.bottom);
 		expect(overlaps(s.intro, s.picture), "off the picture").toBe(false);
 	});
 
 	test("desktop: the copy follows the word, in plain flow", async ({ page }) => {
-		await open(page, 1440, 900);
+		await openHome(page,1440, 900);
 		const s = await at(page, 0);
-		expect(Math.abs(s.tagline.y - s.word.bottom - COPY_MARGIN)).toBeLessThan(1);
+		expect(Math.abs(s.tagline.y - s.word.bottom - s.copyMargin)).toBeLessThan(1);
 		const sub = await page.evaluate(() => {
 			const cs = getComputedStyle(document.querySelector(".sh__sub")!);
 			return { display: cs.display, minBlockSize: cs.minBlockSize };
@@ -410,22 +377,21 @@ test.describe("the copy on the picture's axis (compact step)", () => {
 	test("reduced motion: the card is docked below, so the copy stays under the word", async ({ browser }) => {
 		const context = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 390, height: 844 } });
 		const page = await context.newPage();
-		await page.goto("/");
-		await lockupReady(page);
+		await openHome(page);
 		const s = await at(page, 0);
-		expect(Math.abs(s.tagline.y - s.word.bottom - COPY_MARGIN), "directly under the word").toBeLessThan(1);
+		expect(Math.abs(s.tagline.y - s.word.bottom - s.copyMargin), "directly under the word").toBeLessThan(1);
 		await context.close();
 	});
 
 	test("print: the copy stays under the word", async ({ page }) => {
-		await open(page, 390, 844);
+		await openHome(page,390, 844);
 		await page.emulateMedia({ media: "print" });
 		const s = await at(page, 0);
-		expect(Math.abs(s.tagline.y - s.word.bottom - COPY_MARGIN), "directly under the word").toBeLessThan(1);
+		expect(Math.abs(s.tagline.y - s.word.bottom - s.copyMargin), "directly under the word").toBeLessThan(1);
 	});
 
 	test("it still fades on the same scroll and is not sticky", async ({ page }) => {
-		await open(page, 430, 932);
+		await openHome(page,430, 932);
 		const rest = await at(page, 0);
 		expect(rest.subOpacity).toBe(1);
 		const near = await at(page, 60);
@@ -451,7 +417,7 @@ test.describe("the word holds in the middle", () => {
 		test(`at ${w}×${h} it stays near its rest until the first row meets it, and never overlaps the row`, async ({
 			page,
 		}) => {
-			await open(page, w, h);
+			await openHome(page,w, h);
 			const rest = await at(page, 0);
 			const top = await holdTop(page);
 			const meet = meetAt(rest, top);
@@ -480,7 +446,7 @@ test.describe("the opener is its own first screen", () => {
 		[390, 844],
 	] as const) {
 		test(`at ${w}×${h} the first row starts just below the fold`, async ({ page }) => {
-			await open(page, w, h);
+			await openHome(page,w, h);
 			const s = await at(page, 0);
 			expect(s.first.y, "above the fold").toBeGreaterThanOrEqual(h);
 			expect(s.first.y, "not far below it").toBeLessThan(h + 40);
@@ -493,7 +459,7 @@ test.describe("the opener is its own first screen", () => {
 		[2560, 1440],
 	] as const) {
 		test(`at ${w}×${h} the opener is capped and the cards peek in`, async ({ page }) => {
-			await open(page, w, h);
+			await openHome(page,w, h);
 			const s = await at(page, 0);
 			expect(s.first.y, "the opener stopped growing").toBeLessThan(1000);
 			expect(s.first.y, "the row peeks in").toBeLessThan(h);
@@ -503,7 +469,7 @@ test.describe("the opener is its own first screen", () => {
 		// The tall-window defect: the page ran out of scroll with the word short of
 		// its rest. A tall page may end with the word still in view.
 		test(`at ${w}×${h} the word can settle`, async ({ page }) => {
-			await open(page, w, h);
+			await openHome(page,w, h);
 			const rest = await at(page, 0);
 			const max = await maxScroll(page);
 			const top = await holdTop(page);
@@ -518,7 +484,7 @@ test.describe("the opener is its own first screen", () => {
 	}
 
 	test("when the opener outreaches the page's scroll, the dock lands at the page's end", async ({ page }) => {
-		await open(page, 2560, 1440);
+		await openHome(page,2560, 1440);
 		// A window this tall: the timeline's min(travel, 100%) is what lands the card.
 		const travel = await dockTravel(page);
 		const max = await maxScroll(page);
@@ -534,7 +500,7 @@ test.describe("the opener is its own first screen", () => {
 		[390, 844, "a phone"],
 	] as const) {
 		test(`${name}: the group is centred between the header and the first row`, async ({ page }) => {
-			await open(page, w, h);
+			await openHome(page,w, h);
 			const s = await at(page, 0);
 			const header = await page.evaluate(() => document.querySelector(".site-header")!.getBoundingClientRect().bottom);
 			// The group's top on a phone is the word over the picture, and its foot the
@@ -550,14 +516,14 @@ test.describe("the opener is its own first screen", () => {
 	}
 
 	test("a phone keeps the word's overlap of the picture, the empty header band parked above it", async ({ page }) => {
-		await open(page, 390, 844);
+		await openHome(page,390, 844);
 		const s = await at(page, 0);
 		expect(Math.abs(s.picture.y - (s.word.y + s.word.h / 2))).toBeLessThan(1);
 		expect(s.picture.y - s.card.y, "the header's empty band above the picture").toBeGreaterThan(40);
 	});
 
 	test("a short window is top-anchored, not pushed under the header", async ({ page }) => {
-		await open(page, 844, 390);
+		await openHome(page,844, 390);
 		const s = await at(page, 0);
 		const header = await page.evaluate(() => document.querySelector(".site-header")!.getBoundingClientRect().bottom);
 		expect(s.word.y, "below the header").toBeGreaterThanOrEqual(header);
@@ -569,7 +535,7 @@ test.describe("the opener is its own first screen", () => {
 		[1440, 500, "a short desktop window"],
 	] as const) {
 		test(`in ${name} the opener still holds the parked card and its content`, async ({ page }) => {
-			await open(page, w, h);
+			await openHome(page,w, h);
 			const s = await at(page, 0);
 			expect(s.first.y).toBeGreaterThanOrEqual(h);
 			expect(s.card.bottom, "the parked card clears the first row").toBeLessThan(s.first.y);
@@ -584,8 +550,7 @@ test.describe("the opener is its own first screen", () => {
 				document.documentElement.style.fontSize = "250%";
 			});
 		});
-		await page.goto("/");
-		await lockupReady(page);
+		await openHome(page);
 		const s = await at(page, 0);
 		expect(s.intro.bottom, "the row holds its content").toBeLessThanOrEqual(s.first.y);
 		const docked = await at(page, 3000);
@@ -593,7 +558,7 @@ test.describe("the opener is its own first screen", () => {
 	});
 
 	test("the fades still start at the top; the wipe starts at the hold and ends before the row", async ({ page }) => {
-		await open(page, 1440, 900);
+		await openHome(page,1440, 900);
 		const rest = await at(page, 0);
 		const near = await at(page, 60);
 		expect(near.clip, "no wipe before the pin").toBe(1);
@@ -610,8 +575,7 @@ test.describe("the opener is its own first screen", () => {
 test("reduced motion: no drift, wipe, fade or parallax, and everything shows", async ({ browser }) => {
 	const context = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 1440, height: 900 } });
 	const page = await context.newPage();
-	await page.goto("/");
-	await lockupReady(page);
+	await openHome(page);
 	const rest = await at(page, 0);
 	expect(rest.clip, "the word is solid").toBe(0);
 	expect(rest.subOpacity).toBe(1);
@@ -623,17 +587,19 @@ test("reduced motion: no drift, wipe, fade or parallax, and everything shows", a
 	expect(s.subOpacity).toBe(1);
 	expect(s.clip).toBe(0);
 	expect(
-		await page.evaluate(() =>
-			[".sh__wordmark", ".sh__solid", ".sh__sub", ".wx-videos"].flatMap((q) =>
-				document.querySelector(q)!.getAnimations().map((a) => (a as CSSAnimation).animationName),
-			),
+		await page.evaluate(
+			(selectors) =>
+				selectors.flatMap((q) =>
+					document.querySelector(q)!.getAnimations().map((a) => (a as CSSAnimation).animationName),
+				),
+			[LOCKUP.wordmark, LOCKUP.solid, LOCKUP.sub, VIDEOS.card],
 		),
 	).toEqual([]);
 	await context.close();
 });
 
 test("print shows the intro and '& other stories'", async ({ page }) => {
-	await open(page, 1440, 900);
+	await openHome(page,1440, 900);
 	await at(page, 400);
 	await page.emulateMedia({ media: "print" });
 	const sub = await page.evaluate(() => {

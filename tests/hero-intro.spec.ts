@@ -1,68 +1,31 @@
-import { test, expect, lockupReady, type Page } from "./fixtures/test";
+import { test, expect, type Page } from "./fixtures/test";
+import { LOCKUP, VIDEOS, openHome, scrollAndSettle } from "./fixtures/opener";
 
 /**
- * THE HERO INTRO FADE.
- *
- * "& other stories" and the intro under "tristan" are shown at rest and fade out over the first
- * sliver of scroll. The invariant that matters is the boring half — AT THE TOP OF THE
- * PAGE, THE INTRO IS VISIBLE — because that is the half that broke in production.
- *
- * WHAT WENT WRONG, and why these tests are shaped this way. The fade is
- * `animation-timeline: scroll(root)` over `0 100px`. An engine WITHOUT native
- * scroll-timeline support drops only the animation-timeline declaration and keeps the
- * rest, so the animation binds to the document timeline with
- * `animation-duration: auto` → 0s; with `fill-mode: both` a 0s animation is instantly
- * FINISHED, painting the element at its TO keyframe — `opacity: 0; visibility: hidden`.
- * The intro was then invisible at every scroll position. Measured at the time: hidden
- * at scroll 0 on 5/12 cold Firefox loads.
- *
- * THE GATE IS THE FIX. The fade sits inside `@supports (animation-timeline: scroll())`,
- * so an engine without the feature applies nothing and keeps the stylesheet's shown
- * default. Tests 3 and 4 pin that.
- *
- * Chromium (this spec's only engine) has native support and therefore CANNOT
- * reproduce the unsupported-engine path by loading the page. So the coverage is split:
- *
- *   1. AT REST      the intro is visible at scroll 0 (the regression, directly).
- *   2. FADES        it still fades out, and comes back — the effect is intact.
- *   3. FAIL-VISIBLE with every module dead, the intro is VISIBLE at rest, and nothing
- *                   drives it from the DOCUMENT timeline — that binding, not the
- *                   animation itself, is what painted the to-keyframe forever.
- *   4. GATED        the scroll-driven rules sit inside @supports, so an engine that
- *                   lacks the feature applies nothing instead of snapping to hidden.
- *   6. SCROLLS FREE the intro's MOTION is flow layout, not a scroll-driven transform.
- *
- * On (6): the intro was once `position: absolute` inside the sticky pin, which glued it
- * to the viewport, so the driver wrote translateY(-scrollY) on it every frame to fake
- * ordinary scrolling. Touch scrolling runs on the compositor thread and that transform
- * ran on the main one, so on a phone the intro rode permanently a few frames behind the
- * rest of the page — visibly laggy, and unfixable by making the handler cheaper, since
- * the two are not the same clock. It is a static sibling of the pin now and the browser
- * moves it for free. This test fails if anything re-pins it.
+ * THE HERO INTRO'S FAILURE MODES. Its fade is `animation-timeline: scroll(root)`.
+ * An engine without the feature keeps the rest of the declaration on the document
+ * timeline, where `animation-duration: auto` is 0s and `fill-mode: both` paints the
+ * to-keyframe (hidden) forever. The ordinary fade: home-opener and scroll-fallback.
  */
 
 interface Sub {
 	opacity: number;
 	visibility: string;
 	position: string;
-	/** Viewport-space top edge, for checking it travels with the page. */
-	top: number;
-	/** Any transform on the element — must stay `none`; see (6) in the header. */
 	transform: string;
 	/** Animations attached to the element, with the timeline class driving each. */
 	animations: Array<{ name: string; timeline: string | null; playState: string }>;
 }
 
-async function readSub(page: Page): Promise<Sub> {
-	return page.evaluate(() => {
-		const el = document.querySelector<HTMLElement>(".sh__sub");
-		if (!el) throw new Error(".sh__sub not found");
+function readSub(page: Page): Promise<Sub> {
+	return page.evaluate((selector) => {
+		const el = document.querySelector<HTMLElement>(selector);
+		if (!el) throw new Error(`${selector} not found`);
 		const cs = getComputedStyle(el);
 		return {
 			opacity: Number(cs.opacity),
 			visibility: cs.visibility,
 			position: cs.position,
-			top: el.getBoundingClientRect().top,
 			transform: cs.transform,
 			animations: el.getAnimations().map((a) => ({
 				name: (a as CSSAnimation).animationName ?? "(unnamed)",
@@ -70,78 +33,63 @@ async function readSub(page: Page): Promise<Sub> {
 				playState: a.playState,
 			})),
 		};
-	});
+	}, LOCKUP.sub);
 }
 
-/** Scroll to an absolute offset and let the timelines catch up. */
-async function scrollTo(page: Page, y: number) {
-	await page.evaluate((v) => window.scrollTo(0, v), y);
-	await page.evaluate(
-		() =>
-			new Promise<void>((r) =>
-				requestAnimationFrame(() => requestAnimationFrame(() => r()))
-			)
-	);
-}
-
-test.describe("hero intro — the fade at rest", () => {
-	test("1. AT REST: the intro is visible at the top of the page", async ({
-		page,
-	}) => {
-		await page.goto("/");
-		await lockupReady(page);
-		await scrollTo(page, 0);
-
-		const sub = await readSub(page);
-		expect(sub.opacity).toBe(1);
-		expect(sub.visibility).toBe("visible");
-	});
-
-	test("2. FADES: it fades out on scroll, and returns at the top", async ({
-		page,
-	}) => {
-		await page.goto("/");
-		await lockupReady(page);
-
-		// Read the fade distance from CSS rather than restating 100px, so retuning the
-		// token doesn't turn into a test failure.
-		const span = await page.evaluate(() => {
-			const el = document.querySelector<HTMLElement>(".sh__sub")!;
-			return parseFloat(
-				getComputedStyle(el).getPropertyValue("--sh-sub-fade-px")
-			);
-		});
+test.describe("hero intro", () => {
+	test("past the fade it is hidden and takes no pointer, and it returns at the top", async ({ page }) => {
+		await openHome(page);
+		// Read off the CSS, so retuning the distance isn't a test failure.
+		const span = await page.evaluate(
+			(selector) => parseFloat(getComputedStyle(document.querySelector(selector)!).getPropertyValue("--sh-sub-fade-px")),
+			LOCKUP.sub,
+		);
 		expect(span).toBeGreaterThan(0);
 
-		await scrollTo(page, 0);
-		expect((await readSub(page)).opacity).toBe(1);
-
-		// Mid-fade: strictly between the endpoints, so this fails if the fade has
-		// become a step function (which is exactly what a 0s animation looks like).
-		await scrollTo(page, span / 2);
-		const mid = (await readSub(page)).opacity;
-		expect(mid).toBeGreaterThan(0.1);
-		expect(mid).toBeLessThan(0.9);
-
-		// Past the end: fully out, and no longer a pointer target.
-		await scrollTo(page, span + 50);
+		await scrollAndSettle(page, span + 50, "frames");
 		const out = await readSub(page);
 		expect(out.opacity).toBe(0);
 		expect(out.visibility).toBe("hidden");
 
-		// Reversible — the fade is a function of position, not a one-shot latch.
-		await scrollTo(page, 0);
+		// A function of position, not a one-shot latch.
+		await scrollAndSettle(page, 0, "frames");
 		const back = await readSub(page);
 		expect(back.opacity).toBe(1);
 		expect(back.visibility).toBe("visible");
 	});
 
-	test("3. FAIL-VISIBLE: the intro shows with every module dead", async ({
+	for (const reducedMotion of ["no-preference", "reduce"] as const) {
+		// A transform or a re-pin would put the intro on the main thread's clock,
+		// a few frames behind the page on a phone's compositor scroll. Relative only
+		// so it paints over the word; it takes no offset.
+		test(`it stays an in-flow box with no transform (${reducedMotion})`, async ({ browser }) => {
+			const context = await browser.newContext({ reducedMotion, viewport: { width: 390, height: 664 } });
+			const page = await context.newPage();
+			await openHome(page);
+			for (const y of [0, 30, 60]) {
+				await scrollAndSettle(page, y, "frames");
+				const sub = await readSub(page);
+				expect(sub.position, `at ${y}`).toBe("relative");
+				expect(sub.transform, `at ${y}`).toBe("none");
+			}
+			await context.close();
+		});
+	}
+
+	test("reduced motion: still shown well past the fade", async ({ browser }) => {
+		const context = await browser.newContext({ reducedMotion: "reduce" });
+		const page = await context.newPage();
+		await openHome(page);
+		await scrollAndSettle(page, 400, "frames");
+		const scrolled = await readSub(page);
+		expect(scrolled.opacity).toBe(1);
+		expect(scrolled.visibility).toBe("visible");
+		await context.close();
+	});
+
+	test("with every module dead the intro shows, and nothing drives it from the document timeline", async ({
 		browser,
 	}) => {
-		// A missing bundle (dead JS, a throw, a 404) must still leave the intro VISIBLE
-		// at rest. It is now the CSS that guarantees this rather than a JS default, and
-		// the effect survives the outage entirely — the fade is not JS-driven any more.
 		const context = await browser.newContext();
 		const page = await context.newPage();
 		await context.route("**/_astro/*.js", (route) => route.abort());
@@ -154,11 +102,8 @@ test.describe("hero intro — the fade at rest", () => {
 		expect(sub.opacity).toBe(1);
 		expect(sub.visibility).toBe("visible");
 
-		// AND NOTHING IS ON THE DOCUMENT TIMELINE. This is the precise shape of the old
-		// production bug: it was never "an animation exists", it was an animation bound
-		// to the document timeline, where duration:auto resolves to 0s and fill:both
-		// paints the to-keyframe (hidden) forever. A scroll timeline cannot do that —
-		// its progress is a scroll position, and at rest that is 0.
+		// The bug is a document-timeline binding, not an animation existing: a scroll
+		// timeline's progress is a position, and at rest that is 0.
 		for (const a of sub.animations) {
 			expect(
 				a.timeline,
@@ -169,38 +114,26 @@ test.describe("hero intro — the fade at rest", () => {
 		await context.close();
 	});
 
-	test("4. GATED: every scroll-driven rule sits inside @supports", async ({
-		page,
-	}) => {
-		// THE ONE THING HOLDING THE OLD BUG SHUT. An engine without scroll timelines
-		// drops `animation-timeline` and keeps the rest, which lands the animation on
-		// the document timeline and paints its to-keyframe forever. Wrapping the whole
-		// declaration block in @supports means such an engine applies NOTHING and keeps
-		// the stylesheet's static state instead.
-		//
-		// Asserted against the CSSOM rather than by loading an engine that lacks the
-		// feature, because this suite has no such engine — Chromium supports it, so the
-		// failure is structurally unreproducible here and only the SHAPE of the CSS can
-		// be checked. An ungated rule would pass every other test in this file.
-		await page.goto("/");
-		await lockupReady(page);
+	test("every scroll-driven rule sits inside @supports", async ({ page }) => {
+		// Read from the CSSOM: this spec runs in Chromium, which has the feature, so
+		// the failure can't be reproduced by loading the page and an ungated rule
+		// would pass every other test here.
+		await openHome(page);
 
 		const rules = await page.evaluate(() => {
 			const found: Array<{ selector: string; gated: boolean; conditions: string[] }> = [];
-			// NB a CSSStyleRule also has .cssRules these days (CSS nesting made it a
-			// grouping rule), so this must CHECK the rule and THEN recurse — an
-			// early `continue` on "has cssRules" skips every style rule on the page.
+			// A CSSStyleRule also has .cssRules (CSS nesting made it a grouping rule),
+			// so check the rule and THEN recurse: an early `continue` on "has cssRules"
+			// skips every style rule on the page.
 			const walk = (list: CSSRuleList, conditions: string[]) => {
 				for (const rule of Array.from(list)) {
 					const condition =
 						(rule as CSSSupportsRule | CSSMediaRule).conditionText ?? null;
 					const inner = condition ? [...conditions, condition] : conditions;
 
-					// Only rules that BIND to a scroll/view timeline. Matching on the
-					// property's mere presence over-reports: `animation: none` resets
-					// animation-timeline to `auto`, so a rule that switches an effect off
-					// would read as an ungated binding when it is the
-					// opposite — a rule that removes one.
+					// Only rules that BIND a scroll or view timeline: `animation: none`
+					// resets animation-timeline to `auto`, so the property's mere
+					// presence would report a rule that removes a binding.
 					const style = rule as CSSStyleRule;
 					const timeline = style.style?.getPropertyValue("animation-timeline");
 					if (timeline && /scroll\(|view\(/.test(timeline)) {
@@ -236,43 +169,28 @@ test.describe("hero intro — the fade at rest", () => {
 		}
 	});
 
-	test("7. MINIFIER: the timeline longhands survive the production build", async ({
-		page,
-	}) => {
-		// THE TRAP THIS EXISTS FOR, which is invisible in dev and silent in prod.
-		// `animation-timeline` is deliberately NOT part of the `animation` shorthand —
-		// the shorthand RESETS it. A CSS minifier that does not know this happily folds
-		//
-		//     animation: sh-heading-wipe linear both;
-		//     animation-timeline: scroll(root block);
-		//
-		// into `animation: linear both sh-heading-wipe scroll(root)`, which is not valid
-		// syntax, so the whole declaration is dropped and animation-name computes to
-		// `none`. Nothing errors. The effect simply does not exist in the built site
-		// while the source looks correct — and `animation-range`, a separate longhand,
-		// survives, so even the computed styles look half-plausible.
-		//
-		// Measured: that is exactly what shipped on the first attempt here. The fix is to
-		// write every part as a longhand so there is no shorthand to fold into, and this
-		// asserts the OUTCOME rather than the syntax — an animation that is actually
-		// running, on a scroll timeline, for each of the lockup's three effects and the dock.
-		//
-		// This is why the suite runs against `astro build` output and not the dev server
-		// (see playwright.config.ts): dev does not minify, so dev cannot catch it.
-		await page.goto("/");
-		await lockupReady(page);
+	test("the timeline longhands survive the production build", async ({ page }) => {
+		// `animation` resets `animation-timeline`, so a minifier that folds the two
+		// writes an invalid shorthand, the declaration drops and animation-name
+		// computes to `none`. Nothing errors, and `animation-range` survives to look
+		// plausible. Hence every part is a longhand, and this asserts the outcome: a
+		// running animation on a scroll timeline. Dev doesn't minify, so this needs
+		// the built site (playwright.config.ts).
+		await openHome(page);
 
-		const running = await page.evaluate(() =>
-			[".sh__wordmark", ".sh__solid", ".sh__sub", ".wx-videos"].map((selector) => {
-				const el = document.querySelector(selector);
-				const anims = el ? el.getAnimations() : [];
-				return {
-					selector,
-					found: !!el,
-					names: anims.map((a) => (a as CSSAnimation).animationName),
-					timelines: anims.map((a) => a.timeline?.constructor?.name ?? "none"),
-				};
-			})
+		const running = await page.evaluate(
+			(selectors) =>
+				selectors.map((selector) => {
+					const el = document.querySelector(selector);
+					const anims = el ? el.getAnimations() : [];
+					return {
+						selector,
+						found: !!el,
+						names: anims.map((a) => (a as CSSAnimation).animationName),
+						timelines: anims.map((a) => a.timeline?.constructor?.name ?? "none"),
+					};
+				}),
+			[LOCKUP.wordmark, LOCKUP.solid, LOCKUP.sub, VIDEOS.card],
 		);
 
 		for (const r of running) {
@@ -286,53 +204,5 @@ test.describe("hero intro — the fade at rest", () => {
 				`${r.selector} is not on a scroll timeline`
 			).toContain("ScrollTimeline");
 		}
-	});
-
-	test("6. SCROLLS FREE: the intro moves with the page, untouched by JS", async ({
-		page,
-	}) => {
-		await page.setViewportSize({ width: 390, height: 664 });
-		await page.goto("/");
-		await lockupReady(page);
-
-		await scrollTo(page, 0);
-		const rest = await readSub(page);
-		// Not sticky, not absolute inside the sticky pin — a plain in-flow box. This is
-		// the structural half of the assertion: it is what makes the rest possible.
-		// (Relative only to lie over the word; it takes no offset.)
-		expect(rest.position).toBe("relative");
-		expect(rest.transform).toBe("none");
-
-		// And the behavioural half: its viewport position falls by exactly the scroll
-		// distance, because flow layout — not a driver — is what moves it. A tolerance of
-		// 1px covers sub-pixel layout only; a re-pinned intro is off by the whole 60px,
-		// and one "helpfully" re-animated by JS drifts by whatever the shift was.
-		for (const y of [30, 60]) {
-			await scrollTo(page, y);
-			const now = await readSub(page);
-			expect(now.transform).toBe("none");
-			expect(Math.abs(now.top - (rest.top - y))).toBeLessThan(1);
-		}
-	});
-
-	test("5. REDUCED MOTION: shown, in flow, and never faded", async ({
-		browser,
-	}) => {
-		const context = await browser.newContext({ reducedMotion: "reduce" });
-		const page = await context.newPage();
-		await page.goto("/");
-		await lockupReady(page);
-
-		// In normal flow (not fixed to the viewport) and fully shown — scrolled or not.
-		const atTop = await readSub(page);
-		expect(atTop.opacity).toBe(1);
-		expect(atTop.position).toBe("relative");
-
-		await scrollTo(page, 400);
-		const scrolled = await readSub(page);
-		expect(scrolled.opacity).toBe(1);
-		expect(scrolled.visibility).toBe("visible");
-
-		await context.close();
 	});
 });

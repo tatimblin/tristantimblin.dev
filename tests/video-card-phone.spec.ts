@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "./fixtures/test";
+import { VIDEOS, dockTravel, openHome } from "./fixtures/opener";
 import clips from "../src/data/video-clips.json" with { type: "json" };
 
 /**
@@ -12,30 +13,19 @@ import clips from "../src/data/video-clips.json" with { type: "json" };
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
 
 async function open(page: Page) {
-	await page.goto("/");
+	await openHome(page);
 	await page
-		.locator(".wx-videos__compact[data-ready]")
+		.locator(`${VIDEOS.compact}[data-ready]`)
 		.waitFor({ state: "attached", timeout: 15_000 });
-	await page.locator(".wx-videos[data-widget-state=mounted]").waitFor({ state: "attached", timeout: 15_000 });
+	await page.locator(`${VIDEOS.card}[data-widget-state=mounted]`).waitFor({ state: "attached", timeout: 15_000 });
 }
 
-const travel = (page: Page) =>
-	page.evaluate(() => {
-		const host = document.querySelector<HTMLElement>(".wx-videos")!;
-		const probe = document.createElement("div");
-		probe.style.cssText = "position:absolute;visibility:hidden;height:var(--vc-dock-travel)";
-		host.appendChild(probe);
-		const h = probe.getBoundingClientRect().height;
-		probe.remove();
-		return h;
-	});
-
 const dock = async (page: Page) => {
-	await page.evaluate((v) => window.scrollTo(0, v), Math.ceil(await travel(page)) + 2);
-	await page.locator(".wx-videos[data-vc-docked]").waitFor({ state: "attached" });
+	await page.evaluate((v) => window.scrollTo(0, v), Math.ceil(await dockTravel(page)) + 2);
+	await page.locator(`${VIDEOS.card}[data-vc-docked]`).waitFor({ state: "attached" });
 };
 
-const ruler = (page: Page) => page.locator(".wx-videos__compact .vc__ruler");
+const ruler = (page: Page) => page.locator(`${VIDEOS.compact} .vc__ruler`);
 const value = (page: Page) => ruler(page).getAttribute("aria-valuenow");
 
 const lineState = (page: Page) =>
@@ -206,7 +196,7 @@ test("a clip with no location stays on the date", async ({ page }) => {
 test("reduced motion: the chrome and the ruler are on, and the swap is a cut", async ({ page }) => {
 	await page.emulateMedia({ reducedMotion: "reduce" });
 	await open(page);
-	await page.locator(".wx-videos[data-vc-docked]").waitFor({ state: "attached" });
+	await page.locator(`${VIDEOS.card}[data-vc-docked]`).waitFor({ state: "attached" });
 	expect(await ruler(page).evaluate((el) => (el as HTMLElement).inert), "usable at once").toBe(false);
 	const chrome = await page.evaluate(() => ({
 		chrome: getComputedStyle(document.querySelector(".wx-videos__chrome")!).opacity,

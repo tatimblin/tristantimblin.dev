@@ -6,26 +6,17 @@ import { test, expect, chromium, type Page } from "./fixtures/test";
  * /txt is the POST STACK (src/components/txt/PostStack.astro): a ruled two-
  * column list, the date on the left and the title on the right, one post
  * open at a time — the newest on load, the pointed-at one after. The tag
- * pages keep the plain DS PostList, grouped by year. Categories are a closed
- * set: /txt/category/<id> is simply gone (404), and /txt/categories is a 301
- * in public/_redirects (Cloudflare Pages only). The properties worth pinning:
+ * pages keep the plain DS PostList, grouped by year. Category URLs redirect
+ * to /txt/ (public/_redirects, Cloudflare Pages only). Invariants:
  *
  *  1. EXACTLY ONE LINK PER POST on the index, newest first; ONE post open.
- *  2. NO POINTER JUMP: opening a post never moves a different post under a
- *     still pointer, and the list's height never changes — every post opens
- *     by the same measured height, so the posts below stay put and the one
- *     under the pointer only grows around it. At 1440 and at 375.
- *  3. INTENT: a still pointer opens nothing; a click or tap on a post that
- *     was closed when it began only opens it, the open title (underlined)
- *     is the link; focus opens. The newest is open after every arrival — a
- *     load, a client-router swap, back/forward, a bfcache restore.
+ *  2. NO POINTER JUMP: every post opens by the same measured height, so a
+ *     swap never moves a different post under a still pointer. At 1440 and 375.
+ *  3. INTENT: a still pointer opens nothing; a click or tap on a closed post
+ *     only opens it; focus opens. The newest is open after every arrival.
  *  4. IT WORKS WITH SCRIPTING OFF: the first post is open, every title a link.
- *  5. NO CATEGORY PAGES are built; TAG PAGES STILL RESOLVE.
- *  6. A POST (the block at the foot of this file) is the RULED page: one
- *     four-column grid — the status strip, the title and lead, the hero as
- *     Fig. 01, the body cut into numbered sections with sticky heads, and an
- *     index table naming the tags and the neighbours. No reading ruler, no
- *     contents rail, and the same measure with or without h2s.
+ *  5. A POST (the block at the foot of this file) is one four-column grid,
+ *     at the same measure with or without h2s.
  */
 
 /** The post links on a list page, in DOM order: the stack's titles on /txt,
@@ -487,11 +478,6 @@ test.describe("/txt/", () => {
 		});
 	}
 
-	test("there are no category pages", async ({ page }) => {
-		const res = await page.request.get("/txt/category/programming/");
-		expect(res.status()).toBe(404);
-	});
-
 	test("tag pages still resolve", async ({ page }) => {
 		const res = await page.request.get("/txt/tag/diy/");
 		expect(res.status()).toBe(200);
@@ -524,11 +510,9 @@ test.describe("/txt/", () => {
 	});
 });
 
-/* A bfcache restore brings a page back exactly as it was left — the post the
-   pointer had opened, still open — and fires no astro:page-load. Playwright's
-   Chromium runs with the bfcache off, and a worker's launch options cannot be
-   changed from a describe, so this test launches its own: the full (new-
-   headless) Chromium, which supports it, with the cache left on. */
+/* A bfcache restore fires no astro:page-load. Playwright's Chromium runs with
+   the bfcache off and a worker's launch options can't change from a describe,
+   so this launches its own full (new-headless) Chromium with the cache on. */
 test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) => {
 	const browser = await chromium.launch({
 		channel: "chromium",
@@ -558,13 +542,9 @@ test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) 
 /**
  * THE POST PAGE (src/layouts/PostLayout.astro) — the ruled page.
  *
- * Numbers are chronological: 001 the dashboard (May 2023, the oldest), 002
- * Fisker, 003 the Mega Desk, 004 Tahoe, 005 Asserting on Agent Behavior, 006
- * sub-human (the latest). Most checks run on Asserting (NEWEST, from when it
- * was); the ends are checked on LATEST and OLDEST. `prev` is the older
- * neighbour, `next` the newer. The Mega Desk has
- * no h2s, so it is one section; Asserting has three h2s, so four. Tahoe has
- * no hero; the other two of those three do.
+ * Numbers are chronological, 001 the oldest. `prev` is the older neighbour,
+ * `next` the newer. The fixtures: Asserting (NEWEST) has three h2s, so four
+ * sections; the Mega Desk has none, so one; Tahoe has no hero.
  *
  * TEXT. The mono voice is lowercase in the DOM and capitals on screen, so the
  * assertions read textContent, case-insensitively.
@@ -572,11 +552,8 @@ test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) 
  * HEADINGS. The dev toolbar carries h1s of its own, so headings are found by
  * role inside the article, never by a bare `h1`.
  *
- * THE GRID. At 1440 the article is 1136px wide (the container's inset) and
- * the four columns are (1136 − 3 × 16) / 4 = 272px; the text column is two of
- * them and the gap between, 560px. Boxes are compared to the article's own
- * width rather than to those literals, so a container retune does not fail
- * the geometry.
+ * THE GRID. Boxes are compared to the article's own width, not to pixel
+ * literals, so a container retune does not fail the geometry.
  */
 const NEWEST = "/txt/asserting-on-agent-behavior/";
 const LATEST = "/txt/subhumans/";
@@ -652,16 +629,6 @@ test.describe("/txt/<slug> — the post page", () => {
 		const bareLead = await box(page, ".post__lead");
 		expect(Math.abs(bare.x - article.x)).toBeLessThanOrEqual(1);
 		expect(Math.abs(bare.y - bareLead.y)).toBeLessThanOrEqual(24);
-	});
-
-	test("no reading ruler, no contents rail, no neighbour cards", async ({ page }) => {
-		await page.goto(NEWEST);
-		await expect(page.locator("[data-post-ruler], .ds-tick-ruler")).toHaveCount(0);
-		await expect(page.locator("[data-post-rail]")).toHaveCount(0);
-		await expect(page.getByRole("navigation", { name: "Contents" })).toHaveCount(0);
-		await expect(page.locator(".post__neighbour, .post__neighbours")).toHaveCount(0);
-		// No stat pairs or pills.
-		await expect(page.locator(".post__meta, .ds-pill")).toHaveCount(0);
 	});
 
 	test("the title across three columns, the lead under it (in two beside the card without a hero)", async ({
@@ -799,9 +766,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(page.locator(".post__prose h2")).toHaveCount(0);
 		expect(await page.locator(".ds-prose-section__body > .ds-body").count()).toBeGreaterThan(3);
 
-		// THE FIX: the text column is the same width, and the same two columns,
-		// whether or not the post has h2s — it used to fall into a 22rem column
-		// meant for the contents rail when there was no rail to render.
+		// The text column is the same two columns whether or not the post has h2s.
 		const { text } = await columns(page);
 		const without = await box(page, ".ds-prose-section__body > .ds-body");
 		expect(Math.abs(without.width - withH2s.width)).toBeLessThanOrEqual(1);

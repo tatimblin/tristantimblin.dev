@@ -1,4 +1,5 @@
-import { test, expect, lockupReady, type Page } from "./fixtures/test";
+import { test, expect, type Page } from "./fixtures/test";
+import { openHome } from "./fixtures/opener";
 
 /**
  * THE FIRST FRAME IS THE FINAL FRAME.
@@ -68,9 +69,7 @@ test.describe("opener first frame", () => {
 		test(`JS off lays out as JS on at ${vp.width}x${vp.height}`, async ({ page, browser }) => {
 			const tolerance = toleranceAt(vp.width);
 
-			await page.setViewportSize(vp);
-			await page.goto("/");
-			await lockupReady(page);
+			await openHome(page, vp.width, vp.height);
 			const on = await readOpener(page);
 
 			const context = await browser.newContext({ viewport: vp, javaScriptEnabled: false });
@@ -98,9 +97,7 @@ test.describe("opener first frame", () => {
 	// column: Chromium on Linux rounds each glyph's advance, up to 3.5px on the word.
 	for (const vp of [VIEWPORTS[1], VIEWPORTS[6]]) {
 		test(`"tristan" fills its column at ${vp.width}x${vp.height}`, async ({ page }) => {
-			await page.setViewportSize(vp);
-			await page.goto("/");
-			await lockupReady(page);
+			await openHome(page, vp.width, vp.height);
 			const got = await page.evaluate(() => {
 				const outline = document.querySelector(".sh__outline")!;
 				const range = document.createRange();
@@ -128,8 +125,7 @@ test.describe("opener first frame", () => {
 					}
 				}).observe({ type: "layout-shift", buffered: true });
 			});
-			await page.goto("/");
-			await lockupReady(page);
+			await openHome(page);
 			// Past the fonts and the widgets' first renders.
 			await page.waitForTimeout(1500);
 			const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);

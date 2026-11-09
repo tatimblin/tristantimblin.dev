@@ -1,4 +1,5 @@
-import { test, expect, lockupReady, type Page } from "./fixtures/test";
+import { test, expect, type Page } from "./fixtures/test";
+import { LOCKUP, VIDEOS, dockLift, openHome, scrollAndSettle } from "./fixtures/opener";
 
 /**
  * THE SCROLL EFFECTS, BY OUTCOME. The lockup's drift, wipe and fade and the
@@ -12,21 +13,13 @@ import { test, expect, lockupReady, type Page } from "./fixtures/test";
 const hasTimelines = (page: Page) =>
 	page.evaluate(() => CSS.supports("animation-timeline", "scroll()"));
 
-async function scrollAndSettle(page: Page, y: number) {
-	await page.evaluate((v) => window.scrollTo(0, v), y);
-	await page.waitForTimeout(250);
-}
-
 /** The share of the solid word still clipped away (0 is the whole word). */
 const readClip = (page: Page) =>
-	page.evaluate(() => {
-		const cp = getComputedStyle(document.querySelector<HTMLElement>(".sh__solid")!).clipPath;
+	page.evaluate((solid) => {
+		const cp = getComputedStyle(document.querySelector<HTMLElement>(solid)!).clipPath;
 		const m = /inset\(([\d.]+)%/.exec(cp);
 		return m ? Number(m[1]) / 100 : cp === "none" ? 0 : null;
-	});
-
-const readLift = (page: Page) =>
-	page.evaluate(() => new DOMMatrix(getComputedStyle(document.querySelector(".wx-videos")!).transform).m42);
+	}, LOCKUP.solid);
 
 /** Read off the date, which fades with the frame. */
 const readChrome = (page: Page) =>
@@ -37,11 +30,10 @@ const readSurface = (page: Page) =>
 	page.evaluate(() => Number(getComputedStyle(document.querySelector(".wx-videos__surface")!).opacity));
 
 const videosMounted = (page: Page) =>
-	page.locator(".wx-videos[data-widget-state=mounted]").waitFor({ state: "attached", timeout: 15_000 });
+	page.locator(`${VIDEOS.card}[data-widget-state=mounted]`).waitFor({ state: "attached", timeout: 15_000 });
 
 test("the wipe advances with scroll, or the word is solid throughout", async ({ page }) => {
-	await page.goto("/");
-	await lockupReady(page);
+	await openHome(page);
 
 	const clipAt = async (y: number) => {
 		await scrollAndSettle(page, y);
@@ -70,26 +62,23 @@ test("the wipe advances with scroll, or the word is solid throughout", async ({ 
 });
 
 test("the intro is visible at rest", async ({ page }) => {
-	await page.goto("/");
-	await lockupReady(page);
+	await openHome(page);
 	await scrollAndSettle(page, 0);
 
-	const sub = await page.evaluate(() => {
-		const cs = getComputedStyle(document.querySelector<HTMLElement>(".sh__sub")!);
+	const sub = await page.evaluate((selector) => {
+		const cs = getComputedStyle(document.querySelector<HTMLElement>(selector)!);
 		return { opacity: Number(cs.opacity), visibility: cs.visibility };
-	});
+	}, LOCKUP.sub);
 	expect(sub.opacity).toBe(1);
 	expect(sub.visibility).toBe("visible");
 });
 
 test("the word drifts from the first pixel of scroll, then pins", async ({ page }) => {
-	await page.setViewportSize({ width: 1440, height: 900 });
-	await page.goto("/");
-	await lockupReady(page);
+	await openHome(page, 1440, 900);
 
 	const topAt = async (y: number) => {
 		await scrollAndSettle(page, y);
-		return page.evaluate(() => document.querySelector(".sh__wordmark")!.getBoundingClientRect().top);
+		return page.evaluate((word) => document.querySelector(word)!.getBoundingClientRect().top, LOCKUP.wordmark);
 	};
 	const rest = await topAt(0);
 	const early = await topAt(20);
@@ -115,7 +104,7 @@ test("the card docks with scroll, or sits in its cell throughout", async ({ page
 
 	const at = async (y: number) => {
 		await scrollAndSettle(page, y);
-		return readLift(page);
+		return dockLift(page);
 	};
 
 	if (!(await hasTimelines(page))) {
@@ -163,8 +152,7 @@ async function loadWithoutTimelines(page: Page) {
 		CSS.supports = ((...args: string[]) =>
 			args.join(" ").includes("animation-timeline") ? false : supports(...args)) as typeof CSS.supports;
 	});
-	await page.goto("/");
-	await lockupReady(page);
+	await openHome(page);
 	await page.evaluate(() => {
 		const strip = (parent: CSSStyleSheet | CSSGroupingRule) => {
 			for (let i = parent.cssRules.length - 1; i >= 0; i--) {
@@ -185,22 +173,22 @@ test("without scroll timelines the page is static and complete", async ({ page }
 	for (const y of [0, 400, 3000]) {
 		await scrollAndSettle(page, y);
 		expect(await readClip(page), `the word is clipped at scroll ${y}`).toBe(0);
-		expect(await readLift(page), `the card is lifted at scroll ${y}`).toBe(0);
+		expect(await dockLift(page), `the card is lifted at scroll ${y}`).toBe(0);
 		expect(await readChrome(page), `the chrome is off at scroll ${y}`).toBe(1);
 		expect(await readSurface(page), `the frame is off at scroll ${y}`).toBe(1);
 	}
 	await scrollAndSettle(page, 0);
-	const sub = await page.evaluate(() => getComputedStyle(document.querySelector(".sh__sub")!).opacity);
+	const sub = await page.evaluate((selector) => getComputedStyle(document.querySelector(selector)!).opacity, LOCKUP.sub);
 	expect(Number(sub)).toBe(1);
 });
 
 test("without scroll timelines the compact ruler is on and takes input", async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await loadWithoutTimelines(page);
-	await page.locator(".wx-videos__compact[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+	await page.locator(`${VIDEOS.compact}[data-ready]`).waitFor({ state: "attached", timeout: 15_000 });
 
-	await expect(page.locator(".wx-videos")).toHaveAttribute("data-vc-docked", "");
-	const ruler = page.locator(".wx-videos__compact .vc__ruler");
+	await expect(page.locator(VIDEOS.card)).toHaveAttribute("data-vc-docked", "");
+	const ruler = page.locator(`${VIDEOS.compact} .vc__ruler`);
 	await expect(ruler).toHaveCSS("opacity", "1");
 	await expect(ruler).toHaveCSS("pointer-events", "auto");
 	expect(await ruler.evaluate((el) => (el as HTMLElement).inert)).toBe(false);
