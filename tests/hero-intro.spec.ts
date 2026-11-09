@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "./fixtures/test";
+import { test, expect, lockupReady, type Page } from "./fixtures/test";
 
 /**
  * THE HERO INTRO FADE.
@@ -16,17 +16,11 @@ import { test, expect, type Page } from "./fixtures/test";
  * The intro was then invisible at every scroll position. Measured at the time: hidden
  * at scroll 0 on 5/12 cold Firefox loads.
  *
- * THAT MECHANISM IS BACK, AND THE FIX IS THE GATE, NOT ITS ABSENCE. It was removed once
- * and re-driven from JS; the JS then had the opposite problem (a main-thread handler
- * cannot keep step with a compositor scroll on a phone), so it has returned to CSS —
- * this time wrapped in `@supports (animation-timeline: scroll())`, which means an
- * engine without the feature applies NOTHING and keeps the stylesheet's shown default.
- * That gate did not work before only because the site bundled a scroll-timeline
- * polyfill that does not transpile @supports conditions, so gating deleted the effect
- * on exactly the engines it existed for. The polyfill is gone (Section.astro dropped
- * it), so the gate is now the whole safety story — which is what tests 3 and 4 pin.
+ * THE GATE IS THE FIX. The fade sits inside `@supports (animation-timeline: scroll())`,
+ * so an engine without the feature applies nothing and keeps the stylesheet's shown
+ * default. Tests 3 and 4 pin that.
  *
- * Chromium (this suite's only engine) has native support and therefore CANNOT
+ * Chromium (this spec's only engine) has native support and therefore CANNOT
  * reproduce the unsupported-engine path by loading the page. So the coverage is split:
  *
  *   1. AT REST      the intro is visible at scroll 0 (the regression, directly).
@@ -79,10 +73,9 @@ async function readSub(page: Page): Promise<Sub> {
 	});
 }
 
-/** Scroll to an absolute offset and let the rAF-coalesced driver publish. */
+/** Scroll to an absolute offset and let the timelines catch up. */
 async function scrollTo(page: Page, y: number) {
 	await page.evaluate((v) => window.scrollTo(0, v), y);
-	// Two frames: one for the scroll event → schedule(), one for the rAF write.
 	await page.evaluate(
 		() =>
 			new Promise<void>((r) =>
@@ -96,11 +89,7 @@ test.describe("hero intro — the fade at rest", () => {
 		page,
 	}) => {
 		await page.goto("/");
-		// The lockup measures itself after fonts load; wait for the settle signal it
-		// publishes rather than a bare timeout.
-		await page
-			.locator("stories-heading[data-ready]")
-			.waitFor({ state: "attached", timeout: 10_000 });
+		await lockupReady(page);
 		await scrollTo(page, 0);
 
 		const sub = await readSub(page);
@@ -112,9 +101,7 @@ test.describe("hero intro — the fade at rest", () => {
 		page,
 	}) => {
 		await page.goto("/");
-		await page
-			.locator("stories-heading[data-ready]")
-			.waitFor({ state: "attached", timeout: 10_000 });
+		await lockupReady(page);
 
 		// Read the fade distance from CSS rather than restating 100px, so retuning the
 		// token doesn't turn into a test failure.
@@ -196,9 +183,7 @@ test.describe("hero intro — the fade at rest", () => {
 		// failure is structurally unreproducible here and only the SHAPE of the CSS can
 		// be checked. An ungated rule would pass every other test in this file.
 		await page.goto("/");
-		await page
-			.locator("stories-heading[data-ready]")
-			.waitFor({ state: "attached", timeout: 10_000 });
+		await lockupReady(page);
 
 		const rules = await page.evaluate(() => {
 			const found: Array<{ selector: string; gated: boolean; conditions: string[] }> = [];
@@ -275,9 +260,7 @@ test.describe("hero intro — the fade at rest", () => {
 		// This is why the suite runs against `astro build` output and not the dev server
 		// (see playwright.config.ts): dev does not minify, so dev cannot catch it.
 		await page.goto("/");
-		await page
-			.locator("stories-heading[data-ready]")
-			.waitFor({ state: "attached", timeout: 10_000 });
+		await lockupReady(page);
 
 		const running = await page.evaluate(() =>
 			[".sh__wordmark", ".sh__solid", ".sh__sub", ".wx-videos"].map((selector) => {
@@ -310,9 +293,7 @@ test.describe("hero intro — the fade at rest", () => {
 	}) => {
 		await page.setViewportSize({ width: 390, height: 664 });
 		await page.goto("/");
-		await page
-			.locator("stories-heading[data-ready]")
-			.waitFor({ state: "attached", timeout: 10_000 });
+		await lockupReady(page);
 
 		await scrollTo(page, 0);
 		const rest = await readSub(page);
@@ -340,9 +321,7 @@ test.describe("hero intro — the fade at rest", () => {
 		const context = await browser.newContext({ reducedMotion: "reduce" });
 		const page = await context.newPage();
 		await page.goto("/");
-		await page
-			.locator("stories-heading[data-ready]")
-			.waitFor({ state: "attached", timeout: 10_000 });
+		await lockupReady(page);
 
 		// In normal flow (not fixed to the viewport) and fully shown — scrolled or not.
 		const atTop = await readSub(page);

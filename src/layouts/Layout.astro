@@ -163,8 +163,8 @@ if (!hit) throw new Error(`Layout: "${hitPath ?? Astro.url.pathname}" is not a c
 
 			// Smooth scroll, initialized once and shared across view-transition
 			// navigations. Lenis drives the real window scroll (no transform hack), so it
-			// composes with the scroll-listener web components (stories-heading,
-			// video-carousel) without changes to them.
+			// composes with the scroll timelines and <video-carousel> without changes
+			// to them.
 			function initLenis() {
 				if (window.__lenis) return window.__lenis;
 				// Honor reduced-motion: leave native scrolling untouched.

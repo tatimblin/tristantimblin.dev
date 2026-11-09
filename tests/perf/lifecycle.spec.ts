@@ -1,3 +1,4 @@
+import { lockupReady } from "../fixtures/test";
 import { DESKTOP, during, expect, load, mountAll, observed, scrollTo, settle, test, type Page } from "./fixtures";
 
 /**
@@ -43,7 +44,7 @@ async function roundTrip(page: Page) {
 	await page.goBack();
 	await page.waitForURL((u) => u.pathname === "/");
 	await page.locator("[data-widget]").first().waitFor({ state: "attached" });
-	await page.locator("stories-heading[data-ready]").waitFor({ state: "attached" });
+	await lockupReady(page);
 	await settle(page);
 }
 

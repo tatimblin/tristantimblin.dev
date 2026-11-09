@@ -16,7 +16,7 @@
    THE SCROLL-DRIVEN EFFECTS ARE CSS, NOT JS. The drift, the wipe and the fade run on
    scroll-progress timelines, so the compositor advances them and there is no
    per-frame main-thread work to fall behind a touch scroll. See the block at
-   the foot of this file; index.ts is the fallback for engines without them.
+   the foot of this file. The element is never defined: the lockup ships no JS.
 
    THE KNOBS, all set by the consumer on the host:
      --sh-wordmark-w  the word's width (default: the nearest container's).
@@ -51,13 +51,12 @@ stories-heading {
 	   right of the lockup); its empty area must not swallow pointers meant for
 	   what lies under it. The text opts back in. */
 	pointer-events: none;
-	--sh-clip: 1;
 	--sh-top: 0px;
 	--sh-pin-at: 0px;
 	/* THE DRIFT: from the first pixel of scroll the word rises at this share of
 	   the page's speed — a gentle parallax — until it reaches the sticky line.
 	   MUST MATCH the 15% stop in sh-wordmark-drift below (keyframe offsets
-	   cannot read a variable) and DRIFT_RATE in index.ts. */
+	   cannot read a variable). */
 	--sh-drift-rate: 0.15;
 	--sh-pinned-at: calc(var(--sh-pin-at) / var(--sh-drift-rate));
 	--sh-wipe-at: var(--sh-pinned-at);
@@ -78,8 +77,6 @@ stories-heading {
 	width: fit-content;
 	margin: 0;
 	pointer-events: auto;
-	/* The drift (the foot of this file); --sh-shift is the fallback's. */
-	transform: translateY(var(--sh-shift, 0px));
 	font-family: var(--font-hero, ui-sans-serif, system-ui, sans-serif);
 	/* DM Sans MEDIUM. Set this large, the Bold's stems close up the counters of
 	   the a and the n; the Medium keeps the word open. */
@@ -103,23 +100,15 @@ stories-heading {
 /* The solid: the same face, so the two layers register glyph for glyph with no
    correction. Its box reaches --sh-cover past the word's on every side, and
    pads the text back by as much, so the text sits exactly where the outline's
-   does while the backdrop covers the outline's stroke and the wobble. Hidden
-   from the top by --sh-clip, so the wipe reveals it from the bottom up. */
+   does while the backdrop covers the outline's stroke and the wobble. Unclipped
+   here, which is the word wherever the wipe doesn't run (reduced motion, print,
+   no scroll timelines); the wipe reveals it from the bottom up. */
 .sh__solid {
 	position: absolute;
 	inset: calc(-1 * var(--sh-cover));
 	padding: var(--sh-cover);
 	color: var(--color-fg, CanvasText);
 	background: var(--color-bg, Canvas);
-	clip-path: inset(calc(var(--sh-clip) * 100%) 0 0 0);
-}
-
-/* Reduced motion: no wipe — the solid word shows from the start. (<wobble-text>
-   holds its displacement still under the same preference.) */
-@media (prefers-reduced-motion: reduce) {
-	.sh__solid {
-		clip-path: none;
-	}
 }
 
 /* --- "& other stories" and the intro ---------------------------------------- */
@@ -131,17 +120,8 @@ stories-heading {
 	inline-size: var(--sh-sub-w, auto);
 	margin-block-start: var(--space-3);
 	pointer-events: auto;
-	/* The scroll distance the fade plays over, read straight into the
-	   animation-range below (and by the fallback driver). */
+	/* The scroll distance the fade plays over (the animation-range below). */
 	--sh-sub-fade-px: 100px;
-	/* THE STATIC STATE, and it must stay SHOWN. It is what every path that does
-	   not run the animation lands on: reduced motion, print, and an engine
-	   without scroll timelines before its fallback has published anything. The
-	   custom properties exist for that fallback (index.ts); UNSET they read as
-	   fully shown, which is the point of writing them as var() with these
-	   defaults rather than as literals. */
-	opacity: var(--sh-sub-opacity, 1);
-	visibility: var(--sh-sub-visibility, visible);
 }
 
 .sh__tagline {
@@ -178,22 +158,6 @@ stories-heading {
 	margin-block-start: var(--space-4);
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.sh__sub {
-		opacity: 1;
-		visibility: visible;
-	}
-}
-
-/* A faded intro must never print blank, and print has no scroll to fade
-   against. Mirrors the print block in src/styles/reveal.css. */
-@media print {
-	.sh__sub {
-		opacity: 1;
-		visibility: visible;
-	}
-}
-
 /* --- SCROLL-DRIVEN EFFECTS ---------------------------------------------------
    All three scroll-linked animations, in one place, on scroll-progress timelines.
 
@@ -207,8 +171,8 @@ stories-heading {
    document timeline, where `duration: auto` resolves to 0s and `fill: both`
    paints the TO keyframe forever — for the intro, opacity 0: content invisible,
    permanently. So the block is behind `@supports`, and such an engine keeps the
-   static state above (shown, unwiped) for index.ts's fallback to drive. Never
-   remove the @supports wrapper.
+   static state above: the word solid and pinned, the intro shown. Never remove
+   the @supports wrapper.
 
    REDUCED MOTION is the outer gate, not an override: an animation with
    `fill: both` beats a normal declaration, so a later reduce rule could not
@@ -245,6 +209,8 @@ stories-heading {
 			   <wobble-text>'s displacement filter). The hint keeps that repaint on
 			   its own layer instead of dirtying the heading around it. */
 			will-change: clip-path;
+			/* Unwiped until the timeline resolves, which is after first style. */
+			clip-path: inset(100% 0 0 0);
 			animation-name: sh-heading-wipe;
 			animation-timing-function: linear;
 			animation-fill-mode: both;
@@ -277,9 +243,7 @@ stories-heading {
 	}
 }
 
-/* Animates clip-path itself rather than --sh-clip: inset() interpolates
-   natively, so this needs no @property registration. --sh-clip stays the
-   static, un-animated state for engines that skip the block above. */
+/* inset() interpolates natively, so this needs no @property registration. */
 @keyframes sh-heading-wipe {
 	from {
 		clip-path: inset(100% 0 0 0);

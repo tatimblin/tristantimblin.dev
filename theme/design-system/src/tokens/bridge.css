@@ -1,7 +1,7 @@
 /* Legacy-name bridge.
  *
- * The Web Components (<stories-heading> in theme/*, <dotted-grid> and
- * <video-carousel> from tatimblin/dotgrid, the fleet demo from
+ * The stories-heading lockup, the Web Components (<dotted-grid> and
+ * <video-carousel> from tatimblin/dotgrid) and the fleet demo from
  * tatimblin/vscode-fleet) reference a small set of custom properties
  * (--color-*) that the design system does not define, and read them where a
  * class cannot reach: <dotted-grid> samples --color-fg / --color-bg into a

@@ -49,7 +49,6 @@ const props = Astro.props;
 </Layout>
 
 <script>
-	import "@whois/stories-heading";
 	import "@whois/wobble-text";
 	import "@tristimb/dotted-grid";
 	import "@tristimb/video-carousel";
@@ -270,26 +269,34 @@ const props = Astro.props;
 	     The box ends above the picture's foot, so it never adds to the row's
 	   height: the opener's arithmetic doesn't see it. Not under reduced motion (the
 	   card is docked below and the column beside the copy is empty) or in print
-	   (the card's place there depends on where the page was scrolled to): the copy
+	   (the card's place there depends on where the page was scrolled to), or
+	   without scroll timelines (docked below, as under reduced motion): the copy
 	   stays directly under the word. */
 	@media screen and (max-width: 900px) and (prefers-reduced-motion: no-preference) {
-		.home .sh__sub {
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			min-block-size: max(
-				0px,
-				min(
-					var(--home-picture-h),
-					100svh - var(--home-word-top) - var(--home-word-h) / 2
-				) - var(--home-word-h) - 2 * var(--space-3)
-			);
+		@supports (animation-timeline: scroll()) {
+			.home .sh__sub {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				min-block-size: max(
+					0px,
+					min(
+						var(--home-picture-h),
+						100svh - var(--home-word-top) - var(--home-word-h) / 2
+					) - var(--home-word-h) - 2 * var(--space-3)
+				);
+			}
 		}
 	}
 
-	/* REDUCED MOTION: no drift, so nothing to rise through: the word holds where
-	   it rests, from the first pixel. */
+	/* REDUCED MOTION, OR NO SCROLL TIMELINES: no drift, so nothing to rise
+	   through: the word holds where it rests, from the first pixel. */
 	@media (prefers-reduced-motion: reduce) {
+		.home .ds-widget-grid {
+			--home-drift: 0px;
+		}
+	}
+	@supports not (animation-timeline: scroll()) {
 		.home .ds-widget-grid {
 			--home-drift: 0px;
 		}

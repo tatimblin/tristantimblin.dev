@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures/test";
+import { test, expect, lockupReady } from "./fixtures/test";
 
 /**
  * THE PHONE TILE RENDERS AT 1x, THE DESKTOP CARD KEEPS 2x.
@@ -31,7 +31,7 @@ for (const vp of VIEWPORTS) {
 	test(`the videos card's DPR cap — ${vp.name}`, async ({ page }) => {
 		await page.setViewportSize({ width: vp.width, height: vp.height });
 		await page.goto("/");
-		await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+		await lockupReady(page);
 		await page.waitForTimeout(1500);
 
 		const grids = await page.evaluate((variant) =>

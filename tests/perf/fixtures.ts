@@ -14,7 +14,7 @@
  */
 import { join } from "node:path";
 import { devices } from "@playwright/test";
-import { test as base, expect, type Page, type CDPSession } from "../fixtures/test";
+import { test as base, expect, lockupReady, type Page, type CDPSession } from "../fixtures/test";
 import { probe } from "./probe";
 
 /** src/widgets/now-playing/config.ts's SPOTIFY_SSE_URL. */
@@ -179,7 +179,7 @@ export async function load(page: Page, alongside?: () => Promise<void>) {
 	const side = alongside?.();
 	side?.catch(() => {}); // rethrown below, by the await
 	await page.waitForLoadState("load");
-	await page.locator("stories-heading[data-ready]").waitFor({ state: "attached" });
+	await lockupReady(page);
 	await page.evaluate(() => document.fonts.ready);
 	const now = await page.evaluate(() => performance.now());
 	if (now < LOAD_SETTLES_MS) await page.waitForTimeout(LOAD_SETTLES_MS - now);

@@ -1,4 +1,4 @@
-import { test, expect, MEDIA_BASE, type Page } from "./fixtures/test";
+import { test, expect, lockupReady, MEDIA_BASE, type Page } from "./fixtures/test";
 
 /**
  * THE HOMEPAGE OPENER (src/layouts/HomeLayout.astro): "tristan", "& other stories"
@@ -82,7 +82,7 @@ const meetAt = (rest: { first: Box; word: Box }, top: number) => rest.first.y - 
 async function open(page: Page, width: number, height: number) {
 	await page.setViewportSize({ width, height });
 	await page.goto("/");
-	await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+	await lockupReady(page);
 }
 
 test("no halftone hero: the only grid is the card's, and no fabric is asked for", async ({ page }) => {
@@ -385,7 +385,7 @@ test.describe("the copy on the picture's axis (compact step)", () => {
 			});
 		});
 		await page.goto("/");
-		await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+		await lockupReady(page);
 		const s = await at(page, 0);
 		expect(s.tagline.y, "below the word").toBeGreaterThanOrEqual(s.word.bottom);
 		expect(overlaps(s.intro, s.picture), "off the picture").toBe(false);
@@ -407,7 +407,7 @@ test.describe("the copy on the picture's axis (compact step)", () => {
 		const context = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 390, height: 844 } });
 		const page = await context.newPage();
 		await page.goto("/");
-		await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+		await lockupReady(page);
 		const s = await at(page, 0);
 		expect(Math.abs(s.tagline.y - s.word.bottom - COPY_MARGIN), "directly under the word").toBeLessThan(1);
 		await context.close();
@@ -581,7 +581,7 @@ test.describe("the opener is its own first screen", () => {
 			});
 		});
 		await page.goto("/");
-		await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+		await lockupReady(page);
 		const s = await at(page, 0);
 		expect(s.intro.bottom, "the row holds its content").toBeLessThanOrEqual(s.first.y);
 		const docked = await at(page, 3000);
@@ -607,7 +607,7 @@ test("reduced motion: no drift, wipe, fade or parallax, and everything shows", a
 	const context = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 1440, height: 900 } });
 	const page = await context.newPage();
 	await page.goto("/");
-	await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+	await lockupReady(page);
 	const rest = await at(page, 0);
 	expect(rest.clip, "the word is solid").toBe(0);
 	expect(rest.subOpacity).toBe(1);

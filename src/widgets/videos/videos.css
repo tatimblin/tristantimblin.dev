@@ -76,22 +76,9 @@
 	   fixed 48px would start 7.4px off on a short phone (a 444px travel): at most
 	   8% of the travel keeps the start within 6px at every size. */
 	--vc-chrome-run: min(var(--space-8), var(--vc-dock-travel) * 0.08);
-	/* THE STATIC STATE is parked: an engine without scroll timelines shows it
-	   there until ./client.ts drives --vc-dock-lift (and without the script,
-	   keeps it there, in the open column of the opener). Reduced motion docks
-	   it outright (below). */
-	transform: translateY(
-		var(--vc-dock-lift, calc(-1 * var(--vc-dock-travel)))
-	);
 	will-change: transform;
 	position: relative;
 	z-index: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.wx-videos {
-		transform: none;
-	}
 }
 
 /* THE DOCK, on the compositor: a scroll-progress animation from the park to
@@ -105,14 +92,15 @@
    screen it sinks at most 0.19 of its travel and comes back up into place: the
    opener is a full screen, and a steeper start (2×) read as a drop over it.
    Gated as stories-heading's are (theme/stories-heading/src/styles.css):
-   reduced motion never applies it, and an engine without scroll timelines
-   keeps the static state above for ./client.ts to drive — cssDrivesDock()
-   there is the same feature test. Never remove the @supports wrapper: without
-   it such an engine would run this on the document timeline and paint the TO
-   keyframe forever. */
+   reduced motion and an engine without scroll timelines never apply it, so the
+   card sits docked in its cell with its chrome on. Never remove the @supports
+   wrapper: without it such an engine would run this on the document timeline
+   and paint the TO keyframe forever. */
 @media (prefers-reduced-motion: no-preference) {
 	@supports (animation-timeline: scroll()) {
 		.wx-videos {
+			/* The park until the timeline resolves, which is after first style. */
+			transform: translateY(calc(-1 * var(--vc-dock-travel)));
 			animation-name: vc-dock;
 			animation-timing-function: cubic-bezier(0.3333333333, 0.5, 0.6666666667, 1);
 			animation-fill-mode: both;
@@ -192,10 +180,6 @@
 	box-shadow: var(--shadow-panel);
 	overflow: hidden;
 	pointer-events: none;
-	/* THE STATIC STATE IS SHOWN: reduced motion (the card is docked already), an
-	   engine without scroll timelines until ./client.ts writes --vc-chrome, and
-	   that engine if the script fails (parked, with its label on). */
-	opacity: var(--vc-chrome, 1);
 }
 /* The header's inline pad, as a Widget's own header has it (widget-grid.css keys
    that on a direct child of the card; this one is inside the overlay). */
@@ -277,9 +261,6 @@
 	syntax: "<number>";
 	inherits: true;
 	initial-value: 1;
-}
-.wx-videos__wide {
-	--vc-surface: var(--vc-chrome, 1);
 }
 .wx-videos__wide .wx-videos__chrome {
 	opacity: 1;
@@ -449,7 +430,6 @@
 		block-size: var(--vc-foot-h);
 		margin-block-start: 0;
 		z-index: 2;
-		opacity: var(--vc-chrome, 1);
 	}
 	.wx-videos[data-vc-docked] .wx-videos__compact .vc__ruler {
 		pointer-events: auto;

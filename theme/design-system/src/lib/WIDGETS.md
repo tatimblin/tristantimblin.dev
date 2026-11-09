@@ -66,9 +66,8 @@ return a destroy, which runs before the next swap. `ctx`:
   in an idle callback.
 - **`idle`** — once the page has loaded, in an idle callback: for a card
   whose data should be live before it is seen (now playing's stream).
-- **`eager`** — at once, ahead of the rest: only for a card whose script must
-  be in place before the page can scroll (the videos card's dock-lift
-  fallback, on an engine without scroll timelines).
+- **`eager`** — at once, ahead of the rest: only for a card on screen from the
+  first frame (the videos card, parked in the opener).
 
 Mounts run one at a time with a yield between them. A module that fails to
 load, or a mount that throws, marks that card `data-widget-state="failed"` and
@@ -128,8 +127,9 @@ content — keep it that way; it is what makes the containment safe.
   visitor started (a glide, a shuffle) may use `ctx.frame` directly.
 - **Animate `transform` and `opacity` only.** Anything else re-lays out or
   repaints every frame. A scroll-linked effect is a CSS scroll-driven
-  animation, with a script only as the fallback for engines without scroll
-  timelines (`theme/stories-heading`, `src/widgets/videos`).
+  animation behind `@supports (animation-timeline: scroll())`, and an engine
+  without it gets a static, complete page (`theme/stories-heading`,
+  `src/widgets/videos`).
 - **Read, then write.** Measure in a `read` frame or a ResizeObserver, write
   in a `write` frame; never interleave.
 - **No `requestAnimationFrame` of your own.** Use `ctx.frame` (or `onFrame`

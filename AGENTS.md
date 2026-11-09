@@ -17,7 +17,8 @@ Guidance for AI agents working in this repo.
 - **`theme/*`** — the site's look, as workspace packages (Bun workspaces,
   consumed as `@whois/*`, source exports, no build step):
   - `@whois/design-system` — the design system (tokens + Astro/CSS components).
-  - Web Components (custom elements): `stories-heading`, `wobble-text`.
+  - `wobble-text`, a Web Component, and `stories-heading`, the homepage lockup's
+    CSS (no script).
 - **The halftone elements live in their own repo**,
   [tatimblin/dotgrid](https://github.com/tatimblin/dotgrid):
   `@tristimb/dotted-grid` (`<dotted-grid>`) and `@tristimb/video-carousel`

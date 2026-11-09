@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "./fixtures/test";
+import { test, expect, lockupReady, type Page } from "./fixtures/test";
 
 /**
  * ONLY THE HALFTONE A BREAKPOINT SHOWS EXISTS.
@@ -40,7 +40,7 @@ const grids = (page: Page) =>
 			.sort()
 	);
 
-const ready = (page: Page) => page.locator("stories-heading[data-ready]").waitFor({ state: "attached" });
+const ready = lockupReady;
 
 test.describe("deferred halftones", () => {
 	test("a phone creates only the compact carousel", async ({ page }) => {

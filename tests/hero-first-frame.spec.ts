@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "./fixtures/test";
+import { test, expect, lockupReady, type Page } from "./fixtures/test";
 
 /**
  * THE FIRST FRAME IS THE FINAL FRAME.
@@ -70,7 +70,7 @@ test.describe("opener first frame", () => {
 
 			await page.setViewportSize(vp);
 			await page.goto("/");
-			await page.locator("stories-heading[data-ready]").waitFor({ state: "attached" });
+			await lockupReady(page);
 			const on = await readOpener(page);
 
 			const context = await browser.newContext({ viewport: vp, javaScriptEnabled: false });
@@ -100,7 +100,7 @@ test.describe("opener first frame", () => {
 		test(`"tristan" fills its column at ${vp.width}x${vp.height}`, async ({ page }) => {
 			await page.setViewportSize(vp);
 			await page.goto("/");
-			await page.locator("stories-heading[data-ready]").waitFor({ state: "attached" });
+			await lockupReady(page);
 			const got = await page.evaluate(() => {
 				const outline = document.querySelector(".sh__outline")!;
 				const range = document.createRange();
@@ -129,7 +129,7 @@ test.describe("opener first frame", () => {
 				}).observe({ type: "layout-shift", buffered: true });
 			});
 			await page.goto("/");
-			await page.locator("stories-heading[data-ready]").waitFor({ state: "attached" });
+			await lockupReady(page);
 			// Past the fonts and the widgets' first renders.
 			await page.waitForTimeout(1500);
 			const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
