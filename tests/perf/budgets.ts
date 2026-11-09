@@ -19,14 +19,15 @@
 export const CLS = 0.01;
 
 /** WebGL contexts once the page has loaded (the halftones): the videos card's,
- *  at either width — the homepage has no halftone hero, and <Deferred> builds
- *  only the card's variant for the width. */
-export const WEBGL = { desktop: 1, mobile: 1 };
+ *  at either width (<Deferred> builds only the card's variant for the width),
+ *  and on a phone the opener's clip above "tristan". */
+export const WEBGL = { desktop: 1, mobile: 2 };
 
 /** Videos fetched from the media bucket in the load window (ENGINE_WINDOW_MS,
  *  below), before any scroll: the videos card's first clip, plus one
- *  <link rel=prefetch> for its next (its crossfade needs it decoded on time). */
-export const MEDIA_REQUESTS = { desktop: 2, mobile: 2 };
+ *  <link rel=prefetch> for its next (its crossfade needs it decoded on time),
+ *  and on a phone the opener's clip. */
+export const MEDIA_REQUESTS = { desktop: 2, mobile: 3 };
 
 /** Script files fetched in the load window, before the first scroll, and
  *  which widget chunks may be among them: `eager` (videos), `idle` (now playing) and `near` cards within a

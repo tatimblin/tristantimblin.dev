@@ -4,12 +4,13 @@ import { VIDEOS } from "./fixtures/opener";
 /**
  * ONLY THE HALFTONE A BREAKPOINT SHOWS EXISTS.
  *
- * The homepage has one <dotted-grid>: the videos card's carousel. It has two
- * variants, one per step of the widget grid (src/widgets/videos/Videos.astro) —
- * four columns, with the date ruler out in the gutter; two columns, with no
- * ruler, at 1× — and each is <Deferred> (src/components/Deferred.astro): its
- * markup is a <template> until its breakpoint's media query matches, so the
- * variant the breakpoint hides never makes a WebGL context or downloads a clip.
+ * The homepage's <dotted-grid>s are the videos card's carousel and, on the
+ * compact step, the opener's clip. The carousel has two variants, one per step
+ * of the widget grid (src/widgets/videos/Videos.astro) — four columns, with the
+ * date ruler out in the gutter; two columns, with no ruler, at 1× — and each of
+ * these is <Deferred> (src/components/Deferred.astro): its markup is a
+ * <template> until its breakpoint's media query matches, so what the breakpoint
+ * hides never makes a WebGL context or downloads a clip.
  *
  * What must hold for that to be invisible:
  *   - the right variant exists at load, upgraded, before anything else asks for it;
@@ -37,23 +38,31 @@ async function countGl(page: Page) {
 const grids = (page: Page) =>
 	page.evaluate(() =>
 		Array.from(document.querySelectorAll("dotted-grid"))
-			.map((el) => (el.closest(".wx-videos__compact") ? "compact" : el.closest(".wx-videos__wide") ? "wide" : "other"))
+			.map((el) =>
+				el.matches(".home__clip")
+					? "clip"
+					: el.closest(".wx-videos__compact")
+						? "compact"
+						: el.closest(".wx-videos__wide")
+							? "wide"
+							: "other"
+			)
 			.sort()
 	);
 
 const ready = lockupReady;
 
 test.describe("deferred halftones", () => {
-	test("a phone creates only the compact carousel", async ({ page }) => {
+	test("a phone creates only the clip and the compact carousel", async ({ page }) => {
 		await countGl(page);
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto("/");
 		await ready(page);
 		await page.waitForTimeout(1000);
 
-		expect(await grids(page)).toEqual(["compact"]);
+		expect(await grids(page)).toEqual(["clip", "compact"]);
 		await expect(page.locator(`${VIDEOS.compact}[data-ready]`)).toHaveCount(1);
-		expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(1);
+		expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(2);
 	});
 
 	test("a desktop creates only the wide carousel", async ({ page }) => {
@@ -78,7 +87,7 @@ test.describe("deferred halftones", () => {
 		await expect(page.locator(`${VIDEOS.compact}[data-ready]`)).toHaveCount(1);
 		await expect(page.locator(VIDEOS.compact)).toBeVisible();
 		// The wide variant stays, hidden by its CSS.
-		expect(await grids(page)).toEqual(["compact", "wide"]);
+		expect(await grids(page)).toEqual(["clip", "compact", "wide"]);
 		await expect(page.locator(VIDEOS.wide)).toBeHidden();
 	});
 

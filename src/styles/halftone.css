@@ -25,7 +25,8 @@
 /* --- The section hero: the fabric clip over /txt's and /about's title
    (PageHero) ----------------------------------------------------------------- */
 
-.page-hero__grid {
+.page-hero__grid,
+.home__clip {
 	--dg-polarity: positive;
 }
 
@@ -34,7 +35,8 @@
    streaks. 8 levels is what leaves a sparse few cells dark: the brightest
    peaks snap to the top step, which the highlight darkens; at 12 they stop a
    step short. */
-[data-theme="light"] .page-hero__grid {
+[data-theme="light"] .page-hero__grid,
+[data-theme="light"] .home__clip {
 	--dg-ink: var(--halftone-ink-soft);
 	--dg-dot-shape: square;
 	--dg-dot-scale: 0.8;
@@ -52,7 +54,8 @@
    tertiary ink, a mid warm grey. The cutoff empties the dark cells and
    crosshatch is off (it engraves exactly those), so only the band and its
    ripples carry dots. */
-[data-theme="dark"] .page-hero__grid {
+[data-theme="dark"] .page-hero__grid,
+[data-theme="dark"] .home__clip {
 	--dg-ink: var(--text-tertiary);
 	--dg-gamma: 0.5;
 	--dg-dot-shape: square;
