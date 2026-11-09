@@ -178,7 +178,7 @@ injected before any script; `frame.ts` hands the probe its counters
 | Containment | every named card mounted, with a load mode, style-contained (layout too for `contain="layout"`), an intrinsic size, and `content-visibility: auto` while far | `load.spec.ts` |
 | Every widget covered | each `src/widgets/<name>/client.ts` is a card on the page | `load.spec.ts` |
 | Gzip per widget chunk | `widget-<name>.*.js`, gzipped; a new one gets a default | `bundle.spec.ts` |
-| Idle | settled at the top (desktop): 0 frame callbacks, 0 rAF | `idle.spec.ts` |
+| Idle | settled at the top (desktop): 0 frame callbacks and 0 rAF outside the scheduler, but the `CONTINUOUS` ones (the tagline's wobble) | `idle.spec.ts` |
 | Hidden tab | faked with `visibilitychange`: 0 frame callbacks, 0 rAF, 0 video frames, 0 DOM changes in any card | `idle.spec.ts` |
 | Inactive widget | a card out of sight changes no DOM and runs no frame callback | `idle.spec.ts` |
 | Reduced motion | settled anywhere: no frames of any kind | `idle.spec.ts` |

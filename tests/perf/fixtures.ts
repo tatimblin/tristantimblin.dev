@@ -129,7 +129,20 @@ export async function during(page: Page, ms: number, act?: () => Promise<void>) 
 	for (const [k, v] of Object.entries(b.byLabel)) if (v - (a.byLabel[k] ?? 0)) labels[k] = v - (a.byLabel[k] ?? 0);
 	const rafBy: Record<string, number> = {};
 	for (const [k, v] of Object.entries(b.rafBy)) if (v - (a.rafBy[k] ?? 0)) rafBy[k] = v - (a.rafBy[k] ?? 0);
-	return { raf: b.raf - a.raf, rafBy, rvfc: b.rvfc - a.rvfc, calls: b.calls - a.calls, byLabel: labels, end: b };
+	const raf = b.raf - a.raf;
+	const calls = b.calls - a.calls;
+	return {
+		raf,
+		rafBy,
+		rvfc: b.rvfc - a.rvfc,
+		calls,
+		byLabel: labels,
+		/** Scheduler callbacks other than the CONTINUOUS ones. */
+		otherCalls: calls - CONTINUOUS.reduce((n, l) => n + (labels[l] ?? 0), 0),
+		/** rAF callbacks other than the scheduler's own frames. */
+		otherRaf: raf - (b.frames - a.frames),
+		end: b,
+	};
 }
 
 /** CDP's LayoutCount and RecalcStyleCount, now. */

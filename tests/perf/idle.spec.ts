@@ -17,13 +17,14 @@ const IDLE_MS = 2000;
 test.describe("desktop", () => {
 	test.use(DESKTOP);
 
-	test("settled at the top: no frame callbacks, no rAF", async ({ page }) => {
+	test("settled at the top: nothing runs but the tagline's wobble", async ({ page }) => {
 		await load(page);
 		const idle = await during(page, IDLE_MS);
 		observed("idle at the top", idle);
-		expect(idle.calls, `frame callbacks while idle: ${JSON.stringify(idle.byLabel)}`).toBe(0);
-		expect(idle.raf, `rAF while idle: ${JSON.stringify(idle.rafBy)}`).toBe(0);
-		expect(idle.end.running, "the scheduler is stopped").toBe(false);
+		expect(idle.otherCalls, `frame callbacks while idle: ${JSON.stringify(idle.byLabel)}`).toBe(0);
+		expect(idle.otherRaf, `rAF outside the scheduler while idle: ${JSON.stringify(idle.rafBy)}`).toBe(0);
+		// Everything registered ran in the window, under a continuous label, once each.
+		expect(idle.end.callbacks, "only the continuous callbacks are registered").toBe(Object.keys(idle.byLabel).length);
 	});
 
 	test("Lenis: no frames while idle, wakes on the wheel, settles after it", async ({ page }) => {
