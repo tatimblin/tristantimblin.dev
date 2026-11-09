@@ -1,26 +1,44 @@
 ---
 // ThemeToggle — the light/dark switch: a DS Chip as a button (the tag-style
-// caps control), pressed = light, its label naming the theme a click switches
-// to. The site footer carries it, and a demo page's panel (which has no
-// footer). The binding is src/lib/theme-toggle.ts.
+// caps control), its label naming the theme a click switches to. Both labels
+// are in the markup and data-theme picks one (below), so the words, the name
+// and the selected look are right at first paint, with or without script. The
+// site footer carries it, and a demo page's panel (which has no footer). The
+// binding is src/lib/theme-toggle.ts.
 import Chip from "@whois/design-system/Chip";
+import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 
 interface Props {
 	class?: string;
 }
 ---
 
-<Chip
-	as="button"
-	type="button"
-	class={Astro.props.class}
-	data-theme-toggle
-	aria-label="Switch to light theme"
-	aria-pressed="false"
->
-	<span data-theme-toggle-label>Light</span>
+<Chip as="button" type="button" class={Astro.props.class} data-theme-toggle>
+	<span class="theme-toggle__to-dark">
+		<span aria-hidden="true">Dark</span>
+		<VisuallyHidden as="span">Switch to dark theme</VisuallyHidden>
+	</span>
+	<span class="theme-toggle__to-light">
+		<span aria-hidden="true">Light</span>
+		<VisuallyHidden as="span">Switch to light theme</VisuallyHidden>
+	</span>
 </Chip>
 
 <script>
 	import "../lib/theme-toggle";
 </script>
+
+<style>
+	/* Off <html>'s attribute alone, not the nearest [data-theme]: the chip
+	   switches the page's theme, whatever wrapper it sits in. display: none
+	   takes the other label out of the accessible name too. */
+	:global(:root:not([data-theme="dark"])) .theme-toggle__to-light,
+	:global(:root[data-theme="dark"]) .theme-toggle__to-dark {
+		display: none;
+	}
+	/* The light theme's chip reads as selected, on the Chip's own hooks. */
+	:global(:root:not([data-theme="dark"]) [data-theme-toggle]) {
+		--chip-background: var(--wash-3);
+		--chip-color: var(--text-secondary);
+	}
+</style>

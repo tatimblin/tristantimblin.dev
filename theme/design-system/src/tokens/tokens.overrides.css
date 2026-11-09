@@ -200,6 +200,7 @@
 		--duration-swap: 0s;
 		--duration-quick: 0s;
 		--duration-standard: 0s;
+		--reveal-stagger: 0s;
 	}
 }
 
