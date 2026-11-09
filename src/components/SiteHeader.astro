@@ -8,8 +8,8 @@
 // One bar in the normal flow at the top of every page: the homepage's
 // (HomeLayout) and the blog's (BlogLayout, which PostLayout wraps).
 //
-// Nav is data-driven; pass `links` to change it per page, and `trail` to put
-// the page's path after the brand (a post: `/ txt / <slug>`). The brand, the
+// Pass `trail` to put the page's path after the brand (a post:
+// `/ txt / <slug>`). The brand, the
 // trail and the links are DS Anchors in the ink variant: the primary ink at
 // rest, the accent under the pointer, no underline.
 //
@@ -21,20 +21,18 @@ import Anchor from "@whois/design-system/Anchor";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 
 interface Props {
-	links?: Array<{ label: string; href: string }>;
 	/** Where the page sits, after the brand: `tristantimblin.dev / txt / mega-desk`.
 	 *  A step with an href links up; the last one is the page itself. `slug`
 	 *  lets it shorten on a narrow bar. */
 	trail?: Array<{ label: string; href?: string; slug?: boolean }>;
 }
 
-const {
-	links = [
-		{ label: "Writing", href: "/txt/" },
-		{ label: "About Me", href: "/about/" },
-	],
-	trail = [],
-} = Astro.props;
+const { trail = [] } = Astro.props;
+
+const links = [
+	{ label: "Writing", href: "/txt/" },
+	{ label: "About Me", href: "/about/" },
+];
 
 // The nav link for the section the page is in reads in the accent.
 const path = Astro.url.pathname;

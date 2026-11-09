@@ -55,9 +55,9 @@ return a destroy, which runs before the next swap. `ctx`:
 - **`ctx.activity`** — `visible` (within a quarter screen of the viewport),
   `active` (and the tab visible), `animate` (and motion allowed);
   `.subscribe(fn)` for changes. Everything starts false.
-- **`ctx.whileActive(start, { when })`** — runs `start` each time the card
-  becomes active (`when: "animate"`: active with motion allowed) and the stop
-  it returns each time it stops being so, and on teardown. Put every loop,
+- **`ctx.whileActive(start)`** — runs `start` each time the card becomes
+  active and the stop it returns each time it stops being so, and on
+  teardown. Put every loop,
   timer, clock and playing video here.
 
 ## Load modes (`<Widget load>`)

@@ -3,7 +3,6 @@
 // scrubber. The clip data is authored in the markup (one ruler tick per clip,
 // plus the caption) so it degrades gracefully; the <video-carousel> custom
 // element upgrades it. See @tristimb/video-carousel (github.com/tatimblin/dotgrid).
-import Mono from "@whois/design-system/Mono";
 import clipsData from "../data/video-clips.json";
 import { media } from "../lib/media";
 
@@ -40,8 +39,8 @@ interface Props {
 	xfadeMode?: "threshold" | "rain";
 	xfadeLive?: boolean;
 	/**
-	 * The lattice pitch in CSS px, per instance (a footer card and a full screen
-	 * want different densities). The rest of the look (ink, gamma, cutoff, ...)
+	 * The lattice pitch in CSS px, per instance (the wide card and the phone's
+	 * compact one want different densities). The rest of the look (ink, gamma, cutoff, ...)
 	 * is per THEME, so it is not a prop: it is set with --dg-* custom properties
 	 * on the host's grid (see src/styles/halftone.css and @tristimb/dotted-grid).
 	 * An attribute would beat those and pin the value in both themes.
@@ -53,11 +52,6 @@ interface Props {
 	 * why it must stay an integer.
 	 */
 	maxDpr?: number;
-	/**
-	 * Lay the caption over the clip, bottom-left, as a TV caption with a highlight
-	 * hugging each line (the element's `caption-overlay` attribute).
-	 */
-	captionOverlay?: boolean;
 }
 
 // The clips are data (src/data/video-clips.json): footage prepared by
@@ -76,7 +70,6 @@ const {
 	xfadeLive,
 	cellSize = 7,
 	maxDpr,
-	captionOverlay = false,
 } = Astro.props;
 
 const first = clips[0];
@@ -95,7 +88,6 @@ const webm = (src: string) => media(src.replace(/\.mp4$/, ".webm"));
 	orientation={orientation}
 	axis={axis}
 	fill={fill ? "" : undefined}
-	caption-overlay={captionOverlay ? "" : undefined}
 >
 	{/* Ruler + video share a row so the ruler's height tracks the video box only. */}
 	<div class="vc__main">
@@ -133,26 +125,9 @@ const webm = (src: string) => media(src.replace(/\.mp4$/, ".webm"));
 				xfade-mode={xfadeMode}
 				xfade-live={xfadeLive ? "" : undefined}
 			></dotted-grid>
-			{/* The `caption` slot replaces this figcaption outright, for a consumer
-			   that draws its own: it keeps the [data-vc-*] hooks and the element fills
-			   them. Title then place, no date (the ruler says when). Each run sits in
-			   its own line so `caption-overlay` can give it one highlight that follows
-			   the text across a wrap; both wrappers are `display: contents` otherwise.
-			   The element rewrites the [data-vc-*] fields on every selection. */}
-			<slot name="caption">
-				<figcaption class="vc__caption">
-					<span class="vc__cap-line">
-						<span class="vc__cap-run vc__cap-run--title">
-							<Mono class="vc__desc" tone="primary" data-vc-desc>{first?.description}</Mono>
-						</span>
-					</span>
-					<span class="vc__cap-line">
-						<span class="vc__cap-run vc__cap-run--meta">
-							<Mono class="vc__loc" variant="text" data-vc-loc>{first?.location}</Mono>
-						</span>
-					</span>
-				</figcaption>
-			</slot>
+			{/* The `caption` slot is the consumer's chrome: it carries the [data-vc-*]
+			   hooks, and the element rewrites those fields on every selection. */}
+			<slot name="caption" />
 		</figure>
 	</div>
 </video-carousel>

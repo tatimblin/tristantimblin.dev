@@ -82,7 +82,7 @@ const props = Astro.props;
 	   --widget-grid-gap, widget-grid.css), so it lands on the cards' columns at
 	   every width, and all of it is stylesheet, so the first frame is final. */
 	.home .ds-widget-grid {
-		/* A 1×2 tile's height: the videos card, parked at the top of the opener. */
+		/* A 1×2 tile's height: the videos card, parked centred in the opener. */
 		--home-tile-h: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
 		/* "tristan"'s box: two cells wide, the line height over the size that
 		   width gives it. */
@@ -102,8 +102,8 @@ const props = Astro.props;
 		/* THE LOCKUP ON THE TILE'S AXIS (desktop; a phone overlaps them instead):
 		   how far below the tile's top the word starts, so the shorter lockup
 		   centres beside it. The word's height is exact; the copy under it (the
-		   sub's margin, "& other stories" and two lines of intro, 77px measured at
-		   every desktop width) is stated as a step, because where the word pins
+		   sub's margin, "& other stories" and two lines of intro) is stated as
+		   steps, because where the word pins
 		   has to be a number before any script runs. A pixel or two of the copy's
 		   wrap reads as nothing against a 444px tile. */
 		--home-lockup-h: calc(var(--home-word-h) + var(--space-3) + var(--space-11));

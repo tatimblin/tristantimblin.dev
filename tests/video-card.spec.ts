@@ -94,7 +94,7 @@ test("where the page ends before the travel does, the chrome lands with the dock
 	await open(page);
 	// Cut the page down to a few hundred px of scroll: the 100% half of min(travel, 100%).
 	await page.addStyleTag({
-		content: `.home { min-block-size: 0 !important; padding-block-end: 0 !important; }
+		content: `.home { padding-block-end: 0 !important; }
 			.home .ds-widget-grid > :not(stories-heading):not(.wx-videos) { display: none !important; }
 			.wx-videos { grid-row: 2 / span 1 !important; block-size: 40px; }
 			footer, .site-footer { display: none !important; }`,

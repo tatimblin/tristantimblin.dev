@@ -1,13 +1,12 @@
 // Volo league seasons — read at build time (frontmatter runs in Node) from
-// volo.json, which the volo-seasons GitHub Action regenerates weekly (the
-// Action's fetch script writes to this file's path — keep them in sync).
+// volo.json, which the nightly workflow regenerates on Volo days (its fetch
+// script writes to this file's path — keep them in sync).
 // Volo.astro consumes the normalized shape returned by getVoloSeasons().
 //
 // Vite inlines the JSON at build time, so the data is bundled with the page — no
 // filesystem read or API call at render time, and no credential shipped to the
 // client. See tools/volo/fetch.mjs for the shape and
-// .github/workflows/volo-seasons.yml for the pipeline (mirrors the github-stats
-// setup).
+// .github/workflows/nightly.yml for the pipeline.
 import data from "../../data/volo.json";
 
 export type GameResult = "W" | "L" | "T";

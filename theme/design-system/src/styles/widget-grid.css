@@ -59,7 +59,6 @@
 		var(--widget-font-lg),
 		min(var(--widget-font-xl), calc(var(--widget-cell) * 0.13))
 	);
-	--widget-icon: clamp(20px, calc(var(--widget-cell) * 0.067), 30px);
 	/* Between small cells of one graphic — a TileGrid's tiles, a stacked bar's
 	   segments: a hair under the smallest space step. */
 	--widget-tile-gap: clamp(2px, calc(var(--widget-cell) * 0.01), var(--space-1));

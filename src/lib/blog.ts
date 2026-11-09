@@ -82,17 +82,12 @@ export function groupByYear<T extends Dated>(posts: T[]): Array<{ year: number; 
 
 export const isoDate = (d: Date) => new Date(d).toISOString().split("T")[0];
 
-/** The month: `{ short: "feb", long: "february" }`. UTC, not the build
- *  machine's zone, like every date here: frontmatter dates are bare
- *  YYYY-MM-DD, which parse as UTC midnight, and formatting those locally
- *  prints the day BEFORE anywhere west of UTC while the datetime attribute
- *  still says the right one. */
-function monthOf(d: Date): { short: string; long: string } {
-	const date = new Date(d);
-	const of = (month: "short" | "long") =>
-		date.toLocaleDateString("en-US", { month, timeZone: "UTC" }).toLowerCase();
-	return { short: of("short"), long: of("long") };
-}
+/** The month: `feb`. UTC, not the build machine's zone, like every date
+ *  here: frontmatter dates are bare YYYY-MM-DD, which parse as UTC midnight,
+ *  and formatting those locally prints the day BEFORE anywhere west of UTC
+ *  while the datetime attribute still says the right one. */
+const monthOf = (d: Date): string =>
+	new Date(d).toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toLowerCase();
 
 /**
  * Every post's chronological number, 1-based: the first post ever is 1, so a
@@ -157,6 +152,7 @@ export const monthYear = (d: Date) => {
 	return `${month} / ${year}`;
 };
 
-/** The index table's FILED column: `jun 2025` (the caps voice uppercases it). */
+/** A neighbouring post's date at the foot of a post: `jun 2025` (the caps
+ *  voice uppercases it). */
 export const filedDate = (d: Date) =>
-	`${monthOf(d).short} ${new Date(d).getUTCFullYear()}`;
+	`${monthOf(d)} ${new Date(d).getUTCFullYear()}`;

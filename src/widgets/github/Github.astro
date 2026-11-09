@@ -9,8 +9,6 @@
 // accessible name and aria-pressed carrying the state. Data is read at build
 // time from github.json (see ./github.ts); only the flip is client-side
 // (./client.ts, mounted by the widget runtime).
-//
-// Props pass through to the <Widget> (a class).
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
@@ -23,13 +21,6 @@ import TickRuler from "@whois/design-system/TickRuler";
 import Legend from "@whois/design-system/Legend";
 import HitArea from "@whois/design-system/HitArea";
 import { getGithubStats } from "./github";
-
-interface Props {
-	class?: string;
-	[key: string]: unknown;
-}
-
-const { class: className, ...rest } = Astro.props;
 
 const gh = getGithubStats();
 
@@ -63,7 +54,7 @@ const langs = [
 ];
 ---
 
-<Widget size="1x1" title="github" name="github" class:list={["wx-github", className]} {...rest}>
+<Widget size="1x1" title="github" name="github" class="wx-github">
 	{/* The handle, in the header's meta slot: outside the body the toggle
 	     covers, so tapping it never flips. */}
 	<Mono

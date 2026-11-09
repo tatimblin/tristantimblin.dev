@@ -22,7 +22,7 @@
  * $PAGEVIEWS_SINCE, the workflow_dispatch input) when given. Rows in the
  * window are replaced; older rows stay as committed.
  *
- * GUARDS, as in tools/readers: an HTTP or shape error fails the step; a window
+ * GUARDS: an HTTP or shape error fails the step; a window
  * with no visitors once the ledger is a week old fails it (stale auth); an
  * unreadable ledger is refused rather than overwritten.
  *

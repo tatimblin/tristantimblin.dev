@@ -19,8 +19,6 @@
 // tech and the keyboard see. The bike's slide-in rides the page's
 // reveal (src/lib/reveal.ts): the coordinator marks the card
 // `data-reveal-state="in"` and the bike's CSS keys on that.
-//
-// Props pass through to the <Widget> (a class).
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Figure from "@whois/design-system/Figure";
@@ -31,13 +29,6 @@ import usGlyph from "./icons/us.svg?raw";
 import globeGlyph from "./icons/globe.svg?raw";
 import { readFileSync } from "node:fs";
 import { getBikeStats, percent, pngAspect, ringShares } from "./bike-stats";
-
-interface Props {
-	class?: string;
-	[key: string]: unknown;
-}
-
-const { class: className, ...rest } = Astro.props;
 
 const bike = getBikeStats();
 
@@ -55,11 +46,10 @@ const inkAspect = pngAspect(readFileSync(`public${INK}`));
 		size="1x1"
 		title="bay wheels"
 		name="bike-stats"
-		class:list={["wx-baywheels", className]}
+		class="wx-baywheels"
 		data-mode="us"
 		data-share-us={share.us}
 		data-share-earth={share.earth}
-		{...rest}
 	>
 		{/* Which distance the ring is measuring: the map of the US, or the globe.
 		     A pointer target for the flip, hidden from AT and out of the tab

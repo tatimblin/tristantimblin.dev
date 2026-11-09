@@ -6,10 +6,9 @@
 // A bar picks its season; the header's arrows page the chart when there are
 // more seasons than fit; the tray's heading slides it up over the chart to
 // show every game. Data is read at build time from volo.json (./volo.ts,
-// which the volo-seasons Action regenerates weekly); every season is rendered
+// which the nightly workflow refreshes on Volo days); every season is rendered
 // server-side as a panel in a DS Faces stack, so nothing is fetched. The
 // chart's controls are wired by ./client.ts (mounted by the widget runtime).
-// Props pass through to the <Widget> (a class).
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
@@ -46,13 +45,6 @@ import {
 } from "./volo";
 import "./volo.css";
 
-interface Props {
-	class?: string;
-	[key: string]: unknown;
-}
-
-const { class: className, ...rest } = Astro.props;
-
 let seasons = getVoloSeasons();
 // DEV ONLY: `?volo-seasons=30` pads the history with copies of the real
 // seasons, to see the chart page. (Never read in a build: DEV is false there.)
@@ -87,11 +79,10 @@ const yearShown = (i: number) =>
 <Widget
 	size="2x2"
 	name="volo"
-	class:list={["wx-volo", className]}
+	class="wx-volo"
 	squeeze="title"
 	data-expanded="false"
 	style={`--vl-page:${Math.min(PAGE, seasons.length)};--vl-tallest:${tallest};--vl-peek-rows:${PEEK_ROWS}`}
-	{...rest}
 >
 	{/* The selected season's sport; the script rewrites it. */}
 	<span slot="title">Volo <span data-volo-sport>{seasons[current]?.sport ?? ""}</span></span>

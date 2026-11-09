@@ -1,12 +1,12 @@
 // GitHub stats — read at build time (frontmatter runs in Node) from github.json,
-// which the github-stats GitHub Action regenerates daily (the Action's fetch
-// script writes to this file's path — keep them in sync). Github.astro consumes
+// which the nightly workflow regenerates (its fetch script writes to this
+// file's path — keep them in sync). Github.astro consumes
 // the normalized shape returned by getGithubStats().
 //
 // Vite inlines the JSON at build time, so the data is bundled with the page — no
 // filesystem read or API call at render time, and no token shipped to the client.
-// See tools/github-stats/fetch.mjs for the shape and .github/workflows/github-stats.yml
-// for the pipeline (mirrors the baywheels/bike-stats setup).
+// See tools/github-stats/fetch.mjs for the shape and .github/workflows/nightly.yml
+// for the pipeline.
 import data from "../../data/github.json";
 
 export interface ContribDay {

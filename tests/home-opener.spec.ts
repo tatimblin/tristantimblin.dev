@@ -513,11 +513,9 @@ test.describe("the opener is its own first screen", () => {
 		});
 	}
 
-	test("if the opener ever outreaches the page's scroll, the dock lands at the page's end", async ({ page }) => {
+	test("when the opener outreaches the page's scroll, the dock lands at the page's end", async ({ page }) => {
 		await open(page, 2560, 1440);
-		// The settle floor keeps this from happening on its own; without it the
-		// timeline's min(travel, 100%) is what lands the card.
-		await page.addStyleTag({ content: ".home { min-block-size: 0 !important; }" });
+		// A window this tall: the timeline's min(travel, 100%) is what lands the card.
 		const travel = await dockTravel(page);
 		const max = await maxScroll(page);
 		expect(travel, "the geometry this guards").toBeGreaterThan(max);

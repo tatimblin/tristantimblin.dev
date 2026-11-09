@@ -24,8 +24,8 @@ Guidance for AI agents working in this repo.
   (`<video-carousel>`), installed from GitHub Release tarballs (see the URLs in
   `package.json`). To change them, release there and bump the URL here.
 - **`tests/`** — Playwright, against the built site (`bun run test`);
-  `bun run test:unit` runs the unit tests beside the code (`src/**/*.test.ts`
-  and `theme/*/src/**/*.test.ts`; a bare `bun test` sees `src/` only — see
+  `bun run test:unit` runs the unit tests beside the code (`src/**/*.test.ts`,
+  `theme/*/src/**/*.test.ts` and `tools/**/*.test.ts`; a bare `bun test` sees `src/` only — see
   `bunfig.toml`). Specs import `test` from `tests/fixtures/test.ts`, not
   `@playwright/test`: it answers the media host from two tiny local clips
   (`tests/fixtures/media-stub.*`, the only videos in git), so the suite never
@@ -183,7 +183,7 @@ each) → `bridge.css` (the `--color-*` names the web components read).
 
 **Edges:** every box is `var(--border)` (1px **dashed** `--border-color`) at
 `var(--radius-box)` (2.5px), panels add `--shadow-panel` and a
-`--panel-header-bg` header; code is `--code-bg` / `--code-fg` (+ `--code-border`),
+`--panel-header-bg` header; code is `--code-bg` / `--code-fg`,
 links `--link-color` / `--link-decoration*`, transitions `--duration-standard` +
 `--ease-standard`. Don't hand-write `1px solid`, `border-radius: 0` (use
 `--radius-square`) or a hex colour.

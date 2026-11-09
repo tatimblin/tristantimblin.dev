@@ -3,7 +3,7 @@
 // the grid's last column. The carousel's true layout home is this cell; a
 // scroll-driven lift (a CSS scroll-progress animation in ./videos.css, with
 // ./client.ts as the fallback where scroll timelines are missing) parks it at
-// rest at the top of the homepage's opener, the row above
+// rest centred in the homepage's opener, the row above
 // (src/layouts/HomeLayout.astro), and brings it down into the cell a little
 // faster than the page scrolls. The generic
 // carousel lives in ../../components; this module owns only its grid placement
@@ -15,7 +15,7 @@
 // `contain="layout"`: the ruler overhangs the cell, which paint containment
 // (content-visibility) would clip.
 //
-// Props pass through to the <Widget> (a class). `reveal="eager"`: on screen from
+// `reveal="eager"`: on screen from
 // the first frame, parked above its cell, so it comes in at once rather than
 // with the row it docks into. NB the reveal writes `translate` while the dock lift writes `transform`
 // — two independent properties, so they compose instead of overwriting each
@@ -26,13 +26,6 @@ import Deferred from "../../components/Deferred.astro";
 import VideoCarousel from "../../components/VideoCarousel.astro";
 import VideoChrome from "./VideoChrome.astro";
 import "./videos.css";
-
-interface Props {
-	class?: string;
-	[key: string]: unknown;
-}
-
-const { class: className, ...rest } = Astro.props;
 ---
 
 <Widget
@@ -41,9 +34,8 @@ const { class: className, ...rest } = Astro.props;
 	load="eager"
 	reveal="eager"
 	contain="layout"
-	class:list={["wx-videos", className]}
+	class="wx-videos"
 	chrome={false}
-	{...rest}
 >
 	{/* Clip changes get the threshold transition, so the carousel behaves the
 	    same wherever it appears. No `intro`: the dock is its entrance. */}

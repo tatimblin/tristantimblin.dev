@@ -14,12 +14,10 @@
 	/* SURFACES. The page, a panel on it, the tint a panel fades into. */
 	--background: #fff8eb;
 	--card-background: #fdfdfd;
-	--input-background: var(--card-background);
 
 	/* EDGES. The dashed rule's colour, and the pale blue-grey ring under a
 	   panel (--shadow-panel). */
 	--border-color: #aaa9a6;
-	--input-border: var(--border-color);
 	--panel-outline: #d1dbe4;
 
 	/* INK. Black for headings, a step off it for reading; three greys down
@@ -84,10 +82,8 @@
 	/* CODE. Inline code and a fenced block both on the first wash, the
 	   block with the dashed edge round it; the token colours are GitHub-light
 	   inks, dark enough to read on the wash. */
-	--code-snippet-background: var(--wash-1);
 	--code-bg: var(--wash-1);
 	--code-fg: var(--text-primary);
-	--code-border: var(--border);
 	--code-token-comment: var(--text-subtle);
 	--code-token-keyword: #0550ae;
 	--code-token-string: #116329;

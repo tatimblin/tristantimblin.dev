@@ -3,12 +3,11 @@
 // when it is scrolled near.
 //
 //   <Embed name="painterly-scene" poster={sutro} alt="…" caption="…" />
-//   <Embed src="https://…/v1.2.3/index.js" assetBase="https://…/v1.2.3/" … />
 //
-// The module at `src` (an ES module on another origin; see src/lib/embeds.ts)
-// exports `mount(el, { assetBase }) => { destroy() }`: it draws into `el`,
-// sizes itself to it, and tears everything down on destroy(). `name` looks
-// both URLs up in src/data/embeds.json, which pins the version.
+// `name` looks the module up in src/data/embeds.json, which pins the version.
+// The module (an ES module on another origin; see src/lib/embeds.ts) exports
+// `mount(el, { assetBase }) => { destroy() }`: it draws into `el`, sizes
+// itself to it, and tears everything down on destroy().
 //
 // The figure is the DS Fig (flow: the frame, then the `fig. 0N /` caption
 // line), bled across the wide row like a body image. The frame holds the
@@ -17,10 +16,10 @@
 //   - imports and mounts when the frame comes within a screen of the
 //     viewport, and destroys it once it is two screens away, or when the
 //     client router swaps the page out (onPage);
-//   - keeps the poster when there is no WebGL (unless the embed doesn't need
-//     it, `webgl={false}`), when the import or mount fails, and when the
-//     reader prefers reduced motion and the embed has neither a still frame
-//     (`stillFrame`) nor a motion-off mode of its own (`reducedMotion="mount"`);
+//   - keeps the poster when there is no WebGL (unless the entry doesn't need
+//     it, `"webgl": false`), when the import or mount fails, and when the
+//     reader prefers reduced motion and the entry has neither a still frame
+//     (`"stillFrame"`) nor a motion-off mode of its own (`"reducedMotion": "mount"`);
 //   - shows the stage only once mount() has returned, so a slow or failed
 //     load never covers the poster with an empty box.
 //
@@ -39,26 +38,14 @@ import { embed } from "../lib/embeds";
 import { RULED_SIZES, RULED_WIDTHS } from "../lib/ruled-image";
 
 interface Props {
-	/** An entry in src/data/embeds.json; or give `src` and `assetBase`. */
-	name?: string;
-	/** The module URL to import(). */
-	src?: string;
-	/** Passed to mount() as `assetBase`. */
-	assetBase?: string;
+	/** An entry in src/data/embeds.json. */
+	name: string;
 	/** The still shown before (and instead of) the live embed. */
 	poster: ImageMetadata;
 	alt: string;
 	caption?: string;
 	/** The figure number, zero-padded (`02`), when the post counts it. */
 	no?: string;
-	/** The frame's CSS aspect-ratio; the poster's own by default. */
-	aspect?: string;
-	/** The module renders a still frame under reduced motion (`name` reads it from embeds.json). */
-	stillFrame?: boolean;
-	/** `mount`: the module honours reduced motion itself, so it mounts anyway (`name` reads it). */
-	reducedMotion?: "mount";
-	/** The module needs WebGL; true by default (`name` reads it from embeds.json). */
-	webgl?: boolean;
 	/** A demo page's stage: no figure, the frame fills its parent, the poster
 	 *  loads first thing, and it mounts at once instead of on approach. */
 	fullscreen?: boolean;
@@ -73,14 +60,8 @@ interface Props {
 
 const { name, poster, alt, caption, no, fullscreen = false, touchAction, describedby } = Astro.props;
 const label = Astro.props.label ?? alt;
-const resolved = name ? embed(name) : null;
-const src = Astro.props.src ?? resolved?.src;
-const assetBase = Astro.props.assetBase ?? resolved?.assetBase ?? "";
-const stillFrame = Astro.props.stillFrame ?? resolved?.stillFrame ?? false;
-const reducedMotion = Astro.props.reducedMotion ?? resolved?.reducedMotion;
-const webgl = Astro.props.webgl ?? resolved?.webgl ?? true;
-if (!src) throw new Error("<Embed>: give it a `name` from src/data/embeds.json, or a `src`");
-const aspect = Astro.props.aspect ?? `${poster.width} / ${poster.height}`;
+const { src, assetBase, stillFrame, reducedMotion, webgl } = embed(name);
+const aspect = `${poster.width} / ${poster.height}`;
 // Full screen: a bare box round the frame instead of the numbered figure, and
 // the poster at the viewport's width, fetched first.
 const Wrap = fullscreen ? "div" : Fig;

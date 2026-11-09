@@ -8,23 +8,14 @@
 // --ssp-* properties and ::part()s (now-playing.css): the cover as a flat
 // tile, the title in the figure voice, the artist in dim mono, and the
 // progress bar redrawn as a hairline tick ruler with the accent playhead.
-//
-// Props pass through to the <Widget> (a class).
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Pill from "@whois/design-system/Pill";
 import { SPOTIFY_SSE_URL } from "./config";
 import "./now-playing.css";
-
-interface Props {
-	class?: string;
-	[key: string]: unknown;
-}
-
-const { class: className, ...rest } = Astro.props;
 ---
 
-<Widget size="1x1" title="now playing" name="now-playing" load="idle" class:list={["wx-nowplaying", className]} {...rest}>
+<Widget size="1x1" title="now playing" name="now-playing" load="idle" class="wx-nowplaying">
 	{/* Hidden until the player has told us which state it is in (./client.ts,
 	     which the runtime mounts once the page has loaded: the player and its
 	     stream come with it); the placeholder text only reserves the pill's width. */}

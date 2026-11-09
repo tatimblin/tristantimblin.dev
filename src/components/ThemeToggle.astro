@@ -7,13 +7,9 @@
 // binding is src/lib/theme-toggle.ts.
 import Chip from "@whois/design-system/Chip";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
-
-interface Props {
-	class?: string;
-}
 ---
 
-<Chip as="button" type="button" class={Astro.props.class} data-theme-toggle>
+<Chip as="button" type="button" data-theme-toggle>
 	<span class="theme-toggle__to-dark">
 		<span aria-hidden="true">Dark</span>
 		<VisuallyHidden as="span">Switch to dark theme</VisuallyHidden>

@@ -21,12 +21,9 @@ interface Props {
 }
 
 const { heading } = Astro.props;
-// Rendered, not merely registered: BlogLayout always forwards the slot (see
-// the DS's Card.astro).
-const hasCards = Astro.slots.has("cards") && (await Astro.slots.render("cards")).trim() !== "";
 ---
 
-<div class:list={["page-hero", hasCards && "page-hero--cards"]}>
+<div class="page-hero">
 	<div class="page-hero__stage">
 		{/* Persisted across a view transition between section pages (/txt ↔ /about),
 		     so the router carries this element over rather than swapping in a new one. */}
@@ -45,11 +42,9 @@ const hasCards = Astro.slots.has("cards") && (await Astro.slots.render("cards"))
 			<Heading as="h1" size={6} responsive>{heading}</Heading>
 		</div>
 	</div>
-	{hasCards && (
-		<Grid class="page-hero__cards container" gap={4}>
-			<slot name="cards" />
-		</Grid>
-	)}
+	<Grid class="page-hero__cards container" gap={4}>
+		<slot name="cards" />
+	</Grid>
 </div>
 <script>
 	import "@tristimb/dotted-grid";
@@ -90,9 +85,6 @@ const hasCards = Astro.slots.has("cards") && (await Astro.slots.render("cards"))
 	.page-hero__title {
 		position: absolute;
 		inset-inline: 0;
-		inset-block-end: var(--page-hero-title-foot);
-	}
-	.page-hero--cards .page-hero__title {
 		inset-block-end: calc(var(--page-hero-overlap) + var(--page-hero-title-foot));
 	}
 	/* Positioned, so the row paints over the canvas. */
