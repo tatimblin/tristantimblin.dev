@@ -4,10 +4,12 @@
 // rest a ruled list. Demos are interleaved by date, marked with a chip.
 import BlogLayout from "../../layouts/BlogLayout.astro";
 import PostStack from "../../components/txt/PostStack.astro";
+import TopPosts from "../../components/txt/TopPosts.astro";
 import { BLOG_DESCRIPTION, BLOG_TITLE } from "../../lib/blog";
 import { getDemos, getPosts } from "../../lib/posts";
 
-const entries = [...(await getPosts()), ...(await getDemos())];
+const posts = await getPosts();
+const entries = [...posts, ...(await getDemos())];
 ---
 
 <BlogLayout
@@ -17,5 +19,6 @@ const entries = [...(await getPosts()), ...(await getDemos())];
 	description={BLOG_DESCRIPTION}
 	heading={BLOG_TITLE}
 >
+	<TopPosts slot="hero-cards" posts={posts} />
 	<PostStack posts={entries} />
 </BlogLayout>

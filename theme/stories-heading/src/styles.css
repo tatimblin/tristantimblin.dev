@@ -125,6 +125,9 @@ stories-heading {
 /* --- "& other stories" and the intro ---------------------------------------- */
 
 .sh__sub {
+	/* Over the word, whose fill would otherwise mask the "&" lying on it. */
+	position: relative;
+	z-index: 2;
 	inline-size: var(--sh-sub-w, auto);
 	margin-block-start: var(--space-3);
 	pointer-events: auto;
@@ -142,9 +145,32 @@ stories-heading {
 }
 
 .sh__tagline {
+	/* Holds the wobble's negative margin inside, off the line's own box. */
+	display: flow-root;
 	margin: 0;
 	line-height: 1;
 	white-space: nowrap;
+}
+
+/* Oversized, on a tight leading: its full line box would push the copy out of
+   the room beside a phone's picture. */
+.sh__amp {
+	font-size: 2.25em;
+	line-height: 0.5;
+}
+
+/* Pulled up toward "tristan". The filter clips to its box, so the padding keeps
+   the top of the "&" inside it. */
+.sh__tagline wobble-text {
+	padding-block-start: 0.5em;
+	margin-block-start: -1em;
+}
+
+/* The narrowest phones: a step down, or the line runs onto the picture. */
+@media (max-width: 359px) {
+	.sh__tagline {
+		font-size: var(--font-size-4);
+	}
 }
 
 /* Under "& other stories", a step down: the page's intro. */

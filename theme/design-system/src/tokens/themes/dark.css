@@ -32,8 +32,10 @@
 		color-mix(in oklab, var(--wash-1) 65%, var(--card-background))
 	);
 
-	/* INK. A warm off-white, then three warm greys down. */
+	/* INK. A warm off-white, a step off it for reading, then three warm greys
+	   down. */
 	--text-primary: #f3eee4;
+	--text-body: #dbd6cb;
 	--text-secondary: #c4beb2;
 	--text-subtle: #a19b90;
 	--text-tertiary: #78736a;

@@ -42,7 +42,7 @@ const first = clips[0];
 		) : (
 			<div class="wx-videos__foot">
 				<Mono class="wx-videos__loc" variant="text" tone="secondary" truncate data-vc-loc>{first?.location}</Mono>
-				<Mono class="wx-videos__date" variant="value" data-vc-date>{first?.date}</Mono>
+				<span class="wx-videos__date"><Mono variant="value" data-vc-date>{first?.date}</Mono></span>
 			</div>
 		)
 	}

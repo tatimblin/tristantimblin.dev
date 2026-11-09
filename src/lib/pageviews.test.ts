@@ -1,6 +1,36 @@
 import { describe, expect, test } from "bun:test";
-import { MIN_SHOWN, formatReads, getPathStats, type PageviewsLedger } from "./pageviews";
+import { MIN_SHOWN, formatReads, getPathStats, topByReads, type PageviewsLedger } from "./pageviews";
 import committed from "../data/pageviews.json";
+
+describe("topByReads", () => {
+	const ledger: PageviewsLedger = {
+		updated: "2026-10-20",
+		paths: {
+			"/a/": { reads: 5, recent: 1 },
+			"/b/": { reads: 30, recent: 1 },
+			"/c/": { reads: 5, recent: 1 },
+		},
+	};
+	const top = (items: string[], count: number) => topByReads(items, (item) => item, count, ledger);
+
+	test("ranks by reads and takes the count", () => {
+		expect(top(["/a/", "/b/", "/c/"], 1)).toEqual(["/b/"]);
+	});
+
+	test("ties keep the order given", () => {
+		expect(top(["/c/", "/a/", "/b/"], 3)).toEqual(["/b/", "/c/", "/a/"]);
+	});
+
+	test("an uncounted item still fills the row, last", () => {
+		expect(top(["/none/", "/a/"], 2)).toEqual(["/a/", "/none/"]);
+	});
+
+	test("does not reorder the caller's list", () => {
+		const items = ["/a/", "/b/"];
+		top(items, 2);
+		expect(items).toEqual(["/a/", "/b/"]);
+	});
+});
 
 describe("formatReads", () => {
 	test("hides counts under the threshold", () => {

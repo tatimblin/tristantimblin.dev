@@ -203,8 +203,9 @@ test("the dock lift is driven by exactly one mechanism, and docks either way", a
 	expect((await at(0)).lift, "and lifted again on the way back up").toBeCloseTo(rest.lift, 0);
 });
 
-/** The chrome it puts on as it docks: the same arrangement again, one layer's
- *  opacity on the dock's timeline, or --vc-chrome written from client.ts. */
+/** The chrome it puts on as it docks: the same arrangement again, one number on
+ *  the dock's timeline (read here off the date, which fades with the frame), or
+ *  --vc-chrome written from client.ts. */
 test("the chrome's fade is driven by exactly one mechanism, and lands either way", async ({ page }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/");
@@ -215,7 +216,7 @@ test("the chrome's fade is driven by exactly one mechanism, and lands either way
 		await page.waitForTimeout(250);
 		return page.evaluate(() => {
 			const el = document.querySelector<HTMLElement>(".wx-videos")!;
-			const chrome = document.querySelector<HTMLElement>(".wx-videos__chrome")!;
+			const chrome = document.querySelector<HTMLElement>(".wx-videos__wide")!;
 			return {
 				supports:
 					typeof CSS !== "undefined" &&
@@ -225,7 +226,7 @@ test("the chrome's fade is driven by exactly one mechanism, and lands either way
 					.getAnimations()
 					.filter((a) => /ScrollTimeline/.test(a.timeline?.constructor?.name ?? "")).length,
 				inlineChrome: el.style.getPropertyValue("--vc-chrome"),
-				opacity: Number(getComputedStyle(chrome).opacity),
+				opacity: Number(getComputedStyle(document.querySelector(".wx-videos__date")!).opacity),
 			};
 		});
 	};

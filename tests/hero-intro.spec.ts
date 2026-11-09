@@ -318,7 +318,8 @@ test.describe("hero intro — the fade at rest", () => {
 		const rest = await readSub(page);
 		// Not sticky, not absolute inside the sticky pin — a plain in-flow box. This is
 		// the structural half of the assertion: it is what makes the rest possible.
-		expect(rest.position).toBe("static");
+		// (Relative only to lie over the word; it takes no offset.)
+		expect(rest.position).toBe("relative");
 		expect(rest.transform).toBe("none");
 
 		// And the behavioural half: its viewport position falls by exactly the scroll
@@ -346,7 +347,7 @@ test.describe("hero intro — the fade at rest", () => {
 		// In normal flow (not fixed to the viewport) and fully shown — scrolled or not.
 		const atTop = await readSub(page);
 		expect(atTop.opacity).toBe(1);
-		expect(atTop.position).toBe("static");
+		expect(atTop.position).toBe("relative");
 
 		await scrollTo(page, 400);
 		const scrolled = await readSub(page);

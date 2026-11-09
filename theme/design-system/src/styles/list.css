@@ -3,7 +3,7 @@
 .ds-list {
 	margin: 0;
 	padding: 0;
-	color: inherit;
+	color: var(--text-body); /* reading text, as Body */
 	list-style-position: outside;
 	list-style-image: none;
 }

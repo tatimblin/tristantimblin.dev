@@ -20,7 +20,9 @@ async function open(page: Page, viewport = DESKTOP) {
 
 const chrome = (page: Page) =>
 	page.evaluate(() => {
-		const el = document.querySelector<HTMLElement>(".wx-videos__chrome")!;
+		// Four columns: the date fades with the frame, the label and location stay
+		// on (below). Two: the whole layer fades.
+		const el = document.querySelector<HTMLElement>(".wx-videos__date, .wx-videos__compact .wx-videos__chrome")!;
 		return Number(getComputedStyle(el).opacity);
 	});
 
@@ -303,6 +305,40 @@ test("the header is the same band as its neighbours, and names the selected clip
 	await expect(wide.locator("[data-vc-desc]")).toHaveText(after!.split(" — ")[0]);
 	await expect(wide.locator("[data-vc-loc]")).toHaveText(after!.split(" — ")[1]);
 	await expect(wide.locator("[data-vc-date]")).toHaveText(after!.split(" — ")[2]);
+});
+
+test("floating, the clip keeps its label and location where the docked card has them", async ({ page }) => {
+	await open(page);
+	const read = () =>
+		page.evaluate(() => {
+			const card = document.querySelector(".wx-videos")!.getBoundingClientRect();
+			const field = (s: string) => {
+				const el = document.querySelector(`.wx-videos__wide ${s}`)!;
+				const r = el.getBoundingClientRect();
+				let opacity = 1;
+				for (let n: Element | null = el; n && !n.matches(".wx-videos"); n = n.parentElement) {
+					opacity *= Number(getComputedStyle(n).opacity);
+				}
+				return { opacity, x: r.x - card.x, y: r.y - card.y };
+			};
+			return {
+				label: field("[data-vc-desc]"),
+				location: field("[data-vc-loc]"),
+				frame: Number(getComputedStyle(document.querySelector(".wx-videos__wide .vc__stage")!, "::after").opacity),
+			};
+		});
+	const floating = await read();
+	expect(floating.frame, "no frame yet").toBe(0);
+	expect(floating.label.opacity).toBe(1);
+	expect(floating.location.opacity).toBe(1);
+
+	await scrollTo(page, 3000);
+	const docked = await read();
+	expect(docked.frame, "framed once docked").toBe(1);
+	for (const key of ["label", "location"] as const) {
+		expect(Math.abs(docked[key].x - floating[key].x), `${key} x`).toBeLessThan(1);
+		expect(Math.abs(docked[key].y - floating[key].y), `${key} y`).toBeLessThan(1);
+	}
 });
 
 test("the footer sits on the card's foot, location left and date right", async ({ page }) => {

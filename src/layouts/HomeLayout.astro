@@ -75,19 +75,6 @@ const props = Astro.props;
 		   the cards peek in. svh, so a mobile browser's collapsing chrome never
 		   resizes it. */
 		--home-first-screen: min(100svh, var(--container-max));
-		/* ROOM TO SETTLE. "tristan" rests above the first row, and whether the page
-		   can scroll that far depends only on how much page follows the row (the
-		   opener's height cancels out), so a tall window would run out of scroll
-		   with the word short of its rest, or end with its letters cropped by the
-		   top of the window. So the first row and all that follows are at least a
-		   screen: main is the opener's band (lead + fold + gap, which sums to the
-		   first screen less the header, plus the step) and 100svh more. It counts
-		   none of the footer, which only leaves a little over. The cards are
-		   already taller on an ordinary window; a tall one gets the difference as
-		   space above the footer. */
-		min-block-size: calc(
-			100svh + var(--home-first-screen) + var(--space-4) - var(--home-header-h)
-		);
 	}
 
 	/* THE OPENER'S GEOMETRY, on the grid so the lockup and the videos card read
@@ -171,9 +158,6 @@ const props = Astro.props;
 
 	/* A printed page has no fold to clear and no scroll to settle over. */
 	@media print {
-		.home {
-			min-block-size: 0;
-		}
 		.home .ds-widget-grid {
 			--home-fold: 0px;
 		}
