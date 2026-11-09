@@ -25,6 +25,9 @@ export const VIDEOS = {
 	compact: ".wx-videos__compact",
 } as const;
 
+/** The 16:9 clip above "tristan", on phones and tablets only. */
+export const HOME_CLIP = ".home__clip";
+
 /** Load the homepage, at a size if given, and wait for the lockup's final face. */
 export async function openHome(page: Page, width?: number, height?: number): Promise<void> {
 	if (width !== undefined && height !== undefined) await page.setViewportSize({ width, height });

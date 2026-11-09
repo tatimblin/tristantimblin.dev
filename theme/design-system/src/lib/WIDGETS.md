@@ -169,7 +169,7 @@ injected before any script; `frame.ts` hands the probe its counters
 | Budget | What it checks | Spec |
 | --- | --- | --- |
 | CLS | ≤ 0.01 over a load and a scroll through every card | `load.spec.ts` |
-| WebGL contexts | at load: desktop 1, phone 1 | `load.spec.ts` |
+| WebGL contexts | at load: desktop 1, phone 2 | `load.spec.ts` |
 | Media requests | videos fetched in the load window (the first 6s) | `load.spec.ts` |
 | Scripts before the first scroll | how many files, in the load window, and which widget chunks may be among them | `load.spec.ts` |
 | Engine work | CDP layout and style-recalc counts over a fixed load window and over a scroll pass: a ceiling 1.5× the most seen | `load.spec.ts`, `scroll.spec.ts` |

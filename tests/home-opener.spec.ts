@@ -1,12 +1,13 @@
 import { test, expect, type Page } from "./fixtures/test";
-import { LOCKUP, VIDEOS, dockTravel, openHome, scrollAndSettle } from "./fixtures/opener";
+import { HOME_CLIP, LOCKUP, VIDEOS, dockTravel, openHome, scrollAndSettle } from "./fixtures/opener";
 
 /**
  * THE HOMEPAGE OPENER (src/layouts/HomeLayout.astro): "tristan", "& other stories"
- * and the intro in the left column, the videos card parked in the right one; on
- * scroll the word drifts, pins and wipes to solid, the rest of the lockup fades,
- * and the card drops into its 1×2 cell. The checks follow the opener's acceptance
- * list, in a real engine, at the desktop and phone sizes it was drawn for.
+ * and the intro in the left column, the videos card parked in the right one (on a
+ * phone, a stack: a 16:9 clip, the word, the copy, and the card below them); on
+ * scroll the word drifts, pins and wipes to solid, the rest of the lockup and the
+ * clip fade, and the card drops into its 1×2 cell. The checks follow the opener's
+ * acceptance list, in a real engine, at the desktop and phone sizes it was drawn for.
  * (JS-off parity and layout shift: hero-first-frame.spec.ts. One mechanism per
  * engine: scroll-fallback.spec.ts.)
  */
@@ -15,7 +16,7 @@ type Box = { x: number; y: number; w: number; h: number; right: number; bottom: 
 
 async function at(page: Page, y: number) {
 	await scrollAndSettle(page, y, "frames");
-	return page.evaluate(({ lockup, videos }) => {
+	return page.evaluate(({ lockup, videos, homeClip }) => {
 		// The cards carry the reveal's entrance (`translate`, a rise that may be held
 		// or mid-flight); the geometry here is the painted box without it.
 		const box = (el: Element | null, carrier: Element | null = el) => {
@@ -27,6 +28,7 @@ async function at(page: Page, y: number) {
 		};
 		const solid = document.querySelector<HTMLElement>(lockup.solid)!;
 		const sub = getComputedStyle(document.querySelector(lockup.sub)!);
+		const homeClipEl = document.querySelector(homeClip);
 		const m = /inset\(([\d.]+)%/.exec(getComputedStyle(solid).clipPath);
 		return {
 			word: box(document.querySelector(lockup.wordmark)),
@@ -38,13 +40,16 @@ async function at(page: Page, y: number) {
 			 *  the card, so it is the card that carries its entrance. */
 			picture: box(document.querySelector(videos.grid), document.querySelector(videos.card)),
 			first: box(document.querySelector('[data-widget="now-playing"]')),
+			/** The phone's clip above the word; a desktop has none. */
+			homeClip: homeClipEl ? box(homeClipEl) : (null as unknown as Box),
+			homeClipOpacity: homeClipEl ? Number(getComputedStyle(homeClipEl).opacity) : 0,
 			subOpacity: Number(sub.opacity),
 			/** The copy's distance below "tristan" when it simply follows the word. */
 			copyMargin: parseFloat(sub.marginBlockStart),
 			/** 1 = all outline, 0 = all solid. */
 			clip: m ? Number(m[1]) / 100 : getComputedStyle(solid).clipPath === "none" ? 0 : 1,
 		};
-	}, { lockup: LOCKUP, videos: VIDEOS }) as Promise<{
+	}, { lockup: LOCKUP, videos: VIDEOS, homeClip: HOME_CLIP }) as Promise<{
 		word: Box;
 		solid: Box;
 		tagline: Box;
@@ -52,6 +57,8 @@ async function at(page: Page, y: number) {
 		card: Box;
 		picture: Box;
 		first: Box;
+		homeClip: Box;
+		homeClipOpacity: number;
 		subOpacity: number;
 		copyMargin: number;
 		clip: number;
@@ -216,7 +223,7 @@ test.describe("desktop 1440×900", () => {
 });
 
 test.describe("phone 390×844", () => {
-	test("at rest: a 1×2 tile in the right column, the scrubber dormant, only 'tristan' over it", async ({ page }) => {
+	test("at rest: a 1×2 tile in the right column below the copy, the scrubber dormant", async ({ page }) => {
 		await openHome(page,390, 844);
 		const s = await at(page, 0);
 		// Right column, a 1×2 of the phone's cells. The word's box follows its glyph
@@ -224,12 +231,11 @@ test.describe("phone 390×844", () => {
 		expect(Math.abs(s.card.right - s.word.right)).toBeLessThan(s.word.w * 0.01);
 		expect(Math.abs(s.card.w - s.first.w)).toBeLessThan(1);
 		expect(s.card.h).toBeGreaterThan(2 * s.first.w);
-		// "tristan" spans the content width and runs over the picture; nothing else does.
-		expect(overlaps(s.word, s.picture)).toBe(true);
+		// The stack is clear of the picture; only the tile's empty header band
+		// reaches up beside the copy.
+		expect(overlaps(s.word, s.card), "the word is clear of the tile").toBe(false);
 		expect(overlaps(s.tagline, s.picture)).toBe(false);
 		expect(overlaps(s.intro, s.picture)).toBe(false);
-		expect(overlaps(s.tagline, s.card), "nor the tile's box").toBe(false);
-		expect(overlaps(s.intro, s.card), "nor the tile's box").toBe(false);
 		// The scrubber is faded out and locked until the card docks, and the tile
 		// takes no input.
 		const dormant = await page.evaluate(() => {
@@ -293,12 +299,22 @@ test.describe("phone 390×844", () => {
 			}
 		});
 
-		test(`at ${w}×${h} the word overlaps the picture's top by half a word, and only the word does`, async ({ page }) => {
+		test(`at ${w}×${h} it stacks the clip, the word, the copy, then the picture`, async ({ page }) => {
 			await openHome(page,w, h);
 			const s = await at(page, 0);
-			expect(Math.abs(s.word.bottom - s.picture.y - s.word.h / 2), "half a word over the picture").toBeLessThan(1.5);
+			// A 16:9 clip, 55% of the screen, on the word's left edge.
+			expect(Math.abs(s.homeClip.w - w * 0.55), "55% of the screen").toBeLessThan(1);
+			expect(Math.abs(s.homeClip.w / s.homeClip.h - 16 / 9), "16:9").toBeLessThan(0.02);
+			expect(Math.abs(s.homeClip.x - s.word.x), "on the word's left edge").toBeLessThan(1);
+			expect(s.homeClip.bottom, "above the word").toBeLessThanOrEqual(s.word.y);
+			// The copy at 75% of the screen, between the word and the picture.
+			expect(Math.abs(s.intro.w - w * 0.75), "the blurb is 75% of the screen").toBeLessThan(1);
+			expect(overlaps(s.tagline, s.word), "not the tagline on the word").toBe(false);
+			expect(overlaps(s.intro, s.word), "not the blurb on the word").toBe(false);
+			expect(s.intro.bottom, "the blurb ends above the picture").toBeLessThanOrEqual(s.picture.y);
 			expect(overlaps(s.tagline, s.picture), "not the tagline").toBe(false);
-			expect(overlaps(s.intro, s.picture), "not the blurb").toBe(false);
+			// In the right column.
+			expect(Math.abs(s.card.right - s.word.right)).toBeLessThan(s.word.w * 0.01);
 			// It still lands exactly in its cell.
 			const travel = await dockTravel(page);
 			const docked = await at(page, Math.ceil(travel));
@@ -307,37 +323,20 @@ test.describe("phone 390×844", () => {
 	}
 });
 
-test.describe("the copy on the picture's axis (compact step)", () => {
-	const mid = (a: { y: number }, b: { bottom: number }) => (a.y + b.bottom) / 2;
-
+test.describe("the copy under the word (compact step)", () => {
 	for (const [w, h] of [
+		[320, 568],
+		[360, 740],
+		[375, 667],
 		[390, 844],
 		[412, 915],
 		[430, 932],
 		[600, 900],
 		[768, 1024],
+		[844, 390],
 		[900, 1200],
 	] as const) {
-		test(`at ${w}×${h} the copy is centred on the picture, clear of the word and the picture`, async ({ page }) => {
-			await openHome(page,w, h);
-			const s = await at(page, 0);
-			expect(Math.abs(mid(s.tagline, s.intro) - mid(s.picture, s.picture)), "on the picture's midpoint").toBeLessThan(2);
-			expect(s.tagline.y - s.word.bottom, "below the word").toBeGreaterThanOrEqual(s.copyMargin - 0.5);
-			for (const b of [s.tagline, s.intro]) {
-				expect(overlaps(b, s.word), "not on the word").toBe(false);
-				expect(overlaps(b, s.picture), "not on the picture").toBe(false);
-			}
-			// The word still overlaps the picture by half its height.
-			expect(Math.abs(s.word.bottom - s.picture.y - s.word.h / 2)).toBeLessThan(1.5);
-		});
-	}
-
-	for (const [w, h, name] of [
-		[320, 568, "a phone whose copy is taller than the room"],
-		[360, 740, "a phone whose copy is taller than the room"],
-		[844, 390, "a short window, whose picture runs past the fold"],
-	] as const) {
-		test(`at ${w}×${h}, ${name}: the copy sits directly under the word`, async ({ page }) => {
+		test(`at ${w}×${h} the copy sits directly under the word, clear of the word and the picture`, async ({ page }) => {
 			await openHome(page,w, h);
 			const s = await at(page, 0);
 			expect(Math.abs(s.tagline.y - s.word.bottom - s.copyMargin), "directly under the word").toBeLessThan(1);
@@ -345,7 +344,7 @@ test.describe("the copy on the picture's axis (compact step)", () => {
 				expect(overlaps(b, s.word), "not on the word").toBe(false);
 				expect(overlaps(b, s.picture), "not on the picture").toBe(false);
 			}
-			expect(s.tagline.y, "on the first screen").toBeLessThan(h);
+			expect(s.intro.bottom, "above the picture").toBeLessThanOrEqual(s.picture.y);
 		});
 	}
 
@@ -400,6 +399,36 @@ test.describe("the copy on the picture's axis (compact step)", () => {
 		expect(Math.abs(rest.tagline.y - near.tagline.y - 60), "moves with the page").toBeLessThan(0.5);
 		const gone = await at(page, 100);
 		expect(gone.subOpacity).toBe(0);
+	});
+});
+
+test.describe("the clip above the name (compact step)", () => {
+	test("it scrolls with the page and is gone as it reaches the screen's top", async ({ page }) => {
+		await openHome(page,390, 844);
+		const rest = await at(page, 0);
+		expect(rest.homeClipOpacity).toBe(1);
+		const near = await at(page, 60);
+		expect(Math.abs(rest.homeClip.y - near.homeClip.y - 60), "moves with the page").toBeLessThan(0.5);
+		expect(near.homeClipOpacity, "the fade is under way").toBeLessThan(1);
+		expect(near.homeClipOpacity).toBeGreaterThan(0);
+		const gone = await at(page, Math.ceil(rest.homeClip.bottom));
+		expect(gone.homeClip.bottom, "at the screen's top").toBeLessThanOrEqual(0.5);
+		expect(gone.homeClipOpacity).toBe(0);
+	});
+
+	test("reduced motion: it simply scrolls, with no fade", async ({ browser }) => {
+		const context = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 390, height: 844 } });
+		const page = await context.newPage();
+		await openHome(page);
+		const s = await at(page, 100);
+		expect(s.homeClipOpacity).toBe(1);
+		expect(await page.locator(HOME_CLIP).evaluate((el) => el.getAnimations().length)).toBe(0);
+		await context.close();
+	});
+
+	test("a desktop has no clip", async ({ page }) => {
+		await openHome(page,1440, 900);
+		await expect(page.locator(HOME_CLIP)).toHaveCount(0);
 	});
 });
 
@@ -503,11 +532,11 @@ test.describe("the opener is its own first screen", () => {
 			await openHome(page,w, h);
 			const s = await at(page, 0);
 			const header = await page.evaluate(() => document.querySelector(".site-header")!.getBoundingClientRect().bottom);
-			// The group's top on a phone is the word over the picture, and its foot the
-			// picture's (the tile's empty bands aren't part of what's seen); on a desktop
-			// it is the tile's own (the lockup centres inside its height).
+			// The group's top on a phone is the clip's, and its foot the picture's (the
+			// tile's empty bands aren't part of what's seen); on a desktop it is the
+			// tile's own (the lockup centres inside its height).
 			const phone = w <= 900;
-			const top = phone ? s.word.y : Math.min(s.word.y, s.card.y);
+			const top = phone ? s.homeClip.y : Math.min(s.word.y, s.card.y);
 			const foot = phone ? s.picture.bottom : s.card.bottom;
 			const above = top - header;
 			const below = s.first.y - foot;
@@ -515,10 +544,11 @@ test.describe("the opener is its own first screen", () => {
 		});
 	}
 
-	test("a phone keeps the word's overlap of the picture, the empty header band parked above it", async ({ page }) => {
+	test("a phone starts the picture under the copy, the empty header band parked above it", async ({ page }) => {
 		await openHome(page,390, 844);
 		const s = await at(page, 0);
-		expect(Math.abs(s.picture.y - (s.word.y + s.word.h / 2))).toBeLessThan(1);
+		expect(s.picture.y, "under the copy").toBeGreaterThanOrEqual(s.intro.bottom);
+		expect(s.picture.y - s.intro.bottom, "by about a step").toBeLessThan(40);
 		expect(s.picture.y - s.card.y, "the header's empty band above the picture").toBeGreaterThan(40);
 	});
 
@@ -526,8 +556,8 @@ test.describe("the opener is its own first screen", () => {
 		await openHome(page,844, 390);
 		const s = await at(page, 0);
 		const header = await page.evaluate(() => document.querySelector(".site-header")!.getBoundingClientRect().bottom);
-		expect(s.word.y, "below the header").toBeGreaterThanOrEqual(header);
-		expect(s.word.y - header, "at the opener's top").toBeLessThan(10);
+		expect(s.homeClip.y, "below the header").toBeGreaterThanOrEqual(header);
+		expect(s.homeClip.y - header, "at the opener's top").toBeLessThan(10);
 	});
 
 	for (const [w, h, name] of [

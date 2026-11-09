@@ -13,7 +13,8 @@
 //               cell, rows 2–3 of the last column, by --home-dock-travel,
 //               stated below; the card's height includes the bands its
 //               header and footer take at the dock, so a phone's group is
-//               stated from the picture between them).
+//               stated from the picture between them). A phone or tablet also
+//               has a 16:9 clip above "tristan", which scrolls up and fades.
 //   the cards   everything else, dense-packed from the row after.
 //
 // One grid, so the opener sits on the cards' own columns: the lockup is two
@@ -26,6 +27,9 @@ import Layout from "./Layout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import StoriesHeading from "../components/StoriesHeading.astro";
 import WidgetGrid from "@whois/design-system/WidgetGrid";
+import { WIDGET_COMPACT_MQ } from "@whois/design-system/lib/breakpoints";
+import Deferred from "../components/Deferred.astro";
+import { media } from "../lib/media";
 // The cards' entrance: the motion (the scheduling is src/lib/reveal.ts, the
 // arming the script in the head below).
 import "../styles/reveal.css";
@@ -74,6 +78,20 @@ const props = Astro.props;
 	<SiteHeader />
 	<main class="container home">
 		<WidgetGrid cols={4}>
+			{/* Phones and tablets only: the grid is never created on a wider screen. */}
+			<Deferred media={WIDGET_COMPACT_MQ}>
+				<dotted-grid
+					class="home__clip"
+					aria-hidden="true"
+					src={media("videos/fabric.mp4")}
+					src-webm={media("videos/fabric.webm")}
+					rate="0.93"
+					max-dpr="1"
+					cell-size="4"
+					intro-delay="0"
+					intro="1200"
+				/>
+			</Deferred>
 			<StoriesHeading>
 				<slot name="intro" />
 			</StoriesHeading>
@@ -118,12 +136,12 @@ const props = Astro.props;
 		/* The tile's empty band under the picture, which the group doesn't count
 		   when it centres but the row still holds (phones, below). */
 		--home-tile-foot: 0px;
-		/* THE GROUP the opener centres: the parked tile and, on a phone, the word
-		   overlapping it from half a word above. The lockup's copy is shorter than
-		   the tile beside it, so this is the group's height, from the grid's own
-		   sizes and known before anything is measured. */
+		/* THE GROUP the opener centres: the parked tile and, on a phone, the clip,
+		   the word and the copy stacked above it. The desktop lockup is shorter
+		   than the tile beside it, so this is the group's height, from the grid's
+		   own sizes and known before anything is measured. */
 		--home-group-h: calc(var(--home-tile-drop) + var(--home-two-cells) - var(--home-tile-foot));
-		/* THE LOCKUP ON THE TILE'S AXIS (desktop; a phone overlaps them instead):
+		/* THE LOCKUP ON THE TILE'S AXIS (desktop; a phone stacks them instead):
 		   how far below the tile's top the word starts, so the shorter lockup
 		   centres beside it. The word's height is exact; the copy under it (the
 		   sub's margin, "& other stories" and two lines of intro) is stated as
@@ -196,7 +214,8 @@ const props = Astro.props;
 	.home stories-heading {
 		grid-column: 1 / -1;
 		grid-row: 1;
-		/* Over the parked carousel, which "tristan" overlaps on a phone. */
+		/* Over the parked carousel, whose empty header band the copy crosses on a
+		   phone, and which climbs past the held word. */
 		z-index: 2;
 		/* THE LEFT COLUMN: two cells and the gap — "tristan" fills it, the
 		   intro is set in it. The third column is the air between it and the
@@ -234,55 +253,72 @@ const props = Astro.props;
 		--sh-reveal: max(var(--space-2), var(--home-wipe-room));
 	}
 
-	/* PHONES AND TABLETS (the compact step, two columns): "tristan" spans both and
-	   runs over the top of the carousel's picture, parked half a word down the
-	   right column; the copy takes the left column beside it, and all of it, word
-	   to picture, centres as one (--home-group-h). The solid layer's backdrop is
-	   opaque, so it must stay off the picture: the tile sinks from under the word
-	   before the word pins, and a rise of a quarter of the word's height keeps
-	   them apart while the tile climbs back (tests/home-opener.spec.ts holds that
-	   clearance). The wipe's 100px cap is only its pace on a phone's short hold. */
+	/* PHONES AND TABLETS (the compact step, two columns), top to bottom: a 16:9
+	   clip, "tristan" across both columns, the copy at 75% of the screen, and
+	   the carousel parked in the right column clear below it. All of it centres
+	   as one (--home-group-h). The copy's height is stated, as the desktop's is,
+	   because where the word and the tile sit has to be a number before any
+	   script runs. The wipe's 100px cap is only its pace on a phone's short
+	   hold. */
 	@media (max-width: 900px) {
 		.home {
 			--home-lead: var(--space-2);
 		}
 		.home .ds-widget-grid {
-			--home-tile-drop: calc(var(--home-word-h) / 2 - var(--vc-head-band));
+			--home-clip-w: 55vw;
+			--home-clip-h: calc(var(--home-clip-w) * 9 / 16);
+			--home-clip-block: calc(var(--home-clip-h) + var(--space-4));
+			--home-lockup-drop: var(--home-clip-block);
+			/* The margin, "& other stories" and the intro's three lines. */
+			--home-copy-h: calc(var(--space-12) + var(--space-2));
+			/* The picture starts a step under the copy; its empty band is above it. */
+			--home-tile-drop: calc(
+				var(--home-lockup-drop) + var(--home-word-h) + var(--home-copy-h) + var(--space-4) -
+					var(--vc-head-band)
+			);
 			--home-tile-foot: var(--vc-foot-band);
-			--home-lockup-drop: 0px;
-			--home-drift: max(var(--space-6), var(--home-word-h) / 4);
-			/* The picture alone, between the tile's two empty bands. */
-			--home-picture-h: calc(var(--home-two-cells) - var(--vc-head-band) - var(--home-tile-foot));
 		}
 		.home stories-heading {
-			--sh-sub-w: var(--widget-cell);
+			--sh-sub-w: 75vw;
 			--sh-reveal: max(var(--space-2), min(100px, var(--home-wipe-room)));
+		}
+		.home__clip {
+			grid-column: 1 / -1;
+			grid-row: 1;
+			justify-self: start;
+			inline-size: var(--home-clip-w);
+			block-size: var(--home-clip-h);
+			--dotted-grid-height: var(--home-clip-h);
+			margin-block-start: var(--home-center-drop);
 		}
 	}
 
-	/* THE COPY ON THE PICTURE'S AXIS (the compact step, parked): .sh__sub is a box
-	   symmetric about the picture's middle, and flexbox centres the copy in it,
-	   so nothing estimates the copy's line count. It starts a margin under the
-	   word, which overlaps the picture by half a word, so it must stop as far
-	   above the foot: the picture less a word and two margins. Taller copy
-	   outgrows it from the top and sits directly under "tristan". Only the
-	   picture on the screen counts (100svh), so the copy never lands below the
-	   fold. Off where the card is docked in place (reduced motion, no scroll
-	   timelines) and in print. */
+	/* The narrowest phones wrap the intro to a fourth line. */
+	@media (max-width: 359px) {
+		.home .ds-widget-grid {
+			--home-copy-h: var(--space-13);
+		}
+	}
+
+	/* The clip scrolls with the page, gone by the time it reaches the screen's
+	   top. Gated as the lockup's fades are: without it the clip simply scrolls. */
 	@media screen and (max-width: 900px) and (prefers-reduced-motion: no-preference) {
 		@supports (animation-timeline: scroll()) {
-			.home .sh__sub {
-				display: flex;
-				flex-direction: column;
-				justify-content: center;
-				min-block-size: max(
-					0px,
-					min(
-						var(--home-picture-h),
-						100svh - var(--home-word-top) - var(--home-word-h) / 2
-					) - var(--home-word-h) - 2 * var(--space-3)
-				);
+			.home__clip {
+				animation-name: home-clip-fade;
+				animation-timing-function: linear;
+				animation-fill-mode: both;
+				animation-timeline: scroll(root block);
+				animation-range: 0px
+					calc(
+						var(--site-header-h) + var(--home-lead) + var(--home-center-drop) + var(--home-clip-h)
+					);
 			}
+		}
+	}
+	@keyframes home-clip-fade {
+		to {
+			opacity: 0;
 		}
 	}
 

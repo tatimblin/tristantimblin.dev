@@ -126,8 +126,8 @@ stories-heading {
 	white-space: nowrap;
 }
 
-/* Oversized, on a tight leading: its full line box would push the copy out of
-   the room beside a phone's picture. */
+/* Oversized, on a tight leading: its full line box would push the copy down,
+   off the height a phone's layout states for it. */
 .sh__amp {
 	font-size: 2.25em;
 	line-height: 0.5;
@@ -140,7 +140,7 @@ stories-heading {
 	margin-block-start: -1em;
 }
 
-/* The narrowest phones: a step down, or the line runs onto the picture. */
+/* The narrowest phones: a step down, so the line keeps to the copy's measure. */
 @media (max-width: 359px) {
 	.sh__tagline {
 		font-size: var(--font-size-4);
