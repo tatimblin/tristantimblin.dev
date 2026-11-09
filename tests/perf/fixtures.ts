@@ -25,7 +25,7 @@ const COVER = join(import.meta.dirname, "..", "fixtures", "poster-stub.jpg");
 /** The two pages every budget is held on. */
 export const DESKTOP = { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 };
 const { defaultBrowserType: _engine, ...pixel } = devices["Pixel 7"];
-/** A touch phone (no fine pointer, so no Lenis). */
+/** A touch phone. */
 export const MOBILE = pixel;
 
 /** A track two minutes into four, playing. */
@@ -208,11 +208,7 @@ export async function pageAge(page: Page, ms: number) {
 
 /** Scroll (instantly) to `y`, then let the scroll's work finish. */
 export async function scrollTo(page: Page, y: number) {
-	await page.evaluate((top) => {
-		const lenis = (window as unknown as { __lenis?: { scrollTo(y: number, o: object): void } }).__lenis;
-		if (lenis) lenis.scrollTo(top, { immediate: true, force: true });
-		else window.scrollTo({ top, behavior: "instant" });
-	}, y);
+	await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), y);
 	await page.waitForTimeout(300);
 }
 

@@ -136,8 +136,7 @@ content — keep it that way; it is what makes the containment safe.
   from `frame.ts` outside a widget), so the page has one loop that can stop.
 - **No scroll-blocking listeners.** A `wheel`, `touchstart` or `touchmove`
   listener is `{ passive: true }` unless it must `preventDefault`, and then it
-  goes on the smallest element that needs it, never on `window` (Lenis's own
-  are the one exception: smoothing the wheel is the point of it).
+  goes on the smallest element that needs it, never on `window`.
 - **Never resize the card from inside.** The grid sizes it.
 
 The build holds every one of these: see below.
@@ -182,9 +181,8 @@ injected before any script; `frame.ts` hands the probe its counters
 | Hidden tab | faked with `visibilitychange`: 0 frame callbacks, 0 rAF, 0 video frames, 0 DOM changes in any card | `idle.spec.ts` |
 | Inactive widget | a card out of sight changes no DOM and runs no frame callback | `idle.spec.ts` |
 | Reduced motion | settled anywhere: no frames of any kind | `idle.spec.ts` |
-| Lenis | 0 frames while idle; runs on the wheel; 0 again once settled | `idle.spec.ts` |
 | Long script | no animation frame holds 50ms of script during a scroll pass | `scroll.spec.ts` |
-| Blocking listeners | no non-passive wheel/touch listener but Lenis's own (found by identity) and the allowlisted ones, each with why | `scroll.spec.ts` |
+| Blocking listeners | no non-passive wheel/touch listener but the allowlisted ones, each with why | `scroll.spec.ts` |
 | Lifecycle | a view-transition round trip mounts each card once per load, and leaves the same observers, window/document listeners and frame callbacks behind every time | `lifecycle.spec.ts` |
 
 The long-script budget is the one in milliseconds. It is held on the SCRIPT

@@ -93,9 +93,8 @@ export const ENGINE = {
 export const SCROLL_SCRIPT_MS = 50;
 
 /**
- * Non-passive (scroll-blocking) wheel/touch listeners allowed besides Lenis's
- * own (which are found by identity, from window.__lenis). Each is matched on
- * the target's description and the event type, with the reason it must block.
+ * Non-passive (scroll-blocking) wheel/touch listeners allowed. Each is matched
+ * on the target's description and the event type, with the reason it must block.
  */
 export const BLOCKING_LISTENERS: Array<{ target: RegExp; type: string; why: string }> = [
 	{

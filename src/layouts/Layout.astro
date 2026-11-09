@@ -142,9 +142,6 @@ if (!hit) throw new Error(`Layout: "${hitPath ?? Astro.url.pathname}" is not a c
 			// the inline arming script in <head> owns the fail-visible backstop, so if this
 			// module never arrives the page simply shows everything.
 			import "../lib/reveal";
-			import Lenis from "lenis";
-			import "lenis/dist/lenis.css";
-			import { driveLenis } from "../lib/smooth-scroll";
 			// Page-view counting: GoatCounter, on the production host only.
 			import { startCounting } from "../lib/analytics/count";
 			// No halftone decodes video in a background tab.
@@ -155,46 +152,10 @@ if (!hit) throw new Error(`Layout: "${hitPath ?? Astro.url.pathname}" is not a c
 
 			declare global {
 				interface Window {
-					__lenis?: Lenis;
 					/** Set data-theme on <html> (defined inline in <head>). */
 					__setTheme: (theme: "light" | "dark") => void;
 				}
 			}
-
-			// Smooth scroll, initialized once and shared across view-transition
-			// navigations. Lenis drives the real window scroll (no transform hack), so it
-			// composes with the scroll timelines and <video-carousel> without changes
-			// to them.
-			function initLenis() {
-				if (window.__lenis) return window.__lenis;
-				// Honor reduced-motion: leave native scrolling untouched.
-				if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
-
-				// Wheel/trackpad only. Lenis 1.x keeps touch native (syncTouch off), so on a
-				// touch device it smooths NOTHING, so phones and tablets never create it;
-				// desktop wheel/trackpad smoothing is unchanged.
-				if (!window.matchMedia("(pointer: fine)").matches) return null;
-
-				// Subtle smoothing, close to native.
-				const lenis = new Lenis({ lerp: 0.18, smoothWheel: true });
-				window.__lenis = lenis;
-
-				// Its frames come from the page's scheduler, and only while it is
-				// smoothing a scroll: an idle page runs no loop for it
-				// (src/lib/smooth-scroll.ts).
-				driveLenis(lenis);
-				return lenis;
-			}
-
-			initLenis();
-
-			// After a view-transition swap, re-measure the new page and reset to top.
-			document.addEventListener("astro:after-swap", () => {
-				const lenis = window.__lenis;
-				if (!lenis) return;
-				lenis.scrollTo(0, { immediate: true });
-				lenis.resize();
-			});
 		</script>
 	</body>
 </html>
