@@ -90,7 +90,7 @@ test.describe("reveal — safety", () => {
 		// the page must be fully visible. This is the "blank page" regression guard.
 		const context = await browser.newContext({ javaScriptEnabled: false });
 		const page = await context.newPage();
-		await page.goto("/txt/mega-desk/");
+		await page.goto("/");
 
 		const state = await page.evaluate(() => {
 			const all = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
@@ -113,9 +113,11 @@ test.describe("reveal — safety", () => {
 		// Kill the images the coordinator waits on. Readiness can then never resolve
 		// normally, so this exercises the deadline + inline backstop — the branch that
 		// never runs in practice and where a permanently-hidden region would hide.
-		await page.route("**/*.{webp,png,jpg,jpeg,gif,mp4,webm}", (route) => route.abort());
-		await page.goto("/txt/mega-desk/");
+		await page.route("**/*.{webp,avif,png,jpg,jpeg,gif,mp4,webm}", (route) => route.abort());
+		await page.goto("/");
 
+		// A card is held until it is reached, so walk them all into view.
+		await walkPage(page);
 		await settleReveal(page);
 		const state = await readReveal(page);
 
@@ -452,17 +454,6 @@ test.describe("reveal — below-the-fold behaviour", () => {
 		expect(new Set(ios).size, "nothing made twice").toBe(ios.length);
 	});
 
-	test("a post's images share one observer", async ({ page }) => {
-		await countObservers(page);
-		await page.goto("/txt/mega-desk/");
-		await page.waitForFunction(
-			() => document.querySelector("[data-reveal]")?.hasAttribute("data-reveal-state") === true
-		);
-		const targets = await page.locator("[data-reveal]").count();
-		expect(targets).toBeGreaterThan(1);
-		expect((await made(page)).filter((k) => k === "0px 0px -10% 0px|0.2")).toHaveLength(1);
-	});
-
 	test("a card reached after the backstop still has its entrance", async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await page.goto("/");
@@ -631,20 +622,35 @@ test.describe("reveal — below-the-fold behaviour", () => {
 	});
 });
 
-test.describe("reveal — the /txt index", () => {
-	test("8. INDEX: /txt has no reveal targets and nothing hidden on a hard load", async ({
-		page,
-	}) => {
-		// The index is a plain list of links, with no images to wait for. The
-		// reveal is an ASSET-arrival mechanism — it holds a region back until
-		// its image has decoded — so the index carries no targets at all. This
-		// pins that: the coordinator has nothing to hold, and the page is fully
-		// visible on a hard load — the path tests 6 and 7 do not exercise, since
-		// ClientRouter tears the reveal down before a swapped page mounts.
+test.describe("reveal — home only", () => {
+	for (const path of ["/txt/", "/txt/mega-desk/"]) {
+		test(`8. ${path} has no reveal targets and nothing hidden on a hard load`, async ({ page }) => {
+			// The reveal belongs to the homepage's cards (HomeLayout): a written page
+			// carries no targets and is never armed.
+			await page.goto(path);
+			const state = await readReveal(page);
+			expect(state.total, "a written page should carry no reveal targets").toBe(0);
+			expect(state.armed).toBe(false);
+			expect(state.faded).toBe(0);
+		});
+	}
+
+	test("9. a soft navigation home does not arm the page", async ({ page }) => {
+		// ClientRouter re-runs an inline head script on a swap, and the arming script
+		// comes in with HomeLayout's head: it must stay to hard loads, or cached
+		// cards would blink out on the way home.
 		await page.goto("/txt/");
+		await page.evaluate(() => {
+			(window as unknown as { __noReload: boolean }).__noReload = true;
+			document.querySelector<HTMLAnchorElement>('a[href="/"]')!.click();
+		});
+		await page.waitForURL((u) => u.pathname === "/");
+		await page.waitForFunction(
+			() => document.querySelector('[data-reveal="row"]')?.getAttribute("data-reveal-state") === "in"
+		);
+		expect(await page.evaluate(() => (window as unknown as { __noReload?: boolean }).__noReload)).toBe(true);
 		const state = await readReveal(page);
-		expect(state.total, "the index should carry no reveal targets").toBe(0);
+		expect(state.armed).toBe(false);
 		expect(state.faded).toBe(0);
-		await expect(page.locator("a.stack__title").first()).toBeVisible();
 	});
 });

@@ -5,6 +5,7 @@
 import amc from "../../data/amc.json";
 import cache from "../../data/amc-films.json";
 import { asGenre, filmKey, type Genre } from "./genres";
+import { MONTHS } from "../../lib/format";
 
 /** One film as the client sees it: short keys, since all of them ship in the
  *  page. */
@@ -93,14 +94,12 @@ export function imdbHref(imdbId: string | null | undefined, name: string): strin
 		: `https://www.imdb.com/find/?q=${encodeURIComponent(name)}`;
 }
 
-const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-
 /** The showing's date as YYYY-MM-DD: the fetch's `iso`, or parsed from its
  *  display string ("January 10, 2024") for tickets fetched before it had one. */
 export function isoDate(movie: Movie): string | null {
 	if (movie.iso && /^\d{4}-\d{2}-\d{2}$/.test(movie.iso)) return movie.iso;
 	const m = String(movie.date ?? "").match(/^\s*([A-Za-z]{3})[A-Za-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/);
-	const month = m ? MONTHS.indexOf(m[1].toLowerCase()) : -1;
+	const month = m ? MONTHS.findIndex((name) => name.toLowerCase() === m[1].toLowerCase()) : -1;
 	if (!m || month < 0) return null;
 	return `${m[3]}-${String(month + 1).padStart(2, "0")}-${m[2].padStart(2, "0")}`;
 }

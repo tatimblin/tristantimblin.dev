@@ -29,7 +29,6 @@ import {
 	groupAt,
 	isUpcoming,
 	lerp,
-	MONTHS,
 	orders,
 	placeAtAngle,
 	smoothstep,
@@ -37,6 +36,7 @@ import {
 	type CapArc,
 } from "./arc";
 import type { Film } from "./amc";
+import { MONTHS } from "../../lib/format";
 
 type Mode = "date" | "genre";
 

@@ -63,7 +63,7 @@ import {
 	postHref,
 	readingStats,
 } from "../../lib/blog";
-import { formatReads, getPathStats } from "../../lib/pageviews";
+import { reads } from "../../lib/pageviews";
 
 type Entry = CollectionEntry<"txt"> | CollectionEntry<"demos">;
 
@@ -81,7 +81,7 @@ const rows = byDateDesc(posts).map((entry) => {
 			title: entry.data.title,
 			demo: true,
 			// Only a count: a demo has no category or word count.
-			meta: formatReads(getPathStats(href)?.reads, "views"),
+			meta: reads(href, "views"),
 			excerpt: entry.data.description,
 			action: "View",
 		};
@@ -89,13 +89,12 @@ const rows = byDateDesc(posts).map((entry) => {
 	const cat = entry.data.category ? categories[entry.data.category] : null;
 	const { words } = readingStats(entry.body);
 	const href = postHref(entry.id);
-	const reads = formatReads(getPathStats(href)?.reads);
 	return {
 		href,
 		date: entry.data.date,
 		title: entry.data.title,
 		demo: false,
-		meta: [cat?.label, `${words.toLocaleString("en-US")} words`, reads].filter(Boolean).join(" · "),
+		meta: [cat?.label, `${words.toLocaleString("en-US")} words`, reads(href)].filter(Boolean).join(" · "),
 		excerpt: entry.data.excerpt,
 		action: "Read",
 	};

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import committed from "../../data/pageviews.json";
 import { buildViews, emptyNote, formatDay, getReaderStats, isDrawable } from "./readers";
+import { formatCount } from "../../lib/format";
 
 const day = (date: string, visitors: number) => ({ date, visitors });
 
@@ -65,5 +66,12 @@ describe("the empty state", () => {
 	test("formatDay", () => {
 		expect(formatDay("2026-07-30")).toBe("Jul 30, 2026");
 		expect(formatDay("nope")).toBe("");
+	});
+
+	test("formatCount groups thousands whatever the machine's locale", () => {
+		expect(formatCount(0)).toBe("0");
+		expect(formatCount(999)).toBe("999");
+		expect(formatCount(1204)).toBe("1,204");
+		expect(formatCount(1234567)).toBe("1,234,567");
 	});
 });

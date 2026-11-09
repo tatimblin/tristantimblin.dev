@@ -6,7 +6,7 @@
  * geometric property may appear here.
  *
  * THE HIDDEN RULE REQUIRES TWO CONDITIONS: `html.reveal-armed` (set by the inline
- * head script in Layout.astro, which also schedules its own removal) AND the
+ * head script in HomeLayout.astro, which also schedules its own removal) AND the
  * absence of the revealed state. Either one going away reveals the content, so
  * every failure path — no JS, a bundle that 404s, a throw, a hung asset — lands on
  * VISIBLE. The un-armed document is the visible document. */

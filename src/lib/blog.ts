@@ -14,6 +14,7 @@
  * — never an emoji, which the old `icon` frontmatter field used to carry.
  */
 import type { IconName } from "@whois/design-system/icons";
+import { monthOf } from "./format";
 
 /** Where the /txt posts live, relative to the project root: the content
  *  collection's glob base, and the folder the markdown plugins
@@ -39,10 +40,12 @@ export type CategoryId = keyof typeof categories;
 export const categoryIds = Object.keys(categories) as [CategoryId, ...CategoryId[]];
 
 export const tagHref = (tag: string) => `/txt/tag/${tag}/`;
+/** A tag as words: `tag-name` printed `tag name`. */
+export const tagLabel = (tag: string) => tag.replace(/-/g, " ");
 export const postHref = (id: string) => `/txt/${id}/`;
 
 /** The demos (src/content/demos): full-screen experiments, listed among the
- *  posts but numbered on their own (`demo / 001`, postNumbers over the demos
+ *  posts but numbered on their own (`demo / 001`, postPlaces over the demos
  *  alone) and served at /demo/<id>/. */
 export const DEMOS_BASE = "./src/content/demos";
 export const demoHref = (id: string) => `/demo/${id}/`;
@@ -61,16 +64,14 @@ interface Dated {
 
 /** Newest first. */
 export function byDateDesc<T extends Dated>(posts: T[]): T[] {
-	return [...posts].sort(
-		(a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
-	);
+	return [...posts].sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 }
 
 /** Posts bucketed by year, newest year first, each bucket newest first. */
 export function groupByYear<T extends Dated>(posts: T[]): Array<{ year: number; posts: T[] }> {
 	const groups = new Map<number, T[]>();
 	for (const post of byDateDesc(posts)) {
-		const year = new Date(post.data.date).getUTCFullYear();
+		const year = post.data.date.getUTCFullYear();
 		const bucket = groups.get(year);
 		if (bucket) bucket.push(post);
 		else groups.set(year, [post]);
@@ -80,24 +81,28 @@ export function groupByYear<T extends Dated>(posts: T[]): Array<{ year: number; 
 		.map(([year, posts]) => ({ year, posts }));
 }
 
-export const isoDate = (d: Date) => new Date(d).toISOString().split("T")[0];
-
-/** The month: `feb`. UTC, not the build machine's zone, like every date
- *  here: frontmatter dates are bare YYYY-MM-DD, which parse as UTC midnight,
- *  and formatting those locally prints the day BEFORE anywhere west of UTC
- *  while the datetime attribute still says the right one. */
-const monthOf = (d: Date): string =>
-	new Date(d).toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toLowerCase();
+export const isoDate = (d: Date) => d.toISOString().split("T")[0];
 
 /**
- * Every post's chronological number, 1-based: the first post ever is 1, so a
- * new post takes the next number and the old ones keep theirs. Keyed by id,
- * over whatever list is given (the rendered one — in PROD the non-draft
- * posts). `padNo` prints it the way the post page does (`005`).
+ * Each entry's place in a list, by id. `newestFirst` is as getPosts and
+ * getDemos return it. `no` is its chronological number, 1-based: the first
+ * post ever is 1, so a new post takes the next number and the old ones keep
+ * theirs (`padNo` prints it). `prev` is the entry before it (older), `next`
+ * the one after (newer); null at either end.
  */
-export function postNumbers<T extends Dated & { id: string }>(posts: T[]): Map<string, number> {
-	const asc = byDateDesc(posts).reverse();
-	return new Map(asc.map((post, i) => [post.id, i + 1]));
+export function postPlaces<T extends { id: string }>(
+	newestFirst: T[],
+): Map<string, { no: number; prev: T | null; next: T | null }> {
+	return new Map(
+		newestFirst.map((post, i) => [
+			post.id,
+			{
+				no: newestFirst.length - i,
+				prev: newestFirst[i + 1] ?? null,
+				next: newestFirst[i - 1] ?? null,
+			},
+		]),
+	);
 }
 
 export const padNo = (no: number) => String(no).padStart(3, "0");
@@ -113,21 +118,9 @@ export function readingStats(body: string | undefined): { words: number; minutes
 	return { words, minutes: Math.max(1, Math.ceil(words / 200)) };
 }
 
-/** The post's chronological neighbours: `prev` is the one published before
- *  it (older), `next` the one after (newer); null at either end. */
-export function neighbours<T extends Dated & { id: string }>(
-	posts: T[],
-	id: string,
-): { prev: T | null; next: T | null } {
-	const asc = byDateDesc(posts).reverse();
-	const i = asc.findIndex((post) => post.id === id);
-	if (i === -1) return { prev: null, next: null };
-	return { prev: asc[i - 1] ?? null, next: asc[i + 1] ?? null };
-}
-
 /** The post page's date: `Feb 2, 2026`; UTC like the rest. */
 export const longDate = (d: Date) =>
-	new Date(d).toLocaleDateString("en-US", {
+	d.toLocaleDateString("en-US", {
 		month: "short",
 		day: "numeric",
 		year: "numeric",
@@ -137,22 +130,19 @@ export const longDate = (d: Date) =>
 /** A dotted date: `02.02.2026` — day, month, year, each padded; UTC like the
  *  rest. */
 export const dottedDate = (d: Date) => {
-	const date = new Date(d);
-	const day = String(date.getUTCDate()).padStart(2, "0");
-	const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-	return `${day}.${month}.${date.getUTCFullYear()}`;
+	const day = String(d.getUTCDate()).padStart(2, "0");
+	const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+	return `${day}.${month}.${d.getUTCFullYear()}`;
 };
 
 /** The /txt stack's date column: `02 / 26` — zero-padded month, two-digit
  *  year; UTC like the rest. */
 export const monthYear = (d: Date) => {
-	const date = new Date(d);
-	const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-	const year = String(date.getUTCFullYear() % 100).padStart(2, "0");
+	const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+	const year = String(d.getUTCFullYear() % 100).padStart(2, "0");
 	return `${month} / ${year}`;
 };
 
 /** A neighbouring post's date at the foot of a post: `jun 2025` (the caps
  *  voice uppercases it). */
-export const filedDate = (d: Date) =>
-	`${monthOf(d)} ${new Date(d).getUTCFullYear()}`;
+export const filedDate = (d: Date) => `${monthOf(d).toLowerCase()} ${d.getUTCFullYear()}`;

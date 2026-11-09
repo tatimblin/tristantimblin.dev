@@ -59,13 +59,6 @@ const MAX_STAGGER_STEPS = 3;
 
 const ARMED_CLASS = "reveal-armed";
 
-/** Mirrors the inline head script's guard, so a re-run can't double-arm. */
-declare global {
-	interface Window {
-		__revealArmed?: boolean;
-	}
-}
-
 /** Resolve when an image is decoded — or has definitively failed. A 404 must read
  *  as "ready" (show the alt text) rather than "wait forever". */
 function imageReady(img: HTMLImageElement): Promise<void> {

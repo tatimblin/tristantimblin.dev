@@ -13,6 +13,7 @@
 // before the beacon shipped was imported into GoatCounter and arrives through
 // the same fetch.
 import data from "../../data/pageviews.json";
+import { MONTHS } from "../../lib/format";
 
 export interface ReaderDay {
 	date: string; // YYYY-MM-DD, GoatCounter's day
@@ -193,29 +194,6 @@ export function buildViews(days: ReaderDay[]): RangeView[] {
 /** Whether a view has enough of a series to draw. */
 export const isDrawable = (view: RangeView): boolean =>
 	view.points.length > 1 && view.peak !== null;
-
-/**
- * 1,204 from 1204.
- *
- * Hand-grouped rather than toLocaleString: the build runs on a CI box whose
- * locale is not the reader's, and half of Europe would get 1.204 — which reads
- * as a decimal to everyone else. Same reason MONTHS below is a literal.
- */
-export function formatCount(value: number): string {
-	return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-/**
- * Month names, hand-held rather than reached for through Date +
- * toLocaleDateString: the build runs on a CI box whose locale and timezone are
- * not the reader's, and parsing a bare date as local time moves it a day in
- * half the world. Every date in this module stays a string for the same
- * reason. Same discipline as formatCount().
- */
-const MONTHS = [
-	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
 
 /**
  * "Aug 13–19" from a window's first and last day.
