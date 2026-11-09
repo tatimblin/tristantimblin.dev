@@ -56,3 +56,8 @@ export function formatReads(
 	if (typeof count !== "number" || !Number.isFinite(count) || count < MIN_SHOWN) return null;
 	return `${Math.floor(count).toLocaleString("en-US")} ${unit}`;
 }
+
+/** A page's all-time count as formatReads prints it, by its path. */
+export function reads(path: string, unit: "reads" | "views" = "reads"): string | null {
+	return formatReads(getPathStats(path)?.reads, unit);
+}

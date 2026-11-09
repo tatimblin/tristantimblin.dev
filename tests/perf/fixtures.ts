@@ -14,7 +14,7 @@
  */
 import { join } from "node:path";
 import { devices } from "@playwright/test";
-import { test as base, expect, type Page, type CDPSession } from "../fixtures/test";
+import { test as base, expect, lockupReady, type Page, type CDPSession } from "../fixtures/test";
 import { probe } from "./probe";
 
 /** src/widgets/now-playing/config.ts's SPOTIFY_SSE_URL. */
@@ -25,7 +25,7 @@ const COVER = join(import.meta.dirname, "..", "fixtures", "poster-stub.jpg");
 /** The two pages every budget is held on. */
 export const DESKTOP = { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 };
 const { defaultBrowserType: _engine, ...pixel } = devices["Pixel 7"];
-/** A touch phone (no fine pointer, so no Lenis). */
+/** A touch phone. */
 export const MOBILE = pixel;
 
 /** A track two minutes into four, playing. */
@@ -129,7 +129,20 @@ export async function during(page: Page, ms: number, act?: () => Promise<void>) 
 	for (const [k, v] of Object.entries(b.byLabel)) if (v - (a.byLabel[k] ?? 0)) labels[k] = v - (a.byLabel[k] ?? 0);
 	const rafBy: Record<string, number> = {};
 	for (const [k, v] of Object.entries(b.rafBy)) if (v - (a.rafBy[k] ?? 0)) rafBy[k] = v - (a.rafBy[k] ?? 0);
-	return { raf: b.raf - a.raf, rafBy, rvfc: b.rvfc - a.rvfc, calls: b.calls - a.calls, byLabel: labels, end: b };
+	const raf = b.raf - a.raf;
+	const calls = b.calls - a.calls;
+	return {
+		raf,
+		rafBy,
+		rvfc: b.rvfc - a.rvfc,
+		calls,
+		byLabel: labels,
+		/** Scheduler callbacks other than the CONTINUOUS ones. */
+		otherCalls: calls - CONTINUOUS.reduce((n, l) => n + (labels[l] ?? 0), 0),
+		/** rAF callbacks other than the scheduler's own frames. */
+		otherRaf: raf - (b.frames - a.frames),
+		end: b,
+	};
 }
 
 /** CDP's LayoutCount and RecalcStyleCount, now. */
@@ -179,7 +192,7 @@ export async function load(page: Page, alongside?: () => Promise<void>) {
 	const side = alongside?.();
 	side?.catch(() => {}); // rethrown below, by the await
 	await page.waitForLoadState("load");
-	await page.locator("stories-heading[data-ready]").waitFor({ state: "attached" });
+	await lockupReady(page);
 	await page.evaluate(() => document.fonts.ready);
 	const now = await page.evaluate(() => performance.now());
 	if (now < LOAD_SETTLES_MS) await page.waitForTimeout(LOAD_SETTLES_MS - now);
@@ -195,11 +208,7 @@ export async function pageAge(page: Page, ms: number) {
 
 /** Scroll (instantly) to `y`, then let the scroll's work finish. */
 export async function scrollTo(page: Page, y: number) {
-	await page.evaluate((top) => {
-		const lenis = (window as unknown as { __lenis?: { scrollTo(y: number, o: object): void } }).__lenis;
-		if (lenis) lenis.scrollTo(top, { immediate: true, force: true });
-		else window.scrollTo({ top, behavior: "instant" });
-	}, y);
+	await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), y);
 	await page.waitForTimeout(300);
 }
 

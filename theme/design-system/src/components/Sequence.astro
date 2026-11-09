@@ -104,7 +104,7 @@ const rows = steps.map((step) => (Array.isArray(step) ? step : [step]).map(resol
 
 <Card as="figure" headerAs="figcaption" title={caption} class={cx("ds-sequence", className)} data-prose-bleed="" {...rest}>
 	<div class="ds-sequence__stage" style={`--sequence-lanes: ${keys.length}`}>
-		<ul class="ds-sequence__actors">
+		<ul class="ds-sequence__actors ds-list-bare">
 			{keys.map((key) => <li class="ds-sequence__actor">
 					<span class="ds-mono ds-caps">{actors[key]}</span>
 				</li>)}
@@ -113,7 +113,7 @@ const rows = steps.map((step) => (Array.isArray(step) ? step : [step]).map(resol
 			<div class="ds-sequence__lifelines" aria-hidden="true">
 				{keys.map(() => <span />)}
 			</div>
-			<ol class="ds-sequence__steps">
+			<ol class="ds-sequence__steps ds-list-bare">
 				{
 					rows.map((items) => (
 						<li class="ds-sequence__step">

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "./fixtures/test";
+import { VIDEOS, cardLength, dockLift, dockTravel, openHome, scrollAndSettle } from "./fixtures/opener";
 
 /**
  * THE VIDEOS CARD PUTS ITS CHROME ON AS IT DOCKS (src/widgets/videos): the bare
@@ -10,10 +11,9 @@ import { test, expect, type Page } from "./fixtures/test";
 const DESKTOP = { width: 1440, height: 900 };
 
 async function open(page: Page, viewport = DESKTOP) {
-	await page.setViewportSize(viewport);
-	await page.goto("/");
+	await openHome(page, viewport.width, viewport.height);
 	await page
-		.locator(".wx-videos[data-widget-state=mounted] video-carousel[data-ready]")
+		.locator(`${VIDEOS.card}[data-widget-state=mounted] video-carousel[data-ready]`)
 		.first()
 		.waitFor({ state: "attached", timeout: 15_000 });
 }
@@ -26,36 +26,19 @@ const chrome = (page: Page) =>
 		return Number(getComputedStyle(el).opacity);
 	});
 
-const scrollTo = async (page: Page, y: number) => {
-	await page.evaluate((v) => window.scrollTo(0, v), y);
-	await page.waitForTimeout(250);
-};
-
-/** The dock's resolved travel, in px: --vc-dock-travel on a probe. */
-const travel = (page: Page) =>
-	page.evaluate(() => {
-		const host = document.querySelector<HTMLElement>(".wx-videos")!;
-		const probe = document.createElement("div");
-		probe.style.cssText = "position:absolute;visibility:hidden;height:var(--vc-dock-travel)";
-		host.appendChild(probe);
-		const h = probe.getBoundingClientRect().height;
-		probe.remove();
-		return h;
-	});
-
 test("the floating clip is bare; the chrome is on once the dock has landed", async ({ page }) => {
 	await open(page);
-	const end = await travel(page);
+	const end = await dockTravel(page);
 	expect(await chrome(page), "floating at scroll 0").toBe(0);
-	await scrollTo(page, Math.floor(end) - 100);
+	await scrollAndSettle(page, Math.floor(end) - 100);
 	expect(await chrome(page), "still floating, well before the fade").toBe(0);
-	await scrollTo(page, Math.floor(end) - 24);
+	await scrollAndSettle(page, Math.floor(end) - 24);
 	const mid = await chrome(page);
 	expect(mid, "fading mid-way through its run").toBeGreaterThan(0.2);
 	expect(mid).toBeLessThan(0.8);
-	await scrollTo(page, Math.ceil(end));
+	await scrollAndSettle(page, Math.ceil(end));
 	expect(await chrome(page), "docked").toBe(1);
-	await scrollTo(page, 3000);
+	await scrollAndSettle(page, 3000);
 	expect(await chrome(page), "past the dock").toBe(1);
 });
 
@@ -64,21 +47,11 @@ for (const viewport of [DESKTOP, { width: 390, height: 844 }, { width: 360, heig
 		page,
 	}) => {
 		await open(page, viewport);
-		const end = await travel(page);
-		const run = await page.evaluate(() => {
-			const host = document.querySelector<HTMLElement>(".wx-videos")!;
-			const probe = document.createElement("div");
-			probe.style.cssText = "position:absolute;visibility:hidden;height:var(--vc-chrome-run)";
-			host.appendChild(probe);
-			const h = probe.getBoundingClientRect().height;
-			probe.remove();
-			return h;
-		});
+		const end = await dockTravel(page);
+		const run = await cardLength(page, "--vc-chrome-run");
 		const offsetAt = async (y: number) => {
-			await scrollTo(page, y);
-			return page.evaluate(
-				() => new DOMMatrix(getComputedStyle(document.querySelector(".wx-videos")!).transform).m42,
-			);
+			await scrollAndSettle(page, y);
+			return dockLift(page);
 		};
 		const atStart = Math.abs(await offsetAt(Math.ceil(end - run)));
 		expect(atStart, "off its cell as the chrome starts").toBeLessThanOrEqual(6);
@@ -94,7 +67,7 @@ test("where the page ends before the travel does, the chrome lands with the dock
 	await open(page);
 	// Cut the page down to a few hundred px of scroll: the 100% half of min(travel, 100%).
 	await page.addStyleTag({
-		content: `.home { min-block-size: 0 !important; padding-block-end: 0 !important; }
+		content: `.home { padding-block-end: 0 !important; }
 			.home .ds-widget-grid > :not(stories-heading):not(.wx-videos) { display: none !important; }
 			.wx-videos { grid-row: 2 / span 1 !important; block-size: 40px; }
 			footer, .site-footer { display: none !important; }`,
@@ -106,18 +79,15 @@ test("where the page ends before the travel does, the chrome lands with the dock
 		window.scrollTo(0, max);
 		return { max };
 	});
-	const end = await travel(page);
+	const end = await dockTravel(page);
 	expect(state.max, "the page must end before the travel for this to mean anything").toBeLessThan(end);
 	expect(state.max).toBeGreaterThan(48);
 	await expect
 		.poll(() => page.evaluate(() => window.scrollY))
 		.toBe(state.max);
 	await expect.poll(() => chrome(page), { message: "the chrome lands at the page's end" }).toBe(1);
-	const lift = await page.evaluate(
-		() => new DOMMatrix(getComputedStyle(document.querySelector(".wx-videos")!).transform).m42,
-	);
-	expect(lift, "and the dock with it").toBeCloseTo(0, 0);
-	await scrollTo(page, state.max - 24);
+	expect(await dockLift(page), "and the dock with it").toBeCloseTo(0, 0);
+	await scrollAndSettle(page, state.max - 24);
 	const mid = await chrome(page);
 	expect(mid, "fading over the last 48px of the page").toBeGreaterThan(0.2);
 	expect(mid).toBeLessThan(0.8);
@@ -149,8 +119,8 @@ for (const viewport of [DESKTOP, { width: 1920, height: 1200 }, { width: 390, he
 		page,
 	}) => {
 		await open(page, viewport);
-		await page.locator(".wx-videos dotted-grid canvas").first().waitFor({ state: "attached" });
-		const end = Math.ceil(await travel(page));
+		await page.locator(`${VIDEOS.grid} canvas`).first().waitFor({ state: "attached" });
+		const end = Math.ceil(await dockTravel(page));
 		// A few sizes of scroll, floating to well past the dock: the canvas never changes size.
 		const positions = [0, Math.round(end / 2), end - 24, end, end + 400];
 		const states = [];
@@ -171,18 +141,10 @@ for (const viewport of [DESKTOP, { width: 1920, height: 1200 }, { width: 390, he
 		// The card's landing is unchanged, and the bands come from the real chrome.
 		const docked = states[3];
 		expect(Math.abs(docked.head.y - docked.card.y), "the header on the card's top edge").toBeLessThanOrEqual(1.5);
-		const bands = await page.evaluate(() => {
-			const card = document.querySelector<HTMLElement>(".wx-videos")!;
-			const probe = (name: string) => {
-				const p = document.createElement("div");
-				p.style.cssText = `position:absolute;visibility:hidden;height:var(${name})`;
-				card.appendChild(p);
-				const h = p.getBoundingClientRect().height;
-				p.remove();
-				return h;
-			};
-			return { head: probe("--vc-head-band"), foot: probe("--vc-foot-band") };
-		});
+		const bands = {
+			head: await cardLength(page, "--vc-head-band"),
+			foot: await cardLength(page, "--vc-foot-band"),
+		};
 		expect(Math.abs(bands.head - (docked.grid.y - docked.card.y)), "the stated header band").toBeLessThan(0.75);
 		expect(Math.abs(bands.foot - (docked.card.bottom - docked.grid.bottom)), "the stated footer band").toBeLessThan(0.75);
 	});
@@ -211,15 +173,15 @@ test("reduced motion and print show the chrome", async ({ page }) => {
 test("focus on the ruler brings the floating chrome on", async ({ page }) => {
 	await open(page);
 	expect(await chrome(page)).toBe(0);
-	await page.locator(".wx-videos__wide .vc__ruler").focus();
+	await page.locator(`${VIDEOS.wide} .vc__ruler`).focus();
 	expect(await chrome(page)).toBe(1);
 });
 
 for (const state of ["floating", "docked"] as const) {
 	test(`the ruler's years are hidden at rest and come on with the ruler (${state})`, async ({ page }) => {
 		await open(page);
-		if (state === "docked") await scrollTo(page, Math.ceil(await travel(page)));
-		const ruler = page.locator(".wx-videos__wide .vc__ruler");
+		if (state === "docked") await scrollAndSettle(page, Math.ceil(await dockTravel(page)));
+		const ruler = page.locator(`${VIDEOS.wide} .vc__ruler`);
 		const year = ruler.locator(".vc__tick-year").first();
 		await expect(year).toHaveCSS("opacity", "0");
 
@@ -257,7 +219,7 @@ test("the ruler's years keep their place, stay on in print, and do not fade unde
 }) => {
 	await page.emulateMedia({ reducedMotion: "reduce" });
 	await open(page);
-	const year = page.locator(".wx-videos__wide .vc__tick-year").first();
+	const year = page.locator(`${VIDEOS.wide} .vc__tick-year`).first();
 	await expect(year).toHaveCSS("opacity", "0");
 	await expect(year).toHaveCSS("transition-duration", "0s");
 	await expect(year).toBeAttached();
@@ -268,7 +230,7 @@ test("the ruler's years keep their place, stay on in print, and do not fade unde
 
 test("the header is the same band as its neighbours, and names the selected clip", async ({ page }) => {
 	await open(page);
-	await scrollTo(page, 800);
+	await scrollAndSettle(page, 800);
 	await page
 		.locator("[data-widget='now-playing'][data-reveal-state='in']")
 		.waitFor({ state: "attached" });
@@ -296,7 +258,7 @@ test("the header is the same band as its neighbours, and names the selected clip
 	expect(header.figcaptions, "the clip is named once").toBe(1);
 
 	// A keyboard step selects the next clip; the header follows.
-	const wide = page.locator(".wx-videos__wide");
+	const wide = page.locator(VIDEOS.wide);
 	const before = await wide.locator(".vc__ruler").getAttribute("aria-valuetext");
 	await wide.locator(".vc__ruler").focus();
 	await wide.locator(".vc__ruler").press("ArrowDown");
@@ -324,7 +286,7 @@ test("floating, the clip keeps its label and location where the docked card has 
 			return {
 				label: field("[data-vc-desc]"),
 				location: field("[data-vc-loc]"),
-				frame: Number(getComputedStyle(document.querySelector(".wx-videos__wide .vc__stage")!, "::after").opacity),
+				frame: Number(getComputedStyle(document.querySelector(".wx-videos__wide .wx-videos__surface")!).opacity),
 			};
 		});
 	const floating = await read();
@@ -332,7 +294,7 @@ test("floating, the clip keeps its label and location where the docked card has 
 	expect(floating.label.opacity).toBe(1);
 	expect(floating.location.opacity).toBe(1);
 
-	await scrollTo(page, 3000);
+	await scrollAndSettle(page, 3000);
 	const docked = await read();
 	expect(docked.frame, "framed once docked").toBe(1);
 	for (const key of ["label", "location"] as const) {
@@ -343,7 +305,7 @@ test("floating, the clip keeps its label and location where the docked card has 
 
 test("the footer sits on the card's foot, location left and date right", async ({ page }) => {
 	await open(page);
-	await scrollTo(page, 3000);
+	await scrollAndSettle(page, 3000);
 	const foot = await page.evaluate(() => {
 		const q = (s: string) => document.querySelector(`.wx-videos__wide ${s}`)!.getBoundingClientRect();
 		return {
@@ -359,9 +321,9 @@ test("the footer sits on the card's foot, location left and date right", async (
 
 test("the ruler keeps its gutter and scrubs while the card floats", async ({ page }) => {
 	await open(page);
-	const ruler = page.locator(".wx-videos__wide .vc__ruler");
+	const ruler = page.locator(`${VIDEOS.wide} .vc__ruler`);
 	const box = await ruler.boundingBox();
-	const card = await page.locator(".wx-videos").boundingBox();
+	const card = await page.locator(VIDEOS.card).boundingBox();
 	expect(box!.x, "in the gutter, outside the card").toBeGreaterThanOrEqual(card!.x + card!.width);
 	// Its span stays the whole cell (the stage's), not the shorter clip: it lines up
 	// with the docked frame, and its ends fade out so it reads fine beside the bare clip.

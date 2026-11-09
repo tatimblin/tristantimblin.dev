@@ -146,10 +146,10 @@ test.describe("/demo/sutro/", () => {
 		await serveEmbed(page);
 		await page.goto(DEMO);
 		const chip = page.locator("[data-demo-panel] [data-theme-toggle]");
-		await expect(chip).toHaveAttribute("aria-pressed", "true");
+		await expect(chip).toHaveAccessibleName("Switch to dark theme");
 		await chip.click();
 		await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-		await expect(chip).toHaveText("Light");
+		await expect(chip.getByText("Light", { exact: true })).toBeVisible();
 	});
 
 	test.describe("under reduced motion", () => {

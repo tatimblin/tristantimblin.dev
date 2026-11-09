@@ -92,9 +92,6 @@
 	display: flex;
 	gap: var(--vl-gap);
 	block-size: 100%;
-	margin: 0;
-	padding: 0;
-	list-style: none;
 	transform: translateX(calc(-1 * var(--vl-start, 0) * (var(--vl-col) + var(--vl-gap))));
 	transition: transform var(--duration-settle) var(--ease-reveal);
 }
@@ -303,9 +300,6 @@
 	   own — it rides the divider instead. */
 	grid-template-columns: auto minmax(0, 1fr) auto auto;
 	grid-auto-rows: var(--vl-row);
-	margin: 0;
-	padding: 0;
-	list-style: none;
 	/* Containing block for the bracket labels, which centre across the grid. */
 	position: relative;
 }

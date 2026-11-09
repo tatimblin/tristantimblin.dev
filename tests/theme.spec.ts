@@ -11,7 +11,7 @@ import { test, expect, type Page } from "./fixtures/test";
  * edge — and not only on the attribute, which could flip while nothing listened.
  *
  *   1. DEFAULT   a first visit is light: the attribute, and the cream page.
- *   2. TOGGLE    the footer chip flips it, says so (aria-pressed / the label),
+ *   2. TOGGLE    the footer chip flips it, says so (the label, the name),
  *                stores the choice, and the choice survives a reload.
  *   3. EDGE      a card is the design's box: a 1px DASHED edge at the 2.5px corner,
  *                both read from tokens (--border, --radius-box), in both themes.
@@ -61,14 +61,16 @@ test("the footer toggle flips the theme, says so, and the choice persists", asyn
 	await page.goto("/");
 	const chip = toggle(page);
 	await chip.scrollIntoViewIfNeeded();
-	// Pressed = light; the label names the theme a click switches TO.
-	await expect(chip).toHaveAttribute("aria-pressed", "true");
-	await expect(chip).toHaveAttribute("aria-label", "Switch to dark theme");
+	// The label and the name say the theme a click switches TO.
+	await expect(chip.getByText("Dark", { exact: true })).toBeVisible();
+	await expect(chip.getByText("Light", { exact: true })).toBeHidden();
+	await expect(chip).toHaveAccessibleName("Switch to dark theme");
 
 	await chip.click();
 	await expect(html(page)).toHaveAttribute("data-theme", "dark");
-	await expect(chip).toHaveAttribute("aria-pressed", "false");
-	await expect(chip).toHaveAttribute("aria-label", "Switch to light theme");
+	await expect(chip.getByText("Light", { exact: true })).toBeVisible();
+	await expect(chip.getByText("Dark", { exact: true })).toBeHidden();
+	await expect(chip).toHaveAccessibleName("Switch to light theme");
 	expect(await page.evaluate(() => localStorage.getItem("theme"))).toBe("dark");
 	await expect.poll(() => pageColour(page)).toBe(NIGHT);
 

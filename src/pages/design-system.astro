@@ -4,13 +4,10 @@
 import Layout from "../layouts/Layout.astro";
 
 import Box from "@whois/design-system/Box";
-import Flex from "@whois/design-system/Flex";
 import Grid from "@whois/design-system/Grid";
-import GridItem from "@whois/design-system/GridItem";
 import Text from "@whois/design-system/Text";
 import Heading from "@whois/design-system/Heading";
 import Body from "@whois/design-system/Body";
-import H1 from "@whois/design-system/H1";
 import H2 from "@whois/design-system/H2";
 import H3 from "@whois/design-system/H3";
 import H4 from "@whois/design-system/H4";
@@ -31,7 +28,6 @@ import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import Mono from "@whois/design-system/Mono";
 import Figure from "@whois/design-system/Figure";
 import Stat from "@whois/design-system/Stat";
-import Hairline from "@whois/design-system/Hairline";
 import TickRuler from "@whois/design-system/TickRuler";
 // The ruled screen: the boxed chip.
 import Chip from "@whois/design-system/Chip";
@@ -95,8 +91,7 @@ const edgeTokens = [
 	["--radius-box", "the one corner (2.5px): a card, a chip, a code block, an image"],
 	["--shadow-panel", "the 1px tinted ring under a panel (--panel-outline)"],
 	["--panel-header-bg", "a panel header's fill: the card fading into the first wash"],
-	["--code-bg", "a fenced block's slab (a pale wash by day, near-black at night), --code-fg on it and --code-border round it"],
-	["--code-snippet-background", "inline code's wash"],
+	["--code-bg", "a fenced block's slab (a pale wash by day, near-black at night), --code-fg on it and --border round it; inline code sits on --wash-1"],
 	["--link-color", "every link: underlined at rest, plain under the pointer"],
 	["--halftone-ink", "a halftone's default ink (-> --color-fg in bridge.css)"],
 	["--halftone-ink-soft", "the videos card's softer ink"],
@@ -195,7 +190,6 @@ const TOKEN_GROUPS: TokenGroup[] = [
 		controls: [
 			{ var: "--code-bg", label: "code-bg", type: "color" },
 			{ var: "--code-fg", label: "code-fg", type: "color" },
-			{ var: "--code-snippet-background", label: "code-snippet-bg", type: "color" },
 		],
 	},
 	{
@@ -260,7 +254,7 @@ const faces = [
 	{
 		token: "--font-heading",
 		name: "DM Sans Medium",
-		use: "every heading \u2014 the post title, section heads, DS H1\u2013H4, a bare h2; the hero lede",
+		use: "every heading \u2014 the post title, section heads, DS H2\u2013H4; the hero lede",
 		css: "font-family: var(--font-heading); font-weight: var(--font-heading-weight);",
 	},
 	{
@@ -291,7 +285,7 @@ const faces = [
 ---
 
 <Layout
-	title="Design System — Tristan Timblin"
+	title="Design System"
 	description="A living catalogue of the @whois design-system components, rendered in every variant, size, and state with a live token editor."
 	noindex
 >
@@ -348,7 +342,7 @@ const faces = [
 				ROLE token, not the family name. Each family ships discrete cuts, one <code>@font-face</code> per cut at its real weight, so a role carries a weight
 				companion — set both or the browser picks the cut for you.
 			</p>
-			<Flex direction="column" gap={3} alignItems="start">
+			<div class="ds-demo__col" style="gap: var(--space-3);">
 				{faces.map((f) => (
 					<div class="ds-demo__face">
 						<span class="ds-demo__face-token">{f.token}</span>
@@ -359,7 +353,7 @@ const faces = [
 						</span>
 					</div>
 				))}
-			</Flex>
+			</div>
 		</section>
 
 		<section class="ds-demo__section">
@@ -368,30 +362,30 @@ const faces = [
 				0–9, each <code>--font-size-N</code>: 12 / 14 / 16 / 18 / 20 / 24 / 32 / 44 / 72.
 				There is no 2 — the scale has no such token. 8 and 9 are the display steps; <code>Heading</code> reaches them as sizes 5 and 6.
 			</p>
-			<Flex direction="column" gap={2} alignItems="start">
+			<div class="ds-demo__col" style="gap: var(--space-2);">
 				{textSizes.map((s) => (
 					<Text size={s}>size {s} — The quick brown fox</Text>
 				))}
-			</Flex>
+			</div>
 		</section>
 
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Text — variants (color)</Heading>
-			<Flex direction="column" gap={1} alignItems="start">
+			<div class="ds-demo__col" style="gap: var(--space-1);">
 				{textVariants.map((v) => (
 					<Text variant={v} size={4}>variant {v}</Text>
 				))}
-			</Flex>
+			</div>
 		</section>
 
 
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Text — families</Heading>
-			<Flex direction="column" gap={1} alignItems="start">
+			<div class="ds-demo__col" style="gap: var(--space-1);">
 				{families.map((f) => (
 					<Text family={f} size={4}>family {f} — AaBbCc 123</Text>
 				))}
-			</Flex>
+			</div>
 		</section>
 
 		<section class="ds-demo__section">
@@ -401,13 +395,13 @@ const faces = [
 				tracking for a run that should sit like a paragraph without being one. <code>caps</code> composes the caps role. <code>truncate</code> is one line,
 				ellipsised.
 			</p>
-			<Flex direction="column" gap={2} alignItems="start">
+			<div class="ds-demo__col" style="gap: var(--space-2);">
 				<Text spaced size={4}>spaced — the body role's leading and tracking</Text>
 				<Text caps size={1} variant="secondary">caps — the uppercase label role</Text>
 				<div style="width:220px; border: var(--border);">
 					<Text truncate size={4}>truncate this very long line that overflows its container</Text>
 				</div>
-			</Flex>
+			</div>
 		</section>
 
 		<section class="ds-demo__section">
@@ -443,10 +437,10 @@ const faces = [
 				wants the mono. Roboto Mono sets every glyph on one advance already. DM Sans
 				ships <code>liga</code> and <code>kern</code>; the mono needs neither.
 			</p>
-			<Flex direction="column" gap={2} alignItems="start">
+			<div class="ds-demo__col" style="gap: var(--space-2);">
 				<Text caps family="ui" size={1}>ds-caps · section mark</Text>
 				<span style="font-size: var(--font-size-0); color: var(--text-tertiary);">--font-size-0 · the caption step, below the scale's 14px floor</span>
-			</Flex>
+			</div>
 		</section>
 
 		{/* INSTRUMENT UI: tokens + voices --------------------------------- */}
@@ -506,7 +500,7 @@ const faces = [
 						) : name === "--shadow-panel" ? (
 							<span class="ds-demo__swatch" style="box-shadow: var(--shadow-panel); background: var(--card-background); border: var(--border)" />
 						) : name === "--code-bg" ? (
-							<span class="ds-demo__swatch ds-demo__swatch--on" style="background: var(--code-bg); color: var(--code-fg); border: var(--code-border)">{"{}"}</span>
+							<span class="ds-demo__swatch ds-demo__swatch--on" style="background: var(--code-bg); color: var(--code-fg); border: var(--border)">{"{}"}</span>
 						) : name === "--link-color" ? (
 							<span class="ds-demo__swatch ds-demo__swatch--on" style="background: none; color: var(--link-color); text-decoration: var(--link-decoration); text-underline-offset: var(--link-underline-offset)">Aa</span>
 						) : (
@@ -517,7 +511,7 @@ const faces = [
 					</div>
 				))}
 			</div>
-			<h2 class="ds-demo__h ds-demo__h--sub">Both themes — the same box on each page</h2>
+			<Heading as="h2" size={1} variant="secondary" class="ds-demo__h ds-demo__h--sub">Both themes — the same box on each page</Heading>
 			<p class="ds-demo__note">
 				The theme is one attribute, <code>data-theme="light|dark"</code> on <code>&lt;html&gt;</code> (light by default, the footer toggle stores the choice
 				in <code>localStorage.theme</code>); each palette is a file
@@ -533,7 +527,7 @@ const faces = [
 							<CardBody>
 								<div class="ds-prose ds-demo__edge-prose">
 									<p>
-										Body in the mono with a <a href="#edges">link in --link-color</a> and <code>inline code</code> on its wash.
+										Body in the mono with a <Anchor href="#edges">link in --link-color</Anchor> and <code>inline code</code> on its wash.
 									</p>
 									<pre><code>const edge = "var(--border)";</code></pre>
 								</div>
@@ -551,7 +545,7 @@ const faces = [
 				it was a monospace; the classes and the component keep it). <code>caps</code> is the panel
 				label (the default), <code>text</code> the quiet sentence case, <code>value</code> a figure at label size. Sizes 0 / 1; tones override the variant's colour; <code>truncate</code> ellipsises. Inside a WidgetGrid the size follows the cell.
 			</p>
-			<Flex direction="column" gap={3} alignItems="start">
+			<div class="ds-demo__col" style="gap: var(--space-3);">
 				<Mono>caps · the panel label</Mono>
 				<Mono variant="text">text · sentence case, the quiet ink</Mono>
 				<Mono variant="value">value · 1,457 / 90% / 12:04</Mono>
@@ -560,7 +554,7 @@ const faces = [
 				<Mono tone="primary">tone primary</Mono>
 				<Mono tone="accent">tone accent</Mono>
 				<Mono as="a" variant="text" href="#">as a link · @handle</Mono>
-			</Flex>
+			</div>
 		</section>
 
 		<section class="ds-demo__section">
@@ -572,35 +566,28 @@ const faces = [
 				mono, the value at the next step — the dashboard's stat pair; several sit in a
 				row.
 			</p>
-			<Flex gap={6} wrap="wrap" alignItems="end">
+			<div class="ds-demo__row" style="gap: var(--space-6); align-items: end;">
 				<Figure unit="contributions">1,457</Figure>
 				<Figure unit="miles">1,551</Figure>
-			</Flex>
-			<Flex gap={6} wrap="wrap" alignItems="end" style="margin-top: var(--space-5);">
+			</div>
+			<div class="ds-demo__row" style="gap: var(--space-6); align-items: end; margin-top: var(--space-5);">
 				<Stat value="90%" label="Allocated" />
 				<Stat value="10%" label="Reserve" />
 				<Stat value="1,034" label="rides" />
-			</Flex>
+			</div>
 			<p class="ds-demo__note" style="margin-top: var(--space-6);">
 				<code>Stat variant="numeral"</code>: the spec sheet's pair — the value big and
 				large (<code>--font-display</code>, DM Sans Medium, at <code>--font-size-8</code>)
 				with a caps label beside it on the numeral's top edge. The label wraps: a <code>&lt;br&gt;</code>, or a title and its meta in the <code>label</code> slot.
 			</p>
-			<Flex gap={6} wrap="wrap" alignItems="start">
+			<div class="ds-demo__row" style="gap: var(--space-6); align-items: start;">
 				<Stat variant="numeral" value="05" label="Posts" />
 				<Stat variant="numeral" value="15"><Fragment slot="label">Min<br />read</Fragment></Stat>
 				<Stat variant="numeral" value="04" label="Topics" />
 				<Stat variant="numeral" value="05">
 					<Fragment slot="label">Asserting on<br />agent behavior<br /><Mono tone="tertiary">Feb 2026 · 554 w</Mono></Fragment>
 				</Stat>
-			</Flex>
-		</section>
-
-		<section class="ds-demo__section">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Hairline</Heading>
-			<p class="ds-demo__note">A rule: the one edge (<code>--border</code>, dashed) drawn across its container. <code>variant="fade"</code> opts into the divider that fades out at both ends (<code>--hairline-fade</code>, a solid 1px gradient). An <code>hr</code>, or <code>as="span"</code> when decorative.</p>
-			<Hairline />
-			<Hairline variant="fade" style="margin-top: var(--space-4);" />
+			</div>
 		</section>
 
 		<section class="ds-demo__section">
@@ -629,7 +616,7 @@ const faces = [
 		</section>
 
 		<section class="ds-demo__section">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Heading + H1–H4 · EM · Strong</Heading>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Heading + H2–H4 · EM · Strong</Heading>
 			<p class="ds-demo__note">
 				Heading sizes 1–4 are the DS's (one Text step up each); 5 (44px) and 6 (72px)
 				are the display steps, and with <code>responsive</code> a heading steps down
@@ -637,7 +624,6 @@ const faces = [
 				(44 / 32), <code>size={"{6}"} responsive</code> the post title (72 / 44).
 				Resize to see the last two step.
 			</p>
-			<H1>H1 heading</H1>
 			<H2>H2 heading</H2>
 			<H3>H3 heading</H3>
 			<H4>H4 heading</H4>
@@ -654,7 +640,7 @@ const faces = [
 				Flat: primary is the accent (the one action a card asks for), secondary an ink
 				wash (the reference's <code>Deploy ▸</code>), tertiary nothing until pointed at. <code>rounded</code> makes a pill button.
 			</p>
-			<Flex gap={3} wrap="wrap">
+			<div class="ds-demo__row" style="gap: var(--space-3);">
 				<Button variant="primary">Primary</Button>
 				<Button variant="secondary">Secondary</Button>
 				<Button variant="tertiary">Tertiary</Button>
@@ -663,7 +649,7 @@ const faces = [
 				<Button variant="secondary" rounded>Tap</Button>
 				<Button variant="secondary"><Icon name="chevron" slot="end-icon" />Deploy</Button>
 				<Button variant="primary" disabled>Disabled</Button>
-			</Flex>
+			</div>
 		</section>
 
 		<section class="ds-demo__section">
@@ -672,22 +658,30 @@ const faces = [
 				<code>secondary</code> (the default) is an ink wash in a hairline; <code>outline</code> the hairline alone, the ruled screen's. Sizes <code>xs</code> (the pill-height one that fits a card header's meta slot), <code>sm</code>, <code>lg</code>, <code>xl</code> (the one big control a screen
 				has). <code>rounded</code> is the round button of the instrument UI.
 			</p>
-			<Flex gap={3} wrap="wrap" alignItems="center">
+			<div class="ds-demo__row" style="gap: var(--space-3);">
 				<IconButton size="xs" rounded aria-label="previous"><Icon name="arrow" size={3} /></IconButton>
 				<IconButton size="sm" aria-label="chevron"><Icon name="chevron" /></IconButton>
 				<IconButton size="lg" aria-label="copy"><Icon name="copy" /></IconButton>
 				<IconButton size="xl" rounded aria-label="pause"><Icon name="pause" /></IconButton>
 				<IconButton size="sm" rounded aria-label="minus"><Icon name="chevron" /></IconButton>
 				<IconButton size="lg" rounded aria-label="play"><Icon name="play" /></IconButton>
-			</Flex>
+			</div>
 			<p class="ds-demo__note" style="margin-top: var(--space-5);">
 				<code>variant="outline"</code> with <code>rounded</code> is the ruled
 				screen's CIRCLED control: the hairline alone, the wash under the pointer.
 			</p>
-			<Flex gap={3} wrap="wrap" alignItems="center">
+			<div class="ds-demo__row" style="gap: var(--space-3);">
 				<IconButton variant="outline" rounded size="sm" aria-label="chevron"><Icon name="chevron" /></IconButton>
 				<IconButton variant="outline" rounded size="lg" aria-label="copy"><Icon name="copy" /></IconButton>
-			</Flex>
+			</div>
+			<p class="ds-demo__note" style="margin-top: var(--space-5);">
+				<code>variant="bare"</code> is the glyph alone, for a card header's meta
+				slot: no box, sized by the glyph, its ink set with <code>--button-color</code>.
+			</p>
+			<div class="ds-demo__row" style="gap: var(--space-3);">
+				<IconButton variant="bare" aria-label="copy"><Icon name="copy" /></IconButton>
+				<IconButton variant="bare" style="--button-color: var(--accent);" aria-label="chevron"><Icon name="chevron" /></IconButton>
+			</div>
 		</section>
 
 		{/* CARD ----------------------------------------------------------- */}
@@ -735,14 +729,14 @@ const faces = [
 			<p class="ds-demo__note">
 				Caps mono in a capsule. <code>subtle</code> (the default) is the header pill, <code>outline</code> the quiet link or toggle (its edge is the Chip's). As a <code>button</code> or <code>a</code> it is a pill button.
 			</p>
-			<Flex gap={2} wrap="wrap" alignItems="center">
+			<div class="ds-demo__row" style="gap: var(--space-2);">
 				<Pill><Icon name="check" />low risk</Pill>
 				<Pill variant="outline">0/360°</Pill>
 				<Pill as="button" type="button">tap</Pill>
 				<Pill as="button" type="button" variant="outline">skip</Pill>
 				<Pill as="a" href="#" variant="outline">home</Pill>
 				<Pill as="button" type="button" disabled>disabled</Pill>
-			</Flex>
+			</div>
 		</section>
 
 		<section class="ds-demo__section" id="chip">
@@ -754,7 +748,7 @@ const faces = [
 				— and fills it with the ink, so what a reader is told and what is drawn cannot
 				fall out of step. The TAGS: <code>tone="accent"</code> draws the edge and caps in the accent, and <code>variant="arrow"</code> is a filled tag cut to a chevron — the ink, or the accent with <code>tone="accent"</code>.
 			</p>
-			<Flex gap={2} wrap="wrap" alignItems="center">
+			<div class="ds-demo__row" style="gap: var(--space-2);">
 				<Chip>projects</Chip>
 				<Chip as="a" href="#" aria-current="page">all</Chip>
 				<Chip as="a" href="#">programming</Chip>
@@ -763,12 +757,12 @@ const faces = [
 				<Chip as="button" type="button">off</Chip>
 				<Chip as="button" type="button" disabled>disabled</Chip>
 				<Chip as="a" href="#">programming <Mono variant="value">2</Mono></Chip>
-			</Flex>
-			<Flex gap={2} wrap="wrap" alignItems="center" data-chip-tags>
+			</div>
+			<div class="ds-demo__row" style="gap: var(--space-2);" data-chip-tags>
 				<Chip tone="accent">telematic</Chip>
 				<Chip variant="arrow">replace</Chip>
 				<Chip variant="arrow" tone="accent">replace</Chip>
-			</Flex>
+			</div>
 		</section>
 
 		{/* HAIRLINE GRAPHICS ---------------------------------------------- */}
@@ -779,10 +773,10 @@ const faces = [
 				stretch, or split into share segments, which take the rank ramp in order unless
 				given a colour — the github tile's language ruler.
 			</p>
-			<Flex direction="column" gap={5} alignItems="stretch">
+			<div class="ds-demo__col" style="gap: var(--space-5); align-items: stretch;">
 				<TickRuler />
 				<TickRuler segments={[{ share: 46 }, { share: 29 }, { share: 14 }, { share: 6 }, { share: 5 }]} />
-			</Flex>
+			</div>
 		</section>
 
 		<section class="ds-demo__section">
@@ -795,12 +789,12 @@ const faces = [
 				ring, takes a crosshair once the script has made it a slider, and its bars
 				are moved with <code>markBar()</code> from <code>lib/bar-graph</code>.
 			</p>
-			<Flex gap={6} wrap="wrap" alignItems="end">
+			<div class="ds-demo__row" style="gap: var(--space-6); align-items: end;">
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} /></div>
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} mark={9} interactive label="An interactive graph, marked at nine" /></div>
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} mark="last" /></div>
 				<div style="inline-size: 240px;"><BarGraph values={graphValues} max={40} mark={7} height="var(--space-8)" label="Sixteen readings, rising" /></div>
-			</Flex>
+			</div>
 		</section>
 
 
@@ -840,7 +834,7 @@ const faces = [
 				strengths, the big ones in the accent. <code>fit="width"</code> (default) shares the
 				width; <code>fit="height"</code> fills a given height and packs to the end.
 			</p>
-			<Flex direction="column" gap={5} alignItems="stretch">
+			<div class="ds-demo__col" style="gap: var(--space-5); align-items: stretch;">
 				<TileGrid cols={16} cells={steps.map((on) => ({ lit: on }))} />
 				<TileGrid cols={16} cells={[0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 0, 1, 1, 2, 4].map((level) => ({ level: level as 0 | 1 | 2 | 3 | 4 }))} />
 				<div style="block-size: var(--space-12); display: flex;">
@@ -850,7 +844,7 @@ const faces = [
 						))}
 					</TileGrid>
 				</div>
-			</Flex>
+			</div>
 		</section>
 
 		<section class="ds-demo__section">
@@ -899,10 +893,10 @@ const faces = [
 				<Widget size="1x1" title="infra #1">
 					<Pill slot="meta"><Icon name="check" />low risk</Pill>
 					<CardBody>
-						<Flex gap={5}>
+						<div class="ds-demo__row" style="gap: var(--space-5); flex-wrap: nowrap;">
 							<Stat value="90%" label="Allocated" />
 							<Stat value="10%" label="Reserve" />
-						</Flex>
+						</div>
 						<Legend style="margin-block-start: auto;" items={[{ label: "A1", value: "10%" }, { label: "A2", value: "20%" }, { label: "A3", value: "70%" }]} />
 					</CardBody>
 				</Widget>
@@ -910,11 +904,11 @@ const faces = [
 					<Mono slot="meta" variant="text">4 / 4</Mono>
 					<CardBody>
 						<TileGrid cols={16} cells={steps.map((on) => ({ lit: on }))} />
-						<Flex gap={4} alignItems="center" justifyContent="center" style="margin-block-start: auto;">
+						<div class="ds-demo__row" style="gap: var(--space-4); flex-wrap: nowrap; justify-content: center; margin-block-start: auto;">
 							<IconButton size="sm" rounded aria-label="slower"><Icon name="chevron" /></IconButton>
 							<IconButton size="xl" rounded aria-label="pause"><Icon name="pause" /></IconButton>
 							<IconButton size="sm" rounded aria-label="faster"><Icon name="chevron" /></IconButton>
-						</Flex>
+						</div>
 					</CardBody>
 				</Widget>
 			</WidgetGrid>
@@ -970,7 +964,7 @@ const faces = [
 				<Body>After a rule. <del>Struck text</del> steps back to the tertiary ink.</Body>
 			</Prose>
 
-			<h2 class="ds-demo__h ds-demo__h--sub">Prose — ruled: sections on the four-column grid</h2>
+			<Heading as="h2" size={1} variant="secondary" class="ds-demo__h ds-demo__h--sub">Prose — ruled: sections on the four-column grid</Heading>
 			<p class="ds-demo__note">
 				<code>variant="ruled"</code> is the post page's column: the body cut into
 				sections at each h2, each a grid row under a hairline with its number and
@@ -1189,7 +1183,7 @@ assertions:
 
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Anchor — variants</Heading>
-			<Flex direction="column" gap={2} alignItems="start">
+			<div class="ds-demo__col" style="gap: var(--space-2);">
 				<Anchor href="#">plain anchor</Anchor>
 				<Anchor href="#" underline>underline</Anchor>
 				<Anchor href="#" underline="always">underline always</Anchor>
@@ -1198,7 +1192,7 @@ assertions:
 				<Anchor href="#" arrow="right">arrow right</Anchor>
 				<Anchor href="#" arrow="left">arrow left</Anchor>
 				<Anchor href="https://example.com" external>external</Anchor>
-			</Flex>
+			</div>
 		</section>
 
 		{/* LIST + INLINECODE ---------------------------------------------- */}
@@ -1222,54 +1216,45 @@ assertions:
 		{/* ICON ----------------------------------------------------------- */}
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Icon — names</Heading>
-			<Flex gap={4} wrap="wrap" alignItems="center">
+			<div class="ds-demo__row" style="gap: var(--space-4);">
 				{iconNames.map((n) => (
-					<Flex direction="column" gap={1} alignItems="center">
+					<div class="ds-demo__col" style="gap: var(--space-1); align-items: center;">
 						<Icon name={n} size={6} variant="primary" />
 						<Text size={1} variant="tertiary">{n}</Text>
-					</Flex>
+					</div>
 				))}
-			</Flex>
-			<h2 class="ds-demo__h" style="margin-top: var(--space-5);">Icon — variants (colors)</h2>
-			<Flex gap={4} wrap="wrap" alignItems="center">
+			</div>
+			<Heading as="h2" size={4} class="ds-demo__h" style="margin-top: var(--space-5);">Icon — variants (colors)</Heading>
+			<div class="ds-demo__row" style="gap: var(--space-4);">
 				{iconVariants.map((v) => (
 					<Icon name="info" size={6} variant={v} />
 				))}
-			</Flex>
+			</div>
 		</section>
 
 		{/* LAYOUT + A11Y -------------------------------------------------- */}
 		<section class="ds-demo__section">
-			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Box / Flex (foundation)</Heading>
-			<Flex gap={2} justifyContent="space-between"
-				style="border: var(--border); padding: var(--space-2);">
-				<Box style="background:var(--blue-400); padding: var(--space-2);">flex a</Box>
-				<Box style="background:var(--blue-500); padding: var(--space-2);">flex b</Box>
-				<Box style="background:var(--blue-600); padding: var(--space-2);">flex c</Box>
-			</Flex>
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Box (foundation)</Heading>
+			<div class="ds-demo__row" style="gap: var(--space-2); flex-wrap: nowrap; justify-content: space-between; border: var(--border); padding: var(--space-2);">
+				<Box style="background:var(--blue-400); padding: var(--space-2);">box a</Box>
+				<Box style="background:var(--blue-500); padding: var(--space-2);">box b</Box>
+				<Box style="background:var(--blue-600); padding: var(--space-2);">box c</Box>
+			</div>
 		</section>
 
 		{/* GRID: columns / gutters / breakpoints ------------------------- */}
 		<section class="ds-demo__section">
 			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Grid — 12 columns + spans</Heading>
 			<Text size={1} variant="tertiary">
-				A 12-track grid. GridItem <code>colSpan</code> maps to <code>grid-column: span N</code>. Spans in each row sum to 12.
+				A 12-track grid. A child takes its span with <code>grid-column: span N</code>. Spans in each row sum to 12.
 			</Text>
 			<Grid templateColumns="repeat(12, 1fr)" gap={3} style="margin-top: var(--space-3);">
 				{Array.from({ length: 12 }).map((_, i) => (
-					<GridItem class="ds-cell ds-cell--head">{i + 1}</GridItem>
+					<div class="ds-cell ds-cell--head">{i + 1}</div>
 				))}
-				<GridItem colSpan={6} class="ds-cell">6</GridItem>
-				<GridItem colSpan={6} class="ds-cell">6</GridItem>
-				<GridItem colSpan={4} class="ds-cell">4</GridItem>
-				<GridItem colSpan={4} class="ds-cell">4</GridItem>
-				<GridItem colSpan={4} class="ds-cell">4</GridItem>
-				<GridItem colSpan={3} class="ds-cell">3</GridItem>
-				<GridItem colSpan={3} class="ds-cell">3</GridItem>
-				<GridItem colSpan={3} class="ds-cell">3</GridItem>
-				<GridItem colSpan={3} class="ds-cell">3</GridItem>
-				<GridItem colSpan={8} class="ds-cell">8</GridItem>
-				<GridItem colSpan={4} class="ds-cell">4</GridItem>
+				{[6, 6, 4, 4, 4, 3, 3, 3, 3, 8, 4].map((span) => (
+					<div class="ds-cell" style={`grid-column: span ${span}`}>{span}</div>
+				))}
 			</Grid>
 		</section>
 
@@ -1285,10 +1270,10 @@ assertions:
 						gap={g} → var(--space-{g})
 					</Text>
 					<Grid templateColumns="repeat(4, 1fr)" gap={g} style="margin-top:6px;">
-						<GridItem class="ds-cell">1</GridItem>
-						<GridItem class="ds-cell">2</GridItem>
-						<GridItem class="ds-cell">3</GridItem>
-						<GridItem class="ds-cell">4</GridItem>
+						<div class="ds-cell">1</div>
+						<div class="ds-cell">2</div>
+						<div class="ds-cell">3</div>
+						<div class="ds-cell">4</div>
 					</Grid>
 				</div>
 			))}
@@ -1299,7 +1284,7 @@ assertions:
 				<Grid templateColumns="repeat(3, 1fr)" gapX={8} gapY={2}
 					style="margin-top:6px;">
 					{Array.from({ length: 6 }).map((_, i) => (
-						<GridItem class="ds-cell">{i + 1}</GridItem>
+						<div class="ds-cell">{i + 1}</div>
 					))}
 				</Grid>
 			</div>
@@ -1319,7 +1304,7 @@ assertions:
 			<Grid templateColumns="repeat(auto-fill, minmax(120px, 1fr))" gap={4}
 				style="margin-top:6px;">
 				{Array.from({ length: 8 }).map((_, i) => (
-					<GridItem class="ds-cell">{i + 1}</GridItem>
+					<div class="ds-cell">{i + 1}</div>
 				))}
 			</Grid>
 
@@ -1328,7 +1313,7 @@ assertions:
 			</Text>
 			<Grid class="ds-bp-grid" gap={4} style="margin-top:6px;">
 				{Array.from({ length: 4 }).map((_, i) => (
-					<GridItem class="ds-cell">{i + 1}</GridItem>
+					<div class="ds-cell">{i + 1}</div>
 				))}
 			</Grid>
 			<Text size={1} variant="tertiary" style="margin-top: var(--space-2); display:block;">
@@ -1549,16 +1534,24 @@ assertions:
 		display: grid;
 		gap: var(--space-6);
 	}
-	/* A sub-heading inside a section: the next block of the same section. A
-	   bare h2, so set a step under the section's own Heading (size 2) — the
-	   global h2 is the post's section head, far too loud here. */
+	/* A sub-heading inside a section: the next block of the same section, a
+	   step under the section's own Heading (size 2). */
 	.ds-demo__h--sub {
 		margin-top: var(--space-7);
-		font-family: var(--font-heading);
-		font-weight: var(--font-heading-weight);
 		font-size: var(--font-size-3);
 		line-height: var(--line-height-ui);
-		color: var(--text-secondary);
+	}
+
+	/* The demos' own layout: specimens down a column, or in a wrapping row. */
+	.ds-demo__col {
+		display: flex;
+		flex-direction: column;
+		align-items: start;
+	}
+	.ds-demo__row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
 	}
 
 	/* Instrument token swatches: a square of the token beside its name and job. */

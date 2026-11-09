@@ -11,7 +11,7 @@ import Heading from "@whois/design-system/Heading";
 import HitArea from "@whois/design-system/HitArea";
 import Mono from "@whois/design-system/Mono";
 import { categories, postHref } from "../../lib/blog";
-import { formatReads, getPathStats, topByReads } from "../../lib/pageviews";
+import { reads, topByReads } from "../../lib/pageviews";
 import type { Post } from "../../lib/posts";
 
 interface Props {
@@ -25,7 +25,7 @@ const top = topByReads(Astro.props.posts, (post) => postHref(post.id), 3).map((p
 		title: post.data.title,
 		excerpt: post.data.excerpt,
 		category: post.data.category ? categories[post.data.category].label : "Post",
-		reads: formatReads(getPathStats(href)?.reads),
+		reads: reads(href),
 	};
 });
 ---

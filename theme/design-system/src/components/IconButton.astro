@@ -13,11 +13,13 @@
 //
 // `variant="outline"` is a hairline with no fill (the wash comes up under the
 // pointer): with `rounded` it is the ruled screen's CIRCLED control.
+// `variant="bare"` is the glyph alone, sized by the glyph (no `size`), with a
+// pad of hit area given back as margin; set its ink with --button-color.
 import { cx } from "../lib/cx";
 
 interface Props {
 	as?: string;
-	variant?: "secondary" | "outline";
+	variant?: "secondary" | "outline" | "bare";
 	size?: "xs" | "sm" | "lg" | "xl";
 	rounded?: boolean;
 	class?: string;
@@ -39,7 +41,7 @@ const cls = cx(
 	"ds-icon-button",
 	"ds-control",
 	`ds-icon-button--variant-${variant}`,
-	`ds-icon-button--size-${size}`,
+	variant !== "bare" && `ds-icon-button--size-${size}`,
 	rounded && "ds-icon-button--rounded-true",
 	className,
 );

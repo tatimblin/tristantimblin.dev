@@ -32,10 +32,20 @@
 	}
 }
 
-/* ink and discreet — once the primary and the tertiary ink at rest. The
-   design has one link colour, so both now read as every other link; the
-   props stay (the port's API), and a page that wants a quieter link scopes
-   --link-color. */
+/* ink — a link that reads as text until it is pointed at: the primary ink at
+   rest, the accent under the pointer or focus, no underline. It re-scopes the
+   --link-* tokens the rules above read, so a caller can still scope
+   --link-color (the header's current section). */
+.ds-anchor--variant-ink {
+	--link-color: var(--text-primary);
+	--link-hover-color: var(--accent);
+	--link-decoration: none;
+	--link-decoration-hover: none;
+}
+
+/* discreet — once the tertiary ink at rest. The design has one link colour,
+   so it now reads as every other link; the prop stays (the port's API), and a
+   page that wants a quieter link scopes --link-color. */
 
 /* external */
 .ds-anchor--external-true {

@@ -8,6 +8,13 @@
 	list-style-image: none;
 }
 
+/* A list stripped of its native chrome, for a <ul>/<ol> drawn some other way. */
+.ds-list-bare {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
 /* variant: unordered — List.Item renders the arrow marker itself. */
 .ds-list--variant-unordered li {
 	list-style: none;
@@ -23,7 +30,7 @@
 .ds-list--variant-ordered li:before {
 	content: counters(li, ".") ". ";
 	color: var(--accent);
-	margin-right: 6px;
+	margin-right: var(--space-2);
 }
 
 /* List.Item — exact port of the DS styled('li', {...}). */
@@ -53,7 +60,7 @@
 .ds-list-item div[data-list-item] {
 	display: block;
 	flex: none;
-	padding-right: 8px;
+	padding-right: var(--space-2);
 }
 .ds-list-item div[data-list-item] > svg {
 	display: inline-block;

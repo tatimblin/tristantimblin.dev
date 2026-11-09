@@ -55,9 +55,9 @@ return a destroy, which runs before the next swap. `ctx`:
 - **`ctx.activity`** — `visible` (within a quarter screen of the viewport),
   `active` (and the tab visible), `animate` (and motion allowed);
   `.subscribe(fn)` for changes. Everything starts false.
-- **`ctx.whileActive(start, { when })`** — runs `start` each time the card
-  becomes active (`when: "animate"`: active with motion allowed) and the stop
-  it returns each time it stops being so, and on teardown. Put every loop,
+- **`ctx.whileActive(start)`** — runs `start` each time the card becomes
+  active and the stop it returns each time it stops being so, and on
+  teardown. Put every loop,
   timer, clock and playing video here.
 
 ## Load modes (`<Widget load>`)
@@ -66,9 +66,8 @@ return a destroy, which runs before the next swap. `ctx`:
   in an idle callback.
 - **`idle`** — once the page has loaded, in an idle callback: for a card
   whose data should be live before it is seen (now playing's stream).
-- **`eager`** — at once, ahead of the rest: only for a card whose script must
-  be in place before the page can scroll (the videos card's dock-lift
-  fallback, on an engine without scroll timelines).
+- **`eager`** — at once, ahead of the rest: only for a card on screen from the
+  first frame (the videos card, parked in the opener).
 
 Mounts run one at a time with a yield between them. A module that fails to
 load, or a mount that throws, marks that card `data-widget-state="failed"` and
@@ -128,16 +127,16 @@ content — keep it that way; it is what makes the containment safe.
   visitor started (a glide, a shuffle) may use `ctx.frame` directly.
 - **Animate `transform` and `opacity` only.** Anything else re-lays out or
   repaints every frame. A scroll-linked effect is a CSS scroll-driven
-  animation, with a script only as the fallback for engines without scroll
-  timelines (`theme/stories-heading`, `src/widgets/videos`).
+  animation behind `@supports (animation-timeline: scroll())`, and an engine
+  without it gets a static, complete page (`theme/stories-heading`,
+  `src/widgets/videos`).
 - **Read, then write.** Measure in a `read` frame or a ResizeObserver, write
   in a `write` frame; never interleave.
 - **No `requestAnimationFrame` of your own.** Use `ctx.frame` (or `onFrame`
   from `frame.ts` outside a widget), so the page has one loop that can stop.
 - **No scroll-blocking listeners.** A `wheel`, `touchstart` or `touchmove`
   listener is `{ passive: true }` unless it must `preventDefault`, and then it
-  goes on the smallest element that needs it, never on `window` (Lenis's own
-  are the one exception: smoothing the wheel is the point of it).
+  goes on the smallest element that needs it, never on `window`.
 - **Never resize the card from inside.** The grid sizes it.
 
 The build holds every one of these: see below.
@@ -178,13 +177,12 @@ injected before any script; `frame.ts` hands the probe its counters
 | Containment | every named card mounted, with a load mode, style-contained (layout too for `contain="layout"`), an intrinsic size, and `content-visibility: auto` while far | `load.spec.ts` |
 | Every widget covered | each `src/widgets/<name>/client.ts` is a card on the page | `load.spec.ts` |
 | Gzip per widget chunk | `widget-<name>.*.js`, gzipped; a new one gets a default | `bundle.spec.ts` |
-| Idle | settled at the top (desktop): 0 frame callbacks, 0 rAF | `idle.spec.ts` |
+| Idle | settled at the top (desktop): 0 frame callbacks and 0 rAF outside the scheduler, but the `CONTINUOUS` ones (the tagline's wobble) | `idle.spec.ts` |
 | Hidden tab | faked with `visibilitychange`: 0 frame callbacks, 0 rAF, 0 video frames, 0 DOM changes in any card | `idle.spec.ts` |
 | Inactive widget | a card out of sight changes no DOM and runs no frame callback | `idle.spec.ts` |
 | Reduced motion | settled anywhere: no frames of any kind | `idle.spec.ts` |
-| Lenis | 0 frames while idle; runs on the wheel; 0 again once settled | `idle.spec.ts` |
 | Long script | no animation frame holds 50ms of script during a scroll pass | `scroll.spec.ts` |
-| Blocking listeners | no non-passive wheel/touch listener but Lenis's own (found by identity) and the allowlisted ones, each with why | `scroll.spec.ts` |
+| Blocking listeners | no non-passive wheel/touch listener but the allowlisted ones, each with why | `scroll.spec.ts` |
 | Lifecycle | a view-transition round trip mounts each card once per load, and leaves the same observers, window/document listeners and frame callbacks behind every time | `lifecycle.spec.ts` |
 
 The long-script budget is the one in milliseconds. It is held on the SCRIPT

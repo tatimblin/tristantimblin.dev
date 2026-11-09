@@ -16,11 +16,10 @@
 // builds the posters and the gauge from them and lays both out against the
 // card as drawn (the geometry in ./arc.ts). The caption is rendered here for
 // the latest film, so the card reads before the script runs.
-//
-// Props pass through to the <Widget> (a class).
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Anchor from "@whois/design-system/Anchor";
+import IconButton from "@whois/design-system/IconButton";
 import calendarGlyph from "./icons/calendar.svg?raw";
 import dramaGlyph from "./icons/drama.svg?raw";
 import { getFilms, type Film } from "./amc";
@@ -30,11 +29,9 @@ interface Props {
 	/** The films, for the dev fixture page (src/pages/dev/[fixture].astro);
 	 *  the real ones by default. */
 	films?: Film[];
-	class?: string;
-	[key: string]: unknown;
 }
 
-const { films = getFilms(), class: className, ...rest } = Astro.props;
+const { films = getFilms() } = Astro.props;
 
 // The caption before the script: the latest film seen.
 const latest = films.findLast((f) => !f.u) ?? films[0];
@@ -44,16 +41,15 @@ const json = JSON.stringify(films).replace(/</g, "\\u003c");
 ---
 
 {latest && (
-	<Widget size="1x1" title="AMC A-List" name="amc" class:list={["wx-amc", className]} data-mode="date" {...rest}>
+	<Widget size="1x1" title="AMC A-List" name="amc" class="wx-amc" data-mode="date">
 		{/* The sort, a toggle (aria-pressed, as the card flips are): the mode
 		     the card is in as a glyph (a calendar, the theatre's masks); the
 		     two cross-fade on data-mode. A bare glyph in the accent, as the bay
-		     wheels header's is: IconButton's hairline box would outweigh the
-		     meta slot's text-sized voice. */}
-		<button slot="meta" type="button" class="wx-amc-mode ds-control" data-amc-mode aria-label="Sort by genre" aria-pressed="false" title="Sort by genre">
+		     wheels header's is. */}
+		<IconButton slot="meta" variant="bare" type="button" class="wx-amc-mode" data-amc-mode aria-label="Sort by genre" aria-pressed="false" title="Sort by genre">
 			<span class="wx-amc-glyph wx-amc-glyph--date" set:html={calendarGlyph} />
 			<span class="wx-amc-glyph wx-amc-glyph--genre" set:html={dramaGlyph} />
-		</button>
+		</IconButton>
 
 		<CardBody class="wx-amc-body">
 			{/* Decoration, laid out by ./fan.ts; the slider and the caption say it. */}
@@ -82,23 +78,14 @@ const json = JSON.stringify(films).replace(/</g, "\\u003c");
 	   in --amc-u, the px per unit of the 210px mock (set by ./fan.ts), so the
 	   drawing scales with the card. */
 
-	/* The mode glyph: a bare button in the accent, a pad of hit area round
-	   the glyph (given back as margin, so it sits where the meta text would),
-	   the two glyphs stacked in one cell and cross-faded on the widget's
-	   data-mode (the motion token is 0s under reduced motion). */
+	/* The mode glyph, in the accent: the two glyphs stacked in one cell and
+	   cross-faded on the widget's data-mode (the motion token is 0s under
+	   reduced motion). */
 	.wx-amc-mode {
-		display: grid;
-		place-items: center;
-		background: none;
-		border: 0;
-		padding: var(--space-1);
-		margin: calc(-1 * var(--space-1));
-		border-radius: var(--radius-box);
-		color: var(--accent);
-		transition: color var(--duration-standard) var(--ease-standard);
+		--button-color: var(--accent);
 	}
 	.wx-amc-mode:hover {
-		color: var(--accent-hover);
+		--button-color: var(--accent-hover);
 	}
 	.wx-amc-glyph {
 		grid-area: 1 / 1;

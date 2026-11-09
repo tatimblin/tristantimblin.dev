@@ -1,77 +1,29 @@
 ---
-// /txt/<slug> — one post. Thin: the collection entry, the numbers the layout
-// prints (its chronological number of the total, reading time), its hero
-// and its neighbours' — everything computed here, rendered by PostLayout.
-// The body arrives already cut into sections (the rehype plugin in
-// astro.config, src/lib/mdx/post-sections.ts) and mapped onto DS components
-// at the <Content> below.
+// /txt/<slug> — one post. The body arrives already cut into sections (the
+// rehype plugin in astro.config, src/lib/mdx/post-sections.ts) and mapped
+// onto DS components at the <Content> below; PostLayout draws the rest.
 import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
-import { getImage } from "astro:assets";
 import { render } from "astro:content";
-import PostLayout, { type Neighbour } from "../../layouts/PostLayout.astro";
+import PostLayout from "../../layouts/PostLayout.astro";
 import { mdxComponents } from "../../components/mdx-components";
-import { neighbours, postHref, postNumbers, readingStats } from "../../lib/blog";
+import { postPlaces } from "../../lib/blog";
 import { getPosts } from "../../lib/posts";
-import { formatReads, getPathStats } from "../../lib/pageviews";
 
 export const getStaticPaths = (async () => {
 	const posts = await getPosts();
-	const numbers = postNumbers(posts);
-	const neighbour = (p: (typeof posts)[number] | null): Neighbour | null =>
-		p && {
-			title: p.data.title,
-			href: postHref(p.id),
-			date: p.data.date,
-		};
-	return posts.map((post) => {
-		const { prev, next } = neighbours(posts, post.id);
-		return {
-			params: { slug: post.id },
-			props: {
-				post,
-				no: numbers.get(post.id)!,
-				total: posts.length,
-				prev: neighbour(prev),
-				next: neighbour(next),
-			},
-		};
-	});
+	const places = postPlaces(posts);
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: { post, total: posts.length, ...places.get(post.id)! },
+	}));
 }) satisfies GetStaticPaths;
 
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { post, no, total, prev, next } = Astro.props;
-const { title, excerpt, cta, category, tags, date, modified, image, imageAlt, canonical, hero } =
-	post.data;
 const { Content } = await render(post);
-
-// THE SOCIAL CARD: `image` when the post names one, else the hero. Both are
-// local assets now, so the URL the meta needs is minted here — one JPEG at
-// the source's size, the format every crawler reads — and Seo makes it
-// absolute. A post with neither gets the site's default card (public/).
-const card = image ?? hero?.src ?? null;
-const ogImage = card ? (await getImage({ src: card, format: "jpg" })).src : undefined;
 ---
 
-<PostLayout
-	title={title}
-	description={excerpt}
-	category={category}
-	tags={tags}
-	date={date}
-	modified={modified}
-	image={ogImage}
-	imageAlt={imageAlt ?? (image ? undefined : hero?.alt)}
-	canonical={canonical ?? undefined}
-	slug={post.id}
-	no={no}
-	total={total}
-	stats={readingStats(post.body)}
-	reads={formatReads(getPathStats(postHref(post.id))?.reads)}
-	hero={hero}
-	cta={cta}
-	prev={prev}
-	next={next}
->
+<PostLayout post={post} no={no} total={total} prev={prev} next={next}>
 	<Content components={mdxComponents} />
 </PostLayout>

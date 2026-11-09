@@ -10,7 +10,7 @@
 //
 // Data is read at build time from pageviews.json (./readers.ts), which the
 // nightly workflow refreshes. Before its first read the ledger is empty and
-// the tile says so. Props pass through to the <Widget>.
+// the tile says so.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
@@ -24,18 +24,11 @@ import WidgetEmpty from "@whois/design-system/WidgetEmpty";
 import {
 	buildViews,
 	emptyNote,
-	formatCount,
 	formatSpan,
 	getReaderStats,
 	isDrawable,
 } from "./readers";
-
-interface Props {
-	class?: string;
-	[key: string]: unknown;
-}
-
-const { class: className, ...rest } = Astro.props;
+import { formatCount } from "../../lib/format";
 
 const stats = getReaderStats();
 
@@ -57,7 +50,7 @@ const readings = (view: (typeof views)[number]) =>
 	);
 ---
 
-<Widget size="1x1" title="visitors" name="readers" class:list={["wx-readers", className]} {...rest}>
+<Widget size="1x1" title="visitors" name="readers" class="wx-readers">
 	{
 		hasSeries && (
 			<Fragment slot="meta">

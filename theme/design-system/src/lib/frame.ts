@@ -2,13 +2,13 @@
  * One frame loop for the whole page.
  *
  * Every per-frame callback on the site (a widget's animation, wobble-text's
- * churn, Lenis's smoothing) registers here instead of calling
- * requestAnimationFrame itself, so that:
+ * churn) registers here instead of calling requestAnimationFrame itself, so
+ * that:
  *
  *  - there is ONE rAF, and it stops when nothing is registered: an idle page
  *    asks for no frames at all;
  *  - each frame runs in PHASES, every callback of one phase before any of the
- *    next: `scroll` (the one thing that moves the page: Lenis), then `read`
+ *    next: `scroll` (anything that moves the page), then `read`
  *    (measure: getBoundingClientRect, offsets, computed style), then `write`
  *    (mutate: styles, attributes, the DOM). A widget that measures in `read` and
  *    paints in `write` never forces a layout another widget's writes dirtied,

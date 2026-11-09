@@ -32,18 +32,15 @@ a dev-only source for generating tokens and a reference for porting.
 import Heading from "@whois/design-system/Heading";
 import Text from "@whois/design-system/Text";
 import Grid from "@whois/design-system/Grid";
-import GridItem from "@whois/design-system/GridItem";
 import Button from "@whois/design-system/Button";
 ---
 
-<Grid templateColumns="repeat(12, 1fr)" gap={4}>
-  <GridItem colSpan={8}>
+<Grid templateColumns="2fr 1fr" gap={4}>
+  <div>
     <Heading as="h2" size={3}>Section title</Heading>
     <Text size={3} variant="secondary">Body copy using a type + color token.</Text>
-  </GridItem>
-  <GridItem colSpan={4}>
-    <Button variant="primary">Action</Button>
-  </GridItem>
+  </div>
+  <Button variant="primary">Action</Button>
 </Grid>
 ```
 
@@ -62,8 +59,8 @@ import Button from "@whois/design-system/Button";
 in the package needs a doubled selector or an `!important`. **Site CSS is
 unlayered and always wins over the package**, at any specificity: a page that
 sets a property on a DS element gets it. The one thing to watch is a bare
-element rule (`h2 { font-size }`) — it beats a DS class too, so the site keeps
-such rules off DS elements (`h2:where(:not(.ds-heading))`, global.css).
+element rule (`h2 { font-size }`) — it beats a DS class too, so the site has
+none beyond global.css's resets.
 
 **3. The prop model** — every component follows the same shape:
 
@@ -81,11 +78,11 @@ such rules off DS elements (`h2:where(:not(.ds-heading))`, global.css).
 — including columns/gutters/breakpoints for `Grid`. Open it instead of guessing a prop; this doc
 deliberately does not duplicate per-component API tables.
 
-**Components available (52):** `Box`, `Flex`, `Grid`, `GridItem`, `Text`, `EM`,
-`Strong`, `Heading`, `H1`–`H4`, `Body`, `Button`, `IconButton`, `Card`,
+**Components available (48):** `Box`, `Grid`, `Text`, `EM`,
+`Strong`, `Heading`, `H2`–`H4`, `Body`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Pill`, `Chip`, `Anchor`, `List`, `ListItem`, `Icon`,
 `VisuallyHidden`, `WidgetGrid`, `Widget`, `WidgetEmpty`, `HitArea` — the
-instrument UI (next section): `Mono`, `Figure`, `Stat`, `Hairline`,
+instrument UI (next section): `Mono`, `Figure`, `Stat`,
 `TickRuler`, `BarGraph`, `Legend`, `LegendItem`,
 `TileGrid`, `Tile`, `Faces`, `Face` — the reading UI (the section after it):
 `PostList`, `PostGroup`, `PostRow`, `Prose`, `Blockquote`, `Fig`, `Sequence` — and the
@@ -136,7 +133,7 @@ Work top-down. Stop at the first rule that matches.
 | `src/tokens/tokens.overrides.css` | Where the site's own theme-independent tokens live (it wins over generated): the type roles and scale steps, the motion vocabulary, the EDGES block (border, radius, link tokens on `:root`; the composites `--border`, `--shadow-panel`, `--panel-header-bg`, `--link-color` on `[data-theme]`), the INSTRUMENT UI block (on `[data-theme]`). |
 | `src/tokens/themes/light.css`, `themes/dark.css` | The two palettes, on `[data-theme="light"]` / `[data-theme="dark"]`: every value that differs between the themes (page, panel, edge colour, inks, washes, accent and `--on-accent`, code block, halftone ink). Edit both together — they name the same set. |
 | `src/tokens/bridge.css` | Edit to add a legacy-name alias (e.g. mapping a site/Web-Component `--color-*` name onto a DS token). |
-| `src/components/*.astro`, `src/styles/*.css` | Edit freely: the package is this site's. For a component that is still a port (`Grid`, `Flex`, `List`, `Anchor`, `Icon`, `VisuallyHidden`) keep the prop names. New component ⇒ add its `@import` to `src/styles/index.css` (in a layer) — or, while only the catalogue renders it, import the file from the component wrapped in `@layer ds.components` — **and** a section to the catalogue page. |
+| `src/components/*.astro`, `src/styles/*.css` | Edit freely: the package is this site's. For a component that is still a port (`Grid`, `List`, `Anchor`, `Icon`, `VisuallyHidden`) keep the prop names. New component ⇒ add its `@import` to `src/styles/index.css` (in a layer) — or, while only the catalogue renders it, import the file from the component wrapped in `@layer ds.components` — **and** a section to the catalogue page. |
 | `src/lib/*.ts` | Client helpers a widget's script imports; keep them DOM-free at import time. |
 
 ---
@@ -162,7 +159,7 @@ unless noted; the per-theme values in `themes/*.css`):
 | `--radius-box` (2.5px), `--radius-square` (0) — `:root` | the one corner of anything boxed, and a corner square on purpose. `--border-radius-0..3` all resolve to `--radius-box`. |
 | `--shadow-panel`, `--panel-outline` | a panel's 1px tinted ring under its edge, and its colour. |
 | `--panel-header-bg` | a panel header's fill: the card fading into `--wash-1` (also the primary Button's and the outline Pill's). |
-| `--code-bg`, `--code-fg`, `--code-border`, `--code-token-*` | a fenced block: the slab, its ink and edge, and the highlight colours (all per theme). |
+| `--code-bg`, `--code-fg`, `--code-token-*` | a fenced block: the slab, its ink, and the highlight colours (all per theme). Its edge is `--border`; inline code sits on `--wash-1`. |
 | `--link-color`, `--link-hover-color`, `--link-decoration(-hover)`, `--link-underline-offset/-thickness` | every link: the colour, underlined at rest, plain under the pointer. |
 | `--duration-standard` (250ms), `--ease-standard` — `:root` | the chrome's own transition (a chip, a pill, a button washing in). |
 | `--halftone-ink`, `--halftone-ink-soft` | the halftones' dot ink per theme, handed to `<dotted-grid>` / `<video-carousel>` as `--color-fg` (bridge.css). |
@@ -172,12 +169,11 @@ unless noted; the per-theme values in `themes/*.css`):
 | `--wash-1/2/3` | three solid tints (the pale blue-grey tag fill, then the panel ring's blue): unlit tile & subtle pill fill; two stronger steps. |
 | `--tone-1..5` | the rank ramp: accent, primary, secondary, tertiary, `--wash-3`. For ranked things (legend, share ruler). |
 | `--text-subtle` | a quiet label ink between secondary and tertiary — a tag's, a toggle's. |
-| `--hairline`, `--hairline-strong`, `--hairline-fade` | the edge colour alone (a drawn stripe, a ring); a stronger edge for under the pointer; the OPT-IN divider gradient that fades at both ends (`<Hairline variant="fade">`). A whole edge is `--border`. |
+| `--hairline`, `--hairline-strong` | the edge colour alone (a drawn stripe, a ring); a stronger edge for under the pointer. A whole edge is `--border`. |
 | `--bar-width` (`:root`, 2px) | every solid edge bar: the pull quote's. |
 | `--border-radius-tile` (2px), `--border-radius-pill` (9999px), `--tick-pitch` (4px) — `:root` | the steps below the generated scales. |
 | `--ticks-image`, `--ticks-image-ink` | the tick ruler as a gradient (hairlines on `--tick-pitch`) in currentColor, and in the ink — for a box that should read as a ruler and cannot take the classes (the player's progress bar). TickRuler draws its own on the same pitch. |
 | `--focus-ring`, `--focus-ring-color`, `--focus-ring-offset`, `--focus-ring-inset` | the focus ring for everything focusable that is not a native control, drawn by `control.css` for every `ds-control`; its colour alone, for a web component that draws its own ring (`--ct-focus`); the offset, and the inset form of it for a control that rings inside its box (set `--control-ring-offset: var(--focus-ring-inset)` in scope). |
-| `--playhead-dot` | a playhead's dot — the video carousel's. |
 | `--positive`, `--negative`, `--contrib-1..4`, `--baywheels` | DATA colours a widget borrows from a chart people already read: a win and a loss, GitHub's greens, the Bay Wheels violet. Not chrome. |
 | `--genre-animation`, `-action`, `-comedy`, `-sci-fi`, `-biopic`, `-thriller`, `-drama`, `-other`; `--genre-mute` | the A-List card's eight genre buckets, one data colour each (none the accent's blue), and how far a bucket that is not current is mixed back towards the card (`color-mix(in oklab, var(--genre-x) var(--genre-mute), var(--card-background))`; less muting on the dark card). |
 | `--poster-ring`, `--poster-shadow`, `--poster-dim`, `--poster-badge-shadow` | a film poster on a card: its 1px ring, the shadow it lifts on, the brightness of a poster off the centre (1 on paper), and the shadow under a disc laid on a poster. |
@@ -264,10 +260,11 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
   = pill button; `start-icon`/`end-icon` slots. `IconButton` — `secondary`
   (default, a wash in a hairline) / `outline` (the hairline alone),
-  `size="xs|sm|lg|xl"`, `rounded` = round button; give it an `aria-label`.
+  / `bare` (the glyph alone, sized by the glyph, its ink set with
+  `--button-color`), `size="xs|sm|lg|xl"`, `rounded` = round button; give it an
+  `aria-label`. A `<ul>`/`<ol>` drawn some other way takes `.ds-list-bare`.
 
 **Hairline graphics.**
-- `Hairline` — a 1px rule fading at both ends; an `hr`, or `as="span"`.
 - `TickRuler` — `segments=[{share, color?}]` (colours default to `--tone-N` by
   order): a share bar, or a plain stretch.
 - `BarGraph` — `values`, `max`, `mark={i|"last"|"max"}` (the one bar in the
@@ -287,8 +284,8 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
 
 **Widget grid.** `WidgetGrid cols` is a query container named `widget`; it
 exposes `--widget-grid-gap` and the fluid scale (`--widget-cell`,
-`--widget-pad`, `--widget-gap`, `--widget-font-xs..xl`, `--widget-font-figure`,
-`--widget-icon`), keyed to a 300px reference cell. A 2×1 is one cell tall and a
+`--widget-pad`, `--widget-gap`, `--widget-font-xs..xl`, `--widget-font-figure`),
+keyed to a 300px reference cell. A 2×1 is one cell tall and a
 1×2 two cells and the gap — sized from the cell, not by an aspect ratio, in
 `:where()` so a widget that must release its size says `aspect-ratio: auto` /
 `block-size: auto` and wins. The COMPACT step — 4 → 2 columns at and below
@@ -303,8 +300,8 @@ is its `client.ts`, whose `mount(el, ctx)` the widget runtime calls when
 [`src/lib/WIDGETS.md`](src/lib/WIDGETS.md)); it reads the arrow keys with
 `stepFromKey(event, at, last)` from `lib/keys`.
 
-**A widget's shape** (`src/widgets/*`): a typed `Props` of `class` and a
-pass-through, spread onto its `<Widget>`. The entrance is `<Widget>`'s own
+**A widget's shape** (`src/widgets/*`): a `<Widget>` with a plain class of its
+own, reading its data at build time; no props unless a page varies one. The entrance is `<Widget>`'s own
 (`reveal`, in WIDGETS.md), so neither the page nor the widget stages it; a
 widget that must react to its reveal keys its CSS on `data-reveal-state="in"` (the bike's slide-in) rather
 than observing on its own. The HEADLINE FIGURE sits at the FOOT of the body
@@ -350,8 +347,8 @@ the UI face, where the accent appears once, on a hovered title.
   markup the site's rehype plugin emits (`src/lib/mdx/post-sections.ts`; the
   shape is in `Prose.astro`): images as a bled `Fig` (`figure.ds-fig`), fences as
   `figure.ds-prose-code` between two hairlines under a header row, a quote with
-  an attribution as `figure.ds-prose-quote`; links in the ink on a 1px
-  underline (`--hyperlink` and `--anchor-border-color` retuned in scope).
+  an attribution as `figure.ds-prose-quote`; links in `--link-color`, underlined
+  at rest and plain under the pointer.
 - `Fig` — the numbered figure: the image on a hairline, square, `Fig. 0N /` and
   a caption in the caps voice. `no`, `caption` (prop or slot),
   `layout="flow"` (the caption line under the image — what the plugin emits)
@@ -445,7 +442,7 @@ site uses. The file layout, class naming and `.astro` shape still apply.
   `ds-bar-graph`, `ds-widget-grid`).
 - **Element:** `ds-<name>__<part>`.
 - **Variant class:** `ds-<name>--<key>-<value>`, key kebab-cased:
-  `.ds-button--variant-primary`, `.ds-flex--gap-3`. Boolean variants
+  `.ds-button--variant-primary`, `.ds-grid--gap-3`. Boolean variants
   `ds-<name>--<key>-true`; emit the class only for values that carry rules.
 - **Shared classes** a component composes in its template: `ds-control` (every
   control), `ds-mono ds-caps` (the caps voice).
@@ -477,7 +474,7 @@ Rules:
 - **Pass-through:** accept `class` (merge via `cx`) and spread `...rest` for
   arbitrary attributes (`id`, `aria-*`, `data-*`, event handlers, `style`).
 - **No `css` prop.** Where a real API maps arbitrary strings onto CSS (Grid's
-  `templateColumns`, GridItem's `colSpan`, a cell's `col`/`row`), render them
+  `templateColumns`, a cell's `col`/`row`), render them
   as an inline `style` (custom properties where a stylesheet reads them).
 - **Defaults:** set to the DS's `defaultVariants` where a port survives; a
   default that has no rule emits no class.
@@ -495,17 +492,17 @@ All resolve globally from `@whois/design-system/tokens.css` (imported in
 Layout): spacing `--space-0..15`, radii `--border-radius-0..3` (+ `-tile`,
 `-pill`), type `--font-size-0..9` (no `-2`; `0` = 12px and `9` = 72px are the
 site's steps below and above the generated scale), weights
-`--font-weight-200/400/500/600/700` (`200` and `700` are the site's; DM Sans
-ships 400/500/700 and Roboto Mono 300/400/500), the leadings `--line-height-heading/-body/-ui` (1.15 / 1.6 / 1.3),
-the trackings `--tracking-heading` (0), `--tracking-caps` (0.1em),
-`--tracking-mono` (0.04em), the theme colors `--text-primary/secondary/tertiary`,
+`--font-weight-400/500/600/700` (`700` is the site's; DM Sans
+ships 400/500/700 and Roboto Mono 300/400/500), the leadings `--line-height-heading/-body/-ui`,
+the trackings `--tracking-heading`, `--tracking-caps`,
+`--tracking-mono` (the values are in `tokens.overrides.css`), the theme colors `--text-primary/secondary/tertiary`,
 `--accent`, `--accent-hover`, `--on-accent`, `--background`,
 `--card-background`, `--border-color` (site CSS may read it; the package reads
 `--hairline`), `--danger`/`--warning`/`--success`, the `--gray/blue/green/red/
 orange/pink-*` scales, `--hyperlink`, the `--token-*` code palette, and
 `--shadow-color`; plus the instrument tokens (previous section: `--lit`,
 `--wash-*`, `--tone-*`, `--hairline*`, `--bar-width`, `--tick-pitch`,
-`--ticks-image*`, `--focus-ring*`, `--playhead-dot`, `--shadow-3`, the
+`--ticks-image*`, `--focus-ring*`, `--shadow-3`, the
 voices, the durations, `--ease-reveal` and the reveal's
 `--reveal-rise` / `--reveal-stagger`), `--tracking-hero` (the hero
 face's display tracking, the lockup's) and the two measures, `--measure-prose`
@@ -529,7 +526,7 @@ with metric-matched fallbacks in `src/styles/fonts.css`):
 | Token | Face | Where |
 | --- | --- | --- |
 | `--font-hero` + `--font-hero-weight` | DM Sans Medium (500) | the hero lockup only: the wordmark, "& other stories" |
-| `--font-heading` + `--font-heading-weight` | DM Sans Medium (500) | every heading: the post title, section heads, DS `H1`–`H4`, a bare `h2`, the hero lede |
+| `--font-heading` + `--font-heading-weight` | DM Sans Medium (500) | every heading: the post title, section heads, DS `H2`–`H4`, the hero lede |
 | `--font-ui` | DM Sans | the interface: widget chrome, the label voice (`Mono`, the caps), figures, the blog's chrome |
 | `--font-display` + `--font-display-weight` | DM Sans Medium (500) | the big numeral: `Stat variant="numeral"` |
 | `--font-body` + `--font-body-weight/-size/-line-height/-letter-spacing` | Roboto Mono Regular (400) | reading text (`Body`, and the bare `body`) |

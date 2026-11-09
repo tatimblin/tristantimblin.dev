@@ -6,6 +6,12 @@
 :root {
   --container-max: 976px;
   --container-pad: clamp(1rem, 4vw, 2rem);
+  /* The site header's band: its block padding round one line of the bar's
+     type (SiteHeader). Stated, not measured, so a layout can size round the
+     bar before any script runs; tests/home-opener.spec.ts holds it to the bar. */
+  --site-header-h: calc(
+    2 * var(--space-4) + var(--font-size-1) * var(--line-height-body)
+  );
   /* THE CONTAINER AS AN INSET — the one source for every full-width row that
      sits in the site's container: the site header, the homepage's opener and
      content rows (HomeLayout's .container), the blog's columns.
@@ -19,6 +25,13 @@
     var(--container-pad),
     (100vw - var(--container-max)) / 2 + var(--container-pad)
   );
+}
+
+/* A block bled to the window has no side edges or corners against it. */
+fleet-demo[data-prose-bleed="window"],
+.embed[data-prose-bleed="window"] .embed__frame {
+  border-inline: 0;
+  border-radius: var(--radius-square);
 }
 
 *,
@@ -85,54 +98,6 @@ h5,
 h6,
 p {
   margin: 0;
-}
-
-/* BARE headings take the heading face. Family and weight travel together: DM
-   Sans ships three cuts, so a family without a weight lands on whichever the
-   browser guesses. A DS Heading sets its own (heading.css) — and since the
-   package's CSS sits in cascade layers under this file, an unlayered element
-   rule here would beat it at any specificity, so these are kept off it. */
-h1:where(:not(.ds-heading)),
-h2:where(:not(.ds-heading)),
-h3:where(:not(.ds-heading)),
-h4:where(:not(.ds-heading)),
-h5:where(:not(.ds-heading)),
-h6:where(:not(.ds-heading)) {
-  font-family: var(--font-heading);
-  font-weight: var(--font-heading-weight);
-  /* Display leading and display tracking on ALL six, not just the two that used
-     to name them below. h3-h6 were inheriting the body's 1.6 from <body>, so the
-     smaller a heading got the more its lines drifted — exactly backwards, since a
-     small heading is the one most likely to wrap. And the tracking was set here
-     at -0.02em/-0.01em while .ds-heading set -0.3px, so a bare <h1> and an <H1>
-     did not match. Both now come from the same tokens .ds-heading uses, so the
-     element and the component render identically. */
-  line-height: var(--line-height-heading);
-  letter-spacing: var(--tracking-heading);
-}
-
-/* A bare h1 is the page-title step (Heading size 5, 44px) and a bare h2 the
-   section step (size 3, 32px) — the same steps the components take. */
-h1:where(:not(.ds-heading)) {
-  font-size: var(--font-size-8);
-}
-
-h2:where(:not(.ds-heading)) {
-  font-size: var(--font-size-7);
-}
-
-/* A bare link in running text (one written as a plain <a>, not an Anchor)
-   reads as the Anchor does: the link tokens, underlined at rest. Unclassed
-   only, so a Pill or a Chip rendered as an <a> keeps its own box. */
-:where(.ds-prose, .ds-body, main p) a:not([class]) {
-  color: var(--link-color);
-  text-decoration-line: var(--link-decoration);
-  text-decoration-thickness: var(--link-underline-thickness);
-  text-underline-offset: var(--link-underline-offset);
-}
-:where(.ds-prose, .ds-body, main p) a:not([class]):is(:hover, :focus-visible) {
-  color: var(--link-hover-color);
-  text-decoration-line: var(--link-decoration-hover);
 }
 
 img {

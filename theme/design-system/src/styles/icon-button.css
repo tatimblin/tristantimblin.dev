@@ -66,6 +66,21 @@
 	--button-border: var(--hairline-strong);
 }
 
+/* variant: bare — the glyph alone, no box and no scale, for a header's meta
+   slot where a hairline would outweigh the text beside it. A pad of hit area
+   given back as margin, so the glyph sits where the text would. The content
+   is a grid, so stacked glyphs can share one cell. */
+.ds-icon-button--variant-bare {
+	padding: var(--space-1);
+	margin: calc(-1 * var(--space-1));
+	border: 0;
+	transform: none;
+}
+.ds-icon-button--variant-bare .ds-icon-button__content {
+	display: grid;
+	place-items: center;
+}
+
 /* rounded → a round button */
 .ds-icon-button--rounded-true {
 	--icon-button-corner: var(--border-radius-pill);

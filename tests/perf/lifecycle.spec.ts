@@ -1,3 +1,4 @@
+import { lockupReady } from "../fixtures/test";
 import { DESKTOP, during, expect, load, mountAll, observed, scrollTo, settle, test, type Page } from "./fixtures";
 
 /**
@@ -43,7 +44,7 @@ async function roundTrip(page: Page) {
 	await page.goBack();
 	await page.waitForURL((u) => u.pathname === "/");
 	await page.locator("[data-widget]").first().waitFor({ state: "attached" });
-	await page.locator("stories-heading[data-ready]").waitFor({ state: "attached" });
+	await lockupReady(page);
 	await settle(page);
 }
 
@@ -88,8 +89,10 @@ test("a view-transition round trip leaks nothing and mounts each card once", asy
 		expect(state.callbacks, `frame callbacks registered ${label}`).toBe(first.callbacks);
 	}
 
-	// And, back at the top, nothing is left running.
+	// And, back at the top, only the tagline's wobble is left running, once: a
+	// second copy of its loop would be a second callback under the same label.
 	const idle = await during(page, 1500);
-	expect(idle.calls, `frame callbacks after the round trips: ${JSON.stringify(idle.byLabel)}`).toBe(0);
-	expect(idle.raf, `rAF after the round trips: ${JSON.stringify(idle.rafBy)}`).toBe(0);
+	expect(idle.otherCalls, `frame callbacks after the round trips: ${JSON.stringify(idle.byLabel)}`).toBe(0);
+	expect(idle.otherRaf, `rAF outside the scheduler after the round trips: ${JSON.stringify(idle.rafBy)}`).toBe(0);
+	expect(idle.end.callbacks, "only the continuous callbacks are registered").toBe(Object.keys(idle.byLabel).length);
 });

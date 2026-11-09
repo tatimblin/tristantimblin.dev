@@ -13,19 +13,21 @@ Guidance for AI agents working in this repo.
   (`images/`) beside them. Data lives in `src/data/`: the widgets' JSON/CSV
   (written by the nightly fetchers in `tools/`, see `.github/workflows/nightly.yml`)
   and the media manifests. A change to only content, data or docs skips the
-  full Playwright suite in CI (build, smoke, deploy only).
+  full Playwright suite in CI (build, smoke, deploy only). CI's Bun version
+  is pinned in `.bun-version`.
 - **`theme/*`** — the site's look, as workspace packages (Bun workspaces,
   consumed as `@whois/*`, source exports, no build step):
   - `@whois/design-system` — the design system (tokens + Astro/CSS components).
-  - Web Components (custom elements): `stories-heading`, `wobble-text`.
+  - `wobble-text`, a Web Component, and `stories-heading`, the homepage lockup's
+    CSS (no script).
 - **The halftone elements live in their own repo**,
   [tatimblin/dotgrid](https://github.com/tatimblin/dotgrid):
   `@tristimb/dotted-grid` (`<dotted-grid>`) and `@tristimb/video-carousel`
   (`<video-carousel>`), installed from GitHub Release tarballs (see the URLs in
   `package.json`). To change them, release there and bump the URL here.
 - **`tests/`** — Playwright, against the built site (`bun run test`);
-  `bun run test:unit` runs the unit tests beside the code (`src/**/*.test.ts`
-  and `theme/*/src/**/*.test.ts`; a bare `bun test` sees `src/` only — see
+  `bun run test:unit` runs the unit tests beside the code (`src/**/*.test.ts`,
+  `theme/*/src/**/*.test.ts` and `tools/**/*.test.ts`; a bare `bun test` sees `src/` only — see
   `bunfig.toml`). Specs import `test` from `tests/fixtures/test.ts`, not
   `@playwright/test`: it answers the media host from two tiny local clips
   (`tests/fixtures/media-stub.*`, the only videos in git), so the suite never
@@ -58,7 +60,8 @@ as `@tristimb/fleet-demo`: a GitHub Release tarball pinned by URL in
 
 - `dist/` — the built workbench page. `copy:fleet-demo` copies it to
   `public/fleet-demo/` (gitignored); the root `build` and `dev` both run it
-  first, and so does Playwright's `webServer` (via `build`).
+  first, and so does Playwright's `webServer` (via `build`, which
+  `PW_PREBUILT=1` skips; CI builds once before its test steps).
 - `src/element.ts` / `element.css` — the `<fleet-demo>` poster/launch element,
   imported as source by `src/components/FleetDemo.astro`.
 
@@ -183,7 +186,7 @@ each) → `bridge.css` (the `--color-*` names the web components read).
 
 **Edges:** every box is `var(--border)` (1px **dashed** `--border-color`) at
 `var(--radius-box)` (2.5px), panels add `--shadow-panel` and a
-`--panel-header-bg` header; code is `--code-bg` / `--code-fg` (+ `--code-border`),
+`--panel-header-bg` header; code is `--code-bg` / `--code-fg`,
 links `--link-color` / `--link-decoration*`, transitions `--duration-standard` +
 `--ease-standard`. Don't hand-write `1px solid`, `border-radius: 0` (use
 `--radius-square`) or a hex colour.

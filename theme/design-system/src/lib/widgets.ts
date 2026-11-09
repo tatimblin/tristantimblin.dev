@@ -3,7 +3,7 @@
  * gets to work with. How to write a widget: ./WIDGETS.md.
  *
  * A card is a <Widget name="…">, which renders `data-widget="<name>"` and
- * `data-widget-load="near|idle"`. The site hands startWidgets() a registry of
+ * `data-widget-load="near|idle|eager"`. The site hands startWidgets() a registry of
  * name → lazy module (import.meta.glob of src/widgets/<name>/client.ts, each
  * its own chunk), and on every page load (onPage: the first, and each
  * view-transition navigation) the runtime:
@@ -50,12 +50,11 @@ export interface WidgetContext {
 	/** onFrame(), unregistered with the card. */
 	frame(callback: FrameCallback, options?: Omit<FrameOptions, "signal" | "label">): () => void;
 	/**
-	 * Run `start` each time the card becomes active (or, with
-	 * `{ when: "animate" }`, active with motion allowed), and the stop it
-	 * returns each time it stops being so, and on teardown. The place for
-	 * continuous work: a frame loop, a timer, a playing video.
+	 * Run `start` each time the card becomes active, and the stop it returns
+	 * each time it stops being so, and on teardown. The place for continuous
+	 * work: a frame loop, a timer, a playing video.
 	 */
-	whileActive(start: () => (() => void) | void, options?: { when?: "active" | "animate" }): void;
+	whileActive(start: () => (() => void) | void): void;
 }
 
 /** Returns its teardown, if it has anything the signal does not undo. */
@@ -117,11 +116,11 @@ function context(name: string, el: HTMLElement, signal: AbortSignal): WidgetCont
 		activity: act,
 		signal,
 		frame: (callback, options) => onFrame(callback, { ...options, signal, label: name }),
-		whileActive(start, { when = "active" } = {}) {
+		whileActive(start) {
 			let stop: (() => void) | void | null = null;
 			let running = false;
 			const sync = () => {
-				const want = !signal.aborted && act[when];
+				const want = !signal.aborted && act.active;
 				if (want === running) return;
 				if (want) {
 					// Marked running only once start has returned: one that throws

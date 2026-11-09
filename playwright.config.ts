@@ -16,6 +16,9 @@ import { defineConfig, devices } from "@playwright/test";
     (with reuseExistingServer, a suite on 4321 would quietly test the dev server). */
 const PORT = Number(process.env.PW_PORT ?? 4460);
 
+/** PW_PREBUILT=1: dist/ is already built (CI builds once, before its test steps). */
+const BUILD = process.env.PW_PREBUILT ? "" : "bun run build && ";
+
 export default defineConfig({
 	testDir: "./tests",
 	fullyParallel: true,
@@ -47,12 +50,9 @@ export default defineConfig({
 			use: { ...devices["Desktop Chrome"] },
 		},
 		{
-			// FIREFOX RUNS ONE SPEC, deliberately. The lockup's scroll effects are CSS
-			// scroll-progress timelines with a JS fallback for engines that lack them, and
-			// Firefox IS that engine (153 reports the feature unsupported) — so the
-			// fallback has no coverage at all from a Chromium-only suite. That is how it
-			// shipped broken: the CSS gate correctly excluded Firefox and nothing was left
-			// to drive the effect there.
+			// FIREFOX RUNS ONE SPEC, deliberately: a second engine's check that the
+			// scroll-progress timelines (Firefox 159+) or, without them, the static
+			// presentation behave.
 			// Scoped to that one file rather than the whole suite because the rest measures
 			// geometry against Chromium's exact layout and font rasterisation; running it
 			// all in a second engine would be a much larger job for no extra safety here.
@@ -64,7 +64,7 @@ export default defineConfig({
 
 	webServer: {
 		// The root build: it copies the prebuilt fleet demo into public/ first.
-		command: `bun run build && bunx --bun astro preview --port ${PORT}`,
+		command: `${BUILD}bunx --bun astro preview --port ${PORT}`,
 		url: `http://localhost:${PORT}`,
 		reuseExistingServer: !process.env.CI,
 		timeout: 180_000,

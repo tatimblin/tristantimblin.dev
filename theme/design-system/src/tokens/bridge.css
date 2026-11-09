@@ -1,13 +1,16 @@
 /* Legacy-name bridge.
  *
- * The Web Components in theme/* reference a small set of custom properties
+ * The stories-heading lockup, the Web Components (<dotted-grid> and
+ * <video-carousel> from tatimblin/dotgrid) and the fleet demo from
+ * tatimblin/vscode-fleet) reference a small set of custom properties
  * (--color-*) that the design system does not define, and read them where a
  * class cannot reach: <dotted-grid> samples --color-fg / --color-bg into a
  * canvas, <stories-heading> and <video-carousel> paint --color-bg behind their
  * knockouts, and the fleet demo's element.css asks for --color-accent /
  * --color-border / --color-muted. This layer maps those names onto DS tokens.
  * Site code reaches for the DS token itself (--text-primary, --background,
- * --accent, --hairline …); nothing in src/ reads a --color-* name.
+ * --accent, --hairline …); the one reader in src/ is /dotgrid, whose panes
+ * show a halftone against the very --color-bg it samples.
  *
  * Imported LAST (after generated, overrides and the themes). Declared on
  * [data-theme], like every derived token, so the aliases re-resolve inside any

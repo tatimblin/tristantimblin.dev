@@ -174,7 +174,7 @@
    align-content: end, so that on a phone, where the tile is a fraction of a
    pixel taller than the room above the ruler, the row spills into the body's
    padding at its top rather than onto the ruler. */
-.wx-nowplaying .ds-card-body {
+.wx-np-body {
 	container: now-playing / inline-size;
 }
 @container now-playing (max-width: 268px) {

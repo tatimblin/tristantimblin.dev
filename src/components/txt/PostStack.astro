@@ -63,16 +63,15 @@ import {
 	postHref,
 	readingStats,
 } from "../../lib/blog";
-import { formatReads, getPathStats } from "../../lib/pageviews";
+import { reads } from "../../lib/pageviews";
 
 type Entry = CollectionEntry<"txt"> | CollectionEntry<"demos">;
 
 interface Props {
 	posts: Entry[];
-	label?: string;
 }
 
-const { posts, label = "Posts" } = Astro.props;
+const { posts } = Astro.props;
 const rows = byDateDesc(posts).map((entry) => {
 	if (entry.collection === "demos") {
 		const href = demoHref(entry.id);
@@ -82,7 +81,7 @@ const rows = byDateDesc(posts).map((entry) => {
 			title: entry.data.title,
 			demo: true,
 			// Only a count: a demo has no category or word count.
-			meta: formatReads(getPathStats(href)?.reads, "views"),
+			meta: reads(href, "views"),
 			excerpt: entry.data.description,
 			action: "View",
 		};
@@ -90,13 +89,12 @@ const rows = byDateDesc(posts).map((entry) => {
 	const cat = entry.data.category ? categories[entry.data.category] : null;
 	const { words } = readingStats(entry.body);
 	const href = postHref(entry.id);
-	const reads = formatReads(getPathStats(href)?.reads);
 	return {
 		href,
 		date: entry.data.date,
 		title: entry.data.title,
 		demo: false,
-		meta: [cat?.label, `${words.toLocaleString("en-US")} words`, reads].filter(Boolean).join(" · "),
+		meta: [cat?.label, `${words.toLocaleString("en-US")} words`, reads(href)].filter(Boolean).join(" · "),
 		excerpt: entry.data.excerpt,
 		action: "Read",
 	};
@@ -107,7 +105,7 @@ const rows = byDateDesc(posts).map((entry) => {
 	rows.length === 0 ? (
 		<Body variant="tertiary">Nothing here yet.</Body>
 	) : (
-		<ol class="stack" aria-label={label} data-stack>
+		<ol class="stack ds-list-bare" aria-label="Posts" data-stack>
 			{rows.map(({ href, date, title, demo, meta, excerpt, action }, i) => {
 				return (
 					<li class="stack__post" data-open={i === 0 ? "" : undefined} data-demo={demo ? "" : undefined}>
@@ -156,9 +154,6 @@ const rows = byDateDesc(posts).map((entry) => {
 	   var(--border) as the other edges, so its dash and colour are theirs.
 	   Square, flat, no fill. */
 	.stack {
-		list-style: none;
-		margin: 0;
-		padding: 0;
 		border-block: var(--border);
 		/* Scroll anchoring must not shift the page while a swap runs. */
 		overflow-anchor: none;

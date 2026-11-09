@@ -1,6 +1,6 @@
 // Baywheels stats — read at build time (frontmatter runs in Node) from the CSV
-// that the baywheels-stats GitHub Action appends to daily (the Action writes to
-// this file's path — keep them in sync). BikeStats.astro consumes the normalized
+// that the nightly workflow appends to (it writes to this file's path — keep
+// them in sync). BikeStats.astro consumes the normalized
 // shape returned by getBikeStats().
 //
 // CSV schema: `date,rides,distance,duration`

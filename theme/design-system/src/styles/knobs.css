@@ -127,9 +127,9 @@
 		flex: 1 1 auto;
 		min-inline-size: 0;
 		padding: var(--space-1) var(--space-2);
-		border: var(--border-width) solid var(--input-border);
+		border: var(--border-width) solid var(--border-color);
 		border-radius: var(--radius-box);
-		background: var(--input-background);
+		background: var(--card-background);
 		color: var(--text-primary);
 		font: inherit;
 		font-family: var(--font-code);

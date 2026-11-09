@@ -14,8 +14,8 @@
  * CSS is unlayered too, which means it ALWAYS wins over a package rule at any
  * specificity — a page that sets a property on a DS element gets it, no
  * chaining required. The one thing to watch: a bare element rule on the site
- * (`h2 { font-size }`) also beats a DS class now, so the site keeps such
- * rules off DS elements (`:not(.ds-heading)`).
+ * (`h2 { font-size }`) also beats a DS class now, so the site has none
+ * beyond global.css's resets.
  *
  * NOT EVERY COMPONENT IS HERE. What only the catalogue pages and the
  * playgrounds render — button, and the tooling (knobs, theme-page) — is
@@ -31,7 +31,6 @@
 /* What every control shares, before the components. */
 @import "./control.css" layer(ds.components);
 @import "./box.css" layer(ds.components);
-@import "./flex.css" layer(ds.components);
 @import "./grid.css" layer(ds.components);
 @import "./widget-grid.css" layer(ds.components);
 @import "./text.css" layer(ds.components);
@@ -54,7 +53,6 @@
 @import "./icon.css" layer(ds.components);
 @import "./visually-hidden.css" layer(ds.components);
 /* Hairline graphics. */
-@import "./hairline.css" layer(ds.components);
 @import "./tick-ruler.css" layer(ds.components);
 @import "./bar-graph.css" layer(ds.components);
 @import "./legend.css" layer(ds.components);

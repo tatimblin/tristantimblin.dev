@@ -11,6 +11,7 @@ import type { GetStaticPaths } from "astro";
 import type { CollectionEntry } from "astro:content";
 import BlogLayout from "../../../layouts/BlogLayout.astro";
 import PostIndex from "../../../components/txt/PostIndex.astro";
+import { tagLabel } from "../../../lib/blog";
 import { getPosts } from "../../../lib/posts";
 
 export const getStaticPaths = (async () => {
@@ -30,11 +31,11 @@ interface Props {
 }
 
 const { tag, posts } = Astro.props;
-const label = tag.replace(/-/g, " ");
+const label = tagLabel(tag);
 ---
 
 <BlogLayout
-	title={`${label} — Tristan Timblin`}
+	title={label}
 	description={`Writing by Tristan Timblin tagged ${label}.`}
 	noindex
 	kicker="Tag"

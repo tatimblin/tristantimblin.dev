@@ -1,56 +1,8 @@
-/* Grid + GridItem — exact port of Grid.styles.tsx. */
+/* Grid — port of Grid.styles.tsx. */
 
 .ds-grid {
 	display: grid;
 	height: inherit;
-}
-
-/* align → align-items */
-.ds-grid--align-start {
-	align-items: start;
-}
-.ds-grid--align-center {
-	align-items: center;
-}
-.ds-grid--align-end {
-	align-items: end;
-}
-.ds-grid--align-stretch {
-	align-items: stretch;
-}
-.ds-grid--align-baseline {
-	align-items: baseline;
-}
-
-/* justify → justify-content */
-.ds-grid--justify-start {
-	justify-content: start;
-}
-.ds-grid--justify-center {
-	justify-content: center;
-}
-.ds-grid--justify-end {
-	justify-content: end;
-}
-.ds-grid--justify-between {
-	justify-content: space-between;
-}
-
-/* flow → grid-auto-flow */
-.ds-grid--flow-row {
-	grid-auto-flow: row;
-}
-.ds-grid--flow-column {
-	grid-auto-flow: column;
-}
-.ds-grid--flow-dense {
-	grid-auto-flow: dense;
-}
-.ds-grid--flow-rowDense {
-	grid-auto-flow: row dense;
-}
-.ds-grid--flow-columnDense {
-	grid-auto-flow: column dense;
 }
 
 /* gap / gapX / gapY → --space-1..15 */
@@ -190,57 +142,4 @@
 }
 .ds-grid--gap-y-15 {
 	row-gap: var(--space-15);
-}
-
-/* --- GridItem --- */
-.ds-grid-item {
-	position: relative;
-}
-
-.ds-grid-item--align-self-start {
-	align-self: start;
-}
-.ds-grid-item--align-self-center {
-	align-self: center;
-}
-.ds-grid-item--align-self-end {
-	align-self: end;
-}
-.ds-grid-item--align-self-stretch {
-	align-self: stretch;
-}
-.ds-grid-item--align-self-baseline {
-	align-self: baseline;
-}
-
-.ds-grid-item--justify-self-start {
-	justify-self: start;
-}
-.ds-grid-item--justify-self-center {
-	justify-self: center;
-}
-.ds-grid-item--justify-self-end {
-	justify-self: end;
-}
-.ds-grid-item--justify-self-stretch {
-	justify-self: stretch;
-}
-.ds-grid-item--justify-self-baseline {
-	justify-self: baseline;
-}
-
-.ds-grid-item--place-self-start {
-	place-self: start;
-}
-.ds-grid-item--place-self-center {
-	place-self: center;
-}
-.ds-grid-item--place-self-end {
-	place-self: end;
-}
-.ds-grid-item--place-self-stretch {
-	place-self: stretch;
-}
-.ds-grid-item--place-self-baseline {
-	place-self: baseline;
 }

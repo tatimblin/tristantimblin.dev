@@ -6,7 +6,7 @@
  * geometric property may appear here.
  *
  * THE HIDDEN RULE REQUIRES TWO CONDITIONS: `html.reveal-armed` (set by the inline
- * head script in Layout.astro, which also schedules its own removal) AND the
+ * head script in HomeLayout.astro, which also schedules its own removal) AND the
  * absence of the revealed state. Either one going away reveals the content, so
  * every failure path — no JS, a bundle that 404s, a throw, a hung asset — lands on
  * VISIBLE. The un-armed document is the visible document. */
@@ -19,10 +19,8 @@
 	html.reveal-armed [data-reveal]:not([data-reveal-state="in"]),
 	[data-reveal="row"][data-reveal-state="pending"] {
 		opacity: 0;
-		/* `translate`, NOT `transform`: it composes with the JS-driven transforms
-		   already on some of these elements (the widget grid's --vc-dock-lift, the
-		   bike watermark's --bw-slide) instead of clobbering them. Verified to
-		   stack rather than replace. */
+		/* `translate`, NOT `transform`: it composes with the videos card's dock,
+		   a transform animation, instead of clobbering it. */
 		translate: 0 var(--reveal-rise);
 	}
 }

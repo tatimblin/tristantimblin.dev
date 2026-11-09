@@ -6,9 +6,8 @@
 .ds-heading {
 	/* The site's heading face. Family and weight travel as a pair: DM Sans is
 	   one family with three cuts, so a family set without a weight lands on
-	   whichever the browser considers nearest. This is the single place H1-H4
-	   pick up the face; the bare h1-h6 element rules in the site's global.css set
-	   the same pair, for headings outside the component. */
+	   whichever the browser considers nearest. This is the single place a
+	   Heading picks up the face. */
 	font-family: var(--font-heading);
 	font-weight: var(--font-heading-weight, var(--font-weight-700));
 	/* Display leading, NOT body leading. A heading is one or two lines that have to
@@ -16,8 +15,7 @@
 	   read as two unrelated lines drifting apart. The token is the one place to
 	   retune it — see the LEADING note in tokens.overrides.css. */
 	line-height: var(--line-height-heading, 1.15);
-	/* The display tracking token, so an <h1> and an <H1> on the same page are
-	   tracked alike. */
+	/* The display tracking token, so every Heading is tracked alike. */
 	letter-spacing: var(--tracking-heading, 0);
 }
 /* The display steps track in: at 44px and up the face's own spacing reads

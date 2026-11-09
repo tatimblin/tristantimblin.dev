@@ -42,7 +42,7 @@ async function wheelPass(page: Page, cdp: CDPSession, device: "desktop" | "mobil
 			await page.waitForTimeout(150);
 		}
 	}
-	// Let the last of it (Lenis's glide, a fling) finish.
+	// Let the last of it (a fling) finish.
 	await page.waitForTimeout(800);
 }
 
@@ -89,25 +89,22 @@ for (const [device, use] of [
 			expect(work.styles, "style recalcs during the scroll pass").toBeLessThanOrEqual(ENGINE.scroll[device].styles);
 		});
 
-		test("no scroll-blocking listeners but Lenis's own", async ({ page }) => {
+		test("no scroll-blocking listeners but the allowlisted ones", async ({ page }) => {
 			await load(page);
 			await mountAll(page);
 			await scrollTo(page, 0);
 			const blocking = await page.evaluate(() => {
-				type L = { target: string; type: string; passive: boolean; removed: boolean; fn: unknown; src: string };
+				type L = { target: string; type: string; passive: boolean; removed: boolean; src: string };
 				const P = (window as unknown as { __whoisPerf: { listeners: L[] } }).__whoisPerf;
-				const vs = (window as unknown as { __lenis?: { virtualScroll?: Record<string, unknown> } }).__lenis?.virtualScroll;
-				const lenis = new Set(vs ? [vs.onWheel, vs.onTouchStart, vs.onTouchMove] : []);
 				return P.listeners
 					// `src` "?" is no page script: Playwright's own injected hit-target
 					// listeners.
 					.filter((l) => !l.removed && !l.passive && l.src !== "?")
 					.filter((l) => ["wheel", "mousewheel", "touchstart", "touchmove"].includes(l.type))
-					.map((l) => ({ target: l.target, type: l.type, lenis: lenis.has(l.fn), src: l.src }));
+					.map((l) => ({ target: l.target, type: l.type, src: l.src }));
 			});
 			observed("non-passive wheel/touch listeners", blocking);
 			for (const l of blocking) {
-				if (l.lenis) continue;
 				const allowed = BLOCKING_LISTENERS.find((a) => a.type === l.type && a.target.test(l.target));
 				expect(
 					allowed,

@@ -1,150 +1,94 @@
-import { test, expect } from "./fixtures/test";
+import { test, expect, type Page } from "./fixtures/test";
+import { LOCKUP, VIDEOS, dockLift, openHome, scrollAndSettle } from "./fixtures/opener";
 
 /**
- * ONE MECHANISM PER ENGINE, AND THE EFFECT ALWAYS WORKS.
- *
- * The lockup's scroll effects are CSS scroll-progress timelines, gated on
- * `@supports (animation-timeline: scroll())`. That gate is what keeps them safe on
- * engines without the feature — but a gate alone would mean those engines get no
- * effect at all, which is what happened: Firefox 153 reports the feature as
- * unsupported, so the wipe and the intro fade simply did not exist there. The old
- * per-frame JS driver is kept behind the SAME feature test to cover them.
- *
- * Two mechanisms for one effect is a standing hazard, so this file pins both halves:
- *
- *   1. Exactly ONE of them drives it. If the CSS `@supports` condition and the JS
- *      feature test ever drift apart, an engine either runs both (the JS writes fight
- *      the animation) or neither (no effect, silently). Neither shows up as an error.
- *   2. The user-visible outcome is the same either way — the wipe advances with
- *      scroll, and the intro is visible at rest.
- *
- * RUNS IN BOTH ENGINES (see playwright.config.ts). It is deliberately written to
- * assert the same behaviour from either side of the branch rather than to expect a
- * particular engine, so it keeps working when Firefox ships scroll-driven animations
- * and simply swaps which path it takes.
+ * THE SCROLL EFFECTS, BY OUTCOME. The lockup's drift, wipe and fade and the
+ * videos card's dock and chrome are CSS scroll-progress timelines behind
+ * `@supports (animation-timeline: scroll())`. Each test asserts the effect
+ * where the engine has them and the static presentation where it doesn't, so
+ * it holds in either kind of engine (playwright.config.ts runs it in Firefox
+ * too).
  */
 
-test("the wipe is driven by exactly one mechanism, and works either way", async ({
-	page,
-}) => {
-	await page.goto("/");
-	await page
-		.locator("stories-heading[data-ready]")
-		.waitFor({ state: "attached", timeout: 15_000 });
+const hasTimelines = (page: Page) =>
+	page.evaluate(() => CSS.supports("animation-timeline", "scroll()"));
 
-	const state = await page.evaluate(() => {
-		const solid = document.querySelector<HTMLElement>(".sh__solid")!;
-		return {
-			supports:
-				typeof CSS !== "undefined" &&
-				typeof CSS.supports === "function" &&
-				CSS.supports("animation-timeline", "scroll()"),
-			// The CSS path's signature: a running animation on a scroll timeline.
-			scrollAnimations: solid
-				.getAnimations()
-				.filter((a) => /ScrollTimeline|ViewTimeline/.test(a.timeline?.constructor?.name ?? ""))
-				.length,
-			// The JS path's signature: --sh-clip written as an INLINE style. The
-			// stylesheet only ever declares it on the host, so an inline value on this
-			// element can only have come from the fallback driver.
-			inlineClip: solid.style.getPropertyValue("--sh-clip"),
-		};
-	});
+/** The share of the solid word still clipped away (0 is the whole word). */
+const readClip = (page: Page) =>
+	page.evaluate((solid) => {
+		const cp = getComputedStyle(document.querySelector<HTMLElement>(solid)!).clipPath;
+		const m = /inset\(([\d.]+)%/.exec(cp);
+		return m ? Number(m[1]) / 100 : cp === "none" ? 0 : null;
+	}, LOCKUP.solid);
 
-	if (state.supports) {
-		expect(state.scrollAnimations, "CSS should drive the wipe here").toBeGreaterThan(0);
-		expect(
-			state.inlineClip,
-			"the JS fallback is ALSO running — the feature test and the @supports condition have drifted apart"
-		).toBe("");
-	} else {
-		expect(
-			state.scrollAnimations,
-			"no scroll-timeline support, so nothing should be animating"
-		).toBe(0);
-		expect(
-			state.inlineClip,
-			"no scroll-timeline support and no JS fallback either — this engine gets no effect at all"
-		).not.toBe("");
-	}
-});
+/** Read off the date, which fades with the frame. */
+const readChrome = (page: Page) =>
+	page.evaluate(() => Number(getComputedStyle(document.querySelector(".wx-videos__date")!).opacity));
 
-test("the wipe advances with scroll on any engine", async ({ page }) => {
-	// The outcome the two mechanisms exist to produce, asserted without caring which
-	// one produced it. Reads the clip fraction rather than the raw string so the two
-	// paths' different rounding (79.87% vs 79.8333%) doesn't matter.
-	await page.goto("/");
-	await page
-		.locator("stories-heading[data-ready]")
-		.waitFor({ state: "attached", timeout: 15_000 });
+/** The frame and the bands, which fade as one layer. */
+const readSurface = (page: Page) =>
+	page.evaluate(() => Number(getComputedStyle(document.querySelector(".wx-videos__surface")!).opacity));
+
+const videosMounted = (page: Page) =>
+	page.locator(`${VIDEOS.card}[data-widget-state=mounted]`).waitFor({ state: "attached", timeout: 15_000 });
+
+test("the wipe advances with scroll, or the word is solid throughout", async ({ page }) => {
+	await openHome(page);
 
 	const clipAt = async (y: number) => {
-		await page.evaluate((v) => window.scrollTo(0, v), y);
-		await page.waitForTimeout(250);
-		return page.evaluate(() => {
-			const cp = getComputedStyle(document.querySelector<HTMLElement>(".sh__solid")!).clipPath;
-			const m = /inset\(([\d.]+)%/.exec(cp);
-			return m ? Number(m[1]) / 100 : cp === "none" ? 0 : null;
-		});
+		await scrollAndSettle(page, y);
+		return readClip(page);
 	};
 
-	// The range is derived from the hero's own geometry, so rather than hardcode scroll
-	// offsets, sample across a span wide enough to contain it at any viewport.
-	const hidden = await clipAt(0);
-	expect(hidden, "the solid layer should start fully clipped").toBeCloseTo(1, 1);
+	if (!(await hasTimelines(page))) {
+		for (const y of [0, 300, 900]) expect(await clipAt(y), `clipped at scroll ${y}`).toBe(0);
+		return;
+	}
 
+	expect(await clipAt(0), "the solid layer should start fully clipped").toBeCloseTo(1, 1);
+
+	// The range comes from the hero's geometry, so sample a span that contains it
+	// at any viewport.
 	const samples: number[] = [];
 	for (let y = 100; y <= 900; y += 100) samples.push((await clipAt(y)) ?? NaN);
 
-	// Monotonically revealing, and it actually gets there.
 	for (let i = 1; i < samples.length; i++) {
 		expect(
 			samples[i],
 			`the wipe went backwards between the ${i - 1}th and ${i}th sample: ${JSON.stringify(samples)}`
 		).toBeLessThanOrEqual(samples[i - 1] + 0.001);
 	}
-	expect(
-		Math.min(...samples),
-		`the wipe never completed: ${JSON.stringify(samples)}`
-	).toBeCloseTo(0, 1);
+	expect(Math.min(...samples), `the wipe never completed: ${JSON.stringify(samples)}`).toBeCloseTo(0, 1);
 });
 
-test("the intro is visible at rest on any engine", async ({ page }) => {
-	// The fail-visible property, checked on whichever path this engine takes.
-	await page.goto("/");
-	await page
-		.locator("stories-heading[data-ready]")
-		.waitFor({ state: "attached", timeout: 15_000 });
-	await page.evaluate(() => window.scrollTo(0, 0));
-	await page.waitForTimeout(250);
+test("the intro is visible at rest", async ({ page }) => {
+	await openHome(page);
+	await scrollAndSettle(page, 0);
 
-	const sub = await page.evaluate(() => {
-		const cs = getComputedStyle(document.querySelector<HTMLElement>(".sh__sub")!);
+	const sub = await page.evaluate((selector) => {
+		const cs = getComputedStyle(document.querySelector<HTMLElement>(selector)!);
 		return { opacity: Number(cs.opacity), visibility: cs.visibility };
-	});
+	}, LOCKUP.sub);
 	expect(sub.opacity).toBe(1);
 	expect(sub.visibility).toBe("visible");
 });
 
-test("the word drifts from the first pixel of scroll, then pins, on any engine", async ({
-	page,
-}) => {
-	// "tristan" never sits still waiting to pin: from scroll 0 it rises at
-	// --sh-drift-rate of the page (a CSS animation, or the fallback's --sh-shift),
-	// then holds at the sticky line. Either mechanism, the same outcome.
-	await page.setViewportSize({ width: 1440, height: 900 });
-	await page.goto("/");
-	await page.locator("stories-heading[data-ready]").waitFor({ state: "attached", timeout: 15_000 });
+test("the word drifts from the first pixel of scroll, then pins", async ({ page }) => {
+	await openHome(page, 1440, 900);
+
 	const topAt = async (y: number) => {
-		await page.evaluate((v) => window.scrollTo(0, v), y);
-		await page.waitForTimeout(250);
-		return page.evaluate(() => document.querySelector(".sh__wordmark")!.getBoundingClientRect().top);
+		await scrollAndSettle(page, y);
+		return page.evaluate((word) => document.querySelector(word)!.getBoundingClientRect().top, LOCKUP.wordmark);
 	};
 	const rest = await topAt(0);
 	const early = await topAt(20);
-	// Moving at once, and only a fraction of the page.
-	expect(rest - early, "still at scroll 20").toBeGreaterThan(1.5);
-	expect(rest - early, "moving with the page, not drifting").toBeLessThan(6);
+	if (await hasTimelines(page)) {
+		// Moving at once, and only a fraction of the page.
+		expect(rest - early, "still at scroll 20").toBeGreaterThan(1.5);
+		expect(rest - early, "moving with the page, not drifting").toBeLessThan(6);
+	} else {
+		expect(Math.abs(rest - early), "held where it rests, with no drift").toBeLessThan(0.5);
+	}
 	// Then pinned: the same place across a stretch of scroll, held a little above
 	// its rest, in the middle.
 	const a = await topAt(280);
@@ -153,93 +97,99 @@ test("the word drifts from the first pixel of scroll, then pins, on any engine",
 	expect(rest - a, "a small rise in all").toBeLessThan(50);
 });
 
-/**
- * THE VIDEOS CARD'S DOCK LIFT is the same arrangement: a CSS scroll-progress
- * animation where the engine has scroll timelines (src/widgets/videos/videos.css),
- * and src/widgets/videos/client.ts writing --vc-dock-lift on scroll where it
- * doesn't. Both halves pinned the same way as the wipe's.
- */
-test("the dock lift is driven by exactly one mechanism, and docks either way", async ({
-	page,
-}) => {
+test("the card docks with scroll, or sits in its cell throughout", async ({ page }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/");
-	const card = page.locator(".wx-videos[data-widget-state=mounted]");
-	await card.waitFor({ state: "attached", timeout: 15_000 });
+	await videosMounted(page);
 
 	const at = async (y: number) => {
-		await page.evaluate((v) => window.scrollTo(0, v), y);
-		await page.waitForTimeout(250);
-		return page.evaluate(() => {
-			const el = document.querySelector<HTMLElement>(".wx-videos")!;
-			return {
-				supports:
-					typeof CSS !== "undefined" &&
-					typeof CSS.supports === "function" &&
-					CSS.supports("animation-timeline", "scroll()"),
-				scrollAnimations: el
-					.getAnimations()
-					.filter((a) => /ScrollTimeline/.test(a.timeline?.constructor?.name ?? "")).length,
-				inlineLift: el.style.getPropertyValue("--vc-dock-lift"),
-				lift: new DOMMatrix(getComputedStyle(el).transform).m42,
-			};
-		});
+		await scrollAndSettle(page, y);
+		return dockLift(page);
 	};
 
-	const rest = await at(0);
-	if (rest.supports) {
-		expect(rest.scrollAnimations, "CSS should drive the dock here").toBe(1);
-		expect(rest.inlineLift, "the JS fallback is ALSO running").toBe("");
-	} else {
-		expect(rest.scrollAnimations).toBe(0);
-		expect(rest.inlineLift, "no scroll timelines and no JS fallback either").not.toBe("");
+	if (!(await hasTimelines(page))) {
+		for (const y of [0, 200, 3000]) expect(await at(y), `lifted at scroll ${y}`).toBe(0);
+		return;
 	}
-	expect(rest.lift, "parked above its slot at scroll 0").toBeLessThan(-100);
 
+	const rest = await at(0);
+	expect(rest, "parked above its slot at scroll 0").toBeLessThan(-100);
 	const mid = await at(200);
-	expect(mid.lift).toBeGreaterThan(rest.lift);
-	expect(mid.lift).toBeLessThan(0);
-	expect((await at(3000)).lift, "docked: no lift left").toBe(0);
-	expect((await at(0)).lift, "and lifted again on the way back up").toBeCloseTo(rest.lift, 0);
+	expect(mid).toBeGreaterThan(rest);
+	expect(mid).toBeLessThan(0);
+	expect(await at(3000), "docked: no lift left").toBe(0);
+	expect(await at(0), "and lifted again on the way back up").toBeCloseTo(rest, 0);
 });
 
-/** The chrome it puts on as it docks: the same arrangement again, one number on
- *  the dock's timeline (read here off the date, which fades with the frame), or
- *  --vc-chrome written from client.ts. */
-test("the chrome's fade is driven by exactly one mechanism, and lands either way", async ({ page }) => {
+test("the chrome fades on as the card docks, or is on throughout", async ({ page }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/");
-	await page.locator(".wx-videos[data-widget-state=mounted]").waitFor({ state: "attached", timeout: 15_000 });
+	await videosMounted(page);
 
 	const at = async (y: number) => {
-		await page.evaluate((v) => window.scrollTo(0, v), y);
-		await page.waitForTimeout(250);
-		return page.evaluate(() => {
-			const el = document.querySelector<HTMLElement>(".wx-videos")!;
-			const chrome = document.querySelector<HTMLElement>(".wx-videos__wide")!;
-			return {
-				supports:
-					typeof CSS !== "undefined" &&
-					typeof CSS.supports === "function" &&
-					CSS.supports("animation-timeline", "scroll()"),
-				scrollAnimations: chrome
-					.getAnimations()
-					.filter((a) => /ScrollTimeline/.test(a.timeline?.constructor?.name ?? "")).length,
-				inlineChrome: el.style.getPropertyValue("--vc-chrome"),
-				opacity: Number(getComputedStyle(document.querySelector(".wx-videos__date")!).opacity),
-			};
-		});
+		await scrollAndSettle(page, y);
+		return readChrome(page);
 	};
 
-	const rest = await at(0);
-	if (rest.supports) {
-		expect(rest.scrollAnimations, "CSS should drive the chrome here").toBe(1);
-		expect(rest.inlineChrome, "the JS fallback is ALSO running").toBe("");
-	} else {
-		expect(rest.scrollAnimations).toBe(0);
-		expect(rest.inlineChrome, "no scroll timelines and no JS fallback either").toBe("0.000");
+	if (!(await hasTimelines(page))) {
+		for (const y of [0, 3000]) expect(await at(y), `off at scroll ${y}`).toBe(1);
+		return;
 	}
-	expect(rest.opacity, "bare at rest").toBe(0);
-	expect((await at(3000)).opacity, "on once docked").toBe(1);
-	expect((await at(0)).opacity, "and off again on the way back up").toBe(0);
+
+	expect(await at(0), "bare at rest").toBe(0);
+	expect(await at(3000), "on once docked").toBe(1);
+	expect(await at(0), "and off again on the way back up").toBe(0);
+});
+
+/**
+ * THE STATIC PRESENTATION, ON DEMAND. @supports can't be stubbed, so this
+ * deletes the rules it gates, leaving the stylesheet such an engine applies,
+ * and has CSS.supports answer as that engine would.
+ */
+async function loadWithoutTimelines(page: Page) {
+	await page.addInitScript(() => {
+		const supports = CSS.supports.bind(CSS) as (...args: string[]) => boolean;
+		CSS.supports = ((...args: string[]) =>
+			args.join(" ").includes("animation-timeline") ? false : supports(...args)) as typeof CSS.supports;
+	});
+	await openHome(page);
+	await page.evaluate(() => {
+		const strip = (parent: CSSStyleSheet | CSSGroupingRule) => {
+			for (let i = parent.cssRules.length - 1; i >= 0; i--) {
+				const rule = parent.cssRules[i];
+				if (rule instanceof CSSSupportsRule && /^\(animation-timeline/.test(rule.conditionText)) parent.deleteRule(i);
+				else if (rule instanceof CSSGroupingRule) strip(rule);
+			}
+		};
+		for (const sheet of Array.from(document.styleSheets)) strip(sheet);
+	});
+}
+
+test("without scroll timelines the page is static and complete", async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await loadWithoutTimelines(page);
+	await videosMounted(page);
+
+	for (const y of [0, 400, 3000]) {
+		await scrollAndSettle(page, y);
+		expect(await readClip(page), `the word is clipped at scroll ${y}`).toBe(0);
+		expect(await dockLift(page), `the card is lifted at scroll ${y}`).toBe(0);
+		expect(await readChrome(page), `the chrome is off at scroll ${y}`).toBe(1);
+		expect(await readSurface(page), `the frame is off at scroll ${y}`).toBe(1);
+	}
+	await scrollAndSettle(page, 0);
+	const sub = await page.evaluate((selector) => getComputedStyle(document.querySelector(selector)!).opacity, LOCKUP.sub);
+	expect(Number(sub)).toBe(1);
+});
+
+test("without scroll timelines the compact ruler is on and takes input", async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	await loadWithoutTimelines(page);
+	await page.locator(`${VIDEOS.compact}[data-ready]`).waitFor({ state: "attached", timeout: 15_000 });
+
+	await expect(page.locator(VIDEOS.card)).toHaveAttribute("data-vc-docked", "");
+	const ruler = page.locator(`${VIDEOS.compact} .vc__ruler`);
+	await expect(ruler).toHaveCSS("opacity", "1");
+	await expect(ruler).toHaveCSS("pointer-events", "auto");
+	expect(await ruler.evaluate((el) => (el as HTMLElement).inert)).toBe(false);
 });

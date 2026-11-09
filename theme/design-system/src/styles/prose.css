@@ -70,7 +70,7 @@
 	overflow-x: auto;
 	background: var(--code-bg);
 	color: var(--code-fg);
-	border: var(--code-border);
+	border: var(--border);
 	border-radius: var(--radius-box);
 	font-family: var(--font-code);
 	font-size: var(--prose-code-size);
@@ -89,7 +89,7 @@
    the tag is styled here instead. */
 .ds-prose :not(pre) > code {
 	padding: 2px var(--space-1);
-	background: var(--code-snippet-background);
+	background: var(--wash-1);
 	border: 0;
 	border-radius: var(--radius-box);
 	font-family: var(--font-code);

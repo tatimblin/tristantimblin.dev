@@ -6,6 +6,7 @@
 // 1×1 (/tmp/amc-mock v5 B1), and ./fan.ts scales them all by the card's own
 // size (`u`), so the card is the same drawing at any cell size.
 import { GENRES, type Genre } from "./genres";
+import { MONTHS } from "../../lib/format";
 
 export interface FilmLike {
 	d: string; // YYYY-MM-DD
@@ -224,7 +225,6 @@ export function placeAtAngle(groups: readonly Group[], arcs: readonly CapArc[], 
 
 /* ── dates and words ─────────────────────────────────────────────────── */
 
-export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 export const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /** A YYYY-MM-DD as a calendar date (no zone: it is the theatre's day). */

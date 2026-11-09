@@ -18,4 +18,4 @@ interface Props {
 const { class: className, ...rest } = Astro.props;
 ---
 
-<ol class={cx("ds-post-list", className)} {...rest}><slot /></ol>
+<ol class={cx("ds-post-list", "ds-list-bare", className)} {...rest}><slot /></ol>

@@ -14,12 +14,9 @@ import type {
 } from "schema-dts";
 
 interface Props {
-	/** The <title>: "<name> — Tristan Timblin" everywhere but the home page. */
+	/** The page's own name; the <title> reads "<title> — Tristan Timblin".
+	 *  Without one (the home page), the site's name alone. */
 	title?: string;
-	/** The page's own name without the site suffix: og:title, twitter:title
-	 *  and the JSON-LD headline. A post or a demo passes it; elsewhere the
-	 *  title stands in. */
-	headline?: string;
 	description?: string;
 	/** Path or absolute URL to the social card; defaults to /og.jpg.
 	 *  A page that passes one gets the large card. */
@@ -69,8 +66,7 @@ const PERSON = {
 };
 
 const {
-	title = SITE_NAME,
-	headline = title,
+	title: pageTitle,
 	description = DEFAULT_DESCRIPTION,
 	image,
 	imageAlt,
@@ -85,6 +81,11 @@ const {
 	text,
 	creditText,
 } = Astro.props;
+
+const title = pageTitle ? `${pageTitle} — ${SITE_NAME}` : SITE_NAME;
+// og:title, twitter:title and the JSON-LD headline: an article goes out under
+// its own name, every other page under its full title.
+const headline = type === "article" && pageTitle ? pageTitle : title;
 
 // Astro.site is the configured origin (https://tristantimblin.dev). Everything
 // social/canonical must be absolute, so resolve against it.

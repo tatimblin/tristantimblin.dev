@@ -5,8 +5,8 @@
  * Plain CSS (not an Astro scoped <style>): the host is rendered by
  * VideoCarousel.astro, and the light theme's dot-colour rule reaches the
  * <dotted-grid> inside it. Nothing here selects a .vc__* internal but the
- * stage and grid the chrome rides over, and the ruler and its year labels,
- * which the two-column grid hides — the package's `fill` attribute and
+ * stage and grid the chrome rides over, the playhead marker, and the ruler
+ * and its year labels, which the two-column grid hides — the package's `fill` attribute and
  * --vc-stage-radius do the rest. The .wx-videos prefix keeps everything
  * contained to this widget; the grid rule below keys on the grid that HOLDS it
  * (:has), so the page needs no class of its own for it. */
@@ -22,10 +22,10 @@
    can't absorb is reserved, and once the margin is wide enough the grid — and
    the card's right edge — runs to the container edge like every other row. */
 .ds-widget-grid:has(.wx-videos) {
-	--vc-outer-margin: calc(var(--container-inset) - var(--container-pad));
 	padding-inline-end: max(
 		0px,
-		var(--vc-ruler-w) + var(--vc-main-gap) - var(--vc-outer-margin)
+		var(--vc-ruler-w) + var(--vc-main-gap) -
+			(var(--container-inset) - var(--container-pad))
 	);
 
 	/* THE CHROME'S BANDS (VideoChrome.astro), from its parts: the header (its
@@ -44,13 +44,13 @@
 	--vc-foot-band: calc(var(--border-width) + var(--vc-foot-h));
 }
 
-/* The video cell: the last column, the first two rows of cards (row 1 is the
-   page's opener, HomeLayout.astro). Numeric lines (not -1/-2): the grid has no
-   explicit row template, so negative lines are unreliable with
-   grid-auto-flow: dense + implicit tracks. grid-auto-flow: dense then packs the
-   auto-placed 1×1 widgets around this. */
+/* The video cell: the last column, at either step (the grid's columns are
+   explicit, so -2 is its start line), and the first two rows of cards (row 1 is
+   the page's opener, HomeLayout.astro; numeric, as the grid has no explicit row
+   template). grid-auto-flow: dense then packs the auto-placed 1×1 widgets
+   around this. */
 .wx-videos {
-	grid-column: var(--widget-cols, 4) / span 1;
+	grid-column: -2 / span 1;
 	grid-row: 2 / span 2;
 	/* Explicit 2-row span sets the height; release the DS 1×2 box so it
 	   doesn't fight the row span. SIZE CONTAINMENT so it never sets the span either:
@@ -76,22 +76,8 @@
 	   fixed 48px would start 7.4px off on a short phone (a 444px travel): at most
 	   8% of the travel keeps the start within 6px at every size. */
 	--vc-chrome-run: min(var(--space-8), var(--vc-dock-travel) * 0.08);
-	/* THE STATIC STATE is parked: an engine without scroll timelines shows it
-	   there until ./client.ts drives --vc-dock-lift (and without the script,
-	   keeps it there, in the open column of the opener). Reduced motion docks
-	   it outright (below). */
-	transform: translateY(
-		var(--vc-dock-lift, calc(-1 * var(--vc-dock-travel)))
-	);
 	will-change: transform;
 	position: relative;
-	z-index: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.wx-videos {
-		transform: none;
-	}
 }
 
 /* THE DOCK, on the compositor: a scroll-progress animation from the park to
@@ -105,14 +91,15 @@
    screen it sinks at most 0.19 of its travel and comes back up into place: the
    opener is a full screen, and a steeper start (2×) read as a drop over it.
    Gated as stories-heading's are (theme/stories-heading/src/styles.css):
-   reduced motion never applies it, and an engine without scroll timelines
-   keeps the static state above for ./client.ts to drive — cssDrivesDock()
-   there is the same feature test. Never remove the @supports wrapper: without
-   it such an engine would run this on the document timeline and paint the TO
-   keyframe forever. */
+   reduced motion and an engine without scroll timelines never apply it, so the
+   card sits docked in its cell with its chrome on. Never remove the @supports
+   wrapper: without it such an engine would run this on the document timeline
+   and paint the TO keyframe forever. */
 @media (prefers-reduced-motion: no-preference) {
 	@supports (animation-timeline: scroll()) {
 		.wx-videos {
+			/* The park until the timeline resolves, which is after first style. */
+			transform: translateY(calc(-1 * var(--vc-dock-travel)));
 			animation-name: vc-dock;
 			animation-timing-function: cubic-bezier(0.3333333333, 0.5, 0.6666666667, 1);
 			animation-fill-mode: both;
@@ -192,16 +179,9 @@
 	box-shadow: var(--shadow-panel);
 	overflow: hidden;
 	pointer-events: none;
-	/* THE STATIC STATE IS SHOWN: reduced motion (the card is docked already), an
-	   engine without scroll timelines until ./client.ts writes --vc-chrome, and
-	   that engine if the script fails (parked, with its label on). */
-	opacity: var(--vc-chrome, 1);
 }
-/* The header's inline pad, as a Widget's own header has it (widget-grid.css keys
-   that on a direct child of the card; this one is inside the overlay). */
 .wx-videos__chrome .ds-card-header {
 	flex: none;
-	padding-inline: var(--widget-pad);
 }
 /* A block of its own so the caption fade's translate applies to it; the
    ellipsis has to be its own for the same reason. */
@@ -233,21 +213,20 @@
    of the dock's own range, so the two cannot drift apart and any change to the
    travel carries over (the page's end, where it comes first, included). The
    card is within a few px of its cell when this starts, and moving with the
-   page; it has fully landed when this ends. */
-@media (prefers-reduced-motion: no-preference) {
+   page; it has fully landed when this ends. Screen only, as a page in print has
+   no scroll to dock over. */
+@media screen and (prefers-reduced-motion: no-preference) {
 	@supports (animation-timeline: scroll()) {
 		.wx-videos__compact .wx-videos__chrome,
 		.wx-videos__compact .vc__ruler,
-		.wx-videos__wide {
+		.wx-videos:not(:focus-within) .wx-videos__wide .wx-videos__surface,
+		.wx-videos:not(:focus-within) .wx-videos__wide .wx-videos__date {
 			animation-name: vc-chrome;
 			animation-timing-function: linear;
 			animation-fill-mode: both;
 			animation-timeline: scroll(root block);
 			animation-range: max(0px, min(var(--vc-dock-travel), 100%) - var(--vc-chrome-run))
 				min(var(--vc-dock-travel), 100%);
-		}
-		.wx-videos__wide {
-			animation-name: vc-surface;
 		}
 	}
 }
@@ -259,35 +238,20 @@
 		opacity: 1;
 	}
 }
-@keyframes vc-surface {
-	from {
-		--vc-surface: 0;
-	}
-	to {
-		--vc-surface: 1;
-	}
-}
 
 /* FOUR COLUMNS: THE TEXT IS ALWAYS ON. The floating clip keeps its label and
    location where the docked card has them, so only what makes it a card fades:
-   the frame, the bands' fills and rules, and the date. Those can't fade inside
-   a layer that stays opaque except as separate layers, so they are painted
-   behind the text here, and one number drives them all. */
-@property --vc-surface {
-	syntax: "<number>";
-	inherits: true;
-	initial-value: 1;
-}
-.wx-videos__wide {
-	--vc-surface: var(--vc-chrome, 1);
-}
+   the date, and this surface behind the text with the frame and the bands'
+   fills and rules. The chrome keeps its boxes, so the text stays put, and
+   paints none of them itself. */
 .wx-videos__wide .wx-videos__chrome {
-	opacity: 1;
-	border-color: transparent;
-	box-shadow: none;
+	--border: var(--border-width) var(--border-style) transparent;
+	--shadow-panel: none;
+	--panel-header-bg: none;
+	--card-background: transparent;
 }
-.wx-videos__wide .vc__stage::after {
-	content: "";
+/* Before the chrome in the stage, at its z-index, so the text paints over it. */
+.wx-videos__surface {
 	position: absolute;
 	inset: 0;
 	z-index: 1;
@@ -295,57 +259,35 @@
 	border: var(--border);
 	border-radius: var(--radius-box);
 	box-shadow: var(--shadow-panel);
+	overflow: hidden;
 	pointer-events: none;
-	opacity: var(--vc-surface);
 }
-.wx-videos__wide .wx-videos__chrome .ds-card-header {
-	background: none;
-	border-block-end-color: transparent;
-}
-.wx-videos__wide .wx-videos__chrome .ds-card-header::before {
+.wx-videos__surface::before,
+.wx-videos__surface::after {
 	content: "";
 	position: absolute;
-	inset: 0 0 calc(-1 * var(--border-width));
-	z-index: -1;
+	inset-inline: 0;
+	box-sizing: border-box;
+}
+/* Inside the frame's edge, so each band is the element's height, not the band's. */
+.wx-videos__surface::before {
+	inset-block-start: 0;
+	block-size: var(--vc-head-h);
 	background: var(--panel-header-bg);
 	border-block-end: var(--border);
-	opacity: var(--vc-surface);
 }
-.wx-videos__wide .wx-videos__foot {
-	position: relative;
-	background: none;
-	border-block-start-color: transparent;
-}
-.wx-videos__wide .wx-videos__foot::before {
-	content: "";
-	position: absolute;
-	inset: calc(-1 * var(--border-width)) 0 0;
-	z-index: -1;
+.wx-videos__surface::after {
+	inset-block-end: 0;
+	block-size: var(--vc-foot-h);
 	background: var(--card-background);
 	border-block-start: var(--border);
-	opacity: var(--vc-surface);
-}
-.wx-videos__wide .wx-videos__date {
-	opacity: var(--vc-surface);
 }
 
 /* The chrome carries the label the ruler is scrubbing, so focus on the ruler
-   while the card is still floating brings it on; !important is what outranks
-   the animation in the cascade. A page in print has no scroll to dock over. */
+   while the card is still floating brings it on: the wide fade is not applied
+   then (above), and here !important outranks the compact one in the cascade. */
 .wx-videos:focus-within .wx-videos__chrome {
 	opacity: 1 !important;
-}
-.wx-videos:focus-within .wx-videos__wide {
-	--vc-surface: 1 !important;
-}
-@media print {
-	.wx-videos__chrome,
-	.wx-videos__compact .vc__ruler {
-		opacity: 1 !important;
-	}
-	.wx-videos__wide {
-		--vc-surface: 1 !important;
-	}
 }
 
 /* THE RULER'S YEARS come on with the ruler: hidden at rest where a pointer can
@@ -429,9 +371,6 @@
 				var(--space-2)
 		);
 	}
-	.wx-videos {
-		grid-column: 2 / span 1;
-	}
 	.wx-videos__wide {
 		display: none;
 	}
@@ -449,7 +388,6 @@
 		block-size: var(--vc-foot-h);
 		margin-block-start: 0;
 		z-index: 2;
-		opacity: var(--vc-chrome, 1);
 	}
 	.wx-videos[data-vc-docked] .wx-videos__compact .vc__ruler {
 		pointer-events: auto;

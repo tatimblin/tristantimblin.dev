@@ -1,21 +1,19 @@
 ---
 // Videos — the video carousel adopted into the widget grid as a 1×2 cell in
 // the grid's last column. The carousel's true layout home is this cell; a
-// scroll-driven lift (a CSS scroll-progress animation in ./videos.css, with
-// ./client.ts as the fallback where scroll timelines are missing) parks it at
-// rest at the top of the homepage's opener, the row above
+// scroll-driven lift (a CSS scroll-progress animation in ./videos.css) parks it at
+// rest centred in the homepage's opener, the row above
 // (src/layouts/HomeLayout.astro), and brings it down into the cell a little
 // faster than the page scrolls. The generic
 // carousel lives in ../../components; this module owns only its grid placement
 // and docking behaviour.
 //
-// The runtime mounts it `eager`, at page load and before every other card: on
-// an engine without scroll timelines the script is what drives the dock, and
-// that has to be in place before the page can be scrolled.
+// The runtime mounts it `eager`, at page load and before every other card: it
+// is on screen from the first frame.
 // `contain="layout"`: the ruler overhangs the cell, which paint containment
 // (content-visibility) would clip.
 //
-// Props pass through to the <Widget> (a class). `reveal="eager"`: on screen from
+// `reveal="eager"`: on screen from
 // the first frame, parked above its cell, so it comes in at once rather than
 // with the row it docks into. NB the reveal writes `translate` while the dock lift writes `transform`
 // — two independent properties, so they compose instead of overwriting each
@@ -27,12 +25,13 @@ import VideoCarousel from "../../components/VideoCarousel.astro";
 import VideoChrome from "./VideoChrome.astro";
 import "./videos.css";
 
-interface Props {
-	class?: string;
-	[key: string]: unknown;
-}
-
-const { class: className, ...rest } = Astro.props;
+const carousel = {
+	fill: true,
+	rulerSide: "right",
+	xfade: 1600,
+	xfadeMode: "threshold",
+	xfadeLive: true,
+} as const;
 ---
 
 <Widget
@@ -41,9 +40,8 @@ const { class: className, ...rest } = Astro.props;
 	load="eager"
 	reveal="eager"
 	contain="layout"
-	class:list={["wx-videos", className]}
+	class="wx-videos"
 	chrome={false}
-	{...rest}
 >
 	{/* Clip changes get the threshold transition, so the carousel behaves the
 	    same wherever it appears. No `intro`: the dock is its entrance. */}
@@ -62,28 +60,18 @@ const { class: className, ...rest } = Astro.props;
 	    ./client.ts). Rendered at 1× (the halftone's cost is per pixel) on a
 	    finer lattice, so the picture still reads at a phone tile's width. */}
 	<Deferred media={WIDGET_WIDE_MQ}>
-		<VideoCarousel
-			class="wx-videos__wide"
-			fill
-			rulerSide="right"
-			xfade={1600}
-			xfadeMode="threshold"
-			xfadeLive
-			cellSize={5}
-		>
+		<VideoCarousel {...carousel} class="wx-videos__wide" cellSize={5}>
+			{/* What fades on the wide card: the frame and the bands (./videos.css). */}
+			<div slot="caption" class="wx-videos__surface" aria-hidden="true"></div>
 			<VideoChrome slot="caption" />
 		</VideoCarousel>
 	</Deferred>
 	<Deferred media={WIDGET_COMPACT_MQ}>
 		<VideoCarousel
+			{...carousel}
 			class="wx-videos__compact"
-			fill
-			rulerSide="right"
 			orientation="horizontal"
 			axis="even"
-			xfade={1600}
-			xfadeMode="threshold"
-			xfadeLive
 			cellSize={4}
 			maxDpr={1}
 		>

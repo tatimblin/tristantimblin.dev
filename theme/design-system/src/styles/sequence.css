@@ -50,9 +50,6 @@
 .ds-sequence__steps {
 	display: grid;
 	grid-template-columns: var(--sequence-columns);
-	margin: 0;
-	padding: 0;
-	list-style: none;
 }
 
 /* The actors: equal-height boxes (the row stretches them), the names

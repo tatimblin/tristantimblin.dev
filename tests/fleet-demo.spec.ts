@@ -1,45 +1,21 @@
 import { test, expect, type FrameLocator, type Page } from "./fixtures/test";
 
 /**
- * THE VS CODE EMBED IN THE POST: IT IS EITHER RUNNING, OR IT IS A PICTURE OF
- * ITSELF — AND FROM THE OUTSIDE THOSE LOOK IDENTICAL.
+ * THE VS CODE EMBED IN THE POST. A workbench that failed to boot still leaves a
+ * right-sized, theme-coloured <iframe>, so no test asserts on the frame: each
+ * asserts on DOM only a real boot produces (.monaco-workbench, tree rows, xterm
+ * output, a toast). The other silent failures:
  *
- * A workbench whose initialize() threw still leaves an <iframe> in the page, at
- * the right size, in the right place, painted the theme's background. So does one
- * whose extension host never came up, or whose fleet extension activated against
- * an empty simulator. Nothing in the host page turns red; the reader just sees a
- * dark rectangle and scrolls past. That is the SILENT failure this file exists to
- * catch, and it dictates the one rule every test below follows: never assert on
- * the frame, always assert on DOM the workbench can only have produced by really
- * booting — .monaco-workbench, tree rows, xterm output, a notification toast.
- *
- * Three further failure modes get their own tests, because each is invisible in
- * the same way — plus a fourth that is the opposite problem: a demo that looks
- * broken while working exactly as written (see the phone test).
- *
- *  1. EAGER LOADING. The whole point of the poster is that a 15 MB bundle does
- *     not download for readers who never press the button. If the element ever
- *     starts fetching on load, the post still looks and behaves exactly the same
- *     — it just costs everyone a workbench. Only the request log can tell.
- *  2. A DEAD TERMINAL. The CAN stream renders to the DOM rather than a canvas
- *     (terminal.integrated.gpuAcceleration is "off" in workbench.ts precisely so
- *     it is readable here). A terminal that opened but never streamed shows a
- *     plausible first screenful and then simply stops, so the assertion has to be
- *     that the text CHANGES, not that text exists.
+ *  1. EAGER LOADING. The poster exists so readers who never launch don't fetch a
+ *     15 MB bundle; only the request log can tell.
+ *  2. A DEAD TERMINAL shows a plausible first screenful, so the text must CHANGE.
+ *     (Readable because workbench.ts sets gpuAcceleration "off".)
  *  3. A COMMAND THAT DISPATCHES NOWHERE. Palette → extension host → simulator →
- *     notification is the demo's entire argument. Every hop is async and across a
- *     worker boundary; a break anywhere leaves a palette that accepts the command
- *     and does nothing visible.
+ *     notification crosses workers; a break leaves a palette that does nothing.
  *
- * CHROMIUM ONLY, by inheritance rather than by declaration: the firefox project
- * in playwright.config.ts carries `testMatch: /scroll-fallback\.spec\.ts/`, which
- * is an INCLUDE list, so every other spec — this one included — runs in chromium
- * alone. Nothing here should be added to firefox's list; the workbench is a
- * 15 MB single-engine boot and this suite is not where its portability is argued.
- *
- * The embed itself is built in github.com/tatimblin/vscode-fleet and arrives as
- * the @tristimb/fleet-demo tarball; its bundle-size guard lives there with the
- * build. What this file checks is that the site serves and boots it.
+ * Chromium only (playwright.config.ts's firefox project is an include list); don't
+ * add this to it. The embed and its bundle-size guard live in tatimblin/vscode-fleet;
+ * this checks that the site serves and boots it.
  */
 
 const POST = "/txt/no-honey-we-have-a-dashboard-at-home/";
@@ -70,22 +46,12 @@ async function boot(page: Page): Promise<FrameLocator> {
 }
 
 /**
- * Run a Fleet command the way a reader would.
- *
- * Three details that are easy to get wrong and fail confusingly. The frame
- * needs focus before F1 reaches the workbench rather than the host page —
- * hence the click, aimed at the STATUS BAR and not the editor body: the
- * staged scene makes the controls editor (a webview iframe) the active
- * editor, and a click into the editor body lands on an iframe that swallows
- * pointer events forever — Playwright retries until the test times out. The
- * status bar is plain workbench DOM that belongs to no editor. Opening the
- * picker retries as a unit, because that same webview finishes loading
- * asynchronously after boot and steals focus when it does — which silently
- * DISMISSES a picker opened a beat earlier; a second F1 after the steal
- * sticks. And F1 opens the picker with ">" ALREADY in the box: typing the
- * query with fill() would replace that prefix and silently drop the picker
- * into file-search mode, where "Fleet: Lock All Doors" matches nothing and
- * Enter is a no-op. Append instead.
+ * Run a Fleet command the way a reader would. The frame needs focus before F1
+ * reaches the workbench: click the STATUS BAR, because the editor body is a
+ * webview iframe that swallows pointer events forever. Opening the picker
+ * retries as a unit: that webview finishes loading after boot and its focus
+ * steal dismisses an open picker. And F1 opens with ">" in the box, so append
+ * the query; fill() would drop the picker into file search, matching nothing.
  */
 async function runCommand(page: Page, frame: FrameLocator, title: string) {
 	const input = frame.locator(".quick-input-box input");
@@ -144,14 +110,8 @@ test("on a phone the demo stays out of the page until summoned", async ({ page }
 });
 
 test("a phone gets a live button, not a disabled one", async ({ page }) => {
-	// The embed used to gate itself at 768px: below that the poster stayed and the
-	// launch button rendered DISABLED while still reading "Launch the demo". From
-	// the reader's side that is indistinguishable from broken software — tap,
-	// nothing. The gate is gone, and this is the test that keeps it gone.
-	//
-	// Deliberately NOT a full narrow boot — that lives in "a phone boots with
-	// the sidebar out of the way" below. What is specific to THIS test is the
-	// ENTRY: an enabled control that moves the state machine off the poster.
+	// A disabled button reads as broken software, tap and nothing. This covers the
+	// entry only; the narrow boot is "a phone boots with the sidebar out of the way".
 	await page.setViewportSize({ width: 393, height: 659 });
 	await page.goto(POST);
 
@@ -162,9 +122,8 @@ test("a phone gets a live button, not a disabled one", async ({ page }) => {
 	await expect(launch).toBeEnabled();
 	await expect(demo).not.toHaveAttribute("data-state", "unsupported");
 
-	// The narrow box has to be a shape a workbench can live in, not the desktop
-	// 16/10 letterbox, which is ~245px tall here — less than the panel alone
-	// claims. Asserting taller-than-wide is the cheap proxy for that.
+	// Not the desktop 16/10 letterbox, ~245px here and less than the panel claims:
+	// taller-than-wide is the cheap proxy for a shape a workbench can live in.
 	const box = await demo.boundingBox();
 	expect(box, "the embed did not lay out").toBeTruthy();
 	expect(box!.height, `the embed is ${box!.width}x${box!.height} on a phone`).toBeGreaterThan(
@@ -177,23 +136,16 @@ test("a phone gets a live button, not a disabled one", async ({ page }) => {
 
 test("a phone boots with the sidebar out of the way", async ({ page }) => {
 	test.slow();
-	// VS Code holds a ~300px minimum editor width, so at this width an open
-	// sidebar shoves the editor and panel past the right edge of an iframe
-	// that cannot scroll horizontally: the workbench "works", but the terminal
-	// — the thing the poster advertises — renders where the reader cannot see
-	// or reach it. workbench.ts collapses the sidebar after the tree has
-	// rendered (narrow viewports only); this is the test that keeps that
-	// collapse honest, because from outside the iframe a clipped workbench
-	// and a usable one are both just a dark rectangle.
+	// VS Code holds a ~300px minimum editor width, so an open sidebar pushes the
+	// terminal past the edge of an iframe that can't scroll sideways. workbench.ts
+	// collapses it after the tree renders (narrow viewports only).
 	await page.setViewportSize({ width: 393, height: 659 });
 	const frame = await boot(page);
 
 	await expect(frame.locator(".part.sidebar")).toBeHidden();
 
-	// And the width the collapse freed up actually reached the terminal: its
-	// rendered rows must sit entirely inside the visible viewport, not merely
-	// exist. boundingBox() reports page coordinates even through the iframe,
-	// so "right edge <= viewport width" is exactly the reader's experience.
+	// The rows must sit inside the viewport, not merely exist. boundingBox()
+	// reports page coordinates even through the iframe.
 	const rows = frame.locator(".part.panel .xterm-rows").first();
 	await expect(rows).toBeVisible({ timeout: 30_000 });
 	await expect(rows).toContainText("can0", { timeout: 15_000 });
@@ -215,12 +167,8 @@ test("launch boots a real workbench, not an iframe-shaped shell", async ({ page 
 	await expect(frame.locator(".part.editor")).toBeVisible();
 	await expect(frame.locator(".part.sidebar")).toBeVisible();
 
-	// And the staged scene, not the README: boot opens the moving vehicle's
-	// controls editor, whose tab is titled "Vehicle · …<VIN tail>". Matching
-	// the prefix rather than a VIN keeps this alive across a re-seeded fleet.
-	// This is the assertion that would have caught the original complaint —
-	// the workbench booted fine and landed the reader somewhere the poster
-	// never pictured.
+	// The staged scene, not the README: the moving vehicle's controls editor.
+	// The prefix, not a VIN, so it survives a re-seeded fleet.
 	await expect(frame.locator(".tabs-container .tab").filter({ hasText: "Vehicle ·" })).toBeVisible({
 		timeout: 15_000,
 	});
@@ -230,20 +178,14 @@ test("the tree renders the whole seeded fleet", async ({ page }) => {
 	test.slow();
 	const frame = await boot(page);
 
-	// Nine rows, not six: the tree is two-level, so three cohort directories
-	// (Stage / North America / EMEA, each seeded Expanded) sit above the six
-	// vehicles they hold, and VS Code gives a group row role="treeitem" too. A
-	// tree that rendered its container but no rows is the shape of an extension
-	// host that never activated — and it looks like an empty sidebar, which
-	// looks like a design choice.
+	// Nine rows: three cohort directories (seeded Expanded) above six vehicles,
+	// and VS Code gives a group row role="treeitem" too. No rows means an extension
+	// host that never activated.
 	const rows = frame.locator('[role="treeitem"]');
 	await expect(rows).toHaveCount(9);
 
-	// Vehicle rows are labelled with the full VIN, and every seeded vehicle is a
-	// Fisker, so every one of them carries the WMI "VCF". Matching on that
-	// fragment rather than on a row's position survives a reshuffle of the seed
-	// — and it is the assertion that would have caught the sidebar rendering
-	// callsigns again.
+	// Rows carry the full VIN, and every seeded Fisker has the WMI "VCF": a match
+	// that survives a reshuffled seed and fails on callsigns.
 	await expect(rows.filter({ hasText: "VCF" })).toHaveCount(6);
 	await expect(rows.first()).toContainText("Stage");
 });
@@ -252,24 +194,16 @@ test("the can terminal streams on arrival, unprompted", async ({ page }) => {
 	test.slow();
 	const frame = await boot(page);
 
-	// NO palette interaction, deliberately. The stream used to exist only
-	// behind "Fleet: Open CAN Stream", and a real reader — with the poster
-	// advertising a streaming terminal — landed on an empty panel and reported
-	// "I don't see any signals running in the terminal". workbench.ts now
-	// stages the stream before ready, so the assertion is the stronger one:
-	// frames are ALREADY flowing when the iframe is first revealed. (This also
-	// removes the palette round-trip this test used to flake on; the palette
-	// keeps its own dedicated test below.)
+	// No palette: workbench.ts stages the stream before ready, so frames are
+	// already flowing when the iframe is revealed.
 	//
 	// .xterm-rows is the DOM renderer's output, which exists only because
-	// gpuAcceleration is off; with the default canvas renderer there would be no
-	// text here to read at all.
+	// gpuAcceleration is off; a canvas renderer leaves no text to read.
 	const rows = frame.locator(".part.panel .xterm-rows").first();
 	await expect(rows).toBeVisible({ timeout: 30_000 });
 	await expect(rows).toContainText("can0", { timeout: 15_000 });
 
-	// The real question: is the bus LIVE? A terminal that opened, printed a header
-	// and died reads identically in a screenshot.
+	// Is the bus live? A terminal that printed a header and died reads the same.
 	const before = await rows.innerText();
 	await page.waitForTimeout(1500);
 	await expect
@@ -285,11 +219,8 @@ test("a palette command round-trips into visible state", async ({ page }) => {
 	const frame = await boot(page);
 	await runCommand(page, frame, "Fleet: Lock All Doors");
 
-	// commands.ts dispatches to all six vehicles and summarises the outcome in one
-	// toast — some vehicles refuse (in motion, asleep, door ajar), which is the
-	// post's point, so the count is not pinned. The regex rather than a substring
-	// because "unlocked" contains "locked": a wired-up-backwards command would
-	// pass a naive contains().
+	// Some vehicles refuse (the post's point), so the count isn't pinned. A regex
+	// because "unlocked" contains "locked": a backwards command would pass contains().
 	const toast = frame.locator(".notification-toast");
 	await expect(toast).toBeVisible({ timeout: 15_000 });
 	await expect(toast).toContainText(/Fleet: locked \d+ of \d+ vehicles/, { timeout: 15_000 });
@@ -299,10 +230,8 @@ test("the reset chip puts a taken-apart workbench back together", async ({ page 
 	test.slow();
 	const frame = await boot(page);
 
-	// Wreck the layout the way a reader can in one keystroke. Driven through the
-	// workbench's own command rather than the palette because this test is about
-	// the reset path, not about the palette (which has its own test above) — and
-	// because a palette detour would add two more async hops to flake on.
+	// Wreck the layout through the workbench's own command: the palette has its own
+	// test, and a detour through it adds two async hops to flake on.
 	const workbench = page.frames().find((candidate) => candidate.url().includes("/fleet-demo/"));
 	expect(workbench, "the workbench frame went missing").toBeTruthy();
 	await workbench!.evaluate(async () => {
@@ -315,8 +244,7 @@ test("the reset chip puts a taken-apart workbench back together", async ({ page 
 	});
 	await expect(frame.locator(".part.panel")).toBeHidden();
 
-	// The chip lives in the HOST page, not the iframe — that is the whole point
-	// of it: it cannot be closed, hidden or scrolled away by the workbench.
+	// In the HOST page, so the workbench can't close, hide or scroll it away.
 	await page.locator("fleet-demo [data-reset]").click();
 
 	// Both halves of the reset: the extension re-seeded (its own toast, the same

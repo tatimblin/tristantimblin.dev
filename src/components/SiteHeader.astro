@@ -6,12 +6,12 @@
 // --text-primary and --accent directly).
 //
 // One bar in the normal flow at the top of every page: the homepage's
-// (HomeLayout) and the blog's (BlogLayout, which PostLayout wraps).
+// (HomeLayout), the written pages' (BlogLayout) and a post's (PostLayout).
 //
-// Nav is data-driven; pass `links` to change it per page, and `trail` to put
-// the page's path after the brand (a post: `/ txt / <slug>`). The brand, the
-// trail and the links are DS Anchors with the bar's own colours: the primary
-// ink at rest, the accent under the pointer, no underline (see below).
+// Pass `trail` to put the page's path after the brand (a post:
+// `/ txt / <slug>`). The brand, the
+// trail and the links are DS Anchors in the ink variant: the primary ink at
+// rest, the accent under the pointer, no underline.
 //
 // A step marked `slug` shortens to fit the bar (src/lib/slug.ts): the script
 // shows the longest of its forms that keeps the path inside its share of the
@@ -21,20 +21,18 @@ import Anchor from "@whois/design-system/Anchor";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 
 interface Props {
-	links?: Array<{ label: string; href: string }>;
 	/** Where the page sits, after the brand: `tristantimblin.dev / txt / mega-desk`.
 	 *  A step with an href links up; the last one is the page itself. `slug`
 	 *  lets it shorten on a narrow bar. */
 	trail?: Array<{ label: string; href?: string; slug?: boolean }>;
 }
 
-const {
-	links = [
-		{ label: "Writing", href: "/txt/" },
-		{ label: "About Me", href: "/about/" },
-	],
-	trail = [],
-} = Astro.props;
+const { trail = [] } = Astro.props;
+
+const links = [
+	{ label: "Writing", href: "/txt/" },
+	{ label: "About Me", href: "/about/" },
+];
 
 // The nav link for the section the page is in reads in the accent.
 const path = Astro.url.pathname;
@@ -157,15 +155,7 @@ const isCurrent = (href: string) => href !== "/" && path.startsWith(href);
 		gap: var(--space-5);
 	}
 
-	/* The bar is chrome, not prose: the site's links are blue and underlined
-	   at rest (anchor.css), which read here as two links dropped in a
-	   sentence. The bar takes the ink instead, and the accent under the
-	   pointer and for the section the page is in. */
-	.site-header :global(.ds-anchor) {
-		--link-color: var(--text-primary);
-		--link-hover-color: var(--accent);
-		text-decoration-line: none;
-	}
+	/* The section the page is in reads in the accent at rest. */
 	.site-header :global(.site-header__link--current) {
 		--link-color: var(--accent);
 	}

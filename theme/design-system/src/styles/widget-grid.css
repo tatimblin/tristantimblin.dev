@@ -46,6 +46,9 @@
 	   at ~1.4× the token. Retune the whole system by shifting the 300px anchor (the
 	   coefficients below are token/300). */
 	--widget-pad: clamp(var(--space-4), calc(var(--widget-cell) * 0.053), var(--space-6));
+	/* A card header's inline pad (card.css), so its title lines up with the
+	   body's content. */
+	--card-header-pad: var(--widget-pad);
 	--widget-gap: clamp(var(--space-2), calc(var(--widget-cell) * 0.027), var(--space-4));
 	--widget-font-xs: clamp(11px, calc(var(--widget-cell) * 0.037), 15px);
 	--widget-font-sm: clamp(14px, calc(var(--widget-cell) * 0.047), 18px);
@@ -59,7 +62,6 @@
 		var(--widget-font-lg),
 		min(var(--widget-font-xl), calc(var(--widget-cell) * 0.13))
 	);
-	--widget-icon: clamp(20px, calc(var(--widget-cell) * 0.067), 30px);
 	/* Between small cells of one graphic — a TileGrid's tiles, a stacked bar's
 	   segments: a hair under the smallest space step. */
 	--widget-tile-gap: clamp(2px, calc(var(--widget-cell) * 0.01), var(--space-1));
@@ -87,12 +89,6 @@
    cell; the body fills the cell below the header and stacks its children with
    the widget gap. min-block-size: 0 so a flex child that measures itself (a
    tile grid, a chart) can shrink to the cell instead of forcing it taller. */
-/* The header keeps card.css's block padding (the panel header is one fixed
-   band, cut off by its edge) and takes the fluid pad on the inline axis only,
-   so its title lines up with the body's content. */
-.ds-widget > .ds-card-header {
-	padding-inline: var(--widget-pad);
-}
 .ds-widget > .ds-card-body {
 	flex: 1 1 auto;
 	min-block-size: 0;

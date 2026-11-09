@@ -2,9 +2,6 @@
 import type { ComponentProps } from "astro/types";
 import { ClientRouter } from "astro:transitions";
 import "../styles/global.css";
-// Asset-arrival reveal (the motion; the scheduling lives in src/lib/reveal.ts and
-// the arming script in this file's <head>).
-import "../styles/reveal.css";
 // The site's two self-hosted faces (DM Sans, Roboto Mono), plus the
 // metric-matched fallbacks that keep the swap from reflowing the copy.
 import "../styles/fonts.css";
@@ -103,48 +100,13 @@ if (!hit) throw new Error(`Layout: "${hitPath ?? Astro.url.pathname}" is not a c
 				document.addEventListener("astro:after-swap", apply);
 			})();
 		</script>
-		{/* Arm the asset reveal: reveal.css hides [data-reveal] only while
-		     .reveal-armed is on <html>. Inline and import-free on purpose, so a
-		     broken bundle can't strand the page — the timeout always disarms.
-		     Skipped for reduced motion, save-data or no IntersectionObserver.
-		     Hard loads only: re-arming on a swap would blink cached content. */}
-		<script is:inline>
-			(function () {
-				if (window.__revealArmed) return;
-				try {
-					var m = window.matchMedia;
-					if (m && m("(prefers-reduced-motion: reduce)").matches) return;
-					if (!("IntersectionObserver" in window)) return;
-					var c = navigator.connection;
-					if (c && c.saveData === true) return;
-				} catch (e) {
-					// A throw in feature detection must not leave the page armed with
-					// nothing able to disarm it.
-					return;
-				}
-				window.__revealArmed = true;
-				var root = document.documentElement;
-				root.classList.add("reveal-armed");
-				// Terminality backstop. 3s is past the p95 for a below-the-fold decode,
-				// and short enough that a broken bundle costs a blink, not a blank page.
-				setTimeout(function () {
-					root.classList.remove("reveal-armed");
-				}, 3000);
-			})();
-		</script>
+		<slot name="head" />
 		<ClientRouter />
 	</head>
 	<body>
 		<slot />
 		{footer && <SiteFooter />}
 		<script>
-			// Reveal coordinator: schedules the [data-reveal] fades. Safe to load late —
-			// the inline arming script in <head> owns the fail-visible backstop, so if this
-			// module never arrives the page simply shows everything.
-			import "../lib/reveal";
-			import Lenis from "lenis";
-			import "lenis/dist/lenis.css";
-			import { driveLenis } from "../lib/smooth-scroll";
 			// Page-view counting: GoatCounter, on the production host only.
 			import { startCounting } from "../lib/analytics/count";
 			// No halftone decodes video in a background tab.
@@ -155,46 +117,10 @@ if (!hit) throw new Error(`Layout: "${hitPath ?? Astro.url.pathname}" is not a c
 
 			declare global {
 				interface Window {
-					__lenis?: Lenis;
 					/** Set data-theme on <html> (defined inline in <head>). */
 					__setTheme: (theme: "light" | "dark") => void;
 				}
 			}
-
-			// Smooth scroll, initialized once and shared across view-transition
-			// navigations. Lenis drives the real window scroll (no transform hack), so it
-			// composes with the scroll-listener web components (stories-heading,
-			// video-carousel) without changes to them.
-			function initLenis() {
-				if (window.__lenis) return window.__lenis;
-				// Honor reduced-motion: leave native scrolling untouched.
-				if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
-
-				// Wheel/trackpad only. Lenis 1.x keeps touch native (syncTouch off), so on a
-				// touch device it smooths NOTHING, so phones and tablets never create it;
-				// desktop wheel/trackpad smoothing is unchanged.
-				if (!window.matchMedia("(pointer: fine)").matches) return null;
-
-				// Subtle smoothing, close to native.
-				const lenis = new Lenis({ lerp: 0.18, smoothWheel: true });
-				window.__lenis = lenis;
-
-				// Its frames come from the page's scheduler, and only while it is
-				// smoothing a scroll: an idle page runs no loop for it
-				// (src/lib/smooth-scroll.ts).
-				driveLenis(lenis);
-				return lenis;
-			}
-
-			initLenis();
-
-			// After a view-transition swap, re-measure the new page and reset to top.
-			document.addEventListener("astro:after-swap", () => {
-				const lenis = window.__lenis;
-				if (!lenis) return;
-				lenis.scrollTo(0, { immediate: true });
-				lenis.resize();
-			});
 		</script>
 	</body>
 </html>

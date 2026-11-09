@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { test as base, chromium, expect, type BrowserContext } from "@playwright/test";
+import { test as base, chromium, expect, type BrowserContext, type Page } from "@playwright/test";
 import { routeCursive } from "./cursive-route";
 
 /** src/lib/media.ts's MEDIA_BASE (that module imports JSON in a form the runner can't load). */
@@ -93,6 +93,12 @@ export const test = base.extend<{ mediaStub: void }, { mediaStubBrowser: void }>
 		{ auto: true },
 	],
 });
+
+/** The homepage's lockup is in the page and has its final face. */
+export async function lockupReady(page: Page): Promise<void> {
+	await page.locator("stories-heading").waitFor({ state: "attached", timeout: 15_000 });
+	await page.evaluate(() => document.fonts.ready.then(() => undefined));
+}
 
 export { chromium, expect };
 export type * from "@playwright/test";

@@ -8,41 +8,34 @@ import PostList from "@whois/design-system/PostList";
 import PostGroup from "@whois/design-system/PostGroup";
 import PostRow from "@whois/design-system/PostRow";
 import Icon from "@whois/design-system/Icon";
-import Body from "@whois/design-system/Body";
 import { categories, groupByYear, postHref } from "../../lib/blog";
 
 interface Props {
 	posts: CollectionEntry<"txt">[];
-	label?: string;
+	label: string;
 }
 
-const { posts, label = "Posts by year" } = Astro.props;
+const { posts, label } = Astro.props;
 const groups = groupByYear(posts);
 ---
 
-{
-	groups.length === 0 ? (
-		<Body variant="tertiary">Nothing here yet.</Body>
-	) : (
-		<PostList aria-label={label}>
-			{groups.map(({ year, posts }) => (
-				<PostGroup label={String(year)}>
-					{posts.map((post) => {
-						const cat = post.data.category ? categories[post.data.category] : null;
-						return (
-							<PostRow href={postHref(post.id)}>
-								{post.data.title}
-								{cat && (
-									<Fragment slot="meta">
-										<Icon name={cat.icon} />
-										{cat.label}
-									</Fragment>
-								)}
-							</PostRow>
-						);
-					})}
-				</PostGroup>
-			))}
-		</PostList>
-	)
-}
+<PostList aria-label={label}>
+	{groups.map(({ year, posts }) => (
+		<PostGroup label={String(year)}>
+			{posts.map((post) => {
+				const cat = post.data.category ? categories[post.data.category] : null;
+				return (
+					<PostRow href={postHref(post.id)}>
+						{post.data.title}
+						{cat && (
+							<Fragment slot="meta">
+								<Icon name={cat.icon} />
+								{cat.label}
+							</Fragment>
+						)}
+					</PostRow>
+				);
+			})}
+		</PostGroup>
+	))}
+</PostList>

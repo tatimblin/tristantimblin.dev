@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "./fixtures/test";
+import { test, expect, lockupReady, type Page } from "./fixtures/test";
+import { VIDEOS } from "./fixtures/opener";
 
 /**
  * ONLY THE HALFTONE A BREAKPOINT SHOWS EXISTS.
@@ -40,7 +41,7 @@ const grids = (page: Page) =>
 			.sort()
 	);
 
-const ready = (page: Page) => page.locator("stories-heading[data-ready]").waitFor({ state: "attached" });
+const ready = lockupReady;
 
 test.describe("deferred halftones", () => {
 	test("a phone creates only the compact carousel", async ({ page }) => {
@@ -51,7 +52,7 @@ test.describe("deferred halftones", () => {
 		await page.waitForTimeout(1000);
 
 		expect(await grids(page)).toEqual(["compact"]);
-		await expect(page.locator(".wx-videos__compact[data-ready]")).toHaveCount(1);
+		await expect(page.locator(`${VIDEOS.compact}[data-ready]`)).toHaveCount(1);
 		expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(1);
 	});
 
@@ -63,7 +64,7 @@ test.describe("deferred halftones", () => {
 		await page.waitForTimeout(1000);
 
 		expect(await grids(page)).toEqual(["wide"]);
-		await expect(page.locator(".wx-videos__compact")).toHaveCount(0);
+		await expect(page.locator(VIDEOS.compact)).toHaveCount(0);
 		expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(1);
 	});
 
@@ -74,11 +75,11 @@ test.describe("deferred halftones", () => {
 		expect(await grids(page)).toEqual(["wide"]);
 
 		await page.setViewportSize({ width: 390, height: 844 });
-		await expect(page.locator(".wx-videos__compact[data-ready]")).toHaveCount(1);
-		await expect(page.locator(".wx-videos__compact")).toBeVisible();
+		await expect(page.locator(`${VIDEOS.compact}[data-ready]`)).toHaveCount(1);
+		await expect(page.locator(VIDEOS.compact)).toBeVisible();
 		// The wide variant stays, hidden by its CSS.
 		expect(await grids(page)).toEqual(["compact", "wide"]);
-		await expect(page.locator(".wx-videos__wide")).toBeHidden();
+		await expect(page.locator(VIDEOS.wide)).toBeHidden();
 	});
 
 	test("a view-transition round trip leaves one", async ({ page }) => {
@@ -98,7 +99,7 @@ test.describe("deferred halftones", () => {
 		await page.waitForTimeout(500);
 
 		expect(await grids(page)).toEqual(["wide"]);
-		await expect(page.locator(".wx-videos__wide dotted-grid canvas")).toHaveCount(1);
+		await expect(page.locator(`${VIDEOS.wide} dotted-grid canvas`)).toHaveCount(1);
 	});
 
 	test("without JavaScript no halftone is created", async ({ browser }) => {

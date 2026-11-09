@@ -15,8 +15,6 @@
 // `cursive-usage` event: a short TickRuler and the figure in the label voice
 // (a header row is one line, so not a stacked Stat). It stays hidden until
 // the first reading, so the card never shows a made-up 0%.
-//
-// Props pass through to the <Widget> (a class).
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Mono from "@whois/design-system/Mono";
@@ -26,13 +24,6 @@ import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import { agentEndpoint, CURSIVE_TERMINAL } from "./config";
 import "./cursive.css";
 
-interface Props {
-	class?: string;
-	[key: string]: unknown;
-}
-
-const { class: className, ...rest } = Astro.props;
-
 const endpoint = agentEndpoint({
 	dev: import.meta.env.DEV,
 	override: import.meta.env.PUBLIC_CURSIVE_AGENT,
@@ -40,7 +31,7 @@ const endpoint = agentEndpoint({
 const bundleOrigin = new URL(CURSIVE_TERMINAL).origin;
 ---
 
-<Widget size="2x2" name="cursive" class:list={["wx-cursive", className]} data-state="idle" {...rest}>
+<Widget size="2x2" name="cursive" class="wx-cursive" data-state="idle">
 	{/* The product's name, linked: the card is a window onto cursive.info. */}
 	<a slot="title" href="https://cursive.info" target="_blank" rel="noopener">cursive.info</a>
 

@@ -6,7 +6,7 @@ import { DESKTOP, MOBILE, activeWidgets, during, expect, load, mountAll, observe
  * reduced motion, not even that; and a card out of sight does no work at all.
  *
  * "Frames" are counted three ways (./probe.ts): the shared scheduler's
- * callbacks (frame.ts, which every widget, wobble-text and Lenis run on), every
+ * callbacks (frame.ts, which every widget and wobble-text run on), every
  * requestAnimationFrame callback from any script (the halftone and carousel
  * packages included), and requestVideoFrameCallback (a halftone's video loop:
  * the one thing allowed to run while it is on screen and playing).
@@ -17,43 +17,14 @@ const IDLE_MS = 2000;
 test.describe("desktop", () => {
 	test.use(DESKTOP);
 
-	test("settled at the top: no frame callbacks, no rAF", async ({ page }) => {
+	test("settled at the top: nothing runs but the tagline's wobble", async ({ page }) => {
 		await load(page);
 		const idle = await during(page, IDLE_MS);
 		observed("idle at the top", idle);
-		expect(idle.calls, `frame callbacks while idle: ${JSON.stringify(idle.byLabel)}`).toBe(0);
-		expect(idle.raf, `rAF while idle: ${JSON.stringify(idle.rafBy)}`).toBe(0);
-		expect(idle.end.running, "the scheduler is stopped").toBe(false);
-	});
-
-	test("Lenis: no frames while idle, wakes on the wheel, settles after it", async ({ page }) => {
-		await load(page);
-		expect(await page.evaluate(() => !!(window as unknown as { __lenis?: unknown }).__lenis), "Lenis is on").toBe(true);
-
-		const idle = await during(page, IDLE_MS);
-		expect(idle.byLabel.lenis ?? 0, "Lenis frames while idle").toBe(0);
-
-		await page.mouse.move(720, 450);
-		const wheel = await during(page, 0, async () => {
-			for (let i = 0; i < 5; i++) {
-				await page.mouse.wheel(0, 120);
-				await page.waitForTimeout(40);
-			}
-		});
-		observed("Lenis frames during 5 wheel ticks", wheel.byLabel.lenis ?? 0);
-		expect(wheel.byLabel.lenis ?? 0, "Lenis ran on the wheel").toBeGreaterThan(0);
-		expect(await page.evaluate(() => scrollY), "and scrolled the page").toBeGreaterThan(0);
-
-		// Settled: Lenis has let go of the loop.
-		await expect
-			.poll(() => page.evaluate(() => (window as unknown as { __lenis: { isScrolling: unknown } }).__lenis.isScrolling), {
-				timeout: 3000,
-			})
-			.toBe(false);
-		await page.waitForTimeout(200);
-		const after = await during(page, 1000);
-		observed("Lenis frames once settled", after.byLabel.lenis ?? 0);
-		expect(after.byLabel.lenis ?? 0, "Lenis frames once settled").toBe(0);
+		expect(idle.otherCalls, `frame callbacks while idle: ${JSON.stringify(idle.byLabel)}`).toBe(0);
+		expect(idle.otherRaf, `rAF outside the scheduler while idle: ${JSON.stringify(idle.rafBy)}`).toBe(0);
+		// Everything registered ran in the window, under a continuous label, once each.
+		expect(idle.end.callbacks, "only the continuous callbacks are registered").toBe(Object.keys(idle.byLabel).length);
 	});
 });
 

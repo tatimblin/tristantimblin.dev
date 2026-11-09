@@ -1,14 +1,15 @@
 ---
-// PostLayout — the reading page for a /txt post, on BlogLayout's wide
-// column: one four-column grid (--ruled-columns / --ruled-gap, the tokens the
-// ruled Prose reads too, so the page's rows and the body's sections fall on
-// the same lines), one column below 1024.
+// PostLayout — the reading page for a /txt post: the site header, then one
+// four-column grid on the site container (--ruled-columns / --ruled-gap, the
+// tokens the ruled Prose reads too, so the page's rows and the body's sections
+// fall on the same lines), one column below 1024.
 //
 // The body arrives via <slot /> already sectioned and mapped to DS components
-// (src/components/mdx-components.ts, applied in txt/[slug].astro). `image` is
-// the social card only; `hero` is the figure on the page.
-import type { ImageMetadata } from "astro";
-import BlogLayout from "./BlogLayout.astro";
+// (src/components/mdx-components.ts, applied in txt/[slug].astro). `image` in
+// the frontmatter is the social card only; `hero` is the figure on the page.
+import { getImage } from "astro:assets";
+import Layout from "./Layout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
 import Img from "../components/mdx/Img.astro";
 import Fig from "@whois/design-system/Fig";
 import Grid from "@whois/design-system/Grid";
@@ -28,74 +29,50 @@ import {
 	filedDate,
 	isoDate,
 	padNo,
+	postHref,
+	readingStats,
 	tagHref,
-	type CategoryId,
+	tagLabel,
 } from "../lib/blog";
-
-/** A neighbouring post, as the foot card links it. */
-export interface Neighbour {
-	title: string;
-	href: string;
-	date: Date;
-}
-
-/** The post's hero image, from its frontmatter: the collection resolves the
- *  path to the import (width, height, format), which the page hands to
- *  <Picture>. */
-export interface Hero {
-	src: ImageMetadata;
-	alt: string;
-	caption?: string;
-}
+import { reads } from "../lib/pageviews";
+import type { Post } from "../lib/posts";
 
 interface Props {
-	title: string;
-	description?: string;
-	category?: CategoryId;
-	tags?: string[];
-	date: Date;
-	modified?: Date | null;
-	/** The social card, and what it shows. Not shown on the page. */
-	image?: string;
-	imageAlt?: string;
-	canonical?: string;
-	/** The post's slug: the last step of the header's path. */
-	slug: string;
+	post: Post;
 	/** The post's chronological number, and how many there are. */
 	no: number;
 	total: number;
-	stats: { words: number; minutes: number };
-	/** "212 reads" (src/lib/pageviews.ts formatReads), or null to leave it off. */
-	reads?: string | null;
-	hero?: Hero | null;
-	/** One link under the lede: where to get what the post introduces. */
-	cta?: { label: string; href: string } | null;
-	prev?: Neighbour | null;
-	next?: Neighbour | null;
+	/** The older and newer posts, for the foot card. */
+	prev: Post | null;
+	next: Post | null;
 }
 
+const { post, no, total, prev, next } = Astro.props;
 const {
 	title,
-	description,
+	excerpt: description,
+	cta,
 	category,
-	tags = [],
+	tags,
 	date,
 	modified,
 	image,
 	imageAlt,
 	canonical,
-	slug,
-	no,
-	total,
-	stats,
-	reads = null,
-	hero = null,
-	cta = null,
-	prev = null,
-	next = null,
-} = Astro.props;
+	hero,
+} = post.data;
 
 const cat = category ? categories[category] : null;
+const stats = readingStats(post.body);
+const readCount = reads(postHref(post.id));
+
+// The social card: `image` when the post names one, else the hero, as one
+// JPEG at the source's size, the format every crawler reads. With neither, the
+// site's default card (Seo).
+const card = image ?? hero?.src ?? null;
+const ogImage = card ? (await getImage({ src: card, format: "jpg" })).src : undefined;
+
+
 /** The title split so every hyphenated word ("sub-human") is an odd run,
  *  set unbreakable: a name never breaks at its hyphen. */
 const titleRuns = title.split(/(\S+-\S+)/);
@@ -104,124 +81,126 @@ const COLUMNS = "var(--ruled-columns)";
 /** The two halves of the foot card: the older post on the left, the newer on
  *  the right, each pointing the way it goes. */
 const neighbours = [
-	{ key: "prev", label: "← Older", post: prev, none: "This is the first post" },
-	{ key: "next", label: "Newer →", post: next, none: "This is the latest post" },
+	{ key: "prev", label: "← Older", entry: prev, none: "This is the first post" },
+	{ key: "next", label: "Newer →", entry: next, none: "This is the latest post" },
 ] as const;
 ---
 
-<BlogLayout
-	wide
+<Layout
 	type="article"
-	title={`${title} — Tristan Timblin`}
-	headline={title}
+	title={title}
 	description={description}
-	image={image}
-	imageAlt={imageAlt}
-	canonical={canonical}
+	image={ogImage}
+	imageAlt={imageAlt ?? (image ? undefined : hero?.alt)}
+	canonical={canonical ?? undefined}
 	publishDate={date}
 	modifiedDate={modified}
 	tags={tags}
 	wordCount={stats.words}
-	trail={[{ label: "txt", href: "/txt/" }, { label: slug, slug: true }]}
 >
-	<article class="post" data-post>
-		<Grid as="header" templateColumns={COLUMNS} gapX={4} class="post__head">
-			<Heading as="h1" size={5} responsive class="post__title">{titleRuns.map((run, i) =>
-				i % 2 ? <span class="post__nobreak">{run}</span> : run
-			)}</Heading>
-		{/* THE DETAILS: a DS Card of Stat pairs (value over its label), in
-		    the first column beside the lead on desktop, between the title and
-		    the lead below 1024. */}
-		<Card class="post__strip" data-post-strip>
-			<CardBody class="post__facts">
-				<Stat label="Date"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
-				{cat && category && <Stat label="Topic"><span class="post__category">{cat.label}</span></Stat>}
-				<Stat label="Length">
-					{/* Unbreakable runs with breaks between them, so a narrow cell
-					    wraps a run onto a second line, never mid-figure. */}
-					<span class="post__stats" data-post-stats><span class="post__run">{stats.minutes} min</span> <span class="post__run">· {stats.words.toLocaleString("en-US")} words</span>{reads && (
-						<Fragment> <span class="post__run post__reads" data-post-reads>· {reads}</span></Fragment>
-					)}</span>
-				</Stat>
-			</CardBody>
-		</Card>
-			{(description || cta) && (
-				<div class="post__intro">
-					{description && (
-						<Text as="p" size={6} responsive variant="secondary" family="ui" class="post__lead">
-							{description}
-						</Text>
-					)}
-					{cta && (
-						<Anchor href={cta.href} arrow="right" class="post__cta" data-post-cta="">
-							<Mono>{cta.label}</Mono>
-						</Anchor>
-					)}
-				</div>
-			)}
-			{/* THE HERO, in the head's grid: with one, the lead goes under the
-			    title and the details card into the hero's first column, over
-			    its Fig. 01 — the column the figure leaves empty. */}
-			{hero && (
-				<Fig no="01" caption={hero.caption ?? hero.alt} layout="ruled" class="post__fig" data-post-hero="">
-					<Img src={hero.src} alt={hero.alt} priority />
-				</Fig>
-			)}
-		</Grid>
-
-		<Prose variant="ruled" class="post__prose">
-			<slot />
-		</Prose>
-		{/* Where a code block's COPY says it worked, for a screen reader: the
-		    button's own label changing is not announced. */}
-		<VisuallyHidden as="p" aria-live="polite" data-code-copy-status="" />
-
-		{/* THE FOOT: a panel, "keep reading". Its body is the two neighbours,
-		     side by side — each half one big link: which way it goes, the title,
-		     the month — and its foot the post's tags as chip links. Where there
-		     is no neighbour the half says so, dimmed, and links nowhere. */}
-		<Card as="nav" class="post-more" aria-label="Keep reading" data-post-more="" title="Keep reading">
-			<Mono slot="meta" tone="tertiary" class="post-more__count">
-				txt / {padNo(no)} of {padNo(total)}
-			</Mono>
-			<div class="post-more__pair">
-				{neighbours.map(({ key, label, post, none }) =>
-					post ? (
-						<a
-							class={`post-more__half post-more__half--${key} ds-control`}
-							href={post.href}
-							data-half={key}
-							data-neighbour={key}
-						>
-							<Mono class="post-more__dir">{label}</Mono>
-							<Text as="span" size={3} class="post-more__title">{post.title}</Text>
-							<Mono tone="tertiary" class="post-more__date">
-								<time datetime={isoDate(post.date)}>{filedDate(post.date)}</time>
-							</Mono>
-						</a>
-					) : (
-						<div class={`post-more__half post-more__half--${key} post-more__half--none`} data-half={key}>
-							<Mono tone="tertiary" class="post-more__dir">{label}</Mono>
-							<Text as="span" size={3} variant="tertiary" class="post-more__title">{none}</Text>
+	<div class="post-page">
+		<SiteHeader trail={[{ label: "txt", href: "/txt/" }, { label: post.id, slug: true }]} />
+		<main class="post-page__main">
+			<article class="post" data-post>
+				<Grid as="header" templateColumns={COLUMNS} gapX={4} class="post__head">
+					<Heading as="h1" size={5} responsive class="post__title">{titleRuns.map((run, i) =>
+						i % 2 ? <span class="post__nobreak">{run}</span> : run
+					)}</Heading>
+					{/* THE DETAILS: a DS Card of Stat pairs (value over its label), in
+					    the first column beside the lead on desktop, between the title and
+					    the lead below 1024. */}
+					<Card class="post__strip" data-post-strip>
+						<CardBody class="post__facts">
+							<Stat label="Date" class="post__fact"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
+							{cat && category && <Stat label="Topic" class="post__fact"><span class="post__category">{cat.label}</span></Stat>}
+							<Stat label="Length" class="post__fact">
+								{/* Unbreakable runs with breaks between them, so a narrow cell
+								    wraps a run onto a second line, never mid-figure. */}
+								<span class="post__stats" data-post-stats><span class="post__run">{stats.minutes} min</span> <span class="post__run">· {stats.words.toLocaleString("en-US")} words</span>{readCount && (
+									<Fragment> <span class="post__run post__reads" data-post-reads>· {readCount}</span></Fragment>
+								)}</span>
+							</Stat>
+						</CardBody>
+					</Card>
+					{(description || cta) && (
+						<div class="post__intro">
+							{description && (
+								<Text as="p" size={6} responsive variant="secondary" family="ui" class="post__lead">
+									{description}
+								</Text>
+							)}
+							{cta && (
+								<Anchor href={cta.href} arrow="right" class="post__cta" data-post-cta="">
+									<Mono>{cta.label}</Mono>
+								</Anchor>
+							)}
 						</div>
-					),
-				)}
-			</div>
-			{tags.length > 0 && (
-				<div class="post-more__tags" data-half="tags">
-					<Mono tone="tertiary">Tagged</Mono>
-					<ul class="post-more__chips">
-						{tags.map((tag) => (
-							<li>
-								<Chip as="a" href={tagHref(tag)}>{tag.replace(/[-_]+/g, " ")}</Chip>
-							</li>
-						))}
-					</ul>
-				</div>
-			)}
-		</Card>
-	</article>
-</BlogLayout>
+					)}
+					{/* THE HERO, in the head's grid: with one, the lead goes under the
+					    title and the details card into the hero's first column, over
+					    its Fig. 01 — the column the figure leaves empty. */}
+					{hero && (
+						<Fig no="01" caption={hero.caption ?? hero.alt} layout="ruled" class="post__fig" data-post-hero="">
+							<Img src={hero.src} alt={hero.alt} priority />
+						</Fig>
+					)}
+				</Grid>
+
+				<Prose variant="ruled" class="post__prose">
+					<slot />
+				</Prose>
+				{/* Where a code block's COPY says it worked, for a screen reader: the
+				    button's own label changing is not announced. */}
+				<VisuallyHidden as="p" aria-live="polite" data-code-copy-status="" />
+
+				{/* THE FOOT: a panel, "keep reading". Its body is the two neighbours,
+				     side by side — each half one big link: which way it goes, the title,
+				     the month — and its foot the post's tags as chip links. Where there
+				     is no neighbour the half says so, dimmed, and links nowhere. */}
+				<Card as="nav" class="post-more" aria-label="Keep reading" data-post-more="" title="Keep reading">
+					<Mono slot="meta" tone="tertiary" class="post-more__count">
+						txt / {padNo(no)} of {padNo(total)}
+					</Mono>
+					<div class="post-more__pair">
+						{neighbours.map(({ key, label, entry, none }) =>
+							entry ? (
+								<a
+									class={`post-more__half post-more__half--${key} ds-control`}
+									href={postHref(entry.id)}
+									data-half={key}
+									data-neighbour={key}
+								>
+									<Mono class="post-more__dir">{label}</Mono>
+									<Text as="span" size={3} class="post-more__title">{entry.data.title}</Text>
+									<Mono tone="tertiary" class="post-more__date">
+										<time datetime={isoDate(entry.data.date)}>{filedDate(entry.data.date)}</time>
+									</Mono>
+								</a>
+							) : (
+								<div class={`post-more__half post-more__half--${key} post-more__half--none`} data-half={key}>
+									<Mono tone="tertiary" class="post-more__dir">{label}</Mono>
+									<Text as="span" size={3} variant="tertiary" class="post-more__title">{none}</Text>
+								</div>
+							),
+						)}
+					</div>
+					{tags.length > 0 && (
+						<div class="post-more__tags" data-half="tags">
+							<Mono tone="tertiary">Tagged</Mono>
+							<ul class="post-more__chips ds-list-bare">
+								{tags.map((tag) => (
+									<li>
+										<Chip as="a" href={tagHref(tag)}>{tagLabel(tag)}</Chip>
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
+				</Card>
+			</article>
+		</main>
+	</div>
+</Layout>
 
 <script>
 	// COPY on a code block (the header the sections plugin builds,
@@ -269,6 +248,17 @@ const neighbours = [
 </script>
 
 <style>
+	/* THE PAGE. The site header and the post on the UI face, the post on the
+	   site container; its first row carries its own distance from the header. */
+	.post-page {
+		min-height: 100vh;
+		font-family: var(--font-ui);
+	}
+	.post-page__main {
+		padding-inline: var(--container-inset);
+		padding-block-end: var(--space-13);
+	}
+
 	/* THE GRID. Four columns a step apart, the tokens the ruled Prose reads
 	   too, so the page's rows and the sections fall on the same lines. The
 	   page's headings — the title here, the section heads through Prose — on
@@ -293,7 +283,7 @@ const neighbours = [
 		gap: var(--space-4);
 	}
 	/* Each Stat reads label first, then the value (a form's order). */
-	.post__facts :global(.ds-stat) {
+	.post__fact {
 		flex-direction: column-reverse;
 	}
 	/* The stats may wrap, between its runs only (the caps Mono is nowrap). */
@@ -430,12 +420,12 @@ const neighbours = [
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-2);
-		margin: 0;
-		padding: 0;
-		list-style: none;
 	}
 
 	@media (max-width: 639px) {
+		.post-page__main {
+			padding-block-end: var(--space-10);
+		}
 		.post-more__pair {
 			grid-template-columns: minmax(0, 1fr);
 		}

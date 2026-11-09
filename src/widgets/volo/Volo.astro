@@ -6,10 +6,9 @@
 // A bar picks its season; the header's arrows page the chart when there are
 // more seasons than fit; the tray's heading slides it up over the chart to
 // show every game. Data is read at build time from volo.json (./volo.ts,
-// which the volo-seasons Action regenerates weekly); every season is rendered
+// which the nightly workflow refreshes on Volo days); every season is rendered
 // server-side as a panel in a DS Faces stack, so nothing is fetched. The
 // chart's controls are wired by ./client.ts (mounted by the widget runtime).
-// Props pass through to the <Widget> (a class).
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
@@ -46,13 +45,6 @@ import {
 } from "./volo";
 import "./volo.css";
 
-interface Props {
-	class?: string;
-	[key: string]: unknown;
-}
-
-const { class: className, ...rest } = Astro.props;
-
 let seasons = getVoloSeasons();
 // DEV ONLY: `?volo-seasons=30` pads the history with copies of the real
 // seasons, to see the chart page. (Never read in a build: DEV is false there.)
@@ -87,11 +79,10 @@ const yearShown = (i: number) =>
 <Widget
 	size="2x2"
 	name="volo"
-	class:list={["wx-volo", className]}
+	class="wx-volo"
 	squeeze="title"
 	data-expanded="false"
 	style={`--vl-page:${Math.min(PAGE, seasons.length)};--vl-tallest:${tallest};--vl-peek-rows:${PEEK_ROWS}`}
-	{...rest}
 >
 	{/* The selected season's sport; the script rewrites it. */}
 	<span slot="title">Volo <span data-volo-sport>{seasons[current]?.sport ?? ""}</span></span>
@@ -122,7 +113,7 @@ const yearShown = (i: number) =>
 					    segments stay out of the control's name. */}
 					<div class="wx-vl-chart" data-volo-chart>
 						<div class="wx-vl-window">
-							<ol class="wx-vl-track" data-volo-track style={`--vl-start:${firstShown}`}>
+							<ol class="wx-vl-track ds-list-bare" data-volo-track style={`--vl-start:${firstShown}`}>
 								{seasons.map((season, i) => {
 									const stack = stacks[i];
 									const mark = placeMark(season);
@@ -208,7 +199,7 @@ const yearShown = (i: number) =>
 											{season.sport} • {seasonName(season)}: {season.team.name}, {formatRecord(season)}
 											{season.champion ? ". League champions." : "."}
 										</VisuallyHidden>
-										<ol class="wx-vl-games">
+										<ol class="wx-vl-games ds-list-bare">
 											{season.games.map((game, gameIndex) => (
 												<li
 													class="wx-vl-game"

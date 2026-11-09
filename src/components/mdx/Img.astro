@@ -5,7 +5,7 @@
 // time — and this renders it as a <Picture>: AVIF with a WebP fallback, a
 // srcset cut to the widths the ruled page draws it at (src/lib/ruled-image.ts),
 // so a phone downloads a phone's worth of pixels. Every image in a /txt post
-// gets four things a bare markdown image cannot express:
+// gets three things a bare markdown image cannot express:
 //
 //   1. INTRINSIC DIMENSIONS, from the import. Markdown has no syntax for
 //      width/height, so these images shipped without them and the page
@@ -16,14 +16,11 @@
 //   2. RESPONSIVE SOURCES. `sizes` is the page's grid arithmetic, so the
 //      browser picks the candidate nearest the box it will draw.
 //   3. Lazy loading + async decode, so a long post doesn't fetch every photo at once.
-//   4. data-reveal, so each image eases in as it is scrolled to instead of
-//      snapping in on decode (see src/lib/reveal.ts).
 //
 // `priority` is for the one image that is the page's largest paint (a post's
-// hero, PostLayout): no reveal — which holds an armed page's image at opacity 0
-// until the coordinator's module runs — and fetched eagerly at high priority
-// (Astro sets loading/decoding/fetchpriority from the flag). Hero or body, an
-// image sits on the wide row (three columns): a body figure bleeds.
+// hero, PostLayout): fetched eagerly at high priority (Astro sets
+// loading/decoding/fetchpriority from the flag). Hero or body, an image sits
+// on the wide row (three columns): a body figure bleeds.
 import { Picture } from "astro:assets";
 import type { ImageMetadata } from "astro";
 import { RULED_SIZES, RULED_WIDTHS } from "../../lib/ruled-image";
@@ -32,7 +29,7 @@ interface Props {
 	src: ImageMetadata;
 	alt?: string;
 	title?: string;
-	/** The page's LCP image: eager, fetchpriority high, no reveal. */
+	/** The page's LCP image: eager, fetchpriority high. */
 	priority?: boolean;
 	[key: string]: unknown;
 }
@@ -49,6 +46,5 @@ const { src, alt = "", priority = false, title: _caption, ...rest } = Astro.prop
 	widths={[...RULED_WIDTHS.wide]}
 	sizes={RULED_SIZES.wide}
 	priority={priority}
-	data-reveal={priority ? undefined : ""}
 	{...rest}
 />
