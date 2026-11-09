@@ -260,7 +260,9 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
   = pill button; `start-icon`/`end-icon` slots. `IconButton` — `secondary`
   (default, a wash in a hairline) / `outline` (the hairline alone),
-  `size="xs|sm|lg|xl"`, `rounded` = round button; give it an `aria-label`.
+  / `bare` (the glyph alone, sized by the glyph, its ink set with
+  `--button-color`), `size="xs|sm|lg|xl"`, `rounded` = round button; give it an
+  `aria-label`. A `<ul>`/`<ol>` drawn some other way takes `.ds-list-bare`.
 
 **Hairline graphics.**
 - `TickRuler` — `segments=[{share, color?}]` (colours default to `--tone-N` by

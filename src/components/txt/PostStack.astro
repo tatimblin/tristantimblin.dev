@@ -105,7 +105,7 @@ const rows = byDateDesc(posts).map((entry) => {
 	rows.length === 0 ? (
 		<Body variant="tertiary">Nothing here yet.</Body>
 	) : (
-		<ol class="stack" aria-label="Posts" data-stack>
+		<ol class="stack ds-list-bare" aria-label="Posts" data-stack>
 			{rows.map(({ href, date, title, demo, meta, excerpt, action }, i) => {
 				return (
 					<li class="stack__post" data-open={i === 0 ? "" : undefined} data-demo={demo ? "" : undefined}>
@@ -154,9 +154,6 @@ const rows = byDateDesc(posts).map((entry) => {
 	   var(--border) as the other edges, so its dash and colour are theirs.
 	   Square, flat, no fill. */
 	.stack {
-		list-style: none;
-		margin: 0;
-		padding: 0;
 		border-block: var(--border);
 		/* Scroll anchoring must not shift the page while a swap runs. */
 		overflow-anchor: none;

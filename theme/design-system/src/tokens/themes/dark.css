@@ -42,13 +42,11 @@
 	--wash-1: #24262a;
 	--wash-2: color-mix(in oklab, var(--wash-3) 60%, var(--wash-1));
 	--wash-3: #343941;
-	--tone-5: var(--wash-3);
 
 	/* THE ACCENT, lifted for the dark page, dark ink on it. Lighter under the
 	   pointer; lit tiles a deeper, quieter blue, so a lit grid glows without
 	   shouting. */
 	--hyperlink: #5ca5ff;
-	--accent: var(--hyperlink);
 	--on-accent: #0b1220;
 	--accent-hover: oklch(from var(--accent) calc(l + 0.06) c h);
 	--lit: oklch(from var(--accent) calc(l - 0.12) calc(c * 0.75) h);

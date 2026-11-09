@@ -674,6 +674,14 @@ const faces = [
 				<IconButton variant="outline" rounded size="sm" aria-label="chevron"><Icon name="chevron" /></IconButton>
 				<IconButton variant="outline" rounded size="lg" aria-label="copy"><Icon name="copy" /></IconButton>
 			</div>
+			<p class="ds-demo__note" style="margin-top: var(--space-5);">
+				<code>variant="bare"</code> is the glyph alone, for a card header's meta
+				slot: no box, sized by the glyph, its ink set with <code>--button-color</code>.
+			</p>
+			<div class="ds-demo__row" style="gap: var(--space-3);">
+				<IconButton variant="bare" aria-label="copy"><Icon name="copy" /></IconButton>
+				<IconButton variant="bare" style="--button-color: var(--accent);" aria-label="chevron"><Icon name="chevron" /></IconButton>
+			</div>
 		</section>
 
 		{/* CARD ----------------------------------------------------------- */}

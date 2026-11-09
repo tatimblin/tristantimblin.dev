@@ -111,9 +111,9 @@ const neighbours = [
 					    the lead below 1024. */}
 					<Card class="post__strip" data-post-strip>
 						<CardBody class="post__facts">
-							<Stat label="Date"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
-							{cat && category && <Stat label="Topic"><span class="post__category">{cat.label}</span></Stat>}
-							<Stat label="Length">
+							<Stat label="Date" class="post__fact"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
+							{cat && category && <Stat label="Topic" class="post__fact"><span class="post__category">{cat.label}</span></Stat>}
+							<Stat label="Length" class="post__fact">
 								{/* Unbreakable runs with breaks between them, so a narrow cell
 								    wraps a run onto a second line, never mid-figure. */}
 								<span class="post__stats" data-post-stats><span class="post__run">{stats.minutes} min</span> <span class="post__run">· {stats.words.toLocaleString("en-US")} words</span>{readCount && (
@@ -187,7 +187,7 @@ const neighbours = [
 					{tags.length > 0 && (
 						<div class="post-more__tags" data-half="tags">
 							<Mono tone="tertiary">Tagged</Mono>
-							<ul class="post-more__chips">
+							<ul class="post-more__chips ds-list-bare">
 								{tags.map((tag) => (
 									<li>
 										<Chip as="a" href={tagHref(tag)}>{tagLabel(tag)}</Chip>
@@ -283,7 +283,7 @@ const neighbours = [
 		gap: var(--space-4);
 	}
 	/* Each Stat reads label first, then the value (a form's order). */
-	.post__facts :global(.ds-stat) {
+	.post__fact {
 		flex-direction: column-reverse;
 	}
 	/* The stats may wrap, between its runs only (the caps Mono is nowrap). */
@@ -420,9 +420,6 @@ const neighbours = [
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-2);
-		margin: 0;
-		padding: 0;
-		list-style: none;
 	}
 
 	@media (max-width: 639px) {

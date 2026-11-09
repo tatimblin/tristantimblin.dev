@@ -19,5 +19,5 @@ const { label, class: className, ...rest } = Astro.props;
 
 <li class={cx("ds-post-group", className)} {...rest}>
 	<div class="ds-post-group__label"><slot name="label">{label}</slot></div>
-	<ol class="ds-post-group__rows"><slot /></ol>
+	<ol class="ds-post-group__rows ds-list-bare"><slot /></ol>
 </li>

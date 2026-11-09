@@ -6,6 +6,12 @@
 :root {
   --container-max: 976px;
   --container-pad: clamp(1rem, 4vw, 2rem);
+  /* The site header's band: its block padding round one line of the bar's
+     type (SiteHeader). Stated, not measured, so a layout can size round the
+     bar before any script runs; tests/home-opener.spec.ts holds it to the bar. */
+  --site-header-h: calc(
+    2 * var(--space-4) + var(--font-size-1) * var(--line-height-body)
+  );
   /* THE CONTAINER AS AN INSET — the one source for every full-width row that
      sits in the site's container: the site header, the homepage's opener and
      content rows (HomeLayout's .container), the blog's columns.
@@ -19,6 +25,13 @@
     var(--container-pad),
     (100vw - var(--container-max)) / 2 + var(--container-pad)
   );
+}
+
+/* A block bled to the window has no side edges or corners against it. */
+fleet-demo[data-prose-bleed="window"],
+.embed[data-prose-bleed="window"] .embed__frame {
+  border-inline: 0;
+  border-radius: var(--radius-square);
 }
 
 *,

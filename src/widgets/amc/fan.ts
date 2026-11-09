@@ -99,7 +99,6 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date(),
 	const N = films.length;
 	if (!body || !fan || !svg || !scrub || !cap || !readout || !title || !modeBtn || N === 0) return null;
 
-	const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 	const ac = new AbortController();
 	const on = <K extends keyof HTMLElementEventMap>(
 		el: HTMLElement,
@@ -509,7 +508,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date(),
 			readout.dataset.mode = mode === "genre" && !roIdle ? "genre" : "date";
 			readout.innerHTML = html;
 		};
-		if (!fade || reduce || !readout.animate) return apply();
+		if (!fade || prefs().reducedMotion || !readout.animate) return apply();
 		readout.getAnimations().forEach((a) => a.cancel());
 		readout.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 110, easing: "ease-in" }).onfinish = () => {
 			apply();
@@ -581,7 +580,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date(),
 	const animateTo = (target: number) => {
 		stop();
 		target = clamp(target);
-		if (reduce) return setPos(target);
+		if (prefs().reducedMotion) return setPos(target);
 		goal = target;
 		const from = pos;
 		const t0 = performance.now();
@@ -626,7 +625,7 @@ export function mountFan(widget: HTMLElement, films: Film[], today = new Date(),
 		setHeader();
 		active = Math.round(pos);
 		setActive();
-		if (reduce || !geo) {
+		if (prefs().reducedMotion || !geo) {
 			blend = b1;
 			return render();
 		}

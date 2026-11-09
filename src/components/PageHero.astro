@@ -3,8 +3,8 @@
 // halftone, framed and short, with the page's title set in its foot, on the
 // site container's edge. BlogLayout renders it in place of its plain page header when a page passes `hero`.
 // The site header sits in the flow above it, so the frame's top margin is the
-// header itself; the sides are held in by the same band (--page-hero-frame,
-// restating the homepage's --home-header-h: the header's padding round one line).
+// header itself; the sides are held in by the same band (--site-header-h,
+// rounded up to a whole pixel).
 // Its tone (ink, gamma, bloom, ...) is per theme in src/styles/halftone.css.
 //
 // The `cards` slot is a row of Cards on the site's container, straddling the
@@ -64,11 +64,6 @@ const { heading } = Astro.props;
 	.page-hero {
 		--page-hero-title-foot: var(--space-6);
 		--page-hero-overlap: var(--space-13);
-		--page-hero-frame: round(
-			up,
-			2 * var(--space-4) + var(--font-size-1) * var(--line-height-body),
-			1px
-		);
 		--page-hero-h: 400px;
 	}
 	.page-hero__grid {
@@ -78,7 +73,7 @@ const { heading } = Astro.props;
 		width: auto;
 		height: var(--page-hero-h);
 		--dotted-grid-height: var(--page-hero-h);
-		margin-inline: var(--page-hero-frame);
+		margin-inline: round(up, var(--site-header-h), 1px);
 	}
 	/* A sibling of the grid, not a child: the grid persists across navigations
 	   and the title changes with the page. */

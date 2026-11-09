@@ -313,12 +313,8 @@ const widths = fullscreen
 	}
 
 	/* In a post the figure bleeds to the window's edges (data-prose-bleed=
-	   "window"): no side edges or corners against the window, and the
-	   caption line back on the page's margin. */
-	.embed[data-prose-bleed="window"] .embed__frame {
-		border-inline: 0;
-		border-radius: 0;
-	}
+	   "window", the frame's edges in global.css): the caption line back on the
+	   page's margin. */
 	.embed[data-prose-bleed="window"] :global(.ds-fig__cap) {
 		padding-inline: var(--container-inset);
 	}

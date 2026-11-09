@@ -33,13 +33,11 @@
 	--wash-1: #f1f4f7;
 	--wash-2: color-mix(in oklab, var(--panel-outline) 70%, var(--wash-1));
 	--wash-3: var(--panel-outline);
-	--tone-5: var(--panel-outline);
 
 	/* THE ACCENT: the link blue, with white on it. Darker under the pointer;
 	   lit tiles a paler, quieter blue, so a lit grid is state, not a row of
 	   buttons. */
 	--hyperlink: #0276fd;
-	--accent: var(--hyperlink);
 	--on-accent: #fff;
 	--accent-hover: oklch(from var(--accent) calc(l - 0.06) c h);
 	--lit: oklch(from var(--accent) calc(l + 0.08) calc(c * 0.55) h);

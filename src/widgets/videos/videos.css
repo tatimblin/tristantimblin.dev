@@ -180,11 +180,8 @@
 	overflow: hidden;
 	pointer-events: none;
 }
-/* The header's inline pad, as a Widget's own header has it (widget-grid.css keys
-   that on a direct child of the card; this one is inside the overlay). */
 .wx-videos__chrome .ds-card-header {
 	flex: none;
-	padding-inline: var(--widget-pad);
 }
 /* A block of its own so the caption fade's translate applies to it; the
    ellipsis has to be its own for the same reason. */

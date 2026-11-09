@@ -130,12 +130,12 @@ test("the tagline wobbles whole, its ampersand oversized", async ({ page }) => {
 });
 
 test("the stated header band is the real one", async ({ page }) => {
-	// HomeLayout states --home-header-h so the pin's start is known without a
+	// global.css states --site-header-h so the pin's start is known without a
 	// script; it must stay the bar's real height.
 	await open(page, 1440, 900);
 	const got = await page.evaluate(() => {
 		const probe = document.createElement("div");
-		probe.style.cssText = "position:absolute;visibility:hidden;height:var(--home-header-h)";
+		probe.style.cssText = "position:absolute;visibility:hidden;height:var(--site-header-h)";
 		document.querySelector(".home")!.appendChild(probe);
 		const stated = probe.getBoundingClientRect().height;
 		probe.remove();

@@ -25,6 +25,7 @@ import Figure from "@whois/design-system/Figure";
 import Stat from "@whois/design-system/Stat";
 import HitArea from "@whois/design-system/HitArea";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
+import IconButton from "@whois/design-system/IconButton";
 import usGlyph from "./icons/us.svg?raw";
 import globeGlyph from "./icons/globe.svg?raw";
 import { readFileSync } from "node:fs";
@@ -54,10 +55,10 @@ const inkAspect = pngAspect(readFileSync(`public${INK}`));
 		{/* Which distance the ring is measuring: the map of the US, or the globe.
 		     A pointer target for the flip, hidden from AT and out of the tab
 		     order: it only presses the HitArea below. */}
-		<button slot="meta" type="button" class="wx-bw-glyph" tabindex="-1" aria-hidden="true">
+		<IconButton slot="meta" variant="bare" type="button" class="wx-bw-glyph" tabindex="-1" aria-hidden="true">
 			<span class="wx-bw-glyph--us" set:html={usGlyph} />
 			<span class="wx-bw-glyph--earth" set:html={globeGlyph} />
-		</button>
+		</IconButton>
 
 		<CardBody class="wx-bw-body">
 			{/* Decoration, laid out by ./ring.ts; the share is in the text below. */}
@@ -163,22 +164,12 @@ const inkAspect = pngAspect(readFileSync(`public${INK}`));
 
 	/* The header glyph, on the widget type scale so it scales with the card:
 	   the solid map reads heavier than the globe, so it takes a step smaller. */
-	/* A bare button: no chrome of its own, a pad of hit area round the glyph
-	   (given back as margin, so it sits where it did), and it inks up under
-	   the pointer. */
+	/* It inks up under the pointer. */
 	.wx-bw-glyph {
-		display: flex;
-		align-items: center;
-		padding: var(--space-1);
-		margin: calc(-1 * var(--space-1));
-		border: none;
-		background: none;
-		color: var(--text-tertiary);
-		cursor: pointer;
-		transition: color var(--duration-standard) var(--ease-standard);
+		--button-color: var(--text-tertiary);
 	}
 	.wx-bw-glyph:hover {
-		color: var(--text-secondary);
+		--button-color: var(--text-secondary);
 	}
 	.wx-bw-glyph :global(svg) {
 		display: block;

@@ -20,7 +20,7 @@ import "./now-playing.css";
 	     which the runtime mounts once the page has loaded: the player and its
 	     stream come with it); the placeholder text only reserves the pill's width. */}
 	<Pill slot="meta" class="wx-np-state">paused</Pill>
-	<CardBody>
+	<CardBody class="wx-np-body">
 		<spotify-player src={SPOTIFY_SSE_URL} layout="cover"></spotify-player>
 	</CardBody>
 </Widget>

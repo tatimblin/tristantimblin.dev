@@ -28,8 +28,7 @@
 	color: var(--negative);
 }
 
-.wx-cursive > .ds-card-body.wx-cs-body,
-.wx-cursive > .ds-card-header + .ds-card-body.wx-cs-body {
+.wx-cs-body {
 	padding: 0;
 	gap: 0;
 }

@@ -270,8 +270,8 @@
  * everything else the ink at a few strengths. The tokens below are that
  * vocabulary. The components that consume them (Mono, Figure, Stat, Pill,
  * TickRuler, BarGraph, Legend, TileGrid, and the card chrome) are
- * documented in CONVENTIONS.md. The washes (--wash-1..3) and the last rank
- * step (--tone-5) are per-theme tints, in themes/light.css and dark.css.
+ * documented in CONVENTIONS.md. The washes (--wash-1..3) are per-theme tints,
+ * in themes/light.css and dark.css.
  *
  * The steps that do not depend on the theme sit on :root; everything derived
  * from a theme token (the inks, the accent) sits on [data-theme], as the ART
@@ -338,14 +338,18 @@
 	   outline pill's): a theme sets it a step over the plain one. */
 	--hairline-strong: var(--text-tertiary);
 
+	/* The one accent: each theme's link blue. */
+	--accent: var(--hyperlink);
+
 	/* The rank ramp, for things ordered by importance that are not "lit": a
 	 * legend, a share ruler, a stack of bars. The accent first — it IS the one
-	 * accent the card gets — then the ink stepping down, and the theme's
-	 * --tone-5 tint last. Five steps; a sixth thing is "other". */
+	 * accent the card gets — then the ink stepping down, and the deepest wash
+	 * last. Five steps; a sixth thing is "other". */
 	--tone-1: var(--accent);
 	--tone-2: var(--text-primary);
 	--tone-3: var(--text-secondary);
 	--tone-4: var(--text-tertiary);
+	--tone-5: var(--wash-3);
 
 	/* The focus ring, for everything focusable that is not a native control:
 	 * a pill or a button, a graph that became a slider, a flip surface. One

@@ -113,7 +113,7 @@ const yearShown = (i: number) =>
 					    segments stay out of the control's name. */}
 					<div class="wx-vl-chart" data-volo-chart>
 						<div class="wx-vl-window">
-							<ol class="wx-vl-track" data-volo-track style={`--vl-start:${firstShown}`}>
+							<ol class="wx-vl-track ds-list-bare" data-volo-track style={`--vl-start:${firstShown}`}>
 								{seasons.map((season, i) => {
 									const stack = stacks[i];
 									const mark = placeMark(season);
@@ -199,7 +199,7 @@ const yearShown = (i: number) =>
 											{season.sport} • {seasonName(season)}: {season.team.name}, {formatRecord(season)}
 											{season.champion ? ". League champions." : "."}
 										</VisuallyHidden>
-										<ol class="wx-vl-games">
+										<ol class="wx-vl-games ds-list-bare">
 											{season.games.map((game, gameIndex) => (
 												<li
 													class="wx-vl-game"
