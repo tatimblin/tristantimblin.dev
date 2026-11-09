@@ -16,6 +16,9 @@ import { defineConfig, devices } from "@playwright/test";
     (with reuseExistingServer, a suite on 4321 would quietly test the dev server). */
 const PORT = Number(process.env.PW_PORT ?? 4460);
 
+/** PW_PREBUILT=1: dist/ is already built (CI builds once, before its test steps). */
+const BUILD = process.env.PW_PREBUILT ? "" : "bun run build && ";
+
 export default defineConfig({
 	testDir: "./tests",
 	fullyParallel: true,
@@ -61,7 +64,7 @@ export default defineConfig({
 
 	webServer: {
 		// The root build: it copies the prebuilt fleet demo into public/ first.
-		command: `bun run build && bunx --bun astro preview --port ${PORT}`,
+		command: `${BUILD}bunx --bun astro preview --port ${PORT}`,
 		url: `http://localhost:${PORT}`,
 		reuseExistingServer: !process.env.CI,
 		timeout: 180_000,

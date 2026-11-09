@@ -13,7 +13,8 @@ Guidance for AI agents working in this repo.
   (`images/`) beside them. Data lives in `src/data/`: the widgets' JSON/CSV
   (written by the nightly fetchers in `tools/`, see `.github/workflows/nightly.yml`)
   and the media manifests. A change to only content, data or docs skips the
-  full Playwright suite in CI (build, smoke, deploy only).
+  full Playwright suite in CI (build, smoke, deploy only). CI's Bun version
+  is pinned in `.bun-version`.
 - **`theme/*`** — the site's look, as workspace packages (Bun workspaces,
   consumed as `@whois/*`, source exports, no build step):
   - `@whois/design-system` — the design system (tokens + Astro/CSS components).
@@ -59,7 +60,8 @@ as `@tristimb/fleet-demo`: a GitHub Release tarball pinned by URL in
 
 - `dist/` — the built workbench page. `copy:fleet-demo` copies it to
   `public/fleet-demo/` (gitignored); the root `build` and `dev` both run it
-  first, and so does Playwright's `webServer` (via `build`).
+  first, and so does Playwright's `webServer` (via `build`, which
+  `PW_PREBUILT=1` skips; CI builds once before its test steps).
 - `src/element.ts` / `element.css` — the `<fleet-demo>` poster/launch element,
   imported as source by `src/components/FleetDemo.astro`.
 
