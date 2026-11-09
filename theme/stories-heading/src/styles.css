@@ -26,10 +26,7 @@
                       also how far the word rises in all. Over it the word
                       drifts up at --sh-drift-rate of the scroll instead of 1:1,
                       so it pins later, at --sh-pinned-at (read it; don't set
-                      it).
-     --sh-wipe-at     the scroll offset the wipe starts at: where the word pins
-                      (--sh-pinned-at), or later if it must first clear
-                      something (the solid layer's backdrop is opaque).
+                      it), where the wipe starts.
      --sh-reveal      the scroll the wipe plays over.
      --sh-sub-w       the intro's inline size (default: the host's). */
 
@@ -59,7 +56,6 @@ stories-heading {
 	   cannot read a variable). */
 	--sh-drift-rate: 0.15;
 	--sh-pinned-at: calc(var(--sh-pin-at) / var(--sh-drift-rate));
-	--sh-wipe-at: var(--sh-pinned-at);
 	--sh-reveal: 300px;
 	/* How far the solid layer's backdrop reaches past the word's box on every
 	   side: room for <wobble-text>'s displacement, which shoves glyphs a few px
@@ -72,8 +68,6 @@ stories-heading {
 .sh__wordmark {
 	position: sticky;
 	top: var(--sh-top);
-	/* Over whatever the word overlaps (a picture beside it on a phone). */
-	z-index: 1;
 	width: fit-content;
 	margin: 0;
 	pointer-events: auto;
@@ -114,9 +108,9 @@ stories-heading {
 /* --- "& other stories" and the intro ---------------------------------------- */
 
 .sh__sub {
-	/* Over the word, whose fill would otherwise mask the "&" lying on it. */
+	/* Positioned, so it paints after the sticky word and the "&" lies over the
+	   word's fill. */
 	position: relative;
-	z-index: 2;
 	inline-size: var(--sh-sub-w, auto);
 	margin-block-start: var(--space-3);
 	pointer-events: auto;
@@ -180,8 +174,8 @@ stories-heading {
    `screen` in the query): a page printed while scrolled would print faded.
 
    THE RANGES are the consumer's geometry: the drift from the top to
-   --sh-pinned-at; the wipe from --sh-wipe-at over --sh-reveal; the fade from
-   the top over --sh-sub-fade-px.
+   --sh-pinned-at; the wipe from there over --sh-reveal; the fade from the top
+   over --sh-sub-fade-px.
 
    THE DRIFT rides on the sticky, not instead of it. Sticky alone moves the
    word 1:1 with the page until --sh-pin-at, then holds it. The drift adds a
@@ -215,8 +209,8 @@ stories-heading {
 			animation-timing-function: linear;
 			animation-fill-mode: both;
 			animation-timeline: scroll(root block);
-			animation-range: var(--sh-wipe-at)
-				calc(var(--sh-wipe-at) + var(--sh-reveal));
+			animation-range: var(--sh-pinned-at)
+				calc(var(--sh-pinned-at) + var(--sh-reveal));
 		}
 
 		.sh__sub {

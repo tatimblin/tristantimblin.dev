@@ -22,10 +22,10 @@
    can't absorb is reserved, and once the margin is wide enough the grid — and
    the card's right edge — runs to the container edge like every other row. */
 .ds-widget-grid:has(.wx-videos) {
-	--vc-outer-margin: calc(var(--container-inset) - var(--container-pad));
 	padding-inline-end: max(
 		0px,
-		var(--vc-ruler-w) + var(--vc-main-gap) - var(--vc-outer-margin)
+		var(--vc-ruler-w) + var(--vc-main-gap) -
+			(var(--container-inset) - var(--container-pad))
 	);
 
 	/* THE CHROME'S BANDS (VideoChrome.astro), from its parts: the header (its
@@ -44,13 +44,13 @@
 	--vc-foot-band: calc(var(--border-width) + var(--vc-foot-h));
 }
 
-/* The video cell: the last column, the first two rows of cards (row 1 is the
-   page's opener, HomeLayout.astro). Numeric lines (not -1/-2): the grid has no
-   explicit row template, so negative lines are unreliable with
-   grid-auto-flow: dense + implicit tracks. grid-auto-flow: dense then packs the
-   auto-placed 1×1 widgets around this. */
+/* The video cell: the last column, at either step (the grid's columns are
+   explicit, so -2 is its start line), and the first two rows of cards (row 1 is
+   the page's opener, HomeLayout.astro; numeric, as the grid has no explicit row
+   template). grid-auto-flow: dense then packs the auto-placed 1×1 widgets
+   around this. */
 .wx-videos {
-	grid-column: var(--widget-cols, 4) / span 1;
+	grid-column: -2 / span 1;
 	grid-row: 2 / span 2;
 	/* Explicit 2-row span sets the height; release the DS 1×2 box so it
 	   doesn't fight the row span. SIZE CONTAINMENT so it never sets the span either:
@@ -78,7 +78,6 @@
 	--vc-chrome-run: min(var(--space-8), var(--vc-dock-travel) * 0.08);
 	will-change: transform;
 	position: relative;
-	z-index: 1;
 }
 
 /* THE DOCK, on the compositor: a scroll-progress animation from the park to
@@ -374,9 +373,6 @@
 			var(--border-width) + var(--space-5) + var(--space-1) + var(--voice-mono-size) * var(--line-height-ui) +
 				var(--space-2)
 		);
-	}
-	.wx-videos {
-		grid-column: 2 / span 1;
 	}
 	.wx-videos__wide {
 		display: none;

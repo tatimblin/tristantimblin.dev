@@ -107,11 +107,6 @@ const props = Astro.props;
 		/* From the header down to the opener. */
 		--home-lead: var(--space-8);
 		padding-block: var(--home-lead) var(--space-10);
-		/* THE FIRST SCREEN: the window, capped at the page's own measure, so the
-		   opener is never taller than the content is wide and a tall window has
-		   the cards peek in. svh, so a mobile browser's collapsing chrome never
-		   resizes it. */
-		--home-first-screen: min(100svh, var(--container-max));
 	}
 
 	/* THE OPENER'S GEOMETRY, on the grid so the lockup and the videos card read
@@ -119,13 +114,12 @@ const props = Astro.props;
 	   --widget-grid-gap, widget-grid.css), so it lands on the cards' columns at
 	   every width, and all of it is stylesheet, so the first frame is final. */
 	.home .ds-widget-grid {
-		/* A 1×2 tile's height: the videos card, parked centred in the opener. */
-		--home-tile-h: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
+		/* Two cells and the gap: the videos card's height, parked centred in the
+		   opener, and the lockup's width. */
+		--home-two-cells: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
 		/* "tristan"'s box: two cells wide, the line height over the size that
 		   width gives it. */
-		--home-word-h: calc(
-			0.8 * (2 * var(--widget-cell) + var(--widget-grid-gap)) / var(--sh-wordmark-em)
-		);
+		--home-word-h: calc(0.8 * var(--home-two-cells) / var(--sh-wordmark-em));
 		/* How far below the opener's top the parked card sits (phones, below). */
 		--home-tile-drop: 0px;
 		/* The tile's empty band under the picture, which the group doesn't count
@@ -135,20 +129,23 @@ const props = Astro.props;
 		   overlapping it from half a word above. The lockup's copy is shorter than
 		   the tile beside it, so this is the group's height, from the grid's own
 		   sizes and known before anything is measured. */
-		--home-group-h: calc(var(--home-tile-drop) + var(--home-tile-h) - var(--home-tile-foot));
+		--home-group-h: calc(var(--home-tile-drop) + var(--home-two-cells) - var(--home-tile-foot));
 		/* THE LOCKUP ON THE TILE'S AXIS (desktop; a phone overlaps them instead):
 		   how far below the tile's top the word starts, so the shorter lockup
 		   centres beside it. The word's height is exact; the copy under it (the
 		   sub's margin, "& other stories" and two lines of intro) is stated as
-		   steps, because where the word pins
-		   has to be a number before any script runs. A pixel or two of the copy's
-		   wrap reads as nothing against a 444px tile. */
-		--home-lockup-h: calc(var(--home-word-h) + var(--space-3) + var(--space-11));
-		--home-lockup-drop: max(0px, (var(--home-tile-h) - var(--home-lockup-h)) / 2);
+		   steps, because where the word pins has to be a number before any script
+		   runs. */
+		--home-lockup-drop: max(
+			0px,
+			(var(--home-two-cells) - var(--home-word-h) - var(--space-3) - var(--space-11)) / 2
+		);
 		/* THE FOLD: the row height that puts the first row of cards a step below
-		   the first screen's bottom. */
+		   the first screen, which is the window capped at the page's own measure
+		   (a tall window has the cards peek in), in svh so a mobile browser's
+		   collapsing chrome never resizes it. */
 		--home-fold: calc(
-			var(--home-first-screen) + var(--space-4) - var(--home-header-h) -
+			min(100svh, var(--container-max)) + var(--space-4) - var(--home-header-h) -
 				var(--home-lead) - var(--widget-grid-gap)
 		);
 		/* THE ROW'S HEIGHT, and so the pin's range: a first screen, or the group's
@@ -211,23 +208,18 @@ const props = Astro.props;
 		/* THE LEFT COLUMN: two cells and the gap — "tristan" fills it, the
 		   intro is set in it. The third column is the air between it and the
 		   carousel in the fourth. */
-		--sh-wordmark-w: calc(2 * var(--widget-cell) + var(--widget-grid-gap));
+		--sh-wordmark-w: var(--home-two-cells);
 		--sh-sub-w: var(--sh-wordmark-w);
 		min-block-size: var(--home-opener-h);
 		/* Centred. Padding, inside the row's height, so the sticky word still
 		   rides down to the row's foot. */
 		padding-block-start: var(--home-word-drop);
-		/* The wipe's bounds, in scroll: the longest it plays over where the row
-		   allows, and the shortest the drift must leave it. */
-		--home-wipe-max: 300px;
+		/* The shortest scroll the wipe may play over. */
 		--home-wipe-min: var(--space-12);
-		/* HOW FAR IT RISES, which is also the scroll at which the sticky line
-		   catches its resting box: --home-drift, unless the row arrives so soon
-		   that the slow drift would still be running when it did (a short window).
-		   Then only what leaves the wipe its minimum, down to none at all, the word
-		   held from the start. A drift of D at rate r ends at D / r, so it spends
-		   D(1 − r) / r of --home-word-range. Nor past a step from the top of the
-		   window, where a top-anchored word (a short window, a tablet) starts. */
+		/* HOW FAR IT RISES (the scroll at which the sticky line catches its
+		   resting box): --home-drift, less whatever a short window needs to leave
+		   the wipe its minimum, as a drift of D at rate r spends D(1 − r) / r of
+		   the range. Never past a step from the window's top. */
 		--sh-pin-at: min(
 			var(--home-drift),
 			var(--home-word-top) - var(--space-2),
@@ -239,37 +231,24 @@ const props = Astro.props;
 		);
 		/* HELD NEAR THE MIDDLE: its rest top less the rise. It drifts up from the
 		   first pixel of scroll and reaches this line at --sh-pinned-at
-		   (stories-heading/styles.css), and THE WIPE starts there (the component's
-		   default --sh-wipe-at). */
+		   (stories-heading/styles.css), and THE WIPE starts there... */
 		--sh-top: calc(var(--home-word-top) - var(--sh-pin-at));
 		/* ...and finishes while the word is still held: within the range less the
 		   drift's slow start, a step short of the row. */
-		--sh-reveal: max(
-			var(--space-2),
-			min(
-				var(--home-wipe-max),
-				var(--home-word-range) - (var(--sh-pinned-at) - var(--sh-pin-at)) - var(--space-5)
-			)
+		--home-wipe-room: calc(
+			var(--home-word-range) - (var(--sh-pinned-at) - var(--sh-pin-at)) - var(--space-5)
 		);
+		--sh-reveal: max(var(--space-2), var(--home-wipe-room));
 	}
 
-	/* PHONES AND TABLETS (the grid's compact step, two columns): "tristan" spans
-	   both and runs over the top of the carousel's PICTURE, which is parked half
-	   a word down the right column. The tile is parked higher than that by the
-	   empty band above the picture (--vc-head-band, src/widgets/videos/videos.css;
-	   on a narrow phone that puts the tile's box a little above the word, which
-	   is nothing to see); "& other stories" and the intro take the left column
-	   beside it (centred on the picture: THE COPY ON THE PICTURE'S AXIS, below),
-	   and all of it, word to picture, centres as one
-	   (--home-group-h). The wipe plays over 100px at most, and the solid layer's
-	   backdrop is opaque, so it must never lie over the picture. The word holds
-	   half a word above the picture's rest, but the tile sinks faster than the
-	   page at first (videos.css) and is clear of the word well before the word
-	   pins; it only climbs back as it docks, and the word has to have gone by
-	   then. A rise of a quarter of the word's height (more than the fixed drift
-	   on the wider steps, where the word is taller) keeps a backdrop's width
-	   between them to the end (tests/home-opener.spec.ts holds that clearance
-	   through the whole hold). */
+	/* PHONES AND TABLETS (the compact step, two columns): "tristan" spans both and
+	   runs over the top of the carousel's picture, parked half a word down the
+	   right column; the copy takes the left column beside it, and all of it, word
+	   to picture, centres as one (--home-group-h). The solid layer's backdrop is
+	   opaque, so it must stay off the picture: the tile sinks from under the word
+	   before the word pins, and a rise of a quarter of the word's height keeps
+	   them apart while the tile climbs back (tests/home-opener.spec.ts holds that
+	   clearance). The wipe's 100px cap is only its pace on a phone's short hold. */
 	@media (max-width: 900px) {
 		.home {
 			--home-lead: var(--space-2);
@@ -280,36 +259,23 @@ const props = Astro.props;
 			--home-lockup-drop: 0px;
 			--home-drift: max(var(--space-6), var(--home-word-h) / 4);
 			/* The picture alone, between the tile's two empty bands. */
-			--home-picture-h: calc(var(--home-tile-h) - var(--vc-head-band) - var(--home-tile-foot));
+			--home-picture-h: calc(var(--home-two-cells) - var(--vc-head-band) - var(--home-tile-foot));
 		}
 		.home stories-heading {
 			--sh-sub-w: var(--widget-cell);
-			--home-wipe-max: 100px;
+			--sh-reveal: max(var(--space-2), min(100px, var(--home-wipe-room)));
 		}
 	}
 
-	/* THE COPY ON THE PICTURE'S AXIS (the compact step, parked): "& other stories"
-	   and the intro, as one block, centred on the picture beside them. The copy's
-	   line count varies with the width, so nothing estimates it: .sh__sub is a box
-	   SYMMETRIC ABOUT THE PICTURE'S MIDDLE and the copy is centred in it by
-	   flexbox. The box starts where the copy always did, a --space-3 margin
-	   (stories-heading/styles.css) under the word, which overlaps the picture by
-	   half a word, so a box whose top is one margin plus half a word below the
-	   picture's top must stop as far above its foot: the picture's height less a
-	   word and two margins.
-	     Copy taller than that (a narrow phone, a large root font) outgrows the box
-	   from the top, so it sits directly under "tristan", as near the middle as it
-	   can get without touching the word.
-	     Only the picture ON THE SCREEN counts (100svh, so a collapsing browser bar
-	   moves nothing): in a short window the picture runs past the fold, and its
-	   true middle would put the copy below the fold, where it fades before it is
-	   ever seen.
-	     The box ends above the picture's foot, so it never adds to the row's
-	   height: the opener's arithmetic doesn't see it. Not under reduced motion (the
-	   card is docked below and the column beside the copy is empty) or in print
-	   (the card's place there depends on where the page was scrolled to), or
-	   without scroll timelines (docked below, as under reduced motion): the copy
-	   stays directly under the word. */
+	/* THE COPY ON THE PICTURE'S AXIS (the compact step, parked): .sh__sub is a box
+	   symmetric about the picture's middle, and flexbox centres the copy in it,
+	   so nothing estimates the copy's line count. It starts a margin under the
+	   word, which overlaps the picture by half a word, so it must stop as far
+	   above the foot: the picture less a word and two margins. Taller copy
+	   outgrows it from the top and sits directly under "tristan". Only the
+	   picture on the screen counts (100svh), so the copy never lands below the
+	   fold. Off where the card is docked in place (reduced motion, no scroll
+	   timelines) and in print. */
 	@media screen and (max-width: 900px) and (prefers-reduced-motion: no-preference) {
 		@supports (animation-timeline: scroll()) {
 			.home .sh__sub {

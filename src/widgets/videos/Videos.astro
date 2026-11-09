@@ -24,6 +24,14 @@ import Deferred from "../../components/Deferred.astro";
 import VideoCarousel from "../../components/VideoCarousel.astro";
 import VideoChrome from "./VideoChrome.astro";
 import "./videos.css";
+
+const carousel = {
+	fill: true,
+	rulerSide: "right",
+	xfade: 1600,
+	xfadeMode: "threshold",
+	xfadeLive: true,
+} as const;
 ---
 
 <Widget
@@ -52,15 +60,7 @@ import "./videos.css";
 	    ./client.ts). Rendered at 1× (the halftone's cost is per pixel) on a
 	    finer lattice, so the picture still reads at a phone tile's width. */}
 	<Deferred media={WIDGET_WIDE_MQ}>
-		<VideoCarousel
-			class="wx-videos__wide"
-			fill
-			rulerSide="right"
-			xfade={1600}
-			xfadeMode="threshold"
-			xfadeLive
-			cellSize={5}
-		>
+		<VideoCarousel {...carousel} class="wx-videos__wide" cellSize={5}>
 			{/* What fades on the wide card: the frame and the bands (./videos.css). */}
 			<div slot="caption" class="wx-videos__surface" aria-hidden="true"></div>
 			<VideoChrome slot="caption" />
@@ -68,14 +68,10 @@ import "./videos.css";
 	</Deferred>
 	<Deferred media={WIDGET_COMPACT_MQ}>
 		<VideoCarousel
+			{...carousel}
 			class="wx-videos__compact"
-			fill
-			rulerSide="right"
 			orientation="horizontal"
 			axis="even"
-			xfade={1600}
-			xfadeMode="threshold"
-			xfadeLive
 			cellSize={4}
 			maxDpr={1}
 		>

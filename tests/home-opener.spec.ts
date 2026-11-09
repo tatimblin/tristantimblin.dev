@@ -122,7 +122,11 @@ test("the tagline wobbles whole, its ampersand oversized", async ({ page }) => {
 		page.locator(".sh__wordmark").boundingBox(),
 	]);
 	expect(ampBox!.y).toBeLessThan(word!.y + word!.height);
-	await expect(page.locator(".sh__sub")).toHaveCSS("z-index", "2");
+	const paintsOverWord = await page.evaluate(
+		([x, y]) => document.elementFromPoint(x, y)?.closest(".sh__sub") != null,
+		[ampBox!.x + ampBox!.width / 2, word!.y + word!.height - 2],
+	);
+	expect(paintsOverWord).toBe(true);
 });
 
 test("the stated header band is the real one", async ({ page }) => {
