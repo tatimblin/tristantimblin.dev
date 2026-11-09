@@ -32,6 +32,10 @@ const readLift = (page: Page) =>
 const readChrome = (page: Page) =>
 	page.evaluate(() => Number(getComputedStyle(document.querySelector(".wx-videos__date")!).opacity));
 
+/** The frame and the bands, which fade as one layer. */
+const readSurface = (page: Page) =>
+	page.evaluate(() => Number(getComputedStyle(document.querySelector(".wx-videos__surface")!).opacity));
+
 const videosMounted = (page: Page) =>
 	page.locator(".wx-videos[data-widget-state=mounted]").waitFor({ state: "attached", timeout: 15_000 });
 
@@ -183,6 +187,7 @@ test("without scroll timelines the page is static and complete", async ({ page }
 		expect(await readClip(page), `the word is clipped at scroll ${y}`).toBe(0);
 		expect(await readLift(page), `the card is lifted at scroll ${y}`).toBe(0);
 		expect(await readChrome(page), `the chrome is off at scroll ${y}`).toBe(1);
+		expect(await readSurface(page), `the frame is off at scroll ${y}`).toBe(1);
 	}
 	await scrollAndSettle(page, 0);
 	const sub = await page.evaluate(() => getComputedStyle(document.querySelector(".sh__sub")!).opacity);

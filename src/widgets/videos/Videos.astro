@@ -61,6 +61,8 @@ import "./videos.css";
 			xfadeLive
 			cellSize={5}
 		>
+			{/* What fades on the wide card: the frame and the bands (./videos.css). */}
+			<div slot="caption" class="wx-videos__surface" aria-hidden="true"></div>
 			<VideoChrome slot="caption" />
 		</VideoCarousel>
 	</Deferred>

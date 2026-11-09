@@ -324,7 +324,7 @@ test("floating, the clip keeps its label and location where the docked card has 
 			return {
 				label: field("[data-vc-desc]"),
 				location: field("[data-vc-loc]"),
-				frame: Number(getComputedStyle(document.querySelector(".wx-videos__wide .vc__stage")!, "::after").opacity),
+				frame: Number(getComputedStyle(document.querySelector(".wx-videos__wide .wx-videos__surface")!).opacity),
 			};
 		});
 	const floating = await read();
