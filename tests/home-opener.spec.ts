@@ -244,8 +244,9 @@ test.describe("phone 390×844", () => {
 	test("at rest: a 1×2 tile in the right column, the scrubber dormant, only 'tristan' over it", async ({ page }) => {
 		await open(page, 390, 844);
 		const s = await at(page, 0);
-		// Right column, a 1×2 of the phone's cells.
-		expect(Math.abs(s.card.right - s.word.right)).toBeLessThan(1);
+		// Right column, a 1×2 of the phone's cells. The word's box follows its glyph
+		// advances, which Chromium on Linux rounds, hence the 1%.
+		expect(Math.abs(s.card.right - s.word.right)).toBeLessThan(s.word.w * 0.01);
 		expect(Math.abs(s.card.w - s.first.w)).toBeLessThan(1);
 		expect(s.card.h).toBeGreaterThan(2 * s.first.w);
 		// "tristan" spans the content width and runs over the picture; nothing else does.
