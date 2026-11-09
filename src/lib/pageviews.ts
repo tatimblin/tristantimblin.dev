@@ -31,6 +31,20 @@ export function getPathStats(path: string, source: PageviewsLedger = ledger): Pa
 }
 
 /**
+ * The `count` items with the most all-time reads. Ties keep the order given,
+ * and an item with no count ranks as zero, so a thin ledger still fills a row.
+ */
+export function topByReads<T>(
+	items: T[],
+	pathOf: (item: T) => string,
+	count: number,
+	source: PageviewsLedger = ledger,
+): T[] {
+	const reads = (item: T) => getPathStats(pathOf(item), source)?.reads ?? 0;
+	return [...items].sort((a, b) => reads(b) - reads(a)).slice(0, count);
+}
+
+/**
  * "212 reads" ("1,204 reads", "212 views"), or null under MIN_SHOWN or for no
  * count at all, so a caller can drop the whole cell. Lowercase: the strip's
  * caps are the Mono's, not the text's.

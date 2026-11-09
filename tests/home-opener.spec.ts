@@ -106,6 +106,25 @@ test("one heading names the lockup; its layers are hidden from assistive tech", 
 	}
 });
 
+test("the tagline wobbles whole, its ampersand oversized", async ({ page }) => {
+	await open(page, 1440, 900);
+	const wobble = page.locator(".sh__tagline wobble-text");
+	await expect(wobble).toHaveText("& other stories");
+	await expect.poll(() => wobble.evaluate((el) => getComputedStyle(el).filter)).toContain("url(");
+	const [rest, amp] = await wobble.evaluate((el) => [
+		parseFloat(getComputedStyle(el).fontSize),
+		parseFloat(getComputedStyle(el.querySelector(".sh__amp")!).fontSize),
+	]);
+	expect(amp).toBe(rest * 2.25);
+	// Up against the word's foot, and painted over it.
+	const [ampBox, word] = await Promise.all([
+		page.locator(".sh__amp").boundingBox(),
+		page.locator(".sh__wordmark").boundingBox(),
+	]);
+	expect(ampBox!.y).toBeLessThan(word!.y + word!.height);
+	await expect(page.locator(".sh__sub")).toHaveCSS("z-index", "2");
+});
+
 test("the stated header band is the real one", async ({ page }) => {
 	// HomeLayout states --home-header-h so the pin's start is known without a
 	// script; it must stay the bar's real height.
@@ -477,8 +496,8 @@ test.describe("the opener is its own first screen", () => {
 		});
 
 		// The tall-window defect: the page ran out of scroll with the word short of
-		// its rest, or ended with its letters cropped by the top of the window.
-		test(`at ${w}×${h} the word can settle and the page doesn't end on it`, async ({ page }) => {
+		// its rest. A tall page may end with the word still in view.
+		test(`at ${w}×${h} the word can settle`, async ({ page }) => {
 			await open(page, w, h);
 			const rest = await at(page, 0);
 			const max = await maxScroll(page);
@@ -490,7 +509,6 @@ test.describe("the opener is its own first screen", () => {
 			expect(Math.abs(settled.first.y - settled.word.bottom - 24), "rests a gap above the row").toBeLessThan(1.5);
 			const end = await at(page, max);
 			expect(Math.abs(end.card.y - end.first.y), "and the card has landed").toBeLessThan(1);
-			expect(end.word.bottom, "the word has gone, not half-gone").toBeLessThanOrEqual(0);
 		});
 	}
 

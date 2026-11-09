@@ -5,6 +5,7 @@
 // link comes here.
 import BlogLayout from "../layouts/BlogLayout.astro";
 import Body from "@whois/design-system/Body";
+import Card from "@whois/design-system/Card";
 import Anchor from "@whois/design-system/Anchor";
 import Blockquote from "@whois/design-system/Blockquote";
 import Mono from "@whois/design-system/Mono";
@@ -18,6 +19,9 @@ import "@whois/wobble-text/styles.css";
 	description="Tristan Timblin — a craftsman who builds things to be used, finding creativity through empathetic design."
 	heading="About Me"
 >
+	<Card slot="hero-cards" as="figure" class="about__photo">
+		<img src="/profile.jpg" alt="Tristan Timblin" width="460" height="460" />
+	</Card>
 	<div class="about__copy">
 		<wobble-text scale="3.2" speed="0.3">
 			<Body>
@@ -50,6 +54,16 @@ import "@whois/wobble-text/styles.css";
 </BlogLayout>
 
 <style>
+	/* A one-column row on a phone would otherwise run it the full width. */
+	.about__photo {
+		max-inline-size: var(--space-14);
+		margin: 0;
+	}
+	.about__photo img {
+		display: block;
+		inline-size: 100%;
+		block-size: auto;
+	}
 	.about__copy {
 		max-width: var(--measure-prose);
 	}

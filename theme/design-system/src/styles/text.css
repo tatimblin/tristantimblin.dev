@@ -75,6 +75,9 @@
 .ds-text--variant-primary {
 	color: var(--text-primary);
 }
+.ds-text--variant-body {
+	color: var(--text-body);
+}
 .ds-text--variant-secondary {
 	color: var(--text-secondary);
 }

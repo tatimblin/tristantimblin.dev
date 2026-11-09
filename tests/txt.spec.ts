@@ -241,7 +241,8 @@ test.describe("/txt/", () => {
 	test("a still pointer opens nothing: the open post changes only when the pointer moves", async ({
 		page,
 	}) => {
-		await page.setViewportSize({ width: 1440, height: 900 });
+		// Tall enough to have the second post on screen, under the hero's cards.
+		await page.setViewportSize({ width: 1440, height: 1200 });
 		await page.goto("/txt/");
 		await page.mouse.move(1, 1);
 		await moveAndCheck(page, 1);
@@ -420,7 +421,8 @@ test.describe("/txt/", () => {
 	});
 
 	test("mouse: hovering opens a post, so a click on its title navigates at once", async ({ page }) => {
-		await page.setViewportSize({ width: 1440, height: 900 });
+		// Tall enough to have the second post on screen, under the hero's cards.
+		await page.setViewportSize({ width: 1440, height: 1200 });
 		await page.goto("/txt/");
 		await page.mouse.move(1, 1);
 		await moveAndCheck(page, 1);

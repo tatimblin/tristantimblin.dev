@@ -1,11 +1,17 @@
 ---
 // PageHero — a section page's hero (/txt, /about): the fabric clip's
-// halftone, framed and short, with the page's title set below it. BlogLayout
-// renders it in place of its plain page header when a page passes `hero`.
+// halftone, framed and short, with the page's title set in its foot, on the
+// site container's edge. BlogLayout renders it in place of its plain page header when a page passes `hero`.
 // The site header sits in the flow above it, so the frame's top margin is the
 // header itself; the sides are held in by the same band (--page-hero-frame,
 // restating the homepage's --home-header-h: the header's padding round one line).
 // Its tone (ink, gamma, bloom, ...) is per theme in src/styles/halftone.css.
+//
+// The `cards` slot is a row of Cards on the site's container, straddling the
+// frame's foot (--page-hero-overlap); the title lifts clear of it. Three
+// columns (one on a phone), and a shorter row keeps the column width rather
+// than stretching.
+import Grid from "@whois/design-system/Grid";
 import Heading from "@whois/design-system/Heading";
 import { media } from "../lib/media";
 import "@tristimb/dotted-grid/styles.css";
@@ -15,32 +21,54 @@ interface Props {
 }
 
 const { heading } = Astro.props;
+// Rendered, not merely registered: BlogLayout always forwards the slot (see
+// the DS's Card.astro).
+const hasCards = Astro.slots.has("cards") && (await Astro.slots.render("cards")).trim() !== "";
 ---
 
-<div class="page-hero">
-	{/* Persisted across a view transition between section pages (/txt ↔ /about),
-	     so the router carries this element over rather than swapping in a new one. */}
-	<dotted-grid
-		transition:persist="page-hero-grid"
-		class="page-hero__grid"
-		src={media("videos/fabric.mp4")}
-		src-webm={media("videos/fabric.webm")}
-		rate="0.93"
-		max-dpr="1"
-		cell-size="6"
-		intro-delay="0"
-		intro="1200"
-	/>
-	<div class="page-hero__title container">
-		<Heading as="h1" size={6} responsive>{heading}</Heading>
+<div class:list={["page-hero", hasCards && "page-hero--cards"]}>
+	<div class="page-hero__stage">
+		{/* Persisted across a view transition between section pages (/txt ↔ /about),
+		     so the router carries this element over rather than swapping in a new one. */}
+		<dotted-grid
+			transition:persist="page-hero-grid"
+			class="page-hero__grid"
+			src={media("videos/fabric.mp4")}
+			src-webm={media("videos/fabric.webm")}
+			rate="0.93"
+			max-dpr="1"
+			cell-size="6"
+			intro-delay="0"
+			intro="1200"
+		/>
+		<div class="page-hero__title container">
+			<Heading as="h1" size={6} responsive>{heading}</Heading>
+		</div>
 	</div>
+	{hasCards && (
+		<Grid class="page-hero__cards container" gap={4}>
+			<slot name="cards" />
+		</Grid>
+	)}
 </div>
 <script>
 	import "@tristimb/dotted-grid";
+
+	// The cards start leaving as the next page starts loading. Nothing waits on
+	// it: the swap cuts the exit off wherever it has got to, and a started exit
+	// reads as a finished one.
+	document.addEventListener("astro:before-preparation", () => {
+		document.querySelector(".page-hero__cards")?.setAttribute("data-leaving", "");
+	});
 </script>
 
 <style>
+	.page-hero__stage {
+		position: relative;
+	}
 	.page-hero {
+		--page-hero-title-foot: var(--space-6);
+		--page-hero-overlap: var(--space-13);
 		--page-hero-frame: round(
 			up,
 			2 * var(--space-4) + var(--font-size-1) * var(--line-height-body),
@@ -57,19 +85,77 @@ const { heading } = Astro.props;
 		--dotted-grid-height: var(--page-hero-h);
 		margin-inline: var(--page-hero-frame);
 	}
+	/* A sibling of the grid, not a child: the grid persists across navigations
+	   and the title changes with the page. */
 	.page-hero__title {
-		padding-block-start: var(--space-6);
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: var(--page-hero-title-foot);
+	}
+	.page-hero--cards .page-hero__title {
+		inset-block-end: calc(var(--page-hero-overlap) + var(--page-hero-title-foot));
+	}
+	/* Positioned, so the row paints over the canvas. */
+	.page-hero__cards {
+		position: relative;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		margin-block-start: calc(-1 * var(--page-hero-overlap));
+	}
+	/* The cards stagger in on every arrival and out ahead of a navigation (the
+	   script above). An animation that ends, so a card is never left hidden
+	   whatever the scripts do. Longhands, as in reveal.css. */
+	.page-hero__cards > :global(*) {
+		animation-name: page-hero-card-in;
+		animation-duration: var(--duration-settle);
+		animation-timing-function: var(--ease-reveal);
+		animation-fill-mode: both;
+		animation-delay: calc(var(--page-hero-card-i, 0) * var(--reveal-stagger));
+	}
+	.page-hero__cards > :global(:nth-child(2)) {
+		--page-hero-card-i: 1;
+	}
+	.page-hero__cards > :global(:nth-child(3)) {
+		--page-hero-card-i: 2;
+	}
+	.page-hero__cards[data-leaving] > :global(*) {
+		animation-name: page-hero-card-out;
+		animation-duration: var(--duration-swap);
+		/* Tighter than the way in: a quick load leaves little time to see it. */
+		animation-delay: calc(var(--page-hero-card-i, 0) * var(--reveal-stagger) / 2);
+	}
+	@keyframes page-hero-card-in {
+		from {
+			opacity: 0;
+			translate: 0 var(--reveal-rise);
+		}
+	}
+	@keyframes page-hero-card-out {
+		to {
+			opacity: 0;
+			translate: 0 var(--reveal-rise);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.page-hero__cards > :global(*),
+		.page-hero__cards[data-leaving] > :global(*) {
+			animation-name: none;
+		}
 	}
 
 	@media (max-width: 900px) {
 		.page-hero {
 			--page-hero-h: 240px;
+			--page-hero-title-foot: var(--space-4);
+			--page-hero-overlap: var(--space-10);
 		}
 		.page-hero__grid {
 			margin-inline: var(--space-2);
 		}
-		.page-hero__title {
-			padding-block-start: var(--space-4);
+	}
+
+	@media (max-width: 639px) {
+		.page-hero__cards {
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 </style>

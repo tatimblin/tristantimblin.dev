@@ -22,9 +22,10 @@
 	--input-border: var(--border-color);
 	--panel-outline: #d1dbe4;
 
-	/* INK. Black for reading; three greys down for labels, quiet labels
-	   (a tag, a toggle) and the faintest meta. */
+	/* INK. Black for headings, a step off it for reading; three greys down
+	   for labels, quiet labels (a tag, a toggle) and the faintest meta. */
 	--text-primary: #000;
+	--text-body: #333331;
 	--text-secondary: #525250;
 	--text-subtle: #727270;
 	--text-tertiary: #aaa9a6;

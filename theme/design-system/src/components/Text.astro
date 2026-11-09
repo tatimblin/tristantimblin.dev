@@ -11,7 +11,7 @@
 //            weight, as a face on this site always travels. `heading` is the
 //            heading face at its Bold on something that is not a heading — the
 //            hero lede's caps statement.
-//   variant  the ink: default (currentColor) | primary | secondary | tertiary.
+//   variant  the ink: default (currentColor) | primary | body | secondary | tertiary.
 //   caps     the caps role (caps.css): uppercase, tracked, the trailing
 //            tracking pulled back.
 //   spaced   OFF by default. On, the body role's leading and tracking
@@ -29,7 +29,7 @@ import { cx } from "../lib/cx";
 
 type Family = "default" | "ui" | "heading" | "body" | "hero" | "code";
 type Size = 0 | 1 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-type Variant = "default" | "primary" | "secondary" | "tertiary";
+type Variant = "default" | "primary" | "body" | "secondary" | "tertiary";
 
 interface Props {
 	as?: string;

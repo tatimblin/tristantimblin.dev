@@ -1,0 +1,92 @@
+---
+// TopPosts — /txt's hero cards: the three posts with the most reads, each
+// card one link. Posts only, not demos. Ranked at build time from the
+// committed GoatCounter ledger (src/lib/pageviews.ts), so the nightly fetch
+// moves them; ties and uncounted posts fall back to the order given.
+import Anchor from "@whois/design-system/Anchor";
+import Body from "@whois/design-system/Body";
+import Card from "@whois/design-system/Card";
+import CardBody from "@whois/design-system/CardBody";
+import Heading from "@whois/design-system/Heading";
+import HitArea from "@whois/design-system/HitArea";
+import Mono from "@whois/design-system/Mono";
+import { categories, postHref } from "../../lib/blog";
+import { formatReads, getPathStats, topByReads } from "../../lib/pageviews";
+import type { Post } from "../../lib/posts";
+
+interface Props {
+	posts: Post[];
+}
+
+const top = topByReads(Astro.props.posts, (post) => postHref(post.id), 3).map((post) => {
+	const href = postHref(post.id);
+	return {
+		href,
+		title: post.data.title,
+		excerpt: post.data.excerpt,
+		category: post.data.category ? categories[post.data.category].label : "Post",
+		reads: formatReads(getPathStats(href)?.reads),
+	};
+});
+---
+
+{top.map(({ href, title, excerpt, category, reads }) => (
+	<Card as="article" title={category} class="top-post">
+		{reads && <Mono slot="meta">{reads}</Mono>}
+		<CardBody class="top-post__body">
+			<Heading as="h2" size={1} class="top-post__title">{title}</Heading>
+			<Body class="top-post__excerpt">{excerpt}</Body>
+			{/* A span: the HitArea is the card's one link. */}
+			<Anchor as="span" class="top-post__read">Read</Anchor>
+		</CardBody>
+		<HitArea as="a" href={href} aria-label={title} />
+	</Card>
+))}
+
+<style>
+	/* A column, so READ rests on the foot of a row of unequal blurbs. */
+	.top-post {
+		display: flex;
+		flex-direction: column;
+		transition: background var(--duration-quick) var(--ease-reveal);
+	}
+	.top-post__body {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: var(--space-3);
+	}
+	.top-post__title {
+		transition: color var(--duration-standard) var(--ease-standard);
+	}
+	/* A phone stacks the row, so it keeps only the most read. */
+	@media (max-width: 639px) {
+		.top-post:nth-child(n + 2) {
+			display: none;
+		}
+	}
+	.top-post__excerpt {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
+	}
+	.top-post__read {
+		align-self: flex-start;
+		margin-block-start: auto;
+	}
+
+	/* The HitArea lies over all of this and takes the pointer, so the card's
+	   state lights it. The fill goes under the text: HitArea's own `wash` is
+	   opaque and lies over the title. */
+	.top-post:is(:hover, :focus-within) {
+		background: var(--wash-1);
+	}
+	.top-post:is(:hover, :focus-within) .top-post__title {
+		color: var(--link-color);
+	}
+	.top-post:is(:hover, :focus-within) .top-post__read {
+		text-decoration-line: var(--link-decoration-hover);
+	}
+</style>
