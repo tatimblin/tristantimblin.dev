@@ -26,12 +26,12 @@ const { heading } = Astro.props;
 <div class="page-hero">
 	<div class="page-hero__stage">
 		{/* Persisted across a view transition between section pages (/txt ↔ /about),
-		     so the router carries this element over rather than swapping in a new one. */}
+		     so the router carries this element over rather than swapping in a new one.
+		     H.264 alone: an iPhone freezes the AV1 .webm where it loops. */}
 		<dotted-grid
 			transition:persist="page-hero-grid"
 			class="page-hero__grid"
 			src={media("videos/fabric.mp4")}
-			src-webm={media("videos/fabric.webm")}
 			rate="0.93"
 			max-dpr="1"
 			cell-size="6"
