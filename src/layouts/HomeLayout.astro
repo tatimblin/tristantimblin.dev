@@ -78,13 +78,14 @@ const props = Astro.props;
 	<SiteHeader />
 	<main class="container home">
 		<WidgetGrid cols={4}>
-			{/* Phones and tablets only: the grid is never created on a wider screen. */}
+			{/* Phones and tablets only: the grid is never created on a wider screen.
+			     H.264 alone: an iPhone takes the AV1 .webm and stops on it, after a
+			     play or before the first frame. */}
 			<Deferred media={WIDGET_COMPACT_MQ}>
 				<dotted-grid
 					class="home__clip"
 					aria-hidden="true"
 					src={media("videos/fabric.mp4")}
-					src-webm={media("videos/fabric.webm")}
 					rate="0.93"
 					max-dpr="1"
 					cell-size="4"
