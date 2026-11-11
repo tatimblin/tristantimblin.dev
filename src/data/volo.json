@@ -1,5 +1,5 @@
 {
-	"updated": "2026-11-04T20:44:31.177Z",
+	"updated": "2026-11-11T21:12:32.939Z",
 	"username": "tristimb",
 	"seasons": [
 		{
@@ -1794,12 +1794,12 @@
 				"color": "#000000"
 			},
 			"record": {
-				"wins": 2,
+				"wins": 3,
 				"losses": 2,
 				"ties": 0,
-				"pointsFor": 50,
-				"pointsAgainst": 39,
-				"differential": 11,
+				"pointsFor": 66,
+				"pointsAgainst": 44,
+				"differential": 22,
 				"rank": 3,
 				"teams": 6
 			},
@@ -1871,9 +1871,9 @@
 					"round": null,
 					"roundOrder": null,
 					"week": 5,
-					"result": null,
-					"for": null,
-					"against": null,
+					"result": "W",
+					"for": 16,
+					"against": 5,
 					"forfeit": false
 				},
 				{
