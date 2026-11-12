@@ -1,5 +1,5 @@
 {
-	"updated": "2026-11-08T18:08:14.248Z",
+	"updated": "2026-11-12T20:30:50.731Z",
 	"movies": [
 		{
 			"id": null,
@@ -1330,8 +1330,7 @@
 			"time": "4:00pm",
 			"day": "Thursday",
 			"iso": "2026-11-12",
-			"start": "2026-11-12T16:00",
-			"upcoming": true
+			"start": "2026-11-12T16:00"
 		},
 		{
 			"id": null,
