@@ -158,14 +158,6 @@ export function currentSeasonIndex(seasons: VoloSeason[]): number {
 	return started >= 0 ? started : seasons.length - 1;
 }
 
-/** "AUG 2026" — the season's own label, in the venue's zone. */
-export function formatSeasonLabel(season: VoloSeason): string {
-	return fmt(season.startDate, season.timezone, {
-		month: "short",
-		year: "numeric",
-	}).toUpperCase();
-}
-
 /**
  * "08/18" — a game's date in the venue's zone.
  *
@@ -201,22 +193,11 @@ function fmt(
 const ORDINALS = ["th", "st", "nd", "rd"];
 
 /** 1 → "1st", 2 → "2nd", 11 → "11th". */
-export function ordinal(n: number): string {
+function ordinal(n: number): string {
 	const rem100 = n % 100;
 	const rem10 = n % 10;
 	const suffix = rem100 >= 11 && rem100 <= 13 ? "th" : (ORDINALS[rem10] ?? "th");
 	return `${n}${suffix}`;
-}
-
-/**
- * "1st · 5–0", or "3rd · 3–3–1" when the season has a tie — the
- * placing (see formatPlacing()) and the tally (formatTally()), which the tile
- * also sets apart so a narrow header can drop the placing and keep the tally.
- */
-export function formatRecord(season: VoloSeason): string {
-	const place = formatPlacing(season);
-	const wl = formatTally(season);
-	return place ? `${place} · ${wl}` : wl;
 }
 
 /** "5–0", or "3–3–1" when the season has a tie. */
@@ -227,68 +208,17 @@ export function formatTally(season: VoloSeason): string {
 	return tally.join("–");
 }
 
-/**
- * "1st", or null when the season has no placing at all.
- *
- * The placing is where the season ENDED, after the playoffs — not the table
- * position it went into them with. Topping the table and losing the Final is a
- * 2nd-place season, and saying "1st" there claims something that did not
- * happen. A season still running has no final placing, so it falls back to the
- * live table position.
- */
-export function formatPlacing(season: VoloSeason): string | null {
-	const { record } = season;
-	const placing = finalPlacement(season) ?? record.rank;
-	return placing && record.teams ? ordinal(placing) : null;
-}
-
 /* ── Derived views ──────────────────────────────────────────────────────────
    Everything below turns the flat season list into the shapes the tile draws.
    Kept here rather than in Volo.astro so the component stays a renderer. */
 
-// Score domains differ by sport and cannot share a scale: softball margins run
-// to 27 runs, volleyball is sets and never exceeds 2. Normalising against a
-// FIXED per-sport cap (rather than each season's own maximum) keeps the bars
-// comparable when the arrows step between seasons — a per-season max would
-// silently rescale and make every season look equally decisive.
-const MARGIN_CAP: Record<string, number> = { Volleyball: 2 };
-const DEFAULT_MARGIN_CAP = 20; // softball: covers all but the two biggest routs
-
-function marginCap(sport: string): number {
-	return MARGIN_CAP[sport] ?? DEFAULT_MARGIN_CAP;
-}
-
-/** 0–1 share of the sport's cap. Blowouts past the cap clamp to 1. */
-export function marginRatio(game: VoloGame, sport: string): number {
-	if (game.for === null || game.against === null) return 0;
-	return Math.min(1, Math.abs(game.for - game.against) / marginCap(sport));
-}
-
-/** "Semifinals" → "SEMI FINALS". Set on the divider above the game it opens. */
-export function formatRound(round: string | null): string | null {
-	if (!round) return null;
-	return round.replace(/([a-z])([A-Z])/g, "$1 $2").toUpperCase()
-		.replace("SEMIFINALS", "SEMI FINALS");
-}
-
 /**
- * The number to set after an opponent's name.
- *
- * A bracket game shows the SEED, which is what the opponent actually was on the
- * night. Everything else shows where they FINISHED, which is a fact from after
- * the game was played — so the two are labelled differently rather than merged
- * into one ambiguous number. Volo's own seeding disagrees with a
- * wins-then-differential sort in a couple of seasons, so where a seed exists it
- * is the authority.
+ * The seasons the tile draws: softball only. The chart is a running RUN
+ * differential and volleyball is scored in sets (2–0), which cannot share that
+ * scale, so this is the softball card, career record included.
  */
-export function opponentStanding(
-	game: VoloGame,
-): { value: number; kind: "seed" | "rank" } | null {
-	if (game.playoff && game.opponentSeed) {
-		return { value: game.opponentSeed, kind: "seed" };
-	}
-	if (game.opponentRank) return { value: game.opponentRank, kind: "rank" };
-	return null;
+export function softballSeasons(seasons: VoloSeason[]): VoloSeason[] {
+	return seasons.filter((season) => season.sport === "Softball");
 }
 
 /**
@@ -330,6 +260,29 @@ function finalPlacement(season: VoloSeason): number | null {
 	return 2 ** depth + 1;
 }
 
+/**
+ * "2nd of 8", or null when the season has no placing at all.
+ *
+ * The placing is where the season ENDED, after the playoffs — not the table
+ * position it went into them with. Topping the table and losing the Final is a
+ * 2nd-place season, and saying "1st" there claims something that did not
+ * happen. A season still running has no final placing, so it falls back to the
+ * live table position.
+ */
+export function formatFinish(season: VoloSeason): string | null {
+	const { record } = season;
+	const place = finalPlacement(season) ?? record.rank;
+	return place && record.teams ? `${ordinal(place)} of ${record.teams}` : null;
+}
+
+const MEDALS: Record<number, string> = { 1: "🏆", 2: "🥈", 3: "🥉" };
+
+/** A finished season's podium: a trophy for the title, a medal for 2nd or 3rd. */
+export function seasonMedal(season: VoloSeason): string | null {
+	const place = finalPlacement(season);
+	return place ? (MEDALS[place] ?? null) : null;
+}
+
 /** The first game with no result yet, or -1 once the season is over. */
 export function nextGameIndex(season: VoloSeason): number {
 	return season.games.findIndex((game) => !game.result);
@@ -340,9 +293,28 @@ export function isOver(season: VoloSeason): boolean {
 	return nextGameIndex(season) < 0;
 }
 
-/** "Fall 2026" — Volo's own label, or the month and year when it has none. */
-export function seasonName(season: VoloSeason): string {
-	return season.seasonLabel ?? formatSeasonLabel(season);
+/** "Fall 2026" — Volo's own label, or "Aug 2026" when it has none. */
+function seasonName(season: VoloSeason): string {
+	return season.seasonLabel ?? fmt(season.startDate, season.timezone, { month: "short", year: "numeric" });
+}
+
+const SPLITS: Record<number, string[]> = { 2: ["Early", "Late"], 3: ["Early", "Mid", "Late"] };
+
+/**
+ * Every season's name, told apart where Volo gives two the same label: two
+ * leagues in one summer are "Early Summer 2025" and "Late Summer 2025" (by
+ * start date; the list is sorted), a third adds "Mid", and past that they are
+ * numbered.
+ */
+export function seasonNames(seasons: VoloSeason[]): string[] {
+	const names = seasons.map(seasonName);
+	return names.map((name, i) => {
+		const same = names.flatMap((other, j) => (other === name ? [j] : []));
+		if (same.length < 2) return name;
+		const at = same.indexOf(i);
+		const split = SPLITS[same.length];
+		return split ? `${split[at]} ${name}` : `${name} ${at + 1}`;
+	});
 }
 
 /** "26" — the season's two-digit year, for the chart's axis. */
@@ -350,93 +322,123 @@ export function seasonYear(season: VoloSeason): string {
 	return season.startDate.slice(2, 4);
 }
 
-/**
- * Where a season finished, as its selected bar says it: the trophy for a
- * title, a medal for losing the final (2nd) or a semifinal (3rd) once the
- * season is over, the ordinal otherwise — a season still running shows its
- * live table position, which is no medal yet — and the year when there is no
- * placing at all.
- */
-export function placeMark(season: VoloSeason): { text: string; medal: boolean } {
-	if (season.champion) return { text: "🏆", medal: true };
-	const place = formatPlacing(season);
-	if (isOver(season) && place === "2nd") return { text: "🥈", medal: true };
-	if (isOver(season) && place === "3rd") return { text: "🥉", medal: true };
-	return { text: place ?? `'${seasonYear(season)}`, medal: false };
+/** "Tue 11/17 · 8:00 PM" — when a game is, in the venue's zone. */
+export function formatGameWhen(startTime: string, timeZone: string): string {
+	const day = fmt(startTime, timeZone, { weekday: "short" });
+	return `${day} ${formatGameDate(startTime, timeZone)} · ${formatGameTime(startTime, timeZone)}`;
 }
 
-/** "lost in the Finals" — how a season ended, for its bar's accessible name. */
-export function seasonOutcome(season: VoloSeason): string {
-	if (season.champion) return "won the league";
-	if (!isOver(season)) return "still playing";
-	const exit = season.games.filter((game) => game.playoff).at(-1);
-	return exit ? `lost in the ${exit.round ?? "playoffs"}` : "missed the playoffs";
-}
-
-/* ── Season stacks ─────────────────────────────────────────────────────────── */
-
-export interface SeasonStack {
-	/** Regular-season games by outcome, bottom up: wins, ties, losses, unplayed. */
-	wins: number;
-	ties: number;
-	losses: number;
-	unplayed: number;
-	/** One entry per playoff game played, in order. */
-	playoffs: GameResult[];
-	/** A season still running: room is held for a bracket it has not reached. */
-	bracketPending: boolean;
-}
-
-/** Games a pending bracket is drawn as: a semifinal and a final. */
-export const PENDING_BRACKET = 2;
-
-export function seasonStack(season: VoloSeason): SeasonStack {
-	const regular = season.games.filter((game) => !game.playoff);
-	const count = (result: GameResult) =>
-		regular.filter((game) => game.result === result).length;
-	const playoffs = season.games
-		.filter((game) => game.playoff && game.result)
-		.map((game) => game.result as GameResult);
-	return {
-		wins: count("W"),
-		ties: count("T"),
-		losses: count("L"),
-		unplayed: regular.filter((game) => !game.result).length,
-		playoffs,
-		bracketPending: !playoffs.length && !isOver(season),
-	};
-}
-
-/** A stack's height in games, the unit the chart is scaled in. */
-export function stackHeight(stack: SeasonStack): number {
-	return (
-		stack.wins + stack.ties + stack.losses + stack.unplayed +
-		(stack.bracketPending ? PENDING_BRACKET : stack.playoffs.length)
-	);
-}
-
-/** The headline: every game ever played, finals reached and titles won. */
+/** The headline: every game played across the given seasons. */
 export function careerSummary(seasons: VoloSeason[]) {
 	const games = seasons.flatMap((season) => season.games);
 	return {
 		wins: games.filter((g) => g.result === "W").length,
 		losses: games.filter((g) => g.result === "L").length,
 		ties: games.filter((g) => g.result === "T").length,
-		finals: seasons.filter((s) => s.games.some((g) => g.round === "Finals")).length,
-		titles: seasons.filter((s) => s.champion).length,
 	};
 }
 
-/** Rows the collapsed schedule shows. */
-export const PEEK_ROWS = 3;
+/* ── Linescore ──────────────────────────────────────────────────────────── */
+
+/** "Semifinals" → "SF", "Finals" → "F", "Round 2" → "R2": a column's head. */
+export function roundShort(round: string | null): string {
+	if (round === "Finals") return "F";
+	if (round === "Semifinals") return "SF";
+	if (round === "Quarterfinals") return "QF";
+	const n = round?.match(/\d+/);
+	return n ? `R${n[0]}` : "P";
+}
+
+export interface LinescoreColumn {
+	/** "1"… for the regular season's weeks, the round for a playoff game. */
+	label: string;
+	/** Null for a bracket the season has not reached yet. */
+	game: VoloGame | null;
+}
 
 /**
- * The first of the rows the collapsed schedule shows: the last result and the
- * games after it in a season still running, the last games (how it ended) in
- * one that is over.
+ * A season's linescore columns: every game in order, and while the season is
+ * running and has no playoff game yet, a column held for each of the bracket's
+ * last two rounds, so the table already shows how far it can go.
  */
-export function peekStart(season: VoloSeason): number {
-	const next = nextGameIndex(season);
-	const at = next < 0 ? season.games.length - PEEK_ROWS : next - 1;
-	return Math.max(0, Math.min(at, season.games.length - PEEK_ROWS));
+export function linescoreColumns(season: VoloSeason): LinescoreColumn[] {
+	let week = 0;
+	const columns: LinescoreColumn[] = season.games.map((game) => ({
+		label: game.playoff ? roundShort(game.round) : String(++week),
+		game,
+	}));
+	if (!isOver(season) && !season.games.some((game) => game.playoff)) {
+		columns.push({ label: "SF", game: null }, { label: "F", game: null });
+	}
+	return columns;
+}
+
+/* ── The differential chart ─────────────────────────────────────────────── */
+
+export type DiffMode = "run" | "win";
+
+export interface DiffPoint {
+	/** Index into the seasons the chart was drawn from. */
+	season: number;
+	/** Where the game falls, in seasons (see diffChart()). */
+	x: number;
+	run: number;
+	win: number;
+	/** The league's Final: the one game the chart marks. */
+	final: boolean;
+	result: GameResult;
+}
+
+/**
+ * The running differential, game by game across every season, in two modes:
+ * RUNS (scored minus allowed) and WINS (won minus lost; a tie is level).
+ *
+ * x is in seasons: every season's band is one unit wide, so a nine-game
+ * season with a playoff run and a six-game one are the same size to pick. Its
+ * games share the band evenly — each takes a slot and lands at the slot's
+ * end — and a season with games still to play keeps one more slot, so the
+ * line stops short of the band's edge, where what is next will go.
+ */
+export function diffChart(seasons: VoloSeason[]): DiffPoint[] {
+	const points: DiffPoint[] = [];
+	let run = 0;
+	let win = 0;
+	seasons.forEach((season, i) => {
+		const played = season.games.filter((game) => game.result);
+		const slots = played.length + (isOver(season) ? 0 : 1);
+		played.forEach((game, k) => {
+			run += (game.for ?? 0) - (game.against ?? 0);
+			win += game.result === "W" ? 1 : game.result === "L" ? -1 : 0;
+			points.push({
+				season: i,
+				x: i + (k + 1) / slots,
+				run,
+				win,
+				final: game.round === "Finals",
+				result: game.result as GameResult,
+			});
+		});
+	});
+	return points;
+}
+
+// The axis steps: runs pile up by the hundred, wins by the ten.
+const DIFF_STEP: Record<DiffMode, number> = { run: 100, win: 10 };
+
+/**
+ * A mode's axis: from zero (or a round floor, if the line ever dips below it)
+ * to a round top, with three labelled rules.
+ */
+export function diffScale(points: DiffPoint[], mode: DiffMode): { min: number; max: number; ticks: number[] } {
+	const step = DIFF_STEP[mode];
+	const values = points.map((point) => point[mode]);
+	const max = Math.max(step, Math.ceil(Math.max(0, ...values) / step) * step);
+	const min = Math.min(0, Math.floor(Math.min(0, ...values) / step) * step);
+	const ticks = min < 0 ? [min, 0, max] : [0, max / 2, max];
+	return { min, max, ticks };
+}
+
+/** "+250", "0", "−20" — an axis label. */
+export function formatDiff(value: number): string {
+	return value > 0 ? `+${value}` : value < 0 ? `−${-value}` : "0";
 }

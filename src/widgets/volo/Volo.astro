@@ -1,14 +1,12 @@
 ---
-// Volo widget — a 2×2 card: every season as a stacked bar (one segment per
-// game: the regular season's wins, ties and losses, then the playoff games
-// stacked apart above them) on an accent band, the selected season's schedule
-// in a tray under it, and the career record as the headline at the foot.
-// A bar picks its season; the header's arrows page the chart when there are
-// more seasons than fit; the tray's heading slides it up over the chart to
-// show every game. Data is read at build time from volo.json (./volo.ts,
-// which the nightly workflow refreshes on Volo days); every season is rendered
-// server-side as a panel in a DS Faces stack, so nothing is fetched. The
-// chart's controls are wired by ./client.ts (mounted by the widget runtime).
+// Volo widget — a 2×2 card for the softball seasons: the running run
+// differential across every game on top (the win differential, from the
+// header's pill), whose season bands pick the linescore under it; the next
+// game; and the career record at the foot. Data is read at build time from
+// volo.json (./volo.ts, which the nightly workflow refreshes on Volo days);
+// both modes of the chart and every season's linescore are rendered here, the
+// linescores as panels in a DS Faces stack, so nothing is fetched or drawn in
+// the browser. ./client.ts wires the bands and the pill.
 import Widget from "@whois/design-system/Widget";
 import CardBody from "@whois/design-system/CardBody";
 import Faces from "@whois/design-system/Faces";
@@ -16,87 +14,90 @@ import Face from "@whois/design-system/Face";
 import Figure from "@whois/design-system/Figure";
 import HitArea from "@whois/design-system/HitArea";
 import Mono from "@whois/design-system/Mono";
-import IconButton from "@whois/design-system/IconButton";
-import Icon from "@whois/design-system/Icon";
+import Pill from "@whois/design-system/Pill";
 import VisuallyHidden from "@whois/design-system/VisuallyHidden";
 import WidgetEmpty from "@whois/design-system/WidgetEmpty";
 import {
 	careerSummary,
 	currentSeasonIndex,
+	diffChart,
+	diffScale,
+	formatDiff,
+	formatFinish,
 	formatGameDate,
 	formatGameTime,
-	formatRecord,
-	formatRound,
+	formatGameWhen,
 	formatTally,
 	getVoloSeasons,
-	marginRatio,
+	isOver,
+	linescoreColumns,
 	nextGameIndex,
-	opponentStanding,
-	ordinal,
-	peekStart,
-	PENDING_BRACKET,
-	PEEK_ROWS,
-	placeMark,
-	seasonName,
-	seasonOutcome,
-	seasonStack,
+	seasonMedal,
+	seasonNames,
 	seasonYear,
-	stackHeight,
+	softballSeasons,
+	type DiffMode,
 } from "./volo";
 import "./volo.css";
 
-let seasons = getVoloSeasons();
-// DEV ONLY: `?volo-seasons=30` pads the history with copies of the real
-// seasons, to see the chart page. (Never read in a build: DEV is false there.)
-const demo = import.meta.env.DEV ? Number(Astro.url.searchParams.get("volo-seasons")) : 0;
-if (demo > seasons.length) {
-	const extra = Array.from({ length: demo - seasons.length }, (_, i) => {
-		const source = seasons[i % (seasons.length - 1)];
-		const start = new Date(seasons[0].startDate);
-		start.setMonth(start.getMonth() - 4 * (demo - seasons.length - i));
-		return { ...source, id: `demo-${i}`, startDate: start.toISOString(), seasonLabel: null };
-	});
-	seasons = [...extra, ...seasons];
-}
-
+const seasons = softballSeasons(getVoloSeasons());
+const names = seasonNames(seasons);
 const current = currentSeasonIndex(seasons);
 const career = careerSummary(seasons);
-const stacks = seasons.map(seasonStack);
-// Every bar is scaled against the tallest season, so a game is the same
-// height in every column.
-const tallest = Math.max(1, ...stacks.map(stackHeight));
+const points = diffChart(seasons);
 
-// Seasons on show at once. More than this and the header's arrows page.
-const PAGE = 12;
-const paged = seasons.length > PAGE;
-// The chart opens on the latest page.
-const firstShown = Math.max(0, seasons.length - PAGE);
-// A year is labelled on its first season on the page.
-const yearShown = (i: number) =>
-	i === 0 || i === firstShown || seasonYear(seasons[i]) !== seasonYear(seasons[i - 1]);
+const MODES: Array<{ key: DiffMode; label: string }> = [
+	{ key: "run", label: "Run diff" },
+	{ key: "win", label: "Win diff" },
+];
+
+// The plot's coordinates, both 0–100: x a share of the seasons, y of the
+// mode's range. The svg is stretched to its box (preserveAspectRatio none),
+// so the dots, which must stay round, are laid over it as boxes at the same
+// percentages.
+const pct = (n: number) => n.toFixed(2);
+const xOf = (x: number) => (x / seasons.length) * 100;
+const plots = MODES.map((mode) => {
+	const scale = diffScale(points, mode.key);
+	const yOf = (v: number) => ((scale.max - v) / (scale.max - scale.min)) * 100;
+	const line = [[0, yOf(0)], ...points.map((p) => [xOf(p.x), yOf(p[mode.key])])];
+	const d = "M" + line.map(([x, y]) => `${pct(x)},${pct(y)}`).join(" L");
+	const end = line[line.length - 1];
+	// The area runs on, level, from the latest point to the plot's edge, so the
+	// live season's band is filled across; the line stops at the point.
+	// A finished season's podium medal, over the middle of its band and clear of
+	// the line's highest point there (the band's own games and where it came in).
+	const medals = seasons.flatMap((season, i) => {
+		const medal = seasonMedal(season);
+		if (!medal) return [];
+		const entry = points.findLast((p) => p.season < i)?.[mode.key] ?? 0;
+		const high = Math.max(entry, ...points.filter((p) => p.season === i).map((p) => p[mode.key]));
+		return [{ season: i, medal, x: xOf(i + 0.5), y: yOf(high) }];
+	});
+	return { ...mode, scale, yOf, d, area: `${d} L100,${pct(end[1])} L100,${pct(yOf(0))} Z`, end, medals };
+});
+
+const live = seasons[current] ?? null;
+const next = live ? nextGameIndex(live) : -1;
+const nextGame = live && next >= 0 ? live.games[next] : null;
+
+// A year is labelled on its first season.
+const yearShown = (i: number) => i === 0 || seasonYear(seasons[i]) !== seasonYear(seasons[i - 1]);
+const total = (i: number, side: "for" | "against") =>
+	seasons[i].games.reduce((sum, game) => sum + (game[side] ?? 0), 0);
 ---
 
-<Widget
-	size="2x2"
-	name="volo"
-	class="wx-volo"
-	squeeze="title"
-	data-expanded="false"
-	style={`--vl-page:${Math.min(PAGE, seasons.length)};--vl-tallest:${tallest};--vl-peek-rows:${PEEK_ROWS}`}
->
-	{/* The selected season's sport; the script rewrites it. */}
-	<span slot="title">Volo <span data-volo-sport>{seasons[current]?.sport ?? ""}</span></span>
-	{paged && (
-		/* Rendered `hidden` and unhidden by the script: without it the chart
-		   shows its latest page and two dead arrows would only mislead. */
-		<span slot="meta" class="wx-vl-nav" role="group" aria-label="Seasons" hidden>
-			<IconButton class="wx-vl-arrow wx-vl-arrow--prev" size="xs" rounded type="button" data-volo-prev aria-label="Earlier seasons">
-				<Icon name="arrow" size={3} />
-			</IconButton>
-			<IconButton class="wx-vl-arrow" size="xs" rounded type="button" data-volo-next aria-label="Later seasons">
-				<Icon name="arrow" size={3} />
-			</IconButton>
-		</span>
+<Widget size="2x2" name="volo" class="wx-volo" squeeze="title" data-mode="run">
+	<span slot="title">Volo softball</span>
+	{seasons.length > 0 && (
+		<Fragment slot="meta">
+			{/* Two pills, one always hidden: without the script the static one
+			    says what the chart is and nothing pretends to be a control. */}
+			<Pill class="wx-vl-mode wx-vl-mode--static">{MODES[0].label}</Pill>
+			<Pill as="button" type="button" class="wx-vl-mode" data-volo-mode hidden>
+				{MODES.map((mode) => <span data-mode-label={mode.key}>{mode.label}</span>)}
+			</Pill>
+		</Fragment>
 	)}
 
 	<CardBody class="wx-vl-body">
@@ -105,174 +106,170 @@ const yearShown = (i: number) =>
 			<WidgetEmpty>No seasons yet.</WidgetEmpty>
 		) : (
 			<>
-				{/* The chart and the schedule tray share this box: the tray rests at
-				    its foot and slides up over the chart. */}
-				<div class="wx-vl-main">
-					{/* A window PAGE seasons wide over a track of all of them. Each
-					    bar is a picture with a HitArea laid over it, so the bar's
-					    segments stay out of the control's name. */}
-					<div class="wx-vl-chart" data-volo-chart>
-						<div class="wx-vl-window">
-							<ol class="wx-vl-track ds-list-bare" data-volo-track style={`--vl-start:${firstShown}`}>
-								{seasons.map((season, i) => {
-									const stack = stacks[i];
-									const mark = placeMark(season);
-									const seg = (k: number, kind: string) =>
-										k > 0 && <span class="wx-vl-seg" data-kind={kind} style={`--k:${k}`} />;
-									return (
-										<li class="wx-vl-season">
-											<span class="wx-vl-stack" aria-hidden="true">
-												{seg(stack.wins, "W")}
-												{seg(stack.ties, "T")}
-												{seg(stack.losses, "L")}
-												{seg(stack.unplayed, "upcoming")}
-												{(stack.playoffs.length > 0 || stack.bracketPending) && <span class="wx-vl-break" />}
-												{stack.bracketPending
-													? seg(PENDING_BRACKET, "bracket")
-													: stack.playoffs.map((result) => seg(1, `P${result}`))}
-											</span>
-											<Mono
-												variant="value"
-												tone="tertiary"
-												class:list={["wx-vl-year", season.champion && "is-title", (season.champion || yearShown(i)) && "is-shown"]}
-												data-year={seasonYear(season)}
-												aria-hidden="true"
-											>
-												{/* A title wears its trophy in place of the year, always;
-												    the selected bar says where its season finished. */}
-												<span class="wx-vl-yr">
-													{season.champion ? <span class="wx-vl-medal">🏆</span> : `'${seasonYear(season)}`}
-												</span>
-												<span class="wx-vl-place">
-													{mark.medal ? <span class="wx-vl-medal">{mark.text}</span> : mark.text}
-												</span>
-											</Mono>
-											{/* Disabled until the script runs; the selected bar is the
-											    one tab stop (the arrow keys walk the rest). */}
-											<HitArea
-												class="wx-vl-pick"
-												data-volo-season={i}
-												aria-current={i === current ? "true" : undefined}
-												aria-label={`${seasonName(season)} ${season.sport}: ${formatTally(season)}, ${seasonOutcome(season)}`}
-												tabindex={i === current ? 0 : -1}
-												disabled
-											/>
-										</li>
-									);
-								})}
-							</ol>
-						</div>
-					</div>
-
-					{/* The selected season's schedule, as a tray. Resting, it shows
-					    PEEK_ROWS rows — the last result and what is next, or how a
-					    finished season ended — and its heading pulls it up over the
-					    chart to show every game. */}
-					<div class="wx-vl-slot" />
-					<section class="wx-vl-sched" aria-label="Schedule">
-						<div class="wx-vl-sched-head">
-							<Mono variant="title" truncate data-volo-heading>{seasonName(seasons[current])} season</Mono>
-							<Icon name="chevron" size={3} class="wx-vl-chevron" />
-							<Mono variant="value" tone="tertiary" class="wx-vl-sched-tally" data-volo-tally>{formatTally(seasons[current])}</Mono>
-							{/* The whole row is the handle. Enabled by the script; without it
-							    the tray rests. */}
-							<HitArea data-volo-expand aria-expanded="false" disabled>
-								<VisuallyHidden as="span" data-volo-expand-label>Show every game</VisuallyHidden>
-							</HitArea>
-						</div>
-						<Faces fill class="wx-vl-panels" data-volo-panels>
+				{/* THE CHART. The plot, full width, and the years under it. The plot
+				    is the season bands (each a HitArea that picks its season, the
+				    controls), over them each mode's trace, which the pill swaps,
+				    and its rules' labels set on the rules at the left. */}
+				<div class="wx-vl-chart">
+					<div class="wx-vl-plot">
+						<div class="wx-vl-bands" role="group" aria-label="Seasons">
 							{seasons.map((season, i) => {
-								const next = nextGameIndex(season);
-								const peek = peekStart(season);
+								const finish = formatFinish(season);
 								return (
-									<Face
-										as="div"
-										class="wx-vl-panel"
-										inactive={i !== current}
-										data-volo-panel={i}
-										data-heading={`${seasonName(season)} season`}
-										data-sport={season.sport}
-										data-tally={formatTally(season)}
-										style={`--vl-peek:${peek}`}
-									>
-										<VisuallyHidden>
-											{season.sport} • {seasonName(season)}: {season.team.name}, {formatRecord(season)}
-											{season.champion ? ". League champions." : "."}
-										</VisuallyHidden>
-										<ol class="wx-vl-games ds-list-bare">
-											{season.games.map((game, gameIndex) => (
-												<li
-													class="wx-vl-game"
-													data-result={game.result ?? "upcoming"}
-													data-playoff={game.playoff ? "true" : undefined}
-													data-lit={gameIndex === next ? "true" : undefined}
-													data-above={gameIndex < peek ? "true" : undefined}
-													data-peek-first={gameIndex === peek ? "true" : undefined}
-												>
-													{game.playoff && (
-														<Mono tone="tertiary" class="wx-vl-round" style={`--vl-i:${gameIndex}`}>
-															{formatRound(game.round) ?? "PLAYOFF"}
-														</Mono>
-													)}
-													<Mono variant="value" tone="tertiary">
-														{formatGameDate(game.startTime, season.timezone)}
-													</Mono>
-													<Mono variant="value" class="wx-vl-opp">
-														<Mono as="span" variant="value" truncate class="wx-vl-opp-name">{game.opponent}</Mono>
-														{(() => {
-															const standing = opponentStanding(game);
-															return standing ? (
-																<Mono
-																	as="span"
-																	variant="value"
-																	tone="tertiary"
-																	class="wx-vl-rank"
-																	title={standing.kind === "seed" ? `${ordinal(standing.value)} seed` : `Finished ${ordinal(standing.value)} in the league`}
-																>
-																	{standing.value}
-																</Mono>
-															) : null;
-														})()}
-													</Mono>
-													{/* Always rendered: the rows are `display: contents` over one
-													    grid, so a skipped cell would shift every column after it. */}
-													<Mono tone="tertiary" class="wx-vl-result">{game.result}</Mono>
-													{game.result ? (
-														game.forfeit && !game.for && !game.against ? (
-															/* A forfeit recorded as 0–0 is not a 0–0 game. */
-															<Mono tone="tertiary" class="wx-vl-score">FF</Mono>
-														) : (
-															<Mono
-																variant="value"
-																class="wx-vl-score"
-																style={`--m:${marginRatio(game, season.sport).toFixed(3)}`}
-																data-forfeit={game.forfeit ? "true" : undefined}
-															>
-																{game.for}<span class="wx-vl-dash">–</span>{game.against}
-																<span class="wx-vl-bar" />
-															</Mono>
-														)
-													) : (
-														<Mono variant="value" tone="secondary" class="wx-vl-time">
-															{formatGameTime(game.startTime, season.timezone)}
-														</Mono>
-													)}
-												</li>
-											))}
-										</ol>
-									</Face>
+									<span class="wx-vl-band">
+										{/* Disabled until the script runs; the selected band is
+										    the one tab stop (the arrow keys walk the rest). */}
+										<HitArea
+											wash
+											class="wx-vl-pick"
+											data-volo-season={i}
+											aria-current={i === current ? "true" : undefined}
+											aria-label={`${names[i]}: ${formatTally(season)}${finish ? `, ${finish}` : ""}`}
+											tabindex={i === current ? 0 : -1}
+											disabled
+										/>
+									</span>
 								);
 							})}
-						</Faces>
-					</section>
+						</div>
+						{plots.map((plot) => (
+							<div class="wx-vl-trace" data-mode={plot.key} aria-hidden="true">
+								<svg viewBox="0 0 100 100" preserveAspectRatio="none">
+									{plot.scale.ticks.map((tick) => (
+										<line
+											class:list={["wx-vl-rule", tick !== 0 && "wx-vl-rule--dashed"]}
+											x1="0"
+											x2="100"
+											y1={pct(plot.yOf(tick))}
+											y2={pct(plot.yOf(tick))}
+										/>
+									))}
+									<path class="wx-vl-area" d={plot.area} />
+									<path class="wx-vl-line" d={plot.d} />
+								</svg>
+								{points.filter((point) => point.final).map((point) => (
+									<span
+										class="wx-vl-dot"
+										data-result={point.result}
+										style={`--x:${pct(xOf(point.x))}%;--y:${pct(plot.yOf(point[plot.key]))}%`}
+									/>
+								))}
+								<span class="wx-vl-dot wx-vl-dot--end" style={`--x:${pct(plot.end[0])}%;--y:${pct(plot.end[1])}%`} />
+								{/* The picked season's medal; the script shows it with its band. */}
+								{plot.medals.map((m) => (
+									<span
+										class="wx-vl-medal"
+										data-volo-medal={m.season}
+										hidden={m.season !== current}
+										style={`--x:${pct(m.x)}%;--y:${pct(m.y)}%`}
+									>
+										{m.medal}
+									</span>
+								))}
+								{/* Zero goes unlabelled: it is the floor, and the line
+								    starts on it. */}
+								{plot.scale.ticks.filter((tick) => tick !== 0).map((tick) => (
+									<Mono variant="value" tone="tertiary" class="wx-vl-tick" style={`--y:${pct(plot.yOf(tick))}%`}>
+										{formatDiff(tick)}
+									</Mono>
+								))}
+							</div>
+						))}
+					</div>
+					<div class="wx-vl-years" aria-hidden="true">
+						{seasons.map((season, i) => (
+							<Mono variant="value" tone="tertiary" class="wx-vl-year">
+								{yearShown(i) ? `'${seasonYear(season)}` : ""}
+							</Mono>
+						))}
+					</div>
 				</div>
 
+				{/* THE LINESCORE: the picked season, game by game — runs for over
+				    runs against, a strip over each game in its result's colour, the
+				    playoffs on a wash. A game still to come shows its date and
+				    time; a bracket not yet reached, an empty column. */}
+				<Faces class="wx-vl-panels" data-volo-panels>
+					{seasons.map((season, i) => {
+						const columns = linescoreColumns(season);
+						const finish = formatFinish(season);
+						return (
+							<Face as="div" class="wx-vl-panel" inactive={i !== current} data-volo-panel={i}>
+								<div class="wx-vl-ls-head">
+									<Mono variant="value" tone="primary" truncate class="wx-vl-ls-name">{names[i]}</Mono>
+									{!isOver(season) && <Mono variant="value" tone="tertiary" class="wx-vl-live">· live</Mono>}
+									<Mono variant="value" tone="secondary" class="wx-vl-ls-sum">
+										{formatTally(season)}{finish && ` · ${finish}`}
+									</Mono>
+								</div>
+								<table class="wx-vl-ls">
+									<VisuallyHidden as="caption">
+										{names[i]} linescore: runs for and against, game by game
+									</VisuallyHidden>
+									<thead>
+										<tr>
+											<td />
+											{columns.map(({ label, game }) => (
+												<th
+													scope="col"
+													data-result={game ? (game.result ?? "next") : "pending"}
+													title={game ? `vs ${game.opponent}, ${formatGameDate(game.startTime, season.timezone)}` : undefined}
+												>
+													<span class="wx-vl-strip" />
+													{label}
+												</th>
+											))}
+											<th scope="col">R</th>
+										</tr>
+									</thead>
+									<tbody>
+										{(["for", "against"] as const).map((side) => (
+											<tr>
+												<th scope="row">{side === "for" ? "Us" : "Them"}</th>
+												{columns.map(({ game }) => {
+													if (!game) return <td data-pending>·</td>;
+													if (!game.result) {
+														return (
+															<td data-next>
+																{side === "for"
+																	? formatGameDate(game.startTime, season.timezone)
+																	: formatGameTime(game.startTime, season.timezone).replace(/ ([AP])M$/, (_, m) => m.toLowerCase())}
+															</td>
+														);
+													}
+													/* A forfeit recorded as 0–0 is not a 0–0 game. */
+													if (game.forfeit && !game.for && !game.against) {
+														return <td data-playoff={game.playoff ? "" : undefined}>FF</td>;
+													}
+													const mine = game[side] ?? 0;
+													const theirs = game[side === "for" ? "against" : "for"] ?? 0;
+													return (
+														<td data-won={mine > theirs ? "" : undefined} data-playoff={game.playoff ? "" : undefined}>
+															{mine}
+														</td>
+													);
+												})}
+												<td class="wx-vl-total">{total(i, side)}</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</Face>
+						);
+					})}
+				</Faces>
+
+				{nextGame && live && (
+					<p class="wx-vl-next">
+						<Mono>Next</Mono>
+						<Mono tone="primary" truncate class="wx-vl-next-opp">vs {nextGame.opponent}</Mono>
+						<Mono tone="accent" class="wx-vl-next-when">{formatGameWhen(nextGame.startTime, live.timezone)}</Mono>
+					</p>
+				)}
+
 				{/* The headline, at the foot like the other tiles' big figures. */}
-				<Figure class="wx-vl-career">
+				<Figure class="wx-vl-career" unit="career">
 					{career.wins}–{career.losses}{career.ties > 0 && <>–{career.ties}</>}
-					<Fragment slot="unit">
-						{career.finals} final{career.finals === 1 ? "" : "s"} · {career.titles} title{career.titles === 1 ? "" : "s"}
-					</Fragment>
 				</Figure>
 			</>
 		)

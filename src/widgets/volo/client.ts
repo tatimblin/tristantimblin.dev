@@ -1,127 +1,69 @@
-// The season chart: a bar per season picks its panel (by click or arrow key),
-// the arrows page the chart a window at a time, and the heading opens the
-// tray of every game. The bars, arrows and tray button are rendered disabled
-// and only enabled here, so none of them is a control that does nothing.
+// The chart's season bands pick the linescore under it (by click or arrow
+// key), and the header's pill flips the chart between the run and the win
+// differential. The bands are rendered disabled and the pill hidden, and only
+// made live here, so neither is a control that does nothing.
 import { showFace } from "@whois/design-system/lib/faces";
 import { stepFromKey } from "@whois/design-system/lib/keys";
 import type { WidgetContext } from "@whois/design-system/lib/widgets";
 
+const MODES = { run: "run differential", win: "win differential" } as const;
+type Mode = keyof typeof MODES;
+
 export function mount(widget: HTMLElement, { signal }: WidgetContext) {
-	const chart = widget.querySelector<HTMLElement>("[data-volo-chart]");
-	const track = widget.querySelector<HTMLElement>("[data-volo-track]");
 	const stack = widget.querySelector<HTMLElement>("[data-volo-panels]");
-	const expand = widget.querySelector<HTMLButtonElement>("[data-volo-expand]");
-	if (!chart || !track || !stack || !expand) return;
+	if (!stack) return;
+	const bands = Array.from(widget.querySelectorAll<HTMLButtonElement>("[data-volo-season]"));
+	const pill = widget.querySelector<HTMLButtonElement>("[data-volo-mode]");
+	const fixed = widget.querySelector<HTMLElement>(".wx-vl-mode--static");
+	const medals = Array.from(widget.querySelectorAll<HTMLElement>("[data-volo-medal]"));
 
-	const bars = Array.from(track.querySelectorAll<HTMLButtonElement>("[data-volo-season]"));
-	const panels = Array.from(stack.querySelectorAll<HTMLElement>("[data-volo-panel]"));
-	const years = Array.from(track.querySelectorAll<HTMLElement>("[data-year]"));
-	const title = widget.querySelector<HTMLElement>("[data-volo-heading]");
-	const tally = widget.querySelector<HTMLElement>("[data-volo-tally]");
-	const sport = widget.querySelector<HTMLElement>("[data-volo-sport]");
-	const expandLabel = widget.querySelector<HTMLElement>("[data-volo-expand-label]");
-	const nav = widget.querySelector<HTMLElement>(".wx-vl-nav");
-	const prev = nav?.querySelector<HTMLButtonElement>("[data-volo-prev]");
-	const next = nav?.querySelector<HTMLButtonElement>("[data-volo-next]");
+	let index = Math.max(0, bands.findIndex((band) => band.hasAttribute("aria-current")));
 
-	const page = Number(getComputedStyle(widget).getPropertyValue("--vl-page")) || bars.length;
-	const lastStart = Math.max(0, bars.length - page);
-	let start = lastStart;
-	let index = Math.max(0, bars.findIndex((bar) => bar.hasAttribute("aria-current")));
-
-	const onShownPage = (i: number) => i >= start && i < start + page;
-
-	// One tab stop: the selected bar, or the page's first when the selected
-	// one has been paged out of view.
-	const rove = () => {
-		const stop = onShownPage(index) ? index : start;
-		bars.forEach((bar, i) => (bar.tabIndex = i === stop ? 0 : -1));
-	};
-
-	// A year is labelled on its first season ON THE PAGE, so a page that
-	// opens mid-year still says which year it is. A title's trophy always
-	// shows.
-	const label = () => {
-		years.forEach((el, i) => {
-			const first = i === start || el.dataset.year !== years[i - 1]?.dataset.year;
-			el.classList.toggle("is-shown", first || el.classList.contains("is-title"));
-		});
-	};
-
-	const pageTo = (to: number) => {
-		start = Math.min(lastStart, Math.max(0, to));
-		track.style.setProperty("--vl-start", String(start));
-		if (prev && next) {
-			// A disabled arrow cannot hold focus: hand it to the sibling
-			// rather than drop it to <body>.
-			const focused = document.activeElement;
-			prev.disabled = start === 0;
-			next.disabled = start === lastStart;
-			if (focused === next && next.disabled) prev.focus();
-			else if (focused === prev && prev.disabled) next.focus();
-		}
-		label();
-		rove();
-	};
-
+	// The picked band is current and the one tab stop; its panel shows.
 	const select = (to: number) => {
-		index = Math.min(bars.length - 1, Math.max(0, to));
-		bars.forEach((bar, i) => {
-			if (i === index) bar.setAttribute("aria-current", "true");
-			else bar.removeAttribute("aria-current");
+		index = Math.min(bands.length - 1, Math.max(0, to));
+		bands.forEach((band, i) => {
+			if (i === index) band.setAttribute("aria-current", "true");
+			else band.removeAttribute("aria-current");
+			band.tabIndex = i === index ? 0 : -1;
 		});
 		showFace(stack, index);
-		const { heading, sport: game, tally: wl } = panels[index].dataset;
-		if (title && heading) title.textContent = heading;
-		if (sport && game) sport.textContent = game;
-		if (tally && wl) tally.textContent = wl;
-		// Keep the selection on the page.
-		if (index < start) pageTo(index);
-		else if (index >= start + page) pageTo(index - page + 1);
-		else rove();
+		for (const medal of medals) medal.hidden = Number(medal.dataset.voloMedal) !== index;
 	};
 
-	// Open, the tray covers the chart: the bars go inert so focus cannot
-	// land under it.
-	const setExpanded = (open: boolean) => {
-		widget.dataset.expanded = String(open);
-		expand.setAttribute("aria-expanded", String(open));
-		chart.inert = open;
-		if (expandLabel) expandLabel.textContent = open ? "Show less" : "Show every game";
+	// The pill names the mode showing; its accessible name says both.
+	const setMode = (mode: Mode) => {
+		widget.dataset.mode = mode;
+		const other: Mode = mode === "run" ? "win" : "run";
+		pill?.setAttribute("aria-label", `Showing the ${MODES[mode]}. Show the ${MODES[other]}`);
 	};
 
 	const on = { signal };
-	for (const bar of bars) {
-		bar.addEventListener("click", () => select(Number(bar.dataset.voloSeason)), on);
-		bar.disabled = false;
+	for (const band of bands) {
+		band.addEventListener("click", () => select(Number(band.dataset.voloSeason)), on);
+		band.disabled = false;
 	}
-	prev?.addEventListener("click", () => pageTo(start - page), on);
-	next?.addEventListener("click", () => pageTo(start + page), on);
-	expand.addEventListener("click", () => setExpanded(widget.dataset.expanded !== "true"), on);
+	pill?.addEventListener("click", () => setMode(widget.dataset.mode === "win" ? "run" : "win"), on);
 	widget.addEventListener(
 		"keydown",
 		(event) => {
-			if (event.key === "Escape" && widget.dataset.expanded === "true") {
-				setExpanded(false);
-				expand.focus();
-				return;
-			}
 			if (!(event.target as HTMLElement).closest("[data-volo-season]")) return;
-			const step = stepFromKey(event, index, bars.length - 1);
+			const step = stepFromKey(event, index, bands.length - 1);
 			if (step === null) return;
 			event.preventDefault();
 			select(step);
-			bars[index].focus();
+			bands[index].focus();
 		},
 		on,
 	);
 
-	pageTo(start);
-	if (nav) nav.hidden = false;
-	expand.disabled = false;
+	setMode(widget.dataset.mode === "win" ? "win" : "run");
+	if (pill) {
+		pill.hidden = false;
+		if (fixed) fixed.hidden = true;
+	}
 
 	return () => {
-		for (const bar of bars) bar.disabled = true;
-		expand.disabled = true;
+		for (const band of bands) band.disabled = true;
 	};
 }

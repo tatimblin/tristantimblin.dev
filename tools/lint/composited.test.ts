@@ -98,17 +98,7 @@ export const GEOMETRY = new Set([
  * property. Each says why; one that is no longer found fails the test too, so
  * the list can only shrink with the code.
  */
-export const ALLOWED: Array<{ file: string; property: string; why: string }> = [
-	{
-		file: "src/widgets/volo/volo.css",
-		property: "block-size",
-		why:
-			"The schedule tray opens by growing up over the chart, a box with a dashed top rule and a " +
-			"list inside; a scaleY would stretch both, a translate would slide the list out of the card. " +
-			"It runs once per press, and the tray is absolutely positioned inside a card the grid sizes, " +
-			"so each frame's relayout is the tray's own subtree.",
-	},
-];
+export const ALLOWED: Array<{ file: string; property: string; why: string }> = [];
 
 interface Finding {
 	file: string;

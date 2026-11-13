@@ -14,80 +14,78 @@ const open = async (page: import("@playwright/test").Page) => {
 };
 
 /**
- * THE SEASON BARS. Each bar is a control that picks its season: the tray's
- * heading follows it, exactly one bar is current, and that bar is the one
- * tab stop. The arrow keys walk the bars from a focused one.
+ * THE SEASON BANDS. Each band on the chart is a control that picks its
+ * season: its linescore shows, exactly one band is current, and that band is
+ * the one tab stop. The arrow keys walk the bands from a focused one.
  */
-test("a bar picks its season, by click and by key", async ({ page }) => {
+test("a band picks its season's linescore, by click and by key", async ({ page }) => {
 	const widget = await open(page);
-	const bars = widget.locator("[data-volo-season]");
-	const heading = widget.locator("[data-volo-heading]");
+	const bands = widget.locator("[data-volo-season]");
 	const current = widget.locator("[data-volo-season][aria-current]");
 	const stops = widget.locator('[data-volo-season][tabindex="0"]');
-	await expect(bars.first()).toBeEnabled();
+	const shown = widget.locator('[data-volo-panel]:not([aria-hidden="true"])');
+	await expect(bands.first()).toBeEnabled();
 	await expect(current).toHaveCount(1);
 	await expect(stops).toHaveCount(1);
-	const opening = await heading.textContent();
+	await expect(shown).toHaveCount(1);
 
-	const count = await bars.count();
-	const earlier = bars.nth(count - 2);
+	const count = await bands.count();
+	const earlier = bands.nth(count - 2);
 	await earlier.click();
 	await expect(earlier).toHaveAttribute("aria-current", "true");
 	await expect(current).toHaveCount(1);
 	await expect(earlier).toHaveAttribute("tabindex", "0");
-	await expect(heading).not.toHaveText(opening ?? "");
+	await expect(shown).toHaveAttribute("data-volo-panel", String(count - 2));
 
 	await page.keyboard.press("ArrowRight");
-	await expect(bars.nth(count - 1)).toHaveAttribute("aria-current", "true");
-	await expect(bars.nth(count - 1)).toBeFocused();
+	await expect(bands.nth(count - 1)).toHaveAttribute("aria-current", "true");
+	await expect(bands.nth(count - 1)).toBeFocused();
+	await expect(shown).toHaveAttribute("data-volo-panel", String(count - 1));
 });
 
 /**
- * THE PAGE ARROWS. More seasons than the window holds: the chart opens on the
- * latest page, "earlier" slides it back, and a disabled arrow cannot hold
- * focus — so focus moves to its sibling rather than dropping to <body>.
+ * THE MODE PILL. The chart opens on the run differential; the pill swaps it
+ * for the win differential and back, and says which is showing.
  */
-test("the page arrows slide the chart and keep focus at the ends", async ({ page }) => {
+test("the pill flips the chart between run and win differential", async ({ page }) => {
 	const widget = await open(page);
-	const nav = widget.locator(".wx-vl-nav");
-	test.skip((await nav.count()) === 0, "every season fits on one page");
-	const prev = widget.locator("[data-volo-prev]");
-	const next = widget.locator("[data-volo-next]");
-	const bars = widget.locator("[data-volo-season]");
+	const pill = widget.locator("[data-volo-mode]");
+	await expect(pill).toBeVisible();
+	await expect(widget).toHaveAttribute("data-mode", "run");
+	await expect(pill.locator("[data-mode-label=run]")).toBeVisible();
+	await expect(pill.locator("[data-mode-label=win]")).toBeHidden();
+	await expect(widget.locator('.wx-vl-trace[data-mode="run"]')).toBeVisible();
+	await expect(widget.locator('.wx-vl-trace[data-mode="win"]')).toBeHidden();
 
-	await expect(nav).toBeVisible();
-	await expect(next).toBeDisabled();
-	await expect(bars.first()).toHaveAttribute("tabindex", "-1");
+	await pill.click();
+	await expect(widget).toHaveAttribute("data-mode", "win");
+	await expect(pill.locator("[data-mode-label=win]")).toBeVisible();
+	await expect(pill.locator("[data-mode-label=run]")).toBeHidden();
+	await expect(pill).toHaveAttribute("aria-label", /Showing the win differential/);
+	await expect(widget.locator('.wx-vl-trace[data-mode="win"]')).toBeVisible();
+	await expect(widget.locator('.wx-vl-trace[data-mode="run"]')).toBeHidden();
 
-	await prev.focus();
-	await prev.click();
-	await expect(prev).toBeDisabled();
-	await expect(next).toBeFocused();
-	await expect(bars.first()).toHaveAttribute("tabindex", "0");
-
-	await next.click();
-	await expect(next).toBeDisabled();
-	await expect(prev).toBeFocused();
+	await pill.click();
+	await expect(widget).toHaveAttribute("data-mode", "run");
 });
 
 /**
- * THE SCHEDULE TRAY. Its heading opens it over the chart — which goes inert,
- * so focus cannot land under the tray — and closes it again; Escape closes it
- * too, handing focus back to the heading.
+ * THE PODIUM. A finished season that placed shows its trophy or medal over
+ * its band, but only while that band is picked.
  */
-test("the tray opens from its heading and closes on Escape", async ({ page }) => {
+test("a picked podium season shows its medal over its band", async ({ page }) => {
 	const widget = await open(page);
-	const handle = widget.locator("[data-volo-expand]");
-	await expect(handle).toBeEnabled();
-	await expect(handle).toHaveAttribute("aria-expanded", "false");
+	const medals = widget.locator('.wx-vl-trace[data-mode="run"] [data-volo-medal]');
+	const season = await medals.first().getAttribute("data-volo-medal");
+	const shown = widget.locator('.wx-vl-trace[data-mode="run"] [data-volo-medal]:not([hidden])');
 
-	await handle.click();
-	await expect(handle).toHaveAttribute("aria-expanded", "true");
-	await expect(widget).toHaveAttribute("data-expanded", "true");
-	await expect(widget.locator("[data-volo-chart]")).toHaveJSProperty("inert", true);
+	await widget.locator(`[data-volo-season="${season}"]`).click();
+	await expect(shown).toHaveCount(1);
+	await expect(shown).toHaveAttribute("data-volo-medal", season!);
+	await expect(shown).toBeVisible();
+	await expect(shown).toHaveText(/🏆|🥈|🥉/u);
 
-	await page.keyboard.press("Escape");
-	await expect(widget.locator("[data-volo-chart]")).toHaveJSProperty("inert", false);
-	await expect(handle).toHaveAttribute("aria-expanded", "false");
-	await expect(handle).toBeFocused();
+	const other = Number(season) === 0 ? 1 : 0;
+	await widget.locator(`[data-volo-season="${other}"]`).click();
+	await expect(medals.and(widget.locator(`[data-volo-medal="${season}"]`))).toBeHidden();
 });
