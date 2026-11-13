@@ -192,17 +192,16 @@ test.describe("/demo/sutro/", () => {
 	});
 });
 
-// Trie type-ahead: a DOM module from jsDelivr (embed-stub-dom.js stands in).
+// Trie type-ahead: a DOM module from GitHub Pages (embed-stub-dom.js stands in).
 test.describe("/demo/trie-autocomplete/", () => {
 	const TRIE = "/demo/trie-autocomplete/";
 	const trie = embedUrls("trie-autocomplete");
 
-	test("mounts at once from its pinned tag and labels its stage as a region", async ({ page }) => {
+	test("mounts at once and labels its stage as a region", async ({ page }) => {
 		const requests = await serveEmbed(page, "trie-autocomplete", "embed-stub-dom.js");
 		await page.goto(TRIE);
 		await expect(frame(page)).toHaveAttribute("data-state", "live");
 		expect(requests).toEqual([trie.src]);
-		expect(trie.src).toMatch(/^https:\/\/cdn\.jsdelivr\.net\/gh\/tatimblin\/trie-autocomplete@v[\d.]+\/dist\/index\.js$/);
 		await expect(page.getByRole("region", { name: "Trie type-ahead, a live scene" })).toBeVisible();
 	});
 

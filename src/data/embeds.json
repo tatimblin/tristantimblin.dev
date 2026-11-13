@@ -14,7 +14,7 @@
 	},
 	"trie-autocomplete": {
 		"version": "0.1.0",
-		"url": "https://cdn.jsdelivr.net/gh/tatimblin/trie-autocomplete@v0.1.0/",
+		"url": "https://tatimblin.github.io/trie-autocomplete/",
 		"entry": "dist/index.js",
 		"webgl": false,
 		"reducedMotion": "mount",
