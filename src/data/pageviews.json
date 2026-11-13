@@ -1,5 +1,5 @@
 {
-	"updated": "2026-11-09",
+	"updated": "2026-11-12",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
@@ -415,6 +415,18 @@
 		{
 			"date": "2026-11-09",
 			"visitors": 12
+		},
+		{
+			"date": "2026-11-10",
+			"visitors": 12
+		},
+		{
+			"date": "2026-11-11",
+			"visitors": 8
+		},
+		{
+			"date": "2026-11-12",
+			"visitors": 4
 		}
 	],
 	"pathDays": [
@@ -532,6 +544,21 @@
 			"date": "2026-11-09",
 			"path": "/txt/subhumans/",
 			"visitors": 1
+		},
+		{
+			"date": "2026-11-10",
+			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
+			"visitors": 3
+		},
+		{
+			"date": "2026-11-11",
+			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-11",
+			"path": "/txt/subhumans/",
+			"visitors": 1
 		}
 	],
 	"paths": {
@@ -552,12 +579,12 @@
 			"recent": 1
 		},
 		"/txt/no-honey-we-have-a-dashboard-at-home/": {
-			"reads": 24,
-			"recent": 2
+			"reads": 28,
+			"recent": 6
 		},
 		"/txt/subhumans/": {
-			"reads": 9,
-			"recent": 9
+			"reads": 10,
+			"recent": 10
 		},
 		"/txt/why-i-joined-fisker/": {
 			"reads": 16,
