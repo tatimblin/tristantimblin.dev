@@ -192,6 +192,41 @@ test.describe("/demo/sutro/", () => {
 	});
 });
 
+// Trie type-ahead: a DOM module from GitHub Pages (embed-stub-dom.js stands in).
+test.describe("/demo/trie-autocomplete/", () => {
+	const TRIE = "/demo/trie-autocomplete/";
+	const trie = embedUrls("trie-autocomplete");
+
+	test("mounts at once and labels its stage as a region", async ({ page }) => {
+		const requests = await serveEmbed(page, "trie-autocomplete", "embed-stub-dom.js");
+		await page.goto(TRIE);
+		await expect(frame(page)).toHaveAttribute("data-state", "live");
+		expect(requests).toEqual([trie.src]);
+		await expect(page.getByRole("region", { name: "Trie type-ahead, a live scene" })).toBeVisible();
+	});
+
+	test("leaves the module's own images alone: only the poster fills the frame", async ({ page }) => {
+		await serveEmbed(page, "trie-autocomplete", "embed-stub-dom.js");
+		await page.goto(TRIE);
+		await expect(frame(page)).toHaveAttribute("data-state", "live");
+		const position = await frame(page).locator("[data-embed-stage]").evaluate((stage) => {
+			const img = stage.appendChild(document.createElement("img"));
+			return getComputedStyle(img).position;
+		});
+		expect(position).toBe("static");
+		await expect(frame(page).locator(".embed__poster")).toHaveAttribute("aria-hidden", "true");
+	});
+
+	test("is on /txt with its DEMO chip, and in the feed and the sitemap", async ({ page, request }) => {
+		await page.goto("/txt/");
+		const row = page.locator(".stack__post").filter({ has: page.locator(`a[href="${TRIE}"]`) });
+		await expect(row).toHaveCount(1);
+		await expect(row.locator(".stack__title .ds-chip")).toHaveText(/demo/i);
+		expect(await (await request.get("/rss.xml")).text()).toContain(`https://tristantimblin.dev${TRIE}`);
+		expect(await (await request.get("/sitemap-0.xml")).text()).toContain(`https://tristantimblin.dev${TRIE}`);
+	});
+});
+
 // meet Lolla: a DOM + Web Audio module from GitHub Pages (embed-stub-dom.js
 // stands in), no WebGL, scrolling inside its own root.
 test.describe("/demo/meet-lolla/", () => {

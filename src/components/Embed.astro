@@ -149,7 +149,7 @@ const widths = fullscreen
 		const setState = (frame: HTMLElement, state: string) => {
 			frame.dataset.state = state;
 			hide(frame.querySelector("[data-embed-stage]"), state !== "live");
-			hide(frame.querySelector("img"), state === "live");
+			hide(frame.querySelector(".embed__poster"), state === "live");
 		};
 		// A canvas is an image; a module that draws DOM is a region of its own
 		// controls, so the stage carries the name (and drops it on unmount).
@@ -285,8 +285,9 @@ const widths = fullscreen
 	}
 
 	/* fig.css and the Prose draw a bare img with the edge, at auto height;
-	   here the frame carries the edge, and the poster fills it. */
-	.embed__frame :global(img) {
+	   here the frame carries the edge, and the poster fills it. Only the
+	   poster: a module that draws DOM may have images of its own in the stage. */
+	.embed__frame :global(.embed__poster) {
 		position: absolute;
 		inset: 0;
 		inline-size: 100%;

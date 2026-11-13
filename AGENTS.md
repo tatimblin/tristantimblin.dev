@@ -132,6 +132,23 @@ are interleaved by date on `/txt` (a DEMO chip), ride in the feed and the
 sitemap, and are numbered on their own (`demo / 001`), never as a txt.
 `tests/demo.spec.ts` covers them.
 
+**Hosting a new demo — the preferred way** (public repo; trie-autocomplete
+does it, meetLolla predates it and still commits `dist/`): GitHub Pages,
+built by an Action on `v*` tags.
+- The repo exports `mount(el, { assetBase }) => { destroy }` from one
+  self-contained ES module (CSS and small assets inlined, styles scoped under
+  a root class, nothing left behind on `destroy()`), built to `dist/index.js`.
+- `dist/` is NOT committed: the repo's Pages workflow triggers on `v*` tags
+  (plus a manual run with a `ref` input), builds, and deploys the page and
+  `dist/` together. Its `github-pages` environment must allow `v*` tags
+  (Settings → Environments), or the deploy is refused.
+- The entry here is `{"version", "url": "https://tatimblin.github.io/<repo>/",
+  "entry": "dist/index.js", ...opt-outs}`. To release: bump the version, merge,
+  tag on main, check the URL serves, then bump `version` here.
+- Not jsDelivr (it needs the build committed at the tag) and not Release assets
+  (no CORS, wrong content type, so `import()` fails). R2 is only for private
+  repos (painterly-scene).
+
 ## The cursive card — a live agent
 
 `src/widgets/cursive/` wraps agent-web's `<cursive-terminal>`, imported at
