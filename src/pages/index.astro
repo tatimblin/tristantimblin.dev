@@ -15,9 +15,12 @@ import Amc from "../widgets/amc/Amc.astro";
 	description="Tristan Timblin — American computer programmer and human-computer interaction engineer."
 >
 	{/* The intro, under "& other stories". A Text, not a Body: a small caps
-	     statement in the heading face, not reading copy. */}
+	     statement in the heading face, not reading copy. It wobbles with the
+	     tagline, at the same pace and a smaller displacement for its size. */}
 	<Text slot="intro" as="p" size={1} caps family="heading" spaced variant="secondary">
-		American computer programmer and human-computer interaction engineer.
+		<wobble-text scale="3.5" speed="0.175">
+			American computer programmer and human-computer interaction engineer.
+		</wobble-text>
 	</Text>
 
 	{/* WIDGETS, after the opener row (HomeLayout). Mixed sizes in non-packed DOM
