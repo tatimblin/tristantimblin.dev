@@ -11,7 +11,11 @@
 //     Pages from its release tag (meetLolla's pages.yml): the bundle at
 //     `<url><entry>`, its media at its usual repo paths. Pages serves only the
 //     latest deployed tag at an unversioned URL, so `version` is informational
-//     there: the release this site was last checked against.
+//     there: the release this site was last checked against. A small public
+//     repo can be served by jsDelivr from its tag instead (trie-autocomplete:
+//     `https://cdn.jsdelivr.net/gh/<owner>/<repo>@v<version>/`), which is
+//     pinned like R2; embeds.test.ts holds the tag to `version`. jsDelivr
+//     refuses repos over 50 MB, hence Pages for meetLolla.
 //
 // <Embed> (src/components/Embed.astro) imports the bundle and calls its
 // `mount(el, { assetBase }) => { destroy() }`.

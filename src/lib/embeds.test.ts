@@ -33,6 +33,13 @@ describe("embeds", () => {
 		expect(embed("test-entry").src).toBe("https://o.github.io/r/index.js");
 	});
 
+	test("a jsDelivr entry is pinned to the tag of its version", () => {
+		for (const [name, { url, version }] of Object.entries(EMBEDS)) {
+			if (!url?.startsWith("https://cdn.jsdelivr.net/gh/")) continue;
+			expect(url, name).toMatch(new RegExp(`@v${version.replaceAll(".", "\\.")}/$`));
+		}
+	});
+
 	test("throws on an unknown name", () => {
 		expect(() => embed("nope")).toThrow(/not in src\/data\/embeds\.json/);
 	});

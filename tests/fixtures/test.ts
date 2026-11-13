@@ -37,6 +37,8 @@ export const MEDIA_PATTERN = `${MEDIA_BASE}/**`;
  *  itself (serveEmbed in tests/fixtures/embed-route.ts, which wins over this)
  *  gets a 404. */
 export const PAGES_PATTERN = "https://tatimblin.github.io/**";
+/** jsDelivr, the other `url` host (a public repo's tag), stubbed the same way. */
+export const JSDELIVR_PATTERN = "https://cdn.jsdelivr.net/**";
 
 /** TMDB's image CDN, where the A-List card's posters are hotlinked from
  *  (src/widgets/amc/amc.ts). Every request gets poster-stub.jpg (274 bytes,
@@ -58,9 +60,11 @@ export async function routeMedia(context: BrowserContext): Promise<void> {
 		if (!stub) return route.fulfill({ status: 404, headers });
 		return route.fulfill({ path: stub.path, contentType: stub.contentType, headers });
 	});
-	await context.route(PAGES_PATTERN, (route) =>
-		route.fulfill({ status: 404, headers: { "access-control-allow-origin": "*", "x-media-stub": "1" } }),
-	);
+	for (const pattern of [PAGES_PATTERN, JSDELIVR_PATTERN]) {
+		await context.route(pattern, (route) =>
+			route.fulfill({ status: 404, headers: { "access-control-allow-origin": "*", "x-media-stub": "1" } }),
+		);
+	}
 	await context.route(TMDB_PATTERN, (route) =>
 		route.fulfill({ path: POSTER_STUB, contentType: "image/jpeg", headers: { "x-media-stub": "1" } }),
 	);
