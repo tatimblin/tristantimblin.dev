@@ -1,6 +1,6 @@
 ---
 title: "Trie type-ahead"
-description: "Autocomplete the 10,000 most common English words as you type, searched in a trie."
+description: "Autocomplete type-ahead implemented as a trie tree over 10,000 common English words. Candidates are ranked by word frequency and how often they follow the previous word. Frequency is counted with a bigram table."
 date: 2023-11-04
 tags: ["data-structures", "svelte", "typescript"]
 embed: trie-autocomplete
