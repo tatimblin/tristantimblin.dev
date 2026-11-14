@@ -205,6 +205,18 @@ test.describe("/demo/trie-autocomplete/", () => {
 		await expect(page.getByRole("region", { name: "Trie type-ahead, a live scene" })).toBeVisible();
 	});
 
+	test("starts with its panel closed (panel: closed); the info button opens it", async ({ page }) => {
+		await serveEmbed(page, "trie-autocomplete", "embed-stub-dom.js");
+		await page.goto(TRIE);
+		const panel = page.locator("[data-demo-panel]");
+		const reopen = page.getByRole("button", { name: "Show demo details" });
+		await expect(panel).toBeHidden();
+		await expect(reopen).toBeVisible();
+		await reopen.click();
+		await expect(panel).toBeVisible();
+		await expect(panel.getByRole("heading", { level: 1, name: "Trie type-ahead" })).toBeVisible();
+	});
+
 	test("leaves the module's own images alone: only the poster fills the frame", async ({ page }) => {
 		await serveEmbed(page, "trie-autocomplete", "embed-stub-dom.js");
 		await page.goto(TRIE);

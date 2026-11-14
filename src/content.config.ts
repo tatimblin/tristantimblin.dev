@@ -76,6 +76,9 @@ const demos = defineCollection({
 				// Short text behind the panel's info toggle.
 				notes: z.string().optional(),
 				credits: z.string().optional(),
+				// `closed`: the page opens with the panel hidden behind its info
+				// button, for a demo with its own heading and text to show.
+				panel: z.enum(["open", "closed"]).default("open"),
 				draft: z.boolean().default(false),
 			})
 			.strict(),
