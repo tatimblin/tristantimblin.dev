@@ -9,7 +9,8 @@
 // date, its title and its one-line description in the body; notes and credits
 // behind the info toggle. On a phone the panel folds to its header and the
 // title; the info toggle opens the rest. Esc closes it. Its × hides the whole
-// panel, leaving a half-strength info button in the corner to bring it back.
+// panel, leaving a half-strength info button in the corner to bring it back;
+// a demo with `panel: closed` starts that way.
 // Under reduced motion the panel says what is showing instead of the live
 // scene (a still frame, or the poster).
 import { getImage } from "astro:assets";
@@ -34,7 +35,9 @@ interface Props {
 }
 
 const { demo, no } = Astro.props;
-const { title, description, date, tags, embed, poster, notes, credits } = demo.data;
+const { title, description, date, tags, embed, poster, notes, credits, panel } = demo.data;
+// `panel: closed` (frontmatter): the page starts as if the × had been pressed.
+const closed = panel === "closed";
 const { stillFrame, reducedMotion, touchAction = "none" } = resolveEmbed(embed);
 const ogImage = (await getImage({ src: poster.src, format: "jpg" })).src;
 const hasInfo = Boolean(notes || credits);
@@ -71,13 +74,21 @@ const hasInfo = Boolean(notes || credits);
 			aria-label="Show demo details"
 			aria-controls="demo-panel"
 			aria-expanded="false"
-			hidden
+			hidden={!closed}
 			data-demo-reopen
 		>
 			<Icon name="info" />
 		</IconButton>
 
-		<Card as="aside" id="demo-panel" class="demo__panel" squeeze="title" aria-labelledby="demo-title" data-demo-panel>
+		<Card
+			as="aside"
+			id="demo-panel"
+			class="demo__panel"
+			squeeze="title"
+			aria-labelledby="demo-title"
+			hidden={closed}
+			data-demo-panel
+		>
 			<Anchor slot="title" variant="ink" arrow="left" href={TXT_HREF} class="demo__back">Writing</Anchor>
 			<div slot="meta" class="demo__controls">
 				<ThemeToggle />
