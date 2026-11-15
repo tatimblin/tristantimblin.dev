@@ -127,7 +127,9 @@ const props = Astro.props;
 	// The cards' scripts: each <Widget name> in the slot is mounted from its own
 	// chunk when it comes due (src/widgets/index.ts).
 	import "../widgets";
-	// ClientRouter fires this for the first load too.
+	// Now, and on each ClientRouter navigation (whose first `astro:page-load` may
+	// already have fired by the time this chunk runs). Idempotent.
+	initScrollFallback();
 	document.addEventListener("astro:page-load", initScrollFallback);
 </script>
 
