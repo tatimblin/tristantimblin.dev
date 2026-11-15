@@ -20,6 +20,12 @@ const published = readdirSync("src/content/txt")
 	.filter((f) => /\.mdx?$/.test(f))
 	.filter((f) => !/^draft:\s*true\s*$/m.test(readFileSync(`src/content/txt/${f}`, "utf8")))
 	.map((f) => f.replace(/\.mdx?$/, ""));
+/** Of those, the ones whose frontmatter opts into The Ergonomist. */
+const syndicated = readdirSync("src/content/txt")
+	.filter((f) => /\.mdx?$/.test(f))
+	.filter((f) => /^syndicate:\s*true\s*$/m.test(readFileSync(`src/content/txt/${f}`, "utf8")))
+	.map((f) => f.replace(/\.mdx?$/, ""))
+	.filter((slug) => published.includes(slug));
 
 interface Item {
 	id: string;
@@ -31,6 +37,7 @@ interface Item {
 	date_published: string;
 	date_modified?: string;
 	tags: string[];
+	_tristantimblin: { category?: string; syndicate: boolean };
 }
 
 test("the feed is JSON Feed 1.1 with every published post, in full", async ({ request }) => {
@@ -80,6 +87,13 @@ test("the feed is JSON Feed 1.1 with every published post, in full", async ({ re
 	// The section numbers and the intro's label are the ruled page's, not the post's.
 	expect(fisker.content_html).toContain('<h2 id="why-fisker">Why Fisker</h2>');
 	expect(fisker.content_html).not.toMatch(/>(00|01|Intro)</);
+
+	// `syndicate: true` in the frontmatter is the only way a post is marked;
+	// sub-human is the first.
+	expect(syndicated).toContain("subhumans");
+	expect(items.filter((i) => i._tristantimblin.syndicate).map((i) => i.url).sort()).toEqual(
+		syndicated.map((slug) => `${SITE}/txt/${slug}/`).sort(),
+	);
 });
 
 test("the fleet demo degrades to its poster, linked to the post", async ({ request }) => {

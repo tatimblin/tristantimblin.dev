@@ -33,7 +33,7 @@ export const GET: APIRoute = async (context) => {
 
 	const items = [];
 	for (const post of await getPosts()) {
-		const { title, excerpt, hero, date, modified, tags, category, canonical } = post.data;
+		const { title, excerpt, hero, date, modified, tags, category, canonical, syndicate } = post.data;
 		const url = abs(postHref(post.id));
 		const { Content } = await render(post);
 		// The hero as a JPEG, the format Seo.astro asks for its social card, so
@@ -51,7 +51,9 @@ export const GET: APIRoute = async (context) => {
 			date_published: date.toISOString(),
 			...(modified && { date_modified: modified.toISOString() }),
 			tags,
-			...(category && { _tristantimblin: { category } }),
+			// `syndicate`: the post's frontmatter opts it into being copied
+			// elsewhere (The Ergonomist reads only these). Every post is in the feed.
+			_tristantimblin: { ...(category && { category }), syndicate },
 		});
 	}
 
