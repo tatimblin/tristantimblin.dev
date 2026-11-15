@@ -62,7 +62,7 @@ test.describe("/demo/sutro/", () => {
 		await expect(frame(page).locator("img")).toHaveAttribute("aria-hidden", "true");
 	});
 
-	test("passes touch-action none to mount()", async ({ page }) => {
+	test("passes touch-action none and autofocus to mount()", async ({ page }) => {
 		await page.route(src, (route) =>
 			route.fulfill({
 				contentType: "text/javascript",
@@ -72,7 +72,8 @@ test.describe("/demo/sutro/", () => {
 		);
 		await page.goto(DEMO);
 		await expect(frame(page)).toHaveAttribute("data-state", "live");
-		expect(await page.evaluate(() => (window as any).__opts)).toEqual({ assetBase, touchAction: "none" });
+		// A demo page is the whole page, so the module may take keys without a click.
+		expect(await page.evaluate(() => (window as any).__opts)).toEqual({ assetBase, touchAction: "none", autofocus: true });
 	});
 
 	test("fills a phone too, with the panel folded to its header and title", async ({ page }) => {
