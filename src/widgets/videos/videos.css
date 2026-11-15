@@ -114,6 +114,13 @@
 			animation-range: 0px min(var(--vc-dock-travel), 100%);
 		}
 	}
+	/* No scroll timelines: src/lib/scroll-fallback.ts plays the dock (and the
+	   chrome's fade, below) from a scroll listener. Parked until it takes over. */
+	@supports not (animation-timeline: scroll()) {
+		.scroll-fallback .wx-videos {
+			transform: translateY(calc(-1 * var(--vc-dock-travel)));
+		}
+	}
 }
 @keyframes vc-dock {
 	from {
@@ -232,6 +239,14 @@
 			animation-timeline: scroll(root block);
 			animation-range: max(0px, min(var(--vc-dock-travel), 100%) - var(--vc-chrome-run))
 				min(var(--vc-dock-travel), 100%);
+		}
+	}
+	@supports not (animation-timeline: scroll()) {
+		.scroll-fallback .wx-videos__compact .wx-videos__chrome,
+		.scroll-fallback .wx-videos__compact .vc__ruler,
+		.scroll-fallback .wx-videos:not(:focus-within) .wx-videos__wide .wx-videos__surface,
+		.scroll-fallback .wx-videos:not(:focus-within) .wx-videos__wide .wx-videos__date {
+			opacity: 0;
 		}
 	}
 }

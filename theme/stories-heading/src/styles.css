@@ -221,6 +221,16 @@ stories-heading {
 			animation-range: 0 var(--sh-sub-fade-px);
 		}
 	}
+
+	/* NO SCROLL TIMELINES, BUT A SCRIPT TO PLAY THEM: the host page may put
+	   .scroll-fallback on <html> and play these from a scroll listener (the site's
+	   src/lib/scroll-fallback.ts). Unwiped until it takes over. */
+	@supports not (animation-timeline: scroll()) {
+		.scroll-fallback .sh__solid {
+			will-change: clip-path;
+			clip-path: inset(100% 0 0 0);
+		}
+	}
 }
 
 /* The 15% stop is --sh-drift-rate: the scroll at which the sticky line catches
