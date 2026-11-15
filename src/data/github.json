@@ -1,47 +1,8 @@
 {
-	"updated": "2026-11-14",
+	"updated": "2026-11-15",
 	"username": "tatimblin",
-	"totalContributions": 3180,
+	"totalContributions": 3206,
 	"weeks": [
-		{
-			"days": [
-				{
-					"date": "2025-11-09",
-					"count": 2,
-					"level": 1
-				},
-				{
-					"date": "2025-11-10",
-					"count": 15,
-					"level": 1
-				},
-				{
-					"date": "2025-11-11",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2025-11-12",
-					"count": 23,
-					"level": 1
-				},
-				{
-					"date": "2025-11-13",
-					"count": 11,
-					"level": 1
-				},
-				{
-					"date": "2025-11-14",
-					"count": 0,
-					"level": 0
-				},
-				{
-					"date": "2025-11-15",
-					"count": 0,
-					"level": 0
-				}
-			]
-		},
 		{
 			"days": [
 				{
@@ -2065,7 +2026,16 @@
 				},
 				{
 					"date": "2026-11-14",
-					"count": 7,
+					"count": 25,
+					"level": 2
+				}
+			]
+		},
+		{
+			"days": [
+				{
+					"date": "2026-11-15",
+					"count": 8,
 					"level": 1
 				}
 			]
@@ -2074,28 +2044,28 @@
 	"languages": [
 		{
 			"name": "TypeScript",
-			"percent": 44.2,
+			"percent": 44.4,
 			"color": "#3178c6"
 		},
 		{
 			"name": "Rust",
-			"percent": 32.5,
+			"percent": 32.4,
 			"color": "#dea584"
 		},
 		{
 			"name": "JavaScript",
-			"percent": 10.6,
+			"percent": 10.5,
 			"color": "#f1e05a"
-		},
-		{
-			"name": "Luau",
-			"percent": 4.4,
-			"color": "#00A2FF"
 		},
 		{
 			"name": "CSS",
 			"percent": 4.4,
 			"color": "#663399"
+		},
+		{
+			"name": "Luau",
+			"percent": 4.4,
+			"color": "#00A2FF"
 		},
 		{
 			"name": "Python",
