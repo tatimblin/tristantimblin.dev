@@ -76,6 +76,14 @@ if (!hit) throw new Error(`Layout: "${hitPath ?? Astro.url.pathname}" is not a c
 			title="Writing — Tristan Timblin"
 			href="/rss.xml"
 		/>
+		{/* The same posts in full, for another site to syndicate
+		     (src/pages/feed.json.ts). */}
+		<link
+			rel="alternate"
+			type="application/feed+json"
+			title="Writing — Tristan Timblin"
+			href="/feed.json"
+		/>
 		<Seo {...seo} />
 		{/* No-FOUC theme init: apply the stored choice before first paint, and
 		     re-apply after each view-transition swap. Light is the fallback.
