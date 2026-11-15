@@ -19,5 +19,13 @@
 		"webgl": false,
 		"reducedMotion": "mount",
 		"touchAction": "auto"
+	},
+	"ball-sort-game": {
+		"version": "0.1.0",
+		"url": "https://tatimblin.github.io/ball-sort-game/",
+		"entry": "dist/index.js",
+		"webgl": false,
+		"reducedMotion": "mount",
+		"touchAction": "manipulation"
 	}
 }

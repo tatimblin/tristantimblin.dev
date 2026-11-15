@@ -239,6 +239,33 @@ test.describe("/demo/trie-autocomplete/", () => {
 	});
 });
 
+// Ball sort: a DOM puzzle from GitHub Pages (embed-stub-dom.js stands in),
+// panel closed, taps without double-tap zoom.
+test.describe("/demo/ball-sort-game/", () => {
+	const BALL = "/demo/ball-sort-game/";
+	const ball = embedUrls("ball-sort-game");
+
+	test("mounts at once, panel closed, with touch-action manipulation", async ({ page }) => {
+		const requests = await serveEmbed(page, "ball-sort-game", "embed-stub-dom.js");
+		await page.goto(BALL);
+		await expect(frame(page)).toHaveAttribute("data-state", "live");
+		expect(requests).toEqual([ball.src]);
+		await expect(frame(page)).toHaveAttribute("data-touch-action", "manipulation");
+		await expect(page.getByRole("region", { name: "Ball sort, a live scene" })).toBeVisible();
+		await expect(page.locator("[data-demo-panel]")).toBeHidden();
+		await expect(page.getByRole("button", { name: "Show demo details" })).toBeVisible();
+	});
+
+	test("is on /txt with its DEMO chip, and in the feed and the sitemap", async ({ page, request }) => {
+		await page.goto("/txt/");
+		const row = page.locator(".stack__post").filter({ has: page.locator(`a[href="${BALL}"]`) });
+		await expect(row).toHaveCount(1);
+		await expect(row.locator(".stack__title .ds-chip")).toHaveText(/demo/i);
+		expect(await (await request.get("/rss.xml")).text()).toContain(`https://tristantimblin.dev${BALL}`);
+		expect(await (await request.get("/sitemap-0.xml")).text()).toContain(`https://tristantimblin.dev${BALL}`);
+	});
+});
+
 // meet Lolla: a DOM + Web Audio module from GitHub Pages (embed-stub-dom.js
 // stands in), no WebGL, scrolling inside its own root.
 test.describe("/demo/meet-lolla/", () => {
