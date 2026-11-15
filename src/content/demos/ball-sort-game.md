@@ -1,6 +1,6 @@
 ---
 title: "Ball sort"
-description: "A sorting puzzle where each column is a stack of cubes. A move pops the top cube and pushes it only onto an empty column or a matching color; a column of four of one color is complete, and the level is won when every color is sorted."
+description: "Getting used to state management in React coming from Vue. A small game about moving pieces on a board."
 date: 2022-04-30
 tags: ["games", "react", "typescript"]
 embed: ball-sort-game
