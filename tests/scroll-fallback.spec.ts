@@ -161,11 +161,54 @@ async function loadWithoutTimelines(page: Page) {
 				else if (rule instanceof CSSGroupingRule) strip(rule);
 			}
 		};
-		for (const sheet of Array.from(document.styleSheets)) strip(sheet);
+		for (const sheet of Array.from(document.styleSheets)) {
+			try {
+				strip(sheet);
+			} catch {
+				// A cross-origin sheet's rules can't be read; none of them are gated.
+			}
+		}
 	});
 }
 
-test("without scroll timelines the page is static and complete", async ({ page }) => {
+/**
+ * WITHOUT SCROLL TIMELINES, A SCRIPT PLAYS THEM (src/lib/scroll-fallback.ts):
+ * release Firefox ships `animation-timeline` behind a pref, so the same effects
+ * run from a scroll listener there.
+ */
+test("without scroll timelines the effects still play", async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await loadWithoutTimelines(page);
+	await videosMounted(page);
+
+	await scrollAndSettle(page, 0);
+	expect(await readClip(page), "the word starts unwiped").toBeCloseTo(1, 2);
+	expect(await dockLift(page), "the card starts parked").toBeLessThan(-100);
+	expect(await readSurface(page), "the frame starts off").toBe(0);
+
+	await scrollAndSettle(page, 3000);
+	expect(await readClip(page), "the word is solid once scrolled").toBe(0);
+	expect(await dockLift(page), "the card is docked once scrolled").toBe(0);
+	expect(await readSurface(page), "the frame is on once docked").toBe(1);
+	const sub = await page.evaluate((selector) => getComputedStyle(document.querySelector(selector)!).opacity, LOCKUP.sub);
+	expect(Number(sub), "the intro has faded").toBe(0);
+});
+
+test("without scroll timelines the compact ruler takes input once docked", async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	await loadWithoutTimelines(page);
+	await page.locator(`${VIDEOS.compact}[data-ready]`).waitFor({ state: "attached", timeout: 15_000 });
+
+	await expect(page.locator(VIDEOS.card)).not.toHaveAttribute("data-vc-docked", "");
+	await scrollAndSettle(page, 3000);
+	await expect(page.locator(VIDEOS.card)).toHaveAttribute("data-vc-docked", "");
+	const ruler = page.locator(`${VIDEOS.compact} .vc__ruler`);
+	await expect(ruler).toHaveCSS("opacity", "1");
+	expect(await ruler.evaluate((el) => (el as HTMLElement).inert)).toBe(false);
+});
+
+test("without scroll timelines, reduced motion is static and complete", async ({ page }) => {
+	await page.emulateMedia({ reducedMotion: "reduce" });
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await loadWithoutTimelines(page);
 	await videosMounted(page);
@@ -182,7 +225,8 @@ test("without scroll timelines the page is static and complete", async ({ page }
 	expect(Number(sub)).toBe(1);
 });
 
-test("without scroll timelines the compact ruler is on and takes input", async ({ page }) => {
+test("without scroll timelines, reduced motion has the compact ruler on and taking input", async ({ page }) => {
+	await page.emulateMedia({ reducedMotion: "reduce" });
 	await page.setViewportSize({ width: 390, height: 844 });
 	await loadWithoutTimelines(page);
 	await page.locator(`${VIDEOS.compact}[data-ready]`).waitFor({ state: "attached", timeout: 15_000 });

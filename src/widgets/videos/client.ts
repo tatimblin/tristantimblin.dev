@@ -159,7 +159,10 @@ function dockSpan(el: HTMLElement) {
  *  in its cell from the start. Delegated, as above: the variant can come later. */
 function lockUntilDocked(el: HTMLElement, signal: AbortSignal, reduced: MediaQueryList) {
 	const ruler = () => el.querySelector<HTMLElement>(".wx-videos__compact .vc__ruler");
-	const timelines = CSS.supports("animation-timeline", "scroll()");
+	// Scroll timelines, or the script that stands in for them (scroll-fallback.ts).
+	const timelines =
+		CSS.supports("animation-timeline", "scroll()") ||
+		document.documentElement.classList.contains("scroll-fallback");
 	let past = false;
 	const apply = () => {
 		const docked = !timelines || reduced.matches || past;
