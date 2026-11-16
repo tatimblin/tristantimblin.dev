@@ -16,6 +16,8 @@
         "@whois/wobble-text": "workspace:*",
         "astro": "^7.1.6",
         "astro-seo": "^1.1.0",
+        "hast-util-from-html": "^2.0.3",
+        "hast-util-to-html": "^9.0.5",
       },
       "devDependencies": {
         "@astrojs/check": "0.9.10",

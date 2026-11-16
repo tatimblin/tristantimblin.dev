@@ -47,6 +47,10 @@ const txt = defineCollection({
 				// A syndicated post's origin, absolute.
 				canonical: z.url().nullable().default(null),
 				modified: z.coerce.date().nullable().default(null),
+				// Shared on The Ergonomist (ergonomist.tatimblin.workers.dev), which
+				// copies the posts /feed.json marks `_tristantimblin.syndicate`,
+				// with a canonical link back here.
+				syndicate: z.boolean().default(false),
 				draft: z.boolean().default(false),
 			})
 			// Strict: a misspelt key (`heor:`, `excrept:`) fails the build instead of

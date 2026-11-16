@@ -16,6 +16,11 @@ on:
         required: true
       CLOUDFLARE_ACCOUNT_ID:
         required: true
+      # A fine-grained token with Contents: write on tatimblin/ergonomist.
+      # deploy.yml passes it, so a post marked `syndicate: true` reaches The
+      # Ergonomist after a code deploy; nightly.yml's data deploys don't.
+      ERGONOMIST_DISPATCH_TOKEN:
+        required: false
 
 jobs:
   deploy:
@@ -57,3 +62,15 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=tristantimblin --branch=master
+
+      # The Ergonomist copies the posts marked `syndicate: true` from
+      # /feed.json when it builds: ask it to rebuild now the feed has changed.
+      # A failed request leaves the site deployed; the paper catches up on its
+      # next build.
+      - name: Rebuild The Ergonomist
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.ERGONOMIST_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "No ERGONOMIST_DISPATCH_TOKEN; skipped."; exit 0; fi
+          gh api repos/tatimblin/ergonomist/dispatches -f event_type=tristantimblin-deployed
