@@ -1,5 +1,5 @@
 {
-	"updated": "2026-11-12",
+	"updated": "2026-11-16",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
@@ -427,6 +427,22 @@
 		{
 			"date": "2026-11-12",
 			"visitors": 4
+		},
+		{
+			"date": "2026-11-13",
+			"visitors": 19
+		},
+		{
+			"date": "2026-11-14",
+			"visitors": 22
+		},
+		{
+			"date": "2026-11-15",
+			"visitors": 9
+		},
+		{
+			"date": "2026-11-16",
+			"visitors": 1
 		}
 	],
 	"pathDays": [
@@ -559,36 +575,93 @@
 			"date": "2026-11-11",
 			"path": "/txt/subhumans/",
 			"visitors": 1
+		},
+		{
+			"date": "2026-11-13",
+			"path": "/demo/trie-autocomplete/",
+			"visitors": 4
+		},
+		{
+			"date": "2026-11-13",
+			"path": "/txt/why-i-joined-fisker/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-14",
+			"path": "/demo/ball-sort-game/",
+			"visitors": 3
+		},
+		{
+			"date": "2026-11-14",
+			"path": "/demo/meet-lolla/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-14",
+			"path": "/demo/trie-autocomplete/",
+			"visitors": 2
+		},
+		{
+			"date": "2026-11-14",
+			"path": "/txt/mega-desk/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-14",
+			"path": "/txt/no-honey-we-have-a-dashboard-at-home/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-14",
+			"path": "/txt/tahoe-mountain-hair/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-15",
+			"path": "/demo/ball-sort-game/",
+			"visitors": 1
 		}
 	],
 	"paths": {
-		"/demo/meet-lolla/": {
+		"/demo/ball-sort-game/": {
 			"reads": 4,
 			"recent": 4
+		},
+		"/demo/meet-lolla/": {
+			"reads": 5,
+			"recent": 5
 		},
 		"/demo/sutro/": {
 			"reads": 3,
 			"recent": 3
+		},
+		"/demo/trie-autocomplete/": {
+			"reads": 6,
+			"recent": 6
 		},
 		"/txt/asserting-on-agent-behavior/": {
 			"reads": 3,
 			"recent": 1
 		},
 		"/txt/mega-desk/": {
-			"reads": 1,
-			"recent": 1
+			"reads": 2,
+			"recent": 2
 		},
 		"/txt/no-honey-we-have-a-dashboard-at-home/": {
-			"reads": 28,
-			"recent": 6
+			"reads": 29,
+			"recent": 7
 		},
 		"/txt/subhumans/": {
 			"reads": 10,
 			"recent": 10
 		},
+		"/txt/tahoe-mountain-hair/": {
+			"reads": 1,
+			"recent": 1
+		},
 		"/txt/why-i-joined-fisker/": {
-			"reads": 16,
-			"recent": 6
+			"reads": 17,
+			"recent": 7
 		}
 	}
 }
