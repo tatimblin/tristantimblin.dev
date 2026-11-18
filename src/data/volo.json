@@ -1,5 +1,5 @@
 {
-	"updated": "2026-11-11T21:12:32.939Z",
+	"updated": "2026-11-18T21:46:32.836Z",
 	"username": "tristimb",
 	"seasons": [
 		{
@@ -1794,13 +1794,13 @@
 				"color": "#000000"
 			},
 			"record": {
-				"wins": 3,
+				"wins": 4,
 				"losses": 2,
 				"ties": 0,
-				"pointsFor": 66,
-				"pointsAgainst": 44,
-				"differential": 22,
-				"rank": 3,
+				"pointsFor": 82,
+				"pointsAgainst": 53,
+				"differential": 29,
+				"rank": 2,
 				"teams": 6
 			},
 			"seed": null,
@@ -1823,7 +1823,7 @@
 				{
 					"startTime": "2026-10-21T04:00:00+00:00",
 					"opponent": "Arroz con Pacificos",
-					"opponentRank": 2,
+					"opponentRank": 3,
 					"opponentSeed": null,
 					"playoff": false,
 					"round": null,
@@ -1885,9 +1885,9 @@
 					"round": null,
 					"roundOrder": null,
 					"week": 6,
-					"result": null,
-					"for": null,
-					"against": null,
+					"result": "W",
+					"for": 16,
+					"against": 9,
 					"forfeit": false
 				}
 			]
