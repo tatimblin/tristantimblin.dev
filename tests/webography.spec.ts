@@ -64,7 +64,7 @@ test.describe("/txt/webography/", () => {
 			await page.goto(URL);
 			await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 
-			const tip = page.locator(`${ROW} .site-index__tip`).first();
+			const tip = page.locator(`${ROW} .site-index__tip .ds-tooltip__trigger`).first();
 			await expect(tip).toHaveAccessibleDescription(data.sites[0].company);
 			expect(await bubbleShown(page, 0)).toBe(false);
 
@@ -76,7 +76,7 @@ test.describe("/txt/webography/", () => {
 			await expect.poll(() => bubbleShown(page, 0)).toBe(false);
 
 			// Keyboard: the dot is a tab stop and shows the same bubble.
-			const second = page.locator(`${ROW} .site-index__tip`).nth(1);
+			const second = page.locator(`${ROW} .site-index__tip .ds-tooltip__trigger`).nth(1);
 			await second.focus();
 			await page.keyboard.press("Shift+Tab");
 			await page.keyboard.press("Tab");
@@ -87,7 +87,7 @@ test.describe("/txt/webography/", () => {
 			const dot = await page
 				.locator(`${ROW} .site-index__dot`)
 				.first()
-				.evaluate((el) => getComputedStyle(el).backgroundColor);
+				.evaluate((el) => getComputedStyle(el, "::before").backgroundColor);
 			expect(dot).not.toBe("rgba(0, 0, 0, 0)");
 		});
 	}
