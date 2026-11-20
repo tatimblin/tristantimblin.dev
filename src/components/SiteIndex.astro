@@ -1,0 +1,203 @@
+---
+// SiteIndex — the Webography post's list: every site, newest first, one line
+// each (year · icon · title ···· ● domain ↗), under a row of stats. The data
+// is the old Vue site's list (src/data/sites.json).
+//
+// The dot names the company in a DS Tooltip on hover and keyboard focus, and
+// as the dot's accessible description; its colour is the --company-* token.
+import Stat from "@whois/design-system/Stat";
+import Tooltip from "@whois/design-system/Tooltip";
+import data from "../data/sites.json";
+import { longDate } from "../lib/blog";
+
+const COMPANY: Record<string, string> = {
+	Personal: "personal",
+	Yext: "yext",
+	Cohere: "cohere",
+	"Drexel University": "drexel",
+};
+
+const domain = (url: string) => new URL(url).hostname.replace(/^www\./, "");
+const day = (iso: string) => longDate(new Date(`${iso}T00:00:00Z`));
+
+const years = [...new Set(data.sites.map((s) => s.year))];
+const groups = years.map((year) => ({
+	year,
+	sites: data.sites.filter((s) => s.year === year),
+}));
+---
+
+<div class="site-index" data-site-index data-prose-bleed="">
+	<div class="site-index__stats">
+		<Stat label="Started"><time datetime={data.started}>{day(data.started)}</time></Stat>
+		<Stat label="Last added"><time datetime={data.lastAdded}>{day(data.lastAdded)}</time></Stat>
+		<Stat label="Sites" value={data.sites.length} />
+	</div>
+
+	<ol class="site-index__years">
+		{
+			groups.map(({ year, sites }) => (
+				<li class="site-index__year">
+					<span class="site-index__when">{year}</span>
+					<ul class="site-index__sites">
+						{sites.map((site) => (
+							<li class="site-index__site" data-site>
+								<span class="site-index__icon" aria-hidden="true">
+									{site.icon}
+								</span>
+								<span class="site-index__title">{site.title}</span>
+								<span class="site-index__lead" aria-hidden="true" />
+								<Tooltip label={site.company} class="site-index__tip" data-company={COMPANY[site.company]}>
+									<span class="site-index__dot" />
+								</Tooltip>
+								<a
+									class="site-index__domain"
+									href={site.url}
+									title={site.desc}
+									target="_blank"
+									rel="noreferrer"
+								>
+									{domain(site.url)}
+									<span aria-hidden="true"> ↗</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				</li>
+			))
+		}
+	</ol>
+</div>
+
+<style>
+	.site-index {
+		display: grid;
+		gap: var(--space-6);
+	}
+
+	.site-index__stats {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-4) var(--space-7);
+		padding: var(--space-4);
+		border: var(--border);
+		border-radius: var(--radius-box);
+	}
+
+	.site-index__years,
+	.site-index__sites {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	/* A year sits beside its first site; the rest hang under that. */
+	.site-index__year {
+		display: grid;
+		grid-template-columns: 5ch minmax(0, 1fr);
+		column-gap: var(--space-3);
+		font-family: var(--font-code);
+		font-size: var(--font-size-1);
+		line-height: var(--line-height-ui);
+	}
+	.site-index__when {
+		padding-block: var(--space-2);
+		color: var(--text-subtle);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.site-index__site {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-2);
+		padding-block: var(--space-2);
+		color: var(--text-body);
+	}
+	.site-index__icon {
+		flex: none;
+		inline-size: 1.5em;
+		text-align: center;
+	}
+	/* The title gives way first: a long one wraps before the domain moves. */
+	.site-index__title {
+		flex: 0 1 auto;
+		min-inline-size: 0;
+		text-wrap: pretty;
+	}
+	.site-index__lead {
+		flex: 1 1 var(--space-4);
+		min-inline-size: var(--space-2);
+		border-block-end: var(--border-width) dotted var(--border-color);
+		transform: translateY(calc(-1 * var(--space-1)));
+	}
+
+	.site-index__tip {
+		flex: none;
+		align-self: center;
+	}
+	.site-index__tip[data-company="personal"] {
+		--site-company: var(--company-personal);
+	}
+	.site-index__tip[data-company="yext"] {
+		--site-company: var(--company-yext);
+	}
+	.site-index__tip[data-company="cohere"] {
+		--site-company: var(--company-cohere);
+	}
+	.site-index__tip[data-company="drexel"] {
+		--site-company: var(--company-drexel);
+	}
+	/* The dot inside a --space-4 target, so the pointer finds it. */
+	.site-index__dot {
+		display: grid;
+		place-items: center;
+		inline-size: var(--space-4);
+		block-size: var(--space-4);
+		cursor: help;
+	}
+	.site-index__dot::before {
+		content: "";
+		inline-size: var(--space-2);
+		block-size: var(--space-2);
+		border-radius: var(--border-radius-pill);
+		background: var(--site-company);
+	}
+
+	.site-index__domain {
+		flex: none;
+		color: var(--link-color);
+		text-decoration: none;
+	}
+	.site-index__domain:hover {
+		text-decoration: var(--link-decoration);
+		text-underline-offset: var(--link-underline-offset);
+	}
+
+	/* A phone has no room for both on one line: the title takes the line
+	   (wrapping if it must) and the dot and domain drop under it, past the
+	   icon. No leader then. */
+	@media (max-width: 639px) {
+		.site-index__year {
+			grid-template-columns: 4ch minmax(0, 1fr);
+			column-gap: var(--space-2);
+		}
+		.site-index__site {
+			flex-wrap: wrap;
+			row-gap: var(--space-1);
+		}
+		.site-index__title {
+			flex: 1 0 calc(100% - 1.5em - var(--space-2));
+		}
+		.site-index__lead {
+			display: none;
+		}
+		.site-index__tip {
+			margin-inline-start: calc(1.5em + var(--space-2) - var(--space-1));
+		}
+		.site-index__domain {
+			flex: 1 1 0;
+			min-inline-size: 0;
+			overflow-wrap: anywhere;
+		}
+	}
+</style>

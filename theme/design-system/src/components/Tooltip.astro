@@ -1,0 +1,38 @@
+---
+// Tooltip — a small HTML bubble naming the thing under the pointer or the
+// keyboard (styles/tooltip.css). CSS only: hover or focus shows it, nothing
+// to mount.
+//
+//   <Tooltip label="Cohere"><span class="dot" /></Tooltip>
+//   <Tooltip label="Yext" placement="bottom">…</Tooltip>
+//
+// The slot is the TRIGGER, wrapped in a span that takes the focus
+// (tabindex="0") and points `aria-describedby` at the bubble, so a screen
+// reader hears the label without the bubble being drawn. Wrap something that
+// is not already focusable: a link or a button inside it would be a second
+// tab stop. The bubble is a sibling of the trigger, not inside it, so it
+// never joins the trigger's name.
+//
+// `class` merges onto the wrapper; everything else passes through.
+import { cx } from "../lib/cx";
+import { uid } from "../lib/uid";
+
+interface Props {
+	/** The bubble's text, and the trigger's accessible description. */
+	label: string;
+	/** Where the bubble sits: above the trigger (default) or below it. */
+	placement?: "top" | "bottom";
+	/** The bubble's id; one is made per instance when not given. */
+	id?: string;
+	class?: string;
+	[key: string]: unknown;
+}
+
+const { label, placement = "top", id, class: className, ...rest } = Astro.props;
+const bubbleId = id ?? uid("ds-tooltip");
+---
+
+<span class={cx("ds-tooltip", placement !== "top" && `ds-tooltip--placement-${placement}`, className)} {...rest}>
+	<span class="ds-tooltip__trigger" tabindex="0" aria-describedby={bubbleId}><slot /></span>
+	<span class="ds-tooltip__bubble ds-mono ds-caps" role="tooltip" id={bubbleId}>{label}</span>
+</span>

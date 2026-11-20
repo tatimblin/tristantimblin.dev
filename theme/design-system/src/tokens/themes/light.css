@@ -69,6 +69,14 @@
 	--genre-other: oklch(0.62 0.03 70);
 	--genre-mute: 34%;
 
+	/* COMPANIES. Webography's dots: who each site was made for, one colour
+	   each at matched chroma, lightness spread so a column of them parts in
+	   value too. Data, not chrome; none of them the accent's blue. */
+	--company-personal: oklch(0.6 0.14 145);
+	--company-yext: oklch(0.54 0.15 298);
+	--company-cohere: oklch(0.62 0.15 28);
+	--company-drexel: oklch(0.74 0.14 88);
+
 	/* POSTERS. A film poster on a card: its hairline ring, the shadow it
 	   lifts on, how far a poster off the centre dims (none on paper), and the
 	   shadow under a disc laid on one. */

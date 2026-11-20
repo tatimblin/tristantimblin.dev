@@ -111,7 +111,7 @@ test.describe("/txt/", () => {
 		const links = await postLinks(page);
 		expect(links.length, "the index should link some posts").toBeGreaterThan(0);
 		expect(new Set(links).size, `duplicate post links: ${links}`).toBe(links.length);
-		expect(links.slice(0, 2)).toEqual(["/txt/subhumans/", "/txt/asserting-on-agent-behavior/"]);
+		expect(links.slice(0, 2)).toEqual(["/txt/webography/", "/txt/subhumans/"]);
 		// No year groups, no PostList: the stack alone.
 		await expect(page.locator(".ds-post-group, .ds-post-list")).toHaveCount(0);
 		// The first row (the newest entry, a post or a demo: demos are
@@ -556,7 +556,7 @@ test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) 
  * literals, so a container retune does not fail the geometry.
  */
 const NEWEST = "/txt/asserting-on-agent-behavior/";
-const LATEST = "/txt/subhumans/";
+const LATEST = "/txt/webography/";
 const NO_H2S = "/txt/mega-desk/";
 const OLDEST = "/txt/no-honey-we-have-a-dashboard-at-home/";
 const NO_HERO = "/txt/tahoe-mountain-hair/";
@@ -906,7 +906,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		// A panel: the card's dashed edge, radius and gradient header.
 		await expect(card).toHaveCSS("border-top-style", "dashed");
 		await expect(card).toHaveCSS("border-top-left-radius", "2.5px");
-		await expect(card.locator(".ds-card-header")).toHaveText(/keep reading\s*txt \/ 005 of 006/i);
+		await expect(card.locator(".ds-card-header")).toHaveText(/keep reading\s*txt \/ 005 of 007/i);
 		await expect(card.locator(".ds-card-header")).toHaveCSS("background-image", /linear-gradient/);
 		const cardBox = await box(page, ".post-more");
 		const { article } = await columns(page);
@@ -934,11 +934,11 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(next).toHaveCSS("border-left-style", "dashed");
 		await expect(next).toHaveCSS("text-align", "end");
 
-		await expect(card.locator('a[data-neighbour="next"]')).toHaveAttribute("href", LATEST);
+		await expect(card.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/subhumans/");
 
 		// The latest post has no newer: the half says so and links nowhere.
 		await page.goto(LATEST);
-		await expect(page.locator(".post-more__count")).toHaveText(/txt \/ 006 of/i);
+		await expect(page.locator(".post-more__count")).toHaveText(/txt \/ 007 of/i);
 		await expect(page.locator('[data-half="next"]')).toHaveText(/newer →\s*This is the latest post/i);
 		await expect(page.locator('[data-half="next"] a')).toHaveCount(0);
 		await expect(page.locator("a.post-more__half--next")).toHaveCount(0);

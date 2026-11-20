@@ -31,6 +31,7 @@ import Stat from "@whois/design-system/Stat";
 import TickRuler from "@whois/design-system/TickRuler";
 // The ruled screen: the boxed chip.
 import Chip from "@whois/design-system/Chip";
+import Tooltip from "@whois/design-system/Tooltip";
 import BarGraph from "@whois/design-system/BarGraph";
 import Legend from "@whois/design-system/Legend";
 import LegendItem from "@whois/design-system/LegendItem";
@@ -762,6 +763,30 @@ const faces = [
 				<Chip tone="accent">telematic</Chip>
 				<Chip variant="arrow">replace</Chip>
 				<Chip variant="arrow" tone="accent">replace</Chip>
+			</div>
+		</section>
+
+		<section class="ds-demo__section" id="tooltip">
+			<Heading as="h2" size={2} variant="secondary" class="ds-demo__h">Tooltip</Heading>
+			<p class="ds-demo__note">
+				A small panel naming its trigger, under the pointer or on keyboard focus (Tab to it). CSS only. The trigger takes the focus and
+				points <code>aria-describedby</code> at the bubble, so the label is read without the bubble being drawn; wrap something that is not
+				already a link or a button. <code>placement="bottom"</code> hangs it below. The dots are Webography's <code>--company-*</code> colours.
+			</p>
+			<div class="ds-demo__row" style="gap: var(--space-4);" data-tooltip-demo>
+				{
+					[
+						["Personal", "--company-personal"],
+						["Yext", "--company-yext"],
+						["Cohere", "--company-cohere"],
+						["Drexel University", "--company-drexel"],
+					].map(([label, color]) => (
+						<Tooltip label={label}>
+							<span class="ds-demo__dot" style={`background: var(${color})`} />
+						</Tooltip>
+					))
+				}
+				<Tooltip label="below" placement="bottom"><Mono>placement bottom</Mono></Tooltip>
 			</div>
 		</section>
 
@@ -1552,6 +1577,12 @@ assertions:
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
+	}
+	.ds-demo__dot {
+		display: block;
+		inline-size: var(--space-3);
+		block-size: var(--space-3);
+		border-radius: 50%;
 	}
 
 	/* Instrument token swatches: a square of the token beside its name and job. */
