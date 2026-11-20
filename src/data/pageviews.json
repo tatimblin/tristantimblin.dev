@@ -1,5 +1,5 @@
 {
-	"updated": "2026-11-16",
+	"updated": "2026-11-19",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
@@ -443,6 +443,18 @@
 		{
 			"date": "2026-11-16",
 			"visitors": 1
+		},
+		{
+			"date": "2026-11-17",
+			"visitors": 3
+		},
+		{
+			"date": "2026-11-18",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-19",
+			"visitors": 2
 		}
 	],
 	"pathDays": [
@@ -661,7 +673,7 @@
 		},
 		"/txt/why-i-joined-fisker/": {
 			"reads": 17,
-			"recent": 7
+			"recent": 6
 		}
 	}
 }
