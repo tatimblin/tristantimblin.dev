@@ -78,10 +78,10 @@ none beyond global.css's resets.
 — including columns/gutters/breakpoints for `Grid`. Open it instead of guessing a prop; this doc
 deliberately does not duplicate per-component API tables.
 
-**Components available (48):** `Box`, `Grid`, `Text`, `EM`,
+**Components available (49):** `Box`, `Grid`, `Text`, `EM`,
 `Strong`, `Heading`, `H2`–`H4`, `Body`, `Button`, `IconButton`, `Card`,
 `CardHeader`, `CardBody`, `Pill`, `Chip`, `Anchor`, `List`, `ListItem`, `Icon`,
-`VisuallyHidden`, `WidgetGrid`, `Widget`, `WidgetEmpty`, `HitArea` — the
+`VisuallyHidden`, `Tooltip`, `WidgetGrid`, `Widget`, `WidgetEmpty`, `HitArea` — the
 instrument UI (next section): `Mono`, `Figure`, `Stat`,
 `TickRuler`, `BarGraph`, `Legend`, `LegendItem`,
 `TileGrid`, `Tile`, `Faces`, `Face` — the reading UI (the section after it):
@@ -257,6 +257,10 @@ dot, a ruler segment, a team's own colour), passed as a CSS colour.
   right-pointing chevron by clip-path (a border cannot follow the cut) —
   the ink with the page colour on it, or the accent with `--on-accent`
   under `tone="accent"` (REPLACE). Both are static tags.
+- `Tooltip` — `label` in a small panel over its slot (`placement="bottom"`
+  hangs it below), shown on hover or keyboard focus, CSS only. The trigger
+  span takes the focus and `aria-describedby`s the bubble; wrap something
+  not already focusable (Webography's company dots).
 - `Button` — `primary` (accent) / `secondary` (ink wash) / `tertiary`; `rounded`
   = pill button; `start-icon`/`end-icon` slots. `IconButton` — `secondary`
   (default, a wash in a hairline) / `outline` (the hairline alone),
@@ -557,7 +561,7 @@ visual or a new token in `tokens.overrides.css` with its reason.
 | `PostGroup` / `PostRow` | default; `label` / `meta` |
 | `Fig` | default (the image), `caption` |
 | `Knobs` | default, `meta`, `note`, `actions` |
-| `TileGrid`, `Faces`, `Prose`, `Blockquote`, `HitArea`, `ThemePage` | default |
+| `TileGrid`, `Faces`, `Prose`, `Blockquote`, `HitArea`, `ThemePage`, `Tooltip` | default |
 
 ### After adding a component
 

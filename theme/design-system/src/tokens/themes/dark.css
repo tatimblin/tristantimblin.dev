@@ -73,6 +73,12 @@
 	--genre-other: oklch(0.7 0.03 70);
 	--genre-mute: 52%;
 
+	/* COMPANIES. Lifted for the dark page, as the genres are. */
+	--company-personal: oklch(0.7 0.14 145);
+	--company-yext: oklch(0.66 0.15 298);
+	--company-cohere: oklch(0.7 0.15 28);
+	--company-drexel: oklch(0.82 0.14 88);
+
 	/* POSTERS. A ring of light on the dark card, a deeper shadow, and the
 	   posters off the centre dimmed. */
 	--poster-ring: rgb(255 255 255 / 0.1);

@@ -52,6 +52,7 @@
 @import "./list.css" layer(ds.components);
 @import "./icon.css" layer(ds.components);
 @import "./visually-hidden.css" layer(ds.components);
+@import "./tooltip.css" layer(ds.components);
 /* Hairline graphics. */
 @import "./tick-ruler.css" layer(ds.components);
 @import "./bar-graph.css" layer(ds.components);
