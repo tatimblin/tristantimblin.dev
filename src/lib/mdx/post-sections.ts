@@ -171,6 +171,16 @@ interface JsxImage {
 
 const JSX_IMAGE = /^(?:img|astro-image)$/;
 
+/** A component written with `data-prose-bleed="full"` in the MDX: it takes
+ *  the whole row, the head's column too. */
+const isFullBleed = (node: RootContent): boolean => {
+	const jsx = node as unknown as JsxImage;
+	return (
+		jsx.type === "mdxJsxFlowElement" &&
+		jsx.attributes.some((a) => a.name === "data-prose-bleed" && a.value === "full")
+	);
+};
+
 /** The words a figure is captioned with: the image's title when it has one
  *  (`![alt](src "caption")`), else its alt. */
 const captionOf = (alt: unknown, title: unknown): string =>
@@ -383,11 +393,19 @@ export function rehypePostSections() {
 			...esm,
 			...sections.map((section, i) => {
 				const no = pad2(i);
+				// An intro that is only full-row blocks (Webography's list) has
+				// nothing for an "Intro" label to introduce: it goes without a head.
+				const headless =
+					!section.heading && section.nodes.filter((n) => !isBlank(n)).every(isFullBleed);
 				return el("section", { className: ["ds-prose-section"], dataSection: no }, [
-					el("header", { className: ["ds-prose-section__head"] }, [
-						mono(no),
-						section.heading ?? introLabel(),
-					]),
+					...(headless
+						? []
+						: [
+								el("header", { className: ["ds-prose-section__head"] }, [
+									mono(no),
+									section.heading ?? introLabel(),
+								]),
+							]),
 					el(
 						"div",
 						{ className: ["ds-prose-section__body"] },

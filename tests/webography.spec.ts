@@ -2,12 +2,15 @@ import { test, expect, type Page } from "./fixtures/test";
 import data from "../src/data/sites.json" with { type: "json" };
 
 /**
- * WEBOGRAPHY (/txt/webography/) — every site, one line each, under a row of
- * stats (src/components/SiteIndex.astro, data in src/data/sites.json).
+ * WEBOGRAPHY (/txt/webography/) — every site, one line each
+ * (src/components/SiteIndex.astro, data in src/data/sites.json), the post
+ * template's list variant: the frontmatter's `facts` fill the details card,
+ * and the full-row list has no "Intro" head.
  *
  *  1. Every site is a row, newest year first; the year prints once per year.
  *  2. Each row links its domain (no www.), off-site in a new tab.
- *  3. The stats: started May 12, 2016, last added Mar 14, 2026, 51 sites.
+ *  3. The details card: started May 12, 2016, last added Mar 14, 2026, 51
+ *     sites; no reading time. The list spans the article.
  *  4. The dot names the company: a bubble on hover and on keyboard focus,
  *     and the dot's accessible description either way. Both themes.
  *  5. A phone does not scroll sideways.
@@ -49,13 +52,23 @@ test.describe("/txt/webography/", () => {
 		await expect(links.first()).toHaveAttribute("rel", "noreferrer");
 	});
 
-	test("the stats start on May 12, 2016", async ({ page }) => {
+	test("the details card is the list's stats; no Intro head, and the list spans the row", async ({ page }) => {
 		await page.goto(URL);
-		const stats = page.locator("[data-site-index] .site-index__stats");
-		const started = stats.locator('time[datetime="2016-05-12"]');
-		await expect(started).toHaveText("May 12, 2016");
-		await expect(stats.locator('time[datetime="2026-03-14"]')).toHaveText("Mar 14, 2026");
-		await expect(stats).toContainText("51");
+		const card = page.locator("[data-post-strip]");
+		const labels = await card.locator(".ds-stat__label").allTextContents();
+		expect(labels.map((l) => l.trim())).toEqual(["Started", "Last added", "Sites"]);
+		await expect(card.locator('time[datetime="2016-05-12"]')).toHaveText("May 12, 2016");
+		await expect(card.locator('time[datetime="2026-03-14"]')).toHaveText("Mar 14, 2026");
+		// The count in the card is the list's length.
+		await expect(card.locator(".ds-stat").nth(2)).toContainText(String(data.sites.length));
+		await expect(card).not.toContainText(/words|min/);
+
+		await expect(page.locator(".ds-prose-section__head")).toHaveCount(0);
+		await expect(page.locator(".ds-prose-section__title", { hasText: "Intro" })).toHaveCount(0);
+		const article = (await page.locator("article[data-post]").boundingBox())!;
+		const list = (await page.locator("[data-site-index]").boundingBox())!;
+		expect(Math.abs(list.x - article.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(list.width - article.width)).toBeLessThanOrEqual(1);
 	});
 
 	for (const theme of ["light", "dark"] as const) {

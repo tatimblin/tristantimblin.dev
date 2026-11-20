@@ -1,14 +1,18 @@
 ---
 // SiteIndex — the Webography post's list: every site, newest first, one line
-// each (year · icon · title ···· ● domain ↗), under a row of stats. The data
-// is the old Vue site's list (src/data/sites.json).
+// each (year · icon · title ···· ● domain ↗). The data is the old Vue site's
+// list (src/data/sites.json); the post's details card carries its stats.
+// Placed with `data-prose-bleed="full"`, it takes the whole row and the
+// section goes without its "Intro" head (src/lib/mdx/post-sections.ts).
 //
 // The dot names the company in a DS Tooltip on hover and keyboard focus, and
 // as the dot's accessible description; its colour is the --company-* token.
-import Stat from "@whois/design-system/Stat";
 import Tooltip from "@whois/design-system/Tooltip";
 import data from "../data/sites.json";
-import { longDate } from "../lib/blog";
+
+interface Props {
+	[key: string]: unknown;
+}
 
 const COMPANY: Record<string, string> = {
 	Personal: "personal",
@@ -18,7 +22,6 @@ const COMPANY: Record<string, string> = {
 };
 
 const domain = (url: string) => new URL(url).hostname.replace(/^www\./, "");
-const day = (iso: string) => longDate(new Date(`${iso}T00:00:00Z`));
 
 const years = [...new Set(data.sites.map((s) => s.year))];
 const groups = years.map((year) => ({
@@ -27,13 +30,7 @@ const groups = years.map((year) => ({
 }));
 ---
 
-<div class="site-index" data-site-index data-prose-bleed="">
-	<div class="site-index__stats">
-		<Stat label="Started"><time datetime={data.started}>{day(data.started)}</time></Stat>
-		<Stat label="Last added"><time datetime={data.lastAdded}>{day(data.lastAdded)}</time></Stat>
-		<Stat label="Sites" value={data.sites.length} />
-	</div>
-
+<div class="site-index" data-site-index {...Astro.props}>
 	<ol class="site-index__years">
 		{
 			groups.map(({ year, sites }) => (
@@ -46,10 +43,12 @@ const groups = years.map((year) => ({
 									{site.icon}
 								</span>
 								<span class="site-index__title">{site.title}</span>
+								<span class="site-index__sep"> · </span>
 								<span class="site-index__lead" aria-hidden="true" />
 								<Tooltip label={site.company} class="site-index__tip" data-company={COMPANY[site.company]}>
 									<span class="site-index__dot" />
 								</Tooltip>
+								<span class="site-index__sep"> · </span>
 								<a
 									class="site-index__domain"
 									href={site.url}
@@ -70,20 +69,6 @@ const groups = years.map((year) => ({
 </div>
 
 <style>
-	.site-index {
-		display: grid;
-		gap: var(--space-6);
-	}
-
-	.site-index__stats {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-4) var(--space-7);
-		padding: var(--space-4);
-		border: var(--border);
-		border-radius: var(--radius-box);
-	}
-
 	.site-index__years,
 	.site-index__sites {
 		list-style: none;
@@ -117,6 +102,11 @@ const groups = years.map((year) => ({
 		flex: none;
 		inline-size: 1.5em;
 		text-align: center;
+	}
+	/* The separators are for the JSON Feed, which drops this CSS and reads
+	   "title · company · domain"; here the leader and the dot stand in. */
+	.site-index__sep {
+		display: none;
 	}
 	/* The title gives way first: a long one wraps before the domain moves. */
 	.site-index__title {

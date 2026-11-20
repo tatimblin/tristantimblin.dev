@@ -60,6 +60,7 @@ const {
 	imageAlt,
 	canonical,
 	hero,
+	facts,
 } = post.data;
 
 const cat = category ? categories[category] : null;
@@ -108,9 +109,16 @@ const neighbours = [
 					)}</Heading>
 					{/* THE DETAILS: a DS Card of Stat pairs (value over its label), in
 					    the first column beside the lead on desktop, between the title and
-					    the lead below 1024. */}
+					    the lead below 1024. A post's `facts` replace the default three. */}
 					<Card class="post__strip" data-post-strip>
 						<CardBody class="post__facts">
+							{facts ? facts.map((fact) =>
+								"date" in fact ? (
+									<Stat label={fact.label} class="post__fact"><time datetime={isoDate(fact.date)}>{longDate(fact.date)}</time></Stat>
+								) : (
+									<Stat label={fact.label} class="post__fact">{fact.value}</Stat>
+								)
+							) : (<Fragment>
 							<Stat label="Date" class="post__fact"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
 							{cat && category && <Stat label="Topic" class="post__fact"><span class="post__category">{cat.label}</span></Stat>}
 							<Stat label="Length" class="post__fact">
@@ -120,6 +128,7 @@ const neighbours = [
 									<Fragment> <span class="post__run post__reads" data-post-reads>· {readCount}</span></Fragment>
 								)}</span>
 							</Stat>
+							</Fragment>)}
 						</CardBody>
 					</Card>
 					{(description || cta) && (

@@ -39,6 +39,18 @@ const txt = defineCollection({
 					})
 					.strict()
 					.optional(),
+				// THE DETAILS CARD'S ROWS, in place of Date / Topic / Length: for a
+				// post that is a record rather than a read (Webography's Started /
+				// Last added / Sites). A row is a date (printed long, with its
+				// datetime) or a value.
+				facts: z
+					.array(
+						z.union([
+							z.object({ label: z.string(), date: z.coerce.date() }).strict(),
+							z.object({ label: z.string(), value: z.string() }).strict(),
+						]),
+					)
+					.optional(),
 				// Social card override, a local image like the hero; falls back to the
 				// hero, then the site default, when null. imageAlt describes it
 				// (og:image:alt); the hero's alt stands in when the card IS the hero.
