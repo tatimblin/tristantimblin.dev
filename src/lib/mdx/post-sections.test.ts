@@ -192,6 +192,30 @@ describe("post sections", () => {
 		expect(jsx.caption).toBe("fig. 01 / Desk");
 	});
 
+	const component = (bleed?: string) => ({
+		type: "mdxJsxFlowElement",
+		name: "SiteIndex",
+		attributes: bleed ? [{ type: "mdxJsxAttribute", name: "data-prose-bleed", value: bleed }] : [],
+		children: [],
+	});
+	const headOf = (...children: unknown[]) => {
+		const tree = { type: "root", children } as Root;
+		rehypePostSections()(tree, file());
+		const section = tree.children[0] as Element;
+		return section.children.map((c) => ((c as Element).properties.className as string[])[0]);
+	};
+
+	test("an intro that is only a full-row component has no head", () => {
+		expect(headOf(component("full"))).toEqual(["ds-prose-section__body"]);
+	});
+
+	test("an intro with any other block keeps its Intro head", () => {
+		expect(headOf(component())).toEqual(["ds-prose-section__head", "ds-prose-section__body"]);
+		expect(headOf(component(""))).toEqual(["ds-prose-section__head", "ds-prose-section__body"]);
+		const p = { type: "element", tagName: "p", properties: {}, children: [{ type: "text", value: "Hi." }] };
+		expect(headOf(p, component("full"))).toEqual(["ds-prose-section__head", "ds-prose-section__body"]);
+	});
+
 	test("a rewritten image inside a link keeps the link", () => {
 		const { first, caption } = figureOf(
 			paragraph({

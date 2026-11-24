@@ -56,6 +56,7 @@ const {
 	tags,
 	date,
 	modified,
+	started,
 	image,
 	imageAlt,
 	canonical,
@@ -111,7 +112,12 @@ const neighbours = [
 					    the lead below 1024. */}
 					<Card class="post__strip" data-post-strip>
 						<CardBody class="post__facts">
-							<Stat label="Date" class="post__fact"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
+							{started ? (
+								<Stat label="Started" class="post__fact"><time datetime={isoDate(started)} class="post__date">{longDate(started)}</time></Stat>
+							) : (
+								<Stat label="Date" class="post__fact"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
+							)}
+							{modified && <Stat label="Updated" class="post__fact"><time datetime={isoDate(modified)} class="post__updated">{longDate(modified)}</time></Stat>}
 							{cat && category && <Stat label="Topic" class="post__fact"><span class="post__category">{cat.label}</span></Stat>}
 							<Stat label="Length" class="post__fact">
 								{/* Unbreakable runs with breaks between them, so a narrow cell

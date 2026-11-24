@@ -1,0 +1,62 @@
+/* Tooltip — a bubble over its trigger, shown under the pointer or the
+ * keyboard's focus. Drawn as a small panel: the card, the dashed edge, the
+ * panel's drop. The voice is the `ds-mono ds-caps` classes Tooltip.astro
+ * composes; this file is the box, the placement and the reveal.
+ *
+ * Hidden is `visibility`, not `display`, so the bubble keeps its box (and
+ * stays the trigger's aria-describedby target) and can fade. It sits outside
+ * the flow, centred on the trigger, and never takes the pointer itself, so
+ * it cannot hold itself open over a neighbour. */
+.ds-tooltip {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+}
+.ds-tooltip__trigger {
+	display: inline-flex;
+	align-items: center;
+	border-radius: var(--radius-box);
+	cursor: default;
+}
+.ds-tooltip__trigger:focus-visible {
+	outline: var(--focus-ring);
+	outline-offset: var(--focus-ring-offset);
+}
+.ds-tooltip__bubble {
+	position: absolute;
+	inset-block-end: calc(100% + var(--space-1));
+	inset-inline-start: 50%;
+	z-index: 2;
+	padding: var(--space-1) var(--space-2);
+	border: var(--border);
+	border-radius: var(--radius-box);
+	background: var(--card-background);
+	box-shadow: var(--shadow-panel);
+	color: var(--text-primary);
+	white-space: nowrap;
+	pointer-events: none;
+	visibility: hidden;
+	opacity: 0;
+	translate: -50% var(--space-1);
+	transition:
+		opacity var(--duration-standard) var(--ease-standard),
+		translate var(--duration-standard) var(--ease-standard),
+		visibility 0s linear var(--duration-standard);
+}
+.ds-tooltip--placement-bottom .ds-tooltip__bubble {
+	inset-block-end: auto;
+	inset-block-start: calc(100% + var(--space-1));
+	translate: -50% calc(-1 * var(--space-1));
+}
+.ds-tooltip:hover .ds-tooltip__bubble,
+.ds-tooltip__trigger:focus-visible + .ds-tooltip__bubble {
+	visibility: visible;
+	opacity: 1;
+	translate: -50% 0;
+	transition-delay: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+	.ds-tooltip__bubble {
+		transition: none;
+	}
+}

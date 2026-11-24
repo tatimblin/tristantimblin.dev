@@ -67,7 +67,8 @@ test("the feed is JSON Feed 1.1 with every published post, in full", async ({ re
 
 		const html = item.content_html;
 		expect(html.length, item.url).toBeGreaterThan(1000);
-		expect(html).toContain("<p>");
+		// Prose, or a list for a post that is one (Webography).
+		expect(html).toMatch(/<p>|<li>/);
 		expect(html).not.toMatch(/<script|<style|<button|\sclass=|\sstyle=|\sdata-/);
 		expect(html, "no custom element survives").not.toMatch(/<[a-z]+-[a-z-]*[\s>]/);
 		for (const [, attr, value] of html.matchAll(/\s(href|src|poster|cite)="([^"]*)"/g)) {

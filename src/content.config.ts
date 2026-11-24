@@ -46,6 +46,10 @@ const txt = defineCollection({
 				imageAlt: z.string().nullable().default(null),
 				// A syndicated post's origin, absolute.
 				canonical: z.url().nullable().default(null),
+				// The details card: `started`, for a post that is a record kept over
+				// time (Webography), replaces the Date row with "Started"; `modified`
+				// adds an "Updated" row. `date` still orders and numbers the post.
+				started: z.coerce.date().nullable().default(null),
 				modified: z.coerce.date().nullable().default(null),
 				// Shared on The Ergonomist (ergonomist.tatimblin.workers.dev), which
 				// copies the posts /feed.json marks `_tristantimblin.syndicate`,
