@@ -1,6 +1,14 @@
 {
 	"sites": [
 		{
+			"title": "Cursive",
+			"company": "Personal",
+			"url": "https://cursive.info/",
+			"icon": "🧠",
+			"year": 2026,
+			"desc": "A knowledge graph of schema.org entities on ATProto that agents read and write."
+		},
+		{
 			"title": "Sonos Local SDK",
 			"company": "Personal",
 			"url": "https://crates.io/crates/sonos-sdk",

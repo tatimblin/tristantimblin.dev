@@ -9,7 +9,7 @@ import data from "../src/data/sites.json" with { type: "json" };
  *  1. Every site is a row, newest year first; the year prints once per year.
  *  2. Each row links its domain (no www.), off-site in a new tab.
  *  3. The details card, the post template's own: Started May 12, 2016 (the
- *     post's `started`) and Updated Mar 14, 2026 (`modified`). The list is
+ *     post's `started`) and Updated Jun 1, 2026 (`modified`). The list is
  *     the whole post: no section head, spanning the row.
  *  4. The dot names the company: a bubble on hover and on keyboard focus,
  *     and the dot's accessible description either way. Both themes.
@@ -37,7 +37,7 @@ test.describe("/txt/webography/", () => {
 
 		const rows = page.locator(ROW);
 		await expect(rows).toHaveCount(data.sites.length);
-		expect(data.sites.length).toBe(51);
+		expect(data.sites.length).toBe(52);
 
 		const years = await page.locator("[data-site-index] .site-index__when").allTextContents();
 		expect(years[0]).toBe("2026");
@@ -60,7 +60,7 @@ test.describe("/txt/webography/", () => {
 		const labels = await card.locator(".ds-stat__label").allTextContents();
 		expect(labels.map((l) => l.trim())).toEqual(["Started", "Updated", "Topic", "Length"]);
 		await expect(card.locator('time[datetime="2016-05-12"]')).toHaveText("May 12, 2016");
-		await expect(card.locator('time[datetime="2026-03-14"]')).toHaveText("Mar 14, 2026");
+		await expect(card.locator('time[datetime="2026-06-01"]')).toHaveText("Jun 1, 2026");
 
 		await expect(page.locator(".ds-prose-section__head")).toHaveCount(0);
 		const article = (await page.locator("article[data-post]").boundingBox())!;
