@@ -1,6 +1,7 @@
 ---
 title: "Introducing sub-human: subagents, for humans"
 date: 2026-10-13
+modified: 2026-11-23
 category: programming
 tags: ["claude-code", "developer-tools", "internal-tools"]
 syndicate: true
@@ -18,7 +19,7 @@ import Sequence from "@whois/design-system/Sequence";
 
 More of the workday now happens inside an agent session, and it can get lonely. Being heads-down with an agent while a coworker sits a few feet away isn't how most of us want to work. The work moves fast. An API contract can change mid-flight, making communication the bottleneck.
 
-sub-human puts coworkers and friends back in the loop, so pivots reach everyone as they happen, without interruption. As teammates, you keep your own workspace, login and session. sub-human connects those sessions remotely using the same machinery Claude Code already uses for subagents.
+sub-human puts coworkers and friends back in the loop, so pivots reach everyone as they happen, without interruption. As teammates, you keep your own workspace, login and session. sub-human connects those sessions, and the work itself is the update: nobody writes a status update or copies between chats.
 
 Working together might now look like a planning session, followed by divvying up tasks, and freely pivoting.
 
@@ -28,11 +29,12 @@ Working together might now look like a planning session, followed by divvying up
   steps={[
     { from: "jess", to: "jc", text: "\"Plan paging for the orders API\"" },
     { from: "jc", to: "tc", text: "Plan v1: page by offset" },
-    { from: "tristan", to: "tc", text: "\"Cap pages at 50 orders\"" },
-    { from: "tc", to: "jc", text: "Plan v2: offset, 50 per page" },
+    { from: "tristan", to: "tc", text: "Asks for changes: \"cap pages at 50\"" },
+    { from: "tc", to: "jc", text: "Tristan’s note, word for word" },
+    { from: "jc", to: "tc", text: "Plan v2: offset, 50 per page" },
     [
-      { from: "jess", to: "jc", text: "Signs off on the plan" },
-      { from: "tristan", to: "tc", text: "Signs off on the plan" },
+      { from: "jess", to: "jc", text: "Agrees to v2" },
+      { from: "tristan", to: "tc", text: "Agrees to v2" },
     ],
     [
       { note: "Builds the API", over: "jc" },
@@ -40,7 +42,7 @@ Working together might now look like a planning session, followed by divvying up
     ],
     { from: "jess", to: "jc", text: "\"Paginate by cursor instead\"" },
     { note: "Changes the API", over: "jc" },
-    { from: "jc", to: "tc", text: "API change: pages by cursor", tone: "accent" },
+    { from: "jc", to: "tc", text: "Update: the API pages by cursor", tone: "accent" },
     { note: "Updates the store", over: "tc" },
     [
       { note: "Tests pass", over: "jc", tone: "success" },
@@ -49,23 +51,26 @@ Working together might now look like a planning session, followed by divvying up
   ]}
 />
 
-In our example, when Jess changes course, Tristan doesn't get a ping. A message goes out to his Claude, and it builds against the new contract. It's then up to his agent to inform him or not.
+In our example, when Jess changes course, Tristan doesn't get a ping. Her session's edits, and one short line from her Claude, reach his Claude beside his next prompt, because they touch the interface his plan names. It builds against the new contract. It's then up to his agent to inform him or not.
 
 ## What's in the room
 
-- **Group consensus.** Plans go to the room for versioned edits, then everyone signs off in their own plan view.
-- **Shared task list.** Everyone claims work from Claude Code's native task list.
-- **Agents that talk to each other.** Claudes pass relevant changes to the right person, or ask someone else's session for an update.
+- **Live updates from the work.** Each session shares the files it edits, its branch, commits, test runs and whether it's working or idle, with no model call. Your Claude may add one short line when it learns or changes something a colleague would want.
+- **Only what bears on your work.** Your Claude hears about a change to a file you touched, an interface your plan names, or a line naming you. Everything else waits for `/room news`.
+- **Group consensus.** Write a plan in plan mode as usual, then share it for agreement. Every version is kept, everyone answers on their own card, and no Claude agrees for its person.
+- **Shared task list.** Claim work from the room's task list, alongside your own native one.
+- **Agents that talk to each other.** Claudes ask each other directly, and the answer comes back after your turn, not in the middle of it.
 
 There's no required workflow. Join a room and tell your Claude how you'd like to work.
 
 ## How it's built
 
-sub-human doesn't add a workflow of its own. It extends a few Claude Code features and adds a networking layer between sessions.
+sub-human doesn't add a workflow of its own. It runs as a Claude Code hooks module and adds a networking layer between sessions.
 
-- **Native to Claude Code.** Rooms use the messaging, plans and task list Claude Code already gives subagents.
+- **Native to Claude Code.** Plans come from plan mode, tasks sit beside the native task list, and Claudes reach each other the way they message subagents.
 - **Not a shared session.** Nobody types into someone else's Claude. Each person keeps their own files, permissions and account.
-- **No server.** A room lives on the machine that opened it. Other machines reach it over SSH or Tailscale.
+- **Never your secrets.** Anything that looks like a secret, secret-holding files, files your repo ignores and files outside the repo are never shared.
+- **No server.** A room lives on the machine that opened it. Other machines reach it over Tailscale or SSH, through an encrypted channel. No telemetry.
 
 ## Spend the time together
 
@@ -78,9 +83,8 @@ Install the [plugin](https://github.com/tatimblin/sub-human) from any Claude Cod
 ```claude-code title="Install"
 /plugin marketplace add tatimblin/sub-human
 /plugin install sub-human@sub-human
-/reload-plugins
 ```
 
-You need Claude Code 2.1.292+ and Node 22.18+. sub-human is in beta: it runs on macOS and Linux only.
+You need Claude Code 2.1.330+ and Node 22.18+ or 24.3+. sub-human is in beta.
 
-Once it's installed, run `/sub-human` to open a room, then `/sub-human invite` for a join command and a PIN to share.
+Once it's installed, type `/room` in each person's session. On one machine, that's all. To bring in someone from another machine, run `/room invite NAME`: you get one line to send them, good once, for 15 minutes, and you let them in when they knock.
