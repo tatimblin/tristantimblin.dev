@@ -70,7 +70,7 @@
 			"url": "https://github.com/yext/pages",
 			"icon": "🖨",
 			"year": 2022,
-			"desc": "A static site generator for hydrating React templates with Yext platform data, writted in Typescript and packaged as a Vite plugin."
+			"desc": "A static site generator for hydrating React templates with Yext platform data, written in Typescript and packaged as a Vite plugin."
 		},
 		{
 			"title": "Rover + Petco",
@@ -134,7 +134,7 @@
 			"url": "https://www.rdaviesfunerals.co.uk/",
 			"icon": "🧟‍♂️",
 			"year": 2022,
-			"desc": "A customizable microsite Dignity can provide to each of it's franchise owners. Replacing the former consolidated website which only offered each location a standard page."
+			"desc": "A customizable microsite Dignity can provide to each of its franchise owners. Replacing the former consolidated website which only offered each location a standard page."
 		},
 		{
 			"title": "IQOS Search Experience",
@@ -278,7 +278,7 @@
 			"url": "https://www.thecivicphl.com/",
 			"icon": "👨‍🎨",
 			"year": 2019,
-			"desc": "The first site built with the Cultivate templating application. Staticly generated site, with a JAMstack backend (do a speed test!). Built with Mike Medoro, and design by Randi Bellamy."
+			"desc": "The first site built with the Cultivate templating application. Statically generated site, with a JAMstack backend (do a speed test!). Built with Mike Medoro, and design by Randi Bellamy."
 		},
 		{
 			"title": "Cultivate design system",
@@ -286,7 +286,7 @@
 			"url": "https://cohere.city/the-civic/",
 			"icon": "⚙️",
 			"year": 2018,
-			"desc": "The first site built with the Cultivate templating application. Staticly generated site, with a JAMstack backend (do a speed test!). Built with Mike Medoro, and design by Randi Bellamy."
+			"desc": ""
 		},
 		{
 			"title": "Urban beer hall",
@@ -318,7 +318,7 @@
 			"url": "https://otto-app.netlify.app/",
 			"icon": "🏗",
 			"year": 2018,
-			"desc": "Vue.js application introducing one of the first developments in Brewerytown, Phildelphia."
+			"desc": "Vue.js application introducing one of the first developments in Brewerytown, Philadelphia."
 		},
 		{
 			"title": "University of Pennsylvania business services portfolio",
@@ -361,7 +361,7 @@
 			"desc": "Wordpress site led by Mike Medoro."
 		},
 		{
-			"title": "Double Knot sushimi bar",
+			"title": "Double Knot sashimi bar",
 			"company": "Cohere",
 			"url": "https://www.eatyour.fish/",
 			"icon": "🍣",

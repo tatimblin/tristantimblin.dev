@@ -1,13 +1,20 @@
 ---
 // SiteIndex — the Webography post's list: every site, newest first, one line
 // each (year · icon · title ···· ● domain ↗). The data is the old Vue site's
-// list (src/data/sites.json); the post's details card carries its stats.
-// Placed with `data-prose-bleed="full"`, it takes the whole row and the
-// section goes without its "Intro" head (src/lib/mdx/post-sections.ts).
+// list (src/data/sites.json). Placed alone with `data-prose-bleed="full"`,
+// it takes the whole row and its section goes without a head
+// (src/lib/mdx/post-sections.ts); the details card's Started / Updated come
+// from the post's `started` / `modified`.
+//
+// A row with a description opens it underneath: a DS HitArea (a real button,
+// aria-expanded) lies over the row, and the dot and the domain link sit above
+// it, so a click anywhere else on the row toggles the blurb.
 //
 // The dot names the company in a DS Tooltip on hover and keyboard focus, and
 // as the dot's accessible description; its colour is the --company-* token.
+import HitArea from "@whois/design-system/HitArea";
 import Tooltip from "@whois/design-system/Tooltip";
+import { uid } from "@whois/design-system/lib/uid";
 import data from "../data/sites.json";
 
 interface Props {
@@ -37,8 +44,20 @@ const groups = years.map((year) => ({
 				<li class="site-index__year">
 					<span class="site-index__when">{year}</span>
 					<ul class="site-index__sites">
-						{sites.map((site) => (
+						{sites.map((site) => {
+							const blurb = site.desc ? uid("site-blurb") : undefined;
+							return (
 							<li class="site-index__site" data-site>
+								{blurb && (
+									<HitArea
+										class="site-index__toggle"
+										data-site-toggle
+										aria-expanded="false"
+										aria-controls={blurb}
+										aria-label={site.title}
+									/>
+								)}
+								<div class="site-index__line">
 								<span class="site-index__icon" aria-hidden="true">
 									{site.icon}
 								</span>
@@ -52,15 +71,21 @@ const groups = years.map((year) => ({
 								<a
 									class="site-index__domain"
 									href={site.url}
-									title={site.desc}
 									target="_blank"
 									rel="noreferrer"
 								>
 									{domain(site.url)}
 									<span aria-hidden="true"> ↗</span>
 								</a>
+								</div>
+								{blurb && (
+									<p class="site-index__blurb" id={blurb}>
+										{site.desc}
+									</p>
+								)}
 							</li>
-						))}
+							);
+						})}
 					</ul>
 				</li>
 			))
@@ -91,12 +116,16 @@ const groups = years.map((year) => ({
 		font-variant-numeric: tabular-nums;
 	}
 
+	/* The row: its one line, then (when open) the blurb under it. */
 	.site-index__site {
+		position: relative;
+		padding-block: var(--space-2);
+		color: var(--text-body);
+	}
+	.site-index__line {
 		display: flex;
 		align-items: baseline;
 		gap: var(--space-2);
-		padding-block: var(--space-2);
-		color: var(--text-body);
 	}
 	.site-index__icon {
 		flex: none;
@@ -121,6 +150,28 @@ const groups = years.map((year) => ({
 		transform: translateY(calc(-1 * var(--space-1)));
 	}
 
+	/* The row's button lies over it all (HitArea, z-index 1); the dot and the
+	   link sit above it and keep their own pointer and focus. */
+	.site-index__site:has(.site-index__toggle) {
+		cursor: pointer;
+	}
+	/* The row's own wash, under its text (HitArea's `wash` would sit over it):
+	   lit under the pointer and while open. */
+	.site-index__site:has(.site-index__toggle) {
+		margin-inline: calc(-1 * var(--space-2));
+		padding-inline: var(--space-2);
+		border-radius: var(--radius-box);
+		transition: background var(--duration-quick) var(--ease-reveal);
+	}
+	.site-index__site:has(.site-index__toggle:hover),
+	.site-index__site:has(.site-index__toggle[aria-expanded="true"]) {
+		background: var(--wash-1);
+	}
+	.site-index__tip,
+	.site-index__domain {
+		position: relative;
+		z-index: 2;
+	}
 	.site-index__tip {
 		flex: none;
 		align-self: center;
@@ -163,6 +214,21 @@ const groups = years.map((year) => ({
 		text-underline-offset: var(--link-underline-offset);
 	}
 
+	/* The blurb takes its own line under the row, on the title's indent. */
+	.site-index__blurb {
+		margin: 0;
+		margin-block-start: var(--space-2);
+		padding-inline-start: calc(1.5em + var(--space-2));
+		color: var(--text-subtle);
+		font-family: var(--font-body);
+		text-wrap: pretty;
+	}
+	/* Shut by CSS, not `hidden`, so the JSON Feed (which drops hidden parts
+	   and this CSS) keeps every blurb under its row. */
+	.site-index__site:not([data-open]) .site-index__blurb {
+		display: none;
+	}
+
 	/* A phone has no room for both on one line: the title takes the line
 	   (wrapping if it must) and the dot and domain drop under it, past the
 	   icon. No leader then. */
@@ -171,7 +237,7 @@ const groups = years.map((year) => ({
 			grid-template-columns: 4ch minmax(0, 1fr);
 			column-gap: var(--space-2);
 		}
-		.site-index__site {
+		.site-index__line {
 			flex-wrap: wrap;
 			row-gap: var(--space-1);
 		}
@@ -191,3 +257,23 @@ const groups = years.map((year) => ({
 		}
 	}
 </style>
+
+<script>
+	// One delegated listener per list: a row's button flips its blurb. Several
+	// can be open at once. Bound on each page-load, once per list.
+	const bind = () => {
+		for (const root of document.querySelectorAll<HTMLElement>("[data-site-index]:not([data-bound])")) {
+			root.dataset.bound = "";
+			root.addEventListener("click", (event) => {
+				const toggle = (event.target as Element).closest<HTMLButtonElement>("[data-site-toggle]");
+				if (!toggle) return;
+				const row = toggle.closest<HTMLElement>("[data-site]");
+				if (!row) return;
+				const open = toggle.getAttribute("aria-expanded") !== "true";
+				toggle.setAttribute("aria-expanded", String(open));
+				row.toggleAttribute("data-open", open);
+			});
+		}
+	};
+	document.addEventListener("astro:page-load", bind);
+</script>

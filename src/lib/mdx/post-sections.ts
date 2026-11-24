@@ -393,7 +393,7 @@ export function rehypePostSections() {
 			...esm,
 			...sections.map((section, i) => {
 				const no = pad2(i);
-				// An intro that is only full-row blocks (Webography's list) has
+				// An intro that is only full-row blocks (a post that is one list) has
 				// nothing for an "Intro" label to introduce: it goes without a head.
 				const headless =
 					!section.heading && section.nodes.filter((n) => !isBlank(n)).every(isFullBleed);

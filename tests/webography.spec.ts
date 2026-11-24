@@ -3,17 +3,19 @@ import data from "../src/data/sites.json" with { type: "json" };
 
 /**
  * WEBOGRAPHY (/txt/webography/) — every site, one line each
- * (src/components/SiteIndex.astro, data in src/data/sites.json), the post
- * template's list variant: the frontmatter's `facts` fill the details card,
- * and the full-row list has no "Intro" head.
+ * (src/components/SiteIndex.astro, data in src/data/sites.json), in the
+ * ordinary post template: the MDX is the one SiteIndex.
  *
  *  1. Every site is a row, newest year first; the year prints once per year.
  *  2. Each row links its domain (no www.), off-site in a new tab.
- *  3. The details card: started May 12, 2016, last added Mar 14, 2026, 51
- *     sites; no reading time. The list spans the article.
+ *  3. The details card, the post template's own: Started May 12, 2016 (the
+ *     post's `started`) and Updated Mar 14, 2026 (`modified`). The list is
+ *     the whole post: no section head, spanning the row.
  *  4. The dot names the company: a bubble on hover and on keyboard focus,
  *     and the dot's accessible description either way. Both themes.
- *  5. A phone does not scroll sideways.
+ *  5. A click on a row (not its link or dot) opens its blurb; a row with no
+ *     description has nothing to open.
+ *  6. A phone does not scroll sideways, a blurb open or not.
  */
 const URL = "/txt/webography/";
 const ROW = "[data-site-index] [data-site]";
@@ -52,19 +54,15 @@ test.describe("/txt/webography/", () => {
 		await expect(links.first()).toHaveAttribute("rel", "noreferrer");
 	});
 
-	test("the details card is the list's stats; no Intro head, and the list spans the row", async ({ page }) => {
+	test("the details card reads Started / Updated; no Intro head, and the list spans the row", async ({ page }) => {
 		await page.goto(URL);
 		const card = page.locator("[data-post-strip]");
 		const labels = await card.locator(".ds-stat__label").allTextContents();
-		expect(labels.map((l) => l.trim())).toEqual(["Started", "Last added", "Sites"]);
+		expect(labels.map((l) => l.trim())).toEqual(["Started", "Updated", "Topic", "Length"]);
 		await expect(card.locator('time[datetime="2016-05-12"]')).toHaveText("May 12, 2016");
 		await expect(card.locator('time[datetime="2026-03-14"]')).toHaveText("Mar 14, 2026");
-		// The count in the card is the list's length.
-		await expect(card.locator(".ds-stat").nth(2)).toContainText(String(data.sites.length));
-		await expect(card).not.toContainText(/words|min/);
 
 		await expect(page.locator(".ds-prose-section__head")).toHaveCount(0);
-		await expect(page.locator(".ds-prose-section__title", { hasText: "Intro" })).toHaveCount(0);
 		const article = (await page.locator("article[data-post]").boundingBox())!;
 		const list = (await page.locator("[data-site-index]").boundingBox())!;
 		expect(Math.abs(list.x - article.x)).toBeLessThanOrEqual(1);
@@ -88,10 +86,10 @@ test.describe("/txt/webography/", () => {
 			await page.mouse.move(0, 0);
 			await expect.poll(() => bubbleShown(page, 0)).toBe(false);
 
-			// Keyboard: the dot is a tab stop and shows the same bubble.
+			// Keyboard: the dot is a tab stop (after the row's button) and shows
+			// the same bubble.
 			const second = page.locator(`${ROW} .site-index__tip .ds-tooltip__trigger`).nth(1);
-			await second.focus();
-			await page.keyboard.press("Shift+Tab");
+			await page.locator(`${ROW} [data-site-toggle]`).nth(1).focus();
 			await page.keyboard.press("Tab");
 			await expect(second).toBeFocused();
 			await expect.poll(() => bubbleShown(page, 1)).toBe(true);
@@ -104,6 +102,49 @@ test.describe("/txt/webography/", () => {
 			expect(dot).not.toBe("rgba(0, 0, 0, 0)");
 		});
 	}
+
+	test("a click on a row opens its blurb; the link and the dot do not", async ({ page, context }) => {
+		await page.goto(URL);
+		const withDesc = data.sites.filter((s) => s.desc);
+		await expect(page.locator(`${ROW} [data-site-toggle]`)).toHaveCount(withDesc.length);
+		const emptyRow = data.sites.findIndex((s) => !s.desc);
+		await expect(page.locator(ROW).nth(emptyRow).locator("[data-site-toggle], .site-index__blurb")).toHaveCount(0);
+
+		const row = page.locator(ROW).first();
+		const toggle = row.locator("[data-site-toggle]");
+		const blurb = row.locator(".site-index__blurb");
+		await expect(toggle).toHaveAttribute("aria-expanded", "false");
+		await expect(blurb).toBeHidden();
+
+		// The title's text is under the row's button: a click there opens it
+		// (forced: Playwright sees the button over the text, which is the point).
+		const title = row.locator(".site-index__title");
+		await title.click({ force: true });
+		await expect(toggle).toHaveAttribute("aria-expanded", "true");
+		await expect(blurb).toBeVisible();
+		await expect(blurb).toHaveText(data.sites[0].desc);
+		await title.click({ force: true });
+		await expect(blurb).toBeHidden();
+
+		// The dot shows its bubble and leaves the row shut.
+		await row.locator(".ds-tooltip__trigger").click();
+		await expect.poll(() => bubbleShown(page, 0)).toBe(true);
+		await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+		// The link opens its site in a new tab and leaves the row shut.
+		await context.route(data.sites[0].url, (r) => r.fulfill({ body: "ok" }));
+		const [popup] = await Promise.all([context.waitForEvent("page"), row.locator("a").click()]);
+		expect(popup.url()).toBe(data.sites[0].url);
+		await popup.close();
+		await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+		// Keyboard: the row's button toggles on Enter and Space.
+		await toggle.focus();
+		await page.keyboard.press("Enter");
+		await expect(blurb).toBeVisible();
+		await page.keyboard.press("Space");
+		await expect(blurb).toBeHidden();
+	});
 
 	test("desktop: the domain sits on its title's line, and no title is cut", async ({ page }) => {
 		await page.goto(URL);
@@ -121,6 +162,8 @@ test.describe("/txt/webography/", () => {
 	test("a phone: the domain drops under the title, nothing cut, no sideways scroll", async ({ page }) => {
 		await page.setViewportSize({ width: 375, height: 800 });
 		await page.goto(URL);
+		await page.locator(`${ROW} .site-index__title`).first().click({ force: true });
+		await expect(page.locator(`${ROW} .site-index__blurb`).first()).toBeVisible();
 		const overflow = await page.evaluate(
 			() => document.documentElement.scrollWidth - document.documentElement.clientWidth,
 		);

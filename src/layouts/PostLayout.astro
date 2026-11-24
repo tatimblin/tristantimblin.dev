@@ -56,11 +56,11 @@ const {
 	tags,
 	date,
 	modified,
+	started,
 	image,
 	imageAlt,
 	canonical,
 	hero,
-	facts,
 } = post.data;
 
 const cat = category ? categories[category] : null;
@@ -109,17 +109,15 @@ const neighbours = [
 					)}</Heading>
 					{/* THE DETAILS: a DS Card of Stat pairs (value over its label), in
 					    the first column beside the lead on desktop, between the title and
-					    the lead below 1024. A post's `facts` replace the default three. */}
+					    the lead below 1024. */}
 					<Card class="post__strip" data-post-strip>
 						<CardBody class="post__facts">
-							{facts ? facts.map((fact) =>
-								"date" in fact ? (
-									<Stat label={fact.label} class="post__fact"><time datetime={isoDate(fact.date)}>{longDate(fact.date)}</time></Stat>
-								) : (
-									<Stat label={fact.label} class="post__fact">{fact.value}</Stat>
-								)
-							) : (<Fragment>
-							<Stat label="Date" class="post__fact"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
+							{started ? (
+								<Stat label="Started" class="post__fact"><time datetime={isoDate(started)} class="post__date">{longDate(started)}</time></Stat>
+							) : (
+								<Stat label="Date" class="post__fact"><time datetime={isoDate(date)} class="post__date">{longDate(date)}</time></Stat>
+							)}
+							{modified && <Stat label="Updated" class="post__fact"><time datetime={isoDate(modified)} class="post__updated">{longDate(modified)}</time></Stat>}
 							{cat && category && <Stat label="Topic" class="post__fact"><span class="post__category">{cat.label}</span></Stat>}
 							<Stat label="Length" class="post__fact">
 								{/* Unbreakable runs with breaks between them, so a narrow cell
@@ -128,7 +126,6 @@ const neighbours = [
 									<Fragment> <span class="post__run post__reads" data-post-reads>· {readCount}</span></Fragment>
 								)}</span>
 							</Stat>
-							</Fragment>)}
 						</CardBody>
 					</Card>
 					{(description || cta) && (
