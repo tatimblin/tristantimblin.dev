@@ -1,5 +1,5 @@
 {
-	"updated": "2026-11-19",
+	"updated": "2026-11-23",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
@@ -455,6 +455,22 @@
 		{
 			"date": "2026-11-19",
 			"visitors": 2
+		},
+		{
+			"date": "2026-11-20",
+			"visitors": 4
+		},
+		{
+			"date": "2026-11-21",
+			"visitors": 6
+		},
+		{
+			"date": "2026-11-22",
+			"visitors": 2
+		},
+		{
+			"date": "2026-11-23",
+			"visitors": 5
 		}
 	],
 	"pathDays": [
@@ -632,6 +648,31 @@
 			"date": "2026-11-15",
 			"path": "/demo/ball-sort-game/",
 			"visitors": 1
+		},
+		{
+			"date": "2026-11-21",
+			"path": "/demo/sutro/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-21",
+			"path": "/demo/trie-autocomplete/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-21",
+			"path": "/txt/asserting-on-agent-behavior/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-22",
+			"path": "/txt/subhumans/",
+			"visitors": 1
+		},
+		{
+			"date": "2026-11-23",
+			"path": "/txt/webography/",
+			"visitors": 1
 		}
 	],
 	"paths": {
@@ -641,33 +682,37 @@
 		},
 		"/demo/meet-lolla/": {
 			"reads": 5,
-			"recent": 5
+			"recent": 1
 		},
 		"/demo/sutro/": {
-			"reads": 3,
+			"reads": 4,
 			"recent": 3
 		},
 		"/demo/trie-autocomplete/": {
-			"reads": 6,
-			"recent": 6
+			"reads": 7,
+			"recent": 7
 		},
 		"/txt/asserting-on-agent-behavior/": {
-			"reads": 3,
+			"reads": 4,
 			"recent": 1
 		},
 		"/txt/mega-desk/": {
 			"reads": 2,
-			"recent": 2
+			"recent": 1
 		},
 		"/txt/no-honey-we-have-a-dashboard-at-home/": {
 			"reads": 29,
-			"recent": 7
+			"recent": 5
 		},
 		"/txt/subhumans/": {
-			"reads": 10,
-			"recent": 10
+			"reads": 11,
+			"recent": 7
 		},
 		"/txt/tahoe-mountain-hair/": {
+			"reads": 1,
+			"recent": 1
+		},
+		"/txt/webography/": {
 			"reads": 1,
 			"recent": 1
 		},
