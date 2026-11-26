@@ -1,5 +1,5 @@
 {
-	"updated": "2026-11-23",
+	"updated": "2026-11-25",
 	"source": "goatcounter",
 	"code": "tristantimblin",
 	"metric": "visitors",
@@ -471,6 +471,14 @@
 		{
 			"date": "2026-11-23",
 			"visitors": 5
+		},
+		{
+			"date": "2026-11-24",
+			"visitors": 2
+		},
+		{
+			"date": "2026-11-25",
+			"visitors": 11
 		}
 	],
 	"pathDays": [
@@ -673,6 +681,11 @@
 			"date": "2026-11-23",
 			"path": "/txt/webography/",
 			"visitors": 1
+		},
+		{
+			"date": "2026-11-25",
+			"path": "/txt/webography/",
+			"visitors": 1
 		}
 	],
 	"paths": {
@@ -686,7 +699,7 @@
 		},
 		"/demo/sutro/": {
 			"reads": 4,
-			"recent": 3
+			"recent": 2
 		},
 		"/demo/trie-autocomplete/": {
 			"reads": 7,
@@ -713,12 +726,12 @@
 			"recent": 1
 		},
 		"/txt/webography/": {
-			"reads": 1,
-			"recent": 1
+			"reads": 2,
+			"recent": 2
 		},
 		"/txt/why-i-joined-fisker/": {
 			"reads": 17,
-			"recent": 6
+			"recent": 1
 		}
 	}
 }
