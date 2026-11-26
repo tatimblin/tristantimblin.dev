@@ -111,7 +111,7 @@ test.describe("/txt/", () => {
 		const links = await postLinks(page);
 		expect(links.length, "the index should link some posts").toBeGreaterThan(0);
 		expect(new Set(links).size, `duplicate post links: ${links}`).toBe(links.length);
-		expect(links.slice(0, 2)).toEqual(["/txt/webography/", "/txt/subhumans/"]);
+		expect(links.slice(0, 2)).toEqual(["/txt/subhumans/", "/txt/webography/"]);
 		// No year groups, no PostList: the stack alone.
 		await expect(page.locator(".ds-post-group, .ds-post-list")).toHaveCount(0);
 		// The first row (the newest entry, a post or a demo: demos are
@@ -556,7 +556,7 @@ test("/txt/ — a bfcache restore reopens the newest post", async ({ baseURL }) 
  * literals, so a container retune does not fail the geometry.
  */
 const NEWEST = "/txt/asserting-on-agent-behavior/";
-const LATEST = "/txt/webography/";
+const LATEST = "/txt/subhumans/";
 const NO_H2S = "/txt/mega-desk/";
 const OLDEST = "/txt/no-honey-we-have-a-dashboard-at-home/";
 const NO_HERO = "/txt/tahoe-mountain-hair/";
@@ -934,7 +934,7 @@ test.describe("/txt/<slug> — the post page", () => {
 		await expect(next).toHaveCSS("border-left-style", "dashed");
 		await expect(next).toHaveCSS("text-align", "end");
 
-		await expect(card.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/subhumans/");
+		await expect(card.locator('a[data-neighbour="next"]')).toHaveAttribute("href", "/txt/webography/");
 
 		// The latest post has no newer: the half says so and links nowhere.
 		await page.goto(LATEST);
