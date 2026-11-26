@@ -135,12 +135,12 @@ export const dottedDate = (d: Date) => {
 	return `${day}.${month}.${d.getUTCFullYear()}`;
 };
 
-/** The /txt stack's date column: `02 / 26` — zero-padded month, two-digit
+/** The /txt stack's date column: `02 / '26` — zero-padded month, two-digit
  *  year; UTC like the rest. */
 export const monthYear = (d: Date) => {
 	const month = String(d.getUTCMonth() + 1).padStart(2, "0");
 	const year = String(d.getUTCFullYear() % 100).padStart(2, "0");
-	return `${month} / ${year}`;
+	return `${month} / '${year}`;
 };
 
 /** A neighbouring post's date at the foot of a post: `jun 2025` (the caps
