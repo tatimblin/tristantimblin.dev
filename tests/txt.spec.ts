@@ -121,7 +121,7 @@ test.describe("/txt/", () => {
 		await expect(page.locator(`${OPEN} .stack__body`)).toBeVisible();
 		// The date column reads month / year.
 		const row = page.locator(POST).filter({ has: page.locator('a[href="/txt/asserting-on-agent-behavior/"]') });
-		await expect(row.locator("time.stack__date")).toHaveText("02 / 26");
+		await expect(row.locator("time.stack__date")).toHaveText("02 / '26");
 		await expect(row.locator("time.stack__date")).toHaveAttribute("datetime", "2026-02-02");
 		// A post's body: category · words, the excerpt, READ to the same
 		// place — no reading-time numeral.
