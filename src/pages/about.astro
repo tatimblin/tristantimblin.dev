@@ -3,6 +3,7 @@
 // BlogLayout's halftone hero (PageHero), on the site container so the copy
 // starts on the title's edge, at the reading measure. The header's "About Me"
 // link comes here.
+import { Picture } from "astro:assets";
 import BlogLayout from "../layouts/BlogLayout.astro";
 import Body from "@whois/design-system/Body";
 import Card from "@whois/design-system/Card";
@@ -10,6 +11,10 @@ import Anchor from "@whois/design-system/Anchor";
 import Blockquote from "@whois/design-system/Blockquote";
 import Mono from "@whois/design-system/Mono";
 import "@whois/wobble-text/styles.css";
+// The portrait is the page's largest paint: AVIF/WebP at the card's 256px and
+// the full 460px source (a 2x screen's best), fetched eagerly at high priority. public/profile.jpg stays as the
+// share image (Seo.astro).
+import profile from "../assets/profile.jpg";
 ---
 
 <BlogLayout
@@ -19,7 +24,15 @@ import "@whois/wobble-text/styles.css";
 	heading="About Me"
 >
 	<Card slot="hero-cards" as="figure" class="about__photo">
-		<img src="/profile.jpg" alt="Tristan Timblin" width="460" height="460" />
+		<Picture
+			src={profile}
+			alt="Tristan Timblin"
+			formats={["avif"]}
+			fallbackFormat="webp"
+			widths={[256, 460]}
+			sizes="256px"
+			priority
+		/>
 	</Card>
 	<div class="about__copy">
 		<wobble-text scale="3.2" speed="0.3">
@@ -58,7 +71,9 @@ import "@whois/wobble-text/styles.css";
 		max-inline-size: var(--space-14);
 		margin: 0;
 	}
-	.about__photo img {
+	/* The photo's box is filled while it loads, not blank. */
+	.about__photo :global(img) {
+		background: var(--panel-header-bg);
 		display: block;
 		inline-size: 100%;
 		block-size: auto;
